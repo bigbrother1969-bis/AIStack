@@ -1,0 +1,8 @@
+selection_id: music-android
+catalog_id: music-library
+selected_ids:
+- pink-floyd
+- queen
+metadata:
+  target: android
+  mode: directory-selection

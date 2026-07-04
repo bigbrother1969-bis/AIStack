@@ -1,0 +1,32 @@
+catalog_id: demo-directory-catalog
+title: Demo Directory Catalog
+metadata:
+  provider: filesystem.directory
+  root: examples
+  exists: true
+  max_depth: 1
+items:
+- id: __pycache__
+  label: __pycache__
+  kind: directory
+  source: examples/__pycache__
+  metadata:
+    relative_path: __pycache__
+- id: catalog_engine
+  label: catalog_engine
+  kind: directory
+  source: examples/catalog_engine
+  metadata:
+    relative_path: catalog_engine
+- id: render_engine
+  label: render_engine
+  kind: directory
+  source: examples/render_engine
+  metadata:
+    relative_path: render_engine
+- id: selection_engine
+  label: selection_engine
+  kind: directory
+  source: examples/selection_engine
+  metadata:
+    relative_path: selection_engine

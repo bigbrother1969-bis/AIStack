@@ -6,12 +6,6 @@ metadata:
   exists: true
   max_depth: 1
 items:
-- id: __pycache__
-  label: __pycache__
-  kind: directory
-  source: examples/__pycache__
-  metadata:
-    relative_path: __pycache__
 - id: catalog_engine
   label: catalog_engine
   kind: directory

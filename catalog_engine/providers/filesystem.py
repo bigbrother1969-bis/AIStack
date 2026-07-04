@@ -34,7 +34,7 @@ class DirectoryCatalogProvider:
             )
 
         for path in sorted(self.root.iterdir()):
-            if not path.is_dir() or path.name.startswith("."):
+            if not path.is_dir() or path.name.startswith(".") or path.name == "__pycache__":
                 continue
 
             items.append(

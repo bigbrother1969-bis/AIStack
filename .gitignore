@@ -2,3 +2,6 @@
 # Python
 __pycache__/
 *.pyc
+
+# Generated examples
+examples/render_engine/*.html

@@ -1,5 +1,8 @@
 from pathlib import Path
+import json
+import os
 import subprocess
+import urllib.request
 import yaml
 
 from fastapi import FastAPI, Form
@@ -23,6 +26,45 @@ def load_app_definition() -> dict:
     return yaml.safe_load(APP_DEF.read_text(encoding="utf-8"))
 
 
+def get_syncthing_status() -> dict:
+    url = os.getenv("SYNCTHING_URL", "http://syncthing:8384").rstrip("/")
+    api_key = os.getenv("SYNCTHING_API_KEY")
+    folder_id = os.getenv("SYNCTHING_FOLDER_ID", "music-android")
+
+    if not api_key:
+        return {
+            "available": False,
+            "status": "Missing API key",
+        }
+
+    try:
+        req = urllib.request.Request(
+            f"{url}/rest/db/status?folder={folder_id}",
+            headers={"X-API-Key": api_key},
+        )
+
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.load(response)
+
+        return {
+            "available": True,
+            "folder_id": folder_id,
+            "state": data.get("state", "unknown"),
+            "global_files": data.get("globalFiles"),
+            "global_bytes": data.get("globalBytes"),
+            "local_files": data.get("localFiles"),
+            "local_bytes": data.get("localBytes"),
+            "need_files": data.get("needFiles"),
+            "need_bytes": data.get("needBytes"),
+        }
+
+    except Exception as exc:
+        return {
+            "available": False,
+            "status": str(exc),
+        }
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     definition = load_app_definition()
@@ -38,6 +80,7 @@ def index(request: Request):
             "catalog": catalog,
             "selected": selected,
             "status": request.query_params.get("status"),
+            "syncthing": get_syncthing_status(),
         },
     )
 

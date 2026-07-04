@@ -14,3 +14,6 @@ examples/selection_engine/music-android-selection-real.yml
 
 # Local backups
 *.bak-*
+
+# Local secrets
+.env.selection-ui

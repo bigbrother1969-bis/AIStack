@@ -28,6 +28,18 @@
     <div class="meta"><strong>{{ status }}</strong></div>
   {% endif %}
 
+  <section class="meta">
+    <h2>Synchronization Status</h2>
+    {% if syncthing.available %}
+      <div>Folder: {{ syncthing.folder_id }}</div>
+      <div>State: <strong>{{ syncthing.state }}</strong></div>
+      <div>Local files: {{ syncthing.local_files }} — Global files: {{ syncthing.global_files }}</div>
+      <div>Need files: {{ syncthing.need_files }} — Need bytes: {{ syncthing.need_bytes }}</div>
+    {% else %}
+      <div><strong>Syncthing status unavailable:</strong> {{ syncthing.status }}</div>
+    {% endif %}
+  </section>
+
   <div class="toolbar">
     <input type="search" id="filter" placeholder="Filter items..." onkeyup="filterItems()">
     <button type="button" onclick="selectVisible(true)">Select visible</button>

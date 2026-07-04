@@ -11,3 +11,6 @@ examples/catalog_engine/music-library-catalog.yml
 
 # Generated selections
 examples/selection_engine/music-android-selection-real.yml
+
+# Local backups
+*.bak-*

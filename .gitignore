@@ -8,3 +8,6 @@ examples/render_engine/*.html
 
 # Generated catalogs
 examples/catalog_engine/music-library-catalog.yml
+
+# Generated selections
+examples/selection_engine/music-android-selection-real.yml

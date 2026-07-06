@@ -27,3 +27,6 @@ reports/generated/
 
 # Python virtual environments
 .venv/
+
+# Python packaging
+*.egg-info/

@@ -24,3 +24,6 @@ __pycache__/
 
 # Generated reports
 reports/generated/
+
+# Python virtual environments
+.venv/

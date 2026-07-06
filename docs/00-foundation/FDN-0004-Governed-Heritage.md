@@ -238,3 +238,24 @@ Every architectural decision, Knowledge Artifact, migration, Context Bundle and 
 - producing reusable engineering knowledge.
 
 The project therefore continuously demonstrates the methodology while it evolves.
+
+---
+
+# Knowledge Transmission Principle
+
+The Single Point Of Truth must remain unique.
+
+However, the governed heritage must be multiply transmissible.
+
+AIStack therefore distinguishes:
+
+- the SPOT, where knowledge is governed;
+- publication mirrors, where knowledge is distributed;
+- context bundles, where knowledge is transported;
+- consumers, where knowledge is used.
+
+A mirror is not a SPOT.
+
+A context bundle is not a SPOT.
+
+They are governed projections of the SPOT.

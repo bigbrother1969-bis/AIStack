@@ -64,3 +64,11 @@ This principle complements:
 - FDN-0007 — Governed Engineering Cycle.
 
 It transforms AIStack from a software project into the first operational demonstration of the Knowledge Operating System.
+
+---
+
+# Codicil
+
+AIStack does not merely describe Governed Heritage Engineering.
+
+It continuously proves it.

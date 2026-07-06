@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+source "$ROOT/bin/aistack_env.sh"
+
+exec "$ROOT/scripts/export_and_push_project_sources.sh"

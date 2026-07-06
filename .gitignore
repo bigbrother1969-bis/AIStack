@@ -30,3 +30,6 @@ reports/generated/
 
 # Python packaging
 *.egg-info/
+
+# Generated context bundles
+context/bundles/

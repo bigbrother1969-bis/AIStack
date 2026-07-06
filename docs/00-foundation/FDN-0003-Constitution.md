@@ -1,3 +1,22 @@
+---
+artifact:
+  id: FDN-0003
+  title: Constitution
+  type: Foundation Document
+  version: 1.0
+  status: Published
+  owner: Foundation
+
+lifecycle:
+  created: 2026-07-06
+  updated: 2026-07-06
+
+relations:
+  references:
+    - FDN-0002
+    - FDN-0004
+---
+
 # AIStack Constitution
 
 ## Purpose

@@ -1,3 +1,23 @@
+---
+artifact:
+  id: FDN-0002
+  title: Glossary
+  type: Foundation Document
+  version: 1.0
+  status: Published
+  owner: Foundation
+
+lifecycle:
+  created: 2026-07-06
+  updated: 2026-07-06
+
+relations:
+  references:
+    - FDN-0003
+    - FDN-0004
+    - FDN-0005
+---
+
 # AIStack Foundation Glossary
 
 ## Purpose

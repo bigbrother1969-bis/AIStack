@@ -1,3 +1,23 @@
+---
+artifact:
+  id: CMP-0001
+  title: Context Bundle Generator
+  type: Component README
+  version: 1.0
+  status: Published
+  owner: Development
+
+lifecycle:
+  created: 2026-07-06
+  updated: 2026-07-06
+
+relations:
+  references:
+    - FDN-0005
+    - STD-0100
+    - STD-0200
+---
+
 # Context Bundle Generator
 
 ## Purpose

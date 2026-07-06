@@ -72,3 +72,25 @@ It transforms AIStack from a software project into the first operational demonst
 AIStack does not merely describe Governed Heritage Engineering.
 
 It continuously proves it.
+
+## Self-Onboarding
+
+### Definition
+
+> **Self-Onboarding is AIStack's ability to automatically rebuild its own knowledge heritage from a clean infrastructure, starting with itself.**
+
+Self-Onboarding does not merely refer to software installation or automatic configuration.
+
+It is AIStack's ability to autonomously rebuild its operational context, governed knowledge heritage, and understanding of the infrastructure it administers.
+
+The first infrastructure observed by AIStack shall always be AIStack itself.
+
+### Rationale
+
+Self-Onboarding demonstrates that:
+
+- knowledge is independent from AI models;
+- governed knowledge can be reconstructed automatically;
+- documentation is a derived artifact of knowledge;
+- AIStack is its own first managed infrastructure.
+

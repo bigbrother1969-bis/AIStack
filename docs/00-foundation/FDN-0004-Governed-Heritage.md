@@ -194,3 +194,47 @@ If no positive impact can be identified, the long-term value of the decision sho
 The Governed Heritage is the permanent memory of a Digital Ecosystem.
 
 AIStack exists to build, govern and exploit this memory in order to continuously improve understanding, maintenance and evolution.
+
+---
+
+# AIStack as the First Governed Heritage
+
+AIStack applies Governed Heritage Engineering to itself before applying it to information systems.
+
+The project deliberately uses itself as its first case study.
+
+Every principle, policy, engineering cycle, Knowledge Artifact and governance mechanism is first validated on AIStack itself before being generalized to external information systems.
+
+This approach provides continuous validation of the methodology while producing a governed engineering heritage.
+
+---
+
+# Foundational Principle
+
+A Governed Heritage Engineering system must first govern its own heritage before governing anyone else's.
+
+Credibility comes from demonstration rather than assertion.
+
+AIStack therefore considers its own repository, documentation, architecture and engineering decisions as its first governed heritage.
+
+---
+
+# Communication Principle
+
+AIStack is not only built using Governed Heritage Engineering.
+
+AIStack is the first living demonstration of Governed Heritage Engineering.
+
+---
+
+# Codicil
+
+Because AIStack is its own first governed heritage.
+
+Every architectural decision, Knowledge Artifact, migration, Context Bundle and Repository Audit contributes simultaneously to:
+
+- improving AIStack;
+- validating Governed Heritage Engineering;
+- producing reusable engineering knowledge.
+
+The project therefore continuously demonstrates the methodology while it evolves.

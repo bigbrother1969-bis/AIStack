@@ -17,3 +17,7 @@ examples/selection_engine/music-android-selection-real.yml
 
 # Local secrets
 .env.selection-ui
+
+# Python generated files
+__pycache__/
+*.pyc

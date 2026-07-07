@@ -1,4 +1,4 @@
-from aistack.catalog.views.core import CatalogView, CatalogViewEngine, CatalogViewItem
+from aistack.kernel.catalog.views import CatalogView, CatalogViewEngine, CatalogViewItem
 
 __all__ = [
     "CatalogView",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aistack.catalog.views import CatalogView
+from aistack.kernel.catalog.views import CatalogView
 from aistack.selection.core import Selection
 from aistack.selection.strategies import SelectionStrategy
 

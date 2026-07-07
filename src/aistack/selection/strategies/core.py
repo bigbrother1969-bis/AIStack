@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from aistack.catalog.views import CatalogView
+from aistack.kernel.catalog.views import CatalogView
 
 
 class SelectionStrategy(Protocol):

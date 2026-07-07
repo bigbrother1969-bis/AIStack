@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from aistack.catalog.views import CatalogView
+from aistack.kernel.catalog.views import CatalogView
 
 
 class ByIdsSelectionStrategy:

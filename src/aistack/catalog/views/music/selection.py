@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from aistack.kernel.catalog import Catalog
-from aistack.catalog.views.core import CatalogView, CatalogViewItem
+from aistack.kernel.catalog.views import CatalogView, CatalogViewItem
 
 
 class MusicSelectionViewEngine:

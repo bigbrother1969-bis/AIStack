@@ -41,3 +41,60 @@ Potential future operations include:
 - generate_draft_artifact
 
 Ollama integration shall be treated as a replaceable AI Engine implementation behind governed Kernel contracts.
+
+---
+
+# First AI Runtime Validation Case
+
+## Objective
+
+The first complete validation case for the AI Runtime shall focus on a real engineering problem:
+
+    "How can I improve my Technical Debt Score?"
+
+## Why this use case
+
+This use case exercises almost every major subsystem of the Knowledge Operating System while remaining completely grounded in governed knowledge.
+
+It demonstrates the complementary roles of the deterministic Runtime and the AI Runtime.
+
+## Deterministic Runtime Responsibilities
+
+The deterministic Runtime shall:
+
+- discover the infrastructure;
+- build governed Catalogs;
+- evaluate Knowledge Policies;
+- compute the Technical Debt Score;
+- produce evidence and traceability.
+
+These results constitute the Single Point Of Truth.
+
+## AI Runtime Responsibilities
+
+The AI Runtime shall never compute the score itself.
+
+Instead it shall:
+
+- explain the score;
+- identify the major contributors;
+- explain the governing policies involved;
+- prioritize remediation actions;
+- estimate expected improvements;
+- generate a draft improvement plan;
+- answer follow-up engineering questions.
+
+## Validation Goal
+
+The complete workflow shall become:
+
+    discover
+        -> catalog
+        -> evaluate
+        -> compute Technical Debt Score
+        -> reason
+        -> explain
+        -> recommend
+        -> draft improvement plan
+
+This validation shall demonstrate that AIStack uses AI to reason about governed knowledge rather than to replace governed knowledge.

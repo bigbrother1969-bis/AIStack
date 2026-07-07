@@ -291,3 +291,25 @@ Deterministic generators transform that knowledge into executable artifacts.
 AIStack progressively evolves towards a generator-based architecture.
 
 The long-term objective is a Meta Generator capable of orchestrating specialized deterministic generators from a common governed knowledge model.
+
+---
+
+# Generic Kernel Principle
+
+## Principle
+
+The portability of AIStack is directly proportional to the amount of generic concepts implemented in the Kernel.
+
+Technology-specific concepts shall remain outside the Kernel as replaceable implementations connected through governed contracts.
+
+The Kernel shall depend only on stable domain concepts such as Contracts, Registries, Catalogs, Catalog Views, Selection Engines, Policies, Renderers and Generators.
+
+Docker, Kubernetes, Nextcloud, Syncthing, Linux, Git, Proxmox and similar technologies are Knowledge Providers or specialized implementations, never Kernel concepts.
+
+## Rationale
+
+Every time a technology-specific concept is replaced by a generic governed concept, AIStack becomes more portable, more reusable, more maintainable and easier to extend.
+
+The Kernel shall remain independent from technologies while technologies remain replaceable plugins around it.
+
+The engineering objective is to maximize generic concepts and minimize technology-specific knowledge inside the Kernel.

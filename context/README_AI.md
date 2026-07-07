@@ -131,3 +131,27 @@ The objective is to ensure that the same issue is not repeated in future session
 
 The protocol evolves through explicit validation and governed improvements.
 
+
+---
+
+# Bootstrap Governance
+
+The AI Bootstrap Protocol is itself a governed knowledge artifact.
+
+It shall evolve according to the same engineering principles as the AIStack project.
+
+The protocol therefore has:
+
+- an explicit purpose;
+- a documented architecture;
+- a governed lifecycle;
+- version control;
+- traceable improvements;
+- reproducible modifications.
+
+Whenever a better collaboration practice is identified and explicitly validated, the protocol shall be updated accordingly.
+
+The protocol is not a prompt.
+
+It is a governed component of the Knowledge Operating System.
+

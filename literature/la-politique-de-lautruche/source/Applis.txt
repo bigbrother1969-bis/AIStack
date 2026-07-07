@@ -1,0 +1,89 @@
+Fichiers
+BlueMail
+Firefox
+Edge
+Tor
+Caprine
+Telegram
+Newelle
+WhatSie
+Olvid
+YACReaderLibrary
+Recoll
+Amazon Cloud Reader
+ChatGPT
+Google Gemini 1
+Google Gemini 2
+Poe
+Calculatrice
+Stable Diffusion
+ONLYOFFICE
+gedit
+Sigil
+Scribus
+FocusWriter
+jEdit
+calibre
+VirtualBox
+Gestionnaire de machines virtuelles
+YAMAHA - RX - V4A : http://192.168.1.8/Setup/
+AudioTube
+Quod Libet
+Celluloid
+VLC
+Handbrake
+ksnip
+TéléLoisirs
+Oqee TV
+Netflix
+Prime Video
+HBO Max
+Disney +
+IPTVnator
+Pluto TV
+Internet Archive
+Public Domain Movies
+Rakuten TV
+Stremio
+Popcorn-Time
+Plex
+FileZilla
+Centre d’applications snap
+Logithèque
+Amazon boutique
+Terminal
+XPipe
+PlayOnLinux
+Steam
+CPU
+Corbeille
+Time
+*******************************
+Sortie
+Affichage de la consommation d’énergie
+Température du CPU
+QRedShift
+Sélectionneur d’espaces de travail
+Moniteur graphique
+Applet KDE Connect
+Radio++
+Météo
+Indicateur de touches de verrouillage avec notifications
+YACReaderLibray
+BlueMail
+Caprine
+Chrome
+Dropbox
+NordVPN
+Stremio
+WhatSie
+Bluetooth
+Notes
+Notifications
+Imprimantes
+Supports amovibles
+Favoris
+Applet son améliorée
+BAMS applet moniteur de batterie et arrêt d’urgence
+Gestionnaire de réseaux
+Calendrier

@@ -88,3 +88,19 @@ Command sequences shall always be self-contained and begin by changing to the ap
 
 The AI shall never assume that the current working directory is correct.
 
+
+---
+
+# Command Completeness
+
+Every generated command sequence shall be:
+
+- complete;
+- executable as-is;
+- deterministic;
+- self-contained.
+
+The AI shall never generate partial command sequences requiring manual reconstruction.
+
+Command sequences shall be verified for syntactic consistency before being proposed.
+

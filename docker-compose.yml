@@ -1,0 +1,21 @@
+services:
+  aistack-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aistack/core:local
+    container_name: aistack-core
+    env_file:
+      - .env
+    volumes:
+      - aistack-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import aistack"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  aistack-data:

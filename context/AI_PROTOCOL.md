@@ -67,3 +67,22 @@ When the user writes "Gravé", it always means that the validated concept become
 The AI shall determine the appropriate governed SPOT and generate the corresponding documentation transaction.
 
 A "Gravé" decision is never treated as a temporary discussion outcome or a conversational note.
+
+---
+
+# Meaning of "Gravé"
+
+The keyword "Gravé" has a single official meaning throughout AIStack.
+
+It indicates that the validated concept becomes part of the permanent governed knowledge heritage of the project.
+
+When receiving "Gravé", the AI shall immediately:
+
+- identify the appropriate SPOT;
+- choose the safest update strategy (create, append, targeted update or replacement);
+- generate an executable documentation transaction;
+- provide validation commands;
+- provide Git add, commit and push commands.
+
+"Gravé" never represents a temporary conversational acknowledgement.
+"Gravé" always means permanent integration into the governed knowledge base.

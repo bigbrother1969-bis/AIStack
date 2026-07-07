@@ -4,12 +4,13 @@ import json
 from pathlib import Path
 
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
-from aistack.providers.docker import DockerProvider
+from aistack.kernel.context import create_kernel_context
 from aistack.selection.from_docker_catalog import DockerSelectionCatalogBuilder
 
 
 def main() -> None:
-    observation = DockerProvider().collect()
+    ctx = create_kernel_context()
+    observation = ctx.providers.get("docker").collect()
     docker_catalog = DockerRuntimeCatalogBuilder().build(observation)
     selection_catalog = DockerSelectionCatalogBuilder().build(docker_catalog)
 

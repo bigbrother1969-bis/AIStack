@@ -4,11 +4,12 @@ from pathlib import Path
 
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.generators.docker import DockerCatalogArtifactGenerator
-from aistack.providers.docker import DockerProvider
+from aistack.kernel.context import create_kernel_context
 
 
 def main() -> None:
-    observation = DockerProvider().collect()
+    ctx = create_kernel_context()
+    observation = ctx.providers.get("docker").collect()
     catalog = DockerRuntimeCatalogBuilder().build(observation)
 
     output_path = DockerCatalogArtifactGenerator().generate(

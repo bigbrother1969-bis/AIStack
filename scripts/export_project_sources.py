@@ -44,6 +44,10 @@ def main() -> None:
     files.append(ROOT / "README.md")
     files.extend(sorted((ROOT / "docs").rglob("*.md")))
 
+    book_repo = ROOT.parent / "la-politique-de-l-autruche"
+    if book_repo.exists():
+        files.extend(sorted((book_repo / "methodology").rglob("*.md")))
+
     files = [p for p in files if p.exists() and is_included(p)]
 
     parts = [
@@ -60,7 +64,10 @@ def main() -> None:
     ]
 
     for path in files:
-        rel = path.relative_to(ROOT)
+        try:
+            rel = path.relative_to(ROOT)
+        except ValueError:
+            rel = path.relative_to(ROOT.parent)
         parts.append(f"# Source: `{rel}`")
         parts.append("")
         parts.append(path.read_text(encoding="utf-8"))

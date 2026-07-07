@@ -259,3 +259,35 @@ A mirror is not a SPOT.
 A context bundle is not a SPOT.
 
 They are governed projections of the SPOT.
+
+---
+
+# Deterministic Generation Principle
+
+## Principle
+
+Knowledge is the primary engineering asset.
+
+Source code, documentation, tests, Docker artifacts and other implementation artifacts are derived products.
+
+AIStack shall generate implementation from governed knowledge whenever deterministic generation is possible.
+
+The objective is not to generate code with AI.
+
+The objective is to generate code from governed knowledge.
+
+## Rationale
+
+Generated artifacts are disposable.
+
+Improving a generator improves every artifact produced from the same governed knowledge.
+
+Artificial Intelligence assists the creation and evolution of governed knowledge.
+
+Deterministic generators transform that knowledge into executable artifacts.
+
+## Consequences
+
+AIStack progressively evolves towards a generator-based architecture.
+
+The long-term objective is a Meta Generator capable of orchestrating specialized deterministic generators from a common governed knowledge model.

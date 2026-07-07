@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from aistack.selection.core import Selection
+from aistack.kernel.selection import Selection
 
 
 def save_selection_yaml(selection: Selection, path: Path) -> Path:

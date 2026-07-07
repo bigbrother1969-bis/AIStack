@@ -4,7 +4,7 @@ from pathlib import Path
 
 from aistack.catalog.yaml import load_catalog_yaml
 from aistack.catalog.views.music import MusicSelectionViewEngine
-from aistack.selection.core import Selection
+from aistack.kernel.selection import Selection
 from aistack.selection.yaml import save_selection_yaml
 
 

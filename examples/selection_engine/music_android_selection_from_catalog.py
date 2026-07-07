@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from aistack.catalog.yaml import load_catalog_yaml
+from aistack.catalog.views.music import MusicSelectionViewEngine
 from aistack.selection.core import Selection
 from aistack.selection.yaml import save_selection_yaml
 
@@ -16,7 +17,8 @@ wanted_labels = {
     "AC  DC",
 }
 
-available_ids = {item.id for item in catalog.items}
+view = MusicSelectionViewEngine().build(catalog)
+available_ids = {item.id for item in view.items}
 selected_ids = sorted(item_id for item_id in wanted_labels if item_id in available_ids)
 
 selection = Selection(

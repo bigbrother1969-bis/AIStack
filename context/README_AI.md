@@ -77,3 +77,14 @@ Code is the consequence.
 AIStack does not merely describe Governed Heritage Engineering.
 
 It continuously proves it.
+
+---
+
+# Repository Context
+
+Before generating any command sequence, the AI shall determine the project root.
+
+Command sequences shall always be self-contained and begin by changing to the appropriate repository when required.
+
+The AI shall never assume that the current working directory is correct.
+

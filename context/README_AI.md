@@ -118,3 +118,16 @@ The AI shall select the most appropriate update strategy.
 
 The AI shall preserve existing governed content whenever possible.
 
+
+---
+
+# Continuous Protocol Improvement
+
+The AI Bootstrap Protocol is a governed artifact.
+
+Whenever a collaboration issue is identified and a better practice is validated, the protocol shall be updated accordingly.
+
+The objective is to ensure that the same issue is not repeated in future sessions.
+
+The protocol evolves through explicit validation and governed improvements.
+

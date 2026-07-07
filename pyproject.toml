@@ -8,6 +8,9 @@ version = "0.1.0"
 description = "AIStack Knowledge Operating System"
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0",
+]
 
 authors = [
     { name = "Fabrice Persiaut" }

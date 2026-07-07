@@ -98,3 +98,63 @@ The complete workflow shall become:
         -> draft improvement plan
 
 This validation shall demonstrate that AIStack uses AI to reason about governed knowledge rather than to replace governed knowledge.
+
+---
+
+# AI Knowledge Grounding from Context Bundles
+
+## Objective
+
+The fourth Runtime validation workstream shall focus on building a governed AI knowledge base from AIStack Context Bundles and generated documentation.
+
+## Principle
+
+AI engines shall reason on governed knowledge rather than on raw infrastructure observations.
+
+The Runtime remains responsible for producing governed knowledge.
+
+The AI Runtime becomes responsible for consuming this governed knowledge.
+
+## Runtime Responsibilities
+
+The Runtime shall produce:
+
+- Context Bundles;
+- generated documentation;
+- Knowledge Artifacts;
+- governed metadata;
+- provenance information;
+- traceability information.
+
+These outputs constitute the knowledge corpus made available to AI engines.
+
+## AI Runtime Responsibilities
+
+The AI Runtime shall:
+
+- ingest Context Bundles;
+- ingest generated documentation;
+- build Knowledge Chunks;
+- build searchable indexes;
+- preserve provenance;
+- preserve traceability;
+- support local Retrieval-Augmented Generation (RAG);
+- evaluate answer quality.
+
+The AI Runtime shall never modify governed knowledge.
+
+## Architecture Principle
+
+Git remains the Single Point Of Truth.
+
+Context Bundles are transferable governed knowledge.
+
+AI indexes are disposable runtime artifacts regenerated from governed sources.
+
+Changing an AI model shall never require rebuilding the governed knowledge base.
+
+## Long-term Goal
+
+Any compatible AI Engine (Ollama today, another implementation tomorrow) shall become operational simply by ingesting the governed Context Bundles produced by AIStack.
+
+This demonstrates the portability of the Knowledge Operating System independently of any specific AI technology.

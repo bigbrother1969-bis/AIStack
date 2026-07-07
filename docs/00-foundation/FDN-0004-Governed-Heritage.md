@@ -349,3 +349,57 @@ After every migration step, the real Music -> Syncthing workflow continued to op
 This validates that the Knowledge Operating System architecture can emerge incrementally while preserving a continuously functional system.
 
 This migration constitutes the first practical demonstration that the AIStack Knowledge Operating System is achievable through continuous architectural evolution rather than disruptive rewrites.
+
+---
+
+# Kernel Bootstrap Principle
+
+## Principle
+
+The Kernel shall bootstrap itself from governed registrations rather than explicit technology-specific wiring.
+
+Application code should request a configured Kernel Context rather than manually instantiating providers, policies, generators or renderers.
+
+## Rationale
+
+A Knowledge Operating System should be extended by registering new capabilities, not by modifying the Kernel itself.
+
+The Kernel is responsible for assembling governed capabilities.
+
+Individual implementations are responsible only for implementing their contracts.
+
+This separation minimizes coupling while maximizing portability and extensibility.
+
+## Target Architecture
+
+The long-term objective is a Kernel Bootstrap capable of automatically constructing a complete Kernel Context.
+
+The bootstrap progressively loads and registers governed capabilities such as:
+
+- Knowledge Providers;
+- Knowledge Policies;
+- Knowledge Generators;
+- Knowledge Renderers;
+- Catalog Views;
+- Selection Strategies;
+- future Kernel extensions.
+
+Application code should ideally require only:
+
+    ctx = KernelBootstrap.default()
+
+or:
+
+    ctx = KernelContext.load()
+
+The remainder of the system should discover its capabilities through governed registries.
+
+## Validation
+
+The introduction of ProviderRegistry and the first default KernelContext demonstrates the first step toward this architecture.
+
+DockerProvider is no longer instantiated directly by application code.
+
+Instead, applications request a configured Kernel Context which exposes registered providers through governed registries.
+
+This validates the transition from technology wiring toward Kernel-managed capability discovery.

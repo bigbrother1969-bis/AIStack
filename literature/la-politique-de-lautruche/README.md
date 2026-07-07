@@ -1,7 +1,14 @@
 # La politique de l'autruche
 
-This directory contains governed source material for the book project.
+This directory contains the current governed working manuscript of the book.
 
-The working documents are included as source artifacts in order to support Context Bundle generation and AI-assisted literary work.
+Included artifact:
 
-The source of truth remains the author's local working directory until a dedicated repository is created.
+- La politique de l'autruche WIP.odt
+
+The manuscript is intentionally included in the AIStack Project Sources so that AI models can work from the latest validated draft.
+
+The local working copy is the author's reference during writing.
+
+The Project Sources publish a governed snapshot of the current work in progress.
+

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from aistack.generators.docker import DockerObservationArtifactGenerator
-from aistack.kernel.context import create_kernel_context
+from aistack.kernel.bootstrap import create_kernel_context
 
 
 def main() -> None:

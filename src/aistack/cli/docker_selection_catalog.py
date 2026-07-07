@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
-from aistack.kernel.context import create_kernel_context
+from aistack.kernel.bootstrap import create_kernel_context
 from aistack.selection.from_docker_catalog import DockerSelectionCatalogBuilder
 
 

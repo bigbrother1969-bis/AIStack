@@ -4,7 +4,7 @@ from pathlib import Path
 
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.generators.docker import DockerCatalogArtifactGenerator
-from aistack.kernel.context import create_kernel_context
+from aistack.kernel.bootstrap import create_kernel_context
 
 
 def main() -> None:

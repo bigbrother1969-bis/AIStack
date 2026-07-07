@@ -403,3 +403,94 @@ DockerProvider is no longer instantiated directly by application code.
 Instead, applications request a configured Kernel Context which exposes registered providers through governed registries.
 
 This validates the transition from technology wiring toward Kernel-managed capability discovery.
+
+---
+
+# Knowledge Runtime and AI Runtime
+
+## Principle
+
+The Knowledge Operating System shall clearly separate deterministic knowledge operations from AI-assisted reasoning operations.
+
+The Runtime governs knowledge.
+
+The AI Engine assists reasoning.
+
+These responsibilities shall never be merged.
+
+## Runtime Responsibilities
+
+The Kernel Runtime orchestrates deterministic operations such as:
+
+- boot
+- discover
+- catalog
+- view
+- select
+- evaluate
+- generate
+- render
+- export_bundle
+
+These operations are reproducible and operate exclusively on governed knowledge.
+
+## AI Runtime Responsibilities
+
+The AI Runtime provides reasoning capabilities such as:
+
+- reason
+- explain
+- summarize
+- recommend
+- validate_with_context
+- generate_draft_artifact
+
+These operations never create authoritative knowledge.
+
+They reason exclusively on governed knowledge produced by the deterministic Runtime.
+
+## Architecture
+
+    Knowledge Runtime
+        |
+        +-- Deterministic Operations
+        |       discover
+        |       catalog
+        |       evaluate
+        |       generate
+        |       render
+        |       export_bundle
+        |
+        +-- AI Runtime
+                reason
+                explain
+                summarize
+                recommend
+                validate
+                draft
+
+The AI Runtime is an implementation behind AI Engine contracts.
+
+It may be implemented using Ollama today and another engine tomorrow without changing the Kernel.
+
+## Consequences
+
+The Kernel never depends on Ollama.
+
+The Runtime never depends on a specific LLM.
+
+Knowledge remains governed independently of AI technology.
+
+AI engines remain replaceable.
+
+The Knowledge Operating System remains durable.
+
+## Validation
+
+This architecture fulfills one of the founding AIStack principles:
+
+> AI is a reasoning assistant, never a source of truth.
+
+The Runtime owns knowledge.
+
+The AI Runtime reasons about knowledge.

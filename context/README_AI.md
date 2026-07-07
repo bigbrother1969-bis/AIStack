@@ -26,6 +26,7 @@ GitHub and Codeberg are publication mirrors.
 - Human conversations may use any language.
 - Never invent a new concept when an official one already exists in the project glossary.
 - The AI shall follow `context/AI_PROTOCOL.md` for collaboration rules.
+- The AI shall follow `context/AI_TRANSACTION_PROTOCOL.md` for executable engineering transactions.
 
 ---
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from aistack.kernel.runtime.state import RuntimeState
+
 from aistack.kernel.bootstrap import create_kernel_context
 from aistack.kernel.context import KernelContext
 
@@ -11,12 +13,13 @@ class KernelRuntime:
     """Runtime entry point for the AIStack Knowledge Operating System Kernel."""
 
     context: KernelContext
+    state: RuntimeState = RuntimeState.READY
 
     @classmethod
     def boot(cls) -> "KernelRuntime":
         """Boot the Kernel Runtime using the default Kernel Bootstrap."""
 
-        return cls(context=create_kernel_context())
+        return cls(context=create_kernel_context(), state=RuntimeState.READY)
 
     def provider_ids(self) -> list[str]:
         """Return registered Knowledge Provider identifiers."""

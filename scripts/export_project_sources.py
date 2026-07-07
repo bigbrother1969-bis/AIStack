@@ -30,7 +30,10 @@ def git_value(*args: str) -> str:
         return "unknown"
 
 def is_included(path: Path) -> bool:
-    rel = path.relative_to(ROOT)
+    try:
+        rel = path.relative_to(ROOT)
+    except ValueError:
+        rel = path.relative_to(ROOT.parent)
     return not any(part in EXCLUDED_PARTS for part in rel.parts)
 
 def main() -> None:

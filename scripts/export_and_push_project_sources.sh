@@ -13,5 +13,14 @@ ssh "$LAPTOP_TARGET" "mkdir -p ~/$REMOTE_DIR"
 
 scp "$BUNDLE" "$LAPTOP_TARGET:~/$REMOTE_DIR/"
 
+scp \
+  context/README_AI.md \
+  context/AI_PROTOCOL.md \
+  context/AI_TRANSACTION_PROTOCOL.md \
+  "$LAPTOP_TARGET:~/$REMOTE_DIR/"
+
 echo "Bundle pushed to:"
 echo "$LAPTOP_TARGET:~/$REMOTE_DIR/AIStack-Project-Sources.zip"
+
+echo "AI protocol files pushed to:"
+echo "$LAPTOP_TARGET:~/$REMOTE_DIR/"

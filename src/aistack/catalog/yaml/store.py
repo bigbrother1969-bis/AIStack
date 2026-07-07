@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from aistack.catalog.core import Catalog, CatalogItem
+from aistack.kernel.catalog import Catalog, CatalogItem
 
 
 def load_catalog_yaml(path: Path) -> Catalog:

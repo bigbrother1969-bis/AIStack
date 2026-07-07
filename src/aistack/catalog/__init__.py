@@ -1,4 +1,4 @@
-from aistack.catalog.core import Catalog, CatalogItem
+from aistack.kernel.catalog import Catalog, CatalogItem
 
 __all__ = [
     "Catalog",

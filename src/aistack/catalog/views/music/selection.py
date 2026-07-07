@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aistack.catalog.core import Catalog
+from aistack.kernel.catalog import Catalog
 from aistack.catalog.views.core import CatalogView, CatalogViewItem
 
 

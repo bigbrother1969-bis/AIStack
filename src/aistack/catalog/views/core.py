@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Protocol
 
-from aistack.catalog.core import Catalog
+from aistack.kernel.catalog import Catalog
 
 
 @dataclass(frozen=True)

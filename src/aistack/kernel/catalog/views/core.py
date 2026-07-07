@@ -20,10 +20,3 @@ class CatalogView:
     title: str
     items: list[CatalogViewItem]
     metadata: dict[str, str] = field(default_factory=dict)
-
-
-class CatalogViewEngine(Protocol):
-    """Build a purpose-specific view from a governed catalog."""
-
-    def build(self, catalog: Catalog) -> CatalogView:
-        ...

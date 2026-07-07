@@ -1,12 +1,3 @@
-from __future__ import annotations
+from aistack.kernel.contracts.selection import SelectionStrategy
 
-from typing import Protocol
-
-from aistack.kernel.catalog.views import CatalogView
-
-
-class SelectionStrategy(Protocol):
-    """Select item identifiers from a Catalog View."""
-
-    def select(self, view: CatalogView) -> list[str]:
-        ...
+__all__ = ["SelectionStrategy"]

@@ -57,3 +57,13 @@ The protocol evolves through explicit validation and governed improvements.
 The AI Collaboration Protocol is not a prompt.
 
 It is a governed component of the Knowledge Operating System.
+
+---
+
+# Perennial Rules
+
+When the user writes "Gravé", it always means that the validated concept becomes a permanent project rule.
+
+The AI shall determine the appropriate governed SPOT and generate the corresponding documentation transaction.
+
+A "Gravé" decision is never treated as a temporary discussion outcome or a conversational note.

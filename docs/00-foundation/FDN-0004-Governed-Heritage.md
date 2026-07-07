@@ -313,3 +313,39 @@ Every time a technology-specific concept is replaced by a generic governed conce
 The Kernel shall remain independent from technologies while technologies remain replaceable plugins around it.
 
 The engineering objective is to maximize generic concepts and minimize technology-specific knowledge inside the Kernel.
+
+---
+
+# Incremental Architecture Validation Principle
+
+## Principle
+
+A target architecture is not validated by its documentation alone.
+
+It is validated when it can be reached through a sequence of small, atomic, reversible changes while keeping the system operational after every step.
+
+## Rationale
+
+Large architectural rewrites introduce unnecessary risk because the system remains unvalidated until the very end.
+
+AIStack favors incremental architectural evolution.
+
+Each architectural step shall:
+
+- preserve operational behavior;
+- compile independently;
+- be validated using a real production workflow;
+- be committed atomically;
+- leave the repository in a releasable state.
+
+## Validation Example
+
+The first Kernel Migration demonstrated this principle.
+
+Generic concepts (Catalog, Catalog View, Selection, Selection Engine, Selection Strategies, Contracts and Kernel Context) were progressively extracted into the Kernel through a sequence of atomic migrations.
+
+After every migration step, the real Music -> Syncthing workflow continued to operate without regression.
+
+This validates that the Knowledge Operating System architecture can emerge incrementally while preserving a continuously functional system.
+
+This migration constitutes the first practical demonstration that the AIStack Knowledge Operating System is achievable through continuous architectural evolution rather than disruptive rewrites.

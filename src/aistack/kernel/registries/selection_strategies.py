@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from aistack.kernel.registry import Registry
-from aistack.selection.strategies import SelectionStrategy
+from aistack.kernel.selection.strategies import SelectionStrategy
 
 
 class SelectionStrategyRegistry(Registry[SelectionStrategy]):

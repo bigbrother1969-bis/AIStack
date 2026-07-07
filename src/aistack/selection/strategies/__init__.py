@@ -1,5 +1,4 @@
-from aistack.selection.strategies.by_ids import ByIdsSelectionStrategy
-from aistack.selection.strategies.core import SelectionStrategy
+from aistack.kernel.selection.strategies import ByIdsSelectionStrategy, SelectionStrategy
 
 __all__ = [
     "ByIdsSelectionStrategy",

@@ -118,3 +118,51 @@ It shall evolve according to the same engineering principles as the AIStack proj
 The protocol is not a prompt.
 
 It is a governed component of the Knowledge Operating System.
+
+---
+
+# Atomic Command Blocks
+
+Executable command sequences shall be generated as independent atomic blocks.
+
+No explanatory text, comments, or additional commands shall be embedded inside file generation blocks.
+
+Every generated file shall be delimited by a single opening and closing EOF marker.
+
+Git commands shall always appear after the file generation block.
+
+The AI shall ensure that executable command sequences cannot accidentally corrupt generated artifacts through mixed content.
+
+---
+
+# AI Transactions
+
+Every modification proposed by the AI shall be treated as a governed transaction.
+
+A transaction shall follow this lifecycle:
+
+1. Repository context
+2. Artifact generation or modification
+3. Validation
+4. Git staging
+5. Commit
+6. Push
+
+The AI shall generate complete transaction sequences whenever possible.
+
+A transaction shall be atomic, reproducible, and executable without manual reconstruction.
+
+---
+
+# Transaction Validation
+
+Before ending a transaction, the AI shall mentally verify that:
+
+- the repository context is correct;
+- every generated file is syntactically complete;
+- every EOF block is correctly closed;
+- Git commands are placed outside file generation blocks;
+- the complete transaction can be executed from top to bottom without modification.
+
+The AI shall never intentionally generate incomplete or interleaved transactions.
+

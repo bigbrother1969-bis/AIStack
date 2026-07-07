@@ -3,17 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 
-class DockerKnowledgeAssetBuilder:
-    """Build stable Docker Knowledge Assets from raw Docker observations."""
+class DockerRuntimeCatalogBuilder:
+    """Build canonical Docker infrastructure assets from raw observations."""
 
     def build(self, observation: dict[str, Any]) -> dict[str, Any]:
         docker = observation["docker"]
 
         return {
-            "asset_type": "docker_runtime_inventory",
+            "catalog_type": "docker_runtime_catalog",
             "source_provider": observation["provider"]["id"],
             "collected_at": observation["collected_at"],
-            "assets": {
+            "infrastructure_assets": {
                 "containers": self._containers(docker["containers"]),
                 "images": self._images(docker["images"]),
                 "networks": self._networks(docker["networks"]),
@@ -30,7 +30,6 @@ class DockerKnowledgeAssetBuilder:
                 "status": item.get("Status"),
                 "state": item.get("State"),
                 "ports": item.get("Ports"),
-                "compose_project": item.get("Label", ""),
             }
             for item in containers
         ]

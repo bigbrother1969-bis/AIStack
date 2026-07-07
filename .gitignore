@@ -1,38 +1,26 @@
 
-# Python
-__pycache__/
-*.pyc
-
-# Generated examples
-examples/render_engine/*.html
-
 # Generated catalogs
-examples/catalog_engine/music-library-catalog.yml
-
-# Generated selections
-examples/selection_engine/music-android-selection-real.yml
-
-# Local backups
-*.bak-*
-
-# Local secrets
-.env.selection-ui
-
-# Python generated files
-__pycache__/
-*.pyc
-
-# Generated reports
-reports/generated/
-
-# Python virtual environments
-.venv/
-
-# Python packaging
-*.egg-info/
-
 # Generated context bundles
-context/bundles/
-
+# Generated examples
+# Generated reports
+# Generated selections
+# Local backups
+# Local secrets
+# Python
+# Python generated files
+# Python packaging
+# Python virtual environments
 # Runtime logs
+*.bak-*
+*.egg-info/
+*.pyc
+.env
+.env.selection-ui
+.venv/
+__pycache__/
+context/bundles/
+examples/catalog_engine/music-library-catalog.yml
+examples/render_engine/*.html
+examples/selection_engine/music-android-selection-real.yml
 logs/*.log
+reports/generated/

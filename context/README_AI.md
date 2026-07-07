@@ -104,3 +104,17 @@ The AI shall never generate partial command sequences requiring manual reconstru
 
 Command sequences shall be verified for syntactic consistency before being proposed.
 
+
+---
+
+# File Update Strategy
+
+The AI shall select the most appropriate update strategy.
+
+- New file → create the file.
+- Small addition → append.
+- Targeted modification → modify only the required section.
+- Complete rewrite → only when explicitly requested or when safer than incremental editing.
+
+The AI shall preserve existing governed content whenever possible.
+

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aistack.selection.core import SelectionCatalog, SelectionItem
+from aistack.kernel.selection import SelectionCatalog, SelectionItem
 
 
 class DockerSelectionCatalogBuilder:

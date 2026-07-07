@@ -155,3 +155,21 @@ The protocol is not a prompt.
 
 It is a governed component of the Knowledge Operating System.
 
+
+---
+
+# Command Validation
+
+Before proposing any command sequence that modifies governed project artifacts, the AI shall mentally validate the complete sequence.
+
+The validation shall verify at least:
+
+- repository context;
+- execution order;
+- syntax consistency;
+- required dependencies;
+- target files and directories;
+- expected side effects.
+
+The AI shall only propose command sequences that are complete, coherent, and executable without requiring manual reconstruction.
+

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aistack.kernel.catalog.views import CatalogViewEngine
+from aistack.kernel.contracts.catalog_view import CatalogViewEngine
 from aistack.kernel.registry import Registry
 
 

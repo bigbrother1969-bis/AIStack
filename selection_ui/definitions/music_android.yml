@@ -1,0 +1,8 @@
+app_id: music_android
+title: Music Android Selection
+catalog_file: examples/catalog_engine/music-library-catalog.yml
+selection_file: examples/selection_engine/music-android-selection-real.yml
+generation_command:
+  - python3
+  - -m
+  - examples.generation_engine.generate_music_android_folder

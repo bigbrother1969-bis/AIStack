@@ -13,6 +13,8 @@ services:
     working_dir: /app
     env_file:
       - .env.selection-ui
+    environment:
+      - PYTHONPATH=/app/src:/app
     networks:
       - proxy
     restart: unless-stopped

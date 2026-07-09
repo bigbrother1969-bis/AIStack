@@ -1,72 +1,141 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8">
   <title>{{ definition.title }}</title>
   <style>
-    body { font-family: sans-serif; max-width: 1000px; margin: 2rem auto; }
+    body { font-family: sans-serif; max-width: 1400px; margin: 2rem auto; color: #1f2933; }
     header { margin-bottom: 1.5rem; }
-    .meta { color: #555; margin-bottom: 1rem; }
-    .toolbar { display: flex; gap: .5rem; margin: 1rem 0; flex-wrap: wrap; }
-    input[type="search"] { flex: 1; min-width: 260px; padding: .6rem; font-size: 1rem; }
-    .item { padding: .35rem 0; border-bottom: 1px solid #eee; }
-    button { padding: .6rem 1rem; font-size: .95rem; cursor: pointer; }
-    .save { margin: 1rem 0; font-weight: bold; }
+    .dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1rem 0 1.5rem; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; background: #fafafa; }
+    .label { color: #666; font-size: .85rem; }
+    .value { font-size: 1.5rem; font-weight: bold; margin-top: .3rem; }
+    .bar { height: 12px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-top: .7rem; }
+    .fill { height: 100%; background: #1f6feb; }
+    .fill.ok { background: #238636; }
+    .fill.warn { background: #d29922; }
+    .toolbar { display: flex; gap: .5rem; margin: 1rem 0; flex-wrap: wrap; align-items: center; }
+    input[type="search"] { flex: 1; min-width: 280px; padding: .7rem; font-size: 1rem; }
+    button { padding: .7rem 1rem; font-size: .95rem; cursor: pointer; border: 1px solid #bbb; border-radius: 6px; background: white; }
+    button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+    .notice { padding: .8rem 1rem; border-radius: 6px; background: #fff7d6; border: 1px solid #f0d36a; margin: 1rem 0; display: none; }
+    .status { padding: .8rem 1rem; border-radius: 6px; background: #e8f5e9; border: 1px solid #a5d6a7; margin: 1rem 0; }
+    #items { columns: 3 320px; column-gap: 1.5rem; }
+    .item { break-inside: avoid; display: grid; grid-template-columns: 28px 1fr; gap: .5rem; align-items: start; padding: .45rem .2rem; border-bottom: 1px solid #eee; }
+    .item:hover { background: #f7faff; }
+    .meta { color: #666; font-size: .82rem; }
+    .badge { display: inline-block; padding: .12rem .4rem; border-radius: 999px; font-size: .75rem; margin-left: .25rem; }
+    .badge.synced { background: #dff6dd; color: #116329; }
+    .badge.pending { background: #fff1cc; color: #7d4e00; }
+    .badge.removed { background: #ffe3e3; color: #8a1f1f; }
+    .footer-actions { margin: 1.5rem 0; }
   </style>
 </head>
 <body>
   <header>
-    <h1>{{ definition.title }}</h1>
-    <div class="meta">
-      Catalog: {{ catalog.catalog_id }} —
-      Items: <span id="total-count">{{ catalog.items|length }}</span> —
-      Selected: <span id="selected-count">{{ selected|length }}</span>
-    </div>
+    <h1>Synchroniser le smartphone</h1>
+    <p class="meta">{{ definition.title }} — Catalog: {{ catalog.catalog_id }}</p>
   </header>
 
   {% if status %}
-    <div class="meta"><strong>{{ status }}</strong></div>
+    <div class="status">{{ status }}</div>
   {% endif %}
 
-  <section class="meta">
-    <h2>Synchronization Status</h2>
+  <section class="dashboard">
+    <div class="card">
+      <div class="label">Catalogue</div>
+      <div class="value">{{ catalog.items | length }}</div>
+      <div class="meta">artistes disponibles</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Sélection</div>
+      <div class="value"><span id="selected-count">{{ selected | length }}</span></div>
+      <div class="bar"><div id="selected-bar" class="fill" style="width: {{ catalog_selected_percent }}%"></div></div>
+      <div class="meta"><span id="selected-percent">{{ catalog_selected_percent }}</span>% du catalogue</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Déjà synchronisés</div>
+      <div class="value">{{ synced | length }}</div>
+      <div class="bar"><div class="fill ok" style="width: {{ selected_synced_percent }}%"></div></div>
+      <div class="meta">{{ selected_synced_percent }}% de la sélection déjà présents</div>
+    </div>
+
+    <div class="card">
+      <div class="label">À appliquer</div>
+      <div class="value">{{ selected_pending | length }}</div>
+      <div class="meta">{{ synced_not_selected | length }} à retirer après régénération</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>État Syncthing</h2>
     {% if syncthing.available %}
-      <div>Folder: {{ syncthing.folder_id }}</div>
-      <div>State: <strong>{{ syncthing.state }}</strong></div>
-      <div>Local files: {{ syncthing.local_files }} — Global files: {{ syncthing.global_files }}</div>
-      <div>Need files: {{ syncthing.need_files }} — Need bytes: {{ syncthing.need_bytes }}</div>
+      <div>Folder: <strong>{{ syncthing.folder_id }}</strong></div>
+      <div>État: <strong>{{ syncthing.state }}</strong></div>
+      <div>Fichiers locaux: {{ syncthing.local_files }} — Fichiers globaux: {{ syncthing.global_files }}</div>
+      <div>Restants: {{ syncthing.need_files }} fichiers — {{ syncthing.need_bytes }} octets</div>
     {% else %}
-      <div><strong>Syncthing status unavailable:</strong> {{ syncthing.status }}</div>
+      <div>{{ syncthing.status }}</div>
     {% endif %}
   </section>
 
+  <div id="pending-notice" class="notice">
+    Modifications en attente — cliquer sur « Synchroniser le smartphone » pour appliquer.
+  </div>
+
   <div class="toolbar">
-    <input type="search" id="filter" placeholder="Filter items..." onkeyup="filterItems()">
-    <button type="button" onclick="selectVisible(true)">Select visible</button>
-    <button type="button" onclick="selectVisible(false)">Unselect visible</button>
-    <button type="button" onclick="invertVisible()">Invert visible</button>
+    <input type="search" id="filter" placeholder="Rechercher un artiste..." onkeyup="filterItems()">
+    <button type="button" onclick="selectVisible(true)">Tout sélectionner</button>
+    <button type="button" onclick="selectVisible(false)">Tout désélectionner</button>
+    <button type="button" onclick="invertVisible()">Inverser</button>
+    <button type="button" onclick="showOnly('synced')">Déjà synchronisés</button>
+    <button type="button" onclick="showOnly('pending')">À synchroniser</button>
+    <button type="button" onclick="showOnly('all')">Tout afficher</button>
   </div>
 
   <form method="post" action="/save">
-    <button class="save" type="submit">Save selection and regenerate</button>
+    <div class="footer-actions">
+      <button class="primary" type="submit">Synchroniser le smartphone</button>
+    </div>
 
     <div id="items">
       {% for item in catalog.items %}
-        <div class="item" data-label="{{ item.label|lower }}">
-          <label>
-            <input class="selector" type="checkbox" name="selected_ids" value="{{ item.id }}"
-              {% if item.id in selected %}checked{% endif %}
-              onchange="updateCounter()">
-            {{ item.label }}
-          </label>
+        {% set is_selected = item.id in selected %}
+        {% set is_synced = item.id in synced %}
+        <div class="item"
+             data-label="{{ (item.label or item.id) | lower }}"
+             data-synced="{{ '1' if is_synced else '0' }}"
+             data-pending="{{ '1' if is_selected and not is_synced else '0' }}">
+          <input class="selector" type="checkbox" name="selected_ids" value="{{ item.id }}"
+            {% if is_selected %}checked{% endif %}
+            onchange="markPending(); updateCounter()">
+          <div>
+            <strong>{{ item.label or item.id }}</strong>
+            {% if is_synced %}
+              <span class="badge synced">synchronisé</span>
+            {% endif %}
+            {% if is_selected and not is_synced %}
+              <span class="badge pending">à synchroniser</span>
+            {% endif %}
+            {% if is_synced and not is_selected %}
+              <span class="badge removed">à retirer</span>
+            {% endif %}
+            <div class="meta">{{ item.metadata.relative_path if item.metadata else item.id }}</div>
+          </div>
         </div>
       {% endfor %}
     </div>
 
-    <button class="save" type="submit">Save selection and regenerate</button>
+    <div class="footer-actions">
+      <button class="primary" type="submit">Synchroniser le smartphone</button>
+    </div>
   </form>
 
   <script>
+    const total = {{ catalog.items | length }};
+
     function visibleItems() {
       return Array.from(document.querySelectorAll(".item"))
         .filter(el => el.style.display !== "none");
@@ -74,7 +143,14 @@
 
     function updateCounter() {
       const selected = document.querySelectorAll(".selector:checked").length;
+      const percent = total ? Math.round((selected / total) * 1000) / 10 : 0;
       document.getElementById("selected-count").textContent = selected;
+      document.getElementById("selected-percent").textContent = percent;
+      document.getElementById("selected-bar").style.width = percent + "%";
+    }
+
+    function markPending() {
+      document.getElementById("pending-notice").style.display = "block";
     }
 
     function filterItems() {
@@ -88,6 +164,7 @@
       visibleItems().forEach(el => {
         el.querySelector(".selector").checked = value;
       });
+      markPending();
       updateCounter();
     }
 
@@ -96,7 +173,16 @@
         const checkbox = el.querySelector(".selector");
         checkbox.checked = !checkbox.checked;
       });
+      markPending();
       updateCounter();
+    }
+
+    function showOnly(mode) {
+      document.querySelectorAll(".item").forEach(el => {
+        if (mode === "all") el.style.display = "";
+        else if (mode === "synced") el.style.display = el.dataset.synced === "1" ? "" : "none";
+        else if (mode === "pending") el.style.display = el.dataset.pending === "1" ? "" : "none";
+      });
     }
 
     updateCounter();

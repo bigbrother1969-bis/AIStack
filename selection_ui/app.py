@@ -26,6 +26,17 @@ def load_app_definition() -> dict:
     return yaml.safe_load(APP_DEF.read_text(encoding="utf-8"))
 
 
+def get_synced_items(target_root: Path) -> set[str]:
+    if not target_root.exists():
+        return set()
+
+    return {
+        path.name
+        for path in target_root.iterdir()
+        if path.is_dir() and path.name != ".stfolder"
+    }
+
+
 def get_syncthing_status() -> dict:
     url = os.getenv("SYNCTHING_URL", "http://syncthing:8384").rstrip("/")
     api_key = os.getenv("SYNCTHING_API_KEY")
@@ -72,6 +83,11 @@ def index(request: Request):
     selection = load_selection_yaml(REPO_ROOT / definition["selection_file"])
     selected = set(selection.selected_ids) if selection else set()
 
+    synced = get_synced_items(Path("/media/TechData/Storage/Music-Android"))
+    selected_synced = selected & synced
+    selected_pending = selected - synced
+    synced_not_selected = synced - selected
+
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -79,6 +95,12 @@ def index(request: Request):
             "definition": definition,
             "catalog": catalog,
             "selected": selected,
+            "synced": synced,
+            "selected_synced": selected_synced,
+            "selected_pending": selected_pending,
+            "synced_not_selected": synced_not_selected,
+            "selected_synced_percent": round((len(selected_synced) / len(selected) * 100), 1) if selected else 100,
+            "catalog_selected_percent": round((len(selected) / len(catalog.items) * 100), 1) if catalog.items else 0,
             "status": request.query_params.get("status"),
             "syncthing": get_syncthing_status(),
         },

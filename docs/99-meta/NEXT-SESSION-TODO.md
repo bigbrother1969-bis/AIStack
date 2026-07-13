@@ -81,3 +81,84 @@ Before / After Verification
 ```
 
 This use case validates that technical debt is derived knowledge produced from observations, evidence and explicit policies rather than a subjective opinion.
+
+## Validation Use Case — Official Validation Suite
+
+The following scenarios constitute the first official validation suite of AIStack.
+
+### 1. Docker Runtime Discovery
+
+Objective:
+
+Demonstrate that AIStack can automatically discover, model and document a Docker infrastructure.
+
+Validated capabilities:
+
+- Runtime observation
+- Knowledge Catalog generation
+- Artifact generation
+- Infrastructure explanation
+
+---
+
+### 2. Context Bundle / Self-Onboarding
+
+Objective:
+
+Demonstrate that AIStack can transmit its governed knowledge to another AI instance.
+
+Validated capabilities:
+
+- Context Bundle generation
+- PROJECT-CONTEXT
+- NEXT-SESSION-TODO
+- Knowledge transfer
+- Self-Onboarding
+
+---
+
+### 3. Music Sync Selection Pipeline
+
+Objective:
+
+Demonstrate that the same Runtime architecture can orchestrate a business process rather than infrastructure only.
+
+Validated capabilities:
+
+- Selection Pipeline
+- Catalog
+- Artifact generation
+- User interaction
+- Regeneration
+
+---
+
+### 4. Sustainability & Technical Debt Analysis
+
+Objective:
+
+Demonstrate that AIStack can derive technical debt and sustainability issues from runtime observations.
+
+Reference incident:
+
+The Selection UI permanently consumed approximately 50% of one CPU core because Uvicorn was started with the development option `--reload`.
+
+AIStack must be able to:
+
+- observe the anomaly;
+- correlate process, container and deployment;
+- identify the root cause;
+- explain the reasoning;
+- recommend the correction;
+- verify the effectiveness of the remediation.
+
+Measured result:
+
+- before: approximately 48–58% CPU;
+- after: approximately 0.2% CPU.
+
+This validation demonstrates one of the core principles of Governed Heritage Engineering:
+
+> Technical debt is not an opinion.
+> It is derived knowledge produced from observations, evidence and explicit policies.
+

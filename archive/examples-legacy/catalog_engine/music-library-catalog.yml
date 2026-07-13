@@ -1,0 +1,1496 @@
+catalog_id: music-library
+title: Music Library
+metadata:
+  provider: filesystem.directory
+  root: /media/TechData/Storage/Music
+  exists: true
+  max_depth: 1
+items:
+- id: 50 Cent
+  label: 50 Cent
+  kind: directory
+  source: /media/TechData/Storage/Music/50 Cent
+  metadata:
+    relative_path: 50 Cent
+- id: AC  DC
+  label: AC  DC
+  kind: directory
+  source: /media/TechData/Storage/Music/AC  DC
+  metadata:
+    relative_path: AC  DC
+- id: Abd Al Malik
+  label: Abd Al Malik
+  kind: directory
+  source: /media/TechData/Storage/Music/Abd Al Malik
+  metadata:
+    relative_path: Abd Al Malik
+- id: Air
+  label: Air
+  kind: directory
+  source: /media/TechData/Storage/Music/Air
+  metadata:
+    relative_path: Air
+- id: Alain Bashung
+  label: Alain Bashung
+  kind: directory
+  source: /media/TechData/Storage/Music/Alain Bashung
+  metadata:
+    relative_path: Alain Bashung
+- id: Ali Farka Toure
+  label: Ali Farka Toure
+  kind: directory
+  source: /media/TechData/Storage/Music/Ali Farka Toure
+  metadata:
+    relative_path: Ali Farka Toure
+- id: Amel Bent
+  label: Amel Bent
+  kind: directory
+  source: /media/TechData/Storage/Music/Amel Bent
+  metadata:
+    relative_path: Amel Bent
+- id: Amy Whinehouse
+  label: Amy Whinehouse
+  kind: directory
+  source: /media/TechData/Storage/Music/Amy Whinehouse
+  metadata:
+    relative_path: Amy Whinehouse
+- id: Anais
+  label: Anais
+  kind: directory
+  source: /media/TechData/Storage/Music/Anais
+  metadata:
+    relative_path: Anais
+- id: Angelique Kidjo
+  label: Angelique Kidjo
+  kind: directory
+  source: /media/TechData/Storage/Music/Angelique Kidjo
+  metadata:
+    relative_path: Angelique Kidjo
+- id: Angie Stone
+  label: Angie Stone
+  kind: directory
+  source: /media/TechData/Storage/Music/Angie Stone
+  metadata:
+    relative_path: Angie Stone
+- id: Anis
+  label: Anis
+  kind: directory
+  source: /media/TechData/Storage/Music/Anis
+  metadata:
+    relative_path: Anis
+- id: Antony and the Johnsons
+  label: Antony and the Johnsons
+  kind: directory
+  source: /media/TechData/Storage/Music/Antony and the Johnsons
+  metadata:
+    relative_path: Antony and the Johnsons
+- id: Archive
+  label: Archive
+  kind: directory
+  source: /media/TechData/Storage/Music/Archive
+  metadata:
+    relative_path: Archive
+- id: Aretha Franklin
+  label: Aretha Franklin
+  kind: directory
+  source: /media/TechData/Storage/Music/Aretha Franklin
+  metadata:
+    relative_path: Aretha Franklin
+- id: Asa
+  label: Asa
+  kind: directory
+  source: /media/TechData/Storage/Music/Asa
+  metadata:
+    relative_path: Asa
+- id: Ashanti
+  label: Ashanti
+  kind: directory
+  source: /media/TechData/Storage/Music/Ashanti
+  metadata:
+    relative_path: Ashanti
+- id: Asian Dub Foundation
+  label: Asian Dub Foundation
+  kind: directory
+  source: /media/TechData/Storage/Music/Asian Dub Foundation
+  metadata:
+    relative_path: Asian Dub Foundation
+- id: Ayo
+  label: Ayo
+  kind: directory
+  source: /media/TechData/Storage/Music/Ayo
+  metadata:
+    relative_path: Ayo
+- id: Ballades Africaines
+  label: Ballades Africaines
+  kind: directory
+  source: /media/TechData/Storage/Music/Ballades Africaines
+  metadata:
+    relative_path: Ballades Africaines
+- id: Barbara
+  label: Barbara
+  kind: directory
+  source: /media/TechData/Storage/Music/Barbara
+  metadata:
+    relative_path: Barbara
+- id: Bebe
+  label: Bebe
+  kind: directory
+  source: /media/TechData/Storage/Music/Bebe
+  metadata:
+    relative_path: Bebe
+- id: Befa Africa 1
+  label: Befa Africa 1
+  kind: directory
+  source: /media/TechData/Storage/Music/Befa Africa 1
+  metadata:
+    relative_path: Befa Africa 1
+- id: Ben Harper
+  label: Ben Harper
+  kind: directory
+  source: /media/TechData/Storage/Music/Ben Harper
+  metadata:
+    relative_path: Ben Harper
+- id: Beyoncé
+  label: Beyoncé
+  kind: directory
+  source: /media/TechData/Storage/Music/Beyoncé
+  metadata:
+    relative_path: Beyoncé
+- id: Bjork
+  label: Bjork
+  kind: directory
+  source: /media/TechData/Storage/Music/Bjork
+  metadata:
+    relative_path: Bjork
+- id: Black Eyed Peas
+  label: Black Eyed Peas
+  kind: directory
+  source: /media/TechData/Storage/Music/Black Eyed Peas
+  metadata:
+    relative_path: Black Eyed Peas
+- id: Black Uhuru
+  label: Black Uhuru
+  kind: directory
+  source: /media/TechData/Storage/Music/Black Uhuru
+  metadata:
+    relative_path: Black Uhuru
+- id: Blondie
+  label: Blondie
+  kind: directory
+  source: /media/TechData/Storage/Music/Blondie
+  metadata:
+    relative_path: Blondie
+- id: Bob Dylan
+  label: Bob Dylan
+  kind: directory
+  source: /media/TechData/Storage/Music/Bob Dylan
+  metadata:
+    relative_path: Bob Dylan
+- id: Bob Marley and The Wailers
+  label: Bob Marley and The Wailers
+  kind: directory
+  source: /media/TechData/Storage/Music/Bob Marley and The Wailers
+  metadata:
+    relative_path: Bob Marley and The Wailers
+- id: Booba
+  label: Booba
+  kind: directory
+  source: /media/TechData/Storage/Music/Booba
+  metadata:
+    relative_path: Booba
+- id: Boris Vian
+  label: Boris Vian
+  kind: directory
+  source: /media/TechData/Storage/Music/Boris Vian
+  metadata:
+    relative_path: Boris Vian
+- id: Brandy
+  label: Brandy
+  kind: directory
+  source: /media/TechData/Storage/Music/Brandy
+  metadata:
+    relative_path: Brandy
+- id: Bruce Springsteen
+  label: Bruce Springsteen
+  kind: directory
+  source: /media/TechData/Storage/Music/Bruce Springsteen
+  metadata:
+    relative_path: Bruce Springsteen
+- id: Bénabar
+  label: Bénabar
+  kind: directory
+  source: /media/TechData/Storage/Music/Bénabar
+  metadata:
+    relative_path: Bénabar
+- id: Cali
+  label: Cali
+  kind: directory
+  source: /media/TechData/Storage/Music/Cali
+  metadata:
+    relative_path: Cali
+- id: Camille
+  label: Camille
+  kind: directory
+  source: /media/TechData/Storage/Music/Camille
+  metadata:
+    relative_path: Camille
+- id: Carla Bruni
+  label: Carla Bruni
+  kind: directory
+  source: /media/TechData/Storage/Music/Carla Bruni
+  metadata:
+    relative_path: Carla Bruni
+- id: Charlie Winston
+  label: Charlie Winston
+  kind: directory
+  source: /media/TechData/Storage/Music/Charlie Winston
+  metadata:
+    relative_path: Charlie Winston
+- id: Cibelle
+  label: Cibelle
+  kind: directory
+  source: /media/TechData/Storage/Music/Cibelle
+  metadata:
+    relative_path: Cibelle
+- id: Clarika
+  label: Clarika
+  kind: directory
+  source: /media/TechData/Storage/Music/Clarika
+  metadata:
+    relative_path: Clarika
+- id: Classique
+  label: Classique
+  kind: directory
+  source: /media/TechData/Storage/Music/Classique
+  metadata:
+    relative_path: Classique
+- id: Claude François
+  label: Claude François
+  kind: directory
+  source: /media/TechData/Storage/Music/Claude François
+  metadata:
+    relative_path: Claude François
+- id: Colbie Caillat
+  label: Colbie Caillat
+  kind: directory
+  source: /media/TechData/Storage/Music/Colbie Caillat
+  metadata:
+    relative_path: Colbie Caillat
+- id: Coldcut
+  label: Coldcut
+  kind: directory
+  source: /media/TechData/Storage/Music/Coldcut
+  metadata:
+    relative_path: Coldcut
+- id: Corneille
+  label: Corneille
+  kind: directory
+  source: /media/TechData/Storage/Music/Corneille
+  metadata:
+    relative_path: Corneille
+- id: Craig David
+  label: Craig David
+  kind: directory
+  source: /media/TechData/Storage/Music/Craig David
+  metadata:
+    relative_path: Craig David
+- id: Céline Dion
+  label: Céline Dion
+  kind: directory
+  source: /media/TechData/Storage/Music/Céline Dion
+  metadata:
+    relative_path: Céline Dion
+- id: Césaria Évora
+  label: Césaria Évora
+  kind: directory
+  source: /media/TechData/Storage/Music/Césaria Évora
+  metadata:
+    relative_path: Césaria Évora
+- id: David Bowie
+  label: David Bowie
+  kind: directory
+  source: /media/TechData/Storage/Music/David Bowie
+  metadata:
+    relative_path: David Bowie
+- id: De La Soul
+  label: De La Soul
+  kind: directory
+  source: /media/TechData/Storage/Music/De La Soul
+  metadata:
+    relative_path: De La Soul
+- id: Des'ree
+  label: Des'ree
+  kind: directory
+  source: /media/TechData/Storage/Music/Des'ree
+  metadata:
+    relative_path: Des'ree
+- id: Destiny's child
+  label: Destiny's child
+  kind: directory
+  source: /media/TechData/Storage/Music/Destiny's child
+  metadata:
+    relative_path: Destiny's child
+- id: Diam's
+  label: Diam's
+  kind: directory
+  source: /media/TechData/Storage/Music/Diam's
+  metadata:
+    relative_path: Diam's
+- id: Diana Ross & The Supremes
+  label: Diana Ross & The Supremes
+  kind: directory
+  source: /media/TechData/Storage/Music/Diana Ross & The Supremes
+  metadata:
+    relative_path: Diana Ross & The Supremes
+- id: Dick Annegarn
+  label: Dick Annegarn
+  kind: directory
+  source: /media/TechData/Storage/Music/Dick Annegarn
+  metadata:
+    relative_path: Dick Annegarn
+- id: Dido
+  label: Dido
+  kind: directory
+  source: /media/TechData/Storage/Music/Dido
+  metadata:
+    relative_path: Dido
+- id: Dominique A
+  label: Dominique A
+  kind: directory
+  source: /media/TechData/Storage/Music/Dominique A
+  metadata:
+    relative_path: Dominique A
+- id: Dupain
+  label: Dupain
+  kind: directory
+  source: /media/TechData/Storage/Music/Dupain
+  metadata:
+    relative_path: Dupain
+- id: Eddy Mitchell
+  label: Eddy Mitchell
+  kind: directory
+  source: /media/TechData/Storage/Music/Eddy Mitchell
+  metadata:
+    relative_path: Eddy Mitchell
+- id: Edith Piaf
+  label: Edith Piaf
+  kind: directory
+  source: /media/TechData/Storage/Music/Edith Piaf
+  metadata:
+    relative_path: Edith Piaf
+- id: Eels
+  label: Eels
+  kind: directory
+  source: /media/TechData/Storage/Music/Eels
+  metadata:
+    relative_path: Eels
+- id: Elastica
+  label: Elastica
+  kind: directory
+  source: /media/TechData/Storage/Music/Elastica
+  metadata:
+    relative_path: Elastica
+- id: Emily Loizeau
+  label: Emily Loizeau
+  kind: directory
+  source: /media/TechData/Storage/Music/Emily Loizeau
+  metadata:
+    relative_path: Emily Loizeau
+- id: Eminem
+  label: Eminem
+  kind: directory
+  source: /media/TechData/Storage/Music/Eminem
+  metadata:
+    relative_path: Eminem
+- id: Eric Clapton
+  label: Eric Clapton
+  kind: directory
+  source: /media/TechData/Storage/Music/Eric Clapton
+  metadata:
+    relative_path: Eric Clapton
+- id: Eurythmics
+  label: Eurythmics
+  kind: directory
+  source: /media/TechData/Storage/Music/Eurythmics
+  metadata:
+    relative_path: Eurythmics
+- id: Eve
+  label: Eve
+  kind: directory
+  source: /media/TechData/Storage/Music/Eve
+  metadata:
+    relative_path: Eve
+- id: F.F.F - Fédération Française de Funk - Discographie
+  label: F.F.F - Fédération Française de Funk - Discographie
+  kind: directory
+  source: /media/TechData/Storage/Music/F.F.F - Fédération Française de Funk - Discographie
+  metadata:
+    relative_path: F.F.F - Fédération Française de Funk - Discographie
+- id: Fatboy Slim
+  label: Fatboy Slim
+  kind: directory
+  source: /media/TechData/Storage/Music/Fatboy Slim
+  metadata:
+    relative_path: Fatboy Slim
+- id: Fela Kuti
+  label: Fela Kuti
+  kind: directory
+  source: /media/TechData/Storage/Music/Fela Kuti
+  metadata:
+    relative_path: Fela Kuti
+- id: Fiona Apple
+  label: Fiona Apple
+  kind: directory
+  source: /media/TechData/Storage/Music/Fiona Apple
+  metadata:
+    relative_path: Fiona Apple
+- id: Florent Pagny
+  label: Florent Pagny
+  kind: directory
+  source: /media/TechData/Storage/Music/Florent Pagny
+  metadata:
+    relative_path: Florent Pagny
+- id: Freddie Mercury
+  label: Freddie Mercury
+  kind: directory
+  source: /media/TechData/Storage/Music/Freddie Mercury
+  metadata:
+    relative_path: Freddie Mercury
+- id: Georges Brassens
+  label: Georges Brassens
+  kind: directory
+  source: /media/TechData/Storage/Music/Georges Brassens
+  metadata:
+    relative_path: Georges Brassens
+- id: Ghost in the Shell OST Collection
+  label: Ghost in the Shell OST Collection
+  kind: directory
+  source: /media/TechData/Storage/Music/Ghost in the Shell OST Collection
+  metadata:
+    relative_path: Ghost in the Shell OST Collection
+- id: Gorillaz
+  label: Gorillaz
+  kind: directory
+  source: /media/TechData/Storage/Music/Gorillaz
+  metadata:
+    relative_path: Gorillaz
+- id: Gossip
+  label: Gossip
+  kind: directory
+  source: /media/TechData/Storage/Music/Gossip
+  metadata:
+    relative_path: Gossip
+- id: Gotan Project
+  label: Gotan Project
+  kind: directory
+  source: /media/TechData/Storage/Music/Gotan Project
+  metadata:
+    relative_path: Gotan Project
+- id: Grace Jones
+  label: Grace Jones
+  kind: directory
+  source: /media/TechData/Storage/Music/Grace Jones
+  metadata:
+    relative_path: Grace Jones
+- id: Grand Corps Malade
+  label: Grand Corps Malade
+  kind: directory
+  source: /media/TechData/Storage/Music/Grand Corps Malade
+  metadata:
+    relative_path: Grand Corps Malade
+- id: Gwen Stefani
+  label: Gwen Stefani
+  kind: directory
+  source: /media/TechData/Storage/Music/Gwen Stefani
+  metadata:
+    relative_path: Gwen Stefani
+- id: Gérard Manset
+  label: Gérard Manset
+  kind: directory
+  source: /media/TechData/Storage/Music/Gérard Manset
+  metadata:
+    relative_path: Gérard Manset
+- id: Henri Salvador
+  label: Henri Salvador
+  kind: directory
+  source: /media/TechData/Storage/Music/Henri Salvador
+  metadata:
+    relative_path: Henri Salvador
+- id: Hubert-Félix Thiéfaine
+  label: Hubert-Félix Thiéfaine
+  kind: directory
+  source: /media/TechData/Storage/Music/Hubert-Félix Thiéfaine
+  metadata:
+    relative_path: Hubert-Félix Thiéfaine
+- id: Hélène Ségara
+  label: Hélène Ségara
+  kind: directory
+  source: /media/TechData/Storage/Music/Hélène Ségara
+  metadata:
+    relative_path: Hélène Ségara
+- id: Ibeyi
+  label: Ibeyi
+  kind: directory
+  source: /media/TechData/Storage/Music/Ibeyi
+  metadata:
+    relative_path: Ibeyi
+- id: Ibrahim Ferrer
+  label: Ibrahim Ferrer
+  kind: directory
+  source: /media/TechData/Storage/Music/Ibrahim Ferrer
+  metadata:
+    relative_path: Ibrahim Ferrer
+- id: Iggy Pop & The Stooges
+  label: Iggy Pop & The Stooges
+  kind: directory
+  source: /media/TechData/Storage/Music/Iggy Pop & The Stooges
+  metadata:
+    relative_path: Iggy Pop & The Stooges
+- id: Imagine Dragons
+  label: Imagine Dragons
+  kind: directory
+  source: /media/TechData/Storage/Music/Imagine Dragons
+  metadata:
+    relative_path: Imagine Dragons
+- id: Jacques Brel
+  label: Jacques Brel
+  kind: directory
+  source: /media/TechData/Storage/Music/Jacques Brel
+  metadata:
+    relative_path: Jacques Brel
+- id: Jacques Higelin
+  label: Jacques Higelin
+  kind: directory
+  source: /media/TechData/Storage/Music/Jacques Higelin
+  metadata:
+    relative_path: Jacques Higelin
+- id: Jain
+  label: Jain
+  kind: directory
+  source: /media/TechData/Storage/Music/Jain
+  metadata:
+    relative_path: Jain
+- id: James Blunt
+  label: James Blunt
+  kind: directory
+  source: /media/TechData/Storage/Music/James Blunt
+  metadata:
+    relative_path: James Blunt
+- id: James Brown
+  label: James Brown
+  kind: directory
+  source: /media/TechData/Storage/Music/James Brown
+  metadata:
+    relative_path: James Brown
+- id: Janis Joplin
+  label: Janis Joplin
+  kind: directory
+  source: /media/TechData/Storage/Music/Janis Joplin
+  metadata:
+    relative_path: Janis Joplin
+- id: Jason Mraz
+  label: Jason Mraz
+  kind: directory
+  source: /media/TechData/Storage/Music/Jason Mraz
+  metadata:
+    relative_path: Jason Mraz
+- id: Jean-Louis Murat
+  label: Jean-Louis Murat
+  kind: directory
+  source: /media/TechData/Storage/Music/Jean-Louis Murat
+  metadata:
+    relative_path: Jean-Louis Murat
+- id: Jennifer Hudson
+  label: Jennifer Hudson
+  kind: directory
+  source: /media/TechData/Storage/Music/Jennifer Hudson
+  metadata:
+    relative_path: Jennifer Hudson
+- id: Jennifer Lopez
+  label: Jennifer Lopez
+  kind: directory
+  source: /media/TechData/Storage/Music/Jennifer Lopez
+  metadata:
+    relative_path: Jennifer Lopez
+- id: Jimi Hendrix
+  label: Jimi Hendrix
+  kind: directory
+  source: /media/TechData/Storage/Music/Jimi Hendrix
+  metadata:
+    relative_path: Jimi Hendrix
+- id: Joe Dassin
+  label: Joe Dassin
+  kind: directory
+  source: /media/TechData/Storage/Music/Joe Dassin
+  metadata:
+    relative_path: Joe Dassin
+- id: John Lee Hooker
+  label: John Lee Hooker
+  kind: directory
+  source: /media/TechData/Storage/Music/John Lee Hooker
+  metadata:
+    relative_path: John Lee Hooker
+- id: John Lennon
+  label: John Lennon
+  kind: directory
+  source: /media/TechData/Storage/Music/John Lennon
+  metadata:
+    relative_path: John Lennon
+- id: Johnny Cash
+  label: Johnny Cash
+  kind: directory
+  source: /media/TechData/Storage/Music/Johnny Cash
+  metadata:
+    relative_path: Johnny Cash
+- id: Johnny Clegg et Savuka
+  label: Johnny Clegg et Savuka
+  kind: directory
+  source: /media/TechData/Storage/Music/Johnny Clegg et Savuka
+  metadata:
+    relative_path: Johnny Clegg et Savuka
+- id: Julien Clerc
+  label: Julien Clerc
+  kind: directory
+  source: /media/TechData/Storage/Music/Julien Clerc
+  metadata:
+    relative_path: Julien Clerc
+- id: Justin Timberlake
+  label: Justin Timberlake
+  kind: directory
+  source: /media/TechData/Storage/Music/Justin Timberlake
+  metadata:
+    relative_path: Justin Timberlake
+- id: KT Tunstall
+  label: KT Tunstall
+  kind: directory
+  source: /media/TechData/Storage/Music/KT Tunstall
+  metadata:
+    relative_path: KT Tunstall
+- id: Kate Bush
+  label: Kate Bush
+  kind: directory
+  source: /media/TechData/Storage/Music/Kate Bush
+  metadata:
+    relative_path: Kate Bush
+- id: Katy Perry
+  label: Katy Perry
+  kind: directory
+  source: /media/TechData/Storage/Music/Katy Perry
+  metadata:
+    relative_path: Katy Perry
+- id: Kery James
+  label: Kery James
+  kind: directory
+  source: /media/TechData/Storage/Music/Kery James
+  metadata:
+    relative_path: Kery James
+- id: Keziah Jones
+  label: Keziah Jones
+  kind: directory
+  source: /media/TechData/Storage/Music/Keziah Jones
+  metadata:
+    relative_path: Keziah Jones
+- id: Khadja Nin
+  label: Khadja Nin
+  kind: directory
+  source: /media/TechData/Storage/Music/Khadja Nin
+  metadata:
+    relative_path: Khadja Nin
+- id: Klaus Nomi
+  label: Klaus Nomi
+  kind: directory
+  source: /media/TechData/Storage/Music/Klaus Nomi
+  metadata:
+    relative_path: Klaus Nomi
+- id: Lara Fabian
+  label: Lara Fabian
+  kind: directory
+  source: /media/TechData/Storage/Music/Lara Fabian
+  metadata:
+    relative_path: Lara Fabian
+- id: Laura Pausini
+  label: Laura Pausini
+  kind: directory
+  source: /media/TechData/Storage/Music/Laura Pausini
+  metadata:
+    relative_path: Laura Pausini
+- id: Led Zeppelin
+  label: Led Zeppelin
+  kind: directory
+  source: /media/TechData/Storage/Music/Led Zeppelin
+  metadata:
+    relative_path: Led Zeppelin
+- id: Leonard Cohen
+  label: Leonard Cohen
+  kind: directory
+  source: /media/TechData/Storage/Music/Leonard Cohen
+  metadata:
+    relative_path: Leonard Cohen
+- id: Les Cowboys Fringants
+  label: Les Cowboys Fringants
+  kind: directory
+  source: /media/TechData/Storage/Music/Les Cowboys Fringants
+  metadata:
+    relative_path: Les Cowboys Fringants
+- id: Les Négresses Vertes
+  label: Les Négresses Vertes
+  kind: directory
+  source: /media/TechData/Storage/Music/Les Négresses Vertes
+  metadata:
+    relative_path: Les Négresses Vertes
+- id: Les Rita Mitsouko
+  label: Les Rita Mitsouko
+  kind: directory
+  source: /media/TechData/Storage/Music/Les Rita Mitsouko
+  metadata:
+    relative_path: Les Rita Mitsouko
+- id: Lionel Ritchie
+  label: Lionel Ritchie
+  kind: directory
+  source: /media/TechData/Storage/Music/Lionel Ritchie
+  metadata:
+    relative_path: Lionel Ritchie
+- id: Little Richard
+  label: Little Richard
+  kind: directory
+  source: /media/TechData/Storage/Music/Little Richard
+  metadata:
+    relative_path: Little Richard
+- id: London Grammar
+  label: London Grammar
+  kind: directory
+  source: /media/TechData/Storage/Music/London Grammar
+  metadata:
+    relative_path: London Grammar
+- id: Lou Reed
+  label: Lou Reed
+  kind: directory
+  source: /media/TechData/Storage/Music/Lou Reed
+  metadata:
+    relative_path: Lou Reed
+- id: Louane
+  label: Louane
+  kind: directory
+  source: /media/TechData/Storage/Music/Louane
+  metadata:
+    relative_path: Louane
+- id: Louis Armstrong
+  label: Louis Armstrong
+  kind: directory
+  source: /media/TechData/Storage/Music/Louis Armstrong
+  metadata:
+    relative_path: Louis Armstrong
+- id: Louise Attaque
+  label: Louise Attaque
+  kind: directory
+  source: /media/TechData/Storage/Music/Louise Attaque
+  metadata:
+    relative_path: Louise Attaque
+- id: Ludacris
+  label: Ludacris
+  kind: directory
+  source: /media/TechData/Storage/Music/Ludacris
+  metadata:
+    relative_path: Ludacris
+- id: Léo Ferré
+  label: Léo Ferré
+  kind: directory
+  source: /media/TechData/Storage/Music/Léo Ferré
+  metadata:
+    relative_path: Léo Ferré
+- id: M (Mathieu Chedid)
+  label: M (Mathieu Chedid)
+  kind: directory
+  source: /media/TechData/Storage/Music/M (Mathieu Chedid)
+  metadata:
+    relative_path: M (Mathieu Chedid)
+- id: MC Solaar
+  label: MC Solaar
+  kind: directory
+  source: /media/TechData/Storage/Music/MC Solaar
+  metadata:
+    relative_path: MC Solaar
+- id: Madonna
+  label: Madonna
+  kind: directory
+  source: /media/TechData/Storage/Music/Madonna
+  metadata:
+    relative_path: Madonna
+- id: Magma - 18 albums - Mp3 320 kbs
+  label: Magma - 18 albums - Mp3 320 kbs
+  kind: directory
+  source: /media/TechData/Storage/Music/Magma - 18 albums - Mp3 320 kbs
+  metadata:
+    relative_path: Magma - 18 albums - Mp3 320 kbs
+- id: Mano Negra
+  label: Mano Negra
+  kind: directory
+  source: /media/TechData/Storage/Music/Mano Negra
+  metadata:
+    relative_path: Mano Negra
+- id: Manu Chao
+  label: Manu Chao
+  kind: directory
+  source: /media/TechData/Storage/Music/Manu Chao
+  metadata:
+    relative_path: Manu Chao
+- id: Mariah Carey
+  label: Mariah Carey
+  kind: directory
+  source: /media/TechData/Storage/Music/Mariah Carey
+  metadata:
+    relative_path: Mariah Carey
+- id: Marvin Gaye
+  label: Marvin Gaye
+  kind: directory
+  source: /media/TechData/Storage/Music/Marvin Gaye
+  metadata:
+    relative_path: Marvin Gaye
+- id: Mary J Blige
+  label: Mary J Blige
+  kind: directory
+  source: /media/TechData/Storage/Music/Mary J Blige
+  metadata:
+    relative_path: Mary J Blige
+- id: Massive Attack
+  label: Massive Attack
+  kind: directory
+  source: /media/TechData/Storage/Music/Massive Attack
+  metadata:
+    relative_path: Massive Attack
+- id: Mathis and the Mathematiks
+  label: Mathis and the Mathematiks
+  kind: directory
+  source: /media/TechData/Storage/Music/Mathis and the Mathematiks
+  metadata:
+    relative_path: Mathis and the Mathematiks
+- id: Matoub Lounes
+  label: Matoub Lounes
+  kind: directory
+  source: /media/TechData/Storage/Music/Matoub Lounes
+  metadata:
+    relative_path: Matoub Lounes
+- id: Michael Jackson
+  label: Michael Jackson
+  kind: directory
+  source: /media/TechData/Storage/Music/Michael Jackson
+  metadata:
+    relative_path: Michael Jackson
+- id: Mickey 3D
+  label: Mickey 3D
+  kind: directory
+  source: /media/TechData/Storage/Music/Mickey 3D
+  metadata:
+    relative_path: Mickey 3D
+- id: Midnight Oil
+  label: Midnight Oil
+  kind: directory
+  source: /media/TechData/Storage/Music/Midnight Oil
+  metadata:
+    relative_path: Midnight Oil
+- id: Missy Elliot
+  label: Missy Elliot
+  kind: directory
+  source: /media/TechData/Storage/Music/Missy Elliot
+  metadata:
+    relative_path: Missy Elliot
+- id: Moby
+  label: Moby
+  kind: directory
+  source: /media/TechData/Storage/Music/Moby
+  metadata:
+    relative_path: Moby
+- id: Mory Kante
+  label: Mory Kante
+  kind: directory
+  source: /media/TechData/Storage/Music/Mory Kante
+  metadata:
+    relative_path: Mory Kante
+- id: Muse
+  label: Muse
+  kind: directory
+  source: /media/TechData/Storage/Music/Muse
+  metadata:
+    relative_path: Muse
+- id: Nana Mouskouri
+  label: Nana Mouskouri
+  kind: directory
+  source: /media/TechData/Storage/Music/Nana Mouskouri
+  metadata:
+    relative_path: Nana Mouskouri
+- id: Nelly Furtado
+  label: Nelly Furtado
+  kind: directory
+  source: /media/TechData/Storage/Music/Nelly Furtado
+  metadata:
+    relative_path: Nelly Furtado
+- id: Neneh Cherry
+  label: Neneh Cherry
+  kind: directory
+  source: /media/TechData/Storage/Music/Neneh Cherry
+  metadata:
+    relative_path: Neneh Cherry
+- id: Nick Cave & The Bad Seeds
+  label: Nick Cave & The Bad Seeds
+  kind: directory
+  source: /media/TechData/Storage/Music/Nick Cave & The Bad Seeds
+  metadata:
+    relative_path: Nick Cave & The Bad Seeds
+- id: Nirvana
+  label: Nirvana
+  kind: directory
+  source: /media/TechData/Storage/Music/Nirvana
+  metadata:
+    relative_path: Nirvana
+- id: No One Is Innocent
+  label: No One Is Innocent
+  kind: directory
+  source: /media/TechData/Storage/Music/No One Is Innocent
+  metadata:
+    relative_path: No One Is Innocent
+- id: Noir Désir
+  label: Noir Désir
+  kind: directory
+  source: /media/TechData/Storage/Music/Noir Désir
+  metadata:
+    relative_path: Noir Désir
+- id: Norah Jones
+  label: Norah Jones
+  kind: directory
+  source: /media/TechData/Storage/Music/Norah Jones
+  metadata:
+    relative_path: Norah Jones
+- id: Nougaro
+  label: Nougaro
+  kind: directory
+  source: /media/TechData/Storage/Music/Nougaro
+  metadata:
+    relative_path: Nougaro
+- id: Oliver Mtukudzi
+  label: Oliver Mtukudzi
+  kind: directory
+  source: /media/TechData/Storage/Music/Oliver Mtukudzi
+  metadata:
+    relative_path: Oliver Mtukudzi
+- id: Orelsan
+  label: Orelsan
+  kind: directory
+  source: /media/TechData/Storage/Music/Orelsan
+  metadata:
+    relative_path: Orelsan
+- id: Otis Redding
+  label: Otis Redding
+  kind: directory
+  source: /media/TechData/Storage/Music/Otis Redding
+  metadata:
+    relative_path: Otis Redding
+- id: Outkast
+  label: Outkast
+  kind: directory
+  source: /media/TechData/Storage/Music/Outkast
+  metadata:
+    relative_path: Outkast
+- id: P!nk
+  label: P!nk
+  kind: directory
+  source: /media/TechData/Storage/Music/P!nk
+  metadata:
+    relative_path: P!nk
+- id: PJ Harvey
+  label: PJ Harvey
+  kind: directory
+  source: /media/TechData/Storage/Music/PJ Harvey
+  metadata:
+    relative_path: PJ Harvey
+- id: Patti Smith
+  label: Patti Smith
+  kind: directory
+  source: /media/TechData/Storage/Music/Patti Smith
+  metadata:
+    relative_path: Patti Smith
+- id: Paul Simon
+  label: Paul Simon
+  kind: directory
+  source: /media/TechData/Storage/Music/Paul Simon
+  metadata:
+    relative_path: Paul Simon
+- id: Paul Simon & Art Garfunkel
+  label: Paul Simon & Art Garfunkel
+  kind: directory
+  source: /media/TechData/Storage/Music/Paul Simon & Art Garfunkel
+  metadata:
+    relative_path: Paul Simon & Art Garfunkel
+- id: Peter Gabriel
+  label: Peter Gabriel
+  kind: directory
+  source: /media/TechData/Storage/Music/Peter Gabriel
+  metadata:
+    relative_path: Peter Gabriel
+- id: Phil Collins
+  label: Phil Collins
+  kind: directory
+  source: /media/TechData/Storage/Music/Phil Collins
+  metadata:
+    relative_path: Phil Collins
+- id: Pink Floyd
+  label: Pink Floyd
+  kind: directory
+  source: /media/TechData/Storage/Music/Pink Floyd
+  metadata:
+    relative_path: Pink Floyd
+- id: Port de Boucan
+  label: Port de Boucan
+  kind: directory
+  source: /media/TechData/Storage/Music/Port de Boucan
+  metadata:
+    relative_path: Port de Boucan
+- id: Portishead
+  label: Portishead
+  kind: directory
+  source: /media/TechData/Storage/Music/Portishead
+  metadata:
+    relative_path: Portishead
+- id: Puff Daddy
+  label: Puff Daddy
+  kind: directory
+  source: /media/TechData/Storage/Music/Puff Daddy
+  metadata:
+    relative_path: Puff Daddy
+- id: Queen
+  label: Queen
+  kind: directory
+  source: /media/TechData/Storage/Music/Queen
+  metadata:
+    relative_path: Queen
+- id: R Kelly
+  label: R Kelly
+  kind: directory
+  source: /media/TechData/Storage/Music/R Kelly
+  metadata:
+    relative_path: R Kelly
+- id: R.E.M
+  label: R.E.M
+  kind: directory
+  source: /media/TechData/Storage/Music/R.E.M
+  metadata:
+    relative_path: R.E.M
+- id: Rachid Taha
+  label: Rachid Taha
+  kind: directory
+  source: /media/TechData/Storage/Music/Rachid Taha
+  metadata:
+    relative_path: Rachid Taha
+- id: Radiohead
+  label: Radiohead
+  kind: directory
+  source: /media/TechData/Storage/Music/Radiohead
+  metadata:
+    relative_path: Radiohead
+- id: Rage Against The Machine
+  label: Rage Against The Machine
+  kind: directory
+  source: /media/TechData/Storage/Music/Rage Against The Machine
+  metadata:
+    relative_path: Rage Against The Machine
+- id: Rail Band - Mory Kante & Salif Keita
+  label: Rail Band - Mory Kante & Salif Keita
+  kind: directory
+  source: /media/TechData/Storage/Music/Rail Band - Mory Kante & Salif Keita
+  metadata:
+    relative_path: Rail Band - Mory Kante & Salif Keita
+- id: Ray Charles
+  label: Ray Charles
+  kind: directory
+  source: /media/TechData/Storage/Music/Ray Charles
+  metadata:
+    relative_path: Ray Charles
+- id: Red Hot Chili Peppers
+  label: Red Hot Chili Peppers
+  kind: directory
+  source: /media/TechData/Storage/Music/Red Hot Chili Peppers
+  metadata:
+    relative_path: Red Hot Chili Peppers
+- id: Renan Luce
+  label: Renan Luce
+  kind: directory
+  source: /media/TechData/Storage/Music/Renan Luce
+  metadata:
+    relative_path: Renan Luce
+- id: Richard Bona
+  label: Richard Bona
+  kind: directory
+  source: /media/TechData/Storage/Music/Richard Bona
+  metadata:
+    relative_path: Richard Bona
+- id: Richard Gotainer
+  label: Richard Gotainer
+  kind: directory
+  source: /media/TechData/Storage/Music/Richard Gotainer
+  metadata:
+    relative_path: Richard Gotainer
+- id: Robbie Williams
+  label: Robbie Williams
+  kind: directory
+  source: /media/TechData/Storage/Music/Robbie Williams
+  metadata:
+    relative_path: Robbie Williams
+- id: Roch Voisine
+  label: Roch Voisine
+  kind: directory
+  source: /media/TechData/Storage/Music/Roch Voisine
+  metadata:
+    relative_path: Roch Voisine
+- id: Rokia Traoré
+  label: Rokia Traoré
+  kind: directory
+  source: /media/TechData/Storage/Music/Rokia Traoré
+  metadata:
+    relative_path: Rokia Traoré
+- id: Run DMC
+  label: Run DMC
+  kind: directory
+  source: /media/TechData/Storage/Music/Run DMC
+  metadata:
+    relative_path: Run DMC
+- id: Sade
+  label: Sade
+  kind: directory
+  source: /media/TechData/Storage/Music/Sade
+  metadata:
+    relative_path: Sade
+- id: Salif Keita
+  label: Salif Keita
+  kind: directory
+  source: /media/TechData/Storage/Music/Salif Keita
+  metadata:
+    relative_path: Salif Keita
+- id: Sandra Nkaké
+  label: Sandra Nkaké
+  kind: directory
+  source: /media/TechData/Storage/Music/Sandra Nkaké
+  metadata:
+    relative_path: Sandra Nkaké
+- id: Seal
+  label: Seal
+  kind: directory
+  source: /media/TechData/Storage/Music/Seal
+  metadata:
+    relative_path: Seal
+- id: Serge Gainsbourg
+  label: Serge Gainsbourg
+  kind: directory
+  source: /media/TechData/Storage/Music/Serge Gainsbourg
+  metadata:
+    relative_path: Serge Gainsbourg
+- id: Shakira
+  label: Shakira
+  kind: directory
+  source: /media/TechData/Storage/Music/Shakira
+  metadata:
+    relative_path: Shakira
+- id: Simon and Garfunkel
+  label: Simon and Garfunkel
+  kind: directory
+  source: /media/TechData/Storage/Music/Simon and Garfunkel
+  metadata:
+    relative_path: Simon and Garfunkel
+- id: Sinead O'Connor
+  label: Sinead O'Connor
+  kind: directory
+  source: /media/TechData/Storage/Music/Sinead O'Connor
+  metadata:
+    relative_path: Sinead O'Connor
+- id: Siouxsie and the Banshees
+  label: Siouxsie and the Banshees
+  kind: directory
+  source: /media/TechData/Storage/Music/Siouxsie and the Banshees
+  metadata:
+    relative_path: Siouxsie and the Banshees
+- id: Skin
+  label: Skin
+  kind: directory
+  source: /media/TechData/Storage/Music/Skin
+  metadata:
+    relative_path: Skin
+- id: Skunk Anansie
+  label: Skunk Anansie
+  kind: directory
+  source: /media/TechData/Storage/Music/Skunk Anansie
+  metadata:
+    relative_path: Skunk Anansie
+- id: Sonic Youth
+  label: Sonic Youth
+  kind: directory
+  source: /media/TechData/Storage/Music/Sonic Youth
+  metadata:
+    relative_path: Sonic Youth
+- id: Soundtracks
+  label: Soundtracks
+  kind: directory
+  source: /media/TechData/Storage/Music/Soundtracks
+  metadata:
+    relative_path: Soundtracks
+- id: SteamLibrary
+  label: SteamLibrary
+  kind: directory
+  source: /media/TechData/Storage/Music/SteamLibrary
+  metadata:
+    relative_path: SteamLibrary
+- id: Stevie Ray Vaughan
+  label: Stevie Ray Vaughan
+  kind: directory
+  source: /media/TechData/Storage/Music/Stevie Ray Vaughan
+  metadata:
+    relative_path: Stevie Ray Vaughan
+- id: Stevie Wonder
+  label: Stevie Wonder
+  kind: directory
+  source: /media/TechData/Storage/Music/Stevie Wonder
+  metadata:
+    relative_path: Stevie Wonder
+- id: Stromae
+  label: Stromae
+  kind: directory
+  source: /media/TechData/Storage/Music/Stromae
+  metadata:
+    relative_path: Stromae
+- id: Susheela Raman
+  label: Susheela Raman
+  kind: directory
+  source: /media/TechData/Storage/Music/Susheela Raman
+  metadata:
+    relative_path: Susheela Raman
+- id: Suzanne Vega
+  label: Suzanne Vega
+  kind: directory
+  source: /media/TechData/Storage/Music/Suzanne Vega
+  metadata:
+    relative_path: Suzanne Vega
+- id: Tanita Tikaram
+  label: Tanita Tikaram
+  kind: directory
+  source: /media/TechData/Storage/Music/Tanita Tikaram
+  metadata:
+    relative_path: Tanita Tikaram
+- id: Tarmac
+  label: Tarmac
+  kind: directory
+  source: /media/TechData/Storage/Music/Tarmac
+  metadata:
+    relative_path: Tarmac
+- id: The Beatles
+  label: The Beatles
+  kind: directory
+  source: /media/TechData/Storage/Music/The Beatles
+  metadata:
+    relative_path: The Beatles
+- id: The Breeeders
+  label: The Breeeders
+  kind: directory
+  source: /media/TechData/Storage/Music/The Breeeders
+  metadata:
+    relative_path: The Breeeders
+- id: The Clash
+  label: The Clash
+  kind: directory
+  source: /media/TechData/Storage/Music/The Clash
+  metadata:
+    relative_path: The Clash
+- id: The Cranberries
+  label: The Cranberries
+  kind: directory
+  source: /media/TechData/Storage/Music/The Cranberries
+  metadata:
+    relative_path: The Cranberries
+- id: The Do
+  label: The Do
+  kind: directory
+  source: /media/TechData/Storage/Music/The Do
+  metadata:
+    relative_path: The Do
+- id: The Doors
+  label: The Doors
+  kind: directory
+  source: /media/TechData/Storage/Music/The Doors
+  metadata:
+    relative_path: The Doors
+- id: The Fugees
+  label: The Fugees
+  kind: directory
+  source: /media/TechData/Storage/Music/The Fugees
+  metadata:
+    relative_path: The Fugees
+- id: The Jesus and Mary Chain
+  label: The Jesus and Mary Chain
+  kind: directory
+  source: /media/TechData/Storage/Music/The Jesus and Mary Chain
+  metadata:
+    relative_path: The Jesus and Mary Chain
+- id: The Lords of the New Church
+  label: The Lords of the New Church
+  kind: directory
+  source: /media/TechData/Storage/Music/The Lords of the New Church
+  metadata:
+    relative_path: The Lords of the New Church
+- id: The Pixies
+  label: The Pixies
+  kind: directory
+  source: /media/TechData/Storage/Music/The Pixies
+  metadata:
+    relative_path: The Pixies
+- id: The Pogues
+  label: The Pogues
+  kind: directory
+  source: /media/TechData/Storage/Music/The Pogues
+  metadata:
+    relative_path: The Pogues
+- id: The Police
+  label: The Police
+  kind: directory
+  source: /media/TechData/Storage/Music/The Police
+  metadata:
+    relative_path: The Police
+- id: The Rolling Stones
+  label: The Rolling Stones
+  kind: directory
+  source: /media/TechData/Storage/Music/The Rolling Stones
+  metadata:
+    relative_path: The Rolling Stones
+- id: The Sex Pistols
+  label: The Sex Pistols
+  kind: directory
+  source: /media/TechData/Storage/Music/The Sex Pistols
+  metadata:
+    relative_path: The Sex Pistols
+- id: The Smiths
+  label: The Smiths
+  kind: directory
+  source: /media/TechData/Storage/Music/The Smiths
+  metadata:
+    relative_path: The Smiths
+- id: The Sugarcubes
+  label: The Sugarcubes
+  kind: directory
+  source: /media/TechData/Storage/Music/The Sugarcubes
+  metadata:
+    relative_path: The Sugarcubes
+- id: The Velvet Underground
+  label: The Velvet Underground
+  kind: directory
+  source: /media/TechData/Storage/Music/The Velvet Underground
+  metadata:
+    relative_path: The Velvet Underground
+- id: The White Stripes
+  label: The White Stripes
+  kind: directory
+  source: /media/TechData/Storage/Music/The White Stripes
+  metadata:
+    relative_path: The White Stripes
+- id: The Who
+  label: The Who
+  kind: directory
+  source: /media/TechData/Storage/Music/The Who
+  metadata:
+    relative_path: The Who
+- id: Tiken Jah Fakoly
+  label: Tiken Jah Fakoly
+  kind: directory
+  source: /media/TechData/Storage/Music/Tiken Jah Fakoly
+  metadata:
+    relative_path: Tiken Jah Fakoly
+- id: Tok Tok Tok
+  label: Tok Tok Tok
+  kind: directory
+  source: /media/TechData/Storage/Music/Tok Tok Tok
+  metadata:
+    relative_path: Tok Tok Tok
+- id: Tori Amos
+  label: Tori Amos
+  kind: directory
+  source: /media/TechData/Storage/Music/Tori Amos
+  metadata:
+    relative_path: Tori Amos
+- id: Touré Kunda
+  label: Touré Kunda
+  kind: directory
+  source: /media/TechData/Storage/Music/Touré Kunda
+  metadata:
+    relative_path: Touré Kunda
+- id: Tracy Chapman
+  label: Tracy Chapman
+  kind: directory
+  source: /media/TechData/Storage/Music/Tracy Chapman
+  metadata:
+    relative_path: Tracy Chapman
+- id: Tryo
+  label: Tryo
+  kind: directory
+  source: /media/TechData/Storage/Music/Tryo
+  metadata:
+    relative_path: Tryo
+- id: Tété
+  label: Tété
+  kind: directory
+  source: /media/TechData/Storage/Music/Tété
+  metadata:
+    relative_path: Tété
+- id: Têtes Raides
+  label: Têtes Raides
+  kind: directory
+  source: /media/TechData/Storage/Music/Têtes Raides
+  metadata:
+    relative_path: Têtes Raides
+- id: U2 - SuperDiscografia
+  label: U2 - SuperDiscografia
+  kind: directory
+  source: /media/TechData/Storage/Music/U2 - SuperDiscografia
+  metadata:
+    relative_path: U2 - SuperDiscografia
+- id: Urban Dance Squad
+  label: Urban Dance Squad
+  kind: directory
+  source: /media/TechData/Storage/Music/Urban Dance Squad
+  metadata:
+    relative_path: Urban Dance Squad
+- id: Usher
+  label: Usher
+  kind: directory
+  source: /media/TechData/Storage/Music/Usher
+  metadata:
+    relative_path: Usher
+- id: Various African Artists
+  label: Various African Artists
+  kind: directory
+  source: /media/TechData/Storage/Music/Various African Artists
+  metadata:
+    relative_path: Various African Artists
+- id: Victoria Abril
+  label: Victoria Abril
+  kind: directory
+  source: /media/TechData/Storage/Music/Victoria Abril
+  metadata:
+    relative_path: Victoria Abril
+- id: William Sheller
+  label: William Sheller
+  kind: directory
+  source: /media/TechData/Storage/Music/William Sheller
+  metadata:
+    relative_path: William Sheller
+- id: Youssou N'Dour
+  label: Youssou N'Dour
+  kind: directory
+  source: /media/TechData/Storage/Music/Youssou N'Dour
+  metadata:
+    relative_path: Youssou N'Dour
+- id: lost+found
+  label: lost+found
+  kind: directory
+  source: /media/TechData/Storage/Music/lost+found
+  metadata:
+    relative_path: lost+found
+- id: soum bill
+  label: soum bill
+  kind: directory
+  source: /media/TechData/Storage/Music/soum bill
+  metadata:
+    relative_path: soum bill

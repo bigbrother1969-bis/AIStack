@@ -1,0 +1,174 @@
+selection_id: music_android
+catalog_id: music-library
+selected_ids:
+- AC  DC
+- Abd Al Malik
+- Air
+- Alain Bashung
+- Amy Whinehouse
+- Angelique Kidjo
+- Antony and the Johnsons
+- Archive
+- Aretha Franklin
+- Asa
+- Ayo
+- Barbara
+- Ben Harper
+- Beyoncé
+- Bjork
+- Blondie
+- Bob Dylan
+- Bob Marley and The Wailers
+- Boris Vian
+- Bruce Springsteen
+- Camille
+- Charlie Winston
+- Coldcut
+- Césaria Évora
+- David Bowie
+- De La Soul
+- Diam's
+- Diana Ross & The Supremes
+- Dido
+- Eddy Mitchell
+- Edith Piaf
+- Elastica
+- Eminem
+- Eric Clapton
+- Eurythmics
+- F.F.F - Fédération Française de Funk - Discographie
+- Fatboy Slim
+- Fela Kuti
+- Fiona Apple
+- Freddie Mercury
+- Georges Brassens
+- Ghost in the Shell OST Collection
+- Gorillaz
+- Gossip
+- Gotan Project
+- Grace Jones
+- Grand Corps Malade
+- Hubert-Félix Thiéfaine
+- Ibeyi
+- Iggy Pop & The Stooges
+- Imagine Dragons
+- Jacques Brel
+- Jacques Higelin
+- Jain
+- James Brown
+- Janis Joplin
+- Jimi Hendrix
+- John Lee Hooker
+- John Lennon
+- Johnny Cash
+- Johnny Clegg et Savuka
+- KT Tunstall
+- Kate Bush
+- Keziah Jones
+- Khadja Nin
+- Klaus Nomi
+- Led Zeppelin
+- Leonard Cohen
+- Les Négresses Vertes
+- Les Rita Mitsouko
+- Little Richard
+- London Grammar
+- Lou Reed
+- Louis Armstrong
+- Louise Attaque
+- Ludacris
+- Léo Ferré
+- M (Mathieu Chedid)
+- MC Solaar
+- Magma - 18 albums - Mp3 320 kbs
+- Mano Negra
+- Manu Chao
+- Marvin Gaye
+- Massive Attack
+- Mathis and the Mathematiks
+- Michael Jackson
+- Midnight Oil
+- Moby
+- Mory Kante
+- Muse
+- Neneh Cherry
+- Nick Cave & The Bad Seeds
+- Nirvana
+- No One Is Innocent
+- Noir Désir
+- Norah Jones
+- Nougaro
+- Oliver Mtukudzi
+- Orelsan
+- Otis Redding
+- Outkast
+- P!nk
+- PJ Harvey
+- Patti Smith
+- Paul Simon & Art Garfunkel
+- Peter Gabriel
+- Phil Collins
+- Pink Floyd
+- Portishead
+- Queen
+- R.E.M
+- Rachid Taha
+- Radiohead
+- Rage Against The Machine
+- Ray Charles
+- Red Hot Chili Peppers
+- Renan Luce
+- Rokia Traoré
+- Run DMC
+- Sade
+- Salif Keita
+- Sandra Nkaké
+- Seal
+- Serge Gainsbourg
+- Simon and Garfunkel
+- Sinead O'Connor
+- Siouxsie and the Banshees
+- Skin
+- Skunk Anansie
+- Sonic Youth
+- Stevie Ray Vaughan
+- Stevie Wonder
+- Stromae
+- Susheela Raman
+- Suzanne Vega
+- Tanita Tikaram
+- The Beatles
+- The Breeeders
+- The Clash
+- The Cranberries
+- The Do
+- The Doors
+- The Fugees
+- The Jesus and Mary Chain
+- The Lords of the New Church
+- The Pixies
+- The Pogues
+- The Police
+- The Rolling Stones
+- The Sex Pistols
+- The Smiths
+- The Sugarcubes
+- The Velvet Underground
+- The White Stripes
+- The Who
+- Tiken Jah Fakoly
+- Tok Tok Tok
+- Tori Amos
+- Touré Kunda
+- Tracy Chapman
+- Tryo
+- Tété
+- Têtes Raides
+- U2 - SuperDiscografia
+- Urban Dance Squad
+- Various African Artists
+- William Sheller
+- Youssou N'Dour
+metadata:
+  source_catalog: examples/catalog_engine/music-library-catalog.yml
+  managed_by: selection_ui

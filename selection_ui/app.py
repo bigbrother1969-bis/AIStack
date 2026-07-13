@@ -13,13 +13,18 @@ from starlette.requests import Request
 from aistack.catalog.yaml import load_catalog_yaml
 from aistack.kernel.selection import Selection
 from aistack.selection.yaml import load_selection_yaml, save_selection_yaml
+from aistack.providers.repository import RepositoryProvider
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-APP_DEF = REPO_ROOT / "selection_ui" / "definitions" / "music_android.yml"
+repository = RepositoryProvider(REPO_ROOT)
+
+APP_DEF = repository.resolve("selection_ui/definitions/music_android.yml")
 
 app = FastAPI(title="AIStack Selection UI")
-templates = Jinja2Templates(directory=str(REPO_ROOT / "selection_ui" / "templates"))
+templates = Jinja2Templates(
+    directory=str(repository.resolve("selection_ui/templates"))
+)
 
 
 def load_app_definition() -> dict:
@@ -79,8 +84,8 @@ def get_syncthing_status() -> dict:
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     definition = load_app_definition()
-    catalog = load_catalog_yaml(REPO_ROOT / definition["catalog_file"])
-    selection = load_selection_yaml(REPO_ROOT / definition["selection_file"])
+    catalog = load_catalog_yaml(repository.resolve(definition["catalog_file"]))
+    selection = load_selection_yaml(repository.resolve(definition["selection_file"]))
     selected = set(selection.selected_ids) if selection else set()
 
     synced = get_synced_items(Path("/media/TechData/Storage/Music-Android"))
@@ -110,8 +115,8 @@ def index(request: Request):
 @app.post("/save")
 def save(selected_ids: list[str] = Form(default=[])):
     definition = load_app_definition()
-    catalog = load_catalog_yaml(REPO_ROOT / definition["catalog_file"])
-    selection_path = REPO_ROOT / definition["selection_file"]
+    catalog = load_catalog_yaml(repository.resolve(definition["catalog_file"]))
+    selection_path = repository.resolve(definition["selection_file"])
 
     selection = Selection(
         selection_id=definition["app_id"],
@@ -127,7 +132,7 @@ def save(selected_ids: list[str] = Form(default=[])):
 
     command = definition.get("generation_command")
     if command:
-        subprocess.run(command, cwd=REPO_ROOT, check=True)
+        subprocess.run(command, cwd=repository.root, check=True)
 
     return RedirectResponse(
         f"/?status=Selection saved. Generation command executed. {len(selected_ids)} items selected.",

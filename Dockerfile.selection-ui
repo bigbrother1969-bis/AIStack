@@ -2,11 +2,21 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir \
-    fastapi \
-    uvicorn \
-    jinja2 \
-    pyyaml \
-    python-multipart
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY selection_ui ./selection_ui
+COPY examples ./examples
+
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir . \
+ && pip install --no-cache-dir \
+      fastapi \
+      uvicorn \
+      jinja2 \
+      python-multipart
+
+ENV PYTHONPATH=/app/src
+
+EXPOSE 8181
 
 CMD ["python3","-m","uvicorn","selection_ui.app:app","--host","0.0.0.0","--port","8181"]

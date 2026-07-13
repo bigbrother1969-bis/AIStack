@@ -1,6 +1,6 @@
 services:
   aistack-selection-ui:
-    image: aistack-selection-ui:latest
+    image: bigbrother1969/selection-ui:0.2
     container_name: aistack-selection-ui
     # Build is disabled until Docker buildx is upgraded.
     # Image must be built manually with:
@@ -8,13 +8,10 @@ services:
     ports:
       - "8181:8181"
     volumes:
-      - /srv/aistack/AISTack:/app
       - /media/TechData:/media/TechData
-    working_dir: /app
     env_file:
       - .env.selection-ui
     environment:
-      - PYTHONPATH=/app/src:/app
     networks:
       - proxy
     restart: unless-stopped

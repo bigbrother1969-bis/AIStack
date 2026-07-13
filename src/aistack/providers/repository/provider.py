@@ -11,6 +11,11 @@ class RepositoryProvider:
     def __init__(self, root: Path | str) -> None:
         self.root = Path(root)
 
+
+    def resolve(self, relative_path: str | Path) -> Path:
+        """Resolve a repository-relative path."""
+        return self.root / Path(relative_path)
+
     def observe(self) -> Iterable[KnowledgeArtifact]:
         readme = self.root / "README.md"
 

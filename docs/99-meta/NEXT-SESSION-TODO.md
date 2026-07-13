@@ -162,3 +162,45 @@ This validation demonstrates one of the core principles of Governed Heritage Eng
 > Technical debt is not an opinion.
 > It is derived knowledge produced from observations, evidence and explicit policies.
 
+
+---
+
+## P2 — Adaptive Resource Scheduler
+
+### Objectif
+
+Concevoir un moteur de gouvernance des ressources capable d'adapter dynamiquement les ressources CPU allouées aux conteneurs en fonction de la charge observée et des politiques définies.
+
+### Fonctionnalités
+
+- Observation continue de la charge CPU des conteneurs.
+- Détection des traitements exceptionnels (indexation, OCR, IA, sauvegardes, migrations…).
+- Réallocation dynamique des CPU (cpuset, quotas Docker ou équivalent).
+- Priorisation des services critiques.
+- Garantie d'un minimum de ressources par service.
+- Retour automatique à une allocation nominale après le pic de charge.
+- Historisation de toutes les décisions.
+
+### Contraintes
+
+- Éviter les oscillations.
+- Éviter toute famine de ressources.
+- Respecter les politiques de gouvernance.
+- Garantir la stabilité de l'infrastructure pendant les réallocations.
+- Toutes les décisions doivent être explicables.
+
+### Cas de validation
+
+Lors d'une reconstruction d'index Immich (OCR, reconnaissance faciale, embeddings…), AIStack détecte le besoin temporaire de puissance, augmente automatiquement les ressources CPU du conteneur concerné, puis restitue ces ressources une fois le traitement terminé.
+
+### Évolution
+
+À terme, généraliser ce moteur en **Resource Governance Engine** afin de gouverner également :
+
+- CPU
+- Mémoire
+- GPU
+- I/O disque
+- Bande passante réseau
+- Consommation énergétique
+

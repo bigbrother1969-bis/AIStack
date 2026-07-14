@@ -36,3 +36,109 @@ Cette reconstruction démontre que la valeur principale ne réside pas dans le c
 
 Elle constitue l'un des premiers cas de validation expérimentaux du Knowledge Operating System.
 
+
+## Principle — Knowledge Begins with Evidence
+
+AIStack distinguishes rigorously between reality, evidence, observations and knowledge.
+
+Knowledge must never be derived directly from raw technical outputs.
+
+A governed transformation pipeline is mandatory.
+
+```text
+Reality
+    ↓
+Evidence Collectors
+    ↓
+Evidence
+    ↓
+Normalizers
+    ↓
+Canonical Observations
+    ↓
+Correlation Engines
+    ↓
+Knowledge Assets
+    ↓
+Policies
+    ↓
+Inference Engines
+    ↓
+Recommendations
+```
+
+### Evidence
+
+Evidence is the immutable record of what has been acquired from a source.
+
+Typical examples include:
+
+- command outputs;
+- API responses;
+- configuration files;
+- JSON payloads;
+- log excerpts;
+- snapshots;
+- measurements.
+
+Evidence must remain as close as possible to the original source and be independently historized.
+
+Evidence contains no business interpretation.
+
+### Observation
+
+An Observation is a canonical interpretation of one or more Evidence objects.
+
+Its purpose is to normalize heterogeneous technologies into stable AIStack concepts.
+
+Examples:
+
+- Docker inspection;
+- Compose project;
+- filesystem inventory;
+- running process;
+- listening port.
+
+Observations are technology-independent.
+
+### Knowledge
+
+Knowledge is produced only after observations have been correlated and evaluated according to explicit policies.
+
+Knowledge may include:
+
+- catalogs;
+- technical debt;
+- Sustainability Score;
+- architecture evaluations;
+- recommendations;
+- documentation;
+- governed artifacts.
+
+### Separation of responsibilities
+
+Each layer has a single responsibility.
+
+- Collector → acquire Evidence.
+- Normalizer → produce canonical Observations.
+- Correlator → combine Observations.
+- Builder → construct governed Knowledge Assets.
+- Generator → generate Artifacts.
+- Renderer → present knowledge.
+
+No component should perform responsibilities belonging to another layer.
+
+### Architectural consequences
+
+The same Evidence may later be reinterpreted using:
+
+- improved Normalizers;
+- additional Correlation Engines;
+- new Knowledge Policies;
+- newer AI Engines.
+
+This must not require a new acquisition from the infrastructure.
+
+This separation enables explainability, reproducibility, auditability and long-term preservation of knowledge.
+
+It also makes AIStack independent from acquisition technologies while preserving the complete Observation History.

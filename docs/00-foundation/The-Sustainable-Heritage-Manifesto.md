@@ -142,3 +142,47 @@ This must not require a new acquisition from the infrastructure.
 This separation enables explainability, reproducibility, auditability and long-term preservation of knowledge.
 
 It also makes AIStack independent from acquisition technologies while preserving the complete Observation History.
+
+## Principle — Modular Monolith First
+
+AIStack shall be designed as a modular monolith before considering distributed deployment.
+
+The primary objective is architectural decoupling rather than physical distribution.
+
+Each responsibility must be isolated behind an explicit contract while remaining deployable within a single Runtime.
+
+```text
+Kernel Runtime
+    │
+    ├── Evidence Collectors
+    ├── Evidence Normalizers
+    ├── Correlation Engines
+    ├── Catalog Builders
+    ├── Knowledge Policies
+    ├── Artifact Generators
+    └── Renderers
+```
+
+Deployment boundaries must never dictate architectural boundaries.
+
+Instead, deployment is derived from architecture.
+
+Components may later evolve into independent services without modifying their contracts.
+
+This evolution is justified only by demonstrated operational needs such as:
+
+- distributed acquisition;
+- security isolation;
+- scalability;
+- asynchronous processing;
+- incompatible dependencies.
+
+The default deployment model remains a single Runtime.
+
+This principle minimizes complexity, reduces resource consumption, simplifies testing and deployment, and remains aligned with the Digital Sobriety principles of AIStack.
+
+The objective is therefore:
+
+> Modular Monolith First.
+
+> Service-Oriented Evolution Only When Justified.

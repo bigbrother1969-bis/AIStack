@@ -204,3 +204,16 @@ Lors d'une reconstruction d'index Immich (OCR, reconnaissance faciale, embedding
 - Bande passante réseau
 - Consommation énergétique
 
+
+## Next Architecture Migration
+
+Priority P0
+
+- create Evidence contracts;
+- create Collector contracts;
+- create Normalizer contracts;
+- create Correlation contracts;
+- create Collector Registry;
+- create Normalizer Registry;
+- create Correlation Registry;
+- migrate Docker Provider incrementally.

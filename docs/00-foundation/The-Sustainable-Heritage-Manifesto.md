@@ -186,3 +186,43 @@ The objective is therefore:
 > Modular Monolith First.
 
 > Service-Oriented Evolution Only When Justified.
+
+## Architecture Evolution — Knowledge Acquisition Pipeline
+
+The former Provider abstraction has reached its architectural limits.
+
+AIStack shall progressively replace technology-oriented Providers with a governed Knowledge Acquisition Pipeline.
+
+The pipeline becomes:
+
+```text
+Reality
+    ↓
+Evidence Collectors
+    ↓
+Evidence
+    ↓
+Normalizers
+    ↓
+Canonical Observations
+    ↓
+Correlation Engines
+    ↓
+Knowledge Assets
+    ↓
+Policies
+    ↓
+Inference Engines
+    ↓
+Recommendations
+```
+
+This architecture separates acquisition, normalization, correlation and reasoning into explicit responsibilities.
+
+The existing Provider implementations become transitional compatibility components and shall be progressively replaced by:
+
+- Evidence Collectors;
+- Evidence Normalizers;
+- Correlation Engines.
+
+The migration shall remain incremental and preserve a working Runtime after every commit.

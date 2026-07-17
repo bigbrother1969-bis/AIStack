@@ -373,3 +373,40 @@ Instead, it operates on Governed Items defined by the domains.
 
 This separation preserves long-term architectural stability while allowing continuous evolution of the system capabilities.
 
+
+## Architecture Is Built from Domains and Capabilities
+
+The architecture of the Knowledge Operating System is built from two complementary dimensions:
+
+- Domains
+- Capabilities
+
+### Domains
+
+Domains define what the system fundamentally understands.
+
+They represent the stable ontology of the Knowledge Operating System.
+
+Domains should evolve slowly.
+
+### Capabilities
+
+Capabilities define what the system knows how to do.
+
+They operate on Governed Items exposed by the Domains.
+
+Capabilities are expected to evolve continuously.
+
+### Architectural Matrix
+
+Every architectural component belongs to one Domain and may participate in one or more Capabilities.
+
+This separation guarantees that:
+
+- the knowledge model remains stable;
+- system behavior can evolve independently;
+- new capabilities can appear without redesigning the knowledge model;
+- new domains can be introduced without rewriting existing capabilities.
+
+This principle maximizes long-term maintainability, extensibility and portability.
+

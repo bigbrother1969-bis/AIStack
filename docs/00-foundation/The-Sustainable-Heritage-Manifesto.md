@@ -226,3 +226,53 @@ The existing Provider implementations become transitional compatibility componen
 - Correlation Engines.
 
 The migration shall remain incremental and preserve a working Runtime after every commit.
+
+## Distinguish Interfaces from Contracts
+
+AIStack distinguishes two complementary architectural concepts.
+
+### Interfaces
+
+Interfaces define the internal programming contracts between AIStack components.
+
+Examples:
+
+- EvidenceCollector
+- EvidenceNormalizer
+- CorrelationEngine
+- KnowledgeGenerator
+
+Interfaces specify responsibilities and behavioral expectations inside the Knowledge Operating System.
+
+### Knowledge Contracts
+
+Knowledge Contracts define governed exchange agreements with external systems.
+
+Examples:
+
+- Docker Engine Contract
+- Docker Compose Contract
+- Filesystem Contract
+- Git Contract
+- REST Contract
+- GraphQL Contract
+- SQL Contract
+- LDAP Contract
+- SNMP Contract
+
+A Knowledge Contract specifies:
+
+- supported capabilities;
+- exchanged information;
+- semantics;
+- version compatibility;
+- limitations;
+- trust assumptions;
+- evidence provenance.
+
+Knowledge Contracts describe **what an external system exposes**.
+
+Interfaces describe **how AIStack components consume those capabilities**.
+
+This separation allows AIStack to remain independent from technologies while depending only on explicit governed contracts.
+

@@ -443,3 +443,19 @@ Before introducing a new architectural layer, verify that:
 - At least two concrete implementations or use cases justify the abstraction.
 
 If one of these conditions is not met, the simpler design shall be preferred.
+
+## Principle — One Validated Concept, One Commit
+
+A Git commit represents a validated engineering concept, not a collection of modified files nor a working session.
+
+Each commit should:
+
+- introduce a single coherent concept;
+- remain independently understandable;
+- be independently testable;
+- be independently reversible;
+- preserve a meaningful project history.
+
+The purpose of Git history is to document the evolution of knowledge and architecture, not merely the evolution of source code.
+
+Large end-of-day commits should be avoided whenever multiple validated concepts have been produced.

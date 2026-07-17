@@ -276,3 +276,45 @@ Interfaces describe **how AIStack components consume those capabilities**.
 
 This separation allows AIStack to remain independent from technologies while depending only on explicit governed contracts.
 
+
+## Everything AIStack Manages Is a Governed Item
+
+Everything AIStack manages is a Governed Item.
+
+AIStack does not define in advance the nature of managed entities.
+
+Instead, it defines the governance model they must satisfy.
+
+Any entity that complies with this governance model becomes a Governed Item and can participate in the Knowledge Operating System.
+
+A Governed Item is therefore the fundamental abstraction of AIStack.
+
+Examples include, but are not limited to:
+
+- Evidence
+- Observation
+- Knowledge Asset
+- Policy
+- Recommendation
+- ADR
+- Documentation
+- Runtime Event
+- Technical Debt Item
+- Catalog Entry
+
+These are not independent concepts.
+
+They are specialized Governed Items.
+
+The architecture is therefore open by construction.
+
+New categories of entities can appear over time without requiring any architectural redesign.
+
+Specialization is a consequence of governance, not the opposite.
+
+Governance precedes specialization.
+
+This recursive definition deliberately avoids defining in advance what AIStack governs.
+
+Instead, AIStack governs every entity that satisfies its governance model.
+

@@ -410,3 +410,36 @@ This separation guarantees that:
 
 This principle maximizes long-term maintainability, extensibility and portability.
 
+
+## Principle — Earned Abstractions
+
+Architecture must remain driven by simplicity.
+
+A new architectural layer, abstraction, or framework shall only be introduced when at least two concrete implementations or two distinct use cases demonstrate that it effectively reduces complexity.
+
+Abstractions are earned, never anticipated.
+
+This principle preserves the balance between long-term architecture and engineering pragmatism.
+
+### Rationale
+
+Over-engineering often results from introducing generic concepts before their necessity has been demonstrated.
+
+AIStack follows a different approach:
+
+- Design the architecture before implementation.
+- Keep every implementation as simple as possible.
+- Generalize only when experience reveals a recurring pattern.
+- Preserve the possibility of future evolution without paying its complexity cost upfront.
+
+### Validation Checklist
+
+Before introducing a new architectural layer, verify that:
+
+- The need exists today.
+- The new layer removes more complexity than it introduces.
+- The solution remains compatible with the KISS principle.
+- The proposal is consistent with the Foundation principles.
+- At least two concrete implementations or use cases justify the abstraction.
+
+If one of these conditions is not met, the simpler design shall be preferred.

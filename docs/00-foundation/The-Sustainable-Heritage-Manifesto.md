@@ -318,3 +318,58 @@ This recursive definition deliberately avoids defining in advance what AIStack g
 
 Instead, AIStack governs every entity that satisfies its governance model.
 
+
+## Separate Domains from Capabilities
+
+The Knowledge Operating System distinguishes two complementary architectural concepts.
+
+### Domains
+
+Domains represent the stable concepts of the knowledge model.
+
+They define what AIStack fundamentally understands.
+
+Examples include:
+
+- Governed Item
+- Evidence
+- Observation
+- Knowledge
+- Governance
+- Contracts
+- Kernel
+
+Domains evolve slowly because they represent the ontology of the Knowledge Operating System.
+
+### Capabilities
+
+Capabilities are the services provided by the Knowledge Operating System.
+
+They manipulate Governed Items but do not define them.
+
+Examples include:
+
+- Acquisition
+- Normalization
+- Correlation
+- Selection
+- Generation
+- Rendering
+- Search
+- Export
+- Inference
+
+Capabilities can evolve, be replaced, optimized or specialized independently from the knowledge model.
+
+### Architectural Principle
+
+Domains define the semantics.
+
+Capabilities define the behavior.
+
+A capability never owns the knowledge model.
+
+Instead, it operates on Governed Items defined by the domains.
+
+This separation preserves long-term architectural stability while allowing continuous evolution of the system capabilities.
+

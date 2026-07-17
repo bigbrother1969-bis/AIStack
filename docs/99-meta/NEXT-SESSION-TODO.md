@@ -217,3 +217,45 @@ Priority P0
 - create Normalizer Registry;
 - create Correlation Registry;
 - migrate Docker Provider incrementally.
+
+# P0 — Knowledge Operating System Bootstrap
+
+The theoretical foundations are now considered stable enough to start the first implementation of the Knowledge Operating System.
+
+Implementation shall follow the validated engineering methodology:
+
+Architecture
+→ Domains
+→ Capabilities
+→ Contracts
+→ Implementation
+→ Packaging
+
+Packaging must remain a consequence of validated concepts, never the starting point.
+
+## Phase 1 — Governed Item
+
+- [ ] feat(item): introduce Governed Item domain
+- [ ] define core interfaces
+- [ ] define metadata model
+- [ ] define lifecycle model
+- [ ] introduce registry
+
+## Phase 2 — Evidence
+
+- [ ] feat(evidence): introduce Evidence domain
+- [ ] define Evidence specialization
+- [ ] define EvidenceCollector interfaces
+
+## Phase 3 — Knowledge Acquisition
+
+- [ ] feat(capability): introduce Acquisition capability
+- [ ] create first acquisition pipeline
+- [ ] migrate first Docker collector
+
+## Phase 4 — Validation
+
+- [ ] validate Domain / Capability architecture
+- [ ] evaluate package organization
+- [ ] migrate package layout only if the architecture naturally confirms it
+

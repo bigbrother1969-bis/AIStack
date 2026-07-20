@@ -1,11 +1,13 @@
-from aistack.kernel.registries.catalog_views import CatalogViewRegistry
-from aistack.kernel.registries.pipelines import PipelineRegistry
-from aistack.kernel.registries.providers import ProviderRegistry
-from aistack.kernel.registries.selection_strategies import SelectionStrategyRegistry
+from aistack.kernel.registries.catalog_view_registry import CatalogViewRegistry
+from aistack.kernel.registries.core import KernelRegistries
+from aistack.kernel.registries.provider_registry import ProviderRegistry
+from aistack.kernel.registries.selection_strategy_registry import (
+    SelectionStrategyRegistry,
+)
 
 __all__ = [
     "CatalogViewRegistry",
-    "PipelineRegistry",
+    "KernelRegistries",
     "ProviderRegistry",
     "SelectionStrategyRegistry",
 ]

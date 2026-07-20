@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from aistack.kernel.registries import CatalogViewRegistry, ProviderRegistry, SelectionStrategyRegistry
+from aistack.kernel.registries import KernelRegistries
+from aistack.kernel.services import KernelServices
 
 
 @dataclass
 class KernelContext:
-    """Root context aggregating Kernel registries."""
+    """Root context aggregating Kernel registries and services."""
 
-    catalog_views: CatalogViewRegistry = field(default_factory=CatalogViewRegistry)
-    selection_strategies: SelectionStrategyRegistry = field(default_factory=SelectionStrategyRegistry)
-    providers: ProviderRegistry = field(default_factory=ProviderRegistry)
+    registries: KernelRegistries = field(default_factory=KernelRegistries)
+    services: KernelServices = field(default_factory=KernelServices)

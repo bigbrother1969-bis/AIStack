@@ -2,15 +2,17 @@ from __future__ import annotations
 
 from aistack.kernel.bootstrap.catalog_views import register_default_catalog_views
 from aistack.kernel.bootstrap.providers import register_default_providers
-from aistack.kernel.bootstrap.selection import register_default_selection_strategies
-from aistack.kernel.context.core import KernelContext
+from aistack.kernel.bootstrap.selection import (
+    register_default_selection_strategies,
+)
+from aistack.kernel.context import Kernel
 
 
-def create_kernel_context() -> KernelContext:
-    """Create the default AIStack Kernel context."""
+def create_kernel() -> Kernel:
+    kernel = Kernel()
 
-    ctx = KernelContext()
-    register_default_providers(ctx)
-    register_default_catalog_views(ctx)
-    register_default_selection_strategies(ctx)
-    return ctx
+    register_default_providers(kernel)
+    register_default_catalog_views(kernel)
+    register_default_selection_strategies(kernel)
+
+    return kernel

@@ -7,8 +7,8 @@ from aistack.kernel.services import KernelServices
 
 
 @dataclass
-class KernelContext:
-    """Root context aggregating Kernel registries and services."""
+class Kernel:
+    """Root Kernel aggregating registries and services."""
 
     registries: KernelRegistries = field(default_factory=KernelRegistries)
     services: KernelServices = field(default_factory=KernelServices)

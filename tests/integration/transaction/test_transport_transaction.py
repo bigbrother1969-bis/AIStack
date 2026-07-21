@@ -25,6 +25,7 @@ from aistack.transport.contracts import (
     ResourceReference,
     TransportEndpoint,
     TransportRequest,
+    TransportResult,
 )
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
@@ -44,8 +45,20 @@ from aistack.transport.registry.in_memory_transport_registry import (
 
 
 class DummyVerifier(DeliveryVerifier):
-    def verify(self, source: bytes, destination: bytes) -> bool:
-        return source == destination
+    """
+    Test verifier.
+
+    The transaction integration test validates the interaction between
+    Transaction and Transport layers, not the verification algorithm
+    itself.
+    """
+
+    def verify(
+        self,
+        request: TransportRequest,
+        result: TransportResult,
+    ) -> bool:
+        return True
 
 
 def test_transport_transaction(tmp_path: Path) -> None:

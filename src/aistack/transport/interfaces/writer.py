@@ -14,6 +14,15 @@ class Writer(Protocol):
     Writes a governed resource to a destination.
     """
 
+    def exists(
+        self,
+        resource: ResourceReference,
+    ) -> bool:
+        """
+        Return True if the destination resource already exists.
+        """
+        ...
+
     def write(
         self,
         resource: ResourceReference,

@@ -32,11 +32,11 @@ class DefaultTransportEngine(TransportEngine):
         )
 
         data = source_capability.receiver.receive(
-            request.resource,
+            request.source_resource,
         )
 
         destination_capability.writer.write(
-            request.resource,
+            request.destination_resource,
             data,
         )
 

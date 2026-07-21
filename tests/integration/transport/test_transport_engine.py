@@ -32,9 +32,12 @@ def test_transport_engine(tmp_path: Path):
     hello_file = root / "hello.txt"
     hello_file.write_text("Hello AIStack!")
 
+    copy_file = root / "copy.txt"
+
     repository = FilesystemPathRepository(
         {
             "hello.txt": hello_file,
+            "copy.txt": copy_file,
         }
     )
 
@@ -61,13 +64,15 @@ def test_transport_engine(tmp_path: Path):
         metadata={},
     )
 
-    resource = ResourceReference(
-        resource_type="file",
-        resource_id="hello.txt",
-    )
-
     request = TransportRequest(
-        resource=resource,
+        source_resource=ResourceReference(
+            resource_type="file",
+            resource_id="hello.txt",
+        ),
+        destination_resource=ResourceReference(
+            resource_type="file",
+            resource_id="copy.txt",
+        ),
         source=endpoint,
         destination=endpoint,
         delivery_mode=DeliveryMode.REPLACE,
@@ -76,7 +81,7 @@ def test_transport_engine(tmp_path: Path):
 
     result = engine.transport(request)
 
-    assert hello_file.read_text() == "Hello AIStack!"
+    assert copy_file.read_text() == "Hello AIStack!"
     assert result.delivered is True
     assert result.verified is True
     assert result.status is TransportStatus.VERIFIED

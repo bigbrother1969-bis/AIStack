@@ -11,6 +11,7 @@ from aistack.transport.contracts import (
     ResourceReference,
     TransportEndpoint,
     TransportRequest,
+    TransportStatus,
 )
 from aistack.transport.filesystem import (
     FilesystemReceiver,
@@ -20,8 +21,8 @@ from aistack.transport.registry import InMemoryTransportRegistry
 
 
 class DummyVerifier:
-    def verify(self, request):
-        pass
+    def verify(self, request, result) -> bool:
+        return True
 
 
 def test_transport_engine(tmp_path: Path):
@@ -73,6 +74,9 @@ def test_transport_engine(tmp_path: Path):
         correlation_id="tx1",
     )
 
-    engine.execute(request)
+    result = engine.transport(request)
 
     assert hello_file.read_text() == "Hello AIStack!"
+    assert result.delivered is True
+    assert result.verified is True
+    assert result.status is TransportStatus.VERIFIED

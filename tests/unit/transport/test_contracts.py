@@ -12,7 +12,6 @@ from aistack.transport import (
     TransportRequest,
     TransportResult,
     TransportStatus,
-    TransportTransaction,
 )
 
 
@@ -53,14 +52,10 @@ def build_destination_endpoint() -> TransportEndpoint:
 
 
 def test_public_contracts_can_describe_a_transport_request() -> None:
-    resource = build_resource()
-    source = build_source_endpoint()
-    destination = build_destination_endpoint()
-
     request = TransportRequest(
-        resource=resource,
-        source=source,
-        destination=destination,
+        resource=build_resource(),
+        source=build_source_endpoint(),
+        destination=build_destination_endpoint(),
         delivery_mode=DeliveryMode.CREATE,
         correlation_id="CORR-0001",
     )
@@ -72,23 +67,9 @@ def test_public_contracts_can_describe_a_transport_request() -> None:
     assert request.correlation_id == "CORR-0001"
 
 
-def test_transaction_distinguishes_delivery_from_verification() -> None:
-    resource = build_resource()
-    source = build_source_endpoint()
-    destination = build_destination_endpoint()
-
-    transaction = TransportTransaction(
-        transaction_id="TX-0001",
-        resource=resource,
-        source=source,
-        destination=destination,
-        delivery_mode=DeliveryMode.CREATE,
-        status=TransportStatus.DELIVERED,
-        attempt_count=1,
-    )
-
+def test_public_contracts_can_describe_a_transport_result() -> None:
     result = TransportResult(
-        transaction_id=transaction.transaction_id,
+        transaction_id="TX-0001",
         status=TransportStatus.DELIVERED,
         delivered=True,
         verified=False,
@@ -96,17 +77,17 @@ def test_transaction_distinguishes_delivery_from_verification() -> None:
         message="Resource delivered but not yet verified.",
     )
 
-    assert transaction.resource is resource
-    assert transaction.source is source
-    assert transaction.destination is destination
+    assert result.transaction_id == "TX-0001"
     assert result.delivered is True
     assert result.verified is False
+    assert result.rollback_available is False
     assert result.status is TransportStatus.DELIVERED
 
 
 def test_contracts_are_immutable() -> None:
     artifact = build_artifact()
     resource = build_resource()
+
     request = TransportRequest(
         resource=resource,
         source=build_source_endpoint(),

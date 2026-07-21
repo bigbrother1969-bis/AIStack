@@ -9,9 +9,6 @@ from aistack.transport.contracts.transport_endpoint import TransportEndpoint
 from aistack.transport.contracts.transport_request import TransportRequest
 from aistack.transport.contracts.transport_result import TransportResult
 from aistack.transport.contracts.transport_status import TransportStatus
-from aistack.transport.contracts.transport_transaction import (
-    TransportTransaction,
-)
 
 __all__ = [
     "DeliveryMode",
@@ -21,5 +18,4 @@ __all__ = [
     "TransportRequest",
     "TransportResult",
     "TransportStatus",
-    "TransportTransaction",
 ]

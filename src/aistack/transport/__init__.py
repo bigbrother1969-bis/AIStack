@@ -1,4 +1,6 @@
-"""AIStack Knowledge Transport Layer."""
+"""
+AIStack Knowledge Transport Layer.
+"""
 
 from aistack.transport.contracts import (
     DeliveryMode,
@@ -8,7 +10,6 @@ from aistack.transport.contracts import (
     TransportRequest,
     TransportResult,
     TransportStatus,
-    TransportTransaction,
 )
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
@@ -23,5 +24,4 @@ __all__ = [
     "TransportRequest",
     "TransportResult",
     "TransportStatus",
-    "TransportTransaction",
 ]

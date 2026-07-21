@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from aistack.transport.contracts import TransportRequest
+from uuid import uuid4
+
+from aistack.transport.contracts import (
+    TransportRequest,
+    TransportResult,
+    TransportStatus,
+)
 from aistack.transport.interfaces.transport_engine import TransportEngine
 from aistack.transport.interfaces.transport_registry import TransportRegistry
 
@@ -13,7 +19,10 @@ class DefaultTransportEngine(TransportEngine):
     def __init__(self, registry: TransportRegistry) -> None:
         self._registry = registry
 
-    def execute(self, request: TransportRequest) -> None:
+    def transport(
+        self,
+        request: TransportRequest,
+    ) -> TransportResult:
         source_capability = self._registry.get(
             request.source.endpoint_type
         )
@@ -31,6 +40,27 @@ class DefaultTransportEngine(TransportEngine):
             data,
         )
 
-        destination_capability.verifier.verify(
+        result = TransportResult(
+            transaction_id=str(uuid4()),
+            status=TransportStatus.DELIVERED,
+            delivered=True,
+            verified=False,
+            rollback_available=False,
+        )
+
+        verified = destination_capability.verifier.verify(
             request,
+            result,
+        )
+
+        return TransportResult(
+            transaction_id=result.transaction_id,
+            status=(
+                TransportStatus.VERIFIED
+                if verified
+                else TransportStatus.DELIVERED
+            ),
+            delivered=True,
+            verified=verified,
+            rollback_available=False,
         )

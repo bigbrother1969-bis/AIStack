@@ -6,19 +6,20 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from aistack.transport.contracts.transport_transaction import TransportTransaction
+from aistack.transport.contracts.transport_request import TransportRequest
+from aistack.transport.contracts.transport_result import TransportResult
 
 
 class TransportEngine(Protocol):
     """
-    Executes a transport transaction.
+    Executes a transport request.
     """
 
     def transport(
         self,
-        transaction: TransportTransaction,
-    ) -> TransportTransaction:
+        request: TransportRequest,
+    ) -> TransportResult:
         """
-        Execute the transport operation.
+        Execute the transport operation and return its result.
         """
         ...

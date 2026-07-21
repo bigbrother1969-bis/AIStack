@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 from aistack.transport.contracts import (
+    DeliveryMode,
     TransportRequest,
     TransportResult,
     TransportStatus,
@@ -30,6 +31,20 @@ class DefaultTransportEngine(TransportEngine):
         destination_capability = self._registry.get(
             request.destination.endpoint_type
         )
+
+        if (
+            request.delivery_mode is DeliveryMode.CREATE
+            and destination_capability.writer.exists(
+                request.destination_resource
+            )
+        ):
+            return TransportResult(
+                transaction_id=str(uuid4()),
+                status=TransportStatus.FAILED,
+                delivered=False,
+                verified=False,
+                rollback_available=False,
+            )
 
         data = source_capability.receiver.receive(
             request.source_resource,

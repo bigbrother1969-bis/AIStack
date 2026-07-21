@@ -16,6 +16,16 @@ class FilesystemWriter:
     def __init__(self, path_resolver: PathResolver):
         self._path_resolver = path_resolver
 
+    def exists(
+        self,
+        resource: ResourceReference,
+    ) -> bool:
+        """
+        Return True if the destination already exists.
+        """
+        path = self._path_resolver.resolve(resource)
+        return path.exists()
+
     def write(
         self,
         resource: ResourceReference,

@@ -17,7 +17,9 @@ class TransportRequest:
     Request submitted to the Knowledge Transport Layer.
     """
 
-    resource: ResourceReference
+    source_resource: ResourceReference
+
+    destination_resource: ResourceReference
 
     source: TransportEndpoint
 

@@ -4,22 +4,25 @@ Filesystem implementation of the Knowledge Transport Layer Receiver.
 
 from __future__ import annotations
 
-from aistack.path.interfaces.path_resolver import PathResolver
+from typing import BinaryIO
+
+from aistack.location.interfaces.location_resolver import LocationResolver
 from aistack.transport.contracts.resource_reference import ResourceReference
 
 
 class FilesystemReceiver:
     """
-    Receives governed resources from the local filesystem.
+    Opens governed resources from the local filesystem.
+
+    Physical resource locations are provided by a LocationResolver.
     """
 
-    def __init__(self, path_resolver: PathResolver):
-        self._path_resolver = path_resolver
+    def __init__(self, location_resolver: LocationResolver):
+        self._location_resolver = location_resolver
 
-    def receive(
+    def open(
         self,
         resource: ResourceReference,
-    ) -> bytes:
-        path = self._path_resolver.resolve(resource)
-
-        return path.read_bytes()
+    ) -> BinaryIO:
+        location = self._location_resolver.resolve(resource)
+        return location.open("rb")

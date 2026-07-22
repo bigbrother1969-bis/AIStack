@@ -1,0 +1,87 @@
+# Knowledge Transport Layer Qualification Report
+
+- Qualification ID: `KTL-20260721T215248Z`
+- Started: `2026-07-21T21:52:48.665450+00:00`
+- Finished: `2026-07-22T08:17:46.252607+00:00`
+- Runner version: `2.2.0`
+- Git commit: `1a50096bd1f8187d599943656310479fdddef245`
+
+## Summary
+
+- Total scenarios: **1**
+- Succeeded: **1**
+- Failed: **0**
+- Mandatory failures: **0**
+- Measured duration: **27247.144 s**
+- Average throughput: **1.88 MiB/s**
+
+## Environment
+
+```json
+{
+  "hostname": "GIGABYTE",
+  "platform": "Linux-6.12.95+deb13-amd64-x86_64-with-glibc2.41",
+  "system": "Linux",
+  "release": "6.12.95+deb13-amd64",
+  "machine": "x86_64",
+  "python": "3.13.5",
+  "cpu_logical_count": 4,
+  "memory_total_bytes": 16776228864,
+  "filesystem": "ext4",
+  "disk_total_bytes": 226892955648,
+  "disk_free_bytes_at_start": 68543819776,
+  "qualification_workspace": "/media/BACKUP/AIStack/qualification",
+  "qualification_workspace_filesystem": "autofs\nnfs",
+  "qualification_workspace_free_bytes": 4095080054784,
+  "qualification_destination_root": "/media/BACKUP/AIStack/qualification/destination",
+  "qualification_destination_filesystem": "autofs\nnfs",
+  "qualification_destination_free_bytes": 4095080054784,
+  "selected_scenario": "large-50-gib"
+}
+```
+
+## Scenarios
+
+| Status | Scenario | Size | Duration | Throughput | Explanation |
+|---|---|---:|---:|---:|---|
+| PASS | `large-50-gib` | 50 GiB | 27247.144 s | 1.88 MiB/s | Destination exists and size and SHA-256 match the source. |
+
+## Detailed Results
+
+### large-50-gib
+
+```json
+{
+  "scenario_id": "large-50-gib",
+  "description": "Transport a 50 GiB file",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/media/BACKUP/AIStack/qualification/source/large/large-50-gib.bin",
+  "destination": "/media/BACKUP/AIStack/qualification/destination/large/large-50-gib.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "66f2b4a7b865a29906e447cbe29812e3d07dcea5d924f3601280575f356645ee",
+    "destination_sha256": "66f2b4a7b865a29906e447cbe29812e3d07dcea5d924f3601280575f356645ee",
+    "source_size_bytes": 53687091200,
+    "destination_size_bytes": 53687091200
+  },
+  "metrics": {
+    "duration_seconds": 27247.14394006401,
+    "source_size_bytes": 53687091200,
+    "throughput_mib_per_second": 1.8790960297573016,
+    "process_cpu_seconds": 3916.3188685560003,
+    "system_cpu_average_percent": 47.1255699602863,
+    "system_cpu_peak_percent": 100.0,
+    "process_rss_peak_bytes": 32849920,
+    "source_sha256_seconds": 6059.818053374009,
+    "destination_sha256_seconds": 5245.804602739983
+  },
+  "error_type": null,
+  "error_message": null
+}
+```

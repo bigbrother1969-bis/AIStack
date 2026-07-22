@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from aistack.path.filesystem.filesystem_path_repository import (
-    FilesystemPathRepository,
+from aistack.path.filesystem.filesystem_location_repository import (
+    FilesystemLocationRepository,
 )
-from aistack.path.filesystem.filesystem_path_resolver import (
-    FilesystemPathResolver,
+from aistack.path.filesystem.filesystem_location_resolver import (
+    FilesystemLocationResolver,
 )
 from aistack.transport.contracts.resource_reference import ResourceReference
 from aistack.transport.filesystem.filesystem_receiver import (
@@ -12,16 +12,16 @@ from aistack.transport.filesystem.filesystem_receiver import (
 )
 
 
-def build_receiver(resource_path: Path) -> FilesystemReceiver:
-    repository = FilesystemPathRepository(
+def build_receiver(path: Path) -> FilesystemReceiver:
+    repository = FilesystemLocationRepository(
         {
-            "resource": resource_path,
+            "resource": path,
         }
     )
 
-    path_resolver = FilesystemPathResolver(repository)
+    resolver = FilesystemLocationResolver(repository)
 
-    return FilesystemReceiver(path_resolver)
+    return FilesystemReceiver(resolver)
 
 
 def test_receive_python_file():
@@ -30,12 +30,13 @@ def test_receive_python_file():
 
     receiver = build_receiver(resource)
 
-    data = receiver.receive(
+    with receiver.open(
         ResourceReference(
             resource_type="python",
             resource_id="resource",
         )
-    )
+    ) as stream:
+        data = stream.read()
 
     assert data == resource.read_bytes()
 
@@ -46,11 +47,12 @@ def test_receive_binary_file():
 
     receiver = build_receiver(resource)
 
-    data = receiver.receive(
+    with receiver.open(
         ResourceReference(
             resource_type="binary",
             resource_id="resource",
         )
-    )
+    ) as stream:
+        data = stream.read()
 
     assert data == resource.read_bytes()

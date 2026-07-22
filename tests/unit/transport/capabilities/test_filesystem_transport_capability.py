@@ -1,45 +1,20 @@
+from __future__ import annotations
+
+from unittest.mock import Mock
+
 from aistack.transport.capabilities.filesystem_transport_capability import (
     FilesystemTransportCapability,
 )
-from aistack.transport.registry.in_memory_transport_registry import (
-    InMemoryTransportRegistry,
-)
 
 
-class DummyReceiver:
-    pass
-
-
-class DummyWriter:
-    pass
-
-
-class DummyVerifier:
-    pass
-
-
-def test_register_filesystem_capability():
-
-    receiver = DummyReceiver()
-    writer = DummyWriter()
-    verifier = DummyVerifier()
+def test_filesystem_transport_capability_exposes_receiver_and_writer() -> None:
+    receiver = Mock()
+    writer = Mock()
 
     capability = FilesystemTransportCapability(
         receiver=receiver,
         writer=writer,
-        verifier=verifier,
     )
 
-    registry = InMemoryTransportRegistry()
-
-    registry.register(
-        "filesystem",
-        capability,
-    )
-
-    loaded = registry.get("filesystem")
-
-    assert loaded is capability
-    assert loaded.receiver is receiver
-    assert loaded.writer is writer
-    assert loaded.verifier is verifier
+    assert capability.receiver is receiver
+    assert capability.writer is writer

@@ -4,11 +4,11 @@ from pathlib import Path
 
 from aistack.catalog.compose import ComposeRuntimeCatalogBuilder
 from aistack.generators.compose import ComposeCatalogArtifactGenerator
-from aistack.kernel.bootstrap import create_kernel_context
+from aistack.kernel.bootstrap import create_kernel
 
 
 def main() -> None:
-    ctx = create_kernel_context()
+    ctx = create_kernel()
     observation = ctx.providers.get("compose").collect()
     catalog = ComposeRuntimeCatalogBuilder().build(observation)
 

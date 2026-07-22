@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from aistack.path.filesystem.filesystem_path_repository import (
-    FilesystemPathRepository,
+from aistack.path.filesystem.filesystem_location_repository import (
+    FilesystemLocationRepository,
 )
-from aistack.path.filesystem.filesystem_path_resolver import (
-    FilesystemPathResolver,
+from aistack.path.filesystem.filesystem_location_resolver import (
+    FilesystemLocationResolver,
 )
 from aistack.transaction.adapters.transport_operation_engine import (
     TransportOperationEngine,
@@ -30,14 +30,14 @@ from aistack.transport.contracts import (
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
 )
+from aistack.transport.delivery_verifier import (
+    DeliveryVerifier,
+)
 from aistack.transport.filesystem.filesystem_receiver import (
     FilesystemReceiver,
 )
 from aistack.transport.filesystem.filesystem_writer import (
     FilesystemWriter,
-)
-from aistack.transport.interfaces.delivery_verifier import (
-    DeliveryVerifier,
 )
 from aistack.transport.registry.in_memory_transport_registry import (
     InMemoryTransportRegistry,
@@ -45,23 +45,17 @@ from aistack.transport.registry.in_memory_transport_registry import (
 
 
 class DummyVerifier(DeliveryVerifier):
-    """
-    Test verifier.
-
-    The transaction integration test validates the interaction between
-    Transaction and Transport layers, not the verification algorithm
-    itself.
-    """
 
     def verify(
         self,
+        capability,
         request: TransportRequest,
         result: TransportResult,
     ) -> bool:
         return True
 
 
-def test_transport_transaction(tmp_path: Path) -> None:
+def test_transport_transaction(tmp_path: Path):
 
     root = tmp_path / "storage"
     root.mkdir()
@@ -71,19 +65,18 @@ def test_transport_transaction(tmp_path: Path) -> None:
 
     source.write_text("Hello AIStack!")
 
-    repository = FilesystemPathRepository(
+    repository = FilesystemLocationRepository(
         {
             "hello.txt": source,
             "copy.txt": destination,
         }
     )
 
-    resolver = FilesystemPathResolver(repository)
+    resolver = FilesystemLocationResolver(repository)
 
     capability = FilesystemTransportCapability(
         receiver=FilesystemReceiver(resolver),
         writer=FilesystemWriter(resolver),
-        verifier=DummyVerifier(),
     )
 
     transport_registry = InMemoryTransportRegistry()
@@ -94,6 +87,7 @@ def test_transport_transaction(tmp_path: Path) -> None:
 
     transport_engine = DefaultTransportEngine(
         transport_registry,
+        DummyVerifier(),
     )
 
     operation_registry = InMemoryOperationRegistry()

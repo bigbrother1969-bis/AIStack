@@ -1,12 +1,25 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from aistack.transport import DefaultTransportEngine
+from aistack.transport.default_transport_engine import (
+    DefaultTransportEngine,
+)
+from aistack.transport.delivery_verifier import DeliveryVerifier
+from aistack.transport.registry.in_memory_transport_registry import (
+    InMemoryTransportRegistry,
+)
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class KernelServices:
-    """Root container for Kernel services."""
+    """
+    Immutable aggregate of composed Kernel runtime services.
 
-    transport: DefaultTransportEngine = field(default_factory=DefaultTransportEngine)
+    KernelServices does not instantiate services, resolve dependencies,
+    register capabilities, or orchestrate runtime operations.
+    """
+
+    transport_registry: InMemoryTransportRegistry
+    delivery_verifier: DeliveryVerifier
+    transport: DefaultTransportEngine

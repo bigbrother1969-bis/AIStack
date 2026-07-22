@@ -1,13 +1,13 @@
-"""Filesystem path implementations."""
+"""Filesystem location implementations."""
 
-from aistack.path.filesystem.filesystem_path_repository import (
-    FilesystemPathRepository,
+from aistack.path.filesystem.filesystem_location_repository import (
+    FilesystemLocationRepository,
 )
-from aistack.path.filesystem.filesystem_path_resolver import (
-    FilesystemPathResolver,
+from aistack.path.filesystem.filesystem_location_resolver import (
+    FilesystemLocationResolver,
 )
 
 __all__ = [
-    "FilesystemPathRepository",
-    "FilesystemPathResolver",
+    "FilesystemLocationRepository",
+    "FilesystemLocationResolver",
 ]

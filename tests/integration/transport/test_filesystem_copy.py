@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from aistack.path.filesystem.filesystem_path_repository import (
-    FilesystemPathRepository,
+from aistack.path.filesystem.filesystem_location_repository import (
+    FilesystemLocationRepository,
 )
-from aistack.path.filesystem.filesystem_path_resolver import (
-    FilesystemPathResolver,
+from aistack.path.filesystem.filesystem_location_resolver import (
+    FilesystemLocationResolver,
 )
 from aistack.transport.contracts.resource_reference import ResourceReference
 from aistack.transport.filesystem.filesystem_receiver import (
@@ -15,73 +15,77 @@ from aistack.transport.filesystem.filesystem_writer import (
 )
 
 
-def test_copy_python_file(tmp_path):
+def test_copy_python_file():
 
     source = Path("tests/data/example.py")
-    destination = tmp_path / "copy.py"
+    destination = Path("tests/data/example-copy.py")
 
-    repository = FilesystemPathRepository(
+    repository = FilesystemLocationRepository(
         {
             "source": source,
             "destination": destination,
         }
     )
 
-    path_resolver = FilesystemPathResolver(repository)
+    resolver = FilesystemLocationResolver(repository)
 
-    receiver = FilesystemReceiver(path_resolver)
-    writer = FilesystemWriter(path_resolver)
+    receiver = FilesystemReceiver(resolver)
+    writer = FilesystemWriter(resolver)
 
-    data = receiver.receive(
-        ResourceReference(
-            resource_type="python",
-            resource_id="source",
-        )
-    )
+    try:
+        with receiver.open(
+            ResourceReference(
+                resource_type="python",
+                resource_id="source",
+            )
+        ) as stream:
+            writer.write(
+                ResourceReference(
+                    resource_type="python",
+                    resource_id="destination",
+                ),
+                stream,
+            )
 
-    writer.write(
-        ResourceReference(
-            resource_type="python",
-            resource_id="destination",
-        ),
-        data,
-    )
+        assert destination.read_bytes() == source.read_bytes()
 
-    assert destination.exists()
-    assert destination.read_bytes() == source.read_bytes()
+    finally:
+        destination.unlink(missing_ok=True)
 
 
-def test_copy_binary_file(tmp_path):
+def test_copy_binary_file():
 
     source = Path("tests/data/example.bin")
-    destination = tmp_path / "copy.bin"
+    destination = Path("tests/data/example-copy.bin")
 
-    repository = FilesystemPathRepository(
+    repository = FilesystemLocationRepository(
         {
             "source": source,
             "destination": destination,
         }
     )
 
-    path_resolver = FilesystemPathResolver(repository)
+    resolver = FilesystemLocationResolver(repository)
 
-    receiver = FilesystemReceiver(path_resolver)
-    writer = FilesystemWriter(path_resolver)
+    receiver = FilesystemReceiver(resolver)
+    writer = FilesystemWriter(resolver)
 
-    data = receiver.receive(
-        ResourceReference(
-            resource_type="binary",
-            resource_id="source",
-        )
-    )
+    try:
+        with receiver.open(
+            ResourceReference(
+                resource_type="binary",
+                resource_id="source",
+            )
+        ) as stream:
+            writer.write(
+                ResourceReference(
+                    resource_type="binary",
+                    resource_id="destination",
+                ),
+                stream,
+            )
 
-    writer.write(
-        ResourceReference(
-            resource_type="binary",
-            resource_id="destination",
-        ),
-        data,
-    )
+        assert destination.read_bytes() == source.read_bytes()
 
-    assert destination.exists()
-    assert destination.read_bytes() == source.read_bytes()
+    finally:
+        destination.unlink(missing_ok=True)

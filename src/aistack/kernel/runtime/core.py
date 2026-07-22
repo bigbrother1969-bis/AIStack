@@ -10,7 +10,14 @@ from aistack.transport import DefaultTransportEngine
 
 @dataclass
 class KernelRuntime:
-    """Runtime entry point for the AIStack Knowledge Operating System Kernel."""
+    """
+    Runtime entry point for the AIStack Knowledge Operating System.
+
+    The Runtime supervises the execution of the Kernel.
+
+    Registries, Providers and other Kernel components remain accessible
+    through the Kernel itself and are not exposed by dedicated Runtime APIs.
+    """
 
     kernel: Kernel
     state: RuntimeState = RuntimeState.READY
@@ -29,20 +36,3 @@ class KernelRuntime:
         """Return the Kernel Transport Engine."""
 
         return self.kernel.services.transport
-
-    def provider_ids(self) -> list[str]:
-        """Return registered Knowledge Provider identifiers."""
-
-        return sorted(self.kernel.registries.providers.all().keys())
-
-    def catalog_view_ids(self) -> list[str]:
-        """Return registered Catalog View identifiers."""
-
-        return sorted(self.kernel.registries.catalog_views.all().keys())
-
-    def selection_strategy_ids(self) -> list[str]:
-        """Return registered Selection Strategy identifiers."""
-
-        return sorted(
-            self.kernel.registries.selection_strategies.all().keys()
-        )

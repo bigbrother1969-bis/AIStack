@@ -1,5 +1,5 @@
 """
-Filesystem implementation of the Path Resolver.
+Filesystem implementation of the Location Resolver.
 """
 
 from __future__ import annotations
@@ -7,16 +7,16 @@ from __future__ import annotations
 from pathlib import Path
 
 from aistack.location.interfaces.location_resolver import LocationResolver
-from aistack.path.filesystem.filesystem_path_repository import (
-    FilesystemPathRepository,
+from aistack.path.filesystem.filesystem_location_repository import (
+    FilesystemLocationRepository,
 )
 from aistack.path.interfaces.path_resolver import PathResolver
 from aistack.transport.contracts.resource_reference import ResourceReference
 
 
-class FilesystemPathResolver(PathResolver, LocationResolver):
+class FilesystemLocationResolver(PathResolver, LocationResolver):
     """
-    Resolves physical filesystem paths.
+    Resolves physical filesystem locations.
 
     During the Path-to-Location transition, this implementation satisfies
     both resolver contracts.
@@ -24,7 +24,7 @@ class FilesystemPathResolver(PathResolver, LocationResolver):
 
     def __init__(
         self,
-        repository: FilesystemPathRepository,
+        repository: FilesystemLocationRepository,
     ):
         self._repository = repository
 

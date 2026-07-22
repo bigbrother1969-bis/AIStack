@@ -1,5 +1,5 @@
 """
-Filesystem implementation of the Path Repository.
+Filesystem implementation of the Location Repository.
 """
 
 from __future__ import annotations
@@ -10,9 +10,9 @@ from aistack.location.interfaces.location_repository import LocationRepository
 from aistack.transport.contracts.resource_reference import ResourceReference
 
 
-class FilesystemPathRepository(LocationRepository):
+class FilesystemLocationRepository(LocationRepository):
     """
-    Resolves physical paths for governed resources.
+    Resolves physical locations for governed resources.
 
     This transitional implementation supports both:
 
@@ -25,7 +25,7 @@ class FilesystemPathRepository(LocationRepository):
 
     def get(self, resource_id: str) -> Path:
         """
-        Return the filesystem path associated with a resource identifier.
+        Return the filesystem location associated with a resource identifier.
 
         Kept temporarily for compatibility with existing path consumers.
         """

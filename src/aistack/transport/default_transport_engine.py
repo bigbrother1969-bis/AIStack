@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+from aistack.transport.delivery_verifier import (
+    DeliveryVerifier,
+)
 from aistack.transport.contracts import (
     DeliveryMode,
     TransportRequest,
@@ -17,8 +20,13 @@ class DefaultTransportEngine(TransportEngine):
     Default implementation of the Knowledge Transport Layer.
     """
 
-    def __init__(self, registry: TransportRegistry) -> None:
+    def __init__(
+        self,
+        registry: TransportRegistry,
+        delivery_verifier: DeliveryVerifier,
+    ) -> None:
         self._registry = registry
+        self._delivery_verifier = delivery_verifier
 
     def transport(
         self,
@@ -46,14 +54,13 @@ class DefaultTransportEngine(TransportEngine):
                 rollback_available=False,
             )
 
-        data = source_capability.receiver.receive(
+        with source_capability.receiver.open(
             request.source_resource,
-        )
-
-        destination_capability.writer.write(
-            request.destination_resource,
-            data,
-        )
+        ) as stream:
+            destination_capability.writer.write(
+                request.destination_resource,
+                stream,
+            )
 
         result = TransportResult(
             transaction_id=str(uuid4()),
@@ -63,7 +70,8 @@ class DefaultTransportEngine(TransportEngine):
             rollback_available=False,
         )
 
-        verified = destination_capability.verifier.verify(
+        verified = self._delivery_verifier.verify(
+            destination_capability,
             request,
             result,
         )

@@ -10,16 +10,12 @@ from aistack.location.interfaces.location_resolver import LocationResolver
 from aistack.path.filesystem.filesystem_location_repository import (
     FilesystemLocationRepository,
 )
-from aistack.path.interfaces.path_resolver import PathResolver
 from aistack.transport.contracts.resource_reference import ResourceReference
 
 
-class FilesystemLocationResolver(PathResolver, LocationResolver):
+class FilesystemLocationResolver(LocationResolver):
     """
     Resolves physical filesystem locations.
-
-    During the Path-to-Location transition, this implementation satisfies
-    both resolver contracts.
     """
 
     def __init__(

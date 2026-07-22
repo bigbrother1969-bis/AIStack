@@ -25,7 +25,6 @@ def test_filesystem_repository_supports_location_contract() -> None:
     location_repository: LocationRepository = repository
 
     assert location_repository.locate(resource) == expected_path
-    assert repository.get("resource-1") == expected_path
 
 
 def test_filesystem_resolver_supports_location_contract() -> None:

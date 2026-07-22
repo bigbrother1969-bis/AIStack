@@ -1,19 +1,24 @@
 from __future__ import annotations
 
+from aistack.kernel.models import KnowledgePackage
+
 
 class PackageManager:
     """
-    Handles the lifecycle of Knowledge Packages.
+    Transport Layer facade.
 
-    Responsibilities will be introduced incrementally:
-    - package
-    - unpackage
-    - serialize
-    - deserialize
-    - compress
-    - decompress
-    - sign
-    - verify
-    - encrypt
-    - decrypt
+    The PackageManager orchestrates package capabilities.
+    It never implements packaging algorithms itself.
     """
+
+    def package(
+        self,
+        package: KnowledgePackage,
+    ) -> KnowledgePackage:
+        return package
+
+    def unpackage(
+        self,
+        package: KnowledgePackage,
+    ) -> KnowledgePackage:
+        return package

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from aistack.catalog.views.music import MusicSelectionViewEngine
-from aistack.kernel.context import Kernel
+from aistack.kernel import Kernel
 
 
 def register_default_catalog_views(kernel: Kernel) -> None:

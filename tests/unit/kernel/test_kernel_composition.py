@@ -5,7 +5,7 @@ from dataclasses import FrozenInstanceError
 import pytest
 
 from aistack.kernel.bootstrap.default import create_kernel
-from aistack.kernel.context import Kernel
+from aistack.kernel import Kernel
 from aistack.kernel.registries import KernelRegistries
 from aistack.kernel.services import KernelServices
 from aistack.transport.default_transport_engine import (

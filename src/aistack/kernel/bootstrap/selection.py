@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aistack.kernel.context import Kernel
+from aistack.kernel import Kernel
 from aistack.kernel.selection.strategies import ByIdsSelectionStrategy
 
 

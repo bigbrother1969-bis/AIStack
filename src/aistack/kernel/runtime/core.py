@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from aistack.kernel.bootstrap import create_kernel
-from aistack.kernel.context import Kernel
+from aistack.kernel import Kernel
 from aistack.kernel.runtime.state import RuntimeState
 from aistack.transport import DefaultTransportEngine
 

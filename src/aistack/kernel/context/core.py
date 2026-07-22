@@ -1,14 +1,19 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from aistack.kernel.registries import KernelRegistries
 from aistack.kernel.services import KernelServices
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Kernel:
-    """Root Kernel aggregating registries and services."""
+    """
+    Immutable representation of a fully composed AIStack runtime.
 
-    registries: KernelRegistries = field(default_factory=KernelRegistries)
-    services: KernelServices = field(default_factory=KernelServices)
+    The Kernel does not construct dependencies.
+    Runtime composition is exclusively performed by the bootstrap.
+    """
+
+    registries: KernelRegistries
+    services: KernelServices

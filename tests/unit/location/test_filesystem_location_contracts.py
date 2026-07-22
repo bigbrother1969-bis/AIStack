@@ -3,18 +3,18 @@ from types import SimpleNamespace
 from typing import cast
 
 from aistack.location import LocationRepository, LocationResolver
-from aistack.path.filesystem.filesystem_path_repository import (
-    FilesystemPathRepository,
+from aistack.path.filesystem.filesystem_location_repository import (
+    FilesystemLocationRepository,
 )
-from aistack.path.filesystem.filesystem_path_resolver import (
-    FilesystemPathResolver,
+from aistack.path.filesystem.filesystem_location_resolver import (
+    FilesystemLocationResolver,
 )
 from aistack.transport.contracts.resource_reference import ResourceReference
 
 
 def test_filesystem_repository_supports_location_contract() -> None:
     expected_path = Path("/tmp/resource")
-    repository = FilesystemPathRepository(
+    repository = FilesystemLocationRepository(
         mappings={"resource-1": expected_path},
     )
     resource = cast(
@@ -30,10 +30,10 @@ def test_filesystem_repository_supports_location_contract() -> None:
 
 def test_filesystem_resolver_supports_location_contract() -> None:
     expected_path = Path("/tmp/resource")
-    repository = FilesystemPathRepository(
+    repository = FilesystemLocationRepository(
         mappings={"resource-1": expected_path},
     )
-    resolver = FilesystemPathResolver(repository)
+    resolver = FilesystemLocationResolver(repository)
     resource = cast(
         ResourceReference,
         SimpleNamespace(resource_id="resource-1"),

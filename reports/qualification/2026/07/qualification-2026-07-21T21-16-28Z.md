@@ -1,0 +1,1048 @@
+# Knowledge Transport Layer Qualification Report
+
+- Qualification ID: `KTL-20260721T195216Z`
+- Started: `2026-07-21T19:52:16.591293+00:00`
+- Finished: `2026-07-21T21:16:28.365861+00:00`
+- Runner version: `2.1.0`
+- Git commit: `1a50096bd1f8187d599943656310479fdddef245`
+
+## Summary
+
+- Total scenarios: **26**
+- Succeeded: **25**
+- Failed: **1**
+- Mandatory failures: **1**
+- Measured duration: **2863.093 s**
+- Average throughput: **7.49 MiB/s**
+
+## Environment
+
+```json
+{
+  "hostname": "GIGABYTE",
+  "platform": "Linux-6.12.95+deb13-amd64-x86_64-with-glibc2.41",
+  "system": "Linux",
+  "release": "6.12.95+deb13-amd64",
+  "machine": "x86_64",
+  "python": "3.13.5",
+  "cpu_logical_count": 4,
+  "memory_total_bytes": 16776228864,
+  "filesystem": "ext4",
+  "disk_total_bytes": 226892955648,
+  "disk_free_bytes_at_start": 46956089344
+}
+```
+
+## Scenarios
+
+| Status | Scenario | Size | Duration | Throughput | Explanation |
+|---|---|---:|---:|---:|---|
+| PASS | `standard-01` | 0 B | 0.181 s | 0.00 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-02` | 34 B | 0.135 s | 0.00 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-03` | 56 B | 0.135 s | 0.00 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-04` | 62 B | 0.137 s | 0.00 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-05` | 27 B | 0.138 s | 0.00 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-06` | 38 B | 0.137 s | 0.00 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-07` | 128 KiB | 0.146 s | 0.85 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-08` | 128 KiB | 0.147 s | 0.85 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-09` | 128 KiB | 0.146 s | 0.86 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-10` | 128 KiB | 0.142 s | 0.88 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-11` | 256 KiB | 0.153 s | 1.63 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-12` | 256 KiB | 0.148 s | 1.69 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-13` | 512 KiB | 0.161 s | 3.11 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-14` | 512 KiB | 0.153 s | 3.27 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-15` | 512 KiB | 0.159 s | 3.15 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-16` | 1 MiB | 0.185 s | 5.39 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `standard-17` | 1 MiB | 0.173 s | 5.76 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `create-conflict` | 20 B | 0.130 s | 0.00 MiB/s | CREATE conflict was rejected and existing content was preserved. |
+| PASS | `replace-existing` | 19 B | 0.141 s | 0.00 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `batch-1000-small-files` | 3.90625 MiB | 141.408 s | 0.03 MiB/s | All 1000 files were delivered and verified. |
+| PASS | `large-100-mib` | 100 MiB | 2.410 s | 41.50 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `large-500-mib` | 500 MiB | 12.527 s | 39.92 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `large-1-gib` | 1 GiB | 32.110 s | 31.89 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `large-5-gib` | 5 GiB | 219.446 s | 23.33 MiB/s | Destination exists and size and SHA-256 match the source. |
+| PASS | `large-20-gib` | 20 GiB | 1307.859 s | 15.66 MiB/s | Destination exists and size and SHA-256 match the source. |
+| FAIL | `large-50-gib` | 0 B | 1144.486 s | 0.00 MiB/s | Scenario raised an unexpected exception. |
+
+## Detailed Results
+
+### standard-01
+
+```json
+{
+  "scenario_id": "standard-01",
+  "description": "empty file",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/empty.txt",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/empty.txt",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "destination_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_size_bytes": 0,
+    "destination_size_bytes": 0
+  },
+  "metrics": {
+    "duration_seconds": 0.18072772701270878,
+    "source_size_bytes": 0,
+    "throughput_mib_per_second": 0.0,
+    "process_cpu_seconds": 0.006397304000000048,
+    "system_cpu_average_percent": 7.852564102564102,
+    "system_cpu_peak_percent": 11.538461538461542,
+    "process_rss_peak_bytes": 28438528,
+    "source_sha256_seconds": 9.946699719876051e-05,
+    "destination_sha256_seconds": 0.00016318302368745208
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-02
+
+```json
+{
+  "scenario_id": "standard-02",
+  "description": "plain text",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/plain.txt",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/plain.txt",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "e0ad7379d72a789120277f8dd55e1645e71fe6b6069cbf6dfeb0a59f7be934cd",
+    "destination_sha256": "e0ad7379d72a789120277f8dd55e1645e71fe6b6069cbf6dfeb0a59f7be934cd",
+    "source_size_bytes": 34,
+    "destination_size_bytes": 34
+  },
+  "metrics": {
+    "duration_seconds": 0.13484244898427278,
+    "source_size_bytes": 34,
+    "throughput_mib_per_second": 0.00024046527634331494,
+    "process_cpu_seconds": 0.0071913110000000335,
+    "system_cpu_average_percent": 3.8461538461538436,
+    "system_cpu_peak_percent": 7.692307692307687,
+    "process_rss_peak_bytes": 28442624,
+    "source_sha256_seconds": 0.00017043098341673613,
+    "destination_sha256_seconds": 0.00014870503218844533
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-03
+
+```json
+{
+  "scenario_id": "standard-03",
+  "description": "Unicode and accented text",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/unicode/Connaissance gouvernee - ete.txt",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/unicode/Connaissance gouvernee - ete.txt",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "44d3b24352c2d7e56ebf3e100d863166f46c775e9cd33cb72e6accc2bf904146",
+    "destination_sha256": "44d3b24352c2d7e56ebf3e100d863166f46c775e9cd33cb72e6accc2bf904146",
+    "source_size_bytes": 56,
+    "destination_size_bytes": 56
+  },
+  "metrics": {
+    "duration_seconds": 0.1351821180433035,
+    "source_size_bytes": 56,
+    "throughput_mib_per_second": 0.00039506528298101004,
+    "process_cpu_seconds": 0.007161576000000003,
+    "system_cpu_average_percent": 6.0,
+    "system_cpu_peak_percent": 7.9999999999999964,
+    "process_rss_peak_bytes": 28442624,
+    "source_sha256_seconds": 0.0001509389840066433,
+    "destination_sha256_seconds": 0.0002122300211340189
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-04
+
+```json
+{
+  "scenario_id": "standard-04",
+  "description": "deep directory tree",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/deep/a/b/c/d/e/f/knowledge.json",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/deep/a/b/c/d/e/f/knowledge.json",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "8f074075c6287f0ea7cee02ebc94322bd0e5daabb6eef72a24c1d01a68e0b153",
+    "destination_sha256": "8f074075c6287f0ea7cee02ebc94322bd0e5daabb6eef72a24c1d01a68e0b153",
+    "source_size_bytes": 62,
+    "destination_size_bytes": 62
+  },
+  "metrics": {
+    "duration_seconds": 0.13711805996717885,
+    "source_size_bytes": 62,
+    "throughput_mib_per_second": 0.00043121823362539245,
+    "process_cpu_seconds": 0.008662202000000008,
+    "system_cpu_average_percent": 8.000000000000002,
+    "system_cpu_peak_percent": 16.000000000000004,
+    "process_rss_peak_bytes": 28454912,
+    "source_sha256_seconds": 0.00017082999693229795,
+    "destination_sha256_seconds": 0.00017152196960523725
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-05
+
+```json
+{
+  "scenario_id": "standard-05",
+  "description": "CSV",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/table.csv",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/table.csv",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "e70d856a1195b8d06821be252e34eccc5134263f9e9660d9a5a6a79099166013",
+    "destination_sha256": "e70d856a1195b8d06821be252e34eccc5134263f9e9660d9a5a6a79099166013",
+    "source_size_bytes": 27,
+    "destination_size_bytes": 27
+  },
+  "metrics": {
+    "duration_seconds": 0.1378260509809479,
+    "source_size_bytes": 27,
+    "throughput_mib_per_second": 0.00018682394481815443,
+    "process_cpu_seconds": 0.007268267999999967,
+    "system_cpu_average_percent": 2.0000000000000018,
+    "system_cpu_peak_percent": 4.0000000000000036,
+    "process_rss_peak_bytes": 28454912,
+    "source_sha256_seconds": 0.0002174680121243,
+    "destination_sha256_seconds": 0.0001907310215756297
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-06
+
+```json
+{
+  "scenario_id": "standard-06",
+  "description": "YAML",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/policy.yaml",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/policy.yaml",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "b035422d93082fa0a813dd5e24a523550a79c3492231cb5524ad41fc13fd4dda",
+    "destination_sha256": "b035422d93082fa0a813dd5e24a523550a79c3492231cb5524ad41fc13fd4dda",
+    "source_size_bytes": 38,
+    "destination_size_bytes": 38
+  },
+  "metrics": {
+    "duration_seconds": 0.1370063240174204,
+    "source_size_bytes": 38,
+    "throughput_mib_per_second": 0.0002645105930937145,
+    "process_cpu_seconds": 0.007276865999999993,
+    "system_cpu_average_percent": 2.0000000000000018,
+    "system_cpu_peak_percent": 4.0000000000000036,
+    "process_rss_peak_bytes": 28463104,
+    "source_sha256_seconds": 0.00014433101750910282,
+    "destination_sha256_seconds": 0.00015780102694407105
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-07
+
+```json
+{
+  "scenario_id": "standard-07",
+  "description": "PDF extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/document.pdf",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/document.pdf",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "destination_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "source_size_bytes": 131072,
+    "destination_size_bytes": 131072
+  },
+  "metrics": {
+    "duration_seconds": 0.1464728270075284,
+    "source_size_bytes": 131072,
+    "throughput_mib_per_second": 0.8534006105690529,
+    "process_cpu_seconds": 0.01885613399999997,
+    "system_cpu_average_percent": 17.11111111111111,
+    "system_cpu_peak_percent": 22.22222222222222,
+    "process_rss_peak_bytes": 28598272,
+    "source_sha256_seconds": 0.0031033389968797565,
+    "destination_sha256_seconds": 0.0026699500158429146
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-08
+
+```json
+{
+  "scenario_id": "standard-08",
+  "description": "DOCX extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/document.docx",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/document.docx",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "destination_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "source_size_bytes": 131072,
+    "destination_size_bytes": 131072
+  },
+  "metrics": {
+    "duration_seconds": 0.14690143999177963,
+    "source_size_bytes": 131072,
+    "throughput_mib_per_second": 0.8509106514340146,
+    "process_cpu_seconds": 0.01821081699999999,
+    "system_cpu_average_percent": 4.166666666666669,
+    "system_cpu_peak_percent": 8.333333333333337,
+    "process_rss_peak_bytes": 28598272,
+    "source_sha256_seconds": 0.0028460840112529695,
+    "destination_sha256_seconds": 0.0026769470423460007
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-09
+
+```json
+{
+  "scenario_id": "standard-09",
+  "description": "ODT extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/document.odt",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/document.odt",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "destination_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "source_size_bytes": 131072,
+    "destination_size_bytes": 131072
+  },
+  "metrics": {
+    "duration_seconds": 0.14560488500865176,
+    "source_size_bytes": 131072,
+    "throughput_mib_per_second": 0.8584876804962455,
+    "process_cpu_seconds": 0.015197259000000019,
+    "system_cpu_average_percent": 21.648550724637676,
+    "system_cpu_peak_percent": 39.13043478260869,
+    "process_rss_peak_bytes": 28602368,
+    "source_sha256_seconds": 0.002847642987035215,
+    "destination_sha256_seconds": 0.000767555960919708
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-10
+
+```json
+{
+  "scenario_id": "standard-10",
+  "description": "PPTX extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/presentation.pptx",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/presentation.pptx",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "destination_sha256": "8ec691ebcadaab751b678c2cb7741f273e6ce001549080145b82c9d51f8f2997",
+    "source_size_bytes": 131072,
+    "destination_size_bytes": 131072
+  },
+  "metrics": {
+    "duration_seconds": 0.14157015597447753,
+    "source_size_bytes": 131072,
+    "throughput_mib_per_second": 0.8829544556165861,
+    "process_cpu_seconds": 0.015265490999999964,
+    "system_cpu_average_percent": 19.999999999999996,
+    "system_cpu_peak_percent": 31.999999999999996,
+    "process_rss_peak_bytes": 28602368,
+    "source_sha256_seconds": 0.00073239702032879,
+    "destination_sha256_seconds": 0.0027599160093814135
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-11
+
+```json
+{
+  "scenario_id": "standard-11",
+  "description": "PNG extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/image.png",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/image.png",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "6260b3e0bbe0a1a7918d2276551136bf85b412a73a3311ba15d2f2a2450ae88b",
+    "destination_sha256": "6260b3e0bbe0a1a7918d2276551136bf85b412a73a3311ba15d2f2a2450ae88b",
+    "source_size_bytes": 262144,
+    "destination_size_bytes": 262144
+  },
+  "metrics": {
+    "duration_seconds": 0.15341682103462517,
+    "source_size_bytes": 262144,
+    "throughput_mib_per_second": 1.6295475184144028,
+    "process_cpu_seconds": 0.029424010999999917,
+    "system_cpu_average_percent": 2.1739130434782594,
+    "system_cpu_peak_percent": 4.347826086956519,
+    "process_rss_peak_bytes": 28741632,
+    "source_sha256_seconds": 0.005568407999817282,
+    "destination_sha256_seconds": 0.0054212320246733725
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-12
+
+```json
+{
+  "scenario_id": "standard-12",
+  "description": "JPG extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/photo.jpg",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/photo.jpg",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "6260b3e0bbe0a1a7918d2276551136bf85b412a73a3311ba15d2f2a2450ae88b",
+    "destination_sha256": "6260b3e0bbe0a1a7918d2276551136bf85b412a73a3311ba15d2f2a2450ae88b",
+    "source_size_bytes": 262144,
+    "destination_size_bytes": 262144
+  },
+  "metrics": {
+    "duration_seconds": 0.14835074497386813,
+    "source_size_bytes": 262144,
+    "throughput_mib_per_second": 1.685195447074009,
+    "process_cpu_seconds": 0.02413784200000002,
+    "system_cpu_average_percent": 3.9999999999999982,
+    "system_cpu_peak_percent": 7.9999999999999964,
+    "process_rss_peak_bytes": 28745728,
+    "source_sha256_seconds": 0.001422987028490752,
+    "destination_sha256_seconds": 0.005251233989838511
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-13
+
+```json
+{
+  "scenario_id": "standard-13",
+  "description": "ZIP extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/archive.zip",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/archive.zip",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "42fdbfa92fd49bb7239f16dc186a41755b7236c48c6e6f85635b6084a926f948",
+    "destination_sha256": "42fdbfa92fd49bb7239f16dc186a41755b7236c48c6e6f85635b6084a926f948",
+    "source_size_bytes": 524288,
+    "destination_size_bytes": 524288
+  },
+  "metrics": {
+    "duration_seconds": 0.16079989599529654,
+    "source_size_bytes": 524288,
+    "throughput_mib_per_second": 3.109454747499496,
+    "process_cpu_seconds": 0.031073522999999992,
+    "system_cpu_average_percent": 4.083333333333333,
+    "system_cpu_peak_percent": 4.1666666666666625,
+    "process_rss_peak_bytes": 29011968,
+    "source_sha256_seconds": 0.010872169979847968,
+    "destination_sha256_seconds": 0.003644034033641219
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-14
+
+```json
+{
+  "scenario_id": "standard-14",
+  "description": "MP3 extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/audio.mp3",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/audio.mp3",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "42fdbfa92fd49bb7239f16dc186a41755b7236c48c6e6f85635b6084a926f948",
+    "destination_sha256": "42fdbfa92fd49bb7239f16dc186a41755b7236c48c6e6f85635b6084a926f948",
+    "source_size_bytes": 524288,
+    "destination_size_bytes": 524288
+  },
+  "metrics": {
+    "duration_seconds": 0.1529547130339779,
+    "source_size_bytes": 524288,
+    "throughput_mib_per_second": 3.2689414407840327,
+    "process_cpu_seconds": 0.031149373999999952,
+    "system_cpu_average_percent": 12.0,
+    "system_cpu_peak_percent": 24.0,
+    "process_rss_peak_bytes": 29011968,
+    "source_sha256_seconds": 0.003604937985073775,
+    "destination_sha256_seconds": 0.010280932998284698
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-15
+
+```json
+{
+  "scenario_id": "standard-15",
+  "description": "FLAC extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/audio.flac",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/audio.flac",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "42fdbfa92fd49bb7239f16dc186a41755b7236c48c6e6f85635b6084a926f948",
+    "destination_sha256": "42fdbfa92fd49bb7239f16dc186a41755b7236c48c6e6f85635b6084a926f948",
+    "source_size_bytes": 524288,
+    "destination_size_bytes": 524288
+  },
+  "metrics": {
+    "duration_seconds": 0.15864998300094157,
+    "source_size_bytes": 524288,
+    "throughput_mib_per_second": 3.1515918914219645,
+    "process_cpu_seconds": 0.03825626800000004,
+    "system_cpu_average_percent": 5.929487179487175,
+    "system_cpu_peak_percent": 7.692307692307687,
+    "process_rss_peak_bytes": 29016064,
+    "source_sha256_seconds": 0.010303990973625332,
+    "destination_sha256_seconds": 0.010262394032906741
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-16
+
+```json
+{
+  "scenario_id": "standard-16",
+  "description": "MKV extension",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/video.mkv",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/video.mkv",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "bb073b112df256cd0cadc12f74773797d66e5f119bcccb988c7d0a488158f495",
+    "destination_sha256": "bb073b112df256cd0cadc12f74773797d66e5f119bcccb988c7d0a488158f495",
+    "source_size_bytes": 1048576,
+    "destination_size_bytes": 1048576
+  },
+  "metrics": {
+    "duration_seconds": 0.18545573600567877,
+    "source_size_bytes": 1048576,
+    "throughput_mib_per_second": 5.392122247269717,
+    "process_cpu_seconds": 0.07077889699999995,
+    "system_cpu_average_percent": 4.166666666666669,
+    "system_cpu_peak_percent": 8.333333333333337,
+    "process_rss_peak_bytes": 29552640,
+    "source_sha256_seconds": 0.02126290398882702,
+    "destination_sha256_seconds": 0.020404894021339715
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### standard-17
+
+```json
+{
+  "scenario_id": "standard-17",
+  "description": "binary content",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/binary.bin",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/binary.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "bb073b112df256cd0cadc12f74773797d66e5f119bcccb988c7d0a488158f495",
+    "destination_sha256": "bb073b112df256cd0cadc12f74773797d66e5f119bcccb988c7d0a488158f495",
+    "source_size_bytes": 1048576,
+    "destination_size_bytes": 1048576
+  },
+  "metrics": {
+    "duration_seconds": 0.17348359699826688,
+    "source_size_bytes": 1048576,
+    "throughput_mib_per_second": 5.764233721819765,
+    "process_cpu_seconds": 0.057628506999999995,
+    "system_cpu_average_percent": 15.865384615384615,
+    "system_cpu_peak_percent": 19.23076923076923,
+    "process_rss_peak_bytes": 29552640,
+    "source_sha256_seconds": 0.019329143979121,
+    "destination_sha256_seconds": 0.020456302969250828
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### create-conflict
+
+```json
+{
+  "scenario_id": "create-conflict",
+  "description": "CREATE must preserve an existing destination",
+  "mandatory": true,
+  "success": true,
+  "explanation": "CREATE conflict was rejected and existing content was preserved.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/create-conflict.txt",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/create-conflict.txt",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": false
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "3aec0abedd1c5b5be2b5b5905cca87be7420d78aefdc462197f5414cbaac84ed",
+    "destination_sha256": "08d0ef5ea432d69b6a1a15997ecdd26557f93fce0703e886f3ef4104a3b4d039",
+    "source_size_bytes": 20,
+    "destination_size_bytes": 25,
+    "destination_preserved": true
+  },
+  "metrics": {
+    "duration_seconds": 0.13030691299354658,
+    "source_size_bytes": 20,
+    "throughput_mib_per_second": 0.00014637355678182333,
+    "process_cpu_seconds": 0.006481901000000012,
+    "system_cpu_average_percent": 9.401709401709402,
+    "system_cpu_peak_percent": 11.111111111111116,
+    "process_rss_peak_bytes": 25329664,
+    "source_sha256_seconds": 0.00013318494893610477,
+    "destination_sha256_seconds": 0.00018420402193441987
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### replace-existing
+
+```json
+{
+  "scenario_id": "replace-existing",
+  "description": "REPLACE must overwrite an existing destination",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/replace.txt",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/replace.txt",
+  "delivery_mode": "replace",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "a3be89a03562b5dc60bc2e5af28ff981cf287d60ee02ad1afebca7cbafc81189",
+    "destination_sha256": "a3be89a03562b5dc60bc2e5af28ff981cf287d60ee02ad1afebca7cbafc81189",
+    "source_size_bytes": 19,
+    "destination_size_bytes": 19
+  },
+  "metrics": {
+    "duration_seconds": 0.1412048579659313,
+    "source_size_bytes": 19,
+    "throughput_mib_per_second": 0.00012832286560629906,
+    "process_cpu_seconds": 0.00741304399999998,
+    "system_cpu_average_percent": 7.55555555555556,
+    "system_cpu_peak_percent": 11.111111111111116,
+    "process_rss_peak_bytes": 25329664,
+    "source_sha256_seconds": 0.00014005496632307768,
+    "destination_sha256_seconds": 0.00016158900689333677
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### batch-1000-small-files
+
+```json
+{
+  "scenario_id": "batch-1000-small-files",
+  "description": "Transport 1,000 deterministic 4 KiB files",
+  "mandatory": true,
+  "success": true,
+  "explanation": "All 1000 files were delivered and verified.",
+  "source": null,
+  "destination": null,
+  "delivery_mode": null,
+  "expected": {
+    "file_count": 1000,
+    "file_size_bytes": 4096
+  },
+  "observed": {
+    "successful": 1000,
+    "errors": []
+  },
+  "metrics": {
+    "duration_seconds": 141.40799886803143,
+    "source_size_bytes": 4096000,
+    "throughput_mib_per_second": 0.027623967747719105,
+    "process_cpu_seconds": 0.0,
+    "system_cpu_average_percent": null,
+    "system_cpu_peak_percent": null,
+    "process_rss_peak_bytes": null,
+    "source_sha256_seconds": 0.0,
+    "destination_sha256_seconds": 0.0
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### large-100-mib
+
+```json
+{
+  "scenario_id": "large-100-mib",
+  "description": "Transport a 100 MiB file",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/large/large-100-mib.bin",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/large/large-100-mib.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "5762ef623f792ef0342703573b0a034a8147543dabb54b8e6996015444495ae2",
+    "destination_sha256": "5762ef623f792ef0342703573b0a034a8147543dabb54b8e6996015444495ae2",
+    "source_size_bytes": 104857600,
+    "destination_size_bytes": 104857600
+  },
+  "metrics": {
+    "duration_seconds": 2.4095825479598716,
+    "source_size_bytes": 104857600,
+    "throughput_mib_per_second": 41.50096459018069,
+    "process_cpu_seconds": 2.476724655,
+    "system_cpu_average_percent": 29.80285254198298,
+    "system_cpu_peak_percent": 60.0,
+    "process_rss_peak_bytes": 41058304,
+    "source_sha256_seconds": 0.5944304069853388,
+    "destination_sha256_seconds": 0.5621705100056715
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### large-500-mib
+
+```json
+{
+  "scenario_id": "large-500-mib",
+  "description": "Transport a 500 MiB file",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/large/large-500-mib.bin",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/large/large-500-mib.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "16caa831de4d323da5e07445f9e3a2b6f05ae1808fb273b11c152ae24fe3e135",
+    "destination_sha256": "16caa831de4d323da5e07445f9e3a2b6f05ae1808fb273b11c152ae24fe3e135",
+    "source_size_bytes": 524288000,
+    "destination_size_bytes": 524288000
+  },
+  "metrics": {
+    "duration_seconds": 12.526553875009995,
+    "source_size_bytes": 524288000,
+    "throughput_mib_per_second": 39.91520772504569,
+    "process_cpu_seconds": 13.692916131,
+    "system_cpu_average_percent": 39.14304140306592,
+    "system_cpu_peak_percent": 100.0,
+    "process_rss_peak_bytes": 41058304,
+    "source_sha256_seconds": 2.7864235540037043,
+    "destination_sha256_seconds": 3.3334669769974425
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### large-1-gib
+
+```json
+{
+  "scenario_id": "large-1-gib",
+  "description": "Transport a 1 GiB file",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/large/large-1-gib.bin",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/large/large-1-gib.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "400f2529ced757159c2c467dd8cae1a7a116764b57f7593e3809397545338e42",
+    "destination_sha256": "400f2529ced757159c2c467dd8cae1a7a116764b57f7593e3809397545338e42",
+    "source_size_bytes": 1073741824,
+    "destination_size_bytes": 1073741824
+  },
+  "metrics": {
+    "duration_seconds": 32.1097476319992,
+    "source_size_bytes": 1073741824,
+    "throughput_mib_per_second": 31.89062747349423,
+    "process_cpu_seconds": 34.550693763,
+    "system_cpu_average_percent": 31.225771870874024,
+    "system_cpu_peak_percent": 100.0,
+    "process_rss_peak_bytes": 41123840,
+    "source_sha256_seconds": 6.461982033972163,
+    "destination_sha256_seconds": 9.090776944998652
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### large-5-gib
+
+```json
+{
+  "scenario_id": "large-5-gib",
+  "description": "Transport a 5 GiB file",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/large/large-5-gib.bin",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/large/large-5-gib.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "a0eca67dc5b6af1dc7758cc5f319e3d5b9df2ccefa9d6ea0b734ea305d7bdc44",
+    "destination_sha256": "a0eca67dc5b6af1dc7758cc5f319e3d5b9df2ccefa9d6ea0b734ea305d7bdc44",
+    "source_size_bytes": 5368709120,
+    "destination_size_bytes": 5368709120
+  },
+  "metrics": {
+    "duration_seconds": 219.4459186180029,
+    "source_size_bytes": 5368709120,
+    "throughput_mib_per_second": 23.3314888344429,
+    "process_cpu_seconds": 258.876091448,
+    "system_cpu_average_percent": 39.24254559190515,
+    "system_cpu_peak_percent": 100.0,
+    "process_rss_peak_bytes": 41148416,
+    "source_sha256_seconds": 38.90896947897272,
+    "destination_sha256_seconds": 80.44923838297836
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### large-20-gib
+
+```json
+{
+  "scenario_id": "large-20-gib",
+  "description": "Transport a 20 GiB file",
+  "mandatory": true,
+  "success": true,
+  "explanation": "Destination exists and size and SHA-256 match the source.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/large/large-20-gib.bin",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/large/large-20-gib.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {
+    "destination_exists": true,
+    "source_sha256": "f44b84f692bb0fff6494f298dcc3823f8afaca1e980a5d7211d886a0b63645f4",
+    "destination_sha256": "f44b84f692bb0fff6494f298dcc3823f8afaca1e980a5d7211d886a0b63645f4",
+    "source_size_bytes": 21474836480,
+    "destination_size_bytes": 21474836480
+  },
+  "metrics": {
+    "duration_seconds": 1307.8591526229866,
+    "source_size_bytes": 21474836480,
+    "throughput_mib_per_second": 15.65917855827685,
+    "process_cpu_seconds": 1383.8127751260001,
+    "system_cpu_average_percent": 39.56190743551014,
+    "system_cpu_peak_percent": 100.0,
+    "process_rss_peak_bytes": 41320448,
+    "source_sha256_seconds": 334.41977397102164,
+    "destination_sha256_seconds": 372.17865846696077
+  },
+  "error_type": null,
+  "error_message": null
+}
+```
+
+### large-50-gib
+
+```json
+{
+  "scenario_id": "large-50-gib",
+  "description": "Transport a 50 GiB file",
+  "mandatory": true,
+  "success": false,
+  "explanation": "Scenario raised an unexpected exception.",
+  "source": "/srv/aistack/AISTack/.qualification-workspace/ktl/source/large/large-50-gib.bin",
+  "destination": "/srv/aistack/AISTack/.qualification-workspace/ktl/destination/large/large-50-gib.bin",
+  "delivery_mode": "create",
+  "expected": {
+    "transport_success": true
+  },
+  "observed": {},
+  "metrics": {
+    "duration_seconds": 1144.4862583260401,
+    "source_size_bytes": 0,
+    "throughput_mib_per_second": 0.0,
+    "process_cpu_seconds": 1989.002766685,
+    "system_cpu_average_percent": 30.46401256110009,
+    "system_cpu_peak_percent": 100.0,
+    "process_rss_peak_bytes": 41684992,
+    "source_sha256_seconds": 0.0,
+    "destination_sha256_seconds": 0.0
+  },
+  "error_type": "OSError",
+  "error_message": "[Errno 28] No space left on device"
+}
+```

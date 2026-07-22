@@ -1,34 +1,24 @@
-"""
-Knowledge Transport Layer - Writer interface.
-"""
-
 from __future__ import annotations
 
-from typing import Protocol
+from typing import BinaryIO, Protocol
 
 from aistack.transport.contracts.resource_reference import ResourceReference
 
 
 class Writer(Protocol):
     """
-    Writes a governed resource to a destination.
+    Persists a governed resource from a binary stream.
     """
 
     def exists(
         self,
         resource: ResourceReference,
     ) -> bool:
-        """
-        Return True if the destination resource already exists.
-        """
         ...
 
     def write(
         self,
         resource: ResourceReference,
-        data: bytes,
+        stream: BinaryIO,
     ) -> None:
-        """
-        Persist the serialized representation of a resource.
-        """
         ...

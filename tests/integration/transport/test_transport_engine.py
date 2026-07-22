@@ -1,205 +1,203 @@
 from pathlib import Path
 
 from aistack.path.filesystem import (
-    FilesystemPathRepository,
-    FilesystemPathResolver,
+    FilesystemLocationRepository,
+    FilesystemLocationResolver,
 )
-from aistack.transport import DefaultTransportEngine
 from aistack.transport.capabilities import FilesystemTransportCapability
 from aistack.transport.contracts import (
     DeliveryMode,
     ResourceReference,
     TransportEndpoint,
     TransportRequest,
+    TransportResult,
     TransportStatus,
+)
+from aistack.transport.default_transport_engine import (
+    DefaultTransportEngine,
+)
+from aistack.transport.delivery_verifier import (
+    DeliveryVerifier,
 )
 from aistack.transport.filesystem import (
     FilesystemReceiver,
     FilesystemWriter,
 )
-from aistack.transport.registry import InMemoryTransportRegistry
+from aistack.transport.registry import (
+    InMemoryTransportRegistry,
+)
 
 
-class DummyVerifier:
-    def verify(self, request, result) -> bool:
+class DummyVerifier(DeliveryVerifier):
+    def verify(
+        self,
+        capability,
+        request: TransportRequest,
+        result: TransportResult,
+    ) -> bool:
         return True
 
 
-def test_transport_engine(tmp_path: Path):
-    root = tmp_path / "storage"
-    root.mkdir()
+def build_engine(
+    repository: FilesystemLocationRepository,
+) -> DefaultTransportEngine:
 
-    hello_file = root / "hello.txt"
-    hello_file.write_text("Hello AIStack!")
-
-    copy_file = root / "copy.txt"
-
-    repository = FilesystemPathRepository(
-        {
-            "hello.txt": hello_file,
-            "copy.txt": copy_file,
-        }
-    )
-
-    resolver = FilesystemPathResolver(repository)
-
-    receiver = FilesystemReceiver(resolver)
-    writer = FilesystemWriter(resolver)
+    resolver = FilesystemLocationResolver(repository)
 
     capability = FilesystemTransportCapability(
-        receiver=receiver,
-        writer=writer,
-        verifier=DummyVerifier(),
+        receiver=FilesystemReceiver(resolver),
+        writer=FilesystemWriter(resolver),
     )
 
     registry = InMemoryTransportRegistry()
-    registry.register("filesystem", capability)
+    registry.register(
+        "filesystem",
+        capability,
+    )
 
-    engine = DefaultTransportEngine(registry)
+    return DefaultTransportEngine(
+        registry,
+        DummyVerifier(),
+    )
 
-    endpoint = TransportEndpoint(
+
+def build_endpoint() -> TransportEndpoint:
+
+    return TransportEndpoint(
         endpoint_id="local",
         endpoint_type="filesystem",
         uri="unused",
         metadata={},
     )
 
-    request = TransportRequest(
-        source_resource=ResourceReference(
-            resource_type="file",
-            resource_id="hello.txt",
-        ),
-        destination_resource=ResourceReference(
-            resource_type="file",
-            resource_id="copy.txt",
-        ),
-        source=endpoint,
-        destination=endpoint,
-        delivery_mode=DeliveryMode.REPLACE,
-        correlation_id="tx1",
+
+def test_transport_engine(tmp_path: Path):
+
+    root = tmp_path / "storage"
+    root.mkdir()
+
+    hello = root / "hello.txt"
+    hello.write_text("Hello AIStack!")
+
+    copy = root / "copy.txt"
+
+    repository = FilesystemLocationRepository(
+        {
+            "hello.txt": hello,
+            "copy.txt": copy,
+        }
     )
 
-    result = engine.transport(request)
+    engine = build_engine(repository)
 
-    assert copy_file.read_text() == "Hello AIStack!"
+    endpoint = build_endpoint()
+
+    result = engine.transport(
+        TransportRequest(
+            source_resource=ResourceReference(
+                resource_type="file",
+                resource_id="hello.txt",
+            ),
+            destination_resource=ResourceReference(
+                resource_type="file",
+                resource_id="copy.txt",
+            ),
+            source=endpoint,
+            destination=endpoint,
+            delivery_mode=DeliveryMode.REPLACE,
+            correlation_id="tx1",
+        )
+    )
+
+    assert copy.read_text() == "Hello AIStack!"
     assert result.delivered is True
     assert result.verified is True
     assert result.status is TransportStatus.VERIFIED
 
+
 def test_transport_create_when_destination_missing(tmp_path: Path):
+
     root = tmp_path / "storage"
     root.mkdir()
 
-    hello_file = root / "hello.txt"
-    hello_file.write_text("Hello AIStack!")
+    hello = root / "hello.txt"
+    hello.write_text("Hello AIStack!")
 
-    copy_file = root / "copy.txt"
+    copy = root / "copy.txt"
 
-    repository = FilesystemPathRepository(
+    repository = FilesystemLocationRepository(
         {
-            "hello.txt": hello_file,
-            "copy.txt": copy_file,
+            "hello.txt": hello,
+            "copy.txt": copy,
         }
     )
 
-    resolver = FilesystemPathResolver(repository)
+    engine = build_engine(repository)
 
-    capability = FilesystemTransportCapability(
-        receiver=FilesystemReceiver(resolver),
-        writer=FilesystemWriter(resolver),
-        verifier=DummyVerifier(),
+    endpoint = build_endpoint()
+
+    result = engine.transport(
+        TransportRequest(
+            source_resource=ResourceReference(
+                resource_type="file",
+                resource_id="hello.txt",
+            ),
+            destination_resource=ResourceReference(
+                resource_type="file",
+                resource_id="copy.txt",
+            ),
+            source=endpoint,
+            destination=endpoint,
+            delivery_mode=DeliveryMode.CREATE,
+            correlation_id="tx-create",
+        )
     )
 
-    registry = InMemoryTransportRegistry()
-    registry.register("filesystem", capability)
-
-    engine = DefaultTransportEngine(registry)
-
-    endpoint = TransportEndpoint(
-        endpoint_id="local",
-        endpoint_type="filesystem",
-        uri="unused",
-        metadata={},
-    )
-
-    request = TransportRequest(
-        source_resource=ResourceReference(
-            resource_type="file",
-            resource_id="hello.txt",
-        ),
-        destination_resource=ResourceReference(
-            resource_type="file",
-            resource_id="copy.txt",
-        ),
-        source=endpoint,
-        destination=endpoint,
-        delivery_mode=DeliveryMode.CREATE,
-        correlation_id="tx-create",
-    )
-
-    result = engine.transport(request)
-
-    assert copy_file.exists()
-    assert copy_file.read_text() == "Hello AIStack!"
+    assert copy.exists()
+    assert copy.read_text() == "Hello AIStack!"
     assert result.status is TransportStatus.VERIFIED
 
+
 def test_transport_create_when_destination_exists(tmp_path: Path):
+
     root = tmp_path / "storage"
     root.mkdir()
 
-    hello_file = root / "hello.txt"
-    hello_file.write_text("Hello AIStack!")
+    hello = root / "hello.txt"
+    hello.write_text("Hello AIStack!")
 
-    copy_file = root / "copy.txt"
-    copy_file.write_text("Already here")
+    copy = root / "copy.txt"
+    copy.write_text("Already here")
 
-    repository = FilesystemPathRepository(
+    repository = FilesystemLocationRepository(
         {
-            "hello.txt": hello_file,
-            "copy.txt": copy_file,
+            "hello.txt": hello,
+            "copy.txt": copy,
         }
     )
 
-    resolver = FilesystemPathResolver(repository)
+    engine = build_engine(repository)
 
-    capability = FilesystemTransportCapability(
-        receiver=FilesystemReceiver(resolver),
-        writer=FilesystemWriter(resolver),
-        verifier=DummyVerifier(),
+    endpoint = build_endpoint()
+
+    result = engine.transport(
+        TransportRequest(
+            source_resource=ResourceReference(
+                resource_type="file",
+                resource_id="hello.txt",
+            ),
+            destination_resource=ResourceReference(
+                resource_type="file",
+                resource_id="copy.txt",
+            ),
+            source=endpoint,
+            destination=endpoint,
+            delivery_mode=DeliveryMode.CREATE,
+            correlation_id="tx-create-fail",
+        )
     )
-
-    registry = InMemoryTransportRegistry()
-    registry.register("filesystem", capability)
-
-    engine = DefaultTransportEngine(registry)
-
-    endpoint = TransportEndpoint(
-        endpoint_id="local",
-        endpoint_type="filesystem",
-        uri="unused",
-        metadata={},
-    )
-
-    request = TransportRequest(
-        source_resource=ResourceReference(
-            resource_type="file",
-            resource_id="hello.txt",
-        ),
-        destination_resource=ResourceReference(
-            resource_type="file",
-            resource_id="copy.txt",
-        ),
-        source=endpoint,
-        destination=endpoint,
-        delivery_mode=DeliveryMode.CREATE,
-        correlation_id="tx-create-fail",
-    )
-
-    result = engine.transport(request)
 
     assert result.status is TransportStatus.FAILED
     assert result.delivered is False
     assert result.verified is False
-
-    # destination must remain untouched
-    assert copy_file.read_text() == "Already here"
+    assert copy.read_text() == "Already here"

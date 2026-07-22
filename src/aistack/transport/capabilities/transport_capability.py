@@ -6,14 +6,13 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from aistack.transport.interfaces.delivery_verifier import DeliveryVerifier
 from aistack.transport.interfaces.receiver import Receiver
 from aistack.transport.interfaces.writer import Writer
 
 
 class TransportCapability(Protocol):
     """
-    Groups all transport services for one transport technology.
+    Groups all technology-specific transport primitives.
     """
 
     @property
@@ -22,8 +21,4 @@ class TransportCapability(Protocol):
 
     @property
     def writer(self) -> Writer:
-        ...
-
-    @property
-    def verifier(self) -> DeliveryVerifier:
         ...

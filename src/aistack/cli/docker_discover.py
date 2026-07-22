@@ -3,11 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from aistack.generators.docker import DockerObservationArtifactGenerator
-from aistack.kernel.bootstrap import create_kernel_context
+from aistack.kernel.bootstrap import create_kernel
 
 
 def main() -> None:
-    ctx = create_kernel_context()
+    ctx = create_kernel()
     observation = ctx.providers.get("docker").collect()
 
     output_path = DockerObservationArtifactGenerator().generate(

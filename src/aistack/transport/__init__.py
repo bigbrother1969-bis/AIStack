@@ -14,9 +14,11 @@ from aistack.transport.contracts import (
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
 )
+from aistack.transport.delivery_verifier import DeliveryVerifier
 
 __all__ = [
     "DefaultTransportEngine",
+    "DeliveryVerifier",
     "DeliveryMode",
     "KnowledgeArtifact",
     "ResourceReference",

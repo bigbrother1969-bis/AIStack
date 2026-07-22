@@ -6,7 +6,10 @@ from dataclasses import dataclass
 @dataclass(frozen=True, slots=True)
 class KnowledgePackage:
     """
-    Transportable package of governed knowledge.
+    Passive transport container for knowledge.
 
-    The internal representation will evolve incrementally.
+    Its identifier is the only mandatory invariant.
+    It enables traceability, replay, rollback, and historization.
     """
+
+    id: str

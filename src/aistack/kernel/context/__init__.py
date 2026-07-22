@@ -1,3 +1,5 @@
-from aistack.kernel.context.core import Kernel
+from aistack.kernel.core import Kernel
 
-__all__ = ["Kernel"]
+__all__ = [
+    "Kernel",
+]

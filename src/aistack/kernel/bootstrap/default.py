@@ -9,7 +9,7 @@ from aistack.kernel.bootstrap.providers import (
 from aistack.kernel.bootstrap.selection import (
     register_default_selection_strategies,
 )
-from aistack.kernel.context import Kernel
+from aistack.kernel import Kernel
 from aistack.kernel.registries import KernelRegistries
 from aistack.kernel.registries.catalog_view_registry import CatalogViewRegistry
 from aistack.kernel.registries.provider_registry import ProviderRegistry

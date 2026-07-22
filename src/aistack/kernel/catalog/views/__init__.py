@@ -1,3 +1,9 @@
-from aistack.kernel.catalog.views.core import CatalogView
+from aistack.kernel.catalog.views.core import (
+    CatalogView,
+    CatalogViewItem,
+)
 
-__all__ = ["CatalogView"]
+__all__ = [
+    "CatalogView",
+    "CatalogViewItem",
+]

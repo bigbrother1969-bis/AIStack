@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from aistack.path.filesystem import (
+from aistack.location.filesystem import (
     FilesystemLocationRepository,
     FilesystemLocationResolver,
 )

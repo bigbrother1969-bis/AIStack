@@ -3,10 +3,10 @@ from types import SimpleNamespace
 from typing import cast
 
 from aistack.location import LocationRepository, LocationResolver
-from aistack.path.filesystem.filesystem_location_repository import (
+from aistack.location.filesystem.filesystem_location_repository import (
     FilesystemLocationRepository,
 )
-from aistack.path.filesystem.filesystem_location_resolver import (
+from aistack.location.filesystem.filesystem_location_resolver import (
     FilesystemLocationResolver,
 )
 from aistack.transport.contracts.resource_reference import ResourceReference

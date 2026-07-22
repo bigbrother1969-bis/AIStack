@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from aistack.path.filesystem.filesystem_location_repository import (
+from aistack.location.filesystem.filesystem_location_repository import (
     FilesystemLocationRepository,
 )
-from aistack.path.filesystem.filesystem_location_resolver import (
+from aistack.location.filesystem.filesystem_location_resolver import (
     FilesystemLocationResolver,
 )
 from aistack.transaction.adapters.transport_operation_engine import (

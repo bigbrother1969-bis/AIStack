@@ -2,12 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aistack.kernel.services.execution import ExecutionServices
+from aistack.kernel.services.execution import (
+    ExecutionServices,
+)
+
+from aistack.kernel.services.knowledge.core import (
+    KnowledgeServices,
+)
 
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
 )
-from aistack.transport.delivery_verifier import DeliveryVerifier
+from aistack.transport.delivery_verifier import (
+    DeliveryVerifier,
+)
 from aistack.transport.registry.in_memory_transport_registry import (
     InMemoryTransportRegistry,
 )
@@ -17,9 +25,6 @@ from aistack.transport.registry.in_memory_transport_registry import (
 class KernelServices:
     """
     Immutable aggregate of composed Kernel services.
-
-    Services are already composed dependencies.
-    They do not create or orchestrate other services.
     """
 
     transport_registry: InMemoryTransportRegistry
@@ -27,3 +32,4 @@ class KernelServices:
     transport: DefaultTransportEngine
 
     execution: ExecutionServices
+    knowledge: KnowledgeServices

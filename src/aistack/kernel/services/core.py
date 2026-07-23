@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from aistack.kernel.tracing import TraceRepository
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
 )
@@ -23,3 +24,4 @@ class KernelServices:
     transport_registry: InMemoryTransportRegistry
     delivery_verifier: DeliveryVerifier
     transport: DefaultTransportEngine
+    trace_repository: TraceRepository

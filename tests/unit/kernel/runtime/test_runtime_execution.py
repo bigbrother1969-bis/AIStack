@@ -92,3 +92,26 @@ def test_runtime_does_not_resolve_unknown_task() -> None:
 
     with pytest.raises(KeyError):
         runtime.execute(request)
+
+def test_runtime_persists_execution_trace() -> None:
+    runtime = KernelRuntime.boot()
+
+    task = RecordingTask()
+
+    runtime.kernel.registries.tasks.register(
+        task.task_id,
+        task,
+    )
+
+    request = Request(
+        request_id="request-002",
+        task_id=task.task_id,
+    )
+
+    trace = runtime.execute(request)
+
+    stored = runtime.trace_repository.get_all()
+
+    assert stored == (
+        trace,
+    )

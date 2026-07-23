@@ -6,7 +6,7 @@ import pytest
 
 from aistack.kernel.bootstrap.default import create_kernel
 from aistack.kernel import Kernel
-from aistack.kernel.registries import KernelRegistries
+from aistack.kernel.registries import KernelRegistries, TaskRegistry
 from aistack.kernel.services import KernelServices
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
@@ -22,6 +22,7 @@ def test_create_kernel_composes_expected_runtime_graph() -> None:
 
     assert isinstance(kernel, Kernel)
     assert isinstance(kernel.registries, KernelRegistries)
+    assert isinstance(kernel.registries.tasks, TaskRegistry)
     assert isinstance(kernel.services, KernelServices)
 
     assert isinstance(

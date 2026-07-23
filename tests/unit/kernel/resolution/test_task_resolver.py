@@ -28,4 +28,6 @@ def test_task_resolver_resolves_registered_task() -> None:
         )
     )
 
-    assert resolved is task
+    assert resolved.task is task
+    assert resolved.resolver == "TaskResolver"
+    assert "task" in resolved.reason.lower()

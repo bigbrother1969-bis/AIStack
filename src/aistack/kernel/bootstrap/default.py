@@ -24,7 +24,10 @@ from aistack.kernel.registries.task_registry import (
     TaskRegistry,
 )
 from aistack.kernel.services import KernelServices
-from aistack.kernel.tracing import (
+from aistack.kernel.services.execution import (
+    ExecutionServices,
+)
+from aistack.kernel.tracing.repository import (
     InMemoryTraceRepository,
 )
 from aistack.transport.default_transport_engine import (
@@ -42,8 +45,10 @@ def create_kernel() -> Kernel:
     """
     Compose and initialize the default AIStack Kernel.
 
-    This function is the runtime Composition Root. It is the only place
-    responsible for constructing the default Kernel dependency graph.
+    This function is the Runtime Composition Root.
+
+    It is the only place responsible for creating
+    the default Kernel dependency graph.
     """
 
     registries = KernelRegistries(
@@ -64,11 +69,15 @@ def create_kernel() -> Kernel:
 
     trace_repository = InMemoryTraceRepository()
 
+    execution_services = ExecutionServices(
+        trace_repository=trace_repository,
+    )
+
     services = KernelServices(
         transport_registry=transport_registry,
         delivery_verifier=delivery_verifier,
         transport=transport,
-        trace_repository=trace_repository,
+        execution=execution_services,
     )
 
     kernel = Kernel(
@@ -77,7 +86,9 @@ def create_kernel() -> Kernel:
     )
 
     register_default_providers(kernel)
+
     register_default_catalog_views(kernel)
+
     register_default_selection_strategies(kernel)
 
     return kernel

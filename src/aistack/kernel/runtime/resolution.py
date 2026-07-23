@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from aistack.kernel.registries.task_registry import TaskRegistry
-from aistack.kernel.runtime.request import Request
+from aistack.kernel.execution import Request
 from aistack.kernel.execution.task import Task
 
 

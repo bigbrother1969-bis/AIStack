@@ -1,3 +1,4 @@
+from .contract_registry import ContractRegistry
 from aistack.kernel.registries.catalog_view_registry import CatalogViewRegistry
 from aistack.kernel.registries.core import KernelRegistries
 from aistack.kernel.registries.provider_registry import ProviderRegistry
@@ -10,4 +11,5 @@ __all__ = [
     "KernelRegistries",
     "ProviderRegistry",
     "SelectionStrategyRegistry",
+    "ContractRegistry",
 ]

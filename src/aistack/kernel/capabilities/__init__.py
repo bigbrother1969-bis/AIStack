@@ -1,5 +1,3 @@
 """
-Kernel Capabilities.
-
-Technical implementations used by engines.
+Kernel capability implementations.
 """

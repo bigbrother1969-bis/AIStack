@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from aistack.kernel.execution import Observation, Request
-from aistack.kernel.runtime.resolution import RuntimeResolver
+from aistack.kernel.resolution import TaskResolver
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,8 +14,8 @@ class RuntimeExecutor:
     Execution and Resolution remain separate responsibilities.
     """
 
-    resolver: RuntimeResolver
+    resolver: TaskResolver
 
     def execute(self, request: Request) -> Observation:
-        task = self.resolver.resolve_task(request)
+        task = self.resolver.resolve(request)
         return task.execute(request)

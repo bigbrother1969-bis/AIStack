@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aistack.kernel.runtime.observation import Observation
-from aistack.kernel.runtime.request import Request
+from aistack.kernel.execution import Observation, Request
 from aistack.kernel.runtime.resolution import RuntimeResolver
 
 

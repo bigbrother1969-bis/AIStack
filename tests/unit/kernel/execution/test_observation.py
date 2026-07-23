@@ -1,36 +1,35 @@
-from aistack.kernel.execution import (
-    Observation,
-    ObservationContext,
-)
+from aistack.kernel.execution import Observation, ObservationContext
 
 
-def context(component: str) -> ObservationContext:
+def build_context(component_id: str) -> ObservationContext:
     return ObservationContext(
         request_id="request-001",
         component_type="task",
-        component_id=component,
+        component_id=component_id,
         operation="execute",
     )
 
 
-def test_atomic_observation() -> None:
+def test_observation_without_children_is_atomic() -> None:
     observation = Observation(
-        context=context("atomic"),
+        context=build_context("task.atomic"),
+        data={"status": "observed"},
     )
 
     assert observation.is_atomic
     assert observation.children == ()
 
 
-def test_recursive_observation() -> None:
+def test_observation_preserves_child_observations() -> None:
     child = Observation(
-        context=context("child"),
+        context=build_context("task.child"),
+        data={"value": 1},
     )
 
     parent = Observation(
-        context=context("parent"),
+        context=build_context("task.parent"),
         children=(child,),
     )
 
     assert not parent.is_atomic
-    assert len(parent.children) == 1
+    assert parent.children == (child,)

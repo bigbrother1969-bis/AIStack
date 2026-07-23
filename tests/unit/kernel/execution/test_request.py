@@ -5,19 +5,19 @@ import pytest
 from aistack.kernel.execution import Request
 
 
-def test_request_creation() -> None:
+def test_request_preserves_runtime_intent() -> None:
     request = Request(
         request_id="request-001",
         task_id="task.discovery",
-        payload={"provider": "docker"},
+        payload={"source": "docker"},
     )
 
     assert request.request_id == "request-001"
     assert request.task_id == "task.discovery"
-    assert request.payload == {"provider": "docker"}
+    assert request.payload == {"source": "docker"}
 
 
-def test_request_default_payload() -> None:
+def test_request_payload_defaults_to_empty_mapping() -> None:
     request = Request(
         request_id="request-001",
         task_id="task.discovery",
@@ -33,4 +33,4 @@ def test_request_is_immutable() -> None:
     )
 
     with pytest.raises(FrozenInstanceError):
-        request.task_id = "another-task"
+        request.task_id = "task.other"

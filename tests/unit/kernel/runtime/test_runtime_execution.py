@@ -10,7 +10,9 @@ from aistack.kernel.runtime import (
     KernelRuntime,
     Request,
 )
-
+from aistack.kernel.tracing import (
+    ExecutionTraceEventType,
+)
 
 class RecordingTask:
     task_id = "task.recording"
@@ -58,6 +60,27 @@ def test_runtime_resolves_and_executes_registered_task() -> None:
     assert trace.observation.context.component_id == task.task_id
     assert trace.observation.data == {"executed": True}
 
+    assert len(trace.events) == 5
+
+    assert trace.events[0].event_type is (
+        ExecutionTraceEventType.REQUEST_RECEIVED
+    )
+
+    assert trace.events[1].event_type is (
+        ExecutionTraceEventType.RESOLUTION_STARTED
+    )
+
+    assert trace.events[2].event_type is (
+        ExecutionTraceEventType.RESOLUTION_COMPLETED
+    )
+
+    assert trace.events[3].event_type is (
+        ExecutionTraceEventType.TASK_EXECUTED
+    )
+
+    assert trace.events[4].event_type is (
+        ExecutionTraceEventType.OBSERVATION_PRODUCED
+    )
 
 def test_runtime_does_not_resolve_unknown_task() -> None:
     runtime = KernelRuntime.boot()

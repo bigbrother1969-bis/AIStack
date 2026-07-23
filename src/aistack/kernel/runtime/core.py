@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from aistack.kernel import Kernel
 from aistack.kernel.bootstrap import create_kernel
 from aistack.kernel.runtime.execution import RuntimeExecutor
-from aistack.kernel.runtime.observation import Observation
-from aistack.kernel.runtime.request import Request
+from aistack.kernel.execution import Observation, Request
 from aistack.kernel.runtime.resolution import RuntimeResolver
 from aistack.kernel.runtime.state import RuntimeState
 from aistack.transport import DefaultTransportEngine

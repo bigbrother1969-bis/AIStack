@@ -4,7 +4,10 @@ from dataclasses import dataclass
 
 from aistack.kernel import Kernel
 from aistack.kernel.bootstrap import create_kernel
-from aistack.kernel.execution import Request
+from aistack.kernel.execution import (
+    Request,
+    RuntimeExecutionContext,
+)
 from aistack.kernel.resolution import TaskResolver
 from aistack.kernel.runtime.execution import RuntimeExecutor
 from aistack.kernel.runtime.state import RuntimeState
@@ -51,7 +54,14 @@ class KernelRuntime:
                 f"Runtime is not ready: {self.state.value}"
             )
 
-        return self.executor.execute(request)
+
+        context = RuntimeExecutionContext(
+            request=request,
+        )
+
+        return self.executor.execute(context)
+
+        
 
     @property
     def transport(self) -> DefaultTransportEngine:

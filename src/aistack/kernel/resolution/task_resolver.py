@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from aistack.kernel.execution import Request, Task
-from aistack.kernel.registries.task_registry import TaskRegistry
+from aistack.kernel.contracts import TaskSource
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,7 +14,7 @@ class TaskResolver:
     Resolution is independent from Runtime orchestration.
     """
 
-    tasks: TaskRegistry
+    tasks: TaskSource
 
     def resolve(self, request: Request) -> Task:
         return self.tasks.get(request.task_id)

@@ -6,7 +6,7 @@ from aistack.kernel import Kernel
 from aistack.kernel.bootstrap import create_kernel
 from aistack.kernel.runtime.execution import RuntimeExecutor
 from aistack.kernel.execution import Observation, Request
-from aistack.kernel.runtime.resolution import RuntimeResolver
+from aistack.kernel.resolution import TaskResolver
 from aistack.kernel.runtime.state import RuntimeState
 from aistack.transport import DefaultTransportEngine
 
@@ -23,7 +23,7 @@ class KernelRuntime:
     """
 
     kernel: Kernel
-    resolver: RuntimeResolver
+    resolver: TaskResolver
     executor: RuntimeExecutor
     state: RuntimeState = RuntimeState.READY
 
@@ -32,7 +32,7 @@ class KernelRuntime:
         """Boot the Runtime through the default Kernel Composition Root."""
 
         kernel = create_kernel()
-        resolver = RuntimeResolver(tasks=kernel.registries.tasks)
+        resolver = TaskResolver(tasks=kernel.registries.tasks)
         executor = RuntimeExecutor(resolver=resolver)
 
         return cls(

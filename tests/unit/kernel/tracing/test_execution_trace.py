@@ -5,7 +5,12 @@ from aistack.kernel.execution import (
     Task,
 )
 from aistack.kernel.resolution import ResolutionResult
-from aistack.kernel.tracing import ExecutionTrace
+from aistack.kernel.tracing import (
+    ExecutionPhase,
+    ExecutionTrace,
+    ExecutionTraceEvent,
+    ExecutionTraceEventType,
+)
 
 
 class DummyTask(Task):
@@ -39,12 +44,23 @@ def test_execution_trace_preserves_execution_chain() -> None:
         data={"ok": True},
     )
 
+
     trace = ExecutionTrace(
         request=request,
         resolution=resolution,
         observation=observation,
+        events=(
+            ExecutionTraceEvent(
+                phase=ExecutionPhase.REQUEST,
+                event_type=ExecutionTraceEventType.REQUEST_RECEIVED,
+                component="KernelRuntime",
+                message="Runtime received request",
+            ),
+        ),
     )
+
 
     assert trace.request is request
     assert trace.resolution is resolution
     assert trace.observation is observation
+    assert trace.events[0].phase is ExecutionPhase.REQUEST

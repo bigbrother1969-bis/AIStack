@@ -21,6 +21,6 @@ class RuntimeExecutor:
     def execute(self, request: Request) -> Observation:
         context = ResolutionContext(request=request)
 
-        task = self.resolver.resolve(context)
+        resolution = self.resolver.resolve(context)
 
-        return task.execute(request)
+        return resolution.task.execute(request)

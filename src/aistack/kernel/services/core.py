@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aistack.kernel.tracing import TraceRepository
+from aistack.kernel.services.execution import ExecutionServices
+
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
 )
@@ -15,13 +16,14 @@ from aistack.transport.registry.in_memory_transport_registry import (
 @dataclass(frozen=True, slots=True)
 class KernelServices:
     """
-    Immutable aggregate of composed Kernel runtime services.
+    Immutable aggregate of composed Kernel services.
 
-    KernelServices does not instantiate services, resolve dependencies,
-    register capabilities, or orchestrate runtime operations.
+    Services are already composed dependencies.
+    They do not create or orchestrate other services.
     """
 
     transport_registry: InMemoryTransportRegistry
     delivery_verifier: DeliveryVerifier
     transport: DefaultTransportEngine
-    trace_repository: TraceRepository
+
+    execution: ExecutionServices

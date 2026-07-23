@@ -6,6 +6,7 @@ from aistack.kernel.capabilities.package.encrypt import EncryptCapability
 from aistack.kernel.capabilities.package.serialize import SerializeCapability
 from aistack.kernel.capabilities.package.sign import SignCapability
 from aistack.kernel.capabilities.package.verify_signature import VerifySignatureCapability
+from aistack.kernel.capabilities.package.hash import HashCapability
 
 __all__ = [
     "CompressCapability",
@@ -16,4 +17,5 @@ __all__ = [
     "SerializeCapability",
     "SignCapability",
     "VerifySignatureCapability",
+    "HashCapability",
 ]

@@ -6,10 +6,13 @@ from dataclasses import dataclass
 @dataclass(frozen=True, slots=True)
 class KnowledgePackage:
     """
-    Immutable governed knowledge artifact.
+    Immutable knowledge package.
 
-    A KnowledgePackage is the minimal unit
-    managed by AIStack Knowledge Services.
+    A KnowledgePackage is a portable container
+    grouping governed knowledge artifacts.
+
+    It is designed for export, transfer
+    and reconstruction of AIStack knowledge heritage.
     """
 
     identifier: str

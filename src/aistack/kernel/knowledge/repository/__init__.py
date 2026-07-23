@@ -1,8 +1,8 @@
-from aistack.kernel.knowledge.repository import (
+from aistack.kernel.knowledge.repository.contract import (
     KnowledgeArtifactRepository,
 )
 
-from aistack.kernel.knowledge.repository import (
+from aistack.kernel.knowledge.repository.memory import (
     InMemoryKnowledgeArtifactRepository,
 )
 

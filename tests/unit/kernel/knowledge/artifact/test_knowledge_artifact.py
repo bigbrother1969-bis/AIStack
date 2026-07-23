@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aistack.kernel.knowledge import (
     KnowledgeArtifact,
     KnowledgeLifecycle,
@@ -17,6 +19,12 @@ def test_knowledge_artifact_preserves_governance_metadata() -> None:
             provider="pytest",
         ),
         owner="AIStack",
+        created_at=datetime(
+            2026,
+            7,
+            23,
+        ),
+        version=1,
         score=KnowledgeScore(
             confidence=0.95,
         ),
@@ -27,7 +35,11 @@ def test_knowledge_artifact_preserves_governance_metadata() -> None:
     )
 
     assert artifact.identifier == "artifact.test"
+
     assert artifact.provenance.source == "unit-test"
+
     assert artifact.owner == "AIStack"
+
     assert artifact.score.confidence == 0.95
+
     assert artifact.lifecycle is KnowledgeLifecycle.DISCOVERED

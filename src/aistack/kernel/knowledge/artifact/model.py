@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from aistack.kernel.knowledge.artifact.lifecycle import (
     KnowledgeLifecycle,
@@ -22,6 +23,9 @@ class KnowledgeArtifact:
 
     A KnowledgeArtifact is the smallest
     governed unit of AIStack knowledge.
+
+    Artifacts are immutable.
+    Evolution creates new versions.
     """
 
     identifier: str
@@ -33,6 +37,10 @@ class KnowledgeArtifact:
     provenance: KnowledgeProvenance
 
     owner: str
+
+    created_at: datetime
+
+    version: int
 
     score: KnowledgeScore
 

@@ -41,7 +41,7 @@ from aistack.kernel.services.execution import (
 )
 
 from aistack.kernel.services.knowledge import (
-    InMemoryKnowledgeRepository,
+    InMemoryKnowledgeArtifactRepository,
 )
 
 from aistack.kernel.services.knowledge.core import (
@@ -97,7 +97,9 @@ def create_kernel() -> Kernel:
         trace_repository=trace_repository,
     )
 
-    knowledge_repository = InMemoryKnowledgeRepository()
+    knowledge_repository = (
+        InMemoryKnowledgeArtifactRepository()
+    )
 
     knowledge_services = KnowledgeServices(
         repository=knowledge_repository,

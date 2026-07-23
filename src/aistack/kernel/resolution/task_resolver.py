@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from aistack.kernel.contracts import TaskSource
-from aistack.kernel.execution import Task
+from aistack.kernel.resolution.result import ResolutionResult
 from aistack.kernel.resolution.context import ResolutionContext
 
 
@@ -17,5 +17,11 @@ class TaskResolver:
 
     tasks: TaskSource
 
-    def resolve(self, context: ResolutionContext) -> Task:
-        return self.tasks.get(context.request.task_id)
+    def resolve(self, context: ResolutionContext) -> ResolutionResult:
+        task = self.tasks.get(context.request.task_id)
+
+        return ResolutionResult(
+            task=task,
+            resolver=self.__class__.__name__,
+            reason=f"Task resolved from identifier '{context.request.task_id}'",
+        )

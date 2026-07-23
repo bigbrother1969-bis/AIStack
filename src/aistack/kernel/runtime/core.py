@@ -4,10 +4,11 @@ from dataclasses import dataclass
 
 from aistack.kernel import Kernel
 from aistack.kernel.bootstrap import create_kernel
-from aistack.kernel.runtime.execution import RuntimeExecutor
-from aistack.kernel.execution import Observation, Request
+from aistack.kernel.execution import Request
 from aistack.kernel.resolution import TaskResolver
+from aistack.kernel.runtime.execution import RuntimeExecutor
 from aistack.kernel.runtime.state import RuntimeState
+from aistack.kernel.tracing import ExecutionTrace
 from aistack.transport import DefaultTransportEngine
 
 
@@ -17,7 +18,7 @@ class KernelRuntime:
     Runtime entry point for the AIStack Knowledge Operating System.
 
     The Runtime accepts Requests, resolves their Tasks, executes those Tasks,
-    and returns the resulting Observations.
+    and returns the resulting Execution Trace.
 
     It never resolves or invokes Providers, Capabilities, or Actions directly.
     """
@@ -42,8 +43,8 @@ class KernelRuntime:
             state=RuntimeState.READY,
         )
 
-    def execute(self, request: Request) -> Observation:
-        """Execute one Request through its resolved Task."""
+    def execute(self, request: Request) -> ExecutionTrace:
+        """Execute one Request and return its execution trace."""
 
         if self.state is not RuntimeState.READY:
             raise RuntimeError(

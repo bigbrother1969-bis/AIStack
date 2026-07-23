@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aistack.kernel.bootstrap import create_kernel
 from aistack.kernel import Kernel
+from aistack.kernel.bootstrap import create_kernel
+from aistack.kernel.runtime.execution import RuntimeExecutor
+from aistack.kernel.runtime.observation import Observation
+from aistack.kernel.runtime.request import Request
+from aistack.kernel.runtime.resolution import RuntimeResolver
 from aistack.kernel.runtime.state import RuntimeState
 from aistack.transport import DefaultTransportEngine
 
@@ -13,23 +17,41 @@ class KernelRuntime:
     """
     Runtime entry point for the AIStack Knowledge Operating System.
 
-    The Runtime supervises the execution of the Kernel.
+    The Runtime accepts Requests, resolves their Tasks, executes those Tasks,
+    and returns the resulting Observations.
 
-    Registries, Providers and other Kernel components remain accessible
-    through the Kernel itself and are not exposed by dedicated Runtime APIs.
+    It never resolves or invokes Providers, Capabilities, or Actions directly.
     """
 
     kernel: Kernel
+    resolver: RuntimeResolver
+    executor: RuntimeExecutor
     state: RuntimeState = RuntimeState.READY
 
     @classmethod
     def boot(cls) -> "KernelRuntime":
-        """Boot the Kernel Runtime using the default Kernel Bootstrap."""
+        """Boot the Runtime through the default Kernel Composition Root."""
+
+        kernel = create_kernel()
+        resolver = RuntimeResolver(tasks=kernel.registries.tasks)
+        executor = RuntimeExecutor(resolver=resolver)
 
         return cls(
-            kernel=create_kernel(),
+            kernel=kernel,
+            resolver=resolver,
+            executor=executor,
             state=RuntimeState.READY,
         )
+
+    def execute(self, request: Request) -> Observation:
+        """Execute one Request through its resolved Task."""
+
+        if self.state is not RuntimeState.READY:
+            raise RuntimeError(
+                f"Runtime is not ready: {self.state.value}"
+            )
+
+        return self.executor.execute(request)
 
     @property
     def transport(self) -> DefaultTransportEngine:

@@ -1,10 +1,10 @@
 from aistack.kernel.runtime.core import KernelRuntime
 from aistack.kernel.runtime.execution import RuntimeExecutor
-from aistack.kernel.runtime.observation import (
+from aistack.kernel.execution import (
     Observation,
     ObservationContext,
+    Request,
 )
-from aistack.kernel.runtime.request import Request
 from aistack.kernel.runtime.resolution import RuntimeResolver
 from aistack.kernel.runtime.state import RuntimeState
 from aistack.kernel.execution.task import Task

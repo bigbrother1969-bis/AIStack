@@ -2,19 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aistack.kernel.execution import Request, Task
 from aistack.kernel.contracts import TaskSource
+from aistack.kernel.execution import Task
+from aistack.kernel.resolution.context import ResolutionContext
 
 
 @dataclass(frozen=True, slots=True)
 class TaskResolver:
     """
-    Resolve executable Tasks from execution Requests.
+    Resolve executable Tasks from Resolution Context.
 
-    Resolution is independent from Runtime orchestration.
+    Resolution depends on contracts, not implementations.
     """
 
     tasks: TaskSource
 
-    def resolve(self, request: Request) -> Task:
-        return self.tasks.get(request.task_id)
+    def resolve(self, context: ResolutionContext) -> Task:
+        return self.tasks.get(context.request.task_id)

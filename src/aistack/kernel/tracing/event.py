@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from aistack.kernel.tracing.phase import ExecutionPhase
+
 
 class ExecutionTraceEventType(str, Enum):
     REQUEST_RECEIVED = "request_received"
@@ -15,8 +17,12 @@ class ExecutionTraceEventType(str, Enum):
 @dataclass(frozen=True, slots=True)
 class ExecutionTraceEvent:
     """
-    Immutable event emitted during Runtime execution.
+    Immutable execution event.
+
+    Each event explains one step of Runtime execution.
     """
 
+    phase: ExecutionPhase
     event_type: ExecutionTraceEventType
+    component: str
     message: str

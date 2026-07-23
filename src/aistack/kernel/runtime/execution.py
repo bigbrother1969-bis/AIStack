@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from aistack.kernel.execution import Observation, Request
 from aistack.kernel.resolution import TaskResolver
-
+from aistack.kernel.resolution import ResolutionContext
 
 @dataclass(frozen=True, slots=True)
 class RuntimeExecutor:
@@ -16,6 +16,11 @@ class RuntimeExecutor:
 
     resolver: TaskResolver
 
+
+
     def execute(self, request: Request) -> Observation:
-        task = self.resolver.resolve(request)
+        context = ResolutionContext(request=request)
+
+        task = self.resolver.resolve(context)
+
         return task.execute(request)

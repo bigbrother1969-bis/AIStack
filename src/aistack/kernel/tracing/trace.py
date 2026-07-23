@@ -9,12 +9,12 @@ from aistack.kernel.resolution import ResolutionResult
 @dataclass(frozen=True, slots=True)
 class ExecutionTrace:
     """
-    Immutable trace of one Runtime execution.
+    Complete explanation of a Runtime execution.
 
-    The trace captures:
-    - requested intent,
-    - resolution decision,
-    - produced observation.
+    It preserves:
+    - original request
+    - resolution decision
+    - produced observation
     """
 
     request: Request

@@ -16,6 +16,7 @@ from aistack.kernel.registries.provider_registry import ProviderRegistry
 from aistack.kernel.registries.selection_strategy_registry import (
     SelectionStrategyRegistry,
 )
+from aistack.kernel.registries.task_registry import TaskRegistry
 from aistack.kernel.services import KernelServices
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
@@ -38,6 +39,7 @@ def create_kernel() -> Kernel:
         providers=ProviderRegistry(),
         catalog_views=CatalogViewRegistry(),
         selection_strategies=SelectionStrategyRegistry(),
+        tasks=TaskRegistry(),
     )
 
     transport_registry = InMemoryTransportRegistry()

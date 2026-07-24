@@ -14,6 +14,13 @@ EXCLUDED_PARTS = {
 }
 
 
+EXCLUDED_PATHS = {
+    "context/bundles",
+    "context/published",
+    "inbox",
+}
+
+
 class MarkdownDiscovery:
     """
     Discover markdown knowledge sources.
@@ -22,13 +29,19 @@ class MarkdownDiscovery:
     It does not classify or interpret knowledge.
     """
 
-    def discover(self, root: Path) -> list[DiscoveryResult]:
+    def discover(
+        self,
+        root: Path,
+    ) -> list[DiscoveryResult]:
 
         results = []
 
         for path in sorted(root.rglob("*.md")):
 
-            if self._excluded(path):
+            if self._excluded(
+                root,
+                path,
+            ):
                 continue
 
             content = path.read_text(
@@ -51,9 +64,30 @@ class MarkdownDiscovery:
         return results
 
 
-    def _excluded(self, path: Path) -> bool:
+    def _excluded(
+        self,
+        root: Path,
+        path: Path,
+    ) -> bool:
 
-        return any(
+        if any(
             part in EXCLUDED_PARTS
             for part in path.parts
+        ):
+            return True
+
+
+        try:
+            relative = (
+                path.relative_to(root)
+                .as_posix()
+            )
+
+        except ValueError:
+            relative = path.as_posix()
+
+
+        return any(
+            relative.startswith(prefix)
+            for prefix in EXCLUDED_PATHS
         )

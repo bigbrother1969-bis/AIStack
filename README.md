@@ -1,123 +1,119 @@
+---
+artifact:
+  id: README-AISTACK
+  owner: Foundation
+  status: Draft
+  title: AIStack Main README
+  type: Entry Point Documentation
+  version: 2
+---
+
 # AIStack
 
-> **A Knowledge Operating System for Governed Information System Heritage**
+> A Knowledge Operating System for Governed Information System Heritage
 
 AIStack is an open-source Infrastructure Knowledge Platform (IKP).
 
-Its mission is not simply to monitor or administer an information system.
+Its mission is to transform technical infrastructures into a governed,
+explainable, portable and transferable knowledge heritage.
 
-Its mission is to transform an information system into a governed, explainable, portable and durable knowledge heritage.
+AIStack does not aim to build the most powerful infrastructure.
 
----
-
-# Vision
-
-AIStack considers knowledge as the primary asset of an information system.
-
-Artificial Intelligence is not the core of the system.
-
-AI is used as a reasoning assistant.
-
-Knowledge governance remains the foundation.
-
----
+It aims to build the infrastructure that is best understood.
 
 # Core Principles
 
-- No AI without Data.
-- No Data without Governance.
-- AI is a means, never an end.
-- Every knowledge item has a Single Point Of Truth (SPOT).
-- Every knowledge item is governed.
-- Every recommendation is explainable.
-- Every transformation is traceable.
-- Architecture comes before implementation.
+AIStack follows the principles of Governed Heritage Engineering.
 
----
+-   No AI without Data.
+-   No Data without Governance.
+-   AI is a means, never an end.
+-   Knowledge is the primary engineering asset.
+-   Every knowledge item has a Single Point Of Truth (SPOT).
+-   Every knowledge item is governed.
+-   Every recommendation is explainable.
+-   Every transformation is traceable.
+-   Architecture comes before implementation.
 
-# Governed Engineering
+The complete governed principles registry is maintained in:
 
-AIStack applies the principles of Governed Heritage Engineering to itself before applying them to external information systems.
+docs/00-foundation/PRINCIPLES-REGISTRY.md
 
-The repository itself is continuously governed using the same engineering principles promoted by the project.
+# Architecture Overview
 
-AIStack is therefore the first living demonstration of Governed Heritage Engineering.
+Infrastructure
 
----
+    |
+    v
 
-# Repository Organization
+Knowledge Providers
 
-```
-docs/
-    Foundation
-    Architecture
-    Standards
-    Development
+    |
+    v
 
-src/
-    Future implementation
+Infrastructure Data Catalog
 
-scripts/
-    Internal tooling
+    |
+    v
 
-reports/
-    Generated reports
+Infrastructure Knowledge Graph
 
-tests/
-    Validation
+    |
+    v
 
-archive/
-    Heritage components
-```
+Knowledge Policies
 
----
+    |
+    v
+
+Context Engine
+
+    |
+    v
+
+Rule Engine
+
+    |
+    v
+
+AI Engine
+
+    |
+    v
+
+Explainable Recommendations
+
+# Engineering Approach
+
+AIStack follows:
+
+Vision
+
+Architecture
+
+Documentation
+
+ADR
+
+Implementation
+
+Tests
+
+Release
+
+Understanding is the cause.
+
+Implementation is the consequence.
+
+Code is a Knowledge Artifact.
+
+# Self Application
+
+AIStack applies its own principles to itself.
+
+The project repository is the first governed heritage managed by
+AIStack.
 
 # Documentation
 
-The official documentation is located under:
-
-```
-docs/
-```
-
-The Foundation documents constitute the canonical description of the project.
-
----
-
-# Current Status
-
-Current milestone:
-
-> Foundation completed.
-
-Current sprint:
-
-> GH-0002 — Repository Governance & First Knowledge Provider.
-
----
-
-# Roadmap
-
-The roadmap progressively evolves AIStack toward a complete Knowledge Operating System capable of:
-
-- observing infrastructures;
-- building governed knowledge;
-- assisting administrators;
-- preserving engineering heritage;
-- enabling Self-Onboarding.
-
----
-
-# License
-
-Open Source.
-
-License to be defined.
-
----
-
-# Project Philosophy
-
-AIStack does not claim that Governed Heritage Engineering works.
-
-It demonstrates it every day.
+Documentation is part of the product.

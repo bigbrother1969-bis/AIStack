@@ -1,23 +1,30 @@
 from pathlib import Path
 
-from aistack.contracts.context_bundle import ContextBundle
-from aistack.contracts.context_bundle_service import (
-    ContextBundleService,
-)
-
 from aistack.context_bundle.engine import (
     DefaultContextBundleEngine,
 )
 
+from aistack.contracts.context_bundle_transfer_service import (
+    ContextBundleTransferService,
+)
 
-class DefaultContextBundleService(ContextBundleService):
+
+class DefaultContextBundleService:
     """
-    Application service exposing Context Bundle generation.
+    Main Context Bundle orchestration service.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        engine=None,
+        transfer_service: ContextBundleTransferService | None = None,
+    ):
+        self.engine = (
+            engine
+            or DefaultContextBundleEngine()
+        )
 
-        self.engine = DefaultContextBundleEngine()
+        self.transfer_service = transfer_service
 
 
     def generate(
@@ -25,10 +32,17 @@ class DefaultContextBundleService(ContextBundleService):
         source_path: Path,
         output_path: Path,
         source_commit: str,
-    ) -> ContextBundle:
+    ):
 
-        return self.engine.build(
+        bundle = self.engine.build(
             source_path,
             output_path,
             source_commit,
         )
+
+        if self.transfer_service:
+            self.transfer_service.transfer(
+                output_path
+            )
+
+        return bundle

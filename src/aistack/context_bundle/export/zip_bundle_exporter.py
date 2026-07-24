@@ -13,12 +13,28 @@ from aistack.context_bundle.export.markdown_bundle_exporter import (
     MarkdownBundleExporter,
 )
 
+from aistack.context_bundle.export.readme_bundle_exporter import (
+    ReadmeBundleExporter,
+)
+
+from aistack.context_bundle.manifest.manifest_builder import (
+    DefaultBundleManifest,
+)
+
+from aistack.context_bundle.manifest.json_serializer import (
+    JsonManifestSerializer,
+)
+
 
 class ZipBundleExporter(BundleExporter):
     """
     Export a ContextBundle as a portable ZIP archive.
 
-    The ZIP contains derived representations only.
+    The ZIP contains derived representations only:
+    - README.md
+    - bundle.json
+    - bundle.md
+    - manifest.json
     """
 
     def export(
@@ -31,13 +47,11 @@ class ZipBundleExporter(BundleExporter):
 
             temp = Path(tmp)
 
-            json_file = (
-                temp / "bundle.json"
-            )
+            json_file = temp / "bundle.json"
 
-            markdown_file = (
-                temp / "bundle.md"
-            )
+            markdown_file = temp / "bundle.md"
+
+            manifest_file = temp / "manifest.json"
 
 
             JsonBundleExporter().export(
@@ -45,9 +59,35 @@ class ZipBundleExporter(BundleExporter):
                 json_file,
             )
 
+
             MarkdownBundleExporter().export(
                 bundle,
                 markdown_file,
+            )
+
+
+            manifest = DefaultBundleManifest(
+                _bundle_id=bundle.id,
+                _generated_at=(
+                    bundle.generated_at.isoformat()
+                ),
+                _source_commit=bundle.source_commit,
+                _artifact_count=len(
+                    bundle.artifacts
+                ),
+            )
+
+
+            manifest_file.write_text(
+                JsonManifestSerializer().serialize(
+                    manifest
+                ),
+                encoding="utf-8",
+            )
+
+
+            readme_content = (
+                ReadmeBundleExporter().export()
             )
 
 
@@ -65,6 +105,16 @@ class ZipBundleExporter(BundleExporter):
                 archive.write(
                     markdown_file,
                     "bundle.md",
+                )
+
+                archive.write(
+                    manifest_file,
+                    "manifest.json",
+                )
+
+                archive.writestr(
+                    "README.md",
+                    readme_content,
                 )
 
 

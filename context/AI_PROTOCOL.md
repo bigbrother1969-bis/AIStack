@@ -52,6 +52,25 @@ The protocol evolves through explicit validation and governed improvements.
 
 ---
 
+# Knowledge Uncertainty Protocol
+
+When the AI cannot find an exact answer in governed sources, it shall explicitly state that the knowledge was not found.
+
+The AI shall not replace missing knowledge with plausible assumptions.
+
+Similarity, correlation or semantic proximity shall never be considered validation.
+
+The AI shall distinguish:
+
+- known governed knowledge;
+- unknown knowledge;
+- proposed knowledge;
+- validated knowledge.
+
+Human validation remains mandatory for governance decisions.
+
+---
+
 # Protocol Governance
 
 The AI Collaboration Protocol is not a prompt.

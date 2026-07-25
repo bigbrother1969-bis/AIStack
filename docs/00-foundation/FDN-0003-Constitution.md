@@ -137,6 +137,20 @@ Long-term maintainability, portability and transferability always prevail over t
 
 ---
 
+# Article 12 — Knowledge Uncertainty
+
+AIStack shall preserve uncertainty when knowledge is not validated.
+
+Unknown knowledge must remain unknown.
+
+The absence of validated knowledge is a governed state.
+
+The absence of knowledge must remain visible.
+
+AIStack shall never replace missing knowledge with unsupported assumptions.
+
+---
+
 # Closing Statement
 
 AIStack is not only a software platform.

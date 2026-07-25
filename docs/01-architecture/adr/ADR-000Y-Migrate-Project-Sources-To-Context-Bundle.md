@@ -54,8 +54,9 @@ New flow:
             +--> Markdown
             +--> ZIP
 
-`export_project_sources.py` remains a compatibility entry point and
-becomes an adapter invoking the Context Bundle service.
+`python3 scripts/export_project_sources.py` is the official Context Bundle generation entry point.
+
+It invokes the Context Bundle service and the configured transport layer.
 
 ## Rationale
 

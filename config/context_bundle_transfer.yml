@@ -7,4 +7,4 @@ context_bundle:
     target:
       host: 10.223.207.2
       user: big-brother
-      path: "~/Téléchargements"
+      path: "~/Téléchargements/AIStack"

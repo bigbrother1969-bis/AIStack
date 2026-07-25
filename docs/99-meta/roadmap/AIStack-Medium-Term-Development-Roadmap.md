@@ -191,3 +191,233 @@ AIStack does not learn first.
 AIStack remembers first.
 
 Only a system that preserves its own history can produce trustworthy reasoning.
+
+---
+
+# Validation and Reference Implementation Roadmap
+
+The following use cases define the final validation suite of AIStack.
+
+They are not isolated demos.
+
+They are representative implementations proving that the Knowledge Operating System architecture works end-to-end.
+
+---
+
+# Infrastructure Discovery Provider Refactoring
+
+## Objective
+
+Refactor the initial Docker Compose and infrastructure documentation mechanism to align it with the governed architecture.
+
+The original implementation directly transformed infrastructure files into architecture documentation.
+
+The new implementation must separate:
+
+- observation;
+- normalization;
+- knowledge generation;
+- visualization.
+
+## Target Architecture
+
+Infrastructure
+
+↓
+
+Knowledge Providers
+
+- Docker Provider
+- Compose Provider
+- Linux Provider
+- Hardware Provider
+
+↓
+
+Observation Artifacts
+
+↓
+
+Infrastructure Data Catalog
+
+↓
+
+Infrastructure Knowledge Graph
+
+↓
+
+Generated Knowledge Views
+
+- architecture.html
+- reports
+- dashboards
+
+## Principles
+
+Providers collect evidence only.
+
+They do not interpret, evaluate or generate recommendations.
+
+Generated views remain disposable artifacts derived from governed knowledge.
+
+## First Target
+
+The Gigabyte server becomes the reference infrastructure.
+
+AIStack must first be able to observe, understand and explain itself.
+
+---
+
+# Selection Engine Completion
+
+## Objective
+
+Finalize the Selection Engine as the first complete end-user assistance workflow.
+
+The music synchronization use case demonstrates that AIStack can assist users beyond infrastructure administration.
+
+## Target Flow
+
+Source Data
+
+↓
+
+Catalog
+
+↓
+
+Selection Policy
+
+↓
+
+Selection Engine
+
+↓
+
+Selection Artifact
+
+↓
+
+User Validation
+
+↓
+
+Synchronization Action
+
+↓
+
+History
+
+## Functional Scope
+
+Complete:
+
+- synchronization state detection;
+- already synchronized items;
+- pending changes;
+- deselection handling;
+- deletion proposals;
+- preview before execution;
+- validation workflow;
+- execution trace;
+- synchronization history.
+
+## Architectural Alignment
+
+The Selection Engine must implement:
+
+- Request → Task → Capability → Action model;
+- explicit policies;
+- explainable decisions;
+- human validation before destructive operations;
+- runtime operation history.
+
+---
+
+# Official Validation Use Cases
+
+## 1. Docker Runtime Discovery
+
+Purpose:
+
+Validate that AIStack can discover, model and document an infrastructure.
+
+Validates:
+
+- Knowledge Providers;
+- Observation model;
+- Runtime Catalog;
+- Architecture generation;
+- Infrastructure understanding.
+
+---
+
+## 2. Context Bundle and Self-Onboarding
+
+Purpose:
+
+Validate that AIStack can transfer and rebuild its own knowledge context.
+
+Validates:
+
+- Context Bundle generation;
+- Knowledge Package concept;
+- portability;
+- Self-Onboarding;
+- governed knowledge transmission.
+
+---
+
+## 3. Music Sync Selection Pipeline
+
+Purpose:
+
+Validate that AIStack can assist a user through a complete decision and execution workflow.
+
+Validates:
+
+- Catalog;
+- Selection Engine;
+- policies;
+- user validation;
+- assisted actions;
+- execution history.
+
+---
+
+## 4. Sustainability and Technical Debt Analysis
+
+Purpose:
+
+Validate that AIStack can derive explainable improvement recommendations from observations.
+
+Validates:
+
+- Evidence model;
+- Rule Engine;
+- Technical Debt derivation;
+- Sustainability analysis;
+- recommendation explainability.
+
+Technical Debt is derived knowledge.
+
+It is produced from:
+
+- observations;
+- evidence;
+- explicit rules;
+- documented policies.
+
+---
+
+# Validation Principle
+
+AIStack is validated when it can:
+
+- observe an ecosystem;
+- build governed knowledge;
+- explain its understanding;
+- assist users;
+- preserve history;
+- transmit knowledge;
+- improve continuously.

@@ -1,11 +1,4 @@
-from hashlib import sha256
-from pathlib import Path
-
-from aistack.contracts.discovery import DiscoveryResult
-
-
-EXCLUDED_PARTS = {
-    ".git",
+k    ".git",
     ".venv",
     "__pycache__",
     "archive",
@@ -19,6 +12,11 @@ EXCLUDED_PATHS = {
     "context/bundles",
     "inbox",
 }
+=======
+from aistack.context_bundle.eligibility import (
+    KnowledgeArtifactEligibility,
+)
+>>>>>>> d5711be (refactor(context-bundle): extract knowledge artifact eligibility policy)
 
 
 class MarkdownDiscovery:
@@ -29,18 +27,21 @@ class MarkdownDiscovery:
     It does not classify or interpret knowledge.
     """
 
+    def __init__(self) -> None:
+        self._eligibility = KnowledgeArtifactEligibility()
+
     def discover(
         self,
         root: Path,
     ) -> list[DiscoveryResult]:
 
-        results = []
+        results: list[DiscoveryResult] = []
 
         for path in sorted(root.rglob("*.md")):
 
-            if self._excluded(
-                root,
-                path,
+            if not self._eligibility.is_eligible(
+                root=root,
+                path=path,
             ):
                 continue
 
@@ -63,31 +64,3 @@ class MarkdownDiscovery:
 
         return results
 
-
-    def _excluded(
-        self,
-        root: Path,
-        path: Path,
-    ) -> bool:
-
-        if any(
-            part in EXCLUDED_PARTS
-            for part in path.parts
-        ):
-            return True
-
-
-        try:
-            relative = (
-                path.relative_to(root)
-                .as_posix()
-            )
-
-        except ValueError:
-            relative = path.as_posix()
-
-
-        return any(
-            relative.startswith(prefix)
-            for prefix in EXCLUDED_PATHS
-        )

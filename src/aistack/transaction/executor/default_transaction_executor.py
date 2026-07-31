@@ -5,8 +5,8 @@ Knowledge Transaction - Default Transaction Executor.
 from __future__ import annotations
 
 from aistack.transaction.contracts.transaction import Transaction
-from aistack.transaction.registry.in_memory_operation_registry import (
-    InMemoryOperationRegistry,
+from aistack.transaction.interfaces.operation_registry import (
+    OperationRegistry,
 )
 
 
@@ -17,7 +17,7 @@ class DefaultTransactionExecutor:
 
     def __init__(
         self,
-        registry: InMemoryOperationRegistry,
+        registry: OperationRegistry,
     ) -> None:
         self._registry = registry
 

@@ -1,28 +1,10 @@
 from pathlib import Path
 
-
-EXCLUDED_PARTS = {
-    ".git",
-    ".venv",
-    "__pycache__",
-    "archive",
-    "reports",
-    "exports",
-    ".pytest_cache",
-}
-
-
-EXCLUDED_PATHS = {
-    "context/bundles",
-    "context/published",
-    "inbox",
-    ".pytest_cache",
-}
-
-
-SUPPORTED_EXTENSIONS = {
-    ".md",
-}
+from .rules import (
+    EXCLUDED_PARTS,
+    EXCLUDED_PATHS,
+    SUPPORTED_EXTENSIONS,
+)
 
 
 class KnowledgeArtifactEligibility:

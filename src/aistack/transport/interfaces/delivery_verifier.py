@@ -6,6 +6,9 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from aistack.transport.capabilities.transport_capability import (
+    TransportCapability,
+)
 from aistack.transport.contracts.transport_request import TransportRequest
 from aistack.transport.contracts.transport_result import TransportResult
 
@@ -17,6 +20,7 @@ class DeliveryVerifier(Protocol):
 
     def verify(
         self,
+        capability: TransportCapability,
         request: TransportRequest,
         result: TransportResult,
     ) -> bool:

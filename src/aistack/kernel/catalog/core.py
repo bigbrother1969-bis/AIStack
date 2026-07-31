@@ -16,5 +16,5 @@ class CatalogItem:
 class Catalog:
     catalog_id: str
     title: str
-    items: list[CatalogItem]
+    items: tuple[CatalogItem, ...]
     metadata: dict[str, str] = field(default_factory=dict)

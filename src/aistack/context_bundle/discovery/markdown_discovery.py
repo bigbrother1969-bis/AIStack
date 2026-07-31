@@ -39,10 +39,12 @@ class MarkdownDiscovery:
 
         for path in sorted(root.rglob("*.md")):
 
-            if not self._eligibility.is_eligible(
+            report = self._eligibility.evaluate(
                 root=root,
                 path=path,
-            ):
+            )
+
+            if not report.eligible:
                 continue
 
             content = path.read_text(

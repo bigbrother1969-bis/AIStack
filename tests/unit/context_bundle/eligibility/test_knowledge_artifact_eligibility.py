@@ -5,45 +5,60 @@ from aistack.context_bundle.eligibility import (
 )
 
 
-def eligibility() -> KnowledgeArtifactEligibility:
+def eligibility():
     return KnowledgeArtifactEligibility()
 
 
-def test_accept_markdown():
+def test_markdown_is_eligible():
 
-    assert eligibility().is_eligible(
-        root=Path("."),
-        path=Path("docs/foo.md"),
+    report = eligibility().evaluate(
+        root=Path("/repo"),
+        path=Path("/repo/docs/test.md"),
     )
 
+    assert report.eligible
+    assert report.reason == "knowledge_artifact"
 
-def test_reject_extension():
 
-    assert not eligibility().is_eligible(
-        root=Path("."),
-        path=Path("docs/foo.txt"),
+def test_non_markdown_is_rejected():
+
+    report = eligibility().evaluate(
+        root=Path("/repo"),
+        path=Path("/repo/docs/test.txt"),
     )
 
+    assert not report.eligible
+    assert report.reason == "unsupported_extension"
 
-def test_reject_git():
 
-    assert not eligibility().is_eligible(
-        root=Path("."),
-        path=Path(".git/config.md"),
+def test_git_directory_is_rejected():
+
+    report = eligibility().evaluate(
+        root=Path("/repo"),
+        path=Path("/repo/.git/test.md"),
     )
 
+    assert not report.eligible
+    assert report.reason == "excluded_directory"
 
-def test_reject_pycache():
 
-    assert not eligibility().is_eligible(
-        root=Path("."),
-        path=Path("__pycache__/foo.md"),
+def test_archive_directory_is_rejected():
+
+    report = eligibility().evaluate(
+        root=Path("/repo"),
+        path=Path("/repo/archive/test.md"),
     )
 
+    assert not report.eligible
+    assert report.reason == "excluded_directory"
 
-def test_reject_generated_bundle():
 
-    assert not eligibility().is_eligible(
-        root=Path("."),
-        path=Path("context/bundles/bundle.md"),
+def test_excluded_path_is_rejected():
+
+    report = eligibility().evaluate(
+        root=Path("/repo"),
+        path=Path("/repo/context/bundles/test.md"),
     )
+
+    assert not report.eligible
+    assert report.reason == "excluded_path"

@@ -33,24 +33,35 @@ class DefaultContextBundleEngine(ContextBundleEngine):
     This component only coordinates the pipeline.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        discovery=None,
+        registry_builder=None,
+        bundle_builder=None,
+        exporter=None,
+    ) -> None:
 
-        self.discovery = MarkdownDiscovery()
+        self.discovery = (
+            discovery
+            or MarkdownDiscovery()
+        )
 
         self.registry_builder = (
-            DefaultRegistryBuilder(
+            registry_builder
+            or DefaultRegistryBuilder(
                 MarkdownArtifactBuilder()
             )
         )
 
         self.bundle_builder = (
-            DefaultContextBundleBuilder()
+            bundle_builder
+            or DefaultContextBundleBuilder()
         )
 
         self.exporter = (
-            DefaultBundleExportManager()
+            exporter
+            or DefaultBundleExportManager()
         )
-
 
     def build(
         self,
@@ -59,23 +70,17 @@ class DefaultContextBundleEngine(ContextBundleEngine):
         source_commit: str,
     ) -> ContextBundle:
 
-        discoveries = (
-            self.discovery.discover(
-                source_path
-            )
+        discoveries = self.discovery.discover(
+            source_path,
         )
 
-        registry = (
-            self.registry_builder.build(
-                discoveries
-            )
+        registry = self.registry_builder.build(
+            discoveries,
         )
 
-        bundle = (
-            self.bundle_builder.build(
-                registry,
-                source_commit,
-            )
+        bundle = self.bundle_builder.build(
+            registry,
+            source_commit,
         )
 
         self.exporter.export(

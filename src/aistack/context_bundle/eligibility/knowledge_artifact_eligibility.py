@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from aistack.contracts.eligibility import (
+    EligibilityReport,
+)
+
 from .rules import (
     EXCLUDED_PARTS,
     EXCLUDED_PATHS,
@@ -13,20 +17,26 @@ class KnowledgeArtifactEligibility:
     to become a Knowledge Artifact.
     """
 
-    def is_eligible(
+    def evaluate(
         self,
         root: Path,
         path: Path,
-    ) -> bool:
+    ) -> EligibilityReport:
 
         if path.suffix not in SUPPORTED_EXTENSIONS:
-            return False
+            return EligibilityReport(
+                eligible=False,
+                reason="unsupported_extension",
+            )
 
         if any(
             part in EXCLUDED_PARTS
             for part in path.parts
         ):
-            return False
+            return EligibilityReport(
+                eligible=False,
+                reason="excluded_directory",
+            )
 
         try:
             relative = (
@@ -37,7 +47,16 @@ class KnowledgeArtifactEligibility:
         except ValueError:
             relative = path.as_posix()
 
-        return not any(
+        if any(
             relative.startswith(prefix)
             for prefix in EXCLUDED_PATHS
+        ):
+            return EligibilityReport(
+                eligible=False,
+                reason="excluded_path",
+            )
+
+        return EligibilityReport(
+            eligible=True,
+            reason="knowledge_artifact",
         )

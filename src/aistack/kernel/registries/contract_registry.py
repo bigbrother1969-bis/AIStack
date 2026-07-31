@@ -2,32 +2,17 @@ from __future__ import annotations
 
 from typing import Type
 
+from aistack.kernel.registry import Registry
 
-class ContractRegistry:
-    """
-    Registry of official Kernel contracts.
-    """
 
-    def __init__(self) -> None:
-        self._contracts: dict[str, Type] = {}
+class ContractRegistry(Registry[Type]):
+    """Registry of official Kernel contracts."""
 
-    def register(
-        self,
-        contract: Type,
-    ) -> None:
-        self._contracts[contract.__name__] = contract
+    def register(self, contract: Type) -> None:
+        super().register(contract.__name__, contract)
 
-    def get(
-        self,
-        name: str,
-    ) -> Type:
-        return self._contracts[name]
+    def get(self, name: str) -> Type:
+        return super().get(name)
 
-    def contains(
-        self,
-        name: str,
-    ) -> bool:
-        return name in self._contracts
-
-    def all(self) -> tuple[Type, ...]:
-        return tuple(self._contracts.values())
+    def contains(self, name: str) -> bool:
+        return name in self

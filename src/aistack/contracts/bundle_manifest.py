@@ -12,24 +12,24 @@ class BundleManifest(ABC):
     @property
     @abstractmethod
     def bundle_id(self) -> str:
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def generated_at(self) -> str:
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def source_commit(self) -> str:
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def artifact_count(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def format_version(self) -> str:
-        pass
+        raise NotImplementedError

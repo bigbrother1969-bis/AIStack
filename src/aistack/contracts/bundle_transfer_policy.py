@@ -12,16 +12,16 @@ class BundleTransferPolicy(ABC):
     @property
     @abstractmethod
     def enabled(self) -> bool:
-        pass
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def target(self) -> str:
-        pass
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def strategy(self) -> str:
-        pass
+        raise NotImplementedError

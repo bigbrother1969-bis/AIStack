@@ -10,22 +10,22 @@ class BundleTransferConfiguration(ABC):
     @property
     @abstractmethod
     def enabled(self) -> bool:
-        pass
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def host(self) -> str:
-        pass
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def user(self) -> str:
-        pass
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def destination_path(self) -> str:
-        pass
+        raise NotImplementedError

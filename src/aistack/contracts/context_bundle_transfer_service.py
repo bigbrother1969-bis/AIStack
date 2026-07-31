@@ -21,4 +21,4 @@ class ContextBundleTransferService(ABC):
         Returns:
             True when transfer succeeds.
         """
-        pass
+        raise NotImplementedError

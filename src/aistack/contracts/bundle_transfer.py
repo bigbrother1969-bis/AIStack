@@ -31,4 +31,4 @@ class BundleTransfer(ABC):
         Returns:
             True when transfer is validated.
         """
-        pass
+        raise NotImplementedError

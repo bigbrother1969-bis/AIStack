@@ -8,4 +8,4 @@ class ReadmeExporter(ABC):
 
     @abstractmethod
     def export(self) -> str:
-        pass
+        raise NotImplementedError

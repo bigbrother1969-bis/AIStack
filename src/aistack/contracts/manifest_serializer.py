@@ -15,4 +15,4 @@ class ManifestSerializer(ABC):
         self,
         manifest: BundleManifest,
     ) -> str:
-        pass
+        raise NotImplementedError

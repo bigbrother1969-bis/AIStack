@@ -9,14 +9,14 @@ class TransferTarget(ABC):
     @property
     @abstractmethod
     def host(self) -> str:
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def user(self) -> str:
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def path(self) -> str:
-        pass
+        raise NotImplementedError

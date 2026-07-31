@@ -80,7 +80,6 @@ def test_discovery_ignores_non_source_areas(tmp_path):
 
     excluded = [
         "context/bundles",
-        "context/published",
         "inbox",
     ]
 

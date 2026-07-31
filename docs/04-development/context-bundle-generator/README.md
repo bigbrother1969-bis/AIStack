@@ -3,7 +3,7 @@
 
 ### Latest Bundle Is the SPOT
 
-When multiple versions of `AIStack-Project-Sources.zip` are available, the most recently generated bundle is the official Single Point Of Truth (SPOT) for the exported project knowledge.
+When multiple versions of `AIStack-Context-Bundle.zip` are available, the most recently generated bundle is the official Single Point Of Truth (SPOT) for the exported project knowledge.
 
 Previous bundles are retained exclusively as historical snapshots and must not be used as the default reference for engineering work, validation, or AI reasoning.
 

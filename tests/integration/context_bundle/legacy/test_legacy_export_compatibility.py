@@ -38,10 +38,10 @@ def test_legacy_export_script_generates_bundle():
 
     assert (
         bundle_dir
-        / "AIStack-Project-Sources.zip"
+        / "AIStack-Context-Bundle.zip"
     ).exists()
 
     assert (
         bundle_dir
-        / "AIStack-Project-Sources.md"
+        / "README.md"
     ).exists()

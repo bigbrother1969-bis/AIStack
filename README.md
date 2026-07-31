@@ -6,322 +6,291 @@ artifact:
   title: AIStack Main README
   type: Entry Point Documentation
   version: 3
-
----
-
-# License
-
-AIStack Community Edition is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-
-See the LICENSE file for details.
-  
----
+<<<<<<< HEAD
 
 # AIStack
 
-> A Knowledge Operating System for Governed Information System Heritage
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE.txt)
 
-AIStack is an open-source Infrastructure Knowledge Platform (IKP).
-
-Its mission is to transform technical infrastructures into a governed,
-explainable, portable and transferable knowledge heritage.
+**AIStack** is an open-source **Infrastructure Knowledge Platform (IKP)** designed to transform digital infrastructures into governed, explainable, portable, and sustainable knowledge.
 
 AIStack does not aim to build the most powerful infrastructure.
 
-It aims to build the infrastructure that is best understood.
+**Its ambition is to build the best understood and most sustainable one.**
 
-------------------------------------------------------------------------
+---
 
-# AI Bootstrap Rule
+# Human Guide
 
-The AIStack README is the first knowledge artifact that must be
-consulted by any AI system interacting with this repository.
+## Why AIStack?
 
-For every response concerning AIStack, the AI shall:
+Modern information systems have become increasingly complex.
 
-1.  Read and apply the rules defined in this README.
-2.  Identify the relevant knowledge domains.
-3.  Identify the criticality level of relevant knowledge.
-4.  Apply the corresponding behavior rules.
-5.  Retrieve additional knowledge only from governed sources.
+Their knowledge is often:
 
-No AI response concerning AIStack should be generated without first
-applying this document.
+- scattered across multiple tools;
+- partially undocumented;
+- dependent on individuals;
+- difficult to maintain;
+- difficult to transmit.
 
-The README acts as the recursive bootstrap context for AI interaction.
+AIStack addresses this challenge by transforming infrastructure knowledge into a governed and sustainable heritage.
 
-------------------------------------------------------------------------
+The objective is not merely to operate infrastructures.
 
-# Recursive Knowledge Processing
+The objective is to **understand**, **preserve**, and **transmit** them.
 
-AIStack knowledge must be processed progressively.
+---
 
-The AI shall not load or interpret the entire repository by default.
+## What AIStack Does
 
-The processing sequence is:
+AIStack helps organizations to:
 
-    README
+- Observe infrastructures.
+- Collect operational evidence.
+- Build governed knowledge.
+- Explain architectures and decisions.
+- Maintain operational understanding.
+- Preserve knowledge over time.
+- Assist administrators with explainable recommendations.
+- Facilitate infrastructure evolution and migration.
 
-        |
+AIStack transforms observations into sustainable knowledge assets.
 
-        v
+---
 
-    Knowledge Classification
+## Core Principles
 
-        |
+AIStack is built upon a small set of fundamental principles:
 
-        v
+- Knowledge before Artificial Intelligence.
+- Observation before Understanding.
+- Governance before Automation.
+- Architecture before Implementation.
+- Documentation First.
+- Generated artifacts are disposable.
+- Sustainability over complexity.
+- Explainability before optimization.
+- Open standards before vendor lock-in.
 
-    Criticality Evaluation
+---
 
-        |
+## High-Level Architecture
 
-        v
+```text
+Applications
+        │
+        ▼
+Interfaces
+        │
+        ▼
+Kernel Services
+        │
+        ▼
+Kernel
+├── Engines
+├── Registries
+├── Repositories
+└── Capabilities
+```
 
-    Relevant Context Selection
+The Kernel orchestrates the platform.
 
-        |
+Capabilities implement technical operations.
 
-        v
+Providers observe infrastructures.
 
-    Reasoning
+Knowledge Artifacts preserve governed knowledge.
 
-        |
+---
 
-        v
+## Getting Started
 
-    Response
+Clone the repository:
 
-The objective is to provide the minimum sufficient governed context
-required for each task.
+```bash
+git clone <repository-url>
+cd AIStack
+```
 
-Relevant governed context is preferred over exhaustive context.
+Generate the AI Context Bundle:
 
-------------------------------------------------------------------------
+```bash
+python3 scripts/export_project_sources.py
+```
 
-# Knowledge Classification
+Run the validation suite:
 
-AIStack classifies governed knowledge into six domains.
+```bash
+python3 -m compileall src/aistack && \
+PYTHONPATH=src pytest tests/unit tests/integration
+```
 
-## Foundation
+---
 
-Defines the identity, philosophy and immutable principles of AIStack.
+## Project Documentation
 
-Examples:
+The repository contains:
 
--   Constitution;
--   Core principles;
--   Governed Heritage;
--   Project philosophy.
+- Foundation documents
+- Architecture documentation
+- ADRs (Architecture Decision Records)
+- Development standards
+- Governance rules
+- Knowledge artifacts
+- Context Bundle
+- Roadmap
 
-## Architecture
+---
 
-Defines structural decisions and system organization.
+# AI Bootstrap Guide
 
-Examples:
+## Purpose
 
--   Architecture decisions;
--   Kernel architecture;
--   Runtime architecture;
--   Component boundaries.
+This section is intended for AI assistants collaborating on AIStack.
 
-## Governance
+Before answering any question related to the project, an AI assistant must first understand the project's governance model.
 
-Defines how knowledge is created, maintained and controlled.
+---
 
-Examples:
+## AI Bootstrap Protocol
 
--   Knowledge lifecycle;
--   Contribution rules;
--   Validation processes.
+Always follow this sequence:
 
-## Standards
+```text
+README
+    │
+    ▼
+Knowledge Classification
+    │
+    ▼
+Criticality Evaluation
+    │
+    ▼
+Relevant Context Acquisition
+    │
+    ▼
+Reasoning
+    │
+    ▼
+Response
+```
 
-Defines reusable rules and conventions.
+The objective is **not** to load the entire repository.
 
-Examples:
+The objective is to acquire only the governed knowledge required for the current task.
 
--   Documentation standards;
--   Naming conventions;
--   Specification standards;
--   Testing standards.
+---
 
-## Engineering
+## AI Operating Principles
 
-Defines implementation practices and development methods.
+An AI assistant must always:
 
-Examples:
+- Understand before modifying.
+- Respect the Single Point Of Truth (SPOT).
+- Never invent unknown knowledge.
+- Clearly distinguish observations from assumptions.
+- Produce explainable reasoning.
+- Preserve governance.
+- Prefer architectural improvements over implementation shortcuts.
 
--   Development guidelines;
--   Packaging rules;
--   Migration methods.
+Artificial Intelligence is considered a reasoning assistant, never an autonomous source of truth.
 
-## Knowledge Assets
+---
 
-Contains reusable knowledge artifacts produced or managed by AIStack.
+## Development Workflow
 
-Examples:
+Every significant modification follows the same governed workflow:
 
--   Catalogs;
--   Reports;
--   Generated documentation;
--   Analysis artifacts.
+```text
+Proposal
+      │
+      ▼
+Validation
+      │
+      ▼
+SPOT Update
+      │
+      ▼
+Git Commit
+      │
+      ▼
+Context Bundle Regeneration
+```
 
-------------------------------------------------------------------------
+Knowledge is always validated before becoming part of the project's heritage.
 
-# Knowledge Criticality
+---
 
-Criticality defines how an AI system must behave when using knowledge.
+## AIStack Architectural Model
 
-## C3 --- Core Invariant
+AI assistants should understand the following responsibilities:
 
-C3 knowledge defines fundamental AIStack invariants.
+- Applications expose user-oriented functionality.
+- Interfaces connect external systems.
+- Kernel Services coordinate business operations.
+- The Kernel composes platform capabilities.
+- Engines perform core reasoning and orchestration.
+- Registries maintain governed references.
+- Repositories manage persistent knowledge.
+- Capabilities implement technical mechanisms.
+- Providers observe infrastructures.
+- Knowledge Artifacts preserve and transmit knowledge.
 
-AI behavior:
+Understanding the architecture always takes precedence over writing code.
 
--   MUST preserve this knowledge.
--   MUST NOT contradict it.
--   MUST request explicit validation before changing it.
--   MUST include it in minimal context.
+---
 
-Examples:
+## Engineering Philosophy
 
--   AIStack identity;
--   Generic Kernel Principle;
--   Self Application Principle.
+AIStack follows a Knowledge-Centric Engineering approach.
 
-------------------------------------------------------------------------
+Engineering begins with understanding.
 
-## C2 --- Governed Rule
+Implementation is only one consequence of sufficient understanding.
 
-C2 knowledge defines important governed decisions and practices.
+The platform therefore prioritizes:
 
-AI behavior:
+- Architecture
+- Documentation
+- Governance
+- Knowledge
+- Implementation
 
--   MUST respect this knowledge.
--   MAY propose evolution with justification.
--   MUST preserve traceability.
--   SHOULD include it when relevant.
+rather than the opposite.
 
-------------------------------------------------------------------------
+---
 
-## C1 --- Operational Guidance
+## Contributing
 
-C1 knowledge provides useful operational guidance.
+Contributions are welcome.
 
-AI behavior:
+Before contributing, please ensure that:
 
--   MAY adapt it.
--   SHOULD consider context.
--   DOES NOT define project identity.
+- architectural consistency is preserved;
+- documentation is updated when necessary;
+- governance principles are respected;
+- validation tests pass successfully;
+- knowledge remains traceable and explainable.
 
-------------------------------------------------------------------------
+---
 
-# Why AIStack?
+## License
 
-Information systems continuously generate knowledge:
+AIStack is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
--   architectures;
--   configurations;
--   dependencies;
--   operational decisions;
--   technical history.
+The AGPL v3 guarantees that AIStack and any derivative work remain free and open, including when the software is provided as a network service. Any modifications distributed or made available through a server must also be released under the same license.
 
-However, this knowledge is often undocumented, distributed and difficult
-to transfer.
+For the complete license terms, please refer to the **LICENSE.txt** file included in this repository.
 
-AIStack exists to preserve, govern and transmit this knowledge.
+---
 
-------------------------------------------------------------------------
+## Vision
 
-# Core Principles
+AIStack is not simply another infrastructure management platform.
 
-AIStack follows the principles of Governed Heritage Engineering.
+Its mission is to transform digital infrastructures into governed, explainable, portable, and sustainable knowledge.
 
-The fundamental principles are:
+**Knowledge is the primary asset.**
 
--   No AI without Data.
--   No Data without Governance.
--   AI is a means, never an end.
--   Knowledge is the primary engineering asset.
--   Every knowledge item has a Single Point Of Truth (SPOT).
--   Every knowledge item is governed.
--   Every recommendation is explainable.
--   Every transformation is traceable.
--   Architecture comes before implementation.
-
-The complete principles are maintained in:
-
-    docs/00-foundation/PRINCIPLES-REGISTRY.md
-
-------------------------------------------------------------------------
-
-# Architecture Overview
-
-    Infrastructure
-            |
-            v
-    Knowledge Providers
-            |
-            v
-    Infrastructure Data Catalog
-            |
-            v
-    Infrastructure Knowledge Graph
-            |
-            v
-    Knowledge Policies
-            |
-            v
-    Context Engine
-            |
-            v
-    Rule Engine
-            |
-            v
-    AI Engine
-            |
-            v
-    Explainable Recommendations
-
-------------------------------------------------------------------------
-
-# Documentation
-
-Documentation is part of the product.
-
-Main entry points:
-
-  Document                        Purpose
-  ------------------------------- ----------------------------------
-  PRINCIPLES-REGISTRY.md          Governed principles
-  FDN-0003-Constitution.md        Project constitution
-  FDN-0004-Governed-Heritage.md   Governed Heritage foundation
-  AI_PROTOCOL.md                  AI collaboration protocol
-  AI_TRANSACTION_PROTOCOL.md      Engineering transaction protocol
-
-------------------------------------------------------------------------
-
-# Self Application
-
-AIStack applies its own principles to itself.
-
-The project repository is the first governed heritage managed by
-AIStack.
-
-------------------------------------------------------------------------
-
-# Status
-
-AIStack is under active development.
-
-The project progressively evolves toward a complete Knowledge Operating
-System capable of understanding infrastructures, governing knowledge,
-assisting administrators, transmitting expertise and rebuilding its own
-context.
-
-------------------------------------------------------------------------
-
-# License
-
-Open source.
+Everything else exists to serve it.

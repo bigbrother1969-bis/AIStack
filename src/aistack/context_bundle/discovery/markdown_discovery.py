@@ -11,12 +11,12 @@ EXCLUDED_PARTS = {
     "archive",
     "reports",
     "exports",
+    ".pytest_cache",
 }
 
 
 EXCLUDED_PATHS = {
     "context/bundles",
-    "context/published",
     "inbox",
 }
 

@@ -8,5 +8,5 @@ from aistack.kernel.catalog.views import CatalogView
 class SelectionStrategy(Protocol):
     """Select item identifiers from a Catalog View."""
 
-    def select(self, view: CatalogView) -> list[str]:
+    def select(self, view: CatalogView) -> tuple[str, ...]:
         ...

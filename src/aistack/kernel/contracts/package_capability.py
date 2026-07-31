@@ -18,6 +18,7 @@ class PackageCapability(ABC):
         """
         Return True if this capability supports the package.
         """
+        raise NotImplementedError
 
     @abstractmethod
     def process(
@@ -27,3 +28,4 @@ class PackageCapability(ABC):
         """
         Process the package and return the resulting package.
         """
+        raise NotImplementedError

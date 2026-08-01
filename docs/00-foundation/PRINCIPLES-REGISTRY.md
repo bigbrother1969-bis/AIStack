@@ -145,6 +145,66 @@ AIStack behavior:
 | ENG-005 | Validate every architectural step independently | C2 |
 | ENG-006 | Prefer simple modular maintainable solutions | C1 |
 
+Contracts Derive from Policies
+
+Domain: Engineering
+
+Criticality: C2 — Governed Principle
+
+Principle
+
+Contracts are the operational expression of the applicable Policies under a given Profile.
+
+A Contract is never invented by an implementation.
+
+Engineering Chain
+
+Responsibility
+    |
+    v
+Policies
+    |
+    v
+Profiles
+    |
+    v
+Contracts
+    |
+    v
+Verification
+    |
+    v
+Implementation
+    |
+    v
+Validation
+
+Responsibilities
+
+Responsibilities define why a component exists.
+
+Policies define the governed rules.
+
+Profiles determine which Policies apply.
+
+Contracts translate applicable Policies into explicit and verifiable commitments.
+
+Verification demonstrates Contract compliance.
+
+Implementations fulfill Contracts.
+
+Validation demonstrates business value through User Acceptance Tests (UAT).
+
+Architectural Consequences
+
+The implementation is not the source of truth for behavior.
+
+The Contract is.
+
+The Contract itself remains governed by the applicable Policies and Profile.
+
+Different 
+
 ---
 
 # Operations Principles

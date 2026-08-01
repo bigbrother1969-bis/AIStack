@@ -51,6 +51,117 @@ The PackageManager does not replace governance decisions.
 
 ------------------------------------------------------------------------
 
+Profiles Operationalize Policies
+
+Principle
+
+A Profile is an operational contract consumed by an Engine.
+
+A Profile is not a Single Point Of Truth (SPOT).
+
+The governing SPOT always remains the applicable Knowledge Policies.
+
+A Profile defines the operational requirements applicable to a specificKnowledge Artifact or Knowledge Package, including:
+
+required Capabilities;
+
+compatibility constraints;
+
+validation requirements;
+
+security requirements;
+
+packaging requirements;
+
+operational constraints.
+
+A Profile may be resolved in two ways.
+
+Policy-Based Profile (default)
+
+By default, a Profile is derived from the applicable Knowledge Policies.
+
+Knowledge Policies
+        │
+        ▼
+     Profile
+        │
+        ▼
+      Engine
+
+Policies govern the requirements.
+
+The Profile exposes those requirements as an operational contract.
+
+The Engine consumes the Profile without redefining or interpreting thegoverning Policies.
+
+Custom Profile (exception)
+
+A Profile may also be explicitly supplied for a specific operation.
+
+A Custom Profile is used when the default Policy-based resolution doesnot represent the intended operational requirements.
+
+A Custom Profile shall remain:
+
+explicit;
+
+traceable;
+
+validated;
+
+limited to the operation for which it was supplied.
+
+A Custom Profile does not replace or modify the governing KnowledgePolicies.
+
+Profile Types
+
+AIStack currently distinguishes two Profile types.
+
+Artifact Profile
+
+Defines the operational requirements applicable to a Knowledge Artifact.
+
+Package Profile
+
+Defines the operational requirements applicable to a Knowledge Package.
+
+The Package Profile determines, among other things:
+
+required Capabilities;
+
+compatibility constraints;
+
+validation requirements;
+
+transport requirements.
+
+Architectural Rule
+
+Knowledge Policies
+        │
+        ▼
+     Profiles
+        │
+        ▼
+      Engines
+        │
+        ▼
+   Capabilities
+
+Knowledge Policies govern.
+
+Profiles operationalize.
+
+Engines execute.
+
+Capabilities implement.
+
+Engines shall consume resolved Profiles.
+
+Engines shall never embed Policy resolution or Profile definition insidetheir business logic.
+
+------------------------------------------------------------------------
+
 # Separation Between Axioms, Concepts, Engines and Adapters
 
 AIStack architecture separates:

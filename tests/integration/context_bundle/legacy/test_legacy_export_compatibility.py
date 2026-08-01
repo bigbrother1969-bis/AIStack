@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess
-
+import sys
 
 def test_legacy_export_script_generates_bundle():
 
@@ -17,7 +17,7 @@ def test_legacy_export_script_generates_bundle():
 
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             str(script),
         ],
         cwd=root,

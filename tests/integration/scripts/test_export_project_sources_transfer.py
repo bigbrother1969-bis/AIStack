@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 import subprocess
-
+import sys
 
 def test_export_project_sources_generates_bundle():
 
@@ -18,7 +18,7 @@ def test_export_project_sources_generates_bundle():
 
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             str(script),
         ],
         cwd=root,

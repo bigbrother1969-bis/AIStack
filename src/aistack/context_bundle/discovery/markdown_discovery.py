@@ -1,22 +1,12 @@
-k    ".git",
-    ".venv",
-    "__pycache__",
-    "archive",
-    "reports",
-    "exports",
-    ".pytest_cache",
-}
+from hashlib import sha256
+from pathlib import Path
 
-
-EXCLUDED_PATHS = {
-    "context/bundles",
-    "inbox",
-}
-=======
-from aistack.context_bundle.eligibility import (
+from aistack.contracts.discovery import (
+    DiscoveryResult,
+)
+from aistack.context_bundle.eligibility.knowledge_artifact_eligibility import (
     KnowledgeArtifactEligibility,
 )
->>>>>>> d5711be (refactor(context-bundle): extract knowledge artifact eligibility policy)
 
 
 class MarkdownDiscovery:
@@ -65,4 +55,3 @@ class MarkdownDiscovery:
             )
 
         return results
-

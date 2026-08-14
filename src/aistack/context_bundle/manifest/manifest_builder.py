@@ -17,7 +17,10 @@ class DefaultBundleManifest(
     _generated_at: str
     _source_commit: str
     _artifact_count: int
-    _format_version: str = "1.0"
+    _format_version: str = "1.1"
+    _repository_url: str = "unknown"
+    _content_hash: str = ""
+    _hash_algorithm: str = "sha256"
 
 
     @property
@@ -43,3 +46,18 @@ class DefaultBundleManifest(
     @property
     def format_version(self) -> str:
         return self._format_version
+
+
+    @property
+    def repository_url(self) -> str:
+        return self._repository_url
+
+
+    @property
+    def content_hash(self) -> str:
+        return self._content_hash
+
+
+    @property
+    def hash_algorithm(self) -> str:
+        return self._hash_algorithm

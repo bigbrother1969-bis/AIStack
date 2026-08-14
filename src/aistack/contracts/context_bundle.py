@@ -27,6 +27,9 @@ class ContextBundle:
 
     artifacts: list[KnowledgeArtifact] = field(default_factory=list)
 
+    # Canonical location of the governance SPOT this bundle projects
+    repository_url: str = "unknown"
+
     # Governance model versions used during generation
     classification_version: str = "1.0"
     criticality_version: str = "1.0"

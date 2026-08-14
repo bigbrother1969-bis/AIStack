@@ -23,7 +23,19 @@ class DummyBundleManifest(BundleManifest):
 
     @property
     def format_version(self):
-        return "1.0"
+        return "1.1"
+
+    @property
+    def repository_url(self):
+        return "https://example.org/aistack.git"
+
+    @property
+    def content_hash(self):
+        return "0" * 64
+
+    @property
+    def hash_algorithm(self):
+        return "sha256"
 
 
 def test_bundle_manifest_contract():
@@ -33,4 +45,17 @@ def test_bundle_manifest_contract():
     assert manifest.bundle_id == "bundle-test"
     assert manifest.source_commit == "abcdef"
     assert manifest.artifact_count == 10
-    assert manifest.format_version == "1.0"
+    assert manifest.format_version == "1.1"
+
+
+def test_bundle_manifest_exposes_integrity():
+
+    manifest = DummyBundleManifest()
+
+    assert manifest.repository_url == (
+        "https://example.org/aistack.git"
+    )
+
+    assert len(manifest.content_hash) == 64
+
+    assert manifest.hash_algorithm == "sha256"

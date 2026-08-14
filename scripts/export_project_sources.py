@@ -50,6 +50,39 @@ def git_commit() -> str:
         return "unknown"
 
 
+def repository_url() -> str:
+    """
+    Canonical location of the governance SPOT.
+
+    AISTACK_REPOSITORY_URL should be set to the public
+    canonical URL. The git remote is only a fallback and
+    may expose an internal address, which must never be
+    published inside a mirrored bundle.
+    """
+
+    override = os.getenv(
+        "AISTACK_REPOSITORY_URL",
+    )
+
+    if override:
+        return override.strip()
+
+    try:
+        return subprocess.check_output(
+            [
+                "git",
+                "remote",
+                "get-url",
+                "origin",
+            ],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+
+    except Exception:
+        return "unknown"
+
+
 def main() -> None:
 
     sys.path.insert(
@@ -108,10 +141,14 @@ def main() -> None:
     )
 
 
+    # The service owns bundle transport and already
+    # transfers OUTPUT. Only the companion README has to
+    # be transferred here.
     bundle = service.generate(
         source_path=ROOT,
         output_path=OUTPUT,
         source_commit=git_commit(),
+        repository_url=repository_url(),
     )
 
 
@@ -134,6 +171,10 @@ def main() -> None:
     )
 
     print(
+        f"- Repository: {bundle.repository_url}"
+    )
+
+    print(
         f"- Output: {OUTPUT}"
     )
 
@@ -141,15 +182,11 @@ def main() -> None:
     if transfer_service:
 
         transfer_service.transfer(
-            OUTPUT,
-        )
-
-        transfer_service.transfer(
             README_OUTPUT,
         )
 
         print(
-            "- Transferred to laptop"
+            "- Transferred to configured target"
         )
 
 

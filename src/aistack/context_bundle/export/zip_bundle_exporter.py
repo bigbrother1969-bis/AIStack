@@ -25,6 +25,11 @@ from aistack.context_bundle.manifest.json_serializer import (
     JsonManifestSerializer,
 )
 
+from aistack.context_bundle.manifest.content_hash import (
+    HASH_ALGORITHM,
+    compute_content_hash,
+)
+
 
 class ZipBundleExporter(BundleExporter):
     """
@@ -75,6 +80,11 @@ class ZipBundleExporter(BundleExporter):
                 _artifact_count=len(
                     bundle.artifacts
                 ),
+                _repository_url=bundle.repository_url,
+                _content_hash=compute_content_hash(
+                    bundle.artifacts
+                ),
+                _hash_algorithm=HASH_ALGORITHM,
             )
 
 

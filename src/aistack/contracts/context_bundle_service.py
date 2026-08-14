@@ -15,6 +15,7 @@ class ContextBundleService(ABC):
         source_path: Path,
         output_path: Path,
         source_commit: str,
+        repository_url: str = "unknown",
     ) -> ContextBundle:
         """
         Generate a complete Context Bundle.

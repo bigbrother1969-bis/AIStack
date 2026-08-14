@@ -15,6 +15,7 @@ class ContextBundleEngine(ABC):
         source_path: Path,
         output_path: Path,
         source_commit: str,
+        repository_url: str = "unknown",
     ) -> ContextBundle:
         """
         Build and export a Context Bundle.

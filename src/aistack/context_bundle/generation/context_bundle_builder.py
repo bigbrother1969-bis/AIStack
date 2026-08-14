@@ -18,6 +18,7 @@ class DefaultContextBundleBuilder(ContextBundleBuilder):
         self,
         registry: KnowledgeRegistry,
         source_commit: str,
+        repository_url: str = "unknown",
     ) -> ContextBundle:
 
         now = datetime.now()
@@ -27,6 +28,7 @@ class DefaultContextBundleBuilder(ContextBundleBuilder):
             title="AIStack Context Bundle",
             generated_at=now,
             source_commit=source_commit,
+            repository_url=repository_url,
             artifacts=list(registry.artifacts),
             classification_version="1.0",
             criticality_version="1.0",

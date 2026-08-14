@@ -14,6 +14,7 @@ class ContextBundleBuilder(ABC):
         self,
         registry: KnowledgeRegistry,
         source_commit: str,
+        repository_url: str = "unknown",
     ) -> ContextBundle:
         """
         Build a portable governed knowledge context.

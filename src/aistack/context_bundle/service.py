@@ -32,12 +32,14 @@ class DefaultContextBundleService:
         source_path: Path,
         output_path: Path,
         source_commit: str,
+        repository_url: str = "unknown",
     ):
 
         bundle = self.engine.build(
             source_path,
             output_path,
             source_commit,
+            repository_url,
         )
 
         if self.transfer_service:

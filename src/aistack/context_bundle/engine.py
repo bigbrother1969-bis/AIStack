@@ -68,6 +68,7 @@ class DefaultContextBundleEngine(ContextBundleEngine):
         source_path: Path,
         output_path: Path,
         source_commit: str,
+        repository_url: str = "unknown",
     ) -> ContextBundle:
 
         discoveries = self.discovery.discover(
@@ -81,6 +82,7 @@ class DefaultContextBundleEngine(ContextBundleEngine):
         bundle = self.bundle_builder.build(
             registry,
             source_commit,
+            repository_url,
         )
 
         self.exporter.export(

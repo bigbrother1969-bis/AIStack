@@ -1,10 +1,22 @@
 services:
   aistack-selection-ui:
-    image: bigbrother1969/selection-ui:0.2
+    # Pinned by digest, not by tag: a tag is mutable, a digest is not.
+    # Same discipline as the Context Bundle manifest — an artifact in use
+    # must be identifiable by its content, not by a label someone can move.
+    image: bigbrother1969/selection-ui:0.3@sha256:bb04bd50b24c71995e81683d53c056c1dfb3028f0e1465103c987df18445dff3
     container_name: aistack-selection-ui
-    # Build is disabled until Docker buildx is upgraded.
-    # Image must be built manually with:
-    # docker build -f Dockerfile.selection-ui -t aistack-selection-ui:latest .
+    #
+    # Built and published manually — buildx is not used here.
+    # The command below is the one that produced the image above:
+    #
+    #   docker build -f Dockerfile.selection-ui \
+    #     --label org.opencontainers.image.source="https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack" \
+    #     --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
+    #     --label org.opencontainers.image.version="0.3" \
+    #     --label org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+    #     -t bigbrother1969/selection-ui:0.3 .
+    #   docker push bigbrother1969/selection-ui:0.3
+    #
     ports:
       - "8181:8181"
     volumes:

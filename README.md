@@ -6,7 +6,7 @@ artifact:
   title: AIStack Main README
   type: Entry Point Documentation
   version: 3
-<<<<<<< HEAD
+---
 
 # AIStack
 

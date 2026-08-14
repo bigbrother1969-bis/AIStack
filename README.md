@@ -153,6 +153,31 @@ Before answering any question related to the project, an AI assistant must first
 
 ---
 
+## Acquisition SPOT
+
+The Git repository hosted on Gitea is the **Single Point Of Truth (SPOT)**.
+
+GitHub and Codeberg are publication mirrors. They are not authoritative and shall
+never be used as the origin of governed knowledge.
+
+The **Context Bundle** is the official portable projection of the governed
+heritage. It is not the SPOT. The most recent Context Bundle supersedes all
+previous versions.
+
+A bundle carries its own integrity information in `manifest.json`:
+
+- `source_commit` — the commit the projection was taken from;
+- `repository_url` — the canonical location of the SPOT;
+- `content_hash` — a fingerprint of the governed knowledge carried, derived from
+  artifact identities only, and therefore independent of generation time, machine
+  and path.
+
+Two bundles sharing a `content_hash` carry exactly the same knowledge. An agent
+shall read these fields before reasoning, and shall state which bundle it is
+operating from.
+
+---
+
 ## AI Bootstrap Protocol
 
 Always follow this sequence:

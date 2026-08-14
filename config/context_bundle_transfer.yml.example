@@ -1,0 +1,27 @@
+# Context Bundle transfer configuration — TEMPLATE
+#
+# Copy to config/context_bundle_transfer.yml and adapt.
+# The real file is deployment-specific and is NOT versioned:
+# a machine address is not governed knowledge.
+#
+# Every value can be overridden by environment variables,
+# which is the preferred mechanism for unattended pipelines:
+#
+#   AISTACK_TRANSFER_ENABLED
+#   AISTACK_TRANSFER_HOST
+#   AISTACK_TRANSFER_USER
+#   AISTACK_TRANSFER_PATH
+#
+# Transfer is non-interactive (scp BatchMode). Key-based
+# authentication must be configured on the target host.
+
+context_bundle:
+  transfer:
+    enabled: false
+
+    strategy: ssh
+
+    target:
+      host: "changeme.example.local"
+      user: "changeme"
+      path: "~/aistack-bundles"

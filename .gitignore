@@ -1,4 +1,5 @@
 
+# Deployment specific transfer target
 # Generated catalogs
 # Generated context bundles
 # Generated examples
@@ -18,6 +19,7 @@
 .env.selection-ui
 .venv/
 __pycache__/
+config/context_bundle_transfer.yml
 context/bundles/
 examples/catalog_engine/music-library-catalog.yml
 examples/render_engine/*.html

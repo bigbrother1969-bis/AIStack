@@ -22,6 +22,10 @@ class SshBundleTransfer(BundleTransfer):
 
     Transport destination is governed by
     BundleTransferConfiguration.
+
+    The transfer is non-interactive by design: an
+    unattended pipeline must fail explicitly rather than
+    block on a credential prompt.
     """
 
     def __init__(
@@ -57,6 +61,10 @@ class SshBundleTransfer(BundleTransfer):
         subprocess.run(
             [
                 "scp",
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "StrictHostKeyChecking=accept-new",
                 str(source),
                 target,
             ],

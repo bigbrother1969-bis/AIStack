@@ -16,7 +16,7 @@ authors = [
     { name = "Fabrice Persiaut" }
 ]
 
-license = { text = "To be defined" }
+license = { text = "AGPL-3.0-or-later" }
 
 [project.scripts]
 aistack = "aistack.__main__:main"

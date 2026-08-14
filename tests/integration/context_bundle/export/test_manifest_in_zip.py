@@ -58,4 +58,15 @@ def test_manifest_is_in_context_bundle_zip(tmp_path):
 
         assert manifest["source_commit"] == "commit123"
 
-        assert manifest["format_version"] == "1.0"
+        assert manifest["format_version"] == "1.1"
+
+
+        # Integrity information must travel inside the
+        # archive: a consumer holding only the bundle must
+        # be able to verify what it is looking at.
+
+        assert manifest["hash_algorithm"] == "sha256"
+
+        assert len(manifest["content_hash"]) == 64
+
+        assert "repository_url" in manifest

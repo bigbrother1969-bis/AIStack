@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -18,6 +19,7 @@ def test_json_bundle_exporter(tmp_path):
         criticality=3,
         owner="AIStack",
         source="test.md",
+        status="Proposed",
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
@@ -47,3 +49,9 @@ def test_json_bundle_exporter(tmp_path):
 
     assert "TEST-001" in content
     assert "Test Artifact" in content
+
+    data = json.loads(content)["artifacts"][0]
+
+    assert data["status"] == "Proposed"
+    assert data["owner"] == "AIStack"
+    assert data["confidence"] == "unknown"

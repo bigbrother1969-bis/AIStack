@@ -18,6 +18,7 @@ def test_markdown_bundle_exporter(tmp_path):
         criticality=3,
         owner="AIStack",
         source="test.md",
+        status="Proposed",
         content="# My knowledge",
         created_at=datetime.now(),
         updated_at=datetime.now(),
@@ -49,3 +50,6 @@ def test_markdown_bundle_exporter(tmp_path):
     assert "Test Principle" in content
     assert "# My knowledge" in content
     assert "C3" in content
+    assert "- Status: Proposed" in content
+    assert "- Confidence: unknown" in content
+    assert "- Owner: AIStack" in content

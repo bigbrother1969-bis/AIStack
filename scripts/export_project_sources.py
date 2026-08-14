@@ -9,18 +9,26 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 
 
+# Where the projection is written.
+#
+# Overridable so that a test or a CI job never overwrites the
+# published projection of the repository it runs in.
+BUNDLE_OUTPUT_DIR = Path(
+    os.getenv(
+        "AISTACK_BUNDLE_OUTPUT_DIR",
+        str(ROOT / "context" / "bundles"),
+    )
+)
+
+
 OUTPUT = (
-    ROOT
-    / "context"
-    / "bundles"
+    BUNDLE_OUTPUT_DIR
     / "AIStack-Context-Bundle.zip"
 )
 
 
 README_OUTPUT = (
-    ROOT
-    / "context"
-    / "bundles"
+    BUNDLE_OUTPUT_DIR
     / "README.md"
 )
 

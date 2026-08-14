@@ -26,6 +26,10 @@ class DefaultContextBundleService:
 
         self.transfer_service = transfer_service
 
+        # Outcome of the last delivery attempt.
+        # None means "no failure observed".
+        self.transfer_error: Exception | None = None
+
 
     def generate(
         self,
@@ -42,9 +46,21 @@ class DefaultContextBundleService:
             repository_url,
         )
 
+        self.transfer_error = None
+
         if self.transfer_service:
-            self.transfer_service.transfer(
-                output_path
-            )
+
+            # Generation and delivery are distinct
+            # responsibilities. A delivery failure must not
+            # destroy a valid bundle, and must not be
+            # silently ignored either: it is recorded and
+            # remains visible to the caller.
+            try:
+                self.transfer_service.transfer(
+                    output_path
+                )
+
+            except Exception as error:
+                self.transfer_error = error
 
         return bundle

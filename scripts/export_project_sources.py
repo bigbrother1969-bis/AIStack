@@ -179,15 +179,47 @@ def main() -> None:
     )
 
 
+    delivery_failed = False
+
+
     if transfer_service:
 
-        transfer_service.transfer(
-            README_OUTPUT,
-        )
+        error = service.transfer_error
+
+        if error is None:
+
+            try:
+                transfer_service.transfer(
+                    README_OUTPUT,
+                )
+
+            except Exception as readme_error:
+                error = readme_error
+
+
+        if error is None:
+
+            print(
+                "- Transferred to configured target"
+            )
+
+        else:
+
+            delivery_failed = True
+
+            print(
+                f"- Delivery FAILED: {error}"
+            )
+
+
+    if delivery_failed:
 
         print(
-            "- Transferred to configured target"
+            "Bundle generated and valid. "
+            "Delivery did not complete."
         )
+
+        sys.exit(2)
 
 
 if __name__ == "__main__":

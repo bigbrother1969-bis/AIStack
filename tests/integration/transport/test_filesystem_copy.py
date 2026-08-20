@@ -15,10 +15,10 @@ from aistack.transport.filesystem.filesystem_writer import (
 )
 
 
-def test_copy_python_file():
+def test_copy_python_file(tmp_path):
 
     source = Path("tests/data/example.py")
-    destination = Path("tests/data/example-copy.py")
+    destination = tmp_path / "example-copy.py"
 
     repository = FilesystemLocationRepository(
         {
@@ -50,13 +50,15 @@ def test_copy_python_file():
         assert destination.read_bytes() == source.read_bytes()
 
     finally:
+        # tmp_path is disposed of by pytest; nothing of this
+        # test ever exists inside the repository (STD-0002).
         destination.unlink(missing_ok=True)
 
 
-def test_copy_binary_file():
+def test_copy_binary_file(tmp_path):
 
     source = Path("tests/data/example.bin")
-    destination = Path("tests/data/example-copy.bin")
+    destination = tmp_path / "example-copy.bin"
 
     repository = FilesystemLocationRepository(
         {
@@ -88,4 +90,6 @@ def test_copy_binary_file():
         assert destination.read_bytes() == source.read_bytes()
 
     finally:
+        # tmp_path is disposed of by pytest; nothing of this
+        # test ever exists inside the repository (STD-0002).
         destination.unlink(missing_ok=True)

@@ -60,12 +60,17 @@ def git_commit() -> str:
 
 def repository_url() -> str:
     """
-    Canonical location of the governance SPOT.
+    Canonical public location of the project.
 
-    AISTACK_REPOSITORY_URL should be set to the public
-    canonical URL. The git remote is only a fallback and
-    may expose an internal address, which must never be
-    published inside a mirrored bundle.
+    This is a discovery field: where a reader goes to find
+    AIStack. It is not the governance SPOT, which may be
+    private and unreachable. Verification of a projection
+    rests on source_commit and content_hash, never on a URL.
+
+    AISTACK_REPOSITORY_URL should carry the public canonical
+    URL. The git remote is only a fallback and may expose an
+    internal address, which must never be published inside a
+    bundle.
     """
 
     override = os.getenv(

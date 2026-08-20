@@ -43,10 +43,12 @@ class BundleManifest(ABC):
     @abstractmethod
     def repository_url(self) -> str:
         """
-        Canonical location of the governance SPOT.
+        Canonical public location of the project.
 
-        The bundle is a projection. This property states
-        which repository the projection was taken from.
+        A discovery field: where a reader goes to find
+        AIStack. It is not the governance SPOT, which may be
+        private. Verification rests on source_commit and
+        content_hash, never on a URL.
         """
         raise NotImplementedError
 

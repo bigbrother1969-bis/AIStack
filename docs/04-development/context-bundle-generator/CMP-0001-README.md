@@ -104,3 +104,4 @@ Generated Context Bundle
 ChatGPT Project Sources
       ↓
 Specialized Conversations
+```

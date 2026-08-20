@@ -6,8 +6,8 @@ artifact:
   semantic_type: Standard
   domain: Standards
   criticality: C2
-  status: Proposed
-  confidence: Declared
+  status: Published
+  confidence: Reviewed
   version: 2.0
   owner: Foundation
   created: 2026-07-06
@@ -49,6 +49,11 @@ standard: a standard that contradicts the Constitution yields.
 
 **This is a breaking revision.** Documents compliant with 1.0 are not compliant with
 2.0. The version is 2.0 rather than 1.1 for that reason.
+
+Version 2.0 was drafted by an AI assistant, read and accepted by the owner, and
+engraved — *Gravé* — on 2026-08-20. It therefore declares `confidence: Reviewed`, which
+is the level its own scale defines for that act. It is not `Verified`: no execution has
+yet checked that the heritage conforms to this schema.
 
 Consequence to be carried out separately: the validator shall also observe `version`,
 `created` and `updated`, which it does not today.

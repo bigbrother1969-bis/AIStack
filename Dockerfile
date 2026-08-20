@@ -11,4 +11,4 @@ COPY src ./src
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir .
 
-CMD ["python", "-c", "import aistack, time; print('AIStack core container ready', flush=True); time.sleep(360000)"]
+CMD ["python", "-m", "aistack.cli.knowledge_integrity"]

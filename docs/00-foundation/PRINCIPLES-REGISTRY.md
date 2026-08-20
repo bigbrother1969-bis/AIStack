@@ -204,7 +204,10 @@ The Contract is.
 
 The Contract itself remains governed by the applicable Policies and Profile.
 
-Different 
+> **Truncated content.** A sentence beginning *"Different"* was introduced
+> already incomplete by commit `685bcc8` (2026-08-01). No copy of it exists
+> anywhere in the Governed Heritage. It is recorded as lost rather than
+> removed in silence (FDN-0003, Article 12).
 
 ---
 

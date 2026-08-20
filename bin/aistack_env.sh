@@ -16,6 +16,12 @@ export PYTHONPATH="$AISTACK_REPO_ROOT:${PYTHONPATH:-}"
 
 cd "$AISTACK_REPO_ROOT"
 
-# Project Sources publication
-export AISTACK_LAPTOP_TARGET="big-brother@10.223.207.2"
-export AISTACK_LAPTOP_DIR="Téléchargements/AIStack"
+# The gigabyte -> laptop delivery route was declared here as
+# AISTACK_LAPTOP_TARGET / AISTACK_LAPTOP_DIR. Nothing read
+# either variable, and both carried a private address and an
+# account name into a published repository.
+#
+# The route is deployment configuration, not governed
+# knowledge. It lives in config/context_bundle_transfer.yml,
+# which is not versioned, and is overridable through
+# AISTACK_TRANSFER_HOST / _USER / _PATH.

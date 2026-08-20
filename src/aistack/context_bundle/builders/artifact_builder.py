@@ -2,6 +2,7 @@ from datetime import datetime
 
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.artifact_builder import ArtifactBuilder
+from aistack.contracts.criticality import normalize_criticality
 from aistack.contracts.discovery import DiscoveryResult
 
 from aistack.context_bundle.builders.frontmatter import (
@@ -14,13 +15,18 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
     """
     Build KnowledgeArtifact objects from Markdown discoveries.
 
-    Ownership, lifecycle status and confidence are taken from
-    what the artifact declares about itself. What it does not
-    declare is reported as "unknown" rather than assumed.
+    Every governed attribute is taken from what the artifact
+    declares about itself. Nothing is inferred.
 
-    Domain, semantic type and criticality are still assigned
-    uniformly here. Classification remains an unimplemented
-    pipeline stage.
+    This applies to the three qualifications — domain,
+    semantic type and criticality — as much as to ownership
+    and lifecycle. FDN-0003 Article 4 makes qualification a
+    human contribution that the machine assists but never
+    replaces; a builder that assigned them would be
+    qualifying knowledge on the human's behalf.
+
+    What an artifact does not declare is reported as
+    "unknown", which is a governed state under Article 12.
     """
 
     def build(
@@ -37,9 +43,17 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
         return KnowledgeArtifact(
             id=discovery.content_hash,
             title=discovery.path.stem,
-            domain="Knowledge Assets",
-            semantic_type="Knowledge Artifact",
-            criticality=1,
+            domain=declared_value(
+                declared,
+                "domain",
+            ),
+            semantic_type=declared_value(
+                declared,
+                "type",
+            ),
+            criticality=normalize_criticality(
+                declared.get("criticality")
+            ),
             owner=declared_value(
                 declared,
                 "owner",

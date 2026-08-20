@@ -16,7 +16,7 @@ def test_json_bundle_exporter(tmp_path):
         title="Test Artifact",
         domain="Foundation",
         semantic_type="Principle",
-        criticality=3,
+        criticality="C3",
         owner="AIStack",
         source="test.md",
         status="Proposed",
@@ -55,3 +55,4 @@ def test_json_bundle_exporter(tmp_path):
     assert data["status"] == "Proposed"
     assert data["owner"] == "AIStack"
     assert data["confidence"] == "unknown"
+    assert data["criticality"] == "C3"

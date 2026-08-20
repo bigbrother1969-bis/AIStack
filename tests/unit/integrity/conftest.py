@@ -13,18 +13,20 @@ def make_artifact():
         source="docs/a.md",
         title="a",
         content="# a\n",
-        criticality=1,
+        criticality="C1",
         status="Published",
         confidence="high",
         owner="Foundation",
+        domain="Foundation",
+        semantic_type="Principle",
     ):
         now = datetime(2026, 1, 1)
 
         return KnowledgeArtifact(
             id=source,
             title=title,
-            domain="Knowledge Assets",
-            semantic_type="Knowledge Artifact",
+            domain=domain,
+            semantic_type=semantic_type,
             criticality=criticality,
             owner=owner,
             source=source,

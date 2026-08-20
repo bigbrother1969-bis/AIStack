@@ -4,8 +4,8 @@ from aistack.contracts.integrity_report import (
     KnowledgeIntegrityReport,
 )
 
-from aistack.integrity.checks.criticality_discrimination import (
-    CriticalityDiscriminationCheck,
+from aistack.integrity.checks.classification_declaration import (
+    ClassificationDeclarationCheck,
 )
 from aistack.integrity.checks.duplicate_titles import (
     DuplicateTitleCheck,
@@ -30,7 +30,7 @@ def default_checks() -> list[IntegrityCheck]:
         StructuralIntegrityCheck(),
         MetadataCompletenessCheck(),
         KnowledgeStateCheck(),
-        CriticalityDiscriminationCheck(),
+        ClassificationDeclarationCheck(),
         DuplicateTitleCheck(),
         TransportResidueCheck(),
     ]

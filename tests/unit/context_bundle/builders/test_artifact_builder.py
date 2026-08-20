@@ -21,8 +21,9 @@ def test_markdown_artifact_builder():
     assert artifact.id == "abc123"
     assert artifact.title == "test"
     assert artifact.source == "docs/test.md"
-    assert artifact.domain == "Knowledge Assets"
-    assert artifact.semantic_type == "Knowledge Artifact"
+    assert artifact.domain == "unknown"
+    assert artifact.semantic_type == "unknown"
+    assert artifact.criticality == "unknown"
 
 
 DECLARED = """---
@@ -31,6 +32,9 @@ artifact:
   title: AI Collaboration Protocol
   owner: Foundation
   status: Proposed
+  type: Foundation Protocol
+  domain: Foundation
+  criticality: C3
 ---
 
 # AI Collaboration Protocol
@@ -49,6 +53,9 @@ def test_builder_uses_declared_state():
 
     assert artifact.status == "Proposed"
     assert artifact.owner == "Foundation"
+    assert artifact.domain == "Foundation"
+    assert artifact.semantic_type == "Foundation Protocol"
+    assert artifact.criticality == "C3"
 
 
 def test_builder_reports_undeclared_state_as_unknown():
@@ -68,3 +75,6 @@ def test_builder_reports_undeclared_state_as_unknown():
     assert artifact.status == "unknown"
     assert artifact.owner == "unknown"
     assert artifact.confidence == "unknown"
+    assert artifact.domain == "unknown"
+    assert artifact.semantic_type == "unknown"
+    assert artifact.criticality == "unknown"

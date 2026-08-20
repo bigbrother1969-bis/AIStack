@@ -36,6 +36,7 @@ def test_reads_a_bundle_json(tmp_path):
     assert bundle.source_commit == "f88f113"
     assert len(bundle.artifacts) == 1
     assert bundle.artifacts[0].status == "Proposed"
+    assert bundle.artifacts[0].criticality == "C1"
 
 
 def test_reads_a_bundle_archive(tmp_path):
@@ -76,5 +77,6 @@ def test_absent_fields_read_as_unknown(tmp_path):
     artifact = read_bundle(path).artifacts[0]
 
     assert artifact.status == "unknown"
+    assert artifact.criticality == "C1"
     assert artifact.confidence == "unknown"
     assert artifact.owner == "unknown"

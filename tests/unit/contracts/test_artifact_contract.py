@@ -10,7 +10,7 @@ def test_knowledge_artifact_creation():
         title="Test Knowledge Artifact",
         domain="Foundation",
         semantic_type="Principle",
-        criticality=3,
+        criticality="C3",
         owner="AIStack",
         source="tests/sample.md",
         created_at=datetime.now(),
@@ -21,7 +21,7 @@ def test_knowledge_artifact_creation():
     assert artifact.title == "Test Knowledge Artifact"
     assert artifact.domain == "Foundation"
     assert artifact.semantic_type == "Principle"
-    assert artifact.criticality == 3
+    assert artifact.criticality == "C3"
 
 
 def test_knowledge_artifact_default_values():
@@ -31,7 +31,7 @@ def test_knowledge_artifact_default_values():
         title="Default Test Artifact",
         domain="Engineering",
         semantic_type="Rule",
-        criticality=2,
+        criticality="C2",
         owner="AIStack",
         source="tests/sample.md",
         created_at=datetime.now(),
@@ -50,7 +50,7 @@ def test_knowledge_artifact_is_immutable():
         title="Immutable Artifact",
         domain="Architecture",
         semantic_type="ADR",
-        criticality=3,
+        criticality="C3",
         owner="AIStack",
         source="tests/sample.md",
         created_at=datetime.now(),

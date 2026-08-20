@@ -15,7 +15,7 @@ def test_markdown_bundle_exporter(tmp_path):
         title="Test Principle",
         domain="Foundation",
         semantic_type="Principle",
-        criticality=3,
+        criticality="C3",
         owner="AIStack",
         source="test.md",
         status="Proposed",
@@ -49,7 +49,7 @@ def test_markdown_bundle_exporter(tmp_path):
 
     assert "Test Principle" in content
     assert "# My knowledge" in content
-    assert "C3" in content
+    assert "- Criticality: C3" in content
     assert "- Status: Proposed" in content
     assert "- Confidence: unknown" in content
     assert "- Owner: AIStack" in content

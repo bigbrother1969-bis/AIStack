@@ -82,7 +82,7 @@ def test_default_composition_is_stable():
         "structural-integrity",
         "metadata-completeness",
         "knowledge-state",
-        "criticality-discrimination",
+        "classification-declaration",
         "duplicate-titles",
         "transport-residue",
     ]

@@ -38,7 +38,7 @@ class MarkdownBundleExporter(BundleExporter):
                     f"- Source: {artifact.source}",
                     f"- Domain: {artifact.domain}",
                     f"- Semantic type: {artifact.semantic_type}",
-                    f"- Criticality: C{artifact.criticality}",
+                    f"- Criticality: {artifact.criticality}",
                     f"- Owner: {artifact.owner}",
                     f"- Status: {artifact.status}",
                     f"- Confidence: {artifact.confidence}",

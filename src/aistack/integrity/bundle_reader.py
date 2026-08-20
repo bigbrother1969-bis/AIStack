@@ -5,6 +5,7 @@ import zipfile
 
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.context_bundle import ContextBundle
+from aistack.contracts.criticality import normalize_criticality
 
 
 def read_bundle(path: Path) -> ContextBundle:
@@ -39,9 +40,13 @@ def read_bundle(path: Path) -> ContextBundle:
         KnowledgeArtifact(
             id=entry["id"],
             title=entry["title"],
-            domain=entry["domain"],
-            semantic_type=entry["semantic_type"],
-            criticality=entry["criticality"],
+            domain=entry.get("domain", "unknown"),
+            semantic_type=entry.get(
+                "semantic_type", "unknown"
+            ),
+            criticality=normalize_criticality(
+                entry.get("criticality")
+            ),
             owner=entry.get("owner", "unknown"),
             source=entry["source"],
             content=entry.get("content", ""),

@@ -22,10 +22,13 @@ class KnowledgeArtifact:
     id: str
     title: str
 
-    # Governance classification
+    # Governance classification — all three are qualifications.
+    # Per FDN-0003 Article 4 they are declared by a human and
+    # read by the pipeline, never inferred. "unknown" is a
+    # governed state, not a missing value.
     domain: str
     semantic_type: str
-    criticality: int
+    criticality: str
 
     # Ownership and provenance
     owner: str

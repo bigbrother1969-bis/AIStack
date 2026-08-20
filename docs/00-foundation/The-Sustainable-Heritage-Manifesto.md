@@ -3,6 +3,7 @@ artifact:
   id: FDN-MANIFESTO
   title: The Sustainable Heritage Manifesto
   type: Foundation Manifesto
+  criticality: C3
   status: Draft
   version: 0.1
   owner: Foundation

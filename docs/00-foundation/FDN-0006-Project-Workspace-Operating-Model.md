@@ -3,6 +3,7 @@ artifact:
   id: FDN-0006
   title: Project Workspace Operating Model
   type: Foundation Document
+  criticality: C3
   version: 1.0
   status: Published
   owner: Foundation

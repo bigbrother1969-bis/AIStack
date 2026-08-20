@@ -3,6 +3,7 @@ artifact:
   id: FDN-PRINCIPLES
   title: AIStack Principles Registry
   type: Foundation Registry
+  criticality: C3
   version: 1.0
   status: Draft
   owner: Foundation

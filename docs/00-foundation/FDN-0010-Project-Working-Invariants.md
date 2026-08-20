@@ -3,6 +3,7 @@ artifact:
   id: FDN-0010
   title: Project Working Invariants
   type: Foundation Document
+  criticality: C3
   status: Proposed
   version: 0.1
   owner: Foundation

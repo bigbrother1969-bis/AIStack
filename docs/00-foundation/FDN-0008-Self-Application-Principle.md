@@ -3,6 +3,7 @@ artifact:
   id: FDN-0008
   title: AIStack Self-Application Principle
   type: Foundation Principle
+  criticality: C3
   version: 1.0
   status: Published
   owner: Foundation

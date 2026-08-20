@@ -3,6 +3,7 @@ artifact:
   id: FDN-0005
   title: Project Operating Model
   type: Foundation Document
+  criticality: C3
   version: 1.0
   status: Published
   owner: Foundation

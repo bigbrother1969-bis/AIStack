@@ -1,9 +1,15 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
+# Repository root, derived from this script's own location.
+# Overridable for a deployment that lives elsewhere.
+#
+# A machine path is not governed knowledge — same reason the
+# Context Bundle transfer target was taken out of the repo.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-ROOT="/srv/aistack/AISTack"
+ROOT="${AISTACK_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 
 LOG_DIR="$ROOT/logs"
 
@@ -19,7 +25,7 @@ echo "===== Context Bundle Sync $(date -Iseconds) =====" >> "$LOG_FILE"
 cd "$ROOT"
 
 
-python scripts/export_project_sources.py \
+python3 scripts/export_project_sources.py \
     >> "$LOG_FILE" 2>&1
 
 

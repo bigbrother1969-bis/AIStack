@@ -1,21 +1,34 @@
 services:
+
+  # The core image is a one-shot tool, not a service.
+  #
+  # Its command validates a published Context Bundle and exits:
+  # 0 when the projection is sound, 1 on a blocking finding,
+  # 2 when the bundle cannot be found.
+  #
+  # Until 2026-08-21 the command printed a line and slept for a
+  # hundred hours, which is what `restart: unless-stopped` and a
+  # healthcheck were written for. Replacing the command with the
+  # validator made both wrong: a container that exits at once and
+  # is restarted for ever is a loop, not a service.
+  #
+  # The image carries no bundle. Mount the one to validate:
+  #
+  #   docker compose run --rm aistack-core
+  #
+  # or point it at another projection:
+  #
+  #   docker run --rm -v "$PWD/context/bundles:/app/bundles:ro" \
+  #     aistack/core:local \
+  #     python -m aistack.cli.knowledge_integrity \
+  #     /app/bundles/AIStack-Context-Bundle.zip
+  #
   aistack-core:
     build:
       context: .
       dockerfile: Dockerfile
     image: aistack/core:local
     container_name: aistack-core
-    env_file:
-      - .env
     volumes:
-      - aistack-data:/data
-    healthcheck:
-      test: ["CMD", "python", "-c", "import aistack"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-
-volumes:
-  aistack-data:
+      - ./context/bundles:/app/context/bundles:ro
+    restart: "no"

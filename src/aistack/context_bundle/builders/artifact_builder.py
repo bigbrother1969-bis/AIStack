@@ -29,6 +29,13 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
     replaces; a builder that assigned them would be
     qualifying knowledge on the human's behalf.
 
+    The title is read from the artifact too. Until 2026-08-21
+    the builder used `discovery.path.stem`, so the Constitution
+    travelled as "FDN-0003-Constitution" while declaring
+    `title: Constitution`, and eighteen artifacts appeared to
+    share three titles — "README", "architecture",
+    "specification" — because those are filenames, not titles.
+
     `type` and `semantic_type` are read as the two distinct
     fields STD-0100 v2.0 defines. Until that revision the
     builder read `type` and stored it *as* the semantic type,
@@ -53,7 +60,10 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
 
         return KnowledgeArtifact(
             id=discovery.content_hash,
-            title=discovery.path.stem,
+            title=declared_value(
+                declared,
+                "title",
+            ),
             domain=normalize_domain(
                 declared.get("domain")
             ),

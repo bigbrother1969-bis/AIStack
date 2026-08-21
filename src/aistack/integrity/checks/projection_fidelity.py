@@ -27,6 +27,7 @@ def _verbatim(value) -> str:
 
 # frontmatter key -> (artifact attribute, expected transform)
 CARRIED = (
+    ("title", "title", _verbatim),
     ("type", "declared_type", _verbatim),
     ("domain", "domain", normalize_domain),
     ("semantic_type", "semantic_type", normalize_semantic_type),
@@ -54,7 +55,12 @@ class ProjectionFidelityCheck(IntegrityCheck):
     - the builder hardcoded `domain` and `owner` likewise;
     - the builder read `type` and stored it *as* `semantic_type`,
       so the `semantic_type: Principle` those same two artifacts
-      declared never reached a consumer at all.
+      declared never reached a consumer at all;
+    - the builder took the *filename* as the title and discarded
+      the declared one, which is why eighteen artifacts appeared
+      to share three titles. This check missed that fourth case
+      on the day it was written, because `title` was not in the
+      list below. It is now.
 
     In each case the heritage was correct and the pipeline was
     destroying it in transit. Nothing measured that. A validator

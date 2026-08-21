@@ -6,6 +6,7 @@ from aistack.contracts.integrity_finding import (
     IntegrityFinding,
     IntegritySeverity,
 )
+from aistack.contracts.undeclared import UNDECLARED
 
 
 class DuplicateTitleCheck(IntegrityCheck):
@@ -15,6 +16,12 @@ class DuplicateTitleCheck(IntegrityCheck):
 
     When several artifacts share a title, a reference to it
     is ambiguous and only the content hash disambiguates.
+
+    Artifacts declaring no title are skipped. They all carry
+    UNDECLARED, which would collide with itself and turn this
+    check into a second, noisier report of what
+    `metadata-completeness` already says. An absent title is a
+    missing declaration; it is not a collision.
     """
 
     @property
@@ -29,6 +36,10 @@ class DuplicateTitleCheck(IntegrityCheck):
         by_title = defaultdict(list)
 
         for artifact in bundle.artifacts:
+
+            if artifact.title == UNDECLARED:
+                continue
+
             by_title[artifact.title].append(artifact.source)
 
         collisions = {

@@ -33,6 +33,7 @@ def test_a_faithful_projection_yields_nothing(
         [
             make_artifact(
                 content=DECLARED,
+                title="Mandatory Unit Testing Principle",
                 criticality="C3",
                 domain="Engineering",
                 semantic_type="Principle",

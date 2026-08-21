@@ -30,4 +30,8 @@ def test_registry_builder_creates_registry():
     artifact = registry.get("abc123")
 
     assert artifact is not None
-    assert artifact.title == "test"
+    # The fixture declares no title, so the artifact carries
+    # UNDECLARED. Until 2026-08-21 the builder used the filename
+    # stem here, which is an observation about the file, not a
+    # declaration about the knowledge.
+    assert artifact.title == "unknown"

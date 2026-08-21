@@ -19,8 +19,12 @@ def test_markdown_artifact_builder():
     artifact = builder.build(discovery)
 
     assert artifact.id == "abc123"
-    assert artifact.title == "test"
     assert artifact.source == "docs/test.md"
+    # No frontmatter, so no declared title. The filename stem is
+    # an observation about the file, not a declaration about the
+    # knowledge, and the builder no longer promotes one to the
+    # other.
+    assert artifact.title == "unknown"
     assert artifact.domain == "unknown"
     assert artifact.semantic_type == "unknown"
     assert artifact.criticality == "unknown"
@@ -52,6 +56,7 @@ def test_builder_uses_declared_state():
 
     artifact = MarkdownArtifactBuilder().build(discovery)
 
+    assert artifact.title == "AI Collaboration Protocol"
     assert artifact.status == "Proposed"
     assert artifact.owner == "Foundation"
     assert artifact.domain == "Foundation"

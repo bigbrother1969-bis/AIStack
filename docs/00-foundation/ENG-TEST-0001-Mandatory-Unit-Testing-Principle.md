@@ -1,7 +1,7 @@
 ---
 artifact:
   criticality: C3
-  domain: Engineering
+  domain: Foundation
   id: ENG-TEST-0001
   owner: Engineering
   semantic_type: Principle
@@ -10,7 +10,7 @@ artifact:
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 1.0
+  version: 1.1
   updated: 2026-07-24
 ---
 

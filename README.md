@@ -128,9 +128,13 @@ python3 scripts/export_project_sources.py
 Run the validation suite:
 
 ```bash
-python3 -m compileall src/aistack && \
-PYTHONPATH=src pytest tests/unit tests/integration
+source bin/aistack_env.sh
+python3 -m compileall src/aistack && pytest -q
 ```
+
+`bin/aistack_env.sh` declares the execution environment (ADR-0001,
+ENG-TEST-0002). `pytest` with no argument runs the AIStack suite and
+only it: the paths are declared in `pyproject.toml`, per STD-0002.
 
 ---
 

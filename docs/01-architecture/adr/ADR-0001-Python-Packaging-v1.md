@@ -23,6 +23,17 @@ Accepted.
 Observed on 2026-08-21: `pyproject.toml` declares the setuptools backend and
 `where = ["src"]`, so the decision below is in force.
 
+Also observed on 2026-08-21: decision 1 was declared and not held. This ADR
+named `bin/aistack_env.sh` the SPOT for the execution environment; that file
+exported the repository root alone, so sourcing it did not make `aistack`
+importable. Environment initialization was therefore never de-duplicated —
+`scripts/dev-env.sh` exported a second value and ENG-TEST-0002 asked
+developers to type a third. All three were incomplete, because AIStack has
+two source roots and each declaration named one. Corrected the same day:
+`bin/aistack_env.sh` now exports both, `scripts/dev-env.sh` sources it, and
+ENG-TEST-0002 v2.0 refers to it. The decision below is unchanged; it is now
+implemented.
+
 -   **Status:** Accepted
 -   **Date:** 2026-07-04
 

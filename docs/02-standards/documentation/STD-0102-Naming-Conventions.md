@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 1.4
+  version: 2.0
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-21
@@ -180,30 +180,50 @@ of two letters.
 
 `GOV-` follows the same pattern for governance documents.
 
-## Three digits or four
+## Principles and artifacts
 
-The same prefixes name two different things, and only the width
-of the number tells them apart:
+A principle and an artifact are different governed objects, and
+their identifiers say so:
 
 | Form | Names | Lives in |
 |---|---|---|
-| `FDN-004`, `STD-004`, `GOV-001` — **three digits** | a **principle** | a row of PRINCIPLES-REGISTRY |
-| `FDN-0004`, `STD-0100`, `GOV-0001` — **four digits** | an **artifact** | a file of its own |
+| `FDN-P-004`, `STD-P-004`, `GOV-P-001` | a **principle** | a row of PRINCIPLES-REGISTRY |
+| `FDN-0004`, `STD-0100`, `GOV-0001` | an **artifact** | a file of its own |
 
-This convention was already in force across the heritage on
-2026-08-21 — `STD-004` is *one validated concept, one commit*,
-`STD-0100` is this family of standards — but it had never been
-written down, so nothing prevented a reader from taking one for
-the other.
+The `P` is the whole point. Until 2026-08-21 principles used
+three digits and artifacts four, and nothing else distinguished
+them. Fifteen pairs then differed by one leading zero while
+naming unrelated things — `FDN-005` is *every knowledge item has
+a Single Point Of Truth*, `FDN-0005` is the Project Operating
+Model; `STD-004` is *one validated concept, one commit*,
+`STD-0002` is Test Artifact Isolation.
 
-**A single digit is a thin signal, and this standard does not
-pretend otherwise.** Architecture escaped it on 2026-08-21 by
-giving documents their own prefix, `ARCH-`. `FDN-`, `STD-` and
-`GOV-` still rely on the digit width alone, and the same remedy
-is available to them. Recording the weakness is the minimum; it
-is not the fix.
+An earlier version of this section recorded that weakness,
+observed that architecture had escaped it by giving documents
+the `ARCH-` prefix, and said plainly that recording it was not
+fixing it. The fix came when the risk stopped being theoretical:
+`FDN-0011` was registered as an artifact on 2026-08-21, one zero
+away from the principle `FDN-011`, which already existed.
 
-Identifiers never change.
+Architecture keeps `ARC-P-NNN` for principles and `ARCH-NNNN`
+for documents. The two mechanisms differ because they were
+decided a day apart; both make the families unmistakable, which
+is what the standard requires.
+
+## Identifiers never change
+
+An identifier is how the heritage refers to itself. Renaming one
+silently breaks every reference ever written to it, including
+those outside this repository.
+
+The renumbering of 2026-08-21 is the one exception, decided by
+the owner and recorded in PRINCIPLES-REGISTRY v2.0. Its scope is
+worth stating precisely: **principles only**. No artifact
+identifier changed and no governed file was renamed. The
+exception was affordable because every principle identifier
+lives in a single table plus its citations; the same operation
+on artifact identifiers would have touched fifteen C3 files,
+their names, their frontmatter and every cross-reference.
 
 Titles may evolve.
 

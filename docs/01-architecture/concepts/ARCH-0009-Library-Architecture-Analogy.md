@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-07-24
@@ -15,11 +15,6 @@ artifact:
 ---
 
 # ARCH-0009 — Library Architecture Analogy
-
-## Status
-
--   Type: C1 --- Concept / Conceptual Model
--   Status: Validated concept --- Pending architecture consolidation
 
 ## Purpose
 

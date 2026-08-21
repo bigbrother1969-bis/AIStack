@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-07-24
@@ -16,11 +16,9 @@ artifact:
 
 # ARCH-0010 — Macro-Architecture
 
-## Status
+## Purpose
 
--   Type: C2 --- Architecture Overview
--   Status: Reference concept --- Pending architecture consolidation
--   Purpose: Provide a global mental model of AIStack architecture.
+Provide a global mental model of AIStack architecture.
 
 ------------------------------------------------------------------------
 

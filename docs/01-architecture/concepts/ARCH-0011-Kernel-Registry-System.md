@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-07-24
@@ -16,15 +16,16 @@ artifact:
 
 # ARCH-0011 — Kernel Registry System
 
-## Status
-
--   Type: C2 --- Architecture Overview Extension
--   Status: Validated concept --- Pending architecture consolidation
-
 ## Purpose
 
 Define how AIStack discovers, describes and governs its internal
 capabilities.
+
+This document extends ARCH-0010 — Macro-Architecture. It was declared an
+*Architecture Overview Extension* in a prose status block removed on
+2026-08-21; the relation is stated here because it is content, while the
+status and the criticality it sat beside were already declared in the
+frontmatter.
 
 The Kernel does not directly know all components. The Kernel relies on
 registries that describe available contracts, capabilities and services.

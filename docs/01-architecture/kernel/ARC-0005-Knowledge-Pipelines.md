@@ -1,4 +1,20 @@
-# Knowledge Pipelines
+---
+artifact:
+  id: ARC-0005
+  title: Knowledge Pipelines
+  type: Architecture Document
+  semantic_type: Knowledge Artifact
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Draft
+  owner: Architecture
+  created: 2026-07-08
+  updated: 2026-08-21
+---
+
+# ARC-0005 — Knowledge Pipelines
 
 ## Purpose
 

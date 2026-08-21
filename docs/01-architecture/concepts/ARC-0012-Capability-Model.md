@@ -1,4 +1,20 @@
-# AIStack Capability Model - Architecture Principles (C2)
+---
+artifact:
+  id: ARC-0012
+  title: Capability Model
+  type: Architecture Document
+  semantic_type: Knowledge Artifact
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Draft
+  owner: Architecture
+  created: 2026-07-25
+  updated: 2026-08-21
+---
+
+# ARC-0012 — Capability Model
 
 ## Status
 

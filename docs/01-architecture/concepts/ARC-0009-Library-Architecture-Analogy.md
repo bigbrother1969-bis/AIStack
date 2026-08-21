@@ -1,4 +1,20 @@
-# AIStack Library Architecture Analogy
+---
+artifact:
+  id: ARC-0009
+  title: Library Architecture Analogy
+  type: Architecture Document
+  semantic_type: Knowledge Artifact
+  domain: Architecture
+  criticality: C1
+  confidence: Declared
+  version: 1.0
+  status: Accepted
+  owner: Architecture
+  created: 2026-07-24
+  updated: 2026-08-21
+---
+
+# ARC-0009 — Library Architecture Analogy
 
 ## Status
 

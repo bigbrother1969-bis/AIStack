@@ -1,4 +1,20 @@
-# AIStack Macro-Architecture
+---
+artifact:
+  id: ARC-0010
+  title: Macro-Architecture
+  type: Architecture Document
+  semantic_type: Knowledge Artifact
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Accepted
+  owner: Architecture
+  created: 2026-07-24
+  updated: 2026-08-21
+---
+
+# ARC-0010 — Macro-Architecture
 
 ## Status
 

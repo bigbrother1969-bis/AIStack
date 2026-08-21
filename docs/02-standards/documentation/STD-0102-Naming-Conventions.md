@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 1.0
+  version: 1.1
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-07-06
+  updated: 2026-08-21
 
 relations:
   references:
@@ -66,8 +66,17 @@ FDN-0003-Constitution.md
 
 STD-0100-Documentation-Standard.md
 
-ADR-0001-Context-Bundle-Generator.md
+ADR-0001-Python-Packaging-v1.md
+
+ARC-0002-Kernel-Architecture.md
 ```
+
+A file name carries the identifier and the title, and nothing
+else. Criticality in particular does not belong here: it is a
+declared qualification that may change, and encoding it in the
+name creates a second source for one fact and a rename the day
+it moves. Five architecture documents carried a `-C1` or `-C2`
+suffix until 2026-08-21.
 
 ---
 
@@ -83,6 +92,10 @@ Examples:
 01-architecture/
 
 02-standards/
+
+03-governance/
+
+04-development/
 
 templates/
 
@@ -109,7 +122,22 @@ STD-0100
 CMP-0001
 
 ADR-0001
+
+ARC-0002
 ```
+
+| Prefix | Domain |
+|---|---|
+| `FDN-` | Foundation |
+| `STD-` | Standards |
+| `ARC-` | Architecture — descriptions of the system as it is |
+| `ADR-` | Architecture Decision Records — a decision, with its context and consequences |
+| `CMP-` | Components |
+
+`ARC-` and `ADR-` are both architecture and are deliberately
+distinct: an ADR records *a decision taken at a point in time*
+and does not change once accepted, while an ARC describes *the
+architecture as it stands* and evolves with it.
 
 Identifiers never change.
 

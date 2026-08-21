@@ -1,4 +1,20 @@
-# AIStack Kernel Architecture Overview
+---
+artifact:
+  id: ARC-0001
+  title: Kernel Architecture Overview
+  type: Architecture Document
+  semantic_type: Knowledge Artifact
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Draft
+  owner: Architecture
+  created: 2026-07-08
+  updated: 2026-08-21
+---
+
+# ARC-0001 — Kernel Architecture Overview
 
 ## Purpose
 
@@ -27,13 +43,13 @@ Knowledge Operating System
 
 ## Documentation Structure
 
-- KERNEL-ARCHITECTURE.md: overall Kernel responsibilities and boundaries.
-- RUNTIME-ARCHITECTURE.md: Runtime lifecycle, operations and state model.
-- PIPELINES.md: Knowledge Pipeline architecture and execution model.
-- REGISTRIES.md: governed registries and capability discovery.
-- PROVIDERS.md: Knowledge Provider model and responsibilities.
-- KNOWLEDGE-FLOW.md: deterministic knowledge flow from observation to governed artifacts.
-- AI-RUNTIME.md: AI Engine integration principles.
+- ARC-0002 — Kernel Architecture: overall Kernel responsibilities and boundaries.
+- ARC-0008 — Kernel Runtime Architecture: Runtime lifecycle, operations and state model.
+- ARC-0005 — Knowledge Pipelines: Knowledge Pipeline architecture and execution model.
+- ARC-0007 — Kernel Registries: governed registries and capability discovery.
+- ARC-0006 — Knowledge Providers: Knowledge Provider model and responsibilities.
+- ARC-0004 — Knowledge Flow: deterministic knowledge flow from observation to governed artifacts.
+- ARC-0003 — AI Runtime Architecture: AI Engine integration principles.
 
 ## Governance
 

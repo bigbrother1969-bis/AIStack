@@ -1,3 +1,19 @@
+---
+artifact:
+  id: ADR-0002
+  title: Catalog View Engine
+  type: ADR
+  semantic_type: ADR
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Accepted
+  owner: Architecture
+  created: 2026-07-07
+  updated: 2026-08-21
+---
+
 # ADR-0002 - Catalog View Engine
 
 ## Status

@@ -1,4 +1,27 @@
+---
+artifact:
+  id: ADR-0001
+  title: Python Packaging v1
+  type: ADR
+  semantic_type: ADR
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Accepted
+  owner: Architecture
+  created: 2026-07-04
+  updated: 2026-08-21
+---
+
 # ADR-0001 --- Python Packaging v1
+
+## Status
+
+Accepted.
+
+Observed on 2026-08-21: `pyproject.toml` declares the setuptools backend and
+`where = ["src"]`, so the decision below is in force.
 
 -   **Status:** Accepted
 -   **Date:** 2026-07-04

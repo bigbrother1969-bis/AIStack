@@ -22,6 +22,13 @@ relations:
 
 This file supersedes the previous draft and freezes the architectural decision.
 
+## Status
+
+Accepted.
+
+Admitted into the governed heritage on 2026-08-21, from `docs/incoming/`, where it
+had been sitting since 2026-07-31.
+
 ## Decision
 AIStack separates the **Execution Dimension** from the **Knowledge Acquisition Dimension**.
 

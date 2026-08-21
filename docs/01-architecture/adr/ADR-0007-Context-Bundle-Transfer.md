@@ -9,6 +9,9 @@ artifact:
   confidence: Declared
   status: Accepted
   owner: Architecture
+  version: 1.0
+  created: 2026-07-24
+  updated: 2026-08-21
 ---
 
 # ADR-0007 - Context Bundle Transfer Capability

@@ -1,3 +1,19 @@
+---
+artifact:
+  id: ADR-0005
+  title: Context Bundle Engine Architecture
+  type: ADR
+  semantic_type: ADR
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Proposed
+  owner: Architecture
+  created: 2026-07-24
+  updated: 2026-08-21
+---
+
 # ADR-0005 --- Context Bundle Engine Architecture
 
 ## Status

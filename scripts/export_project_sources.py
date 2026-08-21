@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+import ipaddress
 import os
+import re
 import subprocess
+from urllib.parse import urlparse
 import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+HOSTNAME = re.compile(rf"{LABEL}(?:\.{LABEL})+")
 
 
 # Where the projection is written.
@@ -58,6 +65,40 @@ def git_commit() -> str:
         return "unknown"
 
 
+def is_publishable_url(url: str) -> bool:
+    """
+    True when a URL can mean something to a reader elsewhere.
+
+    A loopback address, a private range or a bare hostname is
+    canonical for nobody: it describes the machine that ran the
+    export, not where AIStack lives.
+    """
+
+    host = urlparse(url).hostname
+
+    if not host:
+        # scp-style remote, "git@host:path"
+        head = url.split(":", 1)[0]
+        host = head.rsplit("@", 1)[-1] or None
+
+    if not host:
+        return False
+
+    if host == "localhost" or host.endswith(".local"):
+        return False
+
+    try:
+        return not ipaddress.ip_address(host).is_private
+
+    except ValueError:
+        pass
+
+    # A hostname a reader elsewhere can resolve: at least two
+    # labels. A bare name resolves only inside the network that
+    # produced it, which is the defect this function exists for.
+    return bool(HOSTNAME.fullmatch(host))
+
+
 def repository_url() -> str:
     """
     Canonical public location of the project.
@@ -67,10 +108,22 @@ def repository_url() -> str:
     private and unreachable. Verification of a projection
     rests on source_commit and content_hash, never on a URL.
 
-    AISTACK_REPOSITORY_URL should carry the public canonical
-    URL. The git remote is only a fallback and may expose an
-    internal address, which must never be published inside a
-    bundle.
+    AISTACK_REPOSITORY_URL carries the public canonical URL.
+    The git remote is only a fallback, and a fallback that
+    resolves to a private or loopback address is **refused**
+    rather than published.
+
+    That refusal is the point. Until 2026-08-21 this function
+    documented the risk — "may expose an internal address,
+    which must never be published inside a bundle" — and did
+    nothing about it. A bundle generated on the SPOT host
+    therefore carried `ssh://git@127.0.0.1:2222/...`, which is
+    both useless to a consumer and a description of internal
+    topology. The rule existed; only the discipline of whoever
+    ran the command enforced it.
+
+    An undeclared URL is a governed state (FDN-0003 Article 12).
+    A wrong one is not.
     """
 
     override = os.getenv(
@@ -81,7 +134,7 @@ def repository_url() -> str:
         return override.strip()
 
     try:
-        return subprocess.check_output(
+        remote = subprocess.check_output(
             [
                 "git",
                 "remote",
@@ -94,6 +147,17 @@ def repository_url() -> str:
 
     except Exception:
         return "unknown"
+
+    if not is_publishable_url(remote):
+        print(
+            f"repository_url: refusing to publish {remote!r} — "
+            "it is a private or loopback address. Set "
+            "AISTACK_REPOSITORY_URL to the public canonical URL.",
+            file=sys.stderr,
+        )
+        return "unknown"
+
+    return remote
 
 
 def main() -> None:

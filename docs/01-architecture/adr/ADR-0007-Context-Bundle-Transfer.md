@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ADR-000Z
+  id: ADR-0007
   title: Context Bundle Transfer Capability
   type: ADR
   semantic_type: ADR
@@ -11,7 +11,7 @@ artifact:
   owner: Architecture
 ---
 
-# ADR-000Z - Context Bundle Transfer Capability
+# ADR-0007 - Context Bundle Transfer Capability
 
 ## Status
 

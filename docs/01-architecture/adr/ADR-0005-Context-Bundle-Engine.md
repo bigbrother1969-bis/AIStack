@@ -1,4 +1,4 @@
-# ADR-000X --- Context Bundle Engine Architecture
+# ADR-0005 --- Context Bundle Engine Architecture
 
 ## Status
 

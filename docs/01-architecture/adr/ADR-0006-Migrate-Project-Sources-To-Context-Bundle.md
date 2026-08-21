@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ADR-000Y
+  id: ADR-0006
   owner: Architecture
   status: Accepted
   title: Migrate Project Sources Export To Context Bundle
@@ -11,7 +11,7 @@ artifact:
   confidence: Declared
 ---
 
-# ADR-000Y - Migrate Project Sources Export To Context Bundle
+# ADR-0006 - Migrate Project Sources Export To Context Bundle
 
 ## Status
 

@@ -1,4 +1,4 @@
-# ADR-000X - AIStack Kernel Architecture
+# ADR-0004 - AIStack Kernel Architecture
 
 ## Status
 

@@ -1,4 +1,4 @@
-# ADR-000X --- Python Packaging v1
+# ADR-0001 --- Python Packaging v1
 
 -   **Status:** Accepted
 -   **Date:** 2026-07-04

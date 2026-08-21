@@ -341,10 +341,10 @@ traceable to a distinct policy.
 
 ## 13. Related Architecture Decisions
 
-- ADR — Evidence-Driven Observation Architecture (`docs/incoming/`, not yet
-  integrated into the governed heritage)
-- ADR — Context Bundle Engine
-- ADR — Context Bundle Transfer
+- ADR-0008 — Evidence-Driven Observation Architecture (admitted into the governed
+  heritage on 2026-08-21; it was in `docs/incoming/` when this suite was written)
+- ADR-0005 — Context Bundle Engine
+- ADR-0007 — Context Bundle Transfer
 
 ---
 

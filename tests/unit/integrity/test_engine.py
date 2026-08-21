@@ -81,6 +81,7 @@ def test_default_composition_is_stable():
     assert names == [
         "structural-integrity",
         "metadata-completeness",
+        "projection-fidelity",
         "knowledge-state",
         "classification-declaration",
         "duplicate-titles",

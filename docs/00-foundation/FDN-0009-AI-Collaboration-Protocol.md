@@ -8,8 +8,6 @@ artifact:
   status: Published
   confidence: Reviewed
   owner: Foundation
-
-lifecycle:
   created: 2026-07-06
   updated: 2026-08-21
 

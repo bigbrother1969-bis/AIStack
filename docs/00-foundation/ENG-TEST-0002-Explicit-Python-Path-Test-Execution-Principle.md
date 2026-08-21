@@ -8,7 +8,6 @@ artifact:
   status: Draft
   title: Explicit Python Path Test Execution Principle
   type: Foundation Principle
-lifecycle:
   created: 2026-07-24
 ---
 

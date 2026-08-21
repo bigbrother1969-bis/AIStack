@@ -35,8 +35,8 @@ def test_undeclared_qualifications_are_warned(make_artifact, make_bundle):
 
     summaries = {f.summary for f in _findings(bundle)}
 
-    assert "artifacts declare no domain" in summaries
-    assert "artifacts declare no semantic type" in summaries
+    assert "artifacts reach a consumer with no domain" in summaries
+    assert "artifacts reach a consumer with no semantic type" in summaries
     assert all(
         f.severity is IntegritySeverity.WARNING
         for f in _findings(bundle)
@@ -87,7 +87,7 @@ def test_undeclared_criticality_is_warned(make_artifact, make_bundle):
     ])
 
     assert any(
-        f.summary == "artifacts declare no criticality"
+        f.summary == "artifacts reach a consumer with no criticality"
         and f.affected == 1
         for f in _findings(bundle)
     )

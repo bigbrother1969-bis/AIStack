@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
-set -euo pipefail
+
+# ------------------------------------------------------------------
+# AIStack execution environment.
+#
+# ADR-0001 designates this file as the single source of truth for
+# the execution environment. This file is meant to be sourced:
+#
+#     source bin/aistack_env.sh
+#
+# It MUST NOT enable "set -e". A sourced script runs in the
+# caller's shell, so `set -e` here terminates that shell the
+# first time any command exits non-zero — a failing test run,
+# for instance. `scripts/dev-env.sh` carried that warning for
+# months while this file, the designated SPOT, did the opposite.
+# The three launchers that source it declare their own
+# `set -euo pipefail` before doing so, and keep it.
+# ------------------------------------------------------------------
 
 # Repository root, derived from this script's own location.
 # Overridable for a deployment that lives elsewhere.
@@ -12,9 +28,22 @@ set -euo pipefail
 AISTACK_ENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export AISTACK_REPO_ROOT="${AISTACK_REPO_ROOT:-$(cd "$AISTACK_ENV_DIR/.." && pwd)}"
 
-export PYTHONPATH="$AISTACK_REPO_ROOT:${PYTHONPATH:-}"
+# AIStack has two source roots, and until 2026-08-21 this file
+# declared one of them.
+#
+#   src/  holds the `aistack` package, per
+#         `[tool.setuptools.packages.find] where = ["src"]`
+#   .     holds `selection_ui`, `examples` and `tools`, which the
+#         three launchers next to this file import
+#
+# Exporting only the repository root made `import aistack` fail,
+# which is why ENG-TEST-0002 v1.0 asked every developer to type
+# `PYTHONPATH=src` by hand and why `scripts/dev-env.sh` exported
+# a third, different value. The environment had three
+# declarations and the governed one covered half the tree.
+export PYTHONPATH="$AISTACK_REPO_ROOT/src:$AISTACK_REPO_ROOT:${PYTHONPATH:-}"
 
-cd "$AISTACK_REPO_ROOT"
+cd "$AISTACK_REPO_ROOT" || return 1
 
 # The gigabyte -> laptop delivery route was declared here as
 # AISTACK_LAPTOP_TARGET / AISTACK_LAPTOP_DIR. Nothing read

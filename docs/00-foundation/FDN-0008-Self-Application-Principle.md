@@ -10,6 +10,8 @@ artifact:
   version: 1.0
   status: Published
   owner: Foundation
+  created: 2026-07-06
+  updated: 2026-07-06
 ---
 
 # FDN-0008 — AIStack Self-Application Principle

@@ -10,6 +10,8 @@ artifact:
   version: 1.0
   status: Published
   owner: Development
+  created: 2026-07-06
+  updated: 2026-07-06
 ---
 
 # CMP-0004 — Repository Knowledge Provider

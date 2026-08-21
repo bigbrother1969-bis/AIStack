@@ -48,7 +48,6 @@ def main() -> None:
 
     if not report.findings:
         print("No finding.")
-        return
 
     for finding in report.findings:
 

@@ -10,6 +10,8 @@ artifact:
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
+  version: 1.0
+  updated: 2026-07-24
 ---
 
 # Explicit Python Path Test Execution Principle

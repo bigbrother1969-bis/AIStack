@@ -10,6 +10,8 @@ artifact:
   version: 1.0
   status: Draft
   owner: Foundation
+  created: 2026-07-06
+  updated: 2026-07-06
 ---
 
 # Purpose

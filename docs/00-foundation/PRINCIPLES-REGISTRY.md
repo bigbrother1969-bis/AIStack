@@ -3,6 +3,9 @@ artifact:
   id: FDN-PRINCIPLES
   title: AIStack Principles Registry
   type: Foundation Registry
+  semantic_type: Knowledge Artifact
+  domain: Foundation
+  confidence: Declared
   criticality: C3
   version: 1.0
   status: Draft

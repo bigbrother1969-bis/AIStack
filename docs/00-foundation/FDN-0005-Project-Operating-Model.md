@@ -3,6 +3,9 @@ artifact:
   id: FDN-0005
   title: Project Operating Model
   type: Foundation Document
+  semantic_type: Knowledge Artifact
+  domain: Foundation
+  confidence: Declared
   criticality: C3
   version: 1.0
   status: Published

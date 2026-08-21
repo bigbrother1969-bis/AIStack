@@ -3,6 +3,10 @@ artifact:
   id: CMP-0003-ARCH
   title: Kernel Contracts Architecture
   type: Component Architecture
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Published
   owner: Development

@@ -3,6 +3,10 @@ artifact:
   id: CMP-0002
   title: Python Packaging
   type: Component README
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Published
   owner: Development

@@ -8,6 +8,7 @@ artifact:
   status: Draft
   title: Mandatory Unit Testing Principle
   type: Foundation Principle
+  confidence: Declared
   created: 2026-07-24
 ---
 

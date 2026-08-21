@@ -3,6 +3,10 @@ artifact:
   id: CMP-0004-ARCH
   title: Repository Provider Architecture
   type: Component Architecture
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Published
   owner: Development

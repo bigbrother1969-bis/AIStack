@@ -3,6 +3,10 @@ artifact:
   id: CMP-0003-SPEC
   title: Kernel Contracts Specification
   type: Component Specification
+  semantic_type: Specification
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Published
   owner: Development

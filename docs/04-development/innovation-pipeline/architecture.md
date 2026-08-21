@@ -3,6 +3,10 @@ artifact:
   id: CMP-0012-ARCH
   title: Innovation Pipeline Architecture
   type: Component Architecture
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Draft
   owner: Foundation

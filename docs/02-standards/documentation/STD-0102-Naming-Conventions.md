@@ -3,6 +3,10 @@ artifact:
   id: STD-0102
   title: Naming Conventions
   type: Documentation Standard
+  semantic_type: Standard
+  domain: Standards
+  criticality: C2
+  confidence: Declared
   status: Published
   version: 1.0
   owner: Foundation

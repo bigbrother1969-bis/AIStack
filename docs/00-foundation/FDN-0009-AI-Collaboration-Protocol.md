@@ -3,6 +3,8 @@ artifact:
   id: FDN-0009
   title: AI Collaboration Protocol
   type: Foundation Protocol
+  semantic_type: Policy
+  domain: Foundation
   criticality: C3
   version: 1.0
   status: Published

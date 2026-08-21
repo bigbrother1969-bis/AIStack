@@ -3,6 +3,10 @@ artifact:
   id: CMP-0004
   title: Repository Knowledge Provider
   type: Component README
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Published
   owner: Development

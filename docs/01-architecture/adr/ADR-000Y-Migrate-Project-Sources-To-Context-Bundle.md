@@ -5,6 +5,10 @@ artifact:
   status: Accepted
   title: Migrate Project Sources Export To Context Bundle
   type: ADR
+  semantic_type: ADR
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
 ---
 
 # ADR-000Y - Migrate Project Sources Export To Context Bundle

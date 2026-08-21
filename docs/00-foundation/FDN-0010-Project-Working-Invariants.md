@@ -3,6 +3,8 @@ artifact:
   id: FDN-0010
   title: Project Working Invariants
   type: Foundation Document
+  semantic_type: Knowledge Artifact
+  domain: Foundation
   criticality: C3
   status: Published
   confidence: Reviewed

@@ -3,6 +3,9 @@ artifact:
   id: FDN-0001
   title: Foundation README
   type: Foundation Document
+  semantic_type: Knowledge Artifact
+  domain: Foundation
+  confidence: Declared
   criticality: C3
   version: 1.0
   status: Published

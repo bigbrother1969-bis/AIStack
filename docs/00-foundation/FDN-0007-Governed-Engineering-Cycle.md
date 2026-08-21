@@ -3,6 +3,9 @@ artifact:
   id: FDN-0007
   title: Governed Engineering Cycle
   type: Foundation Document
+  semantic_type: Knowledge Artifact
+  domain: Foundation
+  confidence: Declared
   criticality: C3
   version: 1.0
   status: Published

@@ -3,6 +3,10 @@ artifact:
   id: ADR-000Z
   title: Context Bundle Transfer Capability
   type: ADR
+  semantic_type: ADR
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
   status: Accepted
   owner: Architecture
 ---

@@ -3,6 +3,10 @@ artifact:
   id: CMP-0001-SPEC
   title: Context Bundle Generator Specification
   type: Component Specification
+  semantic_type: Specification
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Draft
   owner: Development

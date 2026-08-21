@@ -3,6 +3,10 @@ artifact:
   id: CMP-0012
   title: Innovation Pipeline
   type: Component README
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Draft
   owner: Foundation

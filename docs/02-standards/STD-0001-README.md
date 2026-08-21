@@ -3,6 +3,10 @@ artifact:
   id: STD-0001
   title: Standards
   type: Standard Domain
+  semantic_type: Knowledge Artifact
+  domain: Standards
+  criticality: C2
+  confidence: Declared
   status: Published
   version: 1.0
   owner: Foundation

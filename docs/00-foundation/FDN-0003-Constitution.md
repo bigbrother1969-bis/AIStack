@@ -3,6 +3,9 @@ artifact:
   id: FDN-0003
   title: Constitution
   type: Foundation Document
+  semantic_type: Knowledge Artifact
+  domain: Foundation
+  confidence: Declared
   criticality: C3
   version: 1.0
   status: Published

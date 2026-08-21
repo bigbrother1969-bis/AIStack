@@ -3,6 +3,8 @@ artifact:
   id: FDN-MANIFESTO
   title: The Sustainable Heritage Manifesto
   type: Foundation Manifesto
+  semantic_type: Knowledge Artifact
+  domain: Foundation
   criticality: C3
   status: Published
   confidence: Reviewed

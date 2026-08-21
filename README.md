@@ -5,6 +5,10 @@ artifact:
   status: Draft
   title: AIStack Main README
   type: Entry Point Documentation
+  semantic_type: Knowledge Artifact
+  domain: Foundation
+  criticality: C2
+  confidence: Declared
   version: 3
 ---
 

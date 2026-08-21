@@ -3,6 +3,10 @@ artifact:
   id: STD-0200
   title: Specification Standard
   type: Specification Standard
+  semantic_type: Standard
+  domain: Standards
+  criticality: C2
+  confidence: Declared
   status: Published
   version: 1.0
   owner: Foundation

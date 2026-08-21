@@ -3,6 +3,10 @@ artifact:
   id: CMP-0001
   title: Context Bundle Generator
   type: Component README
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
   version: 1.0
   status: Published
   owner: Development

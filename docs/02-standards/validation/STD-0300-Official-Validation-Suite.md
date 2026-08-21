@@ -3,6 +3,9 @@ artifact:
   id: STD-0300
   title: Official Validation Suite
   type: System Specification
+  semantic_type: Specification
+  domain: Standards
+  criticality: C2
   status: Published
   confidence: Reviewed
   version: 1.1

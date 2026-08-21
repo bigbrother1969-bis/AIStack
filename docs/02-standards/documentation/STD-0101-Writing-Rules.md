@@ -3,6 +3,10 @@ artifact:
   id: STD-0101
   title: Writing Rules
   type: Documentation Standard
+  semantic_type: Standard
+  domain: Standards
+  criticality: C2
+  confidence: Declared
   status: Published
   version: 1.0
   owner: Foundation

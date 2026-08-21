@@ -23,6 +23,25 @@ services:
   #     python -m aistack.cli.knowledge_integrity \
   #     /app/bundles/AIStack-Context-Bundle.zip
   #
+  # Published on 2026-08-21, pinned by digest so the record is
+  # not a label someone can move:
+  #
+  #   bigbrother1969/aistack-core:0.1.0
+  #   @sha256:c8ca0fa791e63f8165910b84d913a74a4d084444680518a4a3db13aaaf6359ba
+  #
+  # Built from ef28e16 with:
+  #
+  #   docker build -f Dockerfile \
+  #     --label org.opencontainers.image.source="https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack" \
+  #     --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
+  #     --label org.opencontainers.image.version="0.1.0" \
+  #     --label org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+  #     --label org.opencontainers.image.description="AIStack Knowledge Integrity validator" \
+  #     -t bigbrother1969/aistack-core:0.1.0 .
+  #
+  # The service below builds locally instead, so a change is
+  # validated before it is published.
+  #
   aistack-core:
     build:
       context: .

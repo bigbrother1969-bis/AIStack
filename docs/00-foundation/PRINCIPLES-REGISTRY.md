@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Foundation
   created: 2026-07-24
-  updated: 2026-07-24
+  updated: 2026-08-21
 
 relations:
   references:
@@ -21,6 +21,32 @@ relations:
 ---
 
 # AIStack Principles Registry
+
+## Provenance of version 1.1
+
+Eight principles were added on 2026-08-21, recovered from
+`AIStack-Knowledge-Principles-Consolidated.md` — a hand-maintained
+consolidated view that declared itself a *"consolidation draft pending
+final historical validation"* and restated forty principles, most of
+which already lived here.
+
+Each of the eight was checked against this registry before being added.
+The rest of that file held either principles already registered under a
+different wording, or *descriptions* of the architecture, which belong to
+the `ARCH-` documents and not to a register of principles. The file was
+removed once emptied of what only it carried.
+
+**ARC-012 deserves a note.** *Providers observe and collect; they never
+decide or modify* was violated by `RepositoryProvider`, which assigned
+itself `confidence="high"` and `status="observed"` — two values no
+governed vocabulary contained. The code was repaired on 2026-08-21,
+before the principle it broke had ever been written down. Registering it
+now is what makes the repair checkable rather than a matter of taste.
+
+A hand-maintained second view of these principles is not wanted again:
+FDN-005 gives every knowledge item one Single Point Of Truth, and this
+registry is theirs. A consolidated reading, if one is needed, is a
+generated projection (ENG-003), never a maintained copy.
 
 ## Purpose
 
@@ -92,6 +118,9 @@ AIStack behavior:
 | FDN-008 | Every transformation is traceable | C3 |
 | FDN-009 | Architecture comes before implementation | C3 |
 | FDN-010 | AIStack applies its principles to itself first | C3 |
+| FDN-011 | Evidence produces knowledge; discovery never produces knowledge | C3 |
+| FDN-012 | Every knowledge item is portable across tools, vendors, clouds and models | C3 |
+| FDN-013 | Historical knowledge is preserved through versions and relationships | C3 |
 
 ---
 
@@ -121,6 +150,11 @@ AIStack behavior:
 | ARC-007 | Modular Monolith First | C2 |
 | ARC-008 | Architecture evolves through incremental validated steps | C2 |
 | ARC-009 | Deployment boundaries do not define architecture boundaries | C2 |
+| ARC-010 | The Kernel and the KernelRuntime remain separated | C2 |
+| ARC-011 | Capabilities define what AIStack can do; services provide them | C2 |
+| ARC-012 | Providers observe and collect; they never decide or modify | C3 |
+| ARC-013 | Evaluation consumes canonical knowledge models, never raw technical output | C2 |
+| ARC-014 | Location abstracts physical storage | C2 |
 
 ---
 

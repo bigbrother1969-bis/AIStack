@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-07-24
@@ -96,6 +96,21 @@ AIStack architecture should separate:
 
 -   specialized capabilities
 -   independent evolution
+
+## The Context Bundle as a moving library
+
+The analogy extends to transport. A Context Bundle is the library packed
+for a move: it carries the books, the catalogue and enough of the
+building's rules that the library can be reopened elsewhere.
+
+That is what makes Self-Onboarding possible — an agent receiving the
+bundle does not receive a copy of the shelves, it receives what it needs
+to reconstruct a knowledge environment (Manifesto, Article XVI).
+
+Recovered on 2026-08-21 from `AIStack-Knowledge-Principles-Consolidated.md`,
+where it was the only statement of this idea in the heritage.
+
+---
 
 ## Future evolution
 

@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.0
+  version: 1.1
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-07-06
+  updated: 2026-08-21
 
 relations:
   references:
@@ -125,6 +125,25 @@ A component responsible for discovering observations from a Digital Ecosystem.
 Knowledge Providers never interpret observations.
 
 They only collect evidence.
+
+---
+
+## Location
+
+An abstraction of where a Knowledge Artifact physically resides.
+
+A Location hides the storage mechanism — a filesystem, a repository, a
+remote host — so that the rest of AIStack reasons about artifacts
+without reasoning about storage (ARC-014).
+
+---
+
+## Transport
+
+The movement of a Knowledge Artifact from one Location to another.
+
+Transport carries artifacts. It does not qualify them, alter them or
+decide what travels: eligibility is a separate governed decision.
 
 ---
 

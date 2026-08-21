@@ -19,44 +19,70 @@ services:
     # Pinned by digest, not by tag: a tag is mutable, a digest is not.
     # Same discipline as the Context Bundle manifest — an artifact in use
     # must be identifiable by its content, not by a label someone can move.
-    image: bigbrother1969/selection-ui:0.3@sha256:bb04bd50b24c71995e81683d53c056c1dfb3028f0e1465103c987df18445dff3
+    image: bigbrother1969/selection-ui:0.5@sha256:041b1cd8a529f2bde7b75b076fb83988fdf7d195e83293af3539ecb91e3cc670
     container_name: aistack-selection-ui
     #
-    # ⚠ 0.3 cannot be rebuilt.
+    # Built from AIStack `108b8a7` on 2026-08-21, with:
     #
-    # The image declares
-    # `org.opencontainers.image.revision=a13e4b3d22f8272349b5eafae77a188502206f3e`.
-    # That commit was looked for on 2026-08-21 in every repository
-    # that could hold it — the laptop clone, the SPOT host clone, and
-    # `/srv/aistack`, the ancestor repository this one lives inside —
-    # and `git cat-file` reports the object as absent from all three.
-    # It was not pruned from a branch: the object itself is gone.
-    #
-    # So the digest above identifies the image, and nothing identifies
-    # its source. What this container has been serving since it was
-    # started cannot be read, audited or reproduced. A pinned digest
-    # guarantees that the bytes do not change; it does not tell anyone
-    # what those bytes are.
-    #
-    # This is the reason for 0.4 rather than a version bump: the point
-    # is not that 0.3 is old, it is that it is unaccountable.
-    #
-    # Built and published manually — buildx is not used here.
-    # The command below is the one that produced the image above:
-    #
-    #   docker build -f Dockerfile.selection-ui \
+    #   docker build --no-cache -f Dockerfile.selection-ui \
     #     --label org.opencontainers.image.source="https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack" \
-    #     --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
-    #     --label org.opencontainers.image.version="0.3" \
+    #     --label org.opencontainers.image.revision="$(git -C /srv/aistack/AISTack rev-parse HEAD)" \
+    #     --label org.opencontainers.image.version="0.5" \
     #     --label org.opencontainers.image.licenses="AGPL-3.0-or-later" \
-    #     -t bigbrother1969/selection-ui:0.3 .
-    #   docker push bigbrother1969/selection-ui:0.3
+    #     --label org.opencontainers.image.description="AIStack Selection UI" \
+    #     -t bigbrother1969/selection-ui:0.5 .
+    #   docker push bigbrother1969/selection-ui:0.5
     #
-    # `$(git rev-parse HEAD)` records whichever repository the shell
-    # happened to be standing in. Run one directory higher, it stamps
-    # the ancestor's history onto an image built from this one. A
-    # revision label is only evidence if the build states which
-    # repository it means.
+    # `git -C <path> rev-parse HEAD`, not a bare `$(git rev-parse HEAD)`.
+    # There are two nested repositories here — this one and the ancestor
+    # at `/srv/aistack` — and a bare invocation records whichever one the
+    # shell happens to be standing in. See 0.3 below.
+    #
+    # ---------------------------------------------------------------
+    # Verified before publication, not after:
+    #
+    #   image content   `src/aistack/selection/` holds three entries;
+    #                   no `__pycache__` anywhere under `/app/src`
+    #   command line    no `--reload`
+    #   HTTP            GET / -> 200
+    #   idle CPU        0.32 % of one core, measured after two minutes
+    #                   of inactivity
+    #   memory          42 MiB
+    #
+    # The CPU figure is the one that matters. STD-0300 § VS-4 takes this
+    # very service as its reference incident — 48–58 % of one core while
+    # idle, caused by a development `--reload` left in a permanent
+    # container. Criterion 4.8 asks for a reduction of at least 95 %;
+    # 58 % → 0.32 % is 99.4 %. Reading the Dockerfile would have proved
+    # nothing: the measurement is on the built image.
+    # ---------------------------------------------------------------
+    #
+    # 0.3 — unaccountable. Do not resurrect.
+    #
+    # It declared
+    # `org.opencontainers.image.revision=a13e4b3d22f8272349b5eafae77a188502206f3e`.
+    # That commit was looked for on 2026-08-21 in every repository that
+    # could hold it — the laptop clone, the SPOT host clone, and
+    # `/srv/aistack`, the ancestor repository this one lives inside.
+    # `git cat-file` reports the object as absent from all three: not
+    # detached on some branch, gone. It ran in production for at least
+    # 46 hours. What it was serving cannot be read, audited or rebuilt.
+    #
+    # 0.4 — built and abandoned the same hour, before any use.
+    #
+    # Its source was today's, but the build copied the working tree
+    # rather than the commit: `.dockerignore` listed `__pycache__` and
+    # `*.pyc`, and those patterns match the *full path*, so they
+    # excluded only the context root. Two façade directories deleted
+    # that morning survived in the image, carrying nothing but stale
+    # bytecode — and with their `__init__.py` gone,
+    # `import aistack.selection.engine` returned an empty namespace
+    # package instead of failing. The label said `c8a8c51`; the content
+    # was `c8a8c51` plus whatever was lying on the disk.
+    #
+    # 0.4 was never pinned here and never deployed. It is recorded
+    # because a version that exists on DockerHub and nowhere in the
+    # heritage is exactly the situation 0.3 documents the cost of.
     #
     ports:
       - "8181:8181"

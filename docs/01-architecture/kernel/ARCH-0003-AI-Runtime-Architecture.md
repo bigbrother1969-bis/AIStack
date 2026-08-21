@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0003
+  id: ARCH-0003
   title: AI Runtime Architecture
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0003 — AI Runtime Architecture
+# ARCH-0003 — AI Runtime Architecture
 
 ## Purpose
 

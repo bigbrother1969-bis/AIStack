@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0009
+  id: ARCH-0009
   title: Library Architecture Analogy
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0009 — Library Architecture Analogy
+# ARCH-0009 — Library Architecture Analogy
 
 ## Status
 

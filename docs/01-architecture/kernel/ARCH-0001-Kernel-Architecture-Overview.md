@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0001
+  id: ARCH-0001
   title: Kernel Architecture Overview
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0001 — Kernel Architecture Overview
+# ARCH-0001 — Kernel Architecture Overview
 
 ## Purpose
 
@@ -43,13 +43,13 @@ Knowledge Operating System
 
 ## Documentation Structure
 
-- ARC-0002 — Kernel Architecture: overall Kernel responsibilities and boundaries.
-- ARC-0008 — Kernel Runtime Architecture: Runtime lifecycle, operations and state model.
-- ARC-0005 — Knowledge Pipelines: Knowledge Pipeline architecture and execution model.
-- ARC-0007 — Kernel Registries: governed registries and capability discovery.
-- ARC-0006 — Knowledge Providers: Knowledge Provider model and responsibilities.
-- ARC-0004 — Knowledge Flow: deterministic knowledge flow from observation to governed artifacts.
-- ARC-0003 — AI Runtime Architecture: AI Engine integration principles.
+- ARCH-0002 — Kernel Architecture: overall Kernel responsibilities and boundaries.
+- ARCH-0008 — Kernel Runtime Architecture: Runtime lifecycle, operations and state model.
+- ARCH-0005 — Knowledge Pipelines: Knowledge Pipeline architecture and execution model.
+- ARCH-0007 — Kernel Registries: governed registries and capability discovery.
+- ARCH-0006 — Knowledge Providers: Knowledge Provider model and responsibilities.
+- ARCH-0004 — Knowledge Flow: deterministic knowledge flow from observation to governed artifacts.
+- ARCH-0003 — AI Runtime Architecture: AI Engine integration principles.
 
 ## Governance
 

@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 1.2
+  version: 1.3
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-21
@@ -68,7 +68,7 @@ STD-0100-Documentation-Standard.md
 
 ADR-0001-Python-Packaging-v1.md
 
-ARC-0002-Kernel-Architecture.md
+ARCH-0002-Kernel-Architecture.md
 ```
 
 A file name carries the identifier and the title, and nothing
@@ -123,21 +123,30 @@ CMP-0001
 
 ADR-0001
 
-ARC-0002
+ARCH-0002
 ```
 
 | Prefix | Domain |
 |---|---|
 | `FDN-` | Foundation |
 | `STD-` | Standards |
-| `ARC-` | Architecture — descriptions of the system as it is |
+| `ARCH-` | Architecture — descriptions of the system as it is |
 | `ADR-` | Architecture Decision Records — a decision, with its context and consequences |
 | `CMP-` | Components |
+| `GOV-` | Governance |
 
-`ARC-` and `ADR-` are both architecture and are deliberately
+`ARCH-` and `ADR-` are both architecture and are deliberately
 distinct: an ADR records *a decision taken at a point in time*
-and does not change once accepted, while an ARC describes *the
+and does not change once accepted, while an ARCH describes *the
 architecture as it stands* and evolves with it.
+
+`ARCH-` carries four letters where every other prefix carries
+three. That is deliberate. The registry uses `ARC-` for
+architecture *principles*, and a three-letter architecture
+prefix for documents would have left `ARC-001` and `ARC-0001`
+distinguishable by one digit alone. `ARD-` was rejected for a
+worse reason: `ADR-0004` and `ARD-0004` differ only by the order
+of two letters.
 
 `GOV-` follows the same pattern for governance documents.
 
@@ -148,8 +157,8 @@ of the number tells them apart:
 
 | Form | Names | Lives in |
 |---|---|---|
-| `FDN-004`, `ARC-001`, `GOV-001` — **three digits** | a **principle** | a row of PRINCIPLES-REGISTRY |
-| `FDN-0004`, `ARC-0001`, `GOV-0001` — **four digits** | an **artifact** | a file of its own |
+| `FDN-004`, `STD-004`, `GOV-001` — **three digits** | a **principle** | a row of PRINCIPLES-REGISTRY |
+| `FDN-0004`, `STD-0100`, `GOV-0001` — **four digits** | an **artifact** | a file of its own |
 
 This convention was already in force across the heritage on
 2026-08-21 — `STD-004` is *one validated concept, one commit*,
@@ -157,9 +166,12 @@ This convention was already in force across the heritage on
 written down, so nothing prevented a reader from taking one for
 the other.
 
-A single digit is a thin signal. It is stated here so that it is
-at least a governed one, and a future revision may decide to
-widen it.
+**A single digit is a thin signal, and this standard does not
+pretend otherwise.** Architecture escaped it on 2026-08-21 by
+giving documents their own prefix, `ARCH-`. `FDN-`, `STD-` and
+`GOV-` still rely on the digit width alone, and the same remedy
+is available to them. Recording the weakness is the minimum; it
+is not the fix.
 
 Identifiers never change.
 

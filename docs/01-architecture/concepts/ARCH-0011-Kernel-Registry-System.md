@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0011
+  id: ARCH-0011
   title: Kernel Registry System
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0011 — Kernel Registry System
+# ARCH-0011 — Kernel Registry System
 
 ## Status
 

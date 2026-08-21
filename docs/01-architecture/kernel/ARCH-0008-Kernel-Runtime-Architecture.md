@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0008
+  id: ARCH-0008
   title: Kernel Runtime Architecture
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0008 — Kernel Runtime Architecture
+# ARCH-0008 — Kernel Runtime Architecture
 
 ## Purpose
 

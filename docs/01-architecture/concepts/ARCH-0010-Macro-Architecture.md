@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0010
+  id: ARCH-0010
   title: Macro-Architecture
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0010 — Macro-Architecture
+# ARCH-0010 — Macro-Architecture
 
 ## Status
 

@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0012
+  id: ARCH-0012
   title: Capability Model
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0012 — Capability Model
+# ARCH-0012 — Capability Model
 
 ## Status
 

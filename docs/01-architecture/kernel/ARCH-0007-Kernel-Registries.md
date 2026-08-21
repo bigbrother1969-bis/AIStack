@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0007
+  id: ARCH-0007
   title: Kernel Registries
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0007 — Kernel Registries
+# ARCH-0007 — Kernel Registries
 
 ## Purpose
 

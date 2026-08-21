@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0005
+  id: ARCH-0005
   title: Knowledge Pipelines
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0005 — Knowledge Pipelines
+# ARCH-0005 — Knowledge Pipelines
 
 ## Purpose
 

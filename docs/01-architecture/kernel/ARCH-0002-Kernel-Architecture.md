@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0002
+  id: ARCH-0002
   title: Kernel Architecture
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0002 — Kernel Architecture
+# ARCH-0002 — Kernel Architecture
 
 ## Purpose
 

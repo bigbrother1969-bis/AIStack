@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0004
+  id: ARCH-0004
   title: Knowledge Flow
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0004 — Knowledge Flow
+# ARCH-0004 — Knowledge Flow
 
 ## Purpose
 

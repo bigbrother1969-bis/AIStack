@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0006
+  id: ARCH-0006
   title: Knowledge Providers
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0006 — Knowledge Providers
+# ARCH-0006 — Knowledge Providers
 
 ## Purpose
 

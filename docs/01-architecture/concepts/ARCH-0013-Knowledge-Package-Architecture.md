@@ -1,6 +1,6 @@
 ---
 artifact:
-  id: ARC-0013
+  id: ARCH-0013
   title: Knowledge Package Architecture
   type: Architecture Document
   semantic_type: Knowledge Artifact
@@ -14,7 +14,7 @@ artifact:
   updated: 2026-08-21
 ---
 
-# ARC-0013 — Knowledge Package Architecture
+# ARCH-0013 — Knowledge Package Architecture
 
 ## Status
 

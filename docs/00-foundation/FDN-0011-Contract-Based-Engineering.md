@@ -6,9 +6,9 @@ artifact:
   semantic_type: Principle
   domain: Foundation
   criticality: C3
-  confidence: Declared
-  version: 1.0
-  status: Proposed
+  confidence: Reviewed
+  version: 1.1
+  status: Published
   owner: Foundation
   created: 2026-07-24
   updated: 2026-08-21
@@ -34,8 +34,19 @@ it.
 The content is unchanged. Only the heading levels were normalised and the
 governance block added.
 
-`status: Proposed` because the text has never passed a validation gate;
-it becomes heritage on *Gravé*.
+**Gravé — 2026-08-21.** This artifact is governed heritage. What is
+engraved is an *adoption*: the wording is that of
+`engineering-principles-additions.md`, unchanged, and what the governance
+block added was ownership and identity, not content. The risk is therefore
+not in the text but in what it commits AIStack to. `confidence: Reviewed`:
+read and accepted by the owner.
+
+It was engraved after one day of use rather than on the day it was written.
+That day produced its first measurement — the `Registry` Protocol required
+`contains` and `items`, which no implementation provided, and
+`MutableRegistry` required a `freeze()` that existed nowhere. Principle 1
+below is what makes that an orphan contract rather than an opinion about
+code.
 
 **Why this matters beyond bookkeeping.** STD-0300 § VS-4 asks AIStack to
 derive technical debt from observations rather than from opinion. The

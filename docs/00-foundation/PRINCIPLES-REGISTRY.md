@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 2.0
+  version: 2.1
   status: Draft
   owner: Foundation
   created: 2026-07-24
@@ -21,6 +21,24 @@ relations:
 ---
 
 # AIStack Principles Registry
+
+## Provenance of version 2.1
+
+`FDN-P-014 — Technical debt is a property of the contracts, not of the
+implementation` was registered on 2026-08-21, when FDN-0011 was engraved.
+Until then it was stated in that document and nowhere else, while STD-0300
+§ VS-4 already required AIStack to derive technical debt from observations
+rather than opinion. The acceptance criteria were governed; the principle
+they rest on was not.
+
+**FDN-0011's second principle — *Contract First Engineering* — was
+deliberately not registered here.** `ARC-P-005` already says *contracts
+before implementations*. The two are the same rule at different altitudes:
+one states the ordering, the other states why the ordering follows from
+what engineering delivers. Registering both would give one rule two SPOTs,
+which FDN-P-005 forbids and which this registry was cleaned of on the same
+day. Whether `ARC-P-005` should be reworded to absorb the fuller statement
+is an open question, recorded rather than settled.
 
 ## Provenance of version 2.0
 
@@ -150,6 +168,7 @@ AIStack behavior:
 | FDN-P-011 | Evidence produces knowledge; discovery never produces knowledge | C3 |
 | FDN-P-012 | Every knowledge item is portable across tools, vendors, clouds and models | C3 |
 | FDN-P-013 | Historical knowledge is preserved through versions and relationships | C3 |
+| FDN-P-014 | Technical debt is a property of the contracts, not of the implementation | C3 |
 
 ---
 

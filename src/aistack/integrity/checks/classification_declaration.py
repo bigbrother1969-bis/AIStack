@@ -1,8 +1,6 @@
 from aistack.contracts.context_bundle import ContextBundle
-from aistack.contracts.criticality import (
-    CriticalityLevel,
-    UNDECLARED,
-)
+from aistack.contracts.criticality import CriticalityLevel
+from aistack.contracts.undeclared import UNDECLARED
 from aistack.contracts.integrity_check import IntegrityCheck
 from aistack.contracts.integrity_finding import (
     IntegrityFinding,

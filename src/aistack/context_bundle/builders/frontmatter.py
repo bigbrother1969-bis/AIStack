@@ -1,5 +1,7 @@
 import yaml
 
+from aistack.contracts.undeclared import UNDECLARED
+
 
 def parse_artifact_frontmatter(
     content: str,
@@ -62,8 +64,8 @@ def declared_value(
     value = declared.get(key)
 
     if value is None:
-        return "unknown"
+        return UNDECLARED
 
     text = str(value).strip()
 
-    return text or "unknown"
+    return text or UNDECLARED

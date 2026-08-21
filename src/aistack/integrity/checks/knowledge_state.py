@@ -1,12 +1,10 @@
 from aistack.contracts.context_bundle import ContextBundle
+from aistack.contracts.undeclared import UNDECLARED
 from aistack.contracts.integrity_check import IntegrityCheck
 from aistack.contracts.integrity_finding import (
     IntegrityFinding,
     IntegritySeverity,
 )
-
-
-UNKNOWN = "unknown"
 
 
 class KnowledgeStateCheck(IntegrityCheck):
@@ -39,7 +37,7 @@ class KnowledgeStateCheck(IntegrityCheck):
             subjects = tuple(
                 artifact.source
                 for artifact in bundle.artifacts
-                if getattr(artifact, field) == UNKNOWN
+                if getattr(artifact, field) == UNDECLARED
             )
 
             if subjects:

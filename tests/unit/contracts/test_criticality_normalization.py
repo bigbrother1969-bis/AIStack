@@ -1,7 +1,6 @@
+from aistack.contracts.undeclared import UNDECLARED, is_declared
 from aistack.contracts.criticality import (
     CriticalityLevel,
-    UNDECLARED,
-    is_declared,
     normalize_criticality,
 )
 

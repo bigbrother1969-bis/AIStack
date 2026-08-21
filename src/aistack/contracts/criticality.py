@@ -1,14 +1,13 @@
 from enum import IntEnum
 
+from aistack.contracts.undeclared import UNDECLARED
+
 
 class CriticalityLevel(IntEnum):
 
     C1 = 1
     C2 = 2
     C3 = 3
-
-
-UNDECLARED = "unknown"
 
 
 def normalize_criticality(value) -> str:
@@ -41,8 +40,3 @@ def normalize_criticality(value) -> str:
         return UNDECLARED
 
     return level.name
-
-
-def is_declared(value: str) -> bool:
-
-    return value != UNDECLARED

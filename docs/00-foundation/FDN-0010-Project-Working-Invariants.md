@@ -33,8 +33,8 @@ projet"*. They had never passed a validation gate, and this artifact stood at
 `status: Proposed` until the engraving recorded below.
 
 **Open reconciliation.** Several of these rules restate principles already registered
-in PRINCIPLES-REGISTRY — *understand before implementing* is close to ENG-001,
-*architecture first* to FDN-009, *migrate incrementally* to ARC-008. This artifact
+in PRINCIPLES-REGISTRY — *understand before implementing* is close to ENG-P-001,
+*architecture first* to FDN-P-009, *migrate incrementally* to ARC-P-008. This artifact
 deliberately does not merge them: it preserves the recovered wording so the overlap
 is visible and can be resolved as a governed decision, rather than silently choosing
 one formulation over another.

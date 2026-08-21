@@ -68,7 +68,7 @@ times, differently. `bin/aistack_env.sh`, designated by ADR-0001 as the
 SPOT for the execution environment, exported the repository root and not
 `src`, so sourcing the governed file did not make `aistack` importable.
 `scripts/dev-env.sh` exported `src` and not the root. This principle
-asked for `src` alone. FDN-005 requires one SPOT per knowledge item; the
+asked for `src` alone. FDN-P-005 requires one SPOT per knowledge item; the
 execution environment had three, and none of them was complete.
 
 The principle is unchanged: the environment is stated, never inferred.

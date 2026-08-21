@@ -133,7 +133,7 @@ It does not own:
 | Technical debt finding with its evidence references | generated |
 | This specification | canonical |
 
-All generated outputs are disposable (ENG-003). Only the criteria are governed.
+All generated outputs are disposable (ENG-P-003). Only the criteria are governed.
 
 ---
 
@@ -185,7 +185,7 @@ Before / After Verification
 ```
 
 Human Validation is a step of the chain, not a formality appended to it: the
-platform proposes, the human decides (GOV-001).
+platform proposes, the human decides (GOV-P-001).
 
 ---
 
@@ -334,7 +334,7 @@ traceable to a distinct policy.
 - FDN-0003 — Constitution (Article 5, Explainability; Article 12, Uncertainty)
 - FDN-0007 — Governed Engineering Cycle
 - FDN-0008 — Self-Application Principle
-- PRINCIPLES-REGISTRY — OPS-004 *Observe before acting*, ENG-005 *Validate every
+- PRINCIPLES-REGISTRY — OPS-004 *Observe before acting*, ENG-P-005 *Validate every
   architectural step independently*
 
 ---

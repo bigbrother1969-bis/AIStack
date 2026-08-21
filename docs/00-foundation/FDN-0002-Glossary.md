@@ -134,7 +134,7 @@ An abstraction of where a Knowledge Artifact physically resides.
 
 A Location hides the storage mechanism — a filesystem, a repository, a
 remote host — so that the rest of AIStack reasons about artifacts
-without reasoning about storage (ARC-014).
+without reasoning about storage (ARC-P-014).
 
 ---
 

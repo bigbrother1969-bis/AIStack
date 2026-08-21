@@ -122,7 +122,7 @@ The AI shall keep four states distinct and never let one pass for another:
 | Proposed | produced by the AI, awaiting human validation |
 | Validated | accepted by the human, pending *Gravé* |
 
-Human validation remains mandatory for every governance decision. Per GOV-001,
+Human validation remains mandatory for every governance decision. Per GOV-P-001,
 the AI never creates authoritative knowledge.
 
 ---
@@ -141,6 +141,6 @@ is subject to the rules it describes.
 ## Open Point
 
 FDN-0002 declares itself the Single Point Of Truth for AIStack terminology, yet
-**Gravé** — the central term of principle GOV-004 — is defined in FDN-0005 and
+**Gravé** — the central term of principle GOV-P-004 — is defined in FDN-0005 and
 not in the Glossary. This document deliberately does not add a fourth definition.
 Consolidating the term into FDN-0002 is left as a governed decision.

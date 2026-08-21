@@ -1,10 +1,35 @@
+# A pattern here is matched against the file's full path in the
+# build context, not against its name.
+#
+# Until 2026-08-21 this file read:
+#
+#   __pycache__
+#   *.pyc
+#
+# which excluded `./__pycache__` and root-level `.pyc` files, and
+# nothing else. Every `src/aistack/**/__pycache__` went into every
+# image ever built here. `selection-ui:0.4` shipped with two stale
+# bytecode directories for façade modules deleted the same morning —
+# and because their `__init__.py` was gone while the directory
+# survived, `import aistack.selection.engine` returned an empty
+# namespace package instead of failing.
+#
+# `**/` is what makes a pattern mean "anywhere".
+#
+# The same file governed the build of `aistack-core:0.1.0`, published
+# 2026-08-19. That image carries the same residue.
+
 .git
 .venv
-__pycache__
-*.pyc
-.pytest_cache
-.mypy_cache
-.ruff_cache
+
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/*.egg-info
+
 exports
 reports/generated
 context/bundles/*.zip

@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
-  status: Proposed
+  version: 1.1
+  status: Accepted
   owner: Architecture
   created: 2026-07-24
   updated: 2026-08-21
@@ -18,7 +18,29 @@ artifact:
 
 ## Status
 
-Proposed
+Accepted.
+
+`Proposed` until 2026-08-21, which described neither the decision nor the
+code. The decision had been taken and largely carried out; see
+*Implementation state*.
+
+## Implementation state
+
+Observed on 2026-08-21, at `90313d6`:
+
+- `DefaultContextBundleEngine` exists in
+  `src/aistack/context_bundle/engine.py` and orchestrates the pipeline this
+  ADR describes: discovery, artifact building, registry building, bundle
+  building, export.
+- Each stage sits behind a contract in `src/aistack/contracts/`, and each is
+  injectable — the engine coordinates and does nothing else.
+- **The migration below has not happened.** `scripts/export_project_sources.py`
+  is still the entry point every operator and every published command uses;
+  the engine has not replaced it as the governed packaging layer. The
+  exporter has not become a lower-level source collection component either —
+  it does the packaging itself.
+
+The decision stands. One step of it remains.
 
 ## Context
 

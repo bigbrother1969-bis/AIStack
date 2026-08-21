@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
-  status: Proposed
+  version: 1.1
+  status: Accepted
   owner: Architecture
   created: 2026-07-07
   updated: 2026-08-21
@@ -18,9 +18,14 @@ artifact:
 
 ## Status
 
-Proposed.
+Accepted.
 
-The decision below is stated; it is not carried out. See *Implementation state*.
+A status records whether the decision was taken, not whether the code has
+caught up. This ADR was `Proposed` until 2026-08-21 because its decision was
+unimplemented — which conflated two different facts, and conflicted with
+ADR-0001, `Accepted` on the same day while one of its own decisions had never
+held. The gap belongs in *Implementation state*, below, where it can be read
+without casting doubt on the decision itself.
 
 ## Context
 
@@ -67,21 +72,25 @@ This architecture follows the Open/Closed Principle: the engine remains closed f
 
 ## Implementation state
 
-Observed on 2026-08-21, at `588ca0f`:
+Observed on 2026-08-21, at `90313d6`:
 
-- `src/aistack/selection/engine/` and `src/aistack/selection/strategies/`
-  contain nothing but `__init__.py`. The packages exist; the engine and the
-  strategies do not.
-- One strategy exists — `ByIdsSelectionStrategy` — and it lives in
-  `src/aistack/kernel/selection/strategies/by_ids.py`, a different package from
-  the one this ADR implies.
-- `ByLabelsStrategy`, `ByTagsStrategy`, `ByPolicyStrategy` and `ByRuleStrategy`
-  have no implementation.
+- One strategy exists — `ByIdsSelectionStrategy` — in
+  `src/aistack/kernel/selection/strategies/by_ids.py`. The engine exists
+  beside it, in `src/aistack/kernel/selection/engine/core.py`.
+- `ByLabelsStrategy`, `ByTagsStrategy`, `ByPolicyStrategy` and
+  `ByRuleStrategy` have no implementation.
+- The delegation this ADR decides **is** how the one existing strategy is
+  wired: the engine holds a `SelectionStrategy`, not a branch per criterion.
 
-This section records an observation, not a verdict. The decision may well be the
-right one; it has simply not been carried out, which is why the status above is
-`Proposed` rather than `Accepted`. An ADR that claimed otherwise would make the
-heritage describe a system that does not exist.
+A previous version of this section reported that
+`src/aistack/selection/engine/` and `src/aistack/selection/strategies/`
+existed but were empty, and read that as the decision not being carried out.
+Both were re-export façades that nothing imported, and they were removed on
+2026-08-21. The engine and the strategy were in the kernel package all along;
+the observation had been looking at the wrong tree.
+
+What remains open is coverage, not structure: four of the five criteria this
+ADR anticipates have no strategy yet.
 
 ## Consequences
 

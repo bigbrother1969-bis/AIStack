@@ -14,6 +14,7 @@ def test_zip_bundle_exporter(tmp_path):
     artifact = KnowledgeArtifact(
         id="TEST-001",
         title="Test Principle",
+        declared_type="Test Artifact",
         domain="Foundation",
         semantic_type="Principle",
         criticality=3,

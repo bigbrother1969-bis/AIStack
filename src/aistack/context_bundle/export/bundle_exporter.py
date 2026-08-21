@@ -34,6 +34,7 @@ class JsonBundleExporter(BundleExporter):
                 {
                     "id": artifact.id,
                     "title": artifact.title,
+                    "type": artifact.declared_type,
                     "domain": artifact.domain,
                     "semantic_type": artifact.semantic_type,
                     "criticality": artifact.criticality,

@@ -2,6 +2,10 @@ from datetime import datetime
 
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.artifact_builder import ArtifactBuilder
+from aistack.contracts.classification import (
+    normalize_domain,
+    normalize_semantic_type,
+)
 from aistack.contracts.criticality import normalize_criticality
 from aistack.contracts.discovery import DiscoveryResult
 
@@ -25,6 +29,13 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
     replaces; a builder that assigned them would be
     qualifying knowledge on the human's behalf.
 
+    `type` and `semantic_type` are read as the two distinct
+    fields STD-0100 v2.0 defines. Until that revision the
+    builder read `type` and stored it *as* the semantic type,
+    which is why fourteen free-text labels were travelling
+    through the projection as though they belonged to a closed
+    vocabulary.
+
     What an artifact does not declare is reported as
     "unknown", which is a governed state under Article 12.
     """
@@ -43,16 +54,18 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
         return KnowledgeArtifact(
             id=discovery.content_hash,
             title=discovery.path.stem,
-            domain=declared_value(
-                declared,
-                "domain",
+            domain=normalize_domain(
+                declared.get("domain")
             ),
-            semantic_type=declared_value(
-                declared,
-                "type",
+            semantic_type=normalize_semantic_type(
+                declared.get("semantic_type")
             ),
             criticality=normalize_criticality(
                 declared.get("criticality")
+            ),
+            declared_type=declared_value(
+                declared,
+                "type",
             ),
             owner=declared_value(
                 declared,

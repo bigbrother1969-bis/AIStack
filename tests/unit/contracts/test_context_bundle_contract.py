@@ -9,6 +9,7 @@ def create_test_artifact():
     return KnowledgeArtifact(
         id="TEST-001",
         title="Test Artifact",
+        declared_type="Test Artifact",
         domain="Foundation",
         semantic_type="Principle",
         criticality=3,

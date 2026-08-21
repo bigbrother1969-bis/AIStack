@@ -12,6 +12,7 @@ def _artifact(identifier: str) -> KnowledgeArtifact:
     return KnowledgeArtifact(
         id=identifier,
         title=identifier,
+        declared_type="Test Artifact",
         domain="Knowledge Assets",
         semantic_type="Knowledge Artifact",
         criticality=1,

@@ -25,6 +25,7 @@ def make_artifact():
         return KnowledgeArtifact(
             id=source,
             title=title,
+            declared_type="Test Artifact",
             domain=domain,
             semantic_type=semantic_type,
             criticality=criticality,

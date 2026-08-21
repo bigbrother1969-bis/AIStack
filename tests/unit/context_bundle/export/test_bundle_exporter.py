@@ -14,6 +14,7 @@ def test_json_bundle_exporter(tmp_path):
     artifact = KnowledgeArtifact(
         id="TEST-001",
         title="Test Artifact",
+        declared_type="Test Artifact",
         domain="Foundation",
         semantic_type="Principle",
         criticality="C3",

@@ -4,8 +4,13 @@ import json
 import zipfile
 
 from aistack.contracts.artifact import KnowledgeArtifact
+from aistack.contracts.classification import (
+    normalize_domain,
+    normalize_semantic_type,
+)
 from aistack.contracts.context_bundle import ContextBundle
 from aistack.contracts.criticality import normalize_criticality
+from aistack.contracts.undeclared import UNDECLARED
 
 
 def read_bundle(path: Path) -> ContextBundle:
@@ -16,6 +21,12 @@ def read_bundle(path: Path) -> ContextBundle:
     `bundle.json` it contains, so that any consumer holding
     only a bundle can verify it without access to the
     repository.
+
+    Qualifications are normalized on the way in, exactly as the
+    builder normalizes them on the way out. A projection
+    produced by an older pipeline, or edited by hand, cannot
+    introduce a criticality, a domain or a semantic type that
+    the governed vocabularies do not contain.
     """
 
     path = Path(path)
@@ -40,18 +51,21 @@ def read_bundle(path: Path) -> ContextBundle:
         KnowledgeArtifact(
             id=entry["id"],
             title=entry["title"],
-            domain=entry.get("domain", "unknown"),
-            semantic_type=entry.get(
-                "semantic_type", "unknown"
+            domain=normalize_domain(
+                entry.get("domain")
+            ),
+            semantic_type=normalize_semantic_type(
+                entry.get("semantic_type")
             ),
             criticality=normalize_criticality(
                 entry.get("criticality")
             ),
-            owner=entry.get("owner", "unknown"),
+            declared_type=entry.get("type", UNDECLARED),
+            owner=entry.get("owner", UNDECLARED),
             source=entry["source"],
             content=entry.get("content", ""),
-            status=entry.get("status", "unknown"),
-            confidence=entry.get("confidence", "unknown"),
+            status=entry.get("status", UNDECLARED),
+            confidence=entry.get("confidence", UNDECLARED),
             created_at=generated_at,
             updated_at=generated_at,
         )

@@ -36,6 +36,7 @@ class MarkdownBundleExporter(BundleExporter):
                     "",
                     f"- ID: {artifact.id}",
                     f"- Source: {artifact.source}",
+                    f"- Type: {artifact.declared_type}",
                     f"- Domain: {artifact.domain}",
                     f"- Semantic type: {artifact.semantic_type}",
                     f"- Criticality: {artifact.criticality}",

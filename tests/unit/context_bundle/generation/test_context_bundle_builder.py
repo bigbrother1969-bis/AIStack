@@ -14,6 +14,7 @@ def test_context_bundle_builder_creates_bundle():
     artifact = KnowledgeArtifact(
         id="TEST-001",
         title="Test Artifact",
+        declared_type="Test Artifact",
         domain="Foundation",
         semantic_type="Principle",
         criticality=3,

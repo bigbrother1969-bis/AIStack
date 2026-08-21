@@ -19,6 +19,7 @@ def test_export_manager_creates_complete_bundle(tmp_path):
     artifact = KnowledgeArtifact(
         id="TEST-001",
         title="Test Principle",
+        declared_type="Test Artifact",
         domain="Foundation",
         semantic_type="Principle",
         criticality=3,

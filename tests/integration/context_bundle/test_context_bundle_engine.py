@@ -13,7 +13,12 @@ def test_context_bundle_engine_builds_complete_bundle(
 
     source.mkdir()
 
-    (source / "principle.md").write_text(
+    # Eligibility is an allow list: the governed heritage
+    # lives in docs/, so a fixture must live there too.
+    docs = source / "docs"
+    docs.mkdir()
+
+    (docs / "principle.md").write_text(
         "# Principle\n",
         encoding="utf-8",
     )

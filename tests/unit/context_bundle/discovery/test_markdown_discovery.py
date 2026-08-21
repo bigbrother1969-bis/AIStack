@@ -7,7 +7,11 @@ from aistack.context_bundle.discovery.markdown_discovery import (
 
 def test_markdown_discovery_reads_markdown_files(tmp_path):
 
-    file = tmp_path / "test.md"
+    # Eligibility is an allow list: the governed heritage lives
+    # in docs/, so a fixture must live there too.
+    (tmp_path / "docs").mkdir()
+
+    file = tmp_path / "docs" / "test.md"
     file.write_text(
         "# Test",
         encoding="utf-8",
@@ -38,7 +42,9 @@ def test_markdown_discovery_ignores_non_markdown(tmp_path):
 
 def test_markdown_discovery_generates_hash(tmp_path):
 
-    file = tmp_path / "test.md"
+    (tmp_path / "docs").mkdir()
+
+    file = tmp_path / "docs" / "test.md"
     file.write_text(
         "# Test",
         encoding="utf-8",

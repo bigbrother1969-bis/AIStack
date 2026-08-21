@@ -23,8 +23,11 @@ from aistack.context_bundle.export.bundle_exporter import (
 
 def test_complete_context_bundle_pipeline(tmp_path):
 
-    # Create source knowledge artifact
-    source = tmp_path / "example.md"
+    # Create source knowledge artifact, where the governed
+    # heritage lives: eligibility is an allow list.
+    (tmp_path / "docs").mkdir()
+
+    source = tmp_path / "docs" / "example.md"
 
     source.write_text(
         "# Example Knowledge\n",

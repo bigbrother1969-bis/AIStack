@@ -22,6 +22,38 @@ from __future__ import annotations
 
 import inspect
 
+from typing import Protocol, TypeVar
+
+
+_T = TypeVar("_T")
+
+
+class _EmptyProtocol(Protocol):
+    pass
+
+
+class _EmptyGenericProtocol(Protocol[_T]):
+    pass
+
+
+# Everything a Protocol carries before anyone declares anything
+# in it: `__module__`, `_is_protocol`, `__parameters__` and the
+# rest. Measured from two empty Protocols rather than listed by
+# hand, because that list changes between Python versions and a
+# hardcoded one would rot silently.
+#
+# Subtracting a measured set instead of filtering on a leading
+# underscore is what lets `__contains__` be part of a contract.
+# It is a real member with a real call shape; a check that
+# skipped it would declare a registry conformant without ever
+# looking at how membership is tested.
+PROTOCOL_NOISE = (
+    set(vars(_EmptyProtocol))
+    | set(vars(_EmptyGenericProtocol))
+    | set(vars(Protocol))
+    | set(vars(object))
+)
+
 
 IGNORED_BASES = {"Protocol", "Generic", "object"}
 
@@ -36,8 +68,8 @@ def protocol_members(protocol: type) -> set[str]:
     3.12 — a test that used it silently required that version.
 
     The walk over `__mro__` is the whole point. `MutableRegistry`
-    extends `Registry`, so it requires five members; reading only
-    its own namespace reports two, and a conformance check that
+    extends `Registry`, so it requires four members; reading only
+    its own namespace reports one, and a conformance check that
     under-reports what a contract demands is the same failure it
     was written to catch.
     """
@@ -49,13 +81,9 @@ def protocol_members(protocol: type) -> set[str]:
         if base.__name__ in IGNORED_BASES:
             continue
 
-        required.update(
-            name
-            for name in vars(base)
-            if not name.startswith("_")
-        )
+        required.update(vars(base))
 
-    return required
+    return required - PROTOCOL_NOISE
 
 
 def missing_members(

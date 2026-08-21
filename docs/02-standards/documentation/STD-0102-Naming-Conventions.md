@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 1.3
+  version: 1.4
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-21
@@ -48,6 +48,36 @@ Names should describe responsibilities rather than implementations.
 Canonical names shall be written in English.
 
 Abbreviations should only be used when officially defined.
+
+---
+
+# The Name Of The Project
+
+The project is written **AIStack**: capital A, capital I, capital
+S, lowercase t-a-c-k. The Python distribution and the package are
+written `aistack`, lowercase, as PEP 8 requires.
+
+No other spelling is canonical. `AISTack` in particular is not,
+and it exists: the Codeberg mirror is named
+`bigbrother1969/AISTack` and the SPOT host holds its clone at
+`/srv/aistack/AISTack`, while Gitea and GitHub both use
+`AIStack`. A single run of `scripts/sync_mirrors.sh` prints both
+spellings.
+
+Neither of those two is inside this repository, and neither can
+be corrected from it. They are recorded here so that the
+divergence is a known deployment fact rather than a recurring
+question, and so that nobody propagates the wrong one into
+governed knowledge on the grounds that they saw it somewhere.
+
+Two occurrences of `AISTack` inside the repository are correct
+and shall not be normalized:
+
+- `tests/unit/scripts/test_repository_url.py` reproduces the real
+  Codeberg and tunnel URLs. A fixture that corrected reality
+  would stop testing it.
+- `reports/qualification/2026/07/` records paths observed on the
+  SPOT host in July. A recorded observation is not editable.
 
 ---
 

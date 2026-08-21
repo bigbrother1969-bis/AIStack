@@ -1,28 +1,37 @@
+# A comment above a pattern says why that pattern is ignored.
+#
+# Until 2026-08-21 this file held thirteen comments stacked at
+# the top and fourteen patterns stacked below them, because the
+# whole file had been sorted alphabetically at some point. Every
+# comment still described something; none of them described the
+# line underneath it, which is the only place a reader looks.
 
-# Deployment specific transfer target
-# Generated catalogs
-# Generated context bundles
-# Generated examples
-# Generated reports
-# Generated selections
-# Local backups
-# Local secrets
 # Python
-# Python generated files
-# Python packaging
-# Python virtual environments
-# Runtime logs
-*.bak-*
-*.egg-info/
+__pycache__/
 *.pyc
+*.egg-info/
+.venv/
+
+# Local environment and secrets. Never committed: these carry
+# per-machine values, and one of them carries credentials.
 .env
 .env.selection-ui
-.venv/
-__pycache__/
+
+# Deployment-specific transfer target. The path a given host
+# ships bundles to is a property of that host, not of AIStack.
 config/context_bundle_transfer.yml
+
+# Generated artifacts. ENG-003: what a pipeline can rebuild is
+# disposable, and committing it makes the repository the SPOT of
+# a projection rather than of the heritage.
 context/bundles/
+reports/generated/
 examples/catalog_engine/music-library-catalog.yml
 examples/render_engine/*.html
 examples/selection_engine/music-android-selection-real.yml
+
+# Runtime logs
 logs/*.log
-reports/generated/
+
+# Local backups
+*.bak-*

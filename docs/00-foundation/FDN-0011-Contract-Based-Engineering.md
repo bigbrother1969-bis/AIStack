@@ -1,6 +1,54 @@
-## Technical Debt Is Contract Debt
+---
+artifact:
+  id: FDN-0011
+  title: Contract-Based Engineering
+  type: Foundation Document
+  semantic_type: Principle
+  domain: Foundation
+  criticality: C3
+  confidence: Declared
+  version: 1.0
+  status: Proposed
+  owner: Foundation
+  created: 2026-07-24
+  updated: 2026-08-21
 
-### Principle
+relations:
+  references:
+    - FDN-0003
+    - FDN-0004
+    - STD-0300
+    - PRINCIPLES-REGISTRY
+---
+
+# FDN-0011 — Contract-Based Engineering
+
+## Provenance
+
+These two principles lived in `engineering-principles-additions.md`, a
+working file name, with no identifier, no metadata and no owner. Neither
+is registered in PRINCIPLES-REGISTRY: verified on 2026-08-21, the terms
+*contract debt*, *contract first* and *technical debt* appear nowhere in
+it.
+
+The content is unchanged. Only the heading levels were normalised and the
+governance block added.
+
+`status: Proposed` because the text has never passed a validation gate;
+it becomes heritage on *Gravé*.
+
+**Why this matters beyond bookkeeping.** STD-0300 § VS-4 asks AIStack to
+derive technical debt from observations rather than from opinion. The
+first principle below is what makes that possible: it defines technical
+debt as a property of the contracts, countable from explicit
+architectural observations. The acceptance criteria were governed while
+the principle they rest on was not.
+
+---
+
+# Principle 1 — Technical Debt Is Contract Debt
+
+## Statement
 
 Technical debt is not primarily a property of the implementation.
 
@@ -10,7 +58,7 @@ A governed architecture minimizes technical debt by ensuring that every concept 
 
 Implementations are expected to follow these contracts.
 
-### Contract-Based Technical Debt
+## Contract-Based Technical Debt
 
 Technical debt is derived from violations of the contract architecture rather than from subjective code reviews.
 
@@ -24,7 +72,7 @@ Typical sources of technical debt include:
 - Contracts violating the Single Responsibility Principle
 - Contracts describing obsolete or unused concepts
 
-### Technical Debt Evaluation
+## Technical Debt Evaluation
 
 Technical debt becomes measurable rather than subjective.
 
@@ -40,7 +88,7 @@ The objective is not merely to reduce implementation complexity.
 
 The objective is to maintain a coherent governed conceptual model.
 
-### Engineering Consequence
+## Engineering Consequence
 
 In Governed Heritage Engineering, architecture quality is primarily determined by the quality of its contracts.
 
@@ -51,7 +99,12 @@ Poor contracts inevitably generate technical debt, regardless of implementation 
 Therefore, reducing technical debt consists first in improving the contract architecture rather than refactoring implementation details.
 
 
-## Contract First Engineering
+---
+
+# Principle 2 — Contract First Engineering
+
+---
+
 
 The primary deliverable of software engineering is not code.
 

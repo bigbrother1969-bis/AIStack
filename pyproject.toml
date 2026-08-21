@@ -18,6 +18,15 @@ authors = [
 
 license = { text = "AGPL-3.0-or-later" }
 
+# The canonical public location of the Single Point Of Truth.
+#
+# This is a project fact, identical on every machine, and it is
+# already published inside every Context Bundle. It is not a
+# machine address: the git remote of a given clone may be a
+# tunnel or a loopback, and the export refuses to publish those.
+[project.urls]
+Repository = "https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git"
+
 [project.scripts]
 aistack = "aistack.__main__:main"
 

@@ -5,6 +5,7 @@ import ipaddress
 import os
 import re
 import subprocess
+import tomllib
 from urllib.parse import urlparse
 import sys
 
@@ -99,6 +100,45 @@ def is_publishable_url(url: str) -> bool:
     return bool(HOSTNAME.fullmatch(host))
 
 
+def declared_repository_url() -> str | None:
+    """
+    The canonical URL the project declares about itself.
+
+    `pyproject.toml` is where a Python project states its own
+    location, so the fact lives there rather than in a new
+    convention. It is machine-independent by construction,
+    which is exactly what the git remote is not.
+    """
+
+    try:
+        with (ROOT / "pyproject.toml").open("rb") as handle:
+            data = tomllib.load(handle)
+
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+
+    url = (
+        data.get("project", {})
+        .get("urls", {})
+        .get("Repository")
+    )
+
+    if not url:
+        return None
+
+    url = str(url).strip()
+
+    if not is_publishable_url(url):
+        print(
+            f"repository_url: pyproject declares {url!r}, which "
+            "is not a public location — ignoring it.",
+            file=sys.stderr,
+        )
+        return None
+
+    return url
+
+
 def repository_url() -> str:
     """
     Canonical public location of the project.
@@ -132,6 +172,11 @@ def repository_url() -> str:
 
     if override:
         return override.strip()
+
+    declared = declared_repository_url()
+
+    if declared:
+        return declared
 
     try:
         remote = subprocess.check_output(

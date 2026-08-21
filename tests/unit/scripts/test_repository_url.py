@@ -90,3 +90,64 @@ def test_the_override_wins(monkeypatch):
         EXPORT.repository_url()
         == "https://example.org/aistack.git"
     )
+
+
+CANONICAL = "https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git"
+
+
+def test_the_project_declares_its_own_canonical_location():
+    """
+    `pyproject.toml` is where a Python project states where it
+    lives. Reading it there means every machine produces the
+    same `repository_url`, with no per-host configuration — the
+    git remote of a given clone may be a tunnel, a loopback or
+    a mirror, and none of those is the canonical location.
+    """
+
+    assert EXPORT.declared_repository_url() == CANONICAL
+
+
+def test_the_declaration_beats_the_git_remote(monkeypatch):
+
+    monkeypatch.delenv("AISTACK_REPOSITORY_URL", raising=False)
+
+    assert EXPORT.repository_url() == CANONICAL
+
+
+def test_the_override_beats_the_declaration(monkeypatch):
+
+    monkeypatch.setenv(
+        "AISTACK_REPOSITORY_URL",
+        "https://example.org/fork.git",
+    )
+
+    assert EXPORT.repository_url() == "https://example.org/fork.git"
+
+
+def test_a_private_declaration_is_ignored(tmp_path, monkeypatch):
+    """
+    Declaring it in the repository does not make it publishable.
+    The same rule applies wherever the value comes from.
+    """
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\n\n'
+        '[project.urls]\n'
+        'Repository = "http://192.168.1.10:8101/x.git"\n',
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(EXPORT, "ROOT", tmp_path)
+
+    assert EXPORT.declared_repository_url() is None
+
+
+def test_a_missing_declaration_is_not_an_error(tmp_path, monkeypatch):
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\n', encoding="utf-8"
+    )
+
+    monkeypatch.setattr(EXPORT, "ROOT", tmp_path)
+
+    assert EXPORT.declared_repository_url() is None

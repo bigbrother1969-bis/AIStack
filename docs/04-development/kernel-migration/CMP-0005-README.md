@@ -1,4 +1,20 @@
-# Kernel Migration
+---
+artifact:
+  id: CMP-0005
+  title: Kernel Migration
+  type: Component README
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
+  version: 1.0
+  status: Draft
+  owner: Development
+  created: 2026-07-07
+  updated: 2026-08-21
+---
+
+# CMP-0005 — Kernel Migration
 
 ## Objective
 

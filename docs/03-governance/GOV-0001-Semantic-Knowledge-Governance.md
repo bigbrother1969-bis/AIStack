@@ -1,4 +1,20 @@
-# AIStack Semantic Knowledge Governance Principles (C2)
+---
+artifact:
+  id: GOV-0001
+  title: Semantic Knowledge Governance
+  type: Governance Document
+  semantic_type: Policy
+  domain: Governance
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Draft
+  owner: Foundation
+  created: 2026-07-25
+  updated: 2026-08-21
+---
+
+# GOV-0001 — Semantic Knowledge Governance
 
 ## Status
 

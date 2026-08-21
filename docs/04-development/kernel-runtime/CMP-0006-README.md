@@ -1,4 +1,20 @@
-# Kernel Runtime Operations
+---
+artifact:
+  id: CMP-0006
+  title: Kernel Runtime Operations
+  type: Component README
+  semantic_type: Knowledge Artifact
+  domain: Engineering
+  criticality: C1
+  confidence: Declared
+  version: 1.0
+  status: Draft
+  owner: Development
+  created: 2026-07-07
+  updated: 2026-08-21
+---
+
+# CMP-0006 — Kernel Runtime Operations
 
 ## Status
 

@@ -1,4 +1,20 @@
-# STD-0002 - Test Artifact Isolation
+---
+artifact:
+  id: STD-0002
+  title: Test Artifact Isolation
+  type: Standard
+  semantic_type: Standard
+  domain: Standards
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Published
+  owner: Foundation
+  created: 2026-07-07
+  updated: 2026-08-21
+---
+
+# STD-0002 — Test Artifact Isolation
 
 ## Status
 

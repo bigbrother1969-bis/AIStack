@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 1.1
+  version: 1.2
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-21
@@ -138,6 +138,28 @@ ARC-0002
 distinct: an ADR records *a decision taken at a point in time*
 and does not change once accepted, while an ARC describes *the
 architecture as it stands* and evolves with it.
+
+`GOV-` follows the same pattern for governance documents.
+
+## Three digits or four
+
+The same prefixes name two different things, and only the width
+of the number tells them apart:
+
+| Form | Names | Lives in |
+|---|---|---|
+| `FDN-004`, `ARC-001`, `GOV-001` — **three digits** | a **principle** | a row of PRINCIPLES-REGISTRY |
+| `FDN-0004`, `ARC-0001`, `GOV-0001` — **four digits** | an **artifact** | a file of its own |
+
+This convention was already in force across the heritage on
+2026-08-21 — `STD-004` is *one validated concept, one commit*,
+`STD-0100` is this family of standards — but it had never been
+written down, so nothing prevented a reader from taking one for
+the other.
+
+A single digit is a thin signal. It is stated here so that it is
+at least a governed one, and a future revision may decide to
+widen it.
 
 Identifiers never change.
 

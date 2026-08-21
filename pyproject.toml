@@ -32,3 +32,20 @@ aistack = "aistack.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# STD-0002 (Test Artifact Isolation) says a project's test run
+# covers that project's tests and nothing else. It was enforced
+# by nobody: a bare `pytest` at the repository root walked into
+# `tests/item`, `tests/transaction` and `tests/evidence` — which
+# belong to other work that happens to live in this tree — and
+# reported 220 passing tests for a project that has 209.
+#
+# A number nobody can attribute is not a measurement. Declaring
+# the paths makes `pytest` and `pytest tests/unit tests/integration`
+# the same run, so the standard holds without anyone remembering
+# it.
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/unit",
+    "tests/integration",
+]

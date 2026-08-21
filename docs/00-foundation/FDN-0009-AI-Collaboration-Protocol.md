@@ -5,12 +5,13 @@ artifact:
   type: Foundation Protocol
   criticality: C3
   version: 1.0
-  status: Proposed
+  status: Published
+  confidence: Reviewed
   owner: Foundation
 
 lifecycle:
   created: 2026-07-06
-  updated: 2026-08-14
+  updated: 2026-08-21
 
 relations:
   references:
@@ -51,6 +52,13 @@ Three changes were made during restoration:
   restating it, that article having been adopted after this document was written;
 - the reference to `AI_TRANSACTION_PROTOCOL.md` is dropped — that artifact is
   declared obsolete and is deliberately not restored.
+
+**Gravé — 2026-08-21.** This artifact is governed heritage. What is engraved is a
+*restoration*: the wording comes from `76bd373^:context/AI_PROTOCOL.md`, and the three
+changes listed above — the deduplication of *Gravé*, the reference to Article 12, the
+dropped reference to a non-existent artifact — were made by an AI assistant and
+accepted by the owner. `confidence: Reviewed`: read and accepted, not verified against
+the original by a third party.
 
 ---
 

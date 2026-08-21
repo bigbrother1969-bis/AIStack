@@ -3,11 +3,12 @@ artifact:
   id: STD-0300
   title: Official Validation Suite
   type: System Specification
-  status: Proposed
+  status: Published
+  confidence: Reviewed
   version: 1.1
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-08-14
+  updated: 2026-08-21
 
 relations:
   references:
@@ -50,6 +51,16 @@ remain in `99-meta`.
 The v1.0 omission repeated, at small scale, the defect of commit `76bd373`: content
 removed during a restructuring without the change saying so. It is recorded here
 rather than corrected in silence.
+
+**Gravé — 2026-08-21.** This specification is governed heritage. What is engraved is an
+*extraction*, not a reconstitution: the criteria come from a working note that still
+exists in the repository, so this artifact can be checked against its source at any
+time. That is why it carries less provenance risk than the three Foundation artifacts
+engraved the same day. `confidence: Reviewed`.
+
+`criticality` remains undeclared. Engraving fixes the content, not the qualification;
+the criticality of this specification is a separate decision and stays `unknown` rather
+than being assumed (FDN-0003 Article 12).
 
 ---
 

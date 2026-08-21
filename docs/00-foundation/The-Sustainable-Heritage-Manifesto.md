@@ -4,11 +4,12 @@ artifact:
   title: The Sustainable Heritage Manifesto
   type: Foundation Manifesto
   criticality: C3
-  status: Draft
-  version: 0.1
+  status: Published
+  confidence: Reviewed
+  version: 1.0
   owner: Foundation
   created: 2026-07-11
-  updated: 2026-08-14
+  updated: 2026-08-21
 
 relations:
   references:
@@ -20,7 +21,7 @@ relations:
 
 # The Sustainable Heritage Manifesto
 
-*Draft v0.1*
+*Version 1.0 — Gravé 2026-08-21*
 
 > Engineering should not merely produce software.
 > It should build a sustainable heritage of knowledge.
@@ -45,6 +46,14 @@ Artifact*, *Sustainable Heritage Engineering*.
 
 The manifesto is conceptually upstream of FDN-0003. Its identifier is not numbered in
 sequence, as its adoption predates the Foundation series.
+
+**Gravé — 2026-08-21.** This manifesto is governed heritage and its version moves from
+0.1 to 1.0. What is engraved is a *translation*: the eighteen articles were written in
+French by the owner and rendered into English by an AI assistant, per FDN-0001. The
+French export of 2026-07-11 remains the author's original; where the two diverge, the
+original prevails and this artifact shall be corrected. `confidence: Reviewed` — read
+and accepted by the author of the source, which is the strongest review available for a
+translation short of a second translator.
 
 ---
 

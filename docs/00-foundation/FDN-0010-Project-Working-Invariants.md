@@ -4,11 +4,12 @@ artifact:
   title: Project Working Invariants
   type: Foundation Document
   criticality: C3
-  status: Proposed
-  version: 0.1
+  status: Published
+  confidence: Reviewed
+  version: 1.0
   owner: Foundation
   created: 2026-08-14
-  updated: 2026-08-14
+  updated: 2026-08-21
 
 relations:
   references:
@@ -26,7 +27,8 @@ conversation transcript that occupied `The-Sustainable-Heritage-Manifesto.md` un
 2026-08-14. They are recovered here so that removing the transcript loses nothing.
 
 They were drafted in conversation and described there as *"désormais des invariants du
-projet"*. They have never passed a validation gate. Hence `status: Proposed`.
+projet"*. They had never passed a validation gate, and this artifact stood at
+`status: Proposed` until the engraving recorded below.
 
 **Open reconciliation.** Several of these rules restate principles already registered
 in PRINCIPLES-REGISTRY — *understand before implementing* is close to ENG-001,
@@ -34,6 +36,16 @@ in PRINCIPLES-REGISTRY — *understand before implementing* is close to ENG-001,
 deliberately does not merge them: it preserves the recovered wording so the overlap
 is visible and can be resolved as a governed decision, rather than silently choosing
 one formulation over another.
+
+**Gravé — 2026-08-21.** This artifact is governed heritage and its version moves from
+0.1 to 1.0. What is engraved is a *reconstitution*: an AI assistant selected these five
+blocks out of a 53 KB conversation transcript, and that selection — what counted as an
+invariant and what did not — is now invariant itself. The owner has accepted it.
+`confidence: Reviewed`.
+
+The open reconciliation stated above is **not** closed by this engraving. Several of
+these rules still restate principles registered in PRINCIPLES-REGISTRY. Engraving fixes
+the wording as heritage; it does not decide the overlap.
 
 ---
 

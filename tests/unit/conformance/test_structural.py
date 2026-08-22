@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Protocol
+from typing import Protocol, TypeVar, runtime_checkable
 
 from aistack.conformance.structural import (
     incompatible_members,
@@ -73,6 +73,76 @@ def test_inherited_members_are_required_too():
         "__contains__",
         "put",
     }
+
+
+def test_an_empty_contract_of_every_form_requires_nothing():
+    """
+    The test that was missing, and its absence cost a day's
+    measurement.
+
+    `PROTOCOL_NOISE` is measured from empty contracts because the
+    machinery changes between Python versions. It was measured
+    from bare Protocols only, so when CPython 3.12 added
+    `__non_callable_proto_members__` to every `runtime_checkable`
+    Protocol, that name looked like a requirement no class
+    satisfies — and the two decorated contracts of this heritage
+    were orphans on 3.12 and 3.13 while satisfied on 3.11.
+
+    Found by running the same commit on two machines: 20 orphans
+    on one, 22 on the other. STD-0300 § 6 requires that an
+    unchanged input produce an identical output; a debt figure
+    that depends on the interpreter is not a measurement.
+
+    Each form is checked separately, so a future version adding a
+    member to one of them fails here with its name rather than
+    silently inflating an orphan count.
+    """
+
+    _U = TypeVar("_U")
+
+    class BareProtocol(Protocol):
+        pass
+
+    class GenericProtocol(Protocol[_U]):
+        pass
+
+    @runtime_checkable
+    class DecoratedProtocol(Protocol):
+        pass
+
+    class BareABC(ABC):
+        pass
+
+    for form in (
+        BareProtocol,
+        GenericProtocol,
+        DecoratedProtocol,
+        BareABC,
+    ):
+        assert protocol_members(form) == set(), (
+            f"{form.__name__} leaks machinery as a requirement: "
+            f"{sorted(protocol_members(form))}"
+        )
+
+
+def test_the_instrument_declares_no_class_of_its_own():
+    """
+    Twice in one afternoon the measuring tool appeared inside its
+    own measurement: first as two empty Protocols inventoried as
+    contracts of the heritage, then as fixtures counted among its
+    concrete implementations.
+
+    The fixtures are local to `_measure_noise()` and the sentinel
+    is a plain object, so this module contributes no class to the
+    package. If one is ever added, the inventory's totals move for
+    a reason that has nothing to do with the heritage.
+    """
+
+    import aistack.conformance.structural as instrument
+
+    from aistack.conformance.inventory import classes_of
+
+    assert classes_of(instrument, "aistack") == []
 
 
 def test_protocol_machinery_is_not_mistaken_for_a_requirement():

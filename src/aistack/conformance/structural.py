@@ -13,11 +13,12 @@ anything satisfy this contract? This module answers it, and until
 (GOV-0002/OS-002), which meant the product could not measure its
 own contracts.
 
-**`isinstance` cannot answer.** These Protocols are not
-`runtime_checkable`, and making them so would compare method
-names without looking at call shapes — a class with a `get` that
-takes different parameters would pass. So the comparison is
-structural and explicit.
+**`isinstance` cannot answer.** Most Protocols here are not
+`runtime_checkable`, so `isinstance` refuses outright; the two
+that are — `GovernedItem` and `EvidenceItem`, as of 2026-08-22 —
+would compare member names without looking at call shapes, and a
+class whose `get` takes different parameters would pass. So the
+comparison is structural and explicit for all of them.
 
 Nothing here decides what a violation *means*. `STD-P-002` makes
 a contract written ahead of its implementation the prescribed
@@ -30,47 +31,80 @@ from __future__ import annotations
 
 import inspect
 
-from typing import Protocol, TypeVar
+from abc import ABC
+from typing import Protocol, TypeVar, runtime_checkable
 
 
-_T = TypeVar("_T")
+def _measure_noise() -> frozenset[str]:
+    """
+    Everything a contract carries before anyone declares anything
+    in it.
+
+    Measured from empty contracts of **every form** rather than
+    listed by hand: that list changes between Python versions, and
+    a hardcoded one would rot in silence.
+
+    All four forms are needed, and the fourth was learned the hard
+    way. CPython 3.12 adds `__non_callable_proto_members__` to
+    every `runtime_checkable` Protocol. Measuring from bare
+    Protocols alone left that name looking like a requirement no
+    class satisfies, so the two decorated contracts of this
+    heritage — `GovernedItem` and `EvidenceItem` — were reported
+    as orphans on 3.12 and 3.13 while being satisfied on 3.11.
+
+    Found 2026-08-22 by running the same commit on two machines:
+    20 orphans on one, 22 on the other. A measurement of technical
+    debt that answers differently per interpreter is not a
+    measurement, and STD-0300 § 6 requires that an unchanged input
+    produce an identical output.
+
+    The fixtures are local to this function on purpose. Declared
+    at module level they became classes of the package, and the
+    inventory counted them among its concrete implementations —
+    the instrument appearing in its own measurement for the second
+    time in one afternoon.
+    """
+
+    _T = TypeVar("_T")
+
+    class _EmptyProtocol(Protocol):
+        pass
+
+    class _EmptyGenericProtocol(Protocol[_T]):
+        pass
+
+    @runtime_checkable
+    class _EmptyRuntimeCheckableProtocol(Protocol):
+        pass
+
+    class _EmptyABC(ABC):
+        pass
+
+    return frozenset(
+        set(vars(_EmptyProtocol))
+        | set(vars(_EmptyGenericProtocol))
+        | set(vars(_EmptyRuntimeCheckableProtocol))
+        | set(vars(_EmptyABC))
+        | set(vars(Protocol))
+        | set(vars(ABC))
+        | set(vars(object))
+    )
 
 
-class _EmptyProtocol(Protocol):
-    pass
-
-
-class _EmptyGenericProtocol(Protocol[_T]):
-    pass
-
-
-# Everything a Protocol carries before anyone declares anything
-# in it: `__module__`, `_is_protocol`, `__parameters__` and the
-# rest. Measured from two empty Protocols rather than listed by
-# hand, because that list changes between Python versions and a
-# hardcoded one would rot silently.
-#
 # Subtracting a measured set instead of filtering on a leading
 # underscore is what lets `__contains__` be part of a contract.
 # It is a real member with a real call shape; a check that
 # skipped it would declare a registry conformant without ever
 # looking at how membership is tested.
-PROTOCOL_NOISE = (
-    set(vars(_EmptyProtocol))
-    | set(vars(_EmptyGenericProtocol))
-    | set(vars(Protocol))
-    | set(vars(object))
-)
+PROTOCOL_NOISE = _measure_noise()
 
 
 IGNORED_BASES = {"Protocol", "Generic", "object", "ABC"}
 
 
-class _Unset:
-    """A member the contract names without giving it a value."""
-
-
-_UNSET = _Unset()
+# A sentinel, not a class: a class declared here would be
+# inventoried among the package's concrete implementations.
+_UNSET = object()
 
 
 def protocol_members(protocol: type) -> set[str]:

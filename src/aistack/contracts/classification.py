@@ -9,6 +9,7 @@ class KnowledgeDomain(str, Enum):
     GOVERNANCE = "Governance"
     STANDARDS = "Standards"
     ENGINEERING = "Engineering"
+    OPERATIONS = "Operations"
     KNOWLEDGE_ASSETS = "Knowledge Assets"
 
 

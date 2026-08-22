@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.0
+  version: 2.1
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-20
+  updated: 2026-08-22
 
 relations:
   references:
@@ -96,7 +96,7 @@ Twelve fields are mandatory, grouped by what they answer.
 
 | Field | Vocabulary |
 |---|---|
-| `domain` | `Foundation` · `Architecture` · `Governance` · `Standards` · `Engineering` · `Knowledge Assets` |
+| `domain` | `Foundation` · `Architecture` · `Governance` · `Standards` · `Engineering` · `Operations` · `Knowledge Assets` |
 | `semantic_type` | `Principle` · `Rule` · `Policy` · `ADR` · `Standard` · `Specification` · `Knowledge Artifact` |
 | `criticality` | `C3` core and invariant · `C2` governed · `C1` operational and adaptable |
 
@@ -108,6 +108,37 @@ the first or open the second, and an open vocabulary is not a vocabulary.
 Both vocabularies are contractualised in `src/aistack/contracts/classification.py`.
 The enumeration and this table are two projections of one decision: they shall not
 drift apart.
+
+`Operations` was added to both on 2026-08-22. The heritage had carried Operations
+principles since July — `OPS-P-001` to `OPS-P-004` — while the domain existed in
+neither the table nor the enumeration. An artifact declaring `domain: Operations`
+would have been normalized to `unknown`: the domain was missing from the
+implementation, not from the knowledge.
+
+### A declared `type` determines its `domain`
+
+Every distinct `type` in the heritage maps to exactly one `domain`. Measured on
+2026-08-22 across 63 artifacts and 16 distinct types: no exception. Two artifacts
+declaring the same `type` and different `domain` values would give the heritage two
+answers to one question, and that is not permitted.
+
+`type` does **not** determine `semantic_type`, and does **not** determine
+`criticality`. The same measurement found one counterexample to each, and both are
+correct:
+
+- `FDN-0011` is a `Foundation Document` whose `semantic_type` is `Principle`, where
+  the eight others are `Knowledge Artifact`. The type says where an artifact sits;
+  the semantic type says what it is.
+- `ARCH-0009` is an `Architecture Document` at `C1` where the thirteen others are
+  `C2`. Criticality is a judgement about importance, not a consequence of document
+  kind — the same reading that kept the repository README at `C2` on 2026-08-21,
+  since reading priority is not criticality.
+
+Those two are named here so that a later reader does not complete the rule by
+extending it to three axes, and break two artifacts doing so.
+
+**This rule is stated and not yet enforced.** No integrity check verifies it; it
+holds because it has been applied by hand. That is recorded rather than implied.
 
 ## Governance — who answers for this artifact
 

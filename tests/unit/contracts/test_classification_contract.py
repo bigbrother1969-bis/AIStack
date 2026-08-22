@@ -11,6 +11,7 @@ def test_all_knowledge_domains_exist():
     assert KnowledgeDomain.GOVERNANCE.value == "Governance"
     assert KnowledgeDomain.STANDARDS.value == "Standards"
     assert KnowledgeDomain.ENGINEERING.value == "Engineering"
+    assert KnowledgeDomain.OPERATIONS.value == "Operations"
     assert KnowledgeDomain.KNOWLEDGE_ASSETS.value == "Knowledge Assets"
 
 

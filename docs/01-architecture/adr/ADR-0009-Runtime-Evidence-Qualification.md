@@ -39,8 +39,8 @@ signature matches the definition exactly. The question had been posed
 without reading the glossary entry that answered it. What survives of the
 gap is narrower and is recorded in § 3.1 as `grounding`.
 
-**One point remains open and must be settled before acceptance:** how an
-individual signature is identified. See *Consequences*.
+The point left open by that amendment — how an individual signature is
+identified — was settled the same day. See § 3.2.
 
 ## Context
 
@@ -188,6 +188,34 @@ written from experience, none has been re-verified by a third party, and no
 test proves that any of them fires on the incident it describes. Raising one
 to `Verified` means reproducing that incident.
 
+### 3.2 A signature exists inside its catalogue
+
+A signature is identified by a fragment of its catalogue's identifier:
+
+```
+OPS-0001/S-001 … OPS-0001/S-004
+```
+
+**No third identifier convention is created.** The heritage already carries
+two — `OPS-0001` for artifacts, `OPS-P-001` for principles — and yesterday
+cost a day to make those two unambiguous. A signature is not a governed
+object citable from anywhere; it exists inside the catalogue that declares
+it, and its identifier says exactly that.
+
+`S-` rather than a bare number, so that `OPS-0001/003` can never be read as
+a numbered item of the kind principles are. A slash rather than `#`, because
+the catalogue is written as a YAML block and `#` is that language's comment
+character — an identifier that needs quoting to survive is a trap left for
+later.
+
+`ARC-P-006` is invoked here with its cost known rather than as a
+formula. Should a second catalogue appear — Linux, network, storage — and
+should a signature need citing from outside its own, promoting these
+fragments to first-class identifiers would mean rewriting the citations
+carried by findings already produced. Findings are disposable reports under
+`ENG-P-003`. Nothing durable depends on this choice, which is what makes
+deferring it legitimate rather than merely convenient.
+
 ### 4. One parser, two call sites
 
 The catalogue is written as a delimited structured block inside the document
@@ -259,9 +287,9 @@ Negative:
 
 - `docs/` enters the execution chain. A governed document now has readers
   that are not human, and editing one can break a diagnostic;
-- signatures need an identifier scheme of their own, and the heritage has
-  two conventions already — `OPS-0001` for artifacts, `OPS-P-001` for
-  principles. A third is a third thing to keep straight;
+- a signature cannot be cited from outside its catalogue. That is the
+  decision of § 3.2 and not an oversight; it is what keeps the heritage at
+  two identifier conventions instead of three;
 - a new prefix and a new domain value widen two closed vocabularies;
 - `IntegrityFinding` cannot be reused. Its contract states *"It proposes no
   remediation"*, and VS-4 requires one. A second finding type is introduced —

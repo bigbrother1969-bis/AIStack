@@ -19,6 +19,15 @@ class Signature:
     Every field below is required. None has a default except
     `grounding`, and that exception is the point of it.
 
+    `case_sensitive` has no default either, and the reason is
+    concrete. The experimenter compared three patterns against
+    the log text as written and the fourth against
+    `logs.lower()`. That difference is a property of each rule,
+    and it was invisible until someone tried to transcribe the
+    rules into a form that had to state them. A default would
+    have made three signatures declare a comparison they never
+    chose.
+
     `depth` is a property of the signature and not a parameter of
     the call. The experimenter read a hundred lines for every
     rule; a rule whose useful window is longer would never have
@@ -37,6 +46,7 @@ class Signature:
 
     identifier: str
     pattern: str
+    case_sensitive: bool
     interpretation: str
     remediation: str
     depth: int

@@ -19,6 +19,7 @@ def signature(**overrides) -> Signature:
     declared = {
         "identifier": "OPS-0001/S-001",
         "pattern": "AUTH_FAILED",
+        "case_sensitive": True,
         "interpretation": "OpenVPN reports an authentication failure.",
         "remediation": "Check the VPN credentials used by the container.",
         "depth": 100,
@@ -110,6 +111,7 @@ def test_grounding_defaults_to_undeclared_and_nothing_else_does():
     for missing in (
         "identifier",
         "pattern",
+        "case_sensitive",
         "interpretation",
         "remediation",
         "depth",
@@ -118,6 +120,7 @@ def test_grounding_defaults_to_undeclared_and_nothing_else_does():
         declared = {
             "identifier": "x",
             "pattern": "y",
+            "case_sensitive": True,
             "interpretation": "z",
             "remediation": "w",
             "depth": 1,

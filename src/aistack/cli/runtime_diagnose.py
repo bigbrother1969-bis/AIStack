@@ -34,6 +34,24 @@ DEFAULT_CATALOGUE = (
 )
 
 
+# How much of an evidence line the report prints.
+#
+# It was 90 until the first complete run, on 2026-08-22, showed
+# what 90 costs: an nginx line carrying Docker's timestamp, the
+# container's own timestamp and nginx's own timestamp reached
+# `connect() failed (1` and stopped — the pattern that fired the
+# rule, `connection refused`, was outside the extract. A piece of
+# evidence that does not show what it proves.
+#
+# 200 covers that line and every other one this deployment
+# produced. It does not close the case: a verbose enough log will
+# put a match beyond it again, and the report would go back to
+# hiding what fired. Recorded as GOV-0002/OS-016 rather than
+# claimed as solved. The complete answer is a window centred on
+# the match, and it needs the finding to carry the position.
+EVIDENCE_WIDTH = 200
+
+
 USAGE = (
     "usage: python -m aistack.cli.runtime_diagnose "
     "[--catalogue PATH] [container ...]\n"
@@ -131,7 +149,20 @@ def report(
                 if entry.timestamp
                 else "no timestamp"
             )
-            print(f"      -{entry.offset}  {when}  {entry.text[:90]}")
+            shown = entry.text[:EVIDENCE_WIDTH]
+
+            if len(entry.text) > EVIDENCE_WIDTH:
+                # Named, never silent — the same rule the line
+                # count below already follows. A cut extract that
+                # did not say it was cut would read as the whole
+                # line, and the pattern that fired may be in the
+                # part nobody sees.
+                shown = (
+                    f"{shown}… "
+                    f"[+{len(entry.text) - EVIDENCE_WIDTH} char cut]"
+                )
+
+            print(f"      -{entry.offset}  {when}  {shown}")
 
         if len(finding.evidence) > 3:
             # Named, never silent: a report that trimmed without

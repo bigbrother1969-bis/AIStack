@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -233,6 +233,29 @@ old message: bash had already read the old file. Harmless at this size; on a
 larger file the shell can resume at a shifted byte offset.
 **Derivable** no
 **Qualification** none required.
+
+#### GOV-0002/OS-016 — An evidence extract can omit the pattern that fired the rule
+
+**Nature** `defect` · **Opened** 2026-08-22 · **State** partially mitigated
+**Observed** First complete run of `runtime_diagnose` on 62 containers,
+2026-08-22, with `S-004` temporarily widened to `any` as a control case. The
+`frigate` evidence lines carry three timestamps — Docker's, the container's
+own, and nginx's — and the report's 90-character extract reached
+`connect() failed (1` and stopped. `connection refused`, the pattern that
+fired `OPS-0001/S-004`, sat outside the extract. The finding carried all
+eleven lines in full; the report showed everything about them except what
+they proved.
+
+Mitigated the same day: the width is 200, which covers every line this
+deployment produced, and a cut extract now says how many characters it hides
+— the rule the line count already followed.
+**Derivable** no
+**Qualification** `unknown`. The mitigation moves the boundary, it does not
+remove it: a verbose enough log will put a match beyond 200 again. The
+complete answer is an extract centred on the match, and it requires the
+finding to carry the position at which the signature matched — a field on
+`RuntimeFinding` or on `LogEntry`, which is a contract change and was not
+taken today.
 
 ---
 

@@ -235,6 +235,70 @@ def test_evidence_beyond_three_lines_is_counted_not_hidden(
     assert "4 further line(s) not shown" in out
 
 
+def test_a_line_that_fits_is_printed_whole_and_unmarked(
+    monkeypatch, catalogue_file, capsys
+):
+
+    line = "AUTH_FAILED " + "x" * 100
+
+    run(monkeypatch, catalogue_file, {"gluetun": [line]})
+    out = capsys.readouterr().out
+
+    assert line in out
+    assert "char cut]" not in out
+
+
+def test_a_cut_evidence_line_says_it_was_cut(
+    monkeypatch, catalogue_file, capsys
+):
+    """
+    The first complete run, 2026-08-22: an nginx line carrying
+    three timestamps was cut at 90 characters and stopped before
+    `connection refused` — the pattern that had fired the rule.
+    The extract showed everything except what it proved.
+
+    The width is now 200 and that particular line fits. A verbose
+    enough log will exceed it again, so the cut is announced —
+    the same rule the line count already follows.
+    """
+
+    line = "AUTH_FAILED " + "x" * 300
+
+    run(monkeypatch, catalogue_file, {"gluetun": [line]})
+    out = capsys.readouterr().out
+
+    assert "[+112 char cut]" in out
+    assert "x" * 188 in out
+
+
+def test_the_real_nginx_line_shows_the_pattern_that_fired(
+    monkeypatch, tmp_path, capsys
+):
+    """
+    The line that exposed the defect, verbatim from `frigate` on
+    2026-08-21, with the pattern where it actually sat.
+    """
+
+    catalogue = tmp_path / "OPS-TEST.md"
+    catalogue.write_text(
+        CATALOGUE.replace('"AUTH_FAILED"', '"connection refused"')
+        .replace("case_sensitive: true", "case_sensitive: false"),
+        encoding="utf-8",
+    )
+
+    line = (
+        "2026-08-21 17:20:10.948256087  2026/08/21 17:20:10 [error] "
+        "267#267: *1 connect() failed (111: Connection refused) while "
+        "connecting to upstream, client: 172.18.0.1, server: , "
+        'request: "GET / HTTP/1.1", upstream: "http://127.0.0.1:5000/"'
+    )
+
+    run(monkeypatch, catalogue, {"frigate": [line]})
+    out = capsys.readouterr().out
+
+    assert "Connection refused" in out
+
+
 def test_the_window_read_is_the_deepest_the_catalogue_declares(
     monkeypatch, catalogue_file, capsys
 ):

@@ -66,6 +66,13 @@ PROTOCOL_NOISE = (
 IGNORED_BASES = {"Protocol", "Generic", "object", "ABC"}
 
 
+class _Unset:
+    """A member the contract names without giving it a value."""
+
+
+_UNSET = _Unset()
+
+
 def protocol_members(protocol: type) -> set[str]:
     """
     The names a contract requires, including the ones it inherits.
@@ -90,7 +97,26 @@ def protocol_members(protocol: type) -> set[str]:
 
         required.update(vars(base))
 
-    return required - PROTOCOL_NOISE
+        # An annotated attribute is a requirement with no value.
+        # `class Provider(Protocol): provider_id: str` puts
+        # nothing in `vars()` except the `__annotations__` mapping
+        # itself, so reading `vars()` alone reports that this
+        # contract requires `__annotations__` and nothing else —
+        # which every class in the package satisfies.
+        #
+        # Measured 2026-08-22: that is exactly what happened.
+        # `Provider` was reported as satisfied by all 144 concrete
+        # classes. The error under-declares the debt, which is the
+        # direction that matters.
+        required.update(getattr(base, "__annotations__", {}))
+
+    required -= PROTOCOL_NOISE
+
+    # The mapping is machinery, never a requirement. Its *keys*
+    # are the requirements, and they were just added.
+    required.discard("__annotations__")
+
+    return required
 
 
 def missing_members(
@@ -125,8 +151,14 @@ def incompatible_members(
         protocol, implementation
     ):
 
-        expected = getattr(protocol, name)
+        expected = getattr(protocol, name, _UNSET)
         actual = getattr(implementation, name)
+
+        if expected is _UNSET:
+            # An annotated attribute: the contract states that the
+            # name must exist and gives nothing to compare it to.
+            # Presence was already checked by `missing_members`.
+            continue
 
         if not callable(expected):
             continue

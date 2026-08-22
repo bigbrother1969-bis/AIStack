@@ -99,6 +99,74 @@ def test_an_abc_contract_is_read_the_same_way():
     assert protocol_members(Check) == {"name", "evaluate"}
 
 
+class Described(Protocol):
+    provider_id: str
+    provider_name: str
+
+    def get(self, key: str) -> object: ...
+
+
+# --------------------------------------------------------------------
+# An annotated attribute is a requirement
+# --------------------------------------------------------------------
+
+
+def test_an_annotated_attribute_is_a_required_name():
+    """
+    `class Provider(Protocol): provider_id: str` puts nothing in
+    `vars()` but the `__annotations__` mapping. Reading `vars()`
+    alone reports that the contract requires `__annotations__`
+    and nothing else — a name every class in the package has.
+
+    Measured on the real package 2026-08-22: `Provider` was
+    reported satisfied by all 144 concrete classes. The error
+    under-declares the debt, which is the direction that matters.
+    """
+
+    assert protocol_members(Described) == {
+        "provider_id",
+        "provider_name",
+        "get",
+    }
+
+
+def test_the_annotations_mapping_is_never_itself_a_requirement():
+
+    assert "__annotations__" not in protocol_members(Described)
+
+
+def test_a_class_lacking_an_annotated_attribute_does_not_satisfy():
+
+    class NoIdentity:
+        def get(self, key: str) -> object:
+            return None
+
+    assert not satisfies(Described, NoIdentity)
+    assert missing_members(Described, NoIdentity) == {
+        "provider_id",
+        "provider_name",
+    }
+
+
+def test_an_annotated_attribute_is_compared_on_presence_only():
+    """
+    The contract names the attribute and gives no value to
+    compare against. Presence is the whole requirement; a checker
+    that tried to compare call shapes here would raise on a
+    member the contract never defined.
+    """
+
+    class Identified:
+        provider_id = "aistack.provider.docker"
+        provider_name = "Docker"
+
+        def get(self, key: str) -> object:
+            return None
+
+    assert satisfies(Described, Identified)
+    assert incompatible_members(Described, Identified) == {}
+
+
 # --------------------------------------------------------------------
 # Whether an implementation satisfies it
 # --------------------------------------------------------------------

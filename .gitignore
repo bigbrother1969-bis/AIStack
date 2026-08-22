@@ -42,3 +42,16 @@ logs/*.log
 
 # Local backups
 *.bak-*
+
+# Patches produced for transfer to another machine.
+#
+# ENG-P-003: a generated artifact is disposable. A patch is a
+# projection of commits that already exist in the history — the
+# history is their SPOT, and a patch file in the tree is a second
+# copy of knowledge the repository already holds.
+#
+# Added 2026-08-22 after two of them were written into the working
+# tree instead of /tmp, one day after the transit residue of the
+# same kind had been cleaned out of `docs/`.
+*.patch
+patches-*.tar.gz

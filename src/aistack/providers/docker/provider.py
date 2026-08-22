@@ -64,6 +64,7 @@ class DockerProvider:
         self,
         subject: str,
         depth: int,
+        state: str,
     ) -> RuntimeObservation:
         """
         Read what one container printed, and conclude nothing.
@@ -85,6 +86,12 @@ class DockerProvider:
         happens to write one — which is how a report of eleven
         connection refusals eighteen hours old read as current on
         2026-08-22.
+
+        `state` is supplied by the caller rather than observed
+        here, because the caller has just read it from
+        `collect()` and asking Docker again for every container
+        would double the calls to say the same thing. It is
+        passed through, not invented.
 
         Standard error is merged into standard output. A great
         many containers log there and nowhere else; reading only
@@ -117,6 +124,7 @@ class DockerProvider:
             result.stdout + result.stderr,
             subject=subject,
             provider=self.provider_id,
+            state=state,
             depth=depth,
             collected_at=datetime.now(timezone.utc),
         )

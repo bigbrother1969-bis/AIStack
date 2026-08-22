@@ -51,6 +51,7 @@ def normalize_log_evidence(
     *,
     subject: str,
     provider: str,
+    state: str,
     depth: int,
     collected_at: datetime,
 ) -> RuntimeObservation:
@@ -117,6 +118,7 @@ def normalize_log_evidence(
     return RuntimeObservation(
         subject=subject,
         provider=provider,
+        state=state,
         collected_at=collected_at,
         depth=depth,
         entries=tuple(entries),

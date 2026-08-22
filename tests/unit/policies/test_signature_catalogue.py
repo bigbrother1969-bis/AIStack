@@ -23,6 +23,7 @@ signatures:
   - identifier: OPS-0001/S-001
     pattern: "AUTH_FAILED"
     case_sensitive: true
+    applies_to: ["any"]
     interpretation: "OpenVPN reports an AUTH_FAILED error."
     remediation: "Check the VPN credentials the container uses."
     depth: 100
@@ -189,6 +190,68 @@ def test_the_governed_catalogue_declares_one_case_insensitive_rule():
     ]
 
     assert insensitive == ["OPS-0001/S-004"]
+
+
+def test_a_yaml_sequence_becomes_a_tuple_the_contract_can_hold():
+    """
+    YAML reads a sequence as a list, and `Signature` is frozen. A
+    list inside it would make that word false.
+    """
+
+    catalogue = read_signature_catalogue(document(ONE))
+
+    assert catalogue.signatures[0].applies_to == ("any",)
+    assert isinstance(catalogue.signatures[0].applies_to, tuple)
+
+
+def test_a_scalar_applies_to_is_refused_and_names_the_signature():
+    """
+    `applies_to: running` instead of `applies_to: ["running"]`
+    would otherwise iterate as seven single characters, and the
+    rule would apply to the states `r`, `u`, `n`, `i`, `g`.
+    """
+
+    block = ONE.replace('applies_to: ["any"]', "applies_to: any")
+
+    with pytest.raises(CatalogueError, match="signature #1 of OPS-0001"):
+        read_signature_catalogue(document(block))
+
+
+def test_a_signature_without_applies_to_is_refused():
+    """
+    No default. A rule inheriting universality it never chose is
+    how the frigate false positive happened.
+    """
+
+    block = ONE.replace('    applies_to: ["any"]\n', "")
+
+    with pytest.raises(CatalogueError) as raised:
+        read_signature_catalogue(document(block))
+
+    assert "applies_to" in str(raised.value)
+
+
+def test_the_governed_catalogue_restricts_exactly_one_rule_to_running():
+    """
+    `S-004` is the connection-refused rule, and the frigate false
+    positive of 2026-08-22 is why it is restricted. The other
+    three transcribe what the experimenter did — every rule
+    against whatever container a human had clicked — and the
+    document records that as undecided rather than settled.
+    """
+
+    catalogue = read_signature_catalogue(
+        OPS_0001.read_text(encoding="utf-8")
+    )
+
+    declared = {s.identifier: s.applies_to for s in catalogue.signatures}
+
+    assert declared == {
+        "OPS-0001/S-001": ("any",),
+        "OPS-0001/S-002": ("any",),
+        "OPS-0001/S-003": ("any",),
+        "OPS-0001/S-004": ("running",),
+    }
 
 
 def test_every_governed_signature_declares_its_grounding_as_unknown():

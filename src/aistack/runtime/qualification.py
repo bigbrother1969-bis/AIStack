@@ -53,6 +53,15 @@ def qualify(
     not — and `subjects` elsewhere in this heritage was capped
     once, silently, with the same consequence.
 
+    **A signature is skipped where it means nothing.** The state
+    of the subject is observed; whether a rule applies to that
+    state is declared by the rule. `frigate` is stopped on
+    purpose on this deployment, and the connection refusals an
+    nginx prints while its backend goes away are not a fault —
+    the detection was exact and the remediation was empty. That
+    is an applicability error, not a detection error, and it is
+    fixed where applicability is declared.
+
     A shallower observation than the catalogue requires is
     refused rather than evaluated. A signature declaring a window
     of two thousand lines against an observation of one hundred
@@ -73,6 +82,9 @@ def qualify(
     findings: list[RuntimeFinding] = []
 
     for signature in catalogue.signatures:
+
+        if not signature.applies(observation.state):
+            continue
 
         evidence = tuple(
             entry

@@ -21,6 +21,7 @@ signatures:
   - identifier: OPS-TEST/S-001
     pattern: "AUTH_FAILED"
     case_sensitive: true
+    applies_to: ["any"]
     interpretation: "OpenVPN reports an AUTH_FAILED error."
     remediation: "Check the VPN credentials the container uses."
     depth: 10
@@ -54,12 +55,13 @@ class FakeProvider:
         return {
             "docker": {
                 "containers": [
-                    {"Names": name} for name in self._logs
+                    {"Names": name, "State": "running"}
+                    for name in self._logs
                 ]
             }
         }
 
-    def collect_logs(self, subject: str, depth: int):
+    def collect_logs(self, subject: str, depth: int, state: str):
         lines = self._logs[subject]
 
         if isinstance(lines, Exception):
@@ -70,6 +72,7 @@ class FakeProvider:
         return RuntimeObservation(
             subject=subject,
             provider="fake",
+            state=state,
             collected_at=NOW,
             depth=depth,
             entries=tuple(
@@ -153,8 +156,8 @@ def test_naming_a_container_examines_only_that_one(
     out = capsys.readouterr().out
 
     assert "Subjects examined: 1" in out
-    assert "[sonarr]" in out
-    assert "[gluetun]" not in out
+    assert "[sonarr · running]" in out
+    assert "gluetun" not in out
 
 
 def test_a_subject_that_cannot_be_read_makes_the_sweep_partial(

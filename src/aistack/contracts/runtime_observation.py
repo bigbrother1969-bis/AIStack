@@ -61,6 +61,13 @@ class RuntimeObservation:
     concludes nothing. No field here says whether anything is
     wrong.
 
+    `state` is what the runtime says of the subject — `running`,
+    `exited`, and the rest. It is observed, never judged: a
+    stopped container is a fact, not a fault. Whether a signature
+    means anything in a given state is declared by the signature,
+    because a container shutting down prints connection refusals
+    that mean nothing at all.
+
     `depth` is the number of lines that were read, and it is
     recorded rather than assumed. A signature declaring a window
     deeper than what was collected cannot fire, and the
@@ -70,11 +77,18 @@ class RuntimeObservation:
 
     subject: str
     provider: str
+    state: str
     collected_at: datetime
     depth: int
     entries: tuple[LogEntry, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
+        if not self.state:
+            raise ValueError(
+                "an observation carries the state of its subject; a "
+                "signature declares the states in which it has meaning"
+            )
+
         if not self.subject:
             raise ValueError(
                 "an observation without a subject observes nothing"

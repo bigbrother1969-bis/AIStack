@@ -20,6 +20,7 @@ def signature(**overrides) -> Signature:
         "identifier": "OPS-0001/S-001",
         "pattern": "AUTH_FAILED",
         "case_sensitive": True,
+        "applies_to": ("any",),
         "interpretation": "OpenVPN reports an authentication failure.",
         "remediation": "Check the VPN credentials used by the container.",
         "depth": 100,
@@ -112,6 +113,7 @@ def test_grounding_defaults_to_undeclared_and_nothing_else_does():
         "identifier",
         "pattern",
         "case_sensitive",
+        "applies_to",
         "interpretation",
         "remediation",
         "depth",
@@ -121,6 +123,7 @@ def test_grounding_defaults_to_undeclared_and_nothing_else_does():
             "identifier": "x",
             "pattern": "y",
             "case_sensitive": True,
+            "applies_to": ("any",),
             "interpretation": "z",
             "remediation": "w",
             "depth": 1,
@@ -144,6 +147,59 @@ def test_a_signature_declares_a_window_with_meaning(depth):
 
     with pytest.raises(ValueError, match="window"):
         signature(depth=depth)
+
+
+# --------------------------------------------------------------------
+# A signature declares the states in which it means something
+# --------------------------------------------------------------------
+
+
+def test_any_may_not_be_declared_beside_another_state():
+    """
+    `any` is every state. `["any", "running"]` reads as a
+    restriction and is none, which is exactly the shape of
+    declaration this heritage keeps finding: it asserts a
+    protection and delivers nothing.
+    """
+
+    with pytest.raises(ValueError, match="every state"):
+        signature(applies_to=("any", "running"))
+
+
+def test_a_signature_that_names_no_state_is_refused():
+    """
+    Silently universal is how the frigate false positive
+    happened. A rule that means something everywhere says so.
+    """
+
+    with pytest.raises(ValueError, match="`any`"):
+        signature(applies_to=())
+
+
+def test_a_mutable_applies_to_is_refused():
+    """
+    `Signature` is frozen. A list inside it would make the word
+    false — `signature.applies_to.append("exited")` would widen a
+    governed rule at runtime, with nothing recorded anywhere.
+    """
+
+    with pytest.raises(ValueError, match="frozen"):
+        signature(applies_to=["running"])
+
+
+@pytest.mark.parametrize("states", [("",), ("running", "   "), (None,)])
+def test_a_state_that_is_empty_or_not_text_is_refused(states):
+
+    with pytest.raises(ValueError, match="state"):
+        signature(applies_to=states)
+
+
+def test_applies_answers_for_the_state_it_is_given():
+
+    assert signature(applies_to=("any",)).applies("exited")
+    assert signature(applies_to=("running",)).applies("running")
+    assert not signature(applies_to=("running",)).applies("exited")
+    assert not signature(applies_to=("running",)).applies("unknown")
 
 
 # --------------------------------------------------------------------
@@ -204,6 +260,7 @@ def observation(**overrides) -> RuntimeObservation:
     declared = {
         "subject": "gluetun",
         "provider": "aistack.provider.docker",
+        "state": "running",
         "collected_at": datetime(2026, 8, 22, 12, 0, 0),
         "depth": 100,
         "entries": (entry(),),
@@ -232,6 +289,30 @@ def test_an_observation_names_its_subject():
 
     with pytest.raises(ValueError, match="subject"):
         observation(subject="")
+
+
+def test_an_observation_carries_the_state_of_its_subject():
+    """
+    Whether a rule means anything in a given state is decided by
+    the rule, and it cannot be decided at all if the state does
+    not travel with the observation.
+    """
+
+    assert observation(state="exited").state == "exited"
+
+    with pytest.raises(ValueError, match="state"):
+        observation(state="")
+
+
+def test_the_state_is_observed_and_not_judged():
+    """
+    ARC-P-012. A stopped container is a fact, not a fault: no
+    field of this contract says whether the state is the right
+    one.
+    """
+
+    assert observation(state="exited").state == "exited"
+    assert observation(state="unknown").state == "unknown"
 
 
 def test_a_log_entry_offset_counts_back_from_the_newest_line():

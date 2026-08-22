@@ -69,21 +69,28 @@ def parse(argv: list[str]) -> tuple[Path, list[str]]:
     return catalogue, subjects
 
 
-def containers(provider: DockerProvider) -> list[str]:
+def containers(provider: DockerProvider) -> dict[str, str]:
     """
-    Every container the host declares, running or not.
+    Every container the host declares, with its state.
 
     A stopped container is a subject: its last lines are often
-    the only statement it ever made about why it stopped.
+    the only statement it ever made about why it stopped. The
+    state travels with it, because whether a rule means anything
+    in that state is declared by the rule.
+
+    A container whose state Docker does not report is carried as
+    `unknown` — a governed state under FDN-0003 Article 12 —
+    rather than assumed to be running. Only signatures declaring
+    `any` will then apply to it, which is the honest outcome.
     """
 
     observed = provider.collect()["docker"]["containers"]
 
-    return [
-        entry["Names"]
+    return {
+        entry["Names"]: (entry.get("State") or "unknown")
         for entry in observed
         if isinstance(entry, dict) and entry.get("Names")
-    ]
+    }
 
 
 def report(
@@ -91,6 +98,7 @@ def report(
     unobserved: list[tuple[str, str]],
     catalogue: SignatureCatalogue,
     examined: int,
+    states: dict[str, str],
 ) -> None:
 
     print("Runtime Diagnosis Report")
@@ -105,7 +113,10 @@ def report(
         print("")
 
     for finding in findings:
-        print(f"[{finding.subject}] {finding.signature}")
+        print(
+            f"[{finding.subject} · {states.get(finding.subject, 'unknown')}] "
+            f"{finding.signature}"
+        )
         print(f"    {finding.interpretation}")
         print(f"    -> {finding.remediation}")
         print(
@@ -164,10 +175,12 @@ def main() -> None:
     provider = DockerProvider()
 
     try:
-        subjects = named or containers(provider)
+        declared = containers(provider)
     except (subprocess.SubprocessError, OSError, KeyError) as error:
         print(f"Docker could not be observed: {error}")
         raise SystemExit(2) from error
+
+    subjects = named or list(declared)
 
     findings: list[RuntimeFinding] = []
     unobserved: list[tuple[str, str]] = []
@@ -175,7 +188,9 @@ def main() -> None:
     for subject in subjects:
         try:
             observation = provider.collect_logs(
-                subject, catalogue.deepest
+                subject,
+                catalogue.deepest,
+                declared.get(subject, "unknown"),
             )
         except (subprocess.SubprocessError, OSError) as error:
             unobserved.append((subject, str(error).strip()[:120]))
@@ -183,7 +198,7 @@ def main() -> None:
 
         findings.extend(qualify(observation, catalogue))
 
-    report(findings, unobserved, catalogue, len(subjects))
+    report(findings, unobserved, catalogue, len(subjects), declared)
 
     # A subject that could not be read makes the sweep partial,
     # and a partial sweep reporting "no finding" would be read as

@@ -18,6 +18,7 @@ def signature(**overrides) -> Signature:
         "identifier": "OPS-0001/S-001",
         "pattern": "AUTH_FAILED",
         "case_sensitive": True,
+        "applies_to": ("any",),
         "interpretation": "OpenVPN reports an AUTH_FAILED error.",
         "remediation": "Check the VPN credentials the container uses.",
         "depth": 100,
@@ -28,11 +29,14 @@ def signature(**overrides) -> Signature:
     return Signature(**declared)
 
 
-def observation(lines: list[str], depth: int = 100) -> RuntimeObservation:
+def observation(
+    lines: list[str], depth: int = 100, state: str = "running"
+) -> RuntimeObservation:
     last = len(lines) - 1
     return RuntimeObservation(
         subject="gluetun",
         provider="aistack.provider.docker",
+        state=state,
         collected_at=NOW,
         depth=depth,
         entries=tuple(
@@ -209,3 +213,95 @@ def test_the_finding_carries_the_confidence_and_grounding_declared():
 def test_an_empty_catalogue_qualifies_nothing():
 
     assert qualify(observation(["AUTH_FAILED"]), catalogue()) == []
+
+
+# --------------------------------------------------------------------
+# A rule fires only in the states where it means something
+# --------------------------------------------------------------------
+
+
+def test_a_rule_declaring_any_fires_whatever_the_state():
+
+    rule = signature(applies_to=("any",))
+
+    for state in ("running", "exited", "created", "unknown"):
+        assert len(qualify(observation(["AUTH_FAILED"], state=state),
+                           catalogue(rule))) == 1
+
+
+def test_a_rule_restricted_to_a_state_does_not_fire_outside_it():
+
+    rule = signature(applies_to=("running",))
+
+    assert qualify(
+        observation(["AUTH_FAILED"], state="exited"), catalogue(rule)
+    ) == []
+
+    assert len(
+        qualify(observation(["AUTH_FAILED"], state="running"),
+                catalogue(rule))
+    ) == 1
+
+
+def test_the_frigate_false_positive_does_not_recur():
+    """
+    2026-08-22, first real run of this chain: eleven
+    connection-refused lines in `frigate`, exact in their
+    detection and empty in their remediation. `frigate` is
+    stopped on purpose — started on demand for Oak-15, shut down
+    after — and those lines are what an nginx prints while its
+    backend goes away.
+
+    OPS-0001/S-004 therefore declares `running`. This is that
+    case, kept as a test so the field cannot be quietly widened.
+    """
+
+    refusal = signature(
+        identifier="OPS-0001/S-004",
+        pattern="connection refused",
+        case_sensitive=False,
+        applies_to=("running",),
+    )
+
+    lines = ["connect() failed (111: Connection refused)"] * 11
+
+    assert qualify(observation(lines, state="exited"),
+                   catalogue(refusal)) == []
+
+    assert len(
+        qualify(observation(lines, state="running"), catalogue(refusal))
+    ) == 1
+
+
+def test_an_unknown_state_admits_only_the_rules_that_declare_any():
+    """
+    A container whose state Docker did not report is carried as
+    `unknown` — a governed state under FDN-0003 Article 12 —
+    rather than assumed to be running.
+    """
+
+    findings = qualify(
+        observation(["AUTH_FAILED"], state="unknown"),
+        catalogue(
+            signature(applies_to=("any",)),
+            signature(identifier="OPS-0001/S-002", applies_to=("running",)),
+        ),
+    )
+
+    assert [f.signature for f in findings] == ["OPS-0001/S-001"]
+
+
+def test_a_rule_out_of_state_is_not_evaluated_even_when_it_would_match():
+    """
+    The filter is on applicability, not on the result. A rule
+    that matched but did not apply must produce nothing at all —
+    not a finding with empty evidence, which `RuntimeFinding`
+    would refuse anyway, and not a silent match.
+    """
+
+    findings = qualify(
+        observation(["AUTH_FAILED"] * 40, state="exited"),
+        catalogue(signature(applies_to=("running",))),
+    )
+
+    assert findings == []

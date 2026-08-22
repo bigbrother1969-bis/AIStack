@@ -14,6 +14,7 @@ DECLARED_FIELDS = frozenset(
         "identifier",
         "pattern",
         "case_sensitive",
+        "applies_to",
         "interpretation",
         "remediation",
         "depth",
@@ -128,8 +129,27 @@ def _signature(entry, position: int, artifact: str) -> Signature:
             f"{where} declares unknown field(s): {sorted(unknown)}"
         )
 
+    declared = dict(entry)
+
+    # YAML reads a sequence as a list, and `Signature` is frozen.
+    # A list inside a frozen dataclass is a declaration that
+    # asserts a protection and delivers none, so the conversion
+    # happens here, at the one place where YAML enters, rather
+    # than being tolerated by the contract.
+    if "applies_to" in declared:
+        states = declared["applies_to"]
+
+        if not isinstance(states, list):
+            raise CatalogueError(
+                f"{where} declares `applies_to` as "
+                f"{type(states).__name__}; it is a list of subject "
+                f"states, or [\"any\"]"
+            )
+
+        declared["applies_to"] = tuple(states)
+
     try:
-        return Signature(**entry)
+        return Signature(**declared)
     except TypeError as error:
         # A missing field. The dataclass says which; this says
         # which signature, which the reader of a failed

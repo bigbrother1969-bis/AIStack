@@ -16,6 +16,7 @@ def normalize(raw: str, depth: int = 100):
         raw,
         subject="gluetun",
         provider="aistack.provider.docker",
+        state="running",
         depth=depth,
         collected_at=NOW,
     )
@@ -113,7 +114,7 @@ def test_collecting_no_lines_is_refused_before_docker_is_called():
     """
 
     with pytest.raises(ValueError, match="observes nothing"):
-        DockerProvider().collect_logs("gluetun", 0)
+        DockerProvider().collect_logs("gluetun", 0, "running")
 
 
 def test_the_observation_names_the_provider_that_produced_it():

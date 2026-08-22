@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Operations
   created: 2026-08-22
@@ -76,6 +76,24 @@ four times transcribes what the code did, and states nothing about what each
 rule needs. A `TLS Error` preceding its symptom by two hours would not be
 found at this depth, and nothing would say so.
 
+**`applies_to` records what the first real run established, and no
+more.** On 2026-08-22 this chain swept 62 containers and produced one
+finding: eleven connection refusals in `frigate`, exact in their detection
+and empty in their remediation. `frigate` is stopped on purpose on this
+deployment — started on demand for Oak-15, shut down after — and those lines
+are what an nginx prints while its backend goes away. `S-004` therefore
+declares `running`.
+
+The other three declare `any`, which transcribes what the experimenter did:
+it applied every rule to whatever container a human had clicked, whatever its
+state. Nothing observed says whether that is right for them, and nothing here
+pretends otherwise.
+
+**A deeper gap has no field.** The heritage cannot tell "stopped because
+broken" from "stopped on purpose", because nothing declares which containers
+are expected to run. `applies_to` treats the symptom; the knowledge that
+`frigate` is deliberately idle exists in one person's head.
+
 **Every `grounding` below is `unknown`.** The field names the rule that makes
 a remediation the right one — not the signature itself, which is the rule for
 interpreting. "Check the VPN credentials the container uses" is only
@@ -100,6 +118,7 @@ artifact: OPS-0001
 signatures:
 
   - identifier: OPS-0001/S-001
+    applies_to: ["any"]
     pattern: "AUTH_FAILED"
     case_sensitive: true
     interpretation: "OpenVPN reports an AUTH_FAILED error."
@@ -109,6 +128,7 @@ signatures:
     grounding: unknown
 
   - identifier: OPS-0001/S-002
+    applies_to: ["any"]
     pattern: "Your credentials might be wrong"
     case_sensitive: true
     interpretation: "Gluetun states explicitly that the credentials may be wrong."
@@ -118,6 +138,7 @@ signatures:
     grounding: unknown
 
   - identifier: OPS-0001/S-003
+    applies_to: ["any"]
     pattern: "TLS Error"
     case_sensitive: true
     interpretation: "TLS errors are present in the VPN logs."
@@ -127,6 +148,7 @@ signatures:
     grounding: unknown
 
   - identifier: OPS-0001/S-004
+    applies_to: ["running"]
     pattern: "connection refused"
     case_sensitive: false
     interpretation: "The logs contain connection-refused errors."

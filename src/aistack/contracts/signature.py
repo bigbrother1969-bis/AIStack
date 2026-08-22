@@ -33,6 +33,23 @@ class Signature:
     rule; a rule whose useful window is longer would never have
     fired, and nothing would have said so.
 
+    `applies_to` names the subject states in which the rule means
+    something. The literal `any` stands for every state and may
+    not be mixed with others.
+
+    It exists because of a false positive on 2026-08-22, the
+    first day this chain ran for real. `frigate` is stopped on
+    purpose — it is started on demand and shut down after — and
+    its last hundred lines held eleven connection refusals, which
+    are what an nginx prints while its backend goes away. The
+    detection was exact; the remediation was meaningless. A rule
+    that only means something on a running container has to be
+    able to say so.
+
+    That case also names a deeper gap: the heritage cannot tell
+    "stopped because broken" from "stopped on purpose", because
+    nothing declares which containers are expected to run.
+
     `grounding` names the policy that makes the *remediation* the
     right one — not the policy the signature is, which is itself.
     "Check the VPN credentials used by the container" is only
@@ -47,6 +64,7 @@ class Signature:
     identifier: str
     pattern: str
     case_sensitive: bool
+    applies_to: tuple[str, ...]
     interpretation: str
     remediation: str
     depth: int
@@ -54,6 +72,35 @@ class Signature:
     grounding: str = UNDECLARED
 
     def __post_init__(self) -> None:
+        if not isinstance(self.applies_to, tuple):
+            raise ValueError(
+                f"{self.identifier} declares `applies_to` as "
+                f"{type(self.applies_to).__name__}; this contract is "
+                f"frozen, and a mutable field would make that word "
+                f"mean nothing"
+            )
+
+        if not self.applies_to:
+            raise ValueError(
+                f"{self.identifier} names no state it applies to; a "
+                f"rule that means something everywhere says `any`"
+            )
+
+        if not all(
+            isinstance(s, str) and s.strip() for s in self.applies_to
+        ):
+            raise ValueError(
+                f"{self.identifier} names a state that is empty or is "
+                f"not text: {list(self.applies_to)}"
+            )
+
+        if "any" in self.applies_to and len(self.applies_to) > 1:
+            raise ValueError(
+                f"{self.identifier} declares `any` beside "
+                f"{sorted(set(self.applies_to) - {'any'})}: `any` is "
+                f"every state, and the rest would say nothing"
+            )
+
         for name in ("identifier", "pattern", "interpretation", "remediation"):
             if not getattr(self, name).strip():
                 raise ValueError(
@@ -71,6 +118,19 @@ class Signature:
                 "a signature declares its confidence; STD-0100 makes "
                 "the scale an act, and an unstated act is not one"
             )
+
+
+    def applies(self, state: str) -> bool:
+        """
+        Whether this rule means anything for a subject in `state`.
+
+        `any` is the declared way of saying every state. It is a
+        value, not a default: a signature that named nothing would
+        be silently universal, which is how the frigate false
+        positive happened.
+        """
+
+        return "any" in self.applies_to or state in self.applies_to
 
 
 @dataclass(frozen=True)

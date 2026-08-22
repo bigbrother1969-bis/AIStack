@@ -21,9 +21,16 @@ __pycache__/
 # ships bundles to is a property of that host, not of AIStack.
 config/context_bundle_transfer.yml
 
-# Generated artifacts. ENG-003: what a pipeline can rebuild is
+# Generated artifacts. ENG-P-003: what a pipeline can rebuild is
 # disposable, and committing it makes the repository the SPOT of
 # a projection rather than of the heritage.
+#
+# `build/` and `dist/` were absent until 2026-08-22, so
+# `python -m build` — the standard packaging command, in a project
+# whose ADR-0001 is *Python Packaging v1* — left an untracked build
+# tree that any `git add -A` would have committed.
+build/
+dist/
 context/bundles/
 reports/generated/
 examples/catalog_engine/music-library-catalog.yml

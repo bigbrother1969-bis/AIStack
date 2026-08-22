@@ -30,6 +30,8 @@
 **/.ruff_cache
 **/*.egg-info
 
+build
+dist
 exports
 reports/generated
 context/bundles/*.zip

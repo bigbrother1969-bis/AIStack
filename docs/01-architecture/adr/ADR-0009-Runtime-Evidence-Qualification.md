@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-08-22
@@ -169,11 +169,35 @@ removing: knowledge embedded in code rather than declared.
 |---|---|
 | identifier | unique; a finding cites it |
 | pattern | what is matched in the evidence |
+| case_sensitive | whether the comparison regards case |
+| applies_to | the subject states in which the rule means something |
 | interpretation | what the match means |
 | remediation | what to do about it |
 | depth | the log window in which the signature has meaning |
 | confidence | `Verified` / `Reviewed` / `Declared` |
 | grounding | the policy the *remediation* rests on, or `unknown` |
+
+**`case_sensitive` and `applies_to` were not in this table when the decision
+was accepted.** Both were added on 2026-08-22, both because usage revealed a
+field the decision had not foreseen, and both without a default so that no
+rule inherits a behaviour it never chose.
+
+`case_sensitive` surfaced during transcription: the experimenter compares
+three patterns against the log as written and the fourth against
+`logs.lower()`. That difference is one line of code and says nothing about
+whether it was decided. It only became visible when the rules had to be
+written in a form that required them to state it.
+
+`applies_to` surfaced on the first real run. `frigate` produced eleven
+connection refusals — exact in detection, empty in remediation — because it
+is stopped on purpose on this deployment and those lines are what an nginx
+prints while its backend goes away. A rule that only means something on a
+running container has to be able to say so. `any` is the declared word for
+every state and may not be mixed with others.
+
+A third field was added outside this table, on `LogEntry`: the timestamp
+`docker logs --timestamps` supplies, carried separately from the text so no
+signature compares against a prefix the container never printed.
 
 **`depth` is a property of the signature, not a parameter of the call.** The
 experimenter reads the last hundred lines for every rule. A signature whose
@@ -311,11 +335,39 @@ Negative:
 
 ## Implementation state
 
-Nothing is implemented. This ADR records a decision, not a state.
+The order is the one `ARC-P-005` prescribes: contracts, then the catalogue
+declared by its owner, then collection, normalization, qualification, a CLI,
+and last the web surface.
 
-The contracts come first (`ARC-P-005`), then the catalogue declared by its
-owner, then collection, normalization, qualification, a CLI, and last the
-web surface.
+**As of 2026-08-22, at `47bb2d9`**, everything but the last step is done, and
+the chain has run against the reference deployment: 62 containers examined,
+none unobserved.
+
+| Step | State |
+|---|---|
+| Contracts — `RuntimeObservation`, `Signature`, `RuntimeFinding` | done — 2026-08-22 |
+| `OPS-0001`, the catalogue declared by its owner | done — 2026-08-22 |
+| Collection — `DockerProvider.collect_logs` | done — 2026-08-22 |
+| Normalization — `normalize_log_evidence` | done — 2026-08-22 |
+| Qualification — `qualify` | done — 2026-08-22 |
+| CLI — `aistack.cli.runtime_diagnose` | done — 2026-08-22 |
+| Web surface — `runtime_ui/` | not started |
+| Retirement of `aistack-backend` | not started |
+
+*This section previously read "Nothing is implemented", which was true when
+it was written on 2026-08-21 and false the same evening. It is the fifth
+sentence of that kind found on 2026-08-22, and the first found after
+STD-0100 v2.3 made the rule explicit — an assertion about the code carries
+the date it was measured. Recorded rather than quietly rewritten, per
+GOV-0002/OS-017.*
+
+Three fields the accepted decision did not foresee were added during
+implementation: `Signature.case_sensitive`, `Signature.applies_to` and
+`LogEntry.timestamp`. Each was revealed by usage — the first by
+transcription, the second by the first real run, the third by a finding whose
+age nobody could state. § 3.1 records all three and why each arrived, so that
+a reader comparing the decision to the result knows the difference was
+deliberate.
 
 ## Related Artifacts
 

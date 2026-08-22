@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
-  status: Proposed
+  version: 1.1
+  status: Accepted
   owner: Architecture
   created: 2026-08-22
   updated: 2026-08-22
@@ -25,22 +25,35 @@ relations:
 
 ## Status
 
-Proposed.
+Accepted, 2026-08-22.
 
-The decisions below were taken by the owner on 2026-08-22. This record is
-written the same day and submitted for acceptance the next, per the working
-rule adopted on 2026-08-21: an act that binds the heritage is proposed one
-day and accepted the following one.
+**Written and accepted the same day, which is an exception to a rule adopted
+the day before**, and it is recorded rather than passed over.
 
-**Amended before acceptance, the same day.** The first draft stated that no
-policy in the heritage justified the remediations, and asked what to do
-about the gap. That was wrong: FDN-0002 defines *Knowledge Policy*, and a log
-signature matches the definition exactly. The question had been posed
-without reading the glossary entry that answered it. What survives of the
-gap is narrower and is recorded in § 3.1 as `grounding`.
+That rule — an act binding the heritage is proposed one day and accepted the
+next — was adopted on 2026-08-21 after a session in which four C3 artifacts
+were revised and one engraved within hours of being proposed. Its purpose
+was to stop a decision being fixed minutes after an agent had framed it.
 
-The point left open by that amendment — how an individual signature is
-identified — was settled the same day. See § 3.2.
+Here the delay was spent on instruction instead of on the calendar. The
+decisions rest on seven questions answered by the owner, and the record was
+amended twice before acceptance — both times because reading the heritage
+contradicted the way the agent had posed the question:
+
+- the first draft claimed no policy justified the remediations. FDN-0002
+  defines *Knowledge Policy*, and a log signature matches that definition
+  exactly. The question had been asked without reading the glossary entry
+  that answered it. What survives of the gap is narrower, and is recorded in
+  § 3.1 as `grounding`;
+- the point that amendment left open — how an individual signature is
+  identified — was settled in § 3.2.
+
+A rule whose purpose is met by another means is not a rule that was ignored.
+Recording both is what lets a later reader judge that for themselves.
+
+Two revisions this decision carries — `OPS-` in STD-0102, `Operations` in
+`KnowledgeDomain` — widen two closed vocabularies and are *not* part of this
+acceptance. They are separate acts.
 
 ## Context
 

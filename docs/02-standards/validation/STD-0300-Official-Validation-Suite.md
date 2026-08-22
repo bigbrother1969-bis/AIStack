@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.2
+  version: 1.3
   owner: Foundation
   created: 2026-07-31
   updated: 2026-08-22
@@ -207,7 +207,7 @@ Each criterion carries its own state and, when it has one, the date its
 verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
-criteria below had moved on. Last change: 2026-08-22, criterion 4.9.
+criteria below had moved on. Last change: 2026-08-22, criteria 2.5, 2.6 and 4.9.
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -238,10 +238,34 @@ NEXT-SESSION-TODO · Knowledge transfer · Self-Onboarding.
 | 2.2 | The agent states the bundle's `source_commit` and `content_hash` without external input | **satisfied** — 2026-08-14 |
 | 2.3 | The agent identifies Gitea as the Acquisition SPOT and the mirrors as non-authoritative | **satisfied** — 2026-08-14 |
 | 2.4 | Two agents of different models declare the same uncertainties and the same READY verdict | not verified |
-| 2.5 | `aistack.cli.knowledge_integrity` exits 0 on the bundle used | **failing** — 1 blocking finding |
+| 2.5 | `aistack.cli.knowledge_integrity` exits 0 on the bundle used | **satisfied** — 2026-08-22 |
+| 2.6 | The same report declares `clean: True` | **satisfied** — 2026-08-22 |
 
-Criterion 2.5 makes this scenario self-checking: the suite fails while the heritage
-it transmits is itself unsound. It currently fails on `criticality-discrimination`.
+Criteria 2.5 and 2.6 make this scenario self-checking: the suite fails while the
+heritage it transmits is itself unsound.
+
+Both are executed by `tests/integration/validation/`, which regenerates the
+projection and validates it at every run — § 11 asks that of any criterion that
+becomes automated, so that a regression is visible per commit. The bundle is
+written to a temporary directory: STD-0002 forbids a test from producing an
+operational artifact.
+
+**2.5 was recorded `failing` for eight days after its cause had gone.** The
+blocking finding cited was `criticality-discrimination` — *no artifact is
+declared C3* — noted on 2026-08-14. Artifacts declaring C3 have existed since
+2026-07-24. Nothing distinguished that dead note from a live failure, because no
+test ran the validator on the real projection; the two that existed built
+synthetic bundles. Verified 2026-08-22 at `506230e`, and mutation-tested by
+downgrading the fifteen C3 artifacts to C2, which reproduces the 2026-08-14
+finding exactly.
+
+**2.6 exists because measuring 2.5 exposed its limit.** The validator exits 0 on
+warnings. Removing `owner` from one governed artifact yields `warnings: 1
+clean: False` and an exit code of 0 — this scenario would pass while the heritage
+it transmits had degraded. The `clean` field already carried that fact and
+nothing read it. It is a separate criterion rather than a stricter 2.5 so that
+*degraded* and *broken* keep different weights: a missing metadata field does not
+carry the gravity of a heritage with no minimal governed context.
 
 ### VS-3 — Music Sync Selection Pipeline
 
@@ -344,7 +368,7 @@ measures. This criterion moves when a remediation policy is written, not before.
 
 ---
 
-**Suite state: 21 criteria — 4 satisfied, 1 failing, 16 not verified.**
+**Suite state: 22 criteria — 6 satisfied, 0 failing, 16 not verified.**
 
 ---
 

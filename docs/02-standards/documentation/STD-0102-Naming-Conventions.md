@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 2.0
+  version: 2.1
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-21
+  updated: 2026-08-22
 
 relations:
   references:
@@ -164,6 +164,20 @@ ARCH-0002
 | `ADR-` | Architecture Decision Records — a decision, with its context and consequences |
 | `CMP-` | Components |
 | `GOV-` | Governance |
+| `OPS-` | Operations — knowledge about running this deployment |
+
+`OPS-` was added on 2026-08-22, for `OPS-0001`, the catalogue of
+container log signatures. The heritage had carried Operations
+*principles* since July while having no prefix for an Operations
+*document* and no `Operations` value in the domain vocabulary; a
+document declaring that domain would have been normalized to
+`unknown`. Both were opened the same day.
+
+The family is `OPS-0001` for documents and `OPS-P-001` for
+principles, as for `FDN-`, `STD-` and `GOV-`. The four Operations
+principles carried the old three-digit form until 2026-08-22,
+having been missed by the renumbering of the day before — which
+is how the gap was found.
 
 `ARCH-` and `ADR-` are both architecture and are deliberately
 distinct: an ADR records *a decision taken at a point in time*

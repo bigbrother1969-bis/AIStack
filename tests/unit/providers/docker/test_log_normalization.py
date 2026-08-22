@@ -119,3 +119,79 @@ def test_collecting_no_lines_is_refused_before_docker_is_called():
 def test_the_observation_names_the_provider_that_produced_it():
 
     assert normalize("x\n").provider == "aistack.provider.docker"
+
+
+# --------------------------------------------------------------------
+# The timestamp Docker prefixes is a field, not part of the line
+# --------------------------------------------------------------------
+
+
+def test_the_docker_timestamp_prefix_is_split_off_the_text():
+    """
+    `docker logs --timestamps` prefixes each line. Left inside
+    the text, every signature would compare against something no
+    container printed.
+    """
+
+    entry = normalize("2026-08-22T09:41:12.000000000Z TLS Error\n").entries[0]
+
+    assert entry.text == "TLS Error"
+    assert entry.timestamp == datetime(
+        2026, 8, 22, 9, 41, 12, tzinfo=timezone.utc
+    )
+
+
+def test_a_pattern_cannot_match_the_prefix_the_collector_added():
+    """
+    The concrete failure the split prevents: a signature looking
+    for a four-digit year, or for `Z`, would fire on every line
+    of every container and cite evidence the host never emitted.
+    """
+
+    entries = normalize(
+        "2026-08-22T09:41:12.000000000Z all quiet\n"
+        "2026-08-22T09:41:13.000000000Z still quiet\n"
+    ).entries
+
+    assert not any("2026" in e.text for e in entries)
+
+
+def test_nanoseconds_are_truncated_rather_than_refused():
+    """
+    Docker writes nine fractional digits; `datetime` carries six.
+    Truncating loses a resolution nothing here uses. Refusing
+    would lose the age of every line.
+    """
+
+    entry = normalize("2026-08-22T09:41:12.123456789Z x\n").entries[0]
+
+    assert entry.timestamp.microsecond == 123456
+    assert entry.text == "x"
+
+
+def test_a_line_whose_prefix_does_not_parse_is_kept_whole():
+    """
+    Collection without `--timestamps`, or a malformed prefix.
+    The honest result is "the age is unknown" — a state — not a
+    fabricated time and not a truncated line.
+    """
+
+    entry = normalize("Your credentials might be wrong\n").entries[0]
+
+    assert entry.timestamp is None
+    assert entry.text == "Your credentials might be wrong"
+
+
+def test_an_unparsable_prefix_does_not_lose_the_first_word():
+
+    entry = normalize("AUTH_FAILED reported by the peer\n").entries[0]
+
+    assert entry.text == "AUTH_FAILED reported by the peer"
+
+
+def test_a_timestamped_line_that_is_otherwise_empty_is_an_empty_line():
+
+    entry = normalize("2026-08-22T09:41:12.000000000Z \n").entries[0]
+
+    assert entry.text == ""
+    assert entry.timestamp is not None

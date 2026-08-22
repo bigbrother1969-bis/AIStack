@@ -115,7 +115,12 @@ def report(
         print(f"    evidence: {len(finding.evidence)} line(s)")
 
         for entry in finding.evidence[:3]:
-            print(f"      -{entry.offset}: {entry.text[:110]}")
+            when = (
+                entry.timestamp.isoformat(timespec="seconds")
+                if entry.timestamp
+                else "no timestamp"
+            )
+            print(f"      -{entry.offset}  {when}  {entry.text[:90]}")
 
         if len(finding.evidence) > 3:
             # Named, never silent: a report that trimmed without

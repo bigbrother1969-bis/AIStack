@@ -8,6 +8,44 @@ from aistack.contracts.runtime_observation import (
 )
 
 
+def split_timestamp(line: str) -> tuple[datetime | None, str]:
+    """
+    Separate the prefix `docker logs --timestamps` adds.
+
+    Docker writes RFC 3339 with nanoseconds — more precision than
+    `datetime` carries — so the fractional part is truncated to
+    microseconds rather than refused. Truncating loses a
+    resolution nothing here uses; refusing would lose the age of
+    every line.
+
+    A line whose prefix does not parse is returned whole, with no
+    timestamp. That happens when the caller collected without
+    `--timestamps`, and the honest result is "the age is
+    unknown", not a guess.
+    """
+
+    head, separator, tail = line.partition(" ")
+
+    if not separator:
+        return None, line
+
+    candidate = head
+
+    if candidate.endswith("Z"):
+        candidate = candidate[:-1] + "+00:00"
+
+    if "." in candidate:
+        seconds, _, fraction = candidate.partition(".")
+        digits = fraction[:6]
+        offset = fraction[len(digits) :].lstrip("0123456789")
+        candidate = f"{seconds}.{digits}{offset}"
+
+    try:
+        return datetime.fromisoformat(candidate), tail
+    except ValueError:
+        return None, line
+
+
 def normalize_log_evidence(
     raw: str,
     *,
@@ -30,7 +68,13 @@ def normalize_log_evidence(
     an undifferentiated blob; a qualifier reading the result of
     this function receives identified entries instead of text.
 
-    **Nothing here interprets.** Lines are kept verbatim: no
+    The timestamp Docker prefixes with `--timestamps` is split
+    off and carried in its own field. Leaving it inside the text
+    would make every signature compare against a prefix no
+    container printed — and a pattern like `2026` would match
+    every line of every log.
+
+    **Nothing else here interprets.** Lines are kept verbatim: no
     trimming of content, no case folding, no filtering. A
     signature that matched a line the pipeline had already
     reworded would cite something that never appeared on the
@@ -58,13 +102,22 @@ def normalize_log_evidence(
 
     last = len(lines) - 1
 
+    entries = []
+
+    for index, line in enumerate(lines):
+        timestamp, text = split_timestamp(line)
+        entries.append(
+            LogEntry(
+                offset=last - index,
+                text=text,
+                timestamp=timestamp,
+            )
+        )
+
     return RuntimeObservation(
         subject=subject,
         provider=provider,
         collected_at=collected_at,
         depth=depth,
-        entries=tuple(
-            LogEntry(offset=last - index, text=text)
-            for index, text in enumerate(lines)
-        ),
+        entries=tuple(entries),
     )

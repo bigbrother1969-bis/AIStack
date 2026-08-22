@@ -79,6 +79,13 @@ class DockerProvider:
         window and each signature then evaluates its own. One
         Docker call, not one per rule.
 
+        `--timestamps` is passed so that every line carries its
+        age regardless of what the container prints. Without it,
+        a finding's evidence has a date only when the service
+        happens to write one — which is how a report of eleven
+        connection refusals eighteen hours old read as current on
+        2026-08-22.
+
         Standard error is merged into standard output. A great
         many containers log there and nowhere else; reading only
         stdout would return an empty observation for a service
@@ -92,7 +99,14 @@ class DockerProvider:
             )
 
         result = subprocess.run(
-            ["docker", "logs", "--tail", str(depth), subject],
+            [
+                "docker",
+                "logs",
+                "--timestamps",
+                "--tail",
+                str(depth),
+                subject,
+            ],
             check=True,
             capture_output=True,
             text=True,

@@ -17,10 +17,26 @@ class LogEntry:
     each line an identity, not rewriting it — a signature that
     matched a line the heritage had already reworded would be
     citing something that never appeared on the host.
+
+    `timestamp` is when the line was written, and it is separate
+    from the text on purpose: Docker supplies it with
+    `--timestamps`, and folding it into `text` would make every
+    signature compare against a prefix no container printed.
+
+    It is optional because a line can carry none — a malformed
+    prefix, or evidence assembled by a test. `None` says the age
+    is unknown, which is a state; a fabricated timestamp would
+    say something false.
+
+    The first real run of this chain, on 2026-08-22, reported
+    eleven connection-refused lines that were eighteen hours old,
+    and the only reason anyone could tell was that the container
+    happened to print its own timestamps. Another would not have.
     """
 
     offset: int
     text: str
+    timestamp: datetime | None = None
 
     def __post_init__(self) -> None:
         if self.offset < 0:

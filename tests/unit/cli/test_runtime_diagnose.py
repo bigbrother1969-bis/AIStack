@@ -119,7 +119,7 @@ def test_a_finding_exits_one_and_cites_its_signature(
     assert code == 1
     assert "OPS-TEST/S-001" in out
     assert "Check the VPN credentials" in out
-    assert "-0: AUTH_FAILED" in out
+    assert "AUTH_FAILED" in out
 
 
 def test_every_container_is_examined_when_none_is_named(

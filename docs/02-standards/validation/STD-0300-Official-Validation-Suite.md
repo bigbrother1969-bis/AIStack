@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.1
+  version: 1.2
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-08-21
+  updated: 2026-08-22
 
 relations:
   references:
@@ -20,6 +20,8 @@ relations:
     - FDN-0007
     - FDN-0008
     - PRINCIPLES-REGISTRY
+    - ADR-0009
+    - OPS-0001
 ---
 
 # STD-0300 — Official Validation Suite
@@ -201,7 +203,11 @@ platform proposes, the human decides (GOV-P-001).
 
 ## 9. Acceptance Criteria
 
-State as of 2026-08-14, repository `45710f3`.
+Each criterion carries its own state and, when it has one, the date its
+verification was executed. A single date at the head of this section would have
+to be rewritten at every change and would be wrong the moment one was missed —
+which is how the sentence it replaces came to describe `45710f3` while the
+criteria below had moved on. Last change: 2026-08-22, criterion 4.9.
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -296,15 +302,49 @@ below: the point is that AIStack reproduces the reasoning.
 | 4.6 | The root cause is explained, derived from the collected evidence | not verified |
 | 4.7 | A safe remediation is recommended, citing the policies it derives from by identifier | not verified |
 | 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 48–58 % → 0.2 %) | not verified |
-| 4.9 | No finding is emitted without at least one evidence reference | not verified |
+| 4.9 | No finding is emitted without at least one evidence reference | **satisfied** — 2026-08-22 |
 
 Criterion 4.5 is not a formality. A single label would make the finding an opinion
 about severity; four simultaneous qualifications make it derived knowledge, each
 traceable to a distinct policy.
 
+#### What 2026-08-22 verified, and what it did not
+
+The runtime qualification chain decided by ADR-0009 ran for the first time on
+2026-08-22 against the reference deployment: 62 containers examined, none
+unobserved, the signatures of `OPS-0001` applied to each.
+
+**4.9 is satisfied by construction and was exercised.** `RuntimeFinding` refuses
+to be constructed with empty evidence, and the refusal is mutation-tested — the
+invariant was removed, the test failed, the invariant was restored. The control
+run of 2026-08-22 produced one finding carrying eleven log entries, each
+identified by an offset counting back from the newest line and by the timestamp
+Docker recorded. Verified at `9e27da3`.
+
+**4.1 remains `not verified`, and only half of it is acquired.** The chain
+detects *without being pointed at a service*: run with no argument, it examines
+every container the host declares, which is what the criterion asks and what the
+ancestor could not do — `analyze_container` required a container name. The other
+half is untouched: this chain reads logs and measures no resource whatsoever.
+The reference incident above is a CPU consumption diagnosed through system-call
+observation, and nothing in the heritage observes system calls. Recording the
+acquired half here rather than in the state column is deliberate: a criterion is
+satisfied by its whole statement or not at all.
+
+**4.7 remains `not verified`, and the gap has a name.** A finding does cite the
+policy that produced it — `OPS-0001/S-004` — which is the citation the criterion
+asks for. But every signature in `OPS-0001` declares `grounding: unknown`, and
+that field names precisely the policy that would make the *remediation* the right
+one. "Check the target service, the exposed port, and the Docker network"
+presupposes that a dependency between two services is declared somewhere in this
+heritage, and none is. The field was added on 2026-08-22 to make that absence
+countable under FDN-0003 Article 12; using its existence to declare the criterion
+satisfied would turn an instrument of visibility into a way of hiding what it
+measures. This criterion moves when a remediation policy is written, not before.
+
 ---
 
-**Suite state: 21 criteria — 3 satisfied, 1 failing, 17 not verified.**
+**Suite state: 21 criteria — 4 satisfied, 1 failing, 16 not verified.**
 
 ---
 

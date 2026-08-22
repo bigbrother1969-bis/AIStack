@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -109,14 +109,34 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
-#### GOV-0002/OS-001 — Seventeen declared contracts are satisfied by nothing
+#### GOV-0002/OS-001 — Twenty declared contracts are satisfied by nothing
 
 **Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
-**Observed** 2026-08-22 at `3166073`. Every `.py` under `src/aistack` imported
-by path (277 files, one import failure), yielding 56 contracts — `Protocol` or
-`ABC` — and 130 concrete classes. Structural conformance tested with the
-helper described in OS-002. Seventeen contracts have no class, anywhere, that
-satisfies their members. Ten of the seventeen are one family:
+
+**Measured** 2026-08-22 at `9099df7` by `aistack.conformance.inventory`,
+which anyone can re-run:
+
+```
+298 modules · 56 contracts · 144 concrete classes · 20 orphans · partial
+```
+
+The inventory is **partial**: `aistack.funnel.__main__` does not import
+(OS-018), and the class satisfying one of the twenty could be in it. Twenty
+is therefore an upper bound, not a count.
+
+Identical on Python 3.11, 3.12 and 3.13. That sentence is the entry's own
+history: the first published figure was 20 on one machine and 22 on another,
+because the tool mistook a CPython 3.12 internal for a contract requirement.
+Fixed at `9099df7`; OS-019 records what let it through.
+
+**The earlier figure of seventeen was wrong**, and it is left here rather
+than overwritten. It came from a throwaway script that no longer exists,
+run before OS-008 was closed, so it walked past 33 files including the
+integrity validator — and it ran an instrument with two defects, one of
+which under-declared the debt by reading `__annotations__` instead of the
+attributes a contract declares.
+
+Ten of the twenty are one family:
 `PackageCapability` and its nine specialisations — `Compress`, `Decompress`,
 `Encrypt`, `Decrypt`, `Hash`, `Serialize`, `Deserialize`, `Sign`,
 `VerifySignature` — declared together and implemented never. `TransferTarget`
@@ -128,10 +148,19 @@ structural pass that reported `IntegrityCheck` as orphan while seven checks
 implement it, and a claim that `pyproject.toml` omitted ten directories from
 the distribution — disproved by building the wheel and reading its contents.*
 
-**Derivable** yes, once OS-002 is resolved
+The other ten, for the record, so that qualifying them does not require
+re-running anything: `KnowledgeEngine`, `KnowledgeGenerator`,
+`KnowledgePolicy`, `KnowledgeRenderer`, `EvidenceCollector`,
+`DiscoveryProvider`, `KnowledgePipeline`, `KnowledgeProvider`, and
+`kernel.execution.task.Task` — plus `TransferTarget` named above.
+
+**Derivable** yes — and it now is. `aistack.conformance.inventory` produces
+this figure; OS-002 was what stood in the way.
 **Qualification** `unknown`. STD-P-002 makes a contract ahead of its
-implementation the prescribed order, not a defect. Which of the seventeen are
-planned and which abandoned is the owner's judgement, entry by entry.
+implementation the prescribed order, not a defect. Which of the twenty are
+planned and which abandoned is the owner's judgement, entry by entry. The
+ten-strong `PackageCapability` family is likely one decision rather than
+ten.
 
 #### GOV-0002/OS-002 — The tool that measures contract debt is not in the product
 
@@ -139,11 +168,24 @@ planned and which abandoned is the owner's judgement, entry by entry.
 **Observed** `tests/unit/kernel/contracts/conformance.py`, written 2026-08-21
 for four kernel contracts. It is the only code that can decide whether a
 class satisfies a Protocol structurally, and it lives in the test tree.
+**Partially resolved 2026-08-22.** `aistack.conformance.structural` holds
+the comparison and `aistack.conformance.inventory` derives the architecture;
+both are in the product, with 34 tests and their own control cases. OS-001
+now carries a measured figure rather than an assertion.
+
+What remains open is the second half: **nothing publishes it**.
+`IntegrityCheck.evaluate` takes a `ContextBundle`, and the code is not in
+the bundle, so the measurement exists but no projection carries it. Until
+it does, FDN-P-014 is operative for whoever runs the command and for nobody
+else.
 **Derivable** no — this is what makes the others derivable
-**Qualification** `unknown`. Promoting it to `src/` and adding an integrity
-check would make FDN-P-014 operative: the seventeen of OS-001 would be
-published by the validator at every projection instead of asserted by an
-agent.
+**Qualification** `unknown`. Where the figure is published is an
+architecture decision: carry a contract inventory inside the projection so
+an integrity check can read it, or publish through a separate CLI and leave
+`IntegrityCheck` observing bundles only. The findings must be
+`OBSERVATION`, since `is_clean` ignores those and STD-0300 criterion 2.6 —
+engraved the same day — would otherwise fail on twenty facts the heritage
+has decided are not faults.
 
 #### GOV-0002/OS-003 — `ARC-P-005` and FDN-0011's second principle state one rule twice
 
@@ -215,6 +257,37 @@ not taken on 2026-08-22.
 ---
 
 # Non-conforming instances
+
+#### GOV-0002/OS-019 — The suite runs on one interpreter and three are supported
+
+**Nature** `non-conforming` · **Opened** 2026-08-22 · **State** open
+**Observed** `pyproject.toml` declares `requires-python = ">=3.11"`, so
+3.11, 3.12 and 3.13 are all supported. Nothing runs the suite on more than
+one: whichever the machine happens to have. The published images are
+`python:3.13-slim`; the owner's laptop is 3.13.5; the agent's container is
+3.11.
+
+Concretely, on 2026-08-22 the contract inventory reported 20 orphans on
+3.11 and 22 on 3.12 and 3.13, at the same commit (`2904336`). It was found
+because two people ran it on two machines, not because anything checked.
+Fixed at `9099df7`, and the mutation test that guards the fix is *killed on
+3.13 and survives on 3.11* — the machinery it removes does not exist there.
+The suite therefore proves strictly less on the interpreter it ran on than
+on the one the images ship.
+
+ENG-TEST-0002 is C3 and promises *reproducibility, deterministic execution,
+portability across environments*. It declares the source roots and says
+nothing about the interpreter, so the declared execution environment
+declares an incomplete environment — the same shape of gap the principle's
+own v2.0 was written to close.
+**Derivable** yes — running the suite under each supported version and
+comparing is mechanical
+**Qualification** `unknown`. Three readings: declare a single supported
+version and narrow `requires-python`, which is the cheapest and gives up
+portability; run the suite under each supported version, which needs a
+matrix nobody has set up here; or state that the range is supported on
+declaration only and record the exposure. The current state is the third
+without having said so.
 
 #### GOV-0002/OS-006 — `PRINCIPLES-REGISTRY.md` does not follow `<ID>-<Title>.md`
 

@@ -58,7 +58,7 @@ def test_manifest_is_in_context_bundle_zip(tmp_path):
 
         assert manifest["source_commit"] == "commit123"
 
-        assert manifest["format_version"] == "1.1"
+        assert manifest["format_version"] == "1.2"
 
 
         # Integrity information must travel inside the

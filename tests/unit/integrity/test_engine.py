@@ -86,4 +86,5 @@ def test_default_composition_is_stable():
         "classification-declaration",
         "duplicate-titles",
         "transport-residue",
+        "contract-debt",
     ]

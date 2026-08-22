@@ -39,6 +39,7 @@ class DefaultContextBundleEngine(ContextBundleEngine):
         registry_builder=None,
         bundle_builder=None,
         exporter=None,
+        measure_contracts=None,
     ) -> None:
 
         self.discovery = (
@@ -55,7 +56,9 @@ class DefaultContextBundleEngine(ContextBundleEngine):
 
         self.bundle_builder = (
             bundle_builder
-            or DefaultContextBundleBuilder()
+            or DefaultContextBundleBuilder(
+                measure_contracts=measure_contracts,
+            )
         )
 
         self.exporter = (

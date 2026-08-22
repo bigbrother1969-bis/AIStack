@@ -7,6 +7,9 @@ from aistack.contracts.integrity_report import (
 from aistack.integrity.checks.classification_declaration import (
     ClassificationDeclarationCheck,
 )
+from aistack.integrity.checks.contract_debt import (
+    ContractDebtCheck,
+)
 from aistack.integrity.checks.duplicate_titles import (
     DuplicateTitleCheck,
 )
@@ -37,6 +40,7 @@ def default_checks() -> list[IntegrityCheck]:
         ClassificationDeclarationCheck(),
         DuplicateTitleCheck(),
         TransportResidueCheck(),
+        ContractDebtCheck(),
     ]
 
 

@@ -18,10 +18,13 @@ class DefaultContextBundleService:
         self,
         engine=None,
         transfer_service: ContextBundleTransferService | None = None,
+        measure_contracts=None,
     ):
         self.engine = (
             engine
-            or DefaultContextBundleEngine()
+            or DefaultContextBundleEngine(
+                measure_contracts=measure_contracts,
+            )
         )
 
         self.transfer_service = transfer_service

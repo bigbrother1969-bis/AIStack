@@ -57,7 +57,8 @@ def main() -> None:
         )
 
         print(
-            f"    {finding.affected}/{finding.total} artifacts"
+            f"    {finding.affected}/{finding.total} "
+            f"{finding.unit}"
         )
 
     print("")

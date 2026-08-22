@@ -213,6 +213,8 @@ def main() -> None:
     )
 
 
+    from aistack.conformance.inventory import take_inventory
+
     from aistack.context_bundle.service import (
         DefaultContextBundleService,
     )
@@ -258,8 +260,15 @@ def main() -> None:
             )
 
 
+    # The projection carries the contract architecture measured
+    # at generation. FDN-0011 requires technical debt to be
+    # derived; carrying the derivation here is what makes it
+    # published rather than available to whoever thinks to run a
+    # command, and an agent handed only this bundle can state the
+    # debt of the heritage it received.
     service = DefaultContextBundleService(
         transfer_service=transfer_service,
+        measure_contracts=take_inventory,
     )
 
 

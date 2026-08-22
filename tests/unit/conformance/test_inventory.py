@@ -209,9 +209,19 @@ def test_the_integrity_checks_satisfy_their_contract():
     )
 
     assert not check.is_orphan
-    assert len(check.satisfied_by) == 7
+    assert len(check.satisfied_by) == 8
     assert all(
         "integrity.checks" in name for name in check.satisfied_by
+    )
+
+    # `contract-debt` is the eighth, and it is the one that
+    # publishes this very inventory. The check appearing in the
+    # measurement it produces is not the instrument counting
+    # itself: it is a governed component of the product, exactly
+    # like the seven before it.
+    assert any(
+        name.endswith("ContractDebtCheck")
+        for name in check.satisfied_by
     )
 
 

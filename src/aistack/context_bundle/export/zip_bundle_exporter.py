@@ -1,6 +1,9 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import json
 import zipfile
+
+from aistack.conformance.serialization import serialize_inventory
 
 from aistack.contracts.bundle_exporter import BundleExporter
 from aistack.contracts.context_bundle import ContextBundle
@@ -40,6 +43,13 @@ class ZipBundleExporter(BundleExporter):
     - bundle.json
     - bundle.md
     - manifest.json
+    - contract-inventory.json, when the bundle carries one
+
+    The inventory is written only when it was measured. A bundle
+    produced without a source tree to walk has none, and an empty
+    file would be indistinguishable from a heritage with no
+    contracts — FDN-0003 Article 12 makes the absence a state,
+    and the absent file is how this format says so.
     """
 
     def export(
@@ -126,6 +136,18 @@ class ZipBundleExporter(BundleExporter):
                     "README.md",
                     readme_content,
                 )
+
+                if bundle.contract_inventory is not None:
+                    archive.writestr(
+                        "contract-inventory.json",
+                        json.dumps(
+                            serialize_inventory(
+                                bundle.contract_inventory
+                            ),
+                            indent=2,
+                            ensure_ascii=False,
+                        ),
+                    )
 
 
         return output_path

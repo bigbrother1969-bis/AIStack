@@ -74,12 +74,26 @@ def test_a_clean_report_states_its_verdict(tmp_path):
     appeared only when something was wrong.
 
     Silence is not a verdict. The report says so either way.
+
+    The verdict is what this test protects, and it is asserted
+    below. What it no longer asserts is "No finding.": since
+    2026-08-22 `contract-debt` reports on every bundle, either
+    the orphan contracts it found or the fact that this
+    projection carries no inventory at all. A loose
+    `bundle.json` — which this fixture is — never carries one,
+    because the inventory travels as a separate archive entry.
+
+    "Nobody measured" and "nothing was found" reading identically
+    is the failure that check exists to prevent, so the report
+    losing its silent case is the intended consequence rather
+    than a regression.
     """
 
     output = _run(_bundle(tmp_path, COMPLETE))
 
-    assert "No finding." in output
     assert "blocking: 0   warnings: 0   clean: True" in output
+
+    assert "contract debt is undeclared, not zero" in output
 
 
 def test_a_deficient_report_states_its_verdict(tmp_path):

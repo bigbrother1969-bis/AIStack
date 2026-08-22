@@ -18,7 +18,7 @@ def test_manifest_builder():
 
     assert manifest.artifact_count == 5
 
-    assert manifest.format_version == "1.1"
+    assert manifest.format_version == "1.2"
 
 
 def test_manifest_builder_integrity_defaults():

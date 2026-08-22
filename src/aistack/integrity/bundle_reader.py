@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import zipfile
 
+from aistack.conformance.serialization import deserialize_inventory
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.classification import (
     normalize_domain,
@@ -27,9 +28,18 @@ def read_bundle(path: Path) -> ContextBundle:
     produced by an older pipeline, or edited by hand, cannot
     introduce a criticality, a domain or a semantic type that
     the governed vocabularies do not contain.
+
+    The contract inventory travels only in the archive, because
+    it is a separate entry rather than part of `bundle.json`. A
+    consumer holding the loose `bundle.json` therefore gets a
+    bundle whose `contract_inventory` is `None` — the honest
+    result, and the one a check must be able to tell apart from
+    a heritage with no orphan contracts.
     """
 
     path = Path(path)
+
+    inventory = None
 
     if zipfile.is_zipfile(path):
 
@@ -37,6 +47,13 @@ def read_bundle(path: Path) -> ContextBundle:
             payload = json.loads(
                 archive.read("bundle.json")
             )
+
+            if "contract-inventory.json" in archive.namelist():
+                inventory = deserialize_inventory(
+                    json.loads(
+                        archive.read("contract-inventory.json")
+                    )
+                )
 
     else:
         payload = json.loads(
@@ -78,4 +95,5 @@ def read_bundle(path: Path) -> ContextBundle:
         generated_at=generated_at,
         source_commit=payload["source_commit"],
         artifacts=artifacts,
+        contract_inventory=inventory,
     )

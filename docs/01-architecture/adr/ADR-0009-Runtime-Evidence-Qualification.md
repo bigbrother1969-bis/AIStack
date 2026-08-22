@@ -32,6 +32,16 @@ written the same day and submitted for acceptance the next, per the working
 rule adopted on 2026-08-21: an act that binds the heritage is proposed one
 day and accepted the following one.
 
+**Amended before acceptance, the same day.** The first draft stated that no
+policy in the heritage justified the remediations, and asked what to do
+about the gap. That was wrong: FDN-0002 defines *Knowledge Policy*, and a log
+signature matches the definition exactly. The question had been posed
+without reading the glossary entry that answered it. What survives of the
+gap is narrower and is recorded in § 3.1 as `grounding`.
+
+**One point remains open and must be settled before acceptance:** how an
+individual signature is identified. See *Consequences*.
+
 ## Context
 
 A container named `aistack-backend` has been running on this deployment
@@ -110,20 +120,73 @@ nothing. A document that code reads acquires a machine contract in addition
 to its human one, and that contract has to be explicit — which is what
 FDN-0011 calls the difference between a contract and a claim.
 
-### 3. Signatures are declared, not coded
+### 3. A signature is a Knowledge Policy
+
+FDN-0002 already defines the term:
+
+> **Knowledge Policy** — a governed rule defining how knowledge is
+> evaluated, qualified or interpreted. Knowledge Policies are explicit and
+> versioned.
+
+A log signature is that, word for word: a governed rule defining how an
+observation is interpreted. The vocabulary did not have to be invented.
+
+The consequence is structural. **The catalogue is a policy register, not a
+configuration file that policies would have to justify.** `STD-0300` § VS-4
+criterion 4.7 — *a safe remediation is recommended, citing the policies it
+derives from by identifier* — is then satisfied by construction: a finding
+cites the signature that produced it. That is traceability, not circularity;
+the finding is the output and the signature is the rule.
+
+It follows that **each signature carries its own identifier**, not only the
+document. `OPS-0001` names the catalogue; something must name the third
+signature inside it.
 
 The four signatures are the owner's operational knowledge, learned from
 incidents on this deployment. `GOV-P-001` forbids the AI from authoring
 them, extending them, or rewording them.
 
-They live in a governed artifact under `docs/`, with an owner, a criticality,
-a version, and for each signature: its pattern, its interpretation, its
-remediation, and the identifier of the policy the remediation derives from —
-`STD-0300` § VS-4 criterion 4.7 requires that citation.
-
 Coding them into a Python module would reproduce, on the day it was
 described, the defect this heritage spent 2026-08-20 and 2026-08-21
 removing: knowledge embedded in code rather than declared.
+
+### 3.1 What a signature declares
+
+| Field | Rule |
+|---|---|
+| identifier | unique; a finding cites it |
+| pattern | what is matched in the evidence |
+| interpretation | what the match means |
+| remediation | what to do about it |
+| depth | the log window in which the signature has meaning |
+| confidence | `Verified` / `Reviewed` / `Declared` |
+| grounding | the policy the *remediation* rests on, or `unknown` |
+
+**`depth` is a property of the signature, not a parameter of the call.** The
+experimenter reads the last hundred lines for every rule. A signature whose
+useful window is longer would never fire, and nothing would say so — the
+system could not tell *absent* from *out of range*. Collection reads once at
+the deepest declared window; each signature evaluates its own.
+
+**`grounding` is mandatory and may be `unknown`.** It is not the policy the
+signature *is* — that is the signature itself — but the rule that makes its
+remediation the right one. *"Check the VPN credentials used by the
+container"* is only actionable if those credentials have a declared
+location; *"check the target service, port and Docker network"* presupposes
+that a dependency between two services is declared somewhere. Neither rule
+exists in this heritage today.
+
+The owner's position, recorded 2026-08-22: **ideally every signature is
+grounded, and a system that is well-founded and explainable is the target;
+some ancillary rules may stand without an explicit policy.** Article 12 of
+FDN-0003 gives that its form — the field is required, its absence is
+declared rather than silent, and the number of ungrounded signatures becomes
+a measurable property of the catalogue instead of an impression.
+
+The four initial signatures declare `confidence: Declared`. They were
+written from experience, none has been re-verified by a third party, and no
+test proves that any of them fires on the incident it describes. Raising one
+to `Verified` means reproducing that incident.
 
 ### 4. One parser, two call sites
 
@@ -189,10 +252,16 @@ Positive:
   intentions;
 - the experimenter can be retired, and what it established survives it.
 
+- the heritage gains its first policy register. Principles have had one
+  since July; Knowledge Policies were defined in FDN-0002 and lived nowhere.
+
 Negative:
 
 - `docs/` enters the execution chain. A governed document now has readers
   that are not human, and editing one can break a diagnostic;
+- signatures need an identifier scheme of their own, and the heritage has
+  two conventions already — `OPS-0001` for artifacts, `OPS-P-001` for
+  principles. A third is a third thing to keep straight;
 - a new prefix and a new domain value widen two closed vocabularies;
 - `IntegrityFinding` cannot be reused. Its contract states *"It proposes no
   remediation"*, and VS-4 requires one. A second finding type is introduced —

@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.1
+  version: 2.2
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-22
@@ -55,8 +55,15 @@ engraved — *Gravé* — on 2026-08-20. It therefore declares `confidence: Revi
 is the level its own scale defines for that act. It is not `Verified`: no execution has
 yet checked that the heritage conforms to this schema.
 
-Consequence to be carried out separately: the validator shall also observe `version`,
-`created` and `updated`, which it does not today.
+Consequence carried out separately, and **discharged on 2026-08-21** by `085fe3b`:
+the validator observes `version`, `created` and `updated`. Until 2026-08-22 this
+paragraph still read *"which it does not today"* — a statement about the code that
+had stopped being true a day after it was written.
+
+That is recorded rather than quietly rewritten, because the defect is not the
+deferral. A deferral honoured within a day is the standard working. The defect is
+that nothing distinguished a live deferral from a discharged one, in a document or
+anywhere else — which is why a debt register was decided on 2026-08-22.
 
 ---
 

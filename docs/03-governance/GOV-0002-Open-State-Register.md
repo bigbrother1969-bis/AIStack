@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -235,18 +235,6 @@ The same check as OS-006 would find it.
 **Derivable** yes
 **Qualification** none required; a rename of the file, not of the identifier.
 
-#### GOV-0002/OS-008 — Ten directories under `src/aistack` have no `__init__.py`
-
-**Nature** `non-conforming` · **Opened** 2026-08-22 · **State** open
-**Observed** `funnel`, `integrity`, `integrity/checks`, `core`, and five
-under `transaction/`. ADR-0001 decision 4 states that such directories
-*become proper Python packages*. Verified 2026-08-22: this breaks neither
-import nor packaging — the built wheel contains all of them — but it does
-break `pkgutil` discovery. Concrete cost: two measurements of OS-001 silently
-did not see the integrity validator.
-**Derivable** yes — a check over the source tree
-**Qualification** none required; ADR-0001 already decided it.
-
 ---
 
 # Defects
@@ -291,6 +279,37 @@ complete answer is an extract centred on the match, and it requires the
 finding to carry the position at which the signature matched — a field on
 `RuntimeFinding` or on `LogEntry`, which is a contract change and was not
 taken today.
+
+#### GOV-0002/OS-018 — `aistack.funnel` has never been able to run
+
+**Nature** `defect` · **Opened** 2026-08-22 · **State** open
+**Observed** `src/aistack/funnel/` holds one file, `__main__.py`, 82 lines of
+argparse CLI whose first import is `from .core import FunnelError,
+decapsulate, encapsulate, inspect`. There is no `core.py`, and there never
+was: `2c8018f`, 2026-07-17, added `__main__.py` alone. This is not a deleted
+module, it is a module that was never committed.
+
+`python3 -m aistack.funnel version` raises `ModuleNotFoundError` before
+parsing a single argument. Verified 2026-08-22. The four names it imports
+appear nowhere else in the repository, and nothing anywhere references
+`funnel` — no test, no script, no document, no entry point.
+
+Five weeks undetected, and the reason is OS-008: without `__init__.py`,
+`pkgutil` never descended into the directory, so every discovery pass walked
+straight past it. The defect and the blind spot that hid it were the same
+directory. It surfaced within seconds of closing OS-008 — the first thing the
+newly-visible tree said.
+
+It ships. The built wheel contains it.
+**Derivable** yes — importing every module of the package and reporting the
+failures is exactly what found it, and that is what OS-002 will do
+continuously
+**Qualification** `unknown`. Three readings, and only the owner can choose:
+`core.py` exists somewhere outside this repository and should be brought in;
+the module was abandoned and should be removed; or it is planned and its
+absence should be declared. GOV-P-001 forbids the AI from writing the missing
+module — an ASCII envelope with an integrity check is a specification nobody
+has written down here.
 
 ---
 
@@ -389,5 +408,28 @@ describes one host, and this repository describes a product.
 
 # Resolved
 
-None yet. Entries move here with the date and what discharged them, and are
-never deleted.
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
+#### GOV-0002/OS-008 — Ten directories under `src/aistack` have no `__init__.py`
+
+**Nature** `non-conforming` · **Opened** 2026-08-22 · **State** resolved 2026-08-22 by the ten `__init__.py` files
+**Observed** `funnel`, `integrity`, `integrity/checks`, `core`, and five
+under `transaction/`. ADR-0001 decision 4 states that such directories
+*become proper Python packages*. Verified 2026-08-22: this breaks neither
+import nor packaging — the built wheel contains all of them — but it does
+break `pkgutil` discovery. Concrete cost: two measurements of OS-001 silently
+did not see the integrity validator.
+
+**Resolved 2026-08-22** by adding the ten files. Discovery went from 252
+modules to 294, and the wheel still ships 295 `.py` files — measured on the
+built artifact, not read from `pyproject.toml`. The blind spot covered 33
+files, `src/aistack/integrity/` among them: the tool that validates the
+heritage was invisible to the tool that inventories it.
+
+Adding them immediately exposed OS-018, which the blind spot had been hiding
+for five weeks. That is the argument for closing a blind spot before
+measuring through it.
+**Derivable** yes — a check over the source tree
+**Qualification** none required; ADR-0001 already decided it.

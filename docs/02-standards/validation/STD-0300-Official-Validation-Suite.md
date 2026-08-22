@@ -334,7 +334,7 @@ traceable to a distinct policy.
 - FDN-0003 — Constitution (Article 5, Explainability; Article 12, Uncertainty)
 - FDN-0007 — Governed Engineering Cycle
 - FDN-0008 — Self-Application Principle
-- PRINCIPLES-REGISTRY — OPS-004 *Observe before acting*, ENG-P-005 *Validate every
+- PRINCIPLES-REGISTRY — OPS-P-004 *Observe before acting*, ENG-P-005 *Validate every
   architectural step independently*
 
 ---

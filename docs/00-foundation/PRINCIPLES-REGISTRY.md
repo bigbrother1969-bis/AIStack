@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 2.1
+  version: 2.2
   status: Draft
   owner: Foundation
   created: 2026-07-24
@@ -21,6 +21,35 @@ relations:
 ---
 
 # AIStack Principles Registry
+
+## Provenance of version 2.2
+
+The renumbering of version 2.0 was incomplete. It left the four Operations
+principles — `OPS-001` to `OPS-004` — in the old three-digit form, plus one
+citation of `OPS-004` in STD-0300 § 10, sitting on the same line as
+`ENG-P-005`. Corrected on 2026-08-22: they are `OPS-P-001` to `OPS-P-004`.
+
+The cause is worth recording, because it is the third instance of one
+pattern this week. The renumbering used the expression
+
+```
+\b(FDN|STD|GOV|ENG|ARC)-[0-9]{3}\b
+```
+
+— a list of prefixes assumed rather than measured. `\b[A-Z]{2,5}-[0-9]{3}\b`
+would have found all six families, and is what eventually found the fifth.
+An allow list built from assumption, on the task whose entire purpose was to
+replace assumption with measurement.
+
+The same shape produced `.dockerignore` patterns that matched only the
+context root and a `PYTHONPATH` that declared one of two source roots. Each
+looked exhaustive and covered a subset.
+
+**The consequence was not cosmetic.** STD-0102 v2.0 states that the
+principle/artifact collision is closed. It was not: `OPS-001` and a future
+`OPS-0001` differ by one leading zero, which is precisely the situation the
+renumbering was decided to end — and an `OPS-` artifact was under discussion
+when the gap was found.
 
 ## Provenance of version 2.1
 
@@ -298,7 +327,7 @@ The Contract itself remains governed by the applicable Policies and Profile.
 
 | ID | Principle | Criticality |
 |----|-----------|-------------|
-| OPS-001 | Deployment is Architecture | C2 |
-| OPS-002 | Packaging is an architectural concern | C2 |
-| OPS-003 | Rollback is mandatory for risky evolution | C1 |
-| OPS-004 | Observe before acting | C2 |
+| OPS-P-001 | Deployment is Architecture | C2 |
+| OPS-P-002 | Packaging is an architectural concern | C2 |
+| OPS-P-003 | Rollback is mandatory for risky evolution | C1 |
+| OPS-P-004 | Observe before acting | C2 |

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -64,12 +64,25 @@ from subjective code reviews*.
 
 That ambition is respected here rather than contradicted, and the distinction
 matters: **`contract-debt` is the only nature in this register that is
-derivable**. The others are declared, because nothing can derive them today.
+derivable**. As of 2026-08-22 the others are declared, because nothing
+derives them.
 
-An entry therefore carries a `derivable` field. When a nature becomes
+An entry carries a `derivable` field for that reason. When a nature becomes
 derivable, its entries stop being maintained by hand and become the output of
-a check. The register measures its own automatability, and the first entry
-below is precisely the tool that would make the first nature derivable.
+a check, and the register measures its own automatability.
+
+**One nature crossed that line on 2026-08-22.** `contract-debt` is now
+derived: `aistack.conformance.inventory` walks the package at every
+projection, the archive carries the result, and the `contract-debt` integrity
+check publishes it. OS-001 no longer holds a figure an agent asserted — it
+holds one the validator republishes, identically, on every supported
+interpreter.
+
+What that does **not** change is qualification. The check states how many
+contracts nothing satisfies; STD-P-002 makes a contract ahead of its
+implementation the prescribed order, so which of them are planned and which
+abandoned stays with the owner under GOV-P-001. A derivable nature is one
+whose *facts* are measured, not one whose *judgements* are automated.
 
 This register is not a second view of the code. It is the primary record of
 conditions no artifact states about itself.
@@ -113,21 +126,27 @@ citable from anywhere; it exists inside the register that declares it.
 
 **Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
 
-**Measured** 2026-08-22 at `9099df7` by `aistack.conformance.inventory`,
-which anyone can re-run:
+**Where the current figure lives.** Since `4010d1f` the count is published
+by the `contract-debt` integrity check at every projection, and carried in
+the archive as `contract-inventory.json`. **This entry deliberately does not
+repeat it.** A number copied here would be stale at the next commit — it
+already was, within one — and the point of OS-002 was to stop the debt being
+a figure someone wrote down.
 
 ```
-298 modules · 56 contracts · 144 concrete classes · 20 orphans · partial
+python3 -m aistack.cli.knowledge_integrity
 ```
 
-The inventory is **partial**: `aistack.funnel.__main__` does not import
-(OS-018), and the class satisfying one of the twenty could be in it. Twenty
-is therefore an upper bound, not a count.
+What stays here is what the check cannot say. The count is an **upper
+bound**, not a count: `aistack.funnel.__main__` does not import (OS-018),
+and the class satisfying one of the orphans could be inside it. The check
+publishes that as its own observation.
 
-Identical on Python 3.11, 3.12 and 3.13. That sentence is the entry's own
-history: the first published figure was 20 on one machine and 22 on another,
-because the tool mistook a CPython 3.12 internal for a contract requirement.
-Fixed at `9099df7`; OS-019 records what let it through.
+**First measured** 2026-08-22 at `9099df7`: 56 contracts, 20 orphans,
+identical on Python 3.11, 3.12 and 3.13. That last clause is the entry's own
+history — the first published figure was 20 on one machine and 22 on
+another, because the tool mistook a CPython 3.12 internal for a contract
+requirement. OS-019 records what let it through.
 
 **The earlier figure of seventeen was wrong**, and it is left here rather
 than overwritten. It came from a throwaway script that no longer exists,
@@ -136,7 +155,7 @@ integrity validator — and it ran an instrument with two defects, one of
 which under-declared the debt by reading `__annotations__` instead of the
 attributes a contract declares.
 
-Ten of the twenty are one family:
+Ten of the orphans are one family:
 `PackageCapability` and its nine specialisations — `Compress`, `Decompress`,
 `Encrypt`, `Decrypt`, `Hash`, `Serialize`, `Deserialize`, `Sign`,
 `VerifySignature` — declared together and implemented never. `TransferTarget`
@@ -148,44 +167,20 @@ structural pass that reported `IntegrityCheck` as orphan while seven checks
 implement it, and a claim that `pyproject.toml` omitted ten directories from
 the distribution — disproved by building the wheel and reading its contents.*
 
-The other ten, for the record, so that qualifying them does not require
-re-running anything: `KnowledgeEngine`, `KnowledgeGenerator`,
-`KnowledgePolicy`, `KnowledgeRenderer`, `EvidenceCollector`,
-`DiscoveryProvider`, `KnowledgePipeline`, `KnowledgeProvider`, and
-`kernel.execution.task.Task` — plus `TransferTarget` named above.
+The other ten as of `4010d1f`, listed so that qualifying them does not
+require a re-run: `KnowledgeEngine`, `KnowledgeGenerator`, `KnowledgePolicy`,
+`KnowledgeRenderer`, `EvidenceCollector`, `DiscoveryProvider`,
+`KnowledgePipeline`, `KnowledgeProvider`, and `kernel.execution.task.Task` —
+plus `TransferTarget` named above. The check's `subjects` field carries the
+live list; this one is a snapshot for reading, not the reference.
 
-**Derivable** yes — and it now is. `aistack.conformance.inventory` produces
-this figure; OS-002 was what stood in the way.
-**Qualification** `unknown`. STD-P-002 makes a contract ahead of its
-implementation the prescribed order, not a defect. Which of the twenty are
-planned and which abandoned is the owner's judgement, entry by entry. The
-ten-strong `PackageCapability` family is likely one decision rather than
-ten.
-
-#### GOV-0002/OS-002 — The tool that measures contract debt is not in the product
-
-**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
-**Observed** `tests/unit/kernel/contracts/conformance.py`, written 2026-08-21
-for four kernel contracts. It is the only code that can decide whether a
-class satisfies a Protocol structurally, and it lives in the test tree.
-**Partially resolved 2026-08-22.** `aistack.conformance.structural` holds
-the comparison and `aistack.conformance.inventory` derives the architecture;
-both are in the product, with 34 tests and their own control cases. OS-001
-now carries a measured figure rather than an assertion.
-
-What remains open is the second half: **nothing publishes it**.
-`IntegrityCheck.evaluate` takes a `ContextBundle`, and the code is not in
-the bundle, so the measurement exists but no projection carries it. Until
-it does, FDN-P-014 is operative for whoever runs the command and for nobody
-else.
-**Derivable** no — this is what makes the others derivable
-**Qualification** `unknown`. Where the figure is published is an
-architecture decision: carry a contract inventory inside the projection so
-an integrity check can read it, or publish through a separate CLI and leave
-`IntegrityCheck` observing bundles only. The findings must be
-`OBSERVATION`, since `is_clean` ignores those and STD-0300 criterion 2.6 —
-engraved the same day — would otherwise fail on twenty facts the heritage
-has decided are not faults.
+**Derivable** yes — and it now is, at every projection. OS-002 was what
+stood in the way.
+**Qualification** `unknown`, and this is the half no tool will ever close.
+STD-P-002 makes a contract ahead of its implementation the prescribed order,
+not a defect. Which orphans are planned and which abandoned is the owner's
+judgement, entry by entry; the ten-strong `PackageCapability` family is
+likely one decision rather than ten.
 
 #### GOV-0002/OS-003 — `ARC-P-005` and FDN-0011's second principle state one rule twice
 
@@ -484,6 +479,37 @@ describes one host, and this repository describes a product.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-002 — The tool that measures contract debt is not in the product
+
+**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** resolved 2026-08-22 by `4010d1f`
+**Observed** `tests/unit/kernel/contracts/conformance.py`, written 2026-08-21
+for four kernel contracts. It is the only code that can decide whether a
+class satisfies a Protocol structurally, and it lives in the test tree.
+**Resolved 2026-08-22**, in three steps that had to happen in that order:
+
+1. `aistack.conformance.structural` — the structural comparison, promoted
+   out of the test tree.
+2. `aistack.conformance.inventory` — the discovery that did not exist: walk
+   the package, separate contracts from concrete classes, compute what
+   nothing satisfies.
+3. `contract-debt` — the eighth integrity check, publishing what the
+   projection carries.
+
+The owner chose publication **inside the projection** rather than through a
+separate command. `IntegrityCheck.evaluate` still observes a `ContextBundle`
+and the contract is untouched; the archive gained a fifth entry,
+`contract-inventory.json`, and the bundle format moved to 1.2. The
+consequence is the point: an agent handed the bundle and nothing else can
+state the contract architecture of the heritage it received, which is what
+VS-2 asks of a projection.
+
+Findings are `OBSERVATION`. `is_clean` ignores those — *they state facts
+that are not yet governed rules* — so STD-0300 criterion 2.6, engraved the
+same morning, holds on a heritage carrying twenty of them. Raising them
+would have been a check inventing a verdict STD-P-002 refuses.
+**Derivable** no — this is what makes `contract-debt` derivable
+**Qualification** none required; the decision was taken 2026-08-22.
 
 #### GOV-0002/OS-008 — Ten directories under `src/aistack` have no `__init__.py`
 

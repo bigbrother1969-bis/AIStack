@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.3
+  version: 1.4
   owner: Foundation
   created: 2026-07-31
   updated: 2026-08-22
@@ -62,10 +62,6 @@ rather than corrected in silence.
 exists in the repository, so this artifact can be checked against its source at any
 time. That is why it carries less provenance risk than the three Foundation artifacts
 engraved the same day. `confidence: Reviewed`.
-
-`criticality` remains undeclared. Engraving fixes the content, not the qualification;
-the criticality of this specification is a separate decision and stays `unknown` rather
-than being assumed (FDN-0003 Article 12).
 
 ---
 

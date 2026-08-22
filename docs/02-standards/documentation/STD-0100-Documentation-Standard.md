@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.2
+  version: 2.3
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-22
@@ -224,6 +224,28 @@ Documentation shall:
 - avoid ambiguity;
 - remain technology-independent whenever possible;
 - preserve understanding before describing implementation.
+
+## An assertion about the code carries its date
+
+A sentence stating what the code does, does not do, or does not do *yet* shall
+name the date it was measured and, where one exists, the commit that measured
+it. Without them, a statement about a moving system reads as a permanent
+property of it.
+
+> ✗ the validator does not observe `version`, `created` and `updated` today
+> ✓ as of 2026-08-20, the validator does not observe `version`, `created` and
+>   `updated` (discharged 2026-08-21 by `085fe3b`)
+
+The words that require this treatment are the ones that hide a date inside
+themselves: *today*, *currently*, *still*, *not yet*, *remains*, *for now*. Each
+means "at the time of writing", and none says when that was.
+
+**This rule is enforced by nothing.** It holds by being applied, which is the
+same footing as the `type` → `domain` rule, and the same exposure — recorded as
+GOV-0002/OS-004 for that one and GOV-0002/OS-017 for this. It is written because
+four such sentences were found in two C2 artifacts on 2026-08-22, one of them
+false for eight days and one contradicted by the front-matter four screens above
+it, and because none of them would have survived carrying its own date.
 
 ---
 

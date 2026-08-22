@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -176,6 +176,41 @@ The renumbering itself missed the Operations family — four principles and one
 citation — and that gap survived a day undetected.
 **Derivable** yes — a check over the registry's identifiers
 **Qualification** none required; the convention is decided.
+
+#### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
+
+**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
+**Observed** Four occurrences, in two C2 artifacts, all found on 2026-08-22.
+
+STD-0100 v2.0 carried *"the validator shall also observe `version`, `created` and
+`updated`, **which it does not today**"* from 2026-08-20 until 2026-08-21, one day
+after `085fe3b` had done the work. That one is already the reason this register
+never deletes a resolved entry.
+
+The other three are in STD-0300, and were found by reading it rather than by any
+check:
+
+- criterion 2.5 recorded **failing** since 2026-08-14 on *no artifact is declared
+  C3*, a cause that had gone on 2026-07-24 — three weeks before the note was
+  written. Eight days of a validation suite declaring itself in failure.
+- the acceptance section headed *State as of 2026-08-14, repository `45710f3`*
+  while the criteria under it had moved.
+- the engraving block asserting that `criticality` *remains undeclared* while the
+  front-matter of the same file declared `C2`, both dated 2026-08-21.
+
+All four share one shape: a true statement about a moving system, written without
+the date that made it true. Nothing distinguishes such a sentence from a live one,
+and the cost is asymmetric — a stale *"it does not do X"* makes a heritage look
+worse than it is, and a stale *"it does X"* makes it look better.
+
+**Derivable** partly. The temporal markers that hide a date — *today*,
+*currently*, *still*, *not yet*, *remains*, *for now* — are detectable by pattern.
+Whether the sentence carrying one is stale is not.
+**Qualification** `unknown`. STD-0100 v2.3 states the rule — an assertion about
+the code carries its date and its commit — and, like the `type` → `domain` rule of
+OS-004, it is enforced by nothing and holds by being applied. Whether the pattern
+check is worth its false positives is the owner's call, and it was deliberately
+not taken on 2026-08-22.
 
 ---
 

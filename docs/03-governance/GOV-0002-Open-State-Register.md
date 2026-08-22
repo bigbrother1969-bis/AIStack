@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -284,6 +284,48 @@ itself.
 **Qualification** `unknown`. Both readings are defensible and lead to
 opposite architectures: the ancestor is the product and this repository its
 tooling, or the reverse.
+
+#### GOV-0002/OS-014 — An installed AIStack cannot read the governed catalogue
+
+**Nature** `decision` · **Opened** 2026-08-22 · **State** open
+**Observed** ADR-0009 § 2 makes `docs/` an input to execution: `OPS-0001`
+declares the signatures, and `runtime_diagnose` resolves them from the
+repository root. The wheel contains `aistack/` and nothing else — verified
+2026-08-22 by building it and reading its contents, the same measurement that
+disproved the packaging hypothesis recorded in OS-001. An installed AIStack
+therefore fails with an explicit message and must be given `--catalogue`.
+
+The failure is loud rather than silent, which is why this is a decision and
+not a defect. What is undecided is whether a knowledge policy the product
+executes belongs inside the distribution.
+**Derivable** yes — a check that every path the code resolves under `docs/`
+exists in the built distribution
+**Qualification** `unknown`. Three readings, and they are not equivalent:
+ship `docs/` in the wheel; make `--catalogue` mandatory and remove the
+default; or state that an installed AIStack is a different subject from a
+governed one and require the repository. The third is closest to FDN-P-004,
+and the most inconvenient.
+
+#### GOV-0002/OS-015 — Nothing declares which containers are expected to run
+
+**Nature** `decision` · **Opened** 2026-08-22 · **State** open
+**Observed** First real run of `runtime_diagnose`, 2026-08-22: 62 containers
+swept, one finding — eleven connection refusals in `frigate`, exact in
+detection and empty in remediation. `frigate` is stopped on purpose on this
+deployment; it is started on demand for Oak-15 and shut down after. Those
+lines are what an nginx prints while its backend goes away.
+
+`Signature.applies_to` was added the same day and treats the symptom: a rule
+can now say it means something only on a running container. It does not close
+the gap. The heritage cannot tell *stopped because broken* from *stopped on
+purpose*, because no artifact states which containers this deployment expects
+to be running. That knowledge exists in one person's head, which is the
+condition FDN-P-004 exists to end.
+**Derivable** no — there is nothing to derive it from, and that is the entry
+**Qualification** `unknown`. A declaration of expected state is governed
+knowledge about a deployment, and GOV-P-001 forbids the AI from authoring it.
+Whether it belongs in this repository at all is the prior question: it
+describes one host, and this repository describes a product.
 
 ---
 

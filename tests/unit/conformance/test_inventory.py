@@ -239,21 +239,33 @@ def test_the_inventory_does_not_declare_everything_orphan():
     assert len(inventory.orphans) < len(inventory.contracts)
 
 
-def test_the_inventory_reports_the_module_it_cannot_read():
+def test_every_module_of_the_package_imports():
     """
-    `aistack.funnel.__main__` imports `.core`, which has never
-    existed (GOV-0002/OS-018). It is named here rather than
-    swallowed, and it makes the inventory partial.
+    The inventory of this repository is complete, and that is a
+    governed fact rather than a happy accident.
 
-    When OS-018 is closed this test fails, and that is the point:
-    the inventory becoming complete is a governed change.
+    Until 2026-08-23 it was partial: `aistack.funnel.__main__`
+    imported a `core.py` that had never been committed
+    (GOV-0002/OS-018), so the orphan count was an upper bound.
+    The module was removed and the count became a count.
+
+    This test replaces the one that asserted the opposite. That
+    one carried, in its own docstring, the sentence *"when
+    OS-018 is closed this test fails, and that is the point"* —
+    a test written to be killed by the repair it was watching
+    for.
+
+    What it protects now is the other direction: a module that
+    stops importing makes every orphan figure an upper bound
+    again, and this says so by name rather than letting the
+    report quietly grow a caveat.
     """
 
     inventory = take_inventory()
 
-    assert inventory.is_partial
+    assert inventory.unreadable == (), (
+        f"the package no longer imports cleanly: "
+        f"{[m for m, _ in inventory.unreadable]}"
+    )
 
-    unreadable = dict(inventory.unreadable)
-
-    assert "aistack.funnel.__main__" in unreadable
-    assert "ModuleNotFoundError" in unreadable["aistack.funnel.__main__"]
+    assert not inventory.is_partial

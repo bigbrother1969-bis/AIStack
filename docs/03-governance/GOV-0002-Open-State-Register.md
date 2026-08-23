@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -137,10 +137,11 @@ a figure someone wrote down.
 python3 -m aistack.cli.knowledge_integrity
 ```
 
-What stays here is what the check cannot say. The count is an **upper
-bound**, not a count: `aistack.funnel.__main__` does not import (OS-018),
-and the class satisfying one of the orphans could be inside it. The check
-publishes that as its own observation.
+What stays here is what the check cannot say. **The count became a count on
+2026-08-23**: `aistack.funnel` was removed (OS-018) and every module of the
+package now imports, so the inventory is complete and no longer publishes an
+upper-bound caveat. Should a module stop importing, the caveat returns as its
+own observation and a test names the module.
 
 **First measured** 2026-08-22 at `9099df7`: 56 contracts, 20 orphans,
 identical on Python 3.11, 3.12 and 3.13. That last clause is the entry's own
@@ -342,75 +343,15 @@ larger file the shell can resume at a shifted byte offset.
 **Derivable** no
 **Qualification** none required.
 
-#### GOV-0002/OS-016 — An evidence extract can omit the pattern that fired the rule
-
-**Nature** `defect` · **Opened** 2026-08-22 · **State** partially mitigated
-**Observed** First complete run of `runtime_diagnose` on 62 containers,
-2026-08-22, with `S-004` temporarily widened to `any` as a control case. The
-`frigate` evidence lines carry three timestamps — Docker's, the container's
-own, and nginx's — and the report's 90-character extract reached
-`connect() failed (1` and stopped. `connection refused`, the pattern that
-fired `OPS-0001/S-004`, sat outside the extract. The finding carried all
-eleven lines in full; the report showed everything about them except what
-they proved.
-
-Mitigated the same day: the width is 200, which covers every line this
-deployment produced, and a cut extract now says how many characters it hides
-— the rule the line count already followed.
-**Derivable** no
-**Qualification** `unknown`. The mitigation moves the boundary, it does not
-remove it: a verbose enough log will put a match beyond 200 again. The
-complete answer is an extract centred on the match, and it requires the
-finding to carry the position at which the signature matched — a field on
-`RuntimeFinding` or on `LogEntry`, which is a contract change and was not
-taken today.
-
-#### GOV-0002/OS-018 — `aistack.funnel` has never been able to run
-
-**Nature** `defect` · **Opened** 2026-08-22 · **State** open
-**Observed** `src/aistack/funnel/` holds one file, `__main__.py`, 82 lines of
-argparse CLI whose first import is `from .core import FunnelError,
-decapsulate, encapsulate, inspect`. There is no `core.py`, and there never
-was: `2c8018f`, 2026-07-17, added `__main__.py` alone. This is not a deleted
-module, it is a module that was never committed.
-
-`python3 -m aistack.funnel version` raises `ModuleNotFoundError` before
-parsing a single argument. Verified 2026-08-22. The four names it imports
-appear nowhere else in the repository, and nothing anywhere references
-`funnel` — no test, no script, no document, no entry point.
-
-Five weeks undetected, and the reason is OS-008: without `__init__.py`,
-`pkgutil` never descended into the directory, so every discovery pass walked
-straight past it. The defect and the blind spot that hid it were the same
-directory. It surfaced within seconds of closing OS-008 — the first thing the
-newly-visible tree said.
-
-It ships. The built wheel contains it.
-**Derivable** yes — importing every module of the package and reporting the
-failures is exactly what found it, and that is what OS-002 will do
-continuously
-**Qualification** `unknown`. Three readings, and only the owner can choose:
-`core.py` exists somewhere outside this repository and should be brought in;
-the module was abandoned and should be removed; or it is planned and its
-absence should be declared. GOV-P-001 forbids the AI from writing the missing
-module — an ASCII envelope with an integrity check is a specification nobody
-has written down here.
-
 ---
 
 # Published artifacts
 
-#### GOV-0002/OS-011 — `aistack-core:0.1.0` carries bytecode the heritage does not know about
+None open. The only entry of this nature, OS-011, is in *Resolved*.
 
-**Nature** `published` · **Opened** 2026-08-22 · **State** open
-**Observed** Built 2026-08-19 under a `.dockerignore` whose `__pycache__` and
-`*.pyc` patterns matched only the context root, so every
-`src/aistack/**/__pycache__` entered the image. Corrected in the file on
-2026-08-22 by `108b8a7`; the published image predates the correction and is
-pinned by digest in `docker-compose.yml`.
-**Derivable** no
-**Qualification** `unknown` — rebuild and republish, or leave a one-shot
-validator as it is and record why.
+An empty section is kept rather than removed: it states that this heritage
+publishes artifacts and currently has none in a doubtful state, which is not
+the same as a register that never thought to look.
 
 ---
 
@@ -496,6 +437,103 @@ describes one host, and this repository describes a product.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-016 — An evidence extract can omit the pattern that fired the rule
+
+**Nature** `defect` · **Opened** 2026-08-22 · **State** resolved 2026-08-23 by centring the extract on the match
+**Observed** First complete run of `runtime_diagnose` on 62 containers,
+2026-08-22, with `S-004` temporarily widened to `any` as a control case. The
+`frigate` evidence lines carry three timestamps — Docker's, the container's
+own, and nginx's — and the report's 90-character extract reached
+`connect() failed (1` and stopped. `connection refused`, the pattern that
+fired `OPS-0001/S-004`, sat outside the extract. The finding carried all
+eleven lines in full; the report showed everything about them except what
+they proved.
+
+Mitigated the same day: the width is 200, which covers every line this
+deployment produced, and a cut extract now says how many characters it hides
+— the rule the line count already followed.
+**Resolved 2026-08-23.** The extract is centred on the match, so the width
+now bounds how much context is shown and no longer decides whether the
+pattern is visible. `MatchedLine` carries the line and the position, and the
+position lives there rather than on `LogEntry` because it is a property of
+the encounter between a rule and a line, not of the line — `ARC-P-012` keeps
+the provider on the far side of that boundary.
+
+Two defects surfaced while making the change, both recorded in the commit:
+`tuple[MatchedLine, ...]` accepted bare `LogEntry` objects, because an
+annotation is not a check; and a test asserting `pytest.raises(Exception)`
+began passing because the constructor refused its fixture, so the assignment
+it existed to test was never reached.
+
+One case remains open by design, and it is declared rather than hidden: a
+case-insensitive comparison whose folding changes the text length yields no
+usable index — `ß` folds to `ss` — so `match_at` is `None` and the extract
+falls back to the start of the line. Centring on an index computed against a
+string no container printed would be worse than not centring at all.
+**Derivable** no
+**Qualification** none required; the decision was taken 2026-08-23.
+
+#### GOV-0002/OS-011 — `aistack-core:0.1.0` carries bytecode the heritage does not know about
+
+**Nature** `published` · **Opened** 2026-08-22 · **State** resolved 2026-08-23 by unpublishing the image
+**Observed** Built 2026-08-19 under a `.dockerignore` whose `__pycache__` and
+`*.pyc` patterns matched only the context root, so every
+`src/aistack/**/__pycache__` entered the image. Corrected in the file on
+2026-08-22 by `108b8a7`; the published image predates the correction and is
+pinned by digest in `docker-compose.yml`.
+**Resolved 2026-08-23.** The owner deleted the image from DockerHub rather
+than rebuilding it. Nothing in the repository depended on it: measured
+2026-08-23, `docker-compose.yml` declares `image: aistack/core:local` and
+builds from the local `Dockerfile`, so the published digest appeared only in
+a comment documenting how it had been produced.
+
+Unpublishing rather than rebuilding is the stronger answer to what the entry
+described. A rebuilt image would have to be verified before publication and
+then stay verified; an image nobody pulls cannot diverge from the heritage
+that describes it.
+**Derivable** no
+**Qualification** none required; the decision was taken 2026-08-23.
+
+#### GOV-0002/OS-018 — `aistack.funnel` has never been able to run
+
+**Nature** `defect` · **Opened** 2026-08-22 · **State** resolved 2026-08-23 by removing the module
+**Observed** `src/aistack/funnel/` holds one file, `__main__.py`, 82 lines of
+argparse CLI whose first import is `from .core import FunnelError,
+decapsulate, encapsulate, inspect`. There is no `core.py`, and there never
+was: `2c8018f`, 2026-07-17, added `__main__.py` alone. This is not a deleted
+module, it is a module that was never committed.
+
+`python3 -m aistack.funnel version` raises `ModuleNotFoundError` before
+parsing a single argument. Verified 2026-08-22. The four names it imports
+appear nowhere else in the repository, and nothing anywhere references
+`funnel` — no test, no script, no document, no entry point.
+
+Five weeks undetected, and the reason is OS-008: without `__init__.py`,
+`pkgutil` never descended into the directory, so every discovery pass walked
+straight past it. The defect and the blind spot that hid it were the same
+directory. It surfaced within seconds of closing OS-008 — the first thing the
+newly-visible tree said.
+
+It ships. The built wheel contains it.
+**Searched before deciding, 2026-08-23.** Every branch, every commit and
+every dangling commit of this repository: `funnel/` has only ever held
+`__main__.py`. On the deployment host, `git log --all -- "*funnel*"` in the
+ancestor repository returns nothing and no `funnel/core.py` exists anywhere
+under `/srv/aistack`. The module was never written, here or elsewhere.
+
+**Resolved 2026-08-23** by removing `src/aistack/funnel/`. The owner's
+reading: a CLI whose implementation was never committed is not a deferred
+feature, it is a fragment. What it described is preserved in the commit and
+in this entry — bytes through an integrity-checked ASCII envelope, `pack` /
+`unpack` / `verify`, with a SHA-256 the receiver can check — so an idea that
+returns starts from a specification rather than from an orphan front end.
+
+The immediate effect is on OS-001: the inventory imports cleanly, so the
+orphan count stopped being an upper bound and became a count.
+**Derivable** yes — importing every module and reporting the failures is
+exactly what found it, and `contract-debt` now does that continuously
+**Qualification** none required; the decision was taken 2026-08-23.
 
 #### GOV-0002/OS-006 — `PRINCIPLES-REGISTRY.md` does not follow `<ID>-<Title>.md`
 

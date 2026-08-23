@@ -128,12 +128,15 @@ python3 scripts/export_project_sources.py
 Run the validation suite:
 
 ```bash
-source bin/aistack_env.sh
+source scripts/dev-env.sh
 python3 -m compileall src/aistack && pytest -q
 ```
 
 `bin/aistack_env.sh` declares the execution environment (ADR-0001,
-ENG-TEST-0002). `pytest` with no argument runs the AIStack suite and
+ENG-TEST-0002) and `scripts/dev-env.sh` provides it — it sources the
+first, then puts the project virtual environment ahead of the system
+interpreter, which on most distributions is not the 3.13 this heritage
+is verified on. `pytest` with no argument runs the AIStack suite and
 only it: the paths are declared in `pyproject.toml`, per STD-0002.
 
 ---

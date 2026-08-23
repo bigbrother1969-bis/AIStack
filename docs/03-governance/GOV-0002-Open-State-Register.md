@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.17
+  version: 1.18
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -480,6 +480,19 @@ entry describes.
 Two facts are published, because they are two questions: a registered
 identifier that does not carry the form, and a cited identifier no row
 declares. The second is what the missed Operations family would have been.
+
+**They do not carry the same severity, and the second was corrected on the
+day it was written.** A malformed row is a `WARNING` — no state of the work
+has a principle registered under a name the standard forbids. A citation the
+registry does not declare is an `OBSERVATION`, and it was a `WARNING` for
+four hours: it fired on the commit that qualified this entry's own family,
+where the register recorded a decision to create `FDN-P-015` and `ENG-P-007`
+before the rows existed. `clean: False` forbade recording a decision before
+its consequence, which is this heritage's method.
+
+That is the asymmetry `reference-integrity` was given `OBSERVATION` for the
+same day. The occurrence this entry was opened for is still published at
+every projection, which is what would have caught it a day earlier.
 
 **What the check deliberately does not do** is read prose for the old
 three-digit form. Fourteen occurrences remain in the heritage and every one is

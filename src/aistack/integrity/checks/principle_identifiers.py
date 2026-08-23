@@ -134,9 +134,29 @@ class PrincipleIdentifierCheck(IntegrityCheck):
     report a heritage that documents its history as one that
     failed to migrate.
 
-    The severity is `WARNING`. The form is decided, the registry
-    is a single table, and there is no state of the work in which
-    a principle is registered under a name the standard forbids.
+    **The two facts carry different severities, and the second
+    was corrected on the day it was written.**
+
+    A malformed registered identifier is a `WARNING`: the form is
+    decided, the registry is a single table, and there is no
+    state of the work in which a principle is registered under a
+    name the standard forbids.
+
+    A citation the registry does not declare is an
+    `OBSERVATION`. It was a `WARNING` for four hours, and it
+    fired on the commit that qualified this entry's own family —
+    the register recorded a decision to create `FDN-P-015` and
+    `ENG-P-007` before the rows existed, and `clean: False`
+    forbade recording the decision before its consequence.
+
+    That is the same asymmetry `reference-integrity` was given
+    `OBSERVATION` for on 2026-08-23: a document may legitimately
+    cite one being written, and a heritage whose method is
+    *decide, record, then execute* must be able to commit the
+    middle step. The occurrence OS-005 was opened for — a
+    citation of `OPS-004` left behind by the renumbering — is
+    still published at every projection, which is what would
+    have caught it a day earlier.
     """
 
     @property
@@ -214,7 +234,7 @@ class PrincipleIdentifierCheck(IntegrityCheck):
             findings.append(
                 IntegrityFinding(
                     check=self.name,
-                    severity=IntegritySeverity.WARNING,
+                    severity=IntegritySeverity.OBSERVATION,
                     summary=(
                         f"{len(unregistered)} cited principle(s) "
                         f"are declared by no row of {REGISTRY}"

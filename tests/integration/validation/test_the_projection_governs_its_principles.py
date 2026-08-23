@@ -1,3 +1,4 @@
+from aistack.contracts.integrity_finding import IntegritySeverity
 from aistack.integrity.checks.principle_identifiers import (
     PrincipleIdentifierCheck,
     cited_identifiers,
@@ -15,11 +16,42 @@ def test_every_principle_carries_the_governed_form(projection):
     The renumbering of 2026-08-21 missed the Operations family —
     four principles and one citation — and the gap survived a day
     because nothing read the registry. GOV-0002/OS-005.
+
+    **Only the WARNING half is asserted empty.** A citation the
+    registry does not declare is an OBSERVATION, precisely so
+    that the register can record a decision to create a principle
+    before the row exists. Requiring silence there would make
+    this test forbid the method it documents.
     """
 
-    findings = PrincipleIdentifierCheck().evaluate(projection)
+    findings = [
+        finding
+        for finding in PrincipleIdentifierCheck().evaluate(projection)
+        if finding.severity is IntegritySeverity.WARNING
+    ]
 
     assert findings == [], [f.subjects for f in findings]
+
+
+def test_a_forward_citation_is_observed_and_not_silent(projection):
+    """
+    The other half, and it must not be asserted empty either way.
+
+    A citation the registry does not declare is a real fact about
+    the heritage — it is what the missed Operations family looked
+    like — so it is published at every projection whether or not
+    it is deliberate. This test states that the observation
+    reaches the report at all, since a check downgraded to
+    OBSERVATION and then quietly dropped would be
+    indistinguishable from one that was never written.
+    """
+
+    published = PrincipleIdentifierCheck().evaluate(projection)
+
+    assert all(
+        finding.severity is IntegritySeverity.OBSERVATION
+        for finding in published
+    )
 
 
 def test_the_projection_carries_the_registry(projection):

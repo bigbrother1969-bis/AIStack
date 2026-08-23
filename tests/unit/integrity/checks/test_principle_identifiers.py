@@ -169,7 +169,7 @@ def test_the_wrong_number_of_digits_is_reported():
     assert findings[0].subjects == ("FDN-P-0001", "FDN-P-1")
 
 
-def test_the_finding_is_a_warning():
+def test_a_malformed_registered_identifier_is_a_warning():
     """
     The form is decided and the registry is one table. No state
     of the work has a principle registered under a name the
@@ -234,13 +234,36 @@ def test_the_citation_finding_names_every_artifact_that_wrote_it():
     )
 
 
+def test_an_unregistered_citation_is_an_observation():
+    """
+    It was a WARNING for four hours on 2026-08-23, and it fired
+    on the commit qualifying OS-005's own family: the register
+    recorded a decision to create `FDN-P-015` and `ENG-P-007`
+    before the rows existed, and `clean: False` forbade
+    recording a decision before its consequence.
+
+    Same asymmetry as `reference-integrity`. A heritage whose
+    method is *decide, record, then execute* has to be able to
+    commit the middle step. The occurrence OS-005 was opened for
+    is still published at every projection, which is what would
+    have caught it a day earlier.
+    """
+
+    findings = evaluate(
+        registry("FDN-P-005"),
+        artifact("STD-0300", "Per OPS-P-004, observe first.\n"),
+    )
+
+    assert findings[0].severity is IntegritySeverity.OBSERVATION
+
+
 def test_the_two_kinds_are_reported_as_two_findings():
     """
     A malformed row and an unresolvable citation are different
     questions — one is a registry that names a principle wrongly,
     the other a heritage that invokes a principle nobody
     registered. Reporting them as one number would let them read
-    identically.
+    identically, and they do not even carry the same severity.
     """
 
     findings = evaluate(
@@ -249,7 +272,10 @@ def test_the_two_kinds_are_reported_as_two_findings():
     )
 
     assert len(findings) == 2
-    assert {f.severity for f in findings} == {IntegritySeverity.WARNING}
+    assert [f.severity for f in findings] == [
+        IntegritySeverity.WARNING,
+        IntegritySeverity.OBSERVATION,
+    ]
 
 
 def test_a_malformed_row_declares_nothing_and_its_citations_are_reported():

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.24
+  version: 1.25
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -741,6 +741,46 @@ identifier and no reference.
 that check was the plan; measuring first showed it would accuse 25 of the 65
 artifacts, so the rule has to be settled before it can be enforced.
 **Qualification** none required; a rename of the file, not of the identifier.
+
+#### GOV-0002/OS-026 — Sourcing the declared environment twice declares it twice
+
+**Nature** `defect` · **Opened** 2026-08-23 · **State** resolved 2026-08-23 by making both files idempotent
+**Observed** `bin/aistack_env.sh` prepended the two source roots to
+`PYTHONPATH` without checking whether they were already there, so every
+source added them again. Six copies of each were visible in one working
+session:
+
+```
+PYTHONPATH : .../src:...:.../src:...:.../src:...:.../src:...:.../src:...:.../src:...
+```
+
+`scripts/dev-env.sh` did the same with `.venv/bin` on `PATH`.
+
+**It was found because ENG-TEST-0002 v2.2 made `scripts/dev-env.sh` the
+governed command**, and that file prints `PYTHONPATH`. The report the
+principle started naming an hour earlier is what exposed it — the instrument
+found the defect on its first governed run, which is the argument for having
+the environment describe itself out loud.
+
+Harmless to imports: Python resolves the first match and duplicates only cost
+a scan. Not harmless to the promise. ENG-TEST-0002 is C3 and asks for
+*deterministic execution*, and a variable whose value depends on how many
+times you sourced the source of truth is not deterministic. It also made the
+only report of what is in use unreadable.
+**Resolved 2026-08-23.** Both files remove their own previous entries before
+prepending, so a shell already polluted is repaired by sourcing the file
+again rather than by opening a new one.
+
+Three tests run a real shell rather than reasoning about the files — a test
+that read them would have agreed with their author. Three mutations were
+applied; the second survived the first pass, because every run started from
+an empty `PYTHONPATH` and de-duplication keeping the *first* occurrence was
+then indistinguishable from one keeping the last. The variable is now seeded
+before sourcing, and order is asserted: a developer with two checkouts who
+sources one then the other must import from the second.
+**Derivable** yes, and now derived
+**Qualification** none required; a variable that grows on re-source is not a
+judgement call.
 
 #### GOV-0002/OS-009 — `sync_mirrors.sh` stops at the first failing mirror
 

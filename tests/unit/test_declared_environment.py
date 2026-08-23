@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import subprocess
 
 
 ROOT = Path(__file__).parents[2]
@@ -105,3 +106,108 @@ def test_the_declaration_provides_nothing():
 
     assert ".venv" not in body
     assert "PATH=" not in body.replace("PYTHONPATH=", "")
+
+
+# --------------------------------------------------------------------
+# Sourcing twice leaves the same environment as sourcing once
+# --------------------------------------------------------------------
+
+
+def sourced_environment(
+    command: str,
+    variable: str,
+    times: int,
+    initial: str | None = None,
+) -> list[str]:
+    """
+    The value of `variable` after sourcing `command` `times` over.
+
+    Run in a real shell, because the defect is a shell defect. A
+    test that read the file and reasoned about it would have
+    agreed with the file's author.
+
+    `initial` seeds the variable before the first source. Without
+    it every run starts from an empty `PYTHONPATH`, and de-
+    duplication that kept the first occurrence rather than the
+    last is indistinguishable from one that kept the last — found
+    by mutation, on the assertion written to catch exactly that.
+    """
+
+    script = (
+        "".join(f"source {command} >/dev/null 2>&1; " for _ in range(times))
+        + f'printf "%s" "${variable}"'
+    )
+
+    environment = {"PATH": "/usr/bin:/bin", "HOME": str(ROOT)}
+
+    if initial is not None:
+        environment[variable] = initial
+
+    result = subprocess.run(
+        ["bash", "-c", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+        env=environment,
+    )
+
+    return [entry for entry in result.stdout.split(":") if entry]
+
+
+def test_sourcing_the_declaration_twice_declares_the_roots_once():
+    """
+    It prepended unconditionally until 2026-08-23, so every source
+    added the two roots again — six copies of each were visible in
+    one working session.
+
+    Found because ENG-TEST-0002 v2.2 made `scripts/dev-env.sh` the
+    governed command and that file prints `PYTHONPATH`. The report
+    the principle now names is what exposed it.
+
+    Harmless to imports, and not harmless to the promise: this
+    principle is C3 and asks for *deterministic execution*. A
+    variable whose value depends on how many times you sourced the
+    source of truth is not deterministic. GOV-0002/OS-026.
+    """
+
+    once = sourced_environment("bin/aistack_env.sh", "PYTHONPATH", 1)
+    twice = sourced_environment("bin/aistack_env.sh", "PYTHONPATH", 2)
+
+    assert once == twice
+    assert len(once) == len(set(once))
+
+
+def test_sourcing_the_provider_twice_puts_the_venv_on_path_once():
+
+    once = sourced_environment(
+        "scripts/dev-env.sh", "PATH", 1, initial="/usr/bin:/bin"
+    )
+    thrice = sourced_environment(
+        "scripts/dev-env.sh", "PATH", 3, initial="/usr/bin:/bin"
+    )
+
+    assert once == thrice
+
+    venv = str(ROOT / ".venv" / "bin")
+
+    assert once.count(venv) <= 1
+
+
+def test_the_declared_roots_come_first_and_stay_first():
+    """
+    Order is the half that matters. A developer with two checkouts
+    who sources one then the other must import from the second,
+    and de-duplication that kept the *first* occurrence would give
+    them the first.
+    """
+
+    entries = sourced_environment(
+        "bin/aistack_env.sh",
+        "PYTHONPATH",
+        2,
+        initial="/somewhere/else",
+    )
+
+    assert entries[:2] == [str(ROOT / "src"), str(ROOT)]
+    assert "/somewhere/else" in entries

@@ -27,7 +27,27 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 source "${PROJECT_ROOT}/bin/aistack_env.sh" || return 1
 
-export PATH="${PROJECT_ROOT}/.venv/bin:${PATH}"
+# Idempotent for the same reason `bin/aistack_env.sh` is: this
+# file is sourced, often more than once in a session, and a PATH
+# that grows each time is not a described environment.
+_aistack_venv="${PROJECT_ROOT}/.venv/bin"
+_aistack_kept=""
+_aistack_ifs="$IFS"
+IFS=':'
+
+for _aistack_entry in ${PATH:-}; do
+
+    [ -z "$_aistack_entry" ] && continue
+    [ "$_aistack_entry" = "$_aistack_venv" ] && continue
+
+    _aistack_kept="${_aistack_kept:+$_aistack_kept:}$_aistack_entry"
+done
+
+IFS="$_aistack_ifs"
+
+export PATH="${_aistack_venv}${_aistack_kept:+:$_aistack_kept}"
+
+unset _aistack_venv _aistack_kept _aistack_entry _aistack_ifs
 
 echo "AIStack development environment activated."
 echo "Python     : $(command -v python)"

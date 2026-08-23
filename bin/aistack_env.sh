@@ -41,7 +41,43 @@ export AISTACK_REPO_ROOT="${AISTACK_REPO_ROOT:-$(cd "$AISTACK_ENV_DIR/.." && pwd
 # `PYTHONPATH=src` by hand and why `scripts/dev-env.sh` exported
 # a third, different value. The environment had three
 # declarations and the governed one covered half the tree.
-export PYTHONPATH="$AISTACK_REPO_ROOT/src:$AISTACK_REPO_ROOT:${PYTHONPATH:-}"
+# Sourcing this file twice must leave the same environment as
+# sourcing it once.
+#
+# It prepended unconditionally until 2026-08-23, so every source
+# added the two roots again. Six copies of each were visible in
+# one working session — found because ENG-TEST-0002 v2.2 made
+# `scripts/dev-env.sh` the governed command, and that file prints
+# `PYTHONPATH`. The report the principle now names is what
+# exposed it.
+#
+# Harmless to imports and not harmless to the promise:
+# ENG-TEST-0002 is C3 and asks for *deterministic execution*, and
+# a variable whose value depends on how many times you sourced
+# the source of truth is not deterministic. It also made the
+# report unreadable, which defeats the only instrument that says
+# what is in use.
+#
+# Previous entries are removed rather than skipped, so that a
+# shell already polluted is repaired by sourcing the file again.
+_aistack_kept=""
+_aistack_ifs="$IFS"
+IFS=':'
+
+for _aistack_entry in ${PYTHONPATH:-}; do
+
+    [ -z "$_aistack_entry" ] && continue
+    [ "$_aistack_entry" = "$AISTACK_REPO_ROOT/src" ] && continue
+    [ "$_aistack_entry" = "$AISTACK_REPO_ROOT" ] && continue
+
+    _aistack_kept="${_aistack_kept:+$_aistack_kept:}$_aistack_entry"
+done
+
+IFS="$_aistack_ifs"
+
+export PYTHONPATH="$AISTACK_REPO_ROOT/src:$AISTACK_REPO_ROOT${_aistack_kept:+:$_aistack_kept}"
+
+unset _aistack_kept _aistack_entry _aistack_ifs
 
 cd "$AISTACK_REPO_ROOT" || return 1
 

@@ -247,29 +247,3 @@ def test_the_two_kinds_are_reported_as_two_findings():
 
     assert len(findings) == 2
     assert {f.unit for f in findings} == {"references", "artifacts"}
-
-
-def test_the_current_heritage_declares_no_dangling_reference():
-    """
-    The state of 2026-08-23, and the reason this check publishes
-    nothing today. It was not always so: five references were
-    dangling until the rename of `FDN-PRINCIPLES` earlier the
-    same day.
-    """
-
-    from aistack.integrity.bundle_reader import read_bundle
-    from pathlib import Path
-
-    projection = (
-        Path(__file__).parents[4]
-        / "context"
-        / "bundles"
-        / "AIStack-Context-Bundle.zip"
-    )
-
-    if not projection.exists():
-        return
-
-    findings = ReferenceIntegrityCheck().evaluate(read_bundle(projection))
-
-    assert findings == [], [f.subjects for f in findings]

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.10
+  version: 1.11
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -345,6 +345,43 @@ writing now that the surface is reduced.
 ---
 
 # Decisions
+
+#### GOV-0002/OS-022 — Parallel experimentation is a practice nothing declares
+
+**Nature** `decision` · **Opened** 2026-08-23 · **State** open
+**Observed** The owner runs proof-of-concept work outside this repository and
+integrates it when it is ready. Two instances exist, and both produced a
+governed decision **after** the fact rather than under a rule:
+
+- the **ancestor**, `/srv/aistack`, qualified by ADR-0009 on 2026-08-22 as
+  *an initial experimenter*, whose four log signatures became `OPS-0001`;
+- **QUAL-0001**, in `/srv/aistack/ollama/governed-llm/`, a 64-test campaign
+  qualifying local LLMs against four levels of governed context. Technically
+  complete, `Human evaluation pending`, and cited by no artifact here.
+
+The practice is deliberate and it works. What is undeclared is the practice
+itself: nothing in the heritage says that an experimentation space exists
+outside the projection, how a POC enters it, what makes one integrable, or
+who decides. `docs/99-meta/roadmap/` holds intentions and is explicitly not
+this.
+
+The cost is visible in how both cases were handled. Each required an
+architecture decision written from scratch, and the second one — a campaign
+that measures a founding principle, since QUAL-0001/P005 shows a model
+asserting that AI is the source of truth, which GOV-P-001 forbids — is
+currently reachable only by someone who knows the directory exists.
+
+*An earlier version of this entry read that knowledge "keeps being born
+outside the repository", as if by accident. The owner corrected it: the
+experiments are parallel by design. The defect is not the practice, it is
+that the practice is undeclared.*
+**Derivable** no
+**Qualification** `unknown`. Whether two cases warrant a rule is the owner's
+call; GOV-P-001 forbids the agent writing a governance rule from its own
+reading. What a rule would have to settle, if one is written: where a POC
+lives, what states it passes through, what makes it integrable, and whether
+an unfinished campaign — QUAL-0001 today — is citable by the heritage before
+its evaluation is complete.
 
 #### GOV-0002/OS-013 — The ancestor's relation to the heritage is undecided
 

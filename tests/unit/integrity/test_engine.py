@@ -87,4 +87,5 @@ def test_default_composition_is_stable():
         "duplicate-titles",
         "transport-residue",
         "contract-debt",
+        "reference-integrity",
     ]

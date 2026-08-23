@@ -22,6 +22,9 @@ from aistack.integrity.checks.metadata_completeness import (
 from aistack.integrity.checks.projection_fidelity import (
     ProjectionFidelityCheck,
 )
+from aistack.integrity.checks.reference_integrity import (
+    ReferenceIntegrityCheck,
+)
 from aistack.integrity.checks.structural_integrity import (
     StructuralIntegrityCheck,
 )
@@ -41,6 +44,7 @@ def default_checks() -> list[IntegrityCheck]:
         DuplicateTitleCheck(),
         TransportResidueCheck(),
         ContractDebtCheck(),
+        ReferenceIntegrityCheck(),
     ]
 
 

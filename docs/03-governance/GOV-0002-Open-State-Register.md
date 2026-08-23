@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -195,33 +195,38 @@ second was deliberately not registered.
 **Qualification** `unknown` — reword `ARC-P-005` to absorb the fuller
 statement, or keep both levels deliberately.
 
-#### GOV-0002/OS-020 — A declared reference is checked against nothing
+#### GOV-0002/OS-021 — The projection loses the governed identifier
 
 **Nature** `contract-debt` · **Opened** 2026-08-23 · **State** open
-**Observed** Every artifact may declare `relations: references:`. Measured
-2026-08-23 across the 64 artifacts carrying a declared `id`: **21 distinct
-identifiers are cited, and one designated nothing** —
-`PRINCIPLES-REGISTRY`, cited five times while the registry's identifier was
-`FDN-PRINCIPLES`. The five were the Manifesto, FDN-0009, FDN-0010, FDN-0011
-and STD-0300; four of the five are C3.
+**Observed** `MarkdownArtifactBuilder` sets `id=discovery.content_hash`, so
+every artifact in the bundle is keyed by a SHA-256 and **`FDN-0003` appears
+nowhere in the model**. It survives only inside the `content` string, as
+text in the frontmatter, alongside the prose.
 
-They were corrected on 2026-08-23 with the rename of OS-006, so the count is
-zero today. **What is not corrected is that nothing measures it.** No
-integrity check compares the set of cited identifiers against the set of
-declared ones, so the next broken reference will be as invisible as these
-five were — and a reference is how the heritage says two artifacts belong
-together.
+The same hash is also written to `metadata["content_hash"]`, so the value is
+carried twice and the field named `id` holds neither an identity the heritage
+declares nor a name anyone cites.
 
-The measurement is one pass over the bundle and needs no new input: both
-sets are already in the projection.
-**Derivable** yes — trivially, and unlike OS-004 or OS-005 the data is
-already in the bundle the checks receive
-**Qualification** `unknown` on one point only: the severity. A reference to
-an artifact that does not exist is arguably a `WARNING` rather than an
-`OBSERVATION`, since unlike an orphan contract it is not a prescribed order
-— nothing in the heritage says a reference may point ahead of its target. A
-`WARNING` would make `clean: False` until it is fixed, which is what
-criterion 2.6 is for.
+Measured 2026-08-23: a check comparing declared references against
+`artifact.id` reports 85 dangling references on a heritage that has none.
+`reference-integrity` therefore parses the frontmatter to recover what the
+model dropped — a check re-deriving from prose what the pipeline had in its
+hands.
+
+The consequence for VS-2 is the sharp one. An agent handed the bundle cannot
+resolve *"what does FDN-0003 say"* without parsing 65 frontmatter blocks,
+and the contract `KnowledgeArtifact` documents every field except this one:
+`id: str` carries no comment, where `declared_type`, `domain` and the rest
+carry paragraphs.
+**Derivable** yes — comparing `artifact.id` against the frontmatter `id` is
+one pass over the bundle
+**Qualification** `unknown`. Three readings. Add a `declared_id` field, which
+is additive and leaves the hash where it is. Set `id` to the governed
+identifier and move the hash to `metadata` alone, which is the honest naming
+and touches `duplicate-titles`, `projection-fidelity` and the reader. Or
+declare that a bundle artifact is identified by content and that governed
+identity is deliberately prose — defensible, but then `reference-integrity`
+is parsing text forever and VS-2 inherits that.
 
 #### GOV-0002/OS-004 — `type` → `domain` is stated and enforced by nothing
 
@@ -472,6 +477,43 @@ usable index — `ß` folds to `ss` — so `match_at` is `None` and the extract
 falls back to the start of the line. Centring on an index computed against a
 string no container printed would be worse than not centring at all.
 **Derivable** no
+**Qualification** none required; the decision was taken 2026-08-23.
+
+#### GOV-0002/OS-020 — A declared reference is checked against nothing
+
+**Nature** `contract-debt` · **Opened** 2026-08-23 · **State** resolved 2026-08-23 by `reference-integrity`
+**Observed** Every artifact may declare `relations: references:`. Measured
+2026-08-23 across the 64 artifacts carrying a declared `id`: **21 distinct
+identifiers are cited, and one designated nothing** —
+`PRINCIPLES-REGISTRY`, cited five times while the registry's identifier was
+`FDN-PRINCIPLES`. The five were the Manifesto, FDN-0009, FDN-0010, FDN-0011
+and STD-0300; four of the five are C3.
+
+They were corrected on 2026-08-23 with the rename of OS-006, so the count is
+zero today. **What is not corrected is that nothing measures it.** No
+integrity check compares the set of cited identifiers against the set of
+declared ones, so the next broken reference will be as invisible as these
+five were — and a reference is how the heritage says two artifacts belong
+together.
+
+The measurement is one pass over the bundle and needs no new input: both
+sets are already in the projection.
+**Resolved 2026-08-23** by the `reference-integrity` check, the ninth.
+The owner chose `OBSERVATION`: a `WARNING` would make `clean: False` and
+fail STD-0300 criterion 2.6 until every reference resolves, which would also
+forbid committing an artifact that cites a document being written.
+
+Two facts are published separately rather than summed. A dangling reference
+is a statement that is wrong; an unreadable frontmatter is a statement
+nobody could read, and reporting them together would let *no broken
+references* and *nobody could tell* read identically.
+
+**Writing it exposed OS-021.** A first version compared references against
+`KnowledgeArtifact.id` and reported **85 dangling references** on a heritage
+that has none — `FDN-0003` among them, cited twelve times. The bundle keys
+its artifacts by content hash, so the governed identifier is not in the
+model at all, and the check now reads it from the frontmatter.
+**Derivable** yes — the check does it at every projection
 **Qualification** none required; the decision was taken 2026-08-23.
 
 #### GOV-0002/OS-011 — `aistack-core:0.1.0` carries bytecode the heritage does not know about

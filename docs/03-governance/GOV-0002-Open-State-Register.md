@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.16
+  version: 1.17
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -246,10 +246,6 @@ it named.*
 
 # Non-conforming instances
 
----
-
-# Defects
-
 #### GOV-0002/OS-024 — A principle sits in FDN-0012 with no identifier and no row
 
 **Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
@@ -324,23 +320,15 @@ is not governed at all and that `id` carries identity — which is defensible
 now that the projection is keyed on `id` (OS-021), and which would retire
 the rule rather than enforce it.
 
-#### GOV-0002/OS-009 — `sync_mirrors.sh` stops at the first failing mirror
+---
 
-**Nature** `defect` · **Opened** 2026-08-21 · **State** open
-**Observed** On 2026-08-21 GitHub rate-limited the SPOT host and `set -e`
-ended the run. Codeberg was reachable and was never published. One mirror is
-not a dependency of another.
-**Derivable** no
-**Qualification** none required.
+# Defects
 
-#### GOV-0002/OS-010 — `sync_mirrors.sh` pulls its own new version mid-run
+None open. OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
+were resolved on 2026-08-23 and are in *Resolved*.
 
-**Nature** `defect` · **Opened** 2026-08-21 · **State** open
-**Observed** The run that delivered the script's own improvement printed the
-old message: bash had already read the old file. Harmless at this size; on a
-larger file the shell can resume at a shifted byte offset.
-**Derivable** no
-**Qualification** none required.
+An empty section is kept rather than removed: a register with no defects
+section could not be told from one that never looked for any.
 
 ---
 
@@ -348,9 +336,10 @@ larger file the shell can resume at a shifted byte offset.
 
 None open. The only entry of this nature, OS-011, is in *Resolved*.
 
-An empty section is kept rather than removed: it states that this heritage
-publishes artifacts and currently has none in a doubtful state, which is not
-the same as a register that never thought to look.
+An empty section is kept rather than removed, for the same reason as
+*Defects*: it states that this heritage publishes artifacts and currently
+has none in a doubtful state, which is not the same as a register that never
+thought to look.
 
 ---
 
@@ -545,6 +534,52 @@ identifier and no reference.
 that check was the plan; measuring first showed it would accuse 25 of the 65
 artifacts, so the rule has to be settled before it can be enforced.
 **Qualification** none required; a rename of the file, not of the identifier.
+
+#### GOV-0002/OS-009 — `sync_mirrors.sh` stops at the first failing mirror
+
+**Nature** `defect` · **Opened** 2026-08-21 · **State** resolved 2026-08-23 by publishing every mirror independently
+**Observed** On 2026-08-21 GitHub rate-limited the SPOT host and `set -e`
+ended the run. Codeberg was reachable and was never published. One mirror is
+not a dependency of another.
+**Resolved 2026-08-23.** The mirrors are a list, each attempted whatever the
+others did, and every failure is named at the end. The run still fails — a
+partial synchronization must not look complete to whatever reads the exit
+code — but it fails *after* having done everything it could do.
+
+Writing the fix produced a second defect that was not in the entry. Calling
+`publish` inside an `if` suspends `set -e` for everything it calls, so a
+failed `git push` no longer ended the function: it fell through to the lines
+that count commits and announced a publication that had not happened. Every
+failure now returns rather than raises, and a test watches for the
+announcement.
+
+`tests/integration/scripts/test_sync_mirrors.py` builds a SPOT, a clone and
+two mirrors as real repositories under `tmp_path`, and breaks one by pointing
+its URL at nothing — which is what a rate-limited host looks like from the
+laptop. Three of its ten tests fail against the version this replaces; the
+other seven are controls, and the entry says so rather than claiming ten.
+**Derivable** no
+**Qualification** none required.
+
+#### GOV-0002/OS-010 — `sync_mirrors.sh` pulls its own new version mid-run
+
+**Nature** `defect` · **Opened** 2026-08-21 · **State** resolved 2026-08-23 by parsing the whole file before running any of it
+**Observed** The run that delivered the script's own improvement printed the
+old message: bash had already read the old file. Harmless at this size; on a
+larger file the shell can resume at a shifted byte offset.
+**Resolved 2026-08-23.** Everything the script does now lives inside `main`,
+invoked on the last line as `main "$@"; exit $?` — both commands on one line,
+so that even if `main` ever returned instead of exiting, the `exit` is
+already parsed and bash reads no further byte of a file the pull may have
+replaced.
+
+**The dangerous case is not reproducible at this size**, and the test says so
+instead of pretending to observe it: bash reads a file this small in one
+chunk. What is observed is that a pull which rewrites the script does not
+change the running process, and that the structural guard is present — a
+guard nothing watches is removed by the next person who finds it odd.
+**Derivable** no
+**Qualification** none required.
 
 #### GOV-0002/OS-016 — An evidence extract can omit the pattern that fired the rule
 

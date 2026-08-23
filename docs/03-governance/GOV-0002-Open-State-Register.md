@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.21
+  version: 1.22
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -253,26 +253,6 @@ force today without being declared:
   This is what happens today. Choosing it would mean writing it down, so that
   the next person to run the governed command on a bare shell learns it from
   an artifact rather than from a red test.
-
-#### GOV-0002/OS-003 — `ARC-P-005` and FDN-0011's second principle state one rule twice
-
-**Nature** `contract-debt` · **Opened** 2026-08-21 · **State** open
-**Observed** `ARC-P-005` reads *contracts before implementations*. FDN-0011's
-second principle, *Contract First Engineering*, says the primary deliverable
-of engineering is a governed set of contracts. The same rule at two
-altitudes. Recorded in FDN-0012 v2.1 rather than resolved, and the
-second was deliberately not registered.
-**Derivable** no
-**Qualification** **decided 2026-08-23 by the owner.** **Both levels are
-kept, deliberately.** `ARC-P-005` states the architectural rule; FDN-0011's
-second principle states the founding one. They are not a duplicated
-formulation but one rule at two altitudes, and collapsing them would lose the
-altitude.
-
-The consequence is that the second stops being unregistered: it enters
-FDN-0012 as `FDN-P-015`, so that a reader does not take it for a principle
-someone forgot, and so that `principle-identifiers` counts it like the
-others.
 
 #### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
 
@@ -616,6 +596,46 @@ boundary, so a later reader who completes the rule to `semantic_type` and
 artifacts.
 **Derivable** yes — a check comparing declared types across the bundle
 **Qualification** none required; the rule is decided.
+
+#### GOV-0002/OS-003 — `ARC-P-005` and FDN-0011's second principle state one rule twice
+
+**Nature** `contract-debt` · **Opened** 2026-08-21 · **State** resolved 2026-08-23 by registering `FDN-P-015`
+**Observed** `ARC-P-005` reads *contracts before implementations*. FDN-0011's
+second principle, *Contract First Engineering*, says the primary deliverable
+of engineering is a governed set of contracts. The same rule at two
+altitudes. Recorded in FDN-0012 v2.1 rather than resolved, and the
+second was deliberately not registered.
+**Derivable** no
+**Qualification** **decided 2026-08-23 by the owner.** **Both levels are
+kept, deliberately.** `ARC-P-005` states the architectural rule; FDN-0011's
+second principle states the founding one. They are not a duplicated
+formulation but one rule at two altitudes, and collapsing them would lose the
+altitude.
+
+The consequence is that the second stops being unregistered: it enters
+FDN-0012 as `FDN-P-015`, so that a reader does not take it for a principle
+someone forgot, and so that `principle-identifiers` counts it like the
+others.
+
+**Resolved 2026-08-23.** `FDN-P-015 — The primary deliverable of engineering
+is a governed set of contracts` is in the Foundation table. The count goes
+from 50 to 51 and the register's last forward citation is gone.
+
+**It required overturning a claim in a C3 artifact, and that is recorded
+where the claim stood.** FDN-0012 v2.1 stated that registering both would
+give one rule two SPOTs, *which FDN-P-005 forbids*. The owner was shown that
+sentence before deciding — it had not been put in front of him when the
+choice was first prepared, which is the defect in how the choice was
+prepared, not in the choice.
+
+The argument rested on holding the two for one knowledge item. They are held
+to be two: `ARC-P-005` states an ordering, `FDN-P-015` states what
+engineering delivers. The second implies the first and is not the first. The
+v2.1 paragraph is rewritten rather than deleted, and quotes itself verbatim
+before saying what replaced it.
+
+What v2.1 was right about, and what stands: a principle restated in two
+registered rows would be a duplicate. That is not what these are.
 
 #### GOV-0002/OS-024 — A principle sits in FDN-0012 with no identifier and no row
 

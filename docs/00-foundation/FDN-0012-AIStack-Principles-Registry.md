@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 2.4
+  version: 2.5
   status: Draft
   owner: Foundation
   created: 2026-07-24
@@ -21,6 +21,24 @@ relations:
 ---
 
 # AIStack Principles Registry
+
+## Provenance of version 2.5
+
+`FDN-P-015 — The primary deliverable of engineering is a governed set of
+contracts` was registered on 2026-08-23, reversing the decision recorded in
+version 2.1 not to register it.
+
+It had been stated in FDN-0011 since that document was engraved on 2026-08-21
+and registered nowhere — the same condition `FDN-P-014` was in until the same
+day, and the same condition `ENG-P-007` was in until version 2.4. Three
+principles of one document, none of them countable, none of them citable.
+
+The provenance of version 2.1 is rewritten above rather than removed. It
+argued that registering both would give one rule two SPOTs. That argument
+rested on holding `ARC-P-005` and this principle for one knowledge item; they
+are held to be two, and the reasoning is set out where the old text stood.
+
+GOV-0002/OS-003.
 
 ## Provenance of version 2.4
 
@@ -83,13 +101,33 @@ rather than opinion. The acceptance criteria were governed; the principle
 they rest on was not.
 
 **FDN-0011's second principle — *Contract First Engineering* — was
-deliberately not registered here.** `ARC-P-005` already says *contracts
-before implementations*. The two are the same rule at different altitudes:
-one states the ordering, the other states why the ordering follows from
-what engineering delivers. Registering both would give one rule two SPOTs,
-which FDN-P-005 forbids and which this registry was cleaned of on the same
-day. Whether `ARC-P-005` should be reworded to absorb the fuller statement
-is an open question, recorded rather than settled.
+deliberately not registered here**, and that decision was reversed on
+2026-08-23. The paragraph is rewritten rather than deleted, because what it
+argued is the interesting part.
+
+It read: *"`ARC-P-005` already says contracts before implementations. The two
+are the same rule at different altitudes: one states the ordering, the other
+states why the ordering follows from what engineering delivers. Registering
+both would give one rule two SPOTs, which FDN-P-005 forbids and which this
+registry was cleaned of on the same day. Whether `ARC-P-005` should be
+reworded to absorb the fuller statement is an open question, recorded rather
+than settled."*
+
+That open question was recorded as GOV-0002/OS-003 and settled by the owner
+on 2026-08-23: **both levels are kept, and both are registered.** The second
+enters as `FDN-P-015`.
+
+The claim about FDN-P-005 rested on holding the two for one knowledge item.
+They are held to be two:
+
+- `ARC-P-005` — *contracts before implementations* — states an **ordering**;
+- `FDN-P-015` — *the primary deliverable of engineering is a governed set of
+  contracts* — states what engineering **delivers**.
+
+The second implies the first and is not the first. One SPOT each, and neither
+is a copy of the other. What v2.1 was right about, and what stands, is that a
+principle restated in two registered rows would be a duplicate; that is not
+what these are.
 
 ## Provenance of version 2.0
 
@@ -220,6 +258,7 @@ AIStack behavior:
 | FDN-P-012 | Every knowledge item is portable across tools, vendors, clouds and models | C3 |
 | FDN-P-013 | Historical knowledge is preserved through versions and relationships | C3 |
 | FDN-P-014 | Technical debt is a property of the contracts, not of the implementation | C3 |
+| FDN-P-015 | The primary deliverable of engineering is a governed set of contracts | C3 |
 
 ---
 

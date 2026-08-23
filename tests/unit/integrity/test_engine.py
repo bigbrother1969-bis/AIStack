@@ -85,6 +85,7 @@ def test_default_composition_is_stable():
         "knowledge-state",
         "classification-declaration",
         "classification-coherence",
+        "principle-identifiers",
         "duplicate-titles",
         "transport-residue",
         "contract-debt",

@@ -13,6 +13,30 @@ class KnowledgeDomain(str, Enum):
     KNOWLEDGE_ASSETS = "Knowledge Assets"
 
 
+DOMAIN_PREFIXES: dict[str, str] = {
+    "FDN": KnowledgeDomain.FOUNDATION.value,
+    "ARC": KnowledgeDomain.ARCHITECTURE.value,
+    "GOV": KnowledgeDomain.GOVERNANCE.value,
+    "STD": KnowledgeDomain.STANDARDS.value,
+    "ENG": KnowledgeDomain.ENGINEERING.value,
+    "OPS": KnowledgeDomain.OPERATIONS.value,
+}
+"""
+The three-letter prefix each domain uses in an identifier.
+
+STD-0102 governs the form `<DOMAIN>-P-NNN` for a principle. That
+form needs a closed set of domain prefixes, and until 2026-08-23
+the set existed only as the identifiers people had happened to
+write.
+
+`Knowledge Assets` is absent, and that is a fact about the
+heritage rather than an oversight: no principle has been
+registered in it, so no prefix has been decided. Inventing one
+here would be this module deciding a naming question, which
+GOV-P-001 places with the owner.
+"""
+
+
 class SemanticType(str, Enum):
     PRINCIPLE = "Principle"
     RULE = "Rule"

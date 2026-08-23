@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.14
+  version: 1.16
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -195,16 +195,6 @@ second was deliberately not registered.
 **Qualification** `unknown` — reword `ARC-P-005` to absorb the fuller
 statement, or keep both levels deliberately.
 
-#### GOV-0002/OS-005 — The `<DOMAIN>-P-NNN` convention is enforced by nothing
-
-**Nature** `contract-debt` · **Opened** 2026-08-21 · **State** open
-**Observed** STD-0102 v2.0 renumbered every principle to `<DOMAIN>-P-NNN`.
-Writing `FDN-006` in FDN-0012 tomorrow would pass every check.
-The renumbering itself missed the Operations family — four principles and one
-citation — and that gap survived a day undetected.
-**Derivable** yes — a check over the registry's identifiers
-**Qualification** none required; the convention is decided.
-
 #### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
 
 **Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
@@ -259,6 +249,40 @@ it named.*
 ---
 
 # Defects
+
+#### GOV-0002/OS-024 — A principle sits in FDN-0012 with no identifier and no row
+
+**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
+**Observed** Found while writing the `principle-identifiers` check, by reading
+what the registry contains rather than what its tables declare.
+
+Between the Engineering table and the Operations heading, FDN-0012 carries
+*Contracts Derive from Policies* — four screens declaring `Domain: Engineering`,
+`Criticality: C2 — Governed Principle`, the word **Principle**, a full statement,
+an engineering chain and its architectural consequences. It has no identifier and
+no row in any table.
+
+So it is a governed principle by every property it declares about itself, and it
+is invisible to everything that reads the registry: the 49 the check counts do
+not include it, nothing can cite it, and `FDN-P-014` — *technical debt is a
+property of the contracts* — sits in a table three screens above while its
+fuller statement sits outside one.
+
+It also carries the truncated sentence beginning *"Different"*, introduced
+already incomplete by `685bcc8` on 2026-08-01 and recorded as lost under
+FDN-0003 Article 12. Whatever is decided about the principle, that note travels
+with it.
+
+**Derivable** partly. That a heading declaring `Criticality:` and `Principle`
+carries no identifier is detectable. Whether a block of prose *is* a principle is
+not, and this one was found by reading.
+**Qualification** `unknown`. Three readings: give it the next `ENG-P` number and
+a row, which makes it citable and countable; fold it into `ARC-P-005`
+(*contracts before implementations*) and `FDN-P-014`, which is where its content
+already lives — GOV-0002/OS-003 records that those two overlap and was left
+open for the owner; or state that it is explanatory prose about the engineering
+chain rather than a principle, and strip the self-declaration that says
+otherwise.
 
 #### GOV-0002/OS-023 — `<ID>-<Title>.md` does not describe this heritage
 
@@ -449,6 +473,41 @@ describes one host, and this repository describes a product.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-005 — The `<DOMAIN>-P-NNN` convention is enforced by nothing
+
+**Nature** `contract-debt` · **Opened** 2026-08-21 · **State** resolved 2026-08-23 by `principle-identifiers`
+**Observed** STD-0102 v2.0 renumbered every principle to `<DOMAIN>-P-NNN`.
+Writing `FDN-006` in FDN-0012 tomorrow would pass every check.
+The renumbering itself missed the Operations family — four principles and one
+citation — and that gap survived a day undetected.
+**Resolved 2026-08-23.** Measured first: 49 principles across six domains,
+102 citations of them, all resolving. The `principle-identifiers` check reads
+the rows of FDN-0012 positionally rather than by pattern — a reader that
+collected cells *matching* the form would have found only conforming ones and
+reported `FDN-006` as absent rather than as wrong, which is the failure this
+entry describes.
+
+Two facts are published, because they are two questions: a registered
+identifier that does not carry the form, and a cited identifier no row
+declares. The second is what the missed Operations family would have been.
+
+**What the check deliberately does not do** is read prose for the old
+three-digit form. Fourteen occurrences remain in the heritage and every one is
+a quotation — FDN-0012 and STD-0102 both recount the renumbering and cannot do
+so without naming what they retired. A check over prose cannot tell a
+quotation from a live citation, and would report a heritage that documents its
+history as one that failed to migrate. That boundary is stated in STD-0102
+v2.2 rather than left to whoever next reads the check.
+
+The closed set of domain prefixes had no existence before this: it was
+whatever people had happened to write. It is now in
+`src/aistack/contracts/classification.py` beside the domain vocabulary.
+`Knowledge Assets` is absent from it, deliberately — no principle has been
+registered in that domain, so no prefix has been decided, and deciding one is
+the owner's under GOV-P-001.
+**Derivable** yes — a check over the registry's identifiers
+**Qualification** none required; the convention is decided.
 
 #### GOV-0002/OS-004 — `type` → `domain` is stated and enforced by nothing
 

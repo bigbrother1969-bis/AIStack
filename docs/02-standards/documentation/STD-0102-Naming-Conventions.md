@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 2.1
+  version: 2.2
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-22
+  updated: 2026-08-23
 
 relations:
   references:
@@ -223,6 +223,32 @@ Architecture keeps `ARC-P-NNN` for principles and `ARCH-NNNN`
 for documents. The two mechanisms differ because they were
 decided a day apart; both make the families unmistakable, which
 is what the standard requires.
+
+Since 2026-08-23 the form is derived rather than applied. The
+`principle-identifiers` check reads every row of FDN-0012 at each
+projection and reports any that does not carry
+`<DOMAIN>-P-NNN` — writing `FDN-006` into the registry would no
+longer pass — and it reports separately any principle the
+heritage cites that no row declares. The closed set of domain
+prefixes is contractualised in
+`src/aistack/contracts/classification.py` beside the domain
+vocabulary, for the same reason: one decision, and the
+projections of it must not drift apart.
+
+`Knowledge Assets` has no prefix. No principle has been
+registered in that domain, so none has been decided, and the
+check reports an identifier using one as malformed rather than
+inventing the answer.
+
+**The old three-digit form in prose is deliberately not
+checked.** Fourteen occurrences remain in the heritage, measured
+2026-08-23, every one of them a quotation: this section and
+FDN-0012 both recount the renumbering, and neither can do so
+without naming what it retired. A check over prose cannot tell a
+quotation from a live citation, and would report a heritage that
+documents its history as one that failed to migrate. What is
+checked instead is the registry itself and the citations that
+resolve against it — GOV-0002/OS-005.
 
 ## Identifiers never change
 

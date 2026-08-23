@@ -22,6 +22,9 @@ from aistack.integrity.checks.knowledge_state import (
 from aistack.integrity.checks.metadata_completeness import (
     MetadataCompletenessCheck,
 )
+from aistack.integrity.checks.principle_identifiers import (
+    PrincipleIdentifierCheck,
+)
 from aistack.integrity.checks.projection_fidelity import (
     ProjectionFidelityCheck,
 )
@@ -45,6 +48,7 @@ def default_checks() -> list[IntegrityCheck]:
         KnowledgeStateCheck(),
         ClassificationDeclarationCheck(),
         ClassificationCoherenceCheck(),
+        PrincipleIdentifierCheck(),
         DuplicateTitleCheck(),
         TransportResidueCheck(),
         ContractDebtCheck(),

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.18
+  version: 1.19
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -103,6 +103,20 @@ method working. The defect was that **nothing distinguished a live deferral
 from a discharged one**. Deleting resolved entries here would rebuild that
 same blindness.
 
+## Qualification is dated and attributed
+
+An entry's `Qualification` field carries either `unknown` or a decision, and a
+decision carries the date it was taken and who took it. GOV-P-001 puts that
+act with the owner: the register may measure a condition, and may lay out the
+readings, but it may not choose between them.
+
+**Ten entries were qualified on 2026-08-23**, in one pass — every entry then
+open. What each was decided *against* is kept in place, because a decision
+whose alternatives have been erased reads as the only thing anyone thought of.
+
+A qualified entry is not a resolved one. Six of the ten still carry work, and
+stay in their section until it is done.
+
 ## How an entry is written
 
 ```
@@ -177,11 +191,18 @@ live list; this one is a snapshot for reading, not the reference.
 
 **Derivable** yes — and it now is, at every projection. OS-002 was what
 stood in the way.
-**Qualification** `unknown`, and this is the half no tool will ever close.
-STD-P-002 makes a contract ahead of its implementation the prescribed order,
-not a defect. Which orphans are planned and which abandoned is the owner's
-judgement, entry by entry; the ten-strong `PackageCapability` family is
-likely one decision rather than ten.
+**Qualification** **decided 2026-08-23 by the owner, for ten of the twenty.**
+The `PackageCapability` family — the contract and its nine specialisations —
+is **planned, not abandoned**. STD-P-002 makes a contract ahead of its
+implementation the prescribed order, and this is that order. It stays in the
+package, and its ten orphans become qualified debt rather than unqualified.
+
+The other ten remain `unknown`, and this is the half no tool will ever close:
+`KnowledgeEngine`, `KnowledgeGenerator`, `KnowledgePolicy`,
+`KnowledgeRenderer`, `EvidenceCollector`, `DiscoveryProvider`,
+`KnowledgePipeline`, `KnowledgeProvider`, `kernel.execution.task.Task` and
+`TransferTarget`. The entry stays open for them, and the figure the check
+publishes does not change: twenty orphans, ten of them now answered for.
 
 #### GOV-0002/OS-003 — `ARC-P-005` and FDN-0011's second principle state one rule twice
 
@@ -192,8 +213,16 @@ of engineering is a governed set of contracts. The same rule at two
 altitudes. Recorded in FDN-0012 v2.1 rather than resolved, and the
 second was deliberately not registered.
 **Derivable** no
-**Qualification** `unknown` — reword `ARC-P-005` to absorb the fuller
-statement, or keep both levels deliberately.
+**Qualification** **decided 2026-08-23 by the owner.** **Both levels are
+kept, deliberately.** `ARC-P-005` states the architectural rule; FDN-0011's
+second principle states the founding one. They are not a duplicated
+formulation but one rule at two altitudes, and collapsing them would lose the
+altitude.
+
+The consequence is that the second stops being unregistered: it enters
+FDN-0012 as `FDN-P-015`, so that a reader does not take it for a principle
+someone forgot, and so that `principle-identifiers` counts it like the
+others.
 
 #### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
 
@@ -232,10 +261,19 @@ worse than it is, and a stale *"it does X"* makes it look better.
 **Derivable** partly. The temporal markers that hide a date — *today*,
 *currently*, *still*, *not yet*, *remains*, *for now* — are detectable by pattern.
 Whether the sentence carrying one is stale is not.
-**Qualification** `unknown`. STD-0100 v2.3 states the rule — an assertion about
-the code carries its date and its commit — and as of 2026-08-23 it is enforced by
-nothing and holds by being applied. Whether the pattern check is worth its false
-positives is the owner's call, and it was deliberately not taken on 2026-08-22.
+**Qualification** **decided 2026-08-23 by the owner.** **The pattern check is
+written, and it publishes `OBSERVATION`.**
+
+The markers that hide a date — *today*, *currently*, *still*, *not yet*,
+*remains*, *for now* — are listed at every projection. Whether a sentence
+carrying one has gone stale stays a reading, so the check states where to look
+and never says `clean: False`. A `WARNING` would fail on the historical
+quotations this heritage keeps on purpose, which is the trap
+`principle-identifiers` avoided the same day by refusing to read prose for the
+retired three-digit form.
+
+Six occurrences in two days is the argument. A false positive costs a reading
+here; a stale sentence costs a decision taken on it.
 
 *This paragraph read "like the `type` → `domain` rule of OS-004, it is enforced by
 nothing" until 2026-08-23, when OS-004 was closed. A fifth occurrence of the shape
@@ -272,13 +310,15 @@ with it.
 **Derivable** partly. That a heading declaring `Criticality:` and `Principle`
 carries no identifier is detectable. Whether a block of prose *is* a principle is
 not, and this one was found by reading.
-**Qualification** `unknown`. Three readings: give it the next `ENG-P` number and
-a row, which makes it citable and countable; fold it into `ARC-P-005`
-(*contracts before implementations*) and `FDN-P-014`, which is where its content
-already lives — GOV-0002/OS-003 records that those two overlap and was left
-open for the owner; or state that it is explanatory prose about the engineering
-chain rather than a principle, and strip the self-declaration that says
-otherwise.
+**Qualification** **decided 2026-08-23 by the owner.** **It becomes
+`ENG-P-007`, with a row.** It is what the block already declares itself to be;
+registering it only makes that legible to everything that reads the registry.
+It becomes citable, the count goes from 49 to 50, and `principle-identifiers`
+verifies it like the others.
+
+The truncated sentence beginning *"Different"* travels with it, still recorded
+as lost under FDN-0003 Article 12 rather than quietly dropped by the
+registration.
 
 #### GOV-0002/OS-023 — `<ID>-<Title>.md` does not describe this heritage
 
@@ -312,13 +352,17 @@ before measuring. Measuring first is what turned a one-line check into a
 governance question.*
 **Derivable** yes — comparing `source` against `id` and `title` is one pass
 over the bundle, and it is written the moment the rule is settled
-**Qualification** `unknown`. The rule cannot be enforced until it describes
-what it governs. Three readings: narrow the rule to the artifacts it fits
-and name the families that follow other conventions; rename 25 files, which
-touches no identifier but a great deal of prose; or state that the filename
-is not governed at all and that `id` carries identity — which is defensible
-now that the projection is keyed on `id` (OS-021), and which would retire
-the rule rather than enforce it.
+**Qualification** **decided 2026-08-23 by the owner.** **The rule is
+retired.** `<ID>-<Title>.md` stops being governed. Since OS-021 the projection
+is keyed on `id`, so a filename carries no identity and the constraint had
+become decorative. STD-0102 is amended, no `filename-conformance` check is
+written, and no file is renamed.
+
+OS-006 and OS-007 stay resolved, and were not mistakes. A file whose name
+contradicted its declared title was worth fixing while the name was what a
+reader had. What is retired is the rule that turned those two into a
+permanent obligation over 25 artifacts following other conventions on
+purpose.
 
 ---
 
@@ -355,8 +399,15 @@ containers including WordPress. Mitigated the same day: bound to
 `127.0.0.1:8010`, removed from `proxy`, verified unreachable by name from
 another container. **The API itself is unchanged.**
 **Derivable** no
-**Qualification** `unknown` — add authentication, or accept the exposure in
-writing now that the surface is reduced.
+**Qualification** **decided 2026-08-23 by the owner.** Neither authenticate
+nor accept: **retire the component.** ADR-0009 already decides the migration
+of `aistack-backend`'s function, and authenticating something scheduled for
+removal is work thrown away.
+
+The remainder of ADR-0009 therefore becomes the priority, and this entry
+closes when the surface disappears rather than when it is defended. It stays
+open until then; the mitigation of 2026-08-21 holds meanwhile — bound to
+`127.0.0.1:8010`, off the `proxy` network.
 
 ---
 
@@ -392,12 +443,16 @@ outside the repository", as if by accident. The owner corrected it: the
 experiments are parallel by design. The defect is not the practice, it is
 that the practice is undeclared.*
 **Derivable** no
-**Qualification** `unknown`. Whether two cases warrant a rule is the owner's
-call; GOV-P-001 forbids the agent writing a governance rule from its own
-reading. What a rule would have to settle, if one is written: where a POC
-lives, what states it passes through, what makes it integrable, and whether
-an unfinished campaign — QUAL-0001 today — is citable by the heritage before
-its evaluation is complete.
+**Qualification** **decided 2026-08-23 by the owner.** **A section in
+FDN-0005, not an ADR.** The Project Operating Model states that an
+experimentation space exists outside the projection, and how a POC enters it.
+
+Two observed cases justify declaring that the practice exists. They do not
+justify deciding its states, its criteria and its authority in advance, which
+is what an ADR would have had to do.
+
+What the section has to make possible, and nothing more: that QUAL-0001 be
+citable by the heritage while its human evaluation is still pending.
 
 #### GOV-0002/OS-013 — The ancestor's relation to the heritage is undecided
 
@@ -409,9 +464,13 @@ one as a subdirectory. It holds the source of `aistack-backend:0.10`, built
 the migration of its function; it decides nothing about the repository
 itself.
 **Derivable** no
-**Qualification** `unknown`. Both readings are defensible and lead to
-opposite architectures: the ancestor is the product and this repository its
-tooling, or the reverse.
+**Qualification** **decided 2026-08-23 by the owner.** **This repository is
+the product; `/srv/aistack` is an archive.**
+
+Both readings were defensible and led to opposite architectures. The one
+chosen means that whatever still lives in the ancestor migrates here or ends
+there, and that `aistack-origin` is a permanent backup rather than a second
+line of development.
 
 #### GOV-0002/OS-014 — An installed AIStack cannot read the governed catalogue
 
@@ -428,11 +487,17 @@ not a defect. What is undecided is whether a knowledge policy the product
 executes belongs inside the distribution.
 **Derivable** yes — a check that every path the code resolves under `docs/`
 exists in the built distribution
-**Qualification** `unknown`. Three readings, and they are not equivalent:
-ship `docs/` in the wheel; make `--catalogue` mandatory and remove the
-default; or state that an installed AIStack is a different subject from a
-governed one and require the repository. The third is closest to FDN-P-004,
-and the most inconvenient.
+**Qualification** **decided 2026-08-23 by the owner.** **An installed
+AIStack is a different subject from a governed one**, and a governed one
+requires the repository.
+
+`docs/` is not shipped in the wheel: that would make governed knowledge an
+artifact of distribution, versioned by the wheel rather than by its SPOT, and
+would put two copies of it in the world — which FDN-P-005 forbids.
+`--catalogue` stays optional and the failure stays loud.
+
+This entry recorded the third reading as the most inconvenient of the three.
+It was chosen for the reason it was inconvenient.
 
 #### GOV-0002/OS-015 — Nothing declares which containers are expected to run
 
@@ -450,10 +515,14 @@ purpose*, because no artifact states which containers this deployment expects
 to be running. That knowledge exists in one person's head, which is the
 condition FDN-P-004 exists to end.
 **Derivable** no — there is nothing to derive it from, and that is the entry
-**Qualification** `unknown`. A declaration of expected state is governed
-knowledge about a deployment, and GOV-P-001 forbids the AI from authoring it.
-Whether it belongs in this repository at all is the prior question: it
-describes one host, and this repository describes a product.
+**Qualification** **decided 2026-08-23 by the owner.** **The expected state
+of a deployment is not declared here.** This repository describes a product;
+the set of containers one host expects to be running describes that host, and
+declaring it here would make every other installation contradict it.
+
+`Signature.applies_to` remains the only treatment, and remains deliberately a
+treatment of the symptom. The gap it leaves is real, and is now outside this
+repository's scope rather than pending inside it.
 
 ---
 

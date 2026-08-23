@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.12
+  version: 1.13
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -254,17 +254,49 @@ not taken on 2026-08-22.
 
 # Non-conforming instances
 
-#### GOV-0002/OS-007 — `ADR-0003-Selection-Engine.md` does not carry its full title
-
-**Nature** `non-conforming` · **Opened** 2026-08-21 · **State** open
-**Observed** Its declared title is *Selection Engine Strategy Delegation*.
-The same check as OS-006 would find it.
-**Derivable** yes
-**Qualification** none required; a rename of the file, not of the identifier.
-
 ---
 
 # Defects
+
+#### GOV-0002/OS-023 — `<ID>-<Title>.md` does not describe this heritage
+
+**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
+**Observed** STD-0102 mandates `<ID>-<Title>.md`. Measured 2026-08-23 across
+the 65 artifacts of the projection: **25 do not follow it**. OS-006 and
+OS-007 were recorded as two isolated instances; they were the two that
+happened to be noticed.
+
+The 25 are not 25 mistakes. They are families, and at least three of them
+look deliberate:
+
+- **components.** `CMP-0001` through `CMP-0012` each hold `README.md`,
+  `architecture.md` and `specification.md` inside their own directory. That
+  is a coherent convention — and it produces four files named
+  `architecture.md`, so a filename no longer identifies an artifact.
+- **section READMEs.** `FDN-0001-README.md`, `STD-0001-README.md`, and the
+  repository's own `README.md`, whose declared title is *AIStack Main
+  README*.
+- **the Manifesto**, `The-Sustainable-Heritage-Manifesto.md`, declaring
+  `id: FDN-MANIFESTO` — a name chosen to be read, on a document that opens
+  the heritage.
+
+The rest are near-misses where the title is longer than the filename:
+`ADR-0005-Context-Bundle-Engine.md` declares *Context Bundle Engine
+Architecture*, and three others like it.
+
+*This entry exists because the agent wrote into OS-007 that a
+`filename-conformance` check now enforced the rule — before writing it, and
+before measuring. Measuring first is what turned a one-line check into a
+governance question.*
+**Derivable** yes — comparing `source` against `id` and `title` is one pass
+over the bundle, and it is written the moment the rule is settled
+**Qualification** `unknown`. The rule cannot be enforced until it describes
+what it governs. Three readings: narrow the rule to the artifacts it fits
+and name the families that follow other conventions; rename 25 files, which
+touches no identifier but a great deal of prose; or state that the filename
+is not governed at all and that `id` carries identity — which is defensible
+now that the projection is keyed on `id` (OS-021), and which would retire
+the rule rather than enforce it.
 
 #### GOV-0002/OS-009 — `sync_mirrors.sh` stops at the first failing mirror
 
@@ -415,6 +447,20 @@ describes one host, and this repository describes a product.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-007 — `ADR-0003-Selection-Engine.md` does not carry its full title
+
+**Nature** `non-conforming` · **Opened** 2026-08-21 · **State** resolved 2026-08-23 by the rename
+**Observed** Its declared title is *Selection Engine Strategy Delegation*.
+The same check as OS-006 would find it.
+**Resolved 2026-08-23.** The file is
+`ADR-0003-Selection-Engine-Strategy-Delegation.md`. Nothing cited the old
+name — verified before renaming — so unlike OS-006 this touched no
+identifier and no reference.
+**Derivable** yes, and deliberately not derived yet — see OS-023. Writing
+that check was the plan; measuring first showed it would accuse 25 of the 65
+artifacts, so the rule has to be settled before it can be enforced.
+**Qualification** none required; a rename of the file, not of the identifier.
 
 #### GOV-0002/OS-016 — An evidence extract can omit the pattern that fired the rule
 

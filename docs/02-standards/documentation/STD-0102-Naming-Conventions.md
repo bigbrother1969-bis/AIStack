@@ -201,7 +201,7 @@ their identifiers say so:
 
 | Form | Names | Lives in |
 |---|---|---|
-| `FDN-P-004`, `STD-P-004`, `GOV-P-001` | a **principle** | a row of PRINCIPLES-REGISTRY |
+| `FDN-P-004`, `STD-P-004`, `GOV-P-001` | a **principle** | a row of FDN-0012 |
 | `FDN-0004`, `STD-0100`, `GOV-0001` | an **artifact** | a file of its own |
 
 The `P` is the whole point. Until 2026-08-21 principles used
@@ -231,7 +231,7 @@ silently breaks every reference ever written to it, including
 those outside this repository.
 
 The renumbering of 2026-08-21 is the one exception, decided by
-the owner and recorded in PRINCIPLES-REGISTRY v2.0. Its scope is
+the owner and recorded in FDN-0012 v2.0. Its scope is
 worth stating precisely: **principles only**. No artifact
 identifier changed and no governed file was renamed. The
 exception was affordable because every principle identifier

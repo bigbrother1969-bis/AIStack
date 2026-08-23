@@ -18,7 +18,7 @@ relations:
     - FDN-0003
     - FDN-0004
     - STD-0300
-    - PRINCIPLES-REGISTRY
+    - FDN-0012
 ---
 
 # FDN-0011 — Contract-Based Engineering
@@ -27,7 +27,7 @@ relations:
 
 These two principles lived in `engineering-principles-additions.md`, a
 working file name, with no identifier, no metadata and no owner. Neither
-is registered in PRINCIPLES-REGISTRY: verified on 2026-08-21, the terms
+is registered in FDN-0012: verified on 2026-08-21, the terms
 *contract debt*, *contract first* and *technical debt* appear nowhere in
 it.
 

@@ -18,7 +18,7 @@ relations:
     - FDN-0002
     - FDN-0003
     - FDN-0004
-    - PRINCIPLES-REGISTRY
+    - FDN-0012
 ---
 
 # The Sustainable Heritage Manifesto

@@ -37,7 +37,7 @@ Two aphorisms were recovered on 2026-08-21 from
 `FDN-0001-Constitution.md`, a file that carried the identifier of the
 Foundation README, held no article, and repeated its own contents
 verbatim. Eleven of its thirteen aphorisms already lived in this
-Constitution, in PRINCIPLES-REGISTRY, in FDN-0008 or in the README.
+Constitution, in FDN-0012, in FDN-0008 or in the README.
 These two did not:
 
 - *Every knowledge is portable* — Article 6;

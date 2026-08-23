@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-08-22
+  updated: 2026-08-23
 
 relations:
   references:
@@ -188,11 +188,39 @@ likely one decision rather than ten.
 **Observed** `ARC-P-005` reads *contracts before implementations*. FDN-0011's
 second principle, *Contract First Engineering*, says the primary deliverable
 of engineering is a governed set of contracts. The same rule at two
-altitudes. Recorded in PRINCIPLES-REGISTRY v2.1 rather than resolved, and the
+altitudes. Recorded in FDN-0012 v2.1 rather than resolved, and the
 second was deliberately not registered.
 **Derivable** no
 **Qualification** `unknown` — reword `ARC-P-005` to absorb the fuller
 statement, or keep both levels deliberately.
+
+#### GOV-0002/OS-020 — A declared reference is checked against nothing
+
+**Nature** `contract-debt` · **Opened** 2026-08-23 · **State** open
+**Observed** Every artifact may declare `relations: references:`. Measured
+2026-08-23 across the 64 artifacts carrying a declared `id`: **21 distinct
+identifiers are cited, and one designated nothing** —
+`PRINCIPLES-REGISTRY`, cited five times while the registry's identifier was
+`FDN-PRINCIPLES`. The five were the Manifesto, FDN-0009, FDN-0010, FDN-0011
+and STD-0300; four of the five are C3.
+
+They were corrected on 2026-08-23 with the rename of OS-006, so the count is
+zero today. **What is not corrected is that nothing measures it.** No
+integrity check compares the set of cited identifiers against the set of
+declared ones, so the next broken reference will be as invisible as these
+five were — and a reference is how the heritage says two artifacts belong
+together.
+
+The measurement is one pass over the bundle and needs no new input: both
+sets are already in the projection.
+**Derivable** yes — trivially, and unlike OS-004 or OS-005 the data is
+already in the bundle the checks receive
+**Qualification** `unknown` on one point only: the severity. A reference to
+an artifact that does not exist is arguably a `WARNING` rather than an
+`OBSERVATION`, since unlike an orphan contract it is not a prescribed order
+— nothing in the heritage says a reference may point ahead of its target. A
+`WARNING` would make `clean: False` until it is fixed, which is what
+criterion 2.6 is for.
 
 #### GOV-0002/OS-004 — `type` → `domain` is stated and enforced by nothing
 
@@ -208,7 +236,7 @@ applied by hand.
 
 **Nature** `contract-debt` · **Opened** 2026-08-21 · **State** open
 **Observed** STD-0102 v2.0 renumbered every principle to `<DOMAIN>-P-NNN`.
-Writing `FDN-006` in PRINCIPLES-REGISTRY tomorrow would pass every check.
+Writing `FDN-006` in FDN-0012 tomorrow would pass every check.
 The renumbering itself missed the Operations family — four principles and one
 citation — and that gap survived a day undetected.
 **Derivable** yes — a check over the registry's identifiers
@@ -283,17 +311,6 @@ portability; run the suite under each supported version, which needs a
 matrix nobody has set up here; or state that the range is supported on
 declaration only and record the exposure. The current state is the third
 without having said so.
-
-#### GOV-0002/OS-006 — `PRINCIPLES-REGISTRY.md` does not follow `<ID>-<Title>.md`
-
-**Nature** `non-conforming` · **Opened** 2026-08-21 · **State** open
-**Observed** It declares `id: FDN-PRINCIPLES` and its filename carries no
-title, while STD-0102 mandates the pattern. Invisible to every pass until
-2026-08-21.
-**Derivable** yes — a check comparing filename to `id` and `title`
-**Qualification** `unknown`. `FDN-PRINCIPLES` is itself outside the
-`<PREFIX>-NNNN` form; renaming touches an identifier, which STD-0102 forbids
-outside a declared exception.
 
 #### GOV-0002/OS-007 — `ADR-0003-Selection-Engine.md` does not carry its full title
 
@@ -479,6 +496,29 @@ describes one host, and this repository describes a product.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-006 — `PRINCIPLES-REGISTRY.md` does not follow `<ID>-<Title>.md`
+
+**Nature** `non-conforming` · **Opened** 2026-08-21 · **State** resolved 2026-08-23 by the rename to `FDN-0012`
+**Observed** It declares `id: FDN-PRINCIPLES` and its filename carries no
+title, while STD-0102 mandates the pattern. Invisible to every pass until
+2026-08-21.
+**Resolved 2026-08-23.** The owner chose to rename both the file and the
+identifier rather than declare an exception. `FDN-PRINCIPLES` became
+`FDN-0012` — the next free number — and the file became
+`FDN-0012-AIStack-Principles-Registry.md`. This is the second deliberate
+exception to *"identifiers never change"*, after the `<DOMAIN>-P-NNN`
+renumbering of 2026-08-21, and like that one it is bounded and recorded
+rather than silent.
+
+**Closing it exposed OS-020.** Five artifacts declared
+`- PRINCIPLES-REGISTRY` in `relations: references:` while the registry's
+identifier was `FDN-PRINCIPLES`. Those five references designated nothing,
+in the Manifesto and in three Foundation documents, and no check compares a
+declared reference against the set of declared identifiers. They were
+corrected with the rename.
+**Derivable** yes — a check comparing filename to `id` and `title`
+**Qualification** none required; the decision was taken 2026-08-23.
 
 #### GOV-0002/OS-002 — The tool that measures contract debt is not in the product
 

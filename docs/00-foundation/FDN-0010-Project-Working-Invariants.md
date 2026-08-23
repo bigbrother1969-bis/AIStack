@@ -17,7 +17,7 @@ relations:
   references:
     - FDN-0005
     - FDN-0007
-    - PRINCIPLES-REGISTRY
+    - FDN-0012
 ---
 
 # FDN-0010 — Project Working Invariants
@@ -33,7 +33,7 @@ projet"*. They had never passed a validation gate, and this artifact stood at
 `status: Proposed` until the engraving recorded below.
 
 **Open reconciliation.** Several of these rules restate principles already registered
-in PRINCIPLES-REGISTRY — *understand before implementing* is close to ENG-P-001,
+in FDN-0012 — *understand before implementing* is close to ENG-P-001,
 *architecture first* to FDN-P-009, *migrate incrementally* to ARC-P-008. This artifact
 deliberately does not merge them: it preserves the recovered wording so the overlap
 is visible and can be resolved as a governed decision, rather than silently choosing
@@ -46,7 +46,7 @@ invariant and what did not — is now invariant itself. The owner has accepted i
 `confidence: Reviewed`.
 
 The open reconciliation stated above is **not** closed by this engraving. Several of
-these rules still restate principles registered in PRINCIPLES-REGISTRY. Engraving fixes
+these rules still restate principles registered in FDN-0012. Engraving fixes
 the wording as heritage; it does not decide the overlap.
 
 ---

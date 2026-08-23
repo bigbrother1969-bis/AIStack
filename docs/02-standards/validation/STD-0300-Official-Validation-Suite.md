@@ -19,7 +19,7 @@ relations:
     - FDN-0003
     - FDN-0007
     - FDN-0008
-    - PRINCIPLES-REGISTRY
+    - FDN-0012
     - ADR-0009
     - OPS-0001
 ---
@@ -394,7 +394,7 @@ measures. This criterion moves when a remediation policy is written, not before.
 - FDN-0003 — Constitution (Article 5, Explainability; Article 12, Uncertainty)
 - FDN-0007 — Governed Engineering Cycle
 - FDN-0008 — Self-Application Principle
-- PRINCIPLES-REGISTRY — OPS-P-004 *Observe before acting*, ENG-P-005 *Validate every
+- FDN-0012 — OPS-P-004 *Observe before acting*, ENG-P-005 *Validate every
   architectural step independently*
 
 ---

@@ -19,7 +19,7 @@ relations:
     - FDN-0003
     - FDN-0005
     - FDN-0008
-    - PRINCIPLES-REGISTRY
+    - FDN-0012
 ---
 
 # FDN-0009 — AI Collaboration Protocol

@@ -1,17 +1,17 @@
 ---
 artifact:
-  id: FDN-PRINCIPLES
+  id: FDN-0012
   title: AIStack Principles Registry
   type: Foundation Registry
   semantic_type: Knowledge Artifact
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 2.2
+  version: 2.3
   status: Draft
   owner: Foundation
   created: 2026-07-24
-  updated: 2026-08-21
+  updated: 2026-08-23
 
 relations:
   references:

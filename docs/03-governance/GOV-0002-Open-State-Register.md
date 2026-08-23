@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.11
+  version: 1.12
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -254,37 +254,6 @@ not taken on 2026-08-22.
 
 # Non-conforming instances
 
-#### GOV-0002/OS-019 — The suite runs on one interpreter and three are supported
-
-**Nature** `non-conforming` · **Opened** 2026-08-22 · **State** open
-**Observed** `pyproject.toml` declares `requires-python = ">=3.11"`, so
-3.11, 3.12 and 3.13 are all supported. Nothing runs the suite on more than
-one: whichever the machine happens to have. The published images are
-`python:3.13-slim`; the owner's laptop is 3.13.5; the agent's container is
-3.11.
-
-Concretely, on 2026-08-22 the contract inventory reported 20 orphans on
-3.11 and 22 on 3.12 and 3.13, at the same commit (`2904336`). It was found
-because two people ran it on two machines, not because anything checked.
-Fixed at `9099df7`, and the mutation test that guards the fix is *killed on
-3.13 and survives on 3.11* — the machinery it removes does not exist there.
-The suite therefore proves strictly less on the interpreter it ran on than
-on the one the images ship.
-
-ENG-TEST-0002 is C3 and promises *reproducibility, deterministic execution,
-portability across environments*. It declares the source roots and says
-nothing about the interpreter, so the declared execution environment
-declares an incomplete environment — the same shape of gap the principle's
-own v2.0 was written to close.
-**Derivable** yes — running the suite under each supported version and
-comparing is mechanical
-**Qualification** `unknown`. Three readings: declare a single supported
-version and narrow `requires-python`, which is the cheapest and gives up
-portability; run the suite under each supported version, which needs a
-matrix nobody has set up here; or state that the range is supported on
-declaration only and record the exposure. The current state is the third
-without having said so.
-
 #### GOV-0002/OS-007 — `ADR-0003-Selection-Engine.md` does not carry its full title
 
 **Nature** `non-conforming` · **Opened** 2026-08-21 · **State** open
@@ -481,6 +450,55 @@ usable index — `ß` folds to `ss` — so `match_at` is `None` and the extract
 falls back to the start of the line. Centring on an index computed against a
 string no container printed would be worse than not centring at all.
 **Derivable** no
+**Qualification** none required; the decision was taken 2026-08-23.
+
+#### GOV-0002/OS-019 — The suite runs on one interpreter and three are supported
+
+**Nature** `non-conforming` · **Opened** 2026-08-22 · **State** resolved 2026-08-23 by narrowing the range and checking it
+**Observed** `pyproject.toml` declares `requires-python = ">=3.11"`, so
+3.11, 3.12 and 3.13 are all supported. Nothing runs the suite on more than
+one: whichever the machine happens to have. The published images are
+`python:3.13-slim`; the owner's laptop is 3.13.5; the agent's container is
+3.11.
+
+Concretely, on 2026-08-22 the contract inventory reported 20 orphans on
+3.11 and 22 on 3.12 and 3.13, at the same commit (`2904336`). It was found
+because two people ran it on two machines, not because anything checked.
+Fixed at `9099df7`, and the mutation test that guards the fix is *killed on
+3.13 and survives on 3.11* — the machinery it removes does not exist there.
+The suite therefore proves strictly less on the interpreter it ran on than
+on the one the images ship.
+
+ENG-TEST-0002 is C3 and promises *reproducibility, deterministic execution,
+portability across environments*. It declares the source roots and says
+nothing about the interpreter, so the declared execution environment
+declares an incomplete environment — the same shape of gap the principle's
+own v2.0 was written to close.
+**Resolved 2026-08-23.** The owner narrowed the range:
+`requires-python = ">=3.13"`, which is what the published images run and
+what the owner's machine runs. A portability nothing verified is given up
+rather than claimed.
+
+Narrowing alone would have moved the defect instead of closing it — the
+agent's container runs 3.11, so the suite would have kept passing on an
+interpreter outside the declared range, which is worse than before because
+the claim would then be explicit. Three things close it together:
+
+- `bin/aistack_env.sh`, designated by ADR-0001 as the SPOT for the execution
+  environment, now names the interpreter as well as the source roots, and
+  warns when they disagree. A warning and never an exit: the file is
+  sourced, and a `return` would drop the developer out of the setup they
+  asked for.
+- `tests/unit/test_declared_interpreter.py` reads `requires-python` and
+  compares it to the running interpreter, so a suite passing on an
+  unsupported version says so instead of looking green.
+- the agent installed 3.13 in its container and runs the suite there.
+  Verified 2026-08-23: 463 tests pass on 3.13, and the interpreter test
+  fails on 3.11 with the reason.
+
+A second test asserts the range is exactly `>=3.13`, so widening it again is
+deliberate and arrives with the matrix that would make it true.
+**Derivable** yes — the check does it at every run
 **Qualification** none required; the decision was taken 2026-08-23.
 
 #### GOV-0002/OS-021 — The projection loses the governed identifier

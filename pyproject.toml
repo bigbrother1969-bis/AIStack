@@ -7,7 +7,21 @@ name = "aistack"
 version = "0.1.0"
 description = "AIStack Knowledge Operating System"
 readme = "README.md"
-requires-python = ">=3.11"
+# The interpreter AIStack is verified on.
+#
+# It was ">=3.11" until 2026-08-23, and three versions were
+# declared supported while one was ever run — whichever the
+# machine happened to have. That was not free: the contract
+# inventory reported 20 orphan contracts on 3.11 and 22 on 3.12
+# and 3.13, at the same commit, and it was found because two
+# people ran the same command on two machines rather than
+# because anything checked (GOV-0002/OS-019).
+#
+# 3.13 is what the published images run and what the owner's
+# machine runs. Narrowing the range gives up a portability
+# nothing verified, and `tests/unit/test_declared_interpreter.py`
+# now refuses to let the claim drift from the interpreter in use.
+requires-python = ">=3.13"
 dependencies = [
     "PyYAML>=6.0",
 ]

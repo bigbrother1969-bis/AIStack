@@ -54,3 +54,24 @@ cd "$AISTACK_REPO_ROOT" || return 1
 # knowledge. It lives in config/context_bundle_transfer.yml,
 # which is not versioned, and is overridable through
 # AISTACK_TRANSFER_HOST / _USER / _PATH.
+
+# The interpreter this heritage is verified on.
+#
+# ADR-0001 designates this file as the SPOT for the execution
+# environment, and until 2026-08-23 that environment named its
+# source roots and not its interpreter — while `pyproject.toml`
+# declared a three-version range of which one was ever run.
+#
+# A warning, never an exit: this file is sourced, so a `return`
+# here on a mismatch would drop the developer out of the very
+# setup they asked for. It states the fact and lets them decide.
+AISTACK_PYTHON_REQUIRED="3.13"
+
+AISTACK_PYTHON_FOUND="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)"
+
+if [ "$AISTACK_PYTHON_FOUND" != "$AISTACK_PYTHON_REQUIRED" ]; then
+    echo "AIStack: python3 is $AISTACK_PYTHON_FOUND, this heritage is verified on $AISTACK_PYTHON_REQUIRED" >&2
+    echo "AIStack: the suite will run, and it will not be running what the images ship" >&2
+fi
+
+export AISTACK_PYTHON_REQUIRED

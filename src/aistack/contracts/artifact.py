@@ -32,6 +32,28 @@ class KnowledgeArtifact:
     instead of emitting it silently.
     """
 
+    # The governed identifier the artifact declares — `FDN-0003`,
+    # `STD-0100`, `OPS-0001`. It is the only name anything else
+    # cites: `relations.references` points at it, and a reader
+    # asking the registry for a document asks by this.
+    #
+    # It held the **content hash** until 2026-08-23, and no
+    # comment said so — this field was the one field of this
+    # contract without one. The consequence was measured rather
+    # than argued: a check comparing declared references against
+    # it reported 85 dangling references on a heritage that had
+    # none, and no consumer of a bundle could resolve `FDN-0003`
+    # without parsing 65 frontmatter blocks (GOV-0002/OS-021).
+    #
+    # The hash is not lost. It lives in `metadata["content_hash"]`,
+    # which is where the bundle fingerprint reads it from — the
+    # fingerprint must stay derived from content, or two bundles
+    # carrying the same names over different text would prove
+    # equivalent.
+    #
+    # An artifact declaring no identifier carries `unknown`, per
+    # FDN-0003 Article 12. A hash here would look like an identity
+    # and would not be one.
     id: str
     title: str
 

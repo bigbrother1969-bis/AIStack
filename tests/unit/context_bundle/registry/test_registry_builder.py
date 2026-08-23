@@ -13,7 +13,10 @@ def test_registry_builder_creates_registry():
 
     discovery = DiscoveryResult(
         path=Path("docs/test.md"),
-        content="# Test",
+        content=(
+            "---\nartifact:\n  id: FDN-0003\n"
+            "  title: Constitution\n---\n\n# Test\n"
+        ),
         content_hash="abc123",
     )
 
@@ -27,11 +30,15 @@ def test_registry_builder_creates_registry():
 
     assert registry.count() == 1
 
-    artifact = registry.get("abc123")
+    # The registry is keyed by the governed identifier since
+    # 2026-08-23. Before that it was keyed by content hash, so
+    # asking it for `FDN-0003` — the only name anyone actually
+    # cites — returned nothing, and every consumer had to know a
+    # SHA-256 to find a document (GOV-0002/OS-021).
+    assert registry.get("abc123") is None
+
+    artifact = registry.get("FDN-0003")
 
     assert artifact is not None
-    # The fixture declares no title, so the artifact carries
-    # UNDECLARED. Until 2026-08-21 the builder used the filename
-    # stem here, which is an observation about the file, not a
-    # declaration about the knowledge.
-    assert artifact.title == "unknown"
+    assert artifact.title == "Constitution"
+    assert artifact.metadata["content_hash"] == "abc123"

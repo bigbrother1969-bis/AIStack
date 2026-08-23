@@ -59,7 +59,22 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
         )
 
         return KnowledgeArtifact(
-            id=discovery.content_hash,
+            # The governed identifier the artifact declares —
+            # `FDN-0003`, not a hash. Until 2026-08-23 this field
+            # held `discovery.content_hash`, so the projection
+            # keyed 65 artifacts by SHA-256 and the identifier the
+            # whole heritage cites existed nowhere in the model
+            # (GOV-0002/OS-021). A check comparing references
+            # against it reported 85 dangling references on a
+            # heritage that had none.
+            #
+            # An artifact declaring no `id` is carried as
+            # `unknown`, per FDN-0003 Article 12, rather than
+            # given a hash that would look like an identity.
+            id=declared_value(
+                declared,
+                "id",
+            ),
             title=declared_value(
                 declared,
                 "title",

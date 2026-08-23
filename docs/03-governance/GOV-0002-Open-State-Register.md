@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -194,39 +194,6 @@ second was deliberately not registered.
 **Derivable** no
 **Qualification** `unknown` — reword `ARC-P-005` to absorb the fuller
 statement, or keep both levels deliberately.
-
-#### GOV-0002/OS-021 — The projection loses the governed identifier
-
-**Nature** `contract-debt` · **Opened** 2026-08-23 · **State** open
-**Observed** `MarkdownArtifactBuilder` sets `id=discovery.content_hash`, so
-every artifact in the bundle is keyed by a SHA-256 and **`FDN-0003` appears
-nowhere in the model**. It survives only inside the `content` string, as
-text in the frontmatter, alongside the prose.
-
-The same hash is also written to `metadata["content_hash"]`, so the value is
-carried twice and the field named `id` holds neither an identity the heritage
-declares nor a name anyone cites.
-
-Measured 2026-08-23: a check comparing declared references against
-`artifact.id` reports 85 dangling references on a heritage that has none.
-`reference-integrity` therefore parses the frontmatter to recover what the
-model dropped — a check re-deriving from prose what the pipeline had in its
-hands.
-
-The consequence for VS-2 is the sharp one. An agent handed the bundle cannot
-resolve *"what does FDN-0003 say"* without parsing 65 frontmatter blocks,
-and the contract `KnowledgeArtifact` documents every field except this one:
-`id: str` carries no comment, where `declared_type`, `domain` and the rest
-carry paragraphs.
-**Derivable** yes — comparing `artifact.id` against the frontmatter `id` is
-one pass over the bundle
-**Qualification** `unknown`. Three readings. Add a `declared_id` field, which
-is additive and leaves the hash where it is. Set `id` to the governed
-identifier and move the hash to `metadata` alone, which is the honest naming
-and touches `duplicate-titles`, `projection-fidelity` and the reader. Or
-declare that a bundle artifact is identified by content and that governed
-identity is deliberately prose — defensible, but then `reference-integrity`
-is parsing text forever and VS-2 inherits that.
 
 #### GOV-0002/OS-004 — `type` → `domain` is stated and enforced by nothing
 
@@ -477,6 +444,52 @@ usable index — `ß` folds to `ss` — so `match_at` is `None` and the extract
 falls back to the start of the line. Centring on an index computed against a
 string no container printed would be worse than not centring at all.
 **Derivable** no
+**Qualification** none required; the decision was taken 2026-08-23.
+
+#### GOV-0002/OS-021 — The projection loses the governed identifier
+
+**Nature** `contract-debt` · **Opened** 2026-08-23 · **State** resolved 2026-08-23 by keying artifacts on their identifier
+**Observed** `MarkdownArtifactBuilder` sets `id=discovery.content_hash`, so
+every artifact in the bundle is keyed by a SHA-256 and **`FDN-0003` appears
+nowhere in the model**. It survives only inside the `content` string, as
+text in the frontmatter, alongside the prose.
+
+The same hash is also written to `metadata["content_hash"]`, so the value is
+carried twice and the field named `id` holds neither an identity the heritage
+declares nor a name anyone cites.
+
+Measured 2026-08-23: a check comparing declared references against
+`artifact.id` reports 85 dangling references on a heritage that has none.
+`reference-integrity` therefore parses the frontmatter to recover what the
+model dropped — a check re-deriving from prose what the pipeline had in its
+hands.
+
+The consequence for VS-2 is the sharp one. An agent handed the bundle cannot
+resolve *"what does FDN-0003 say"* without parsing 65 frontmatter blocks,
+and the contract `KnowledgeArtifact` documents every field except this one:
+`id: str` carries no comment, where `declared_type`, `domain` and the rest
+carry paragraphs.
+**Resolved 2026-08-23.** The owner chose the honest naming: `id` carries the
+governed identifier and the hash moves to `metadata["content_hash"]`.
+
+Measured before switching: the 65 artifacts declare 65 distinct identifiers,
+so keying on them loses nothing.
+
+**The switch would have broken the mirror equivalence, silently.**
+`compute_content_hash` read `artifact.id`, which worked only because that
+field held the content hash. Fingerprinting the new `id` would have hashed
+the *names*: two bundles carrying the same 65 identifiers over different text
+would have proven equivalent, and the property the manifest exists for would
+have stopped meaning anything without any test failing. It now reads
+`metadata["content_hash"]`, and the published fingerprint is byte-identical
+before and after — verified on the real projection.
+
+`reference-integrity` no longer parses the frontmatter to recover identity;
+it reads the model. And `KnowledgeArtifact.id` now carries a comment, which
+it never had — the one field of that contract without one was the one nobody
+could interpret.
+**Derivable** yes — comparing `artifact.id` against the frontmatter `id` is
+one pass over the bundle
 **Qualification** none required; the decision was taken 2026-08-23.
 
 #### GOV-0002/OS-020 — A declared reference is checked against nothing

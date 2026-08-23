@@ -3,6 +3,7 @@ from datetime import datetime
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.context_bundle import ContextBundle
 from aistack.contracts.integrity_finding import IntegritySeverity
+from aistack.contracts.undeclared import UNDECLARED
 from aistack.integrity.checks.reference_integrity import (
     ReferenceIntegrityCheck,
     declared_identifier,
@@ -23,18 +24,26 @@ def document(identifier: str, references: list[str] | None = None) -> str:
     return block + "---\n\n# Body\n"
 
 
-def artifact(content: str, source: str = "x.md") -> KnowledgeArtifact:
+def artifact(
+    content: str,
+    source: str = "x.md",
+    identifier: str | None = None,
+) -> KnowledgeArtifact:
     """
-    Built with a hash for `id`, exactly as the pipeline does.
+    Built the way the pipeline builds one.
 
-    That is the point of the fixture: `KnowledgeArtifact.id` is
-    the content hash, not the governed identifier (OS-021), and a
-    test that passed the identifier here would prove the check
-    works on data the projection never contains.
+    `id` is the governed identifier since 2026-08-23. This
+    fixture carried a hash until then, with a docstring stating
+    that was *exactly as the pipeline does* — true when written,
+    and false the moment OS-021 was closed. It is the kind of
+    sentence STD-0100 v2.3 now asks to date.
+
+    The identifier defaults to whatever the content declares, so
+    a test writes one document rather than two halves of one.
     """
 
     return KnowledgeArtifact(
-        id="0" * 64,
+        id=identifier or (declared_identifier(content) or UNDECLARED),
         title="T",
         declared_type="t",
         domain="Foundation",
@@ -217,7 +226,9 @@ def test_an_unreadable_artifact_is_named_by_its_source():
             generated_at=NOW,
             source_commit="abc1234",
             artifacts=[
-                artifact("---\nbroken: [\n---\n", source="docs/x.md")
+                artifact(
+                    "---\nbroken: [\n---\n", source="docs/x.md"
+                )
             ],
         )
     )

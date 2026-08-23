@@ -6,6 +6,7 @@ from aistack.contracts.integrity_finding import (
     IntegrityFinding,
     IntegritySeverity,
 )
+from aistack.contracts.undeclared import UNDECLARED
 
 
 def frontmatter(content: str) -> dict | None:
@@ -126,19 +127,18 @@ class ReferenceIntegrityCheck(IntegrityCheck):
         bundle: ContextBundle,
     ) -> list[IntegrityFinding]:
 
-        # The governed identifiers, read from the frontmatter.
-        # `artifact.id` is a content hash (OS-021), so comparing
-        # against it would report every reference in the heritage
-        # as dangling — which is exactly what a first version of
-        # this check did: 85 of them, including `FDN-0003` cited
-        # twelve times.
+        # `artifact.id` carries the governed identifier since
+        # 2026-08-23. Before that it held a content hash, and a
+        # first version of this check compared references against
+        # it: 85 dangling references on a heritage that had none,
+        # `FDN-0003` among them, cited twelve times. That is
+        # GOV-0002/OS-021, and closing it is what lets this check
+        # read the model instead of re-deriving identity from the
+        # prose the model was built from.
         declared = {
-            identifier
-            for identifier in (
-                declared_identifier(artifact.content)
-                for artifact in bundle.artifacts
-            )
-            if identifier
+            artifact.id
+            for artifact in bundle.artifacts
+            if artifact.id and artifact.id != UNDECLARED
         }
 
         dangling: list[str] = []
@@ -148,7 +148,11 @@ class ReferenceIntegrityCheck(IntegrityCheck):
 
             references = declared_references(artifact.content)
 
-            name = declared_identifier(artifact.content) or artifact.source
+            name = (
+                artifact.id
+                if artifact.id and artifact.id != UNDECLARED
+                else artifact.source
+            )
 
             if references is None:
                 unreadable.append(name)

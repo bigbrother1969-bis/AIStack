@@ -18,7 +18,16 @@ def test_markdown_artifact_builder():
 
     artifact = builder.build(discovery)
 
-    assert artifact.id == "abc123"
+    # No frontmatter, so no declared identifier either. It is
+    # `unknown` under FDN-0003 Article 12 rather than the content
+    # hash: a hash in the `id` field looks like an identity and is
+    # not one, which is what GOV-0002/OS-021 was about.
+    assert artifact.id == "unknown"
+
+    # The hash is still carried, where it belongs and where the
+    # bundle fingerprint reads it from.
+    assert artifact.metadata["content_hash"] == "abc123"
+
     assert artifact.source == "docs/test.md"
     # No frontmatter, so no declared title. The filename stem is
     # an observation about the file, not a declaration about the

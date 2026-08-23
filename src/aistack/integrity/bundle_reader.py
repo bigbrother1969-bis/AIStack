@@ -83,6 +83,9 @@ def read_bundle(path: Path) -> ContextBundle:
             content=entry.get("content", ""),
             status=entry.get("status", UNDECLARED),
             confidence=entry.get("confidence", UNDECLARED),
+            metadata={
+                "content_hash": entry.get("content_hash", ""),
+            },
             created_at=generated_at,
             updated_at=generated_at,
         )

@@ -33,6 +33,14 @@ class JsonBundleExporter(BundleExporter):
             "artifacts": [
                 {
                     "id": artifact.id,
+                    # Published so the fingerprint survives a
+                    # round trip. A consumer that read the bundle
+                    # back and recomputed the hash would otherwise
+                    # get a different value from the one the
+                    # manifest states.
+                    "content_hash": artifact.metadata.get(
+                        "content_hash", ""
+                    ),
                     "title": artifact.title,
                     "type": artifact.declared_type,
                     "domain": artifact.domain,

@@ -84,6 +84,7 @@ def test_default_composition_is_stable():
         "projection-fidelity",
         "knowledge-state",
         "classification-declaration",
+        "classification-coherence",
         "duplicate-titles",
         "transport-residue",
         "contract-debt",

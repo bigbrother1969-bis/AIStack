@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.13
+  version: 1.14
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -195,16 +195,6 @@ second was deliberately not registered.
 **Qualification** `unknown` — reword `ARC-P-005` to absorb the fuller
 statement, or keep both levels deliberately.
 
-#### GOV-0002/OS-004 — `type` → `domain` is stated and enforced by nothing
-
-**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
-**Observed** STD-0100 v2.1 states that a declared `type` determines its
-`domain`. Measured across 63 artifacts and 16 distinct types with no
-exception. No integrity check verifies it; it holds because it has been
-applied by hand.
-**Derivable** yes — a check comparing declared types across the bundle
-**Qualification** none required; the rule is decided.
-
 #### GOV-0002/OS-005 — The `<DOMAIN>-P-NNN` convention is enforced by nothing
 
 **Nature** `contract-debt` · **Opened** 2026-08-21 · **State** open
@@ -218,7 +208,10 @@ citation — and that gap survived a day undetected.
 #### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
 
 **Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
-**Observed** Four occurrences, in two C2 artifacts, all found on 2026-08-22.
+**Observed** Six occurrences, in three C2 artifacts. Four were found on
+2026-08-22; two more on 2026-08-23, both inside the two documents that state
+the rule — STD-0100 and this register. The count is dated because it will
+grow.
 
 STD-0100 v2.0 carried *"the validator shall also observe `version`, `created` and
 `updated`, **which it does not today**"* from 2026-08-20 until 2026-08-21, one day
@@ -236,7 +229,12 @@ check:
 - the engraving block asserting that `criticality` *remains undeclared* while the
   front-matter of the same file declared `C2`, both dated 2026-08-21.
 
-All four share one shape: a true statement about a moving system, written without
+The fifth and sixth were produced by closing OS-004. STD-0100 said the
+`type` → `domain` rule *"is stated and not yet enforced"* and this register said it
+*"is enforced by nothing"*; the check written on 2026-08-23 made both false, and
+neither would have been noticed by anything but a reader following the citations.
+
+All six share one shape: a true statement about a moving system, written without
 the date that made it true. Nothing distinguishes such a sentence from a live one,
 and the cost is asymmetric — a stale *"it does not do X"* makes a heritage look
 worse than it is, and a stale *"it does X"* makes it look better.
@@ -245,10 +243,14 @@ worse than it is, and a stale *"it does X"* makes it look better.
 *currently*, *still*, *not yet*, *remains*, *for now* — are detectable by pattern.
 Whether the sentence carrying one is stale is not.
 **Qualification** `unknown`. STD-0100 v2.3 states the rule — an assertion about
-the code carries its date and its commit — and, like the `type` → `domain` rule of
-OS-004, it is enforced by nothing and holds by being applied. Whether the pattern
-check is worth its false positives is the owner's call, and it was deliberately
-not taken on 2026-08-22.
+the code carries its date and its commit — and as of 2026-08-23 it is enforced by
+nothing and holds by being applied. Whether the pattern check is worth its false
+positives is the owner's call, and it was deliberately not taken on 2026-08-22.
+
+*This paragraph read "like the `type` → `domain` rule of OS-004, it is enforced by
+nothing" until 2026-08-23, when OS-004 was closed. A fifth occurrence of the shape
+this entry exists to record, inside the entry itself, found while closing the rule
+it named.*
 
 ---
 
@@ -447,6 +449,29 @@ describes one host, and this repository describes a product.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-004 — `type` → `domain` is stated and enforced by nothing
+
+**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** resolved 2026-08-23 by `classification-coherence`
+**Observed** STD-0100 v2.1 states that a declared `type` determines its
+`domain`. Measured across 63 artifacts and 16 distinct types with no
+exception. No integrity check verifies it; it holds because it has been
+applied by hand.
+**Resolved 2026-08-23.** Re-measured first, as OS-023 had just shown why:
+65 artifacts, 19 distinct types, still no exception. The
+`classification-coherence` check derives the rule at every projection and
+`test_no_declared_type_maps_to_two_domains` runs it over this repository's
+own heritage at every suite. Severity `WARNING`, not `OBSERVATION` — unlike
+a dangling reference, which can legitimately precede the document it cites,
+no state of the work has one type belonging to two domains.
+
+The check is deliberately one axis wide. STD-0100 names two artifacts that
+depend on that — `FDN-0011` and `ARCH-0009` — and two tests hold the
+boundary, so a later reader who completes the rule to `semantic_type` and
+`criticality` learns it from a red suite rather than from two broken
+artifacts.
+**Derivable** yes — a check comparing declared types across the bundle
+**Qualification** none required; the rule is decided.
 
 #### GOV-0002/OS-007 — `ADR-0003-Selection-Engine.md` does not carry its full title
 

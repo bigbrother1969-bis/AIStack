@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.3
+  version: 2.4
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-22
+  updated: 2026-08-23
 
 relations:
   references:
@@ -125,9 +125,16 @@ implementation, not from the knowledge.
 ### A declared `type` determines its `domain`
 
 Every distinct `type` in the heritage maps to exactly one `domain`. Measured on
-2026-08-22 across 63 artifacts and 16 distinct types: no exception. Two artifacts
+2026-08-22 across 63 artifacts and 16 distinct types, re-measured on 2026-08-23
+across 65 artifacts and 19 types: no exception either time. Two artifacts
 declaring the same `type` and different `domain` values would give the heritage two
 answers to one question, and that is not permitted.
+
+Since 2026-08-23 the rule is derived rather than applied: the
+`classification-coherence` check reads it off every projection, and
+`test_no_declared_type_maps_to_two_domains` runs it over this repository's own
+heritage at every suite. For the day between the two dates the rule was written
+into this C2 standard and verified by nothing — GOV-0002/OS-004, now resolved.
 
 `type` does **not** determine `semantic_type`, and does **not** determine
 `criticality`. The same measurement found one counterexample to each, and both are
@@ -144,8 +151,12 @@ correct:
 Those two are named here so that a later reader does not complete the rule by
 extending it to three axes, and break two artifacts doing so.
 
-**This rule is stated and not yet enforced.** No integrity check verifies it; it
-holds because it has been applied by hand. That is recorded rather than implied.
+From 2026-08-22 to 2026-08-23 this paragraph read *"This rule is stated and not
+yet enforced. No integrity check verifies it; it holds because it has been applied
+by hand."* It is left visible here rather than deleted: the sentence was exact
+when written, and the register entry it produced — OS-004 — is what got the check
+written. A standard that erased its own deferrals would show only rules that had
+always been enforced.
 
 ## Governance — who answers for this artifact
 
@@ -240,9 +251,12 @@ The words that require this treatment are the ones that hide a date inside
 themselves: *today*, *currently*, *still*, *not yet*, *remains*, *for now*. Each
 means "at the time of writing", and none says when that was.
 
-**This rule is enforced by nothing.** It holds by being applied, which is the
-same footing as the `type` → `domain` rule, and the same exposure — recorded as
-GOV-0002/OS-004 for that one and GOV-0002/OS-017 for this. It is written because
+**As of 2026-08-23, this rule is enforced by nothing.** It holds by being
+applied — recorded as GOV-0002/OS-017. Until 2026-08-23 this paragraph named the
+`type` → `domain` rule as being in the same position; that rule is now derived by
+`classification-coherence`, and the sentence saying otherwise was true for one
+day. It is the second occurrence of the shape this very section describes, in the
+section that describes it. It is written because
 four such sentences were found in two C2 artifacts on 2026-08-22, one of them
 false for eight days and one contradicted by the front-matter four screens above
 it, and because none of them would have survived carrying its own date.

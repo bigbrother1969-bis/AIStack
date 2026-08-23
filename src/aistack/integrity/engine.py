@@ -4,6 +4,9 @@ from aistack.contracts.integrity_report import (
     KnowledgeIntegrityReport,
 )
 
+from aistack.integrity.checks.classification_coherence import (
+    ClassificationCoherenceCheck,
+)
 from aistack.integrity.checks.classification_declaration import (
     ClassificationDeclarationCheck,
 )
@@ -41,6 +44,7 @@ def default_checks() -> list[IntegrityCheck]:
         ProjectionFidelityCheck(),
         KnowledgeStateCheck(),
         ClassificationDeclarationCheck(),
+        ClassificationCoherenceCheck(),
         DuplicateTitleCheck(),
         TransportResidueCheck(),
         ContractDebtCheck(),

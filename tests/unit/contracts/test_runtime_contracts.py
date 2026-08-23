@@ -1,8 +1,9 @@
 from datetime import datetime
+import dataclasses
 
 import pytest
 
-from aistack.contracts.runtime_finding import RuntimeFinding
+from aistack.contracts.runtime_finding import MatchedLine, RuntimeFinding
 from aistack.contracts.runtime_observation import (
     LogEntry,
     RuntimeObservation,
@@ -13,6 +14,10 @@ from aistack.contracts.undeclared import UNDECLARED
 
 def entry(offset: int = 0, text: str = "AUTH_FAILED") -> LogEntry:
     return LogEntry(offset=offset, text=text)
+
+
+def matched(offset: int = 0, text: str = "AUTH_FAILED") -> MatchedLine:
+    return MatchedLine(entry=entry(offset, text), match_at=0)
 
 
 def signature(**overrides) -> Signature:
@@ -43,7 +48,7 @@ def finding(**overrides) -> RuntimeFinding:
         "remediation": "Check the VPN credentials used by the container.",
         "confidence": "Declared",
         "grounding": UNDECLARED,
-        "evidence": (entry(),),
+        "evidence": (matched(),),
     }
     declared.update(overrides)
     return RuntimeFinding(**declared)
@@ -76,9 +81,18 @@ def test_a_finding_names_its_subject():
 
 
 def test_a_finding_is_immutable():
+    """
+    `pytest.raises(Exception)` used to stand here, and on
+    2026-08-23 it began passing for the wrong reason: the
+    constructor started refusing the fixture, so the assignment
+    below was never reached. A test that passes because its setup
+    failed is a test that has stopped testing.
+    """
 
-    with pytest.raises(Exception):
-        finding().subject = "other"
+    built = finding()
+
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        built.subject = "other"
 
 
 def test_a_finding_carries_the_wording_that_fired_not_a_reference():
@@ -339,3 +353,58 @@ def test_an_observation_states_nothing_about_correctness():
         "diagnosis",
         "recommendation",
     }
+
+
+# --------------------------------------------------------------------
+# A cited line carries where the pattern was found in it
+# --------------------------------------------------------------------
+
+
+def test_a_match_position_outside_the_line_is_refused():
+    """
+    A position past the end of the text it indexes would centre
+    the report on nothing and cite it as evidence.
+    """
+
+    with pytest.raises(ValueError, match="outside"):
+        MatchedLine(entry=entry(text="short"), match_at=99)
+
+
+def test_a_negative_match_position_is_refused():
+
+    with pytest.raises(ValueError, match="index"):
+        MatchedLine(entry=entry(), match_at=-1)
+
+
+def test_a_position_at_the_very_end_of_the_line_is_allowed():
+    """
+    An empty pattern matches at `len(text)`. The boundary is
+    inclusive on purpose; refusing it would reject a legitimate
+    index rather than an impossible one.
+    """
+
+    assert MatchedLine(entry=entry(text="abc"), match_at=3).match_at == 3
+
+
+def test_an_undetermined_position_is_none_and_not_zero():
+    """
+    Zero is a real position — the pattern at the start of the
+    line. FDN-0003 Article 12: the undetermined is declared, not
+    replaced by a plausible default.
+    """
+
+    assert MatchedLine(entry=entry()).match_at is None
+
+
+def test_a_finding_citing_bare_log_entries_is_refused():
+    """
+    `tuple[MatchedLine, ...]` is an annotation, and an annotation
+    is not a check. When this type changed on 2026-08-23 every
+    caller that had not been updated kept passing bare
+    `LogEntry` objects without complaint — a declaration that
+    asserts a protection and delivers none, inside the contract
+    written to stop exactly that.
+    """
+
+    with pytest.raises(ValueError, match="MatchedLine"):
+        finding(evidence=(entry(),))

@@ -248,18 +248,14 @@ def test_a_line_that_fits_is_printed_whole_and_unmarked(
     assert "char cut]" not in out
 
 
-def test_a_cut_evidence_line_says_it_was_cut(
+def test_a_cut_evidence_line_says_how_much_it_hid(
     monkeypatch, catalogue_file, capsys
 ):
     """
-    The first complete run, 2026-08-22: an nginx line carrying
-    three timestamps was cut at 90 characters and stopped before
-    `connection refused` — the pattern that had fired the rule.
-    The extract showed everything except what it proved.
-
-    The width is now 200 and that particular line fits. A verbose
-    enough log will exceed it again, so the cut is announced —
-    the same rule the line count already follows.
+    The heritage refuses to trim the number of evidence lines in
+    silence; the same rule applies inside a line. What is cut is
+    counted on the side it was cut from, because a bare ellipsis
+    would misplace the match in the reader's head.
     """
 
     line = "AUTH_FAILED " + "x" * 300
@@ -267,8 +263,56 @@ def test_a_cut_evidence_line_says_it_was_cut(
     run(monkeypatch, catalogue_file, {"gluetun": [line]})
     out = capsys.readouterr().out
 
-    assert "[+112 char cut]" in out
-    assert "x" * 188 in out
+    assert "cut]" in out
+    assert "AUTH_FAILED" in out
+
+
+def test_a_match_at_the_end_of_a_long_line_is_still_shown(
+    monkeypatch, tmp_path, capsys
+):
+    """
+    The reason this changed on 2026-08-23. An extract taken from
+    the start shows the pattern only when the pattern is near the
+    start — which is a property of the log, not of the rule. A
+    centred window shows it wherever it sits.
+
+    Here the pattern is 600 characters in, three times the width.
+    A prefix extract would show three hundred `x` and nothing
+    else, and the report would state that a rule fired without
+    ever showing what fired it.
+    """
+
+    catalogue = tmp_path / "OPS-TEST.md"
+    catalogue.write_text(CATALOGUE, encoding="utf-8")
+
+    line = "x" * 600 + " AUTH_FAILED " + "y" * 600
+
+    run(monkeypatch, catalogue, {"gluetun": [line]})
+    out = capsys.readouterr().out
+
+    assert "AUTH_FAILED" in out
+    assert "cut]" in out
+
+
+def test_the_extract_is_centred_rather_than_ending_at_the_match(
+    monkeypatch, tmp_path, capsys
+):
+    """
+    Context on both sides. A window that ended at the match would
+    show what fired the rule and nothing of what surrounded it,
+    and the surrounding text is what a human reads to decide
+    whether the finding matters.
+    """
+
+    catalogue = tmp_path / "OPS-TEST.md"
+    catalogue.write_text(CATALOGUE, encoding="utf-8")
+
+    line = "a" * 600 + "AUTH_FAILED" + "b" * 600
+
+    run(monkeypatch, catalogue, {"gluetun": [line]})
+    out = capsys.readouterr().out
+
+    assert "aaaAUTH_FAILEDbbb" in out
 
 
 def test_the_real_nginx_line_shows_the_pattern_that_fired(

@@ -4,6 +4,55 @@ from aistack.contracts.runtime_observation import LogEntry
 
 
 @dataclass(frozen=True)
+class MatchedLine:
+    """
+    One log line, and where in it the signature was found.
+
+    The position lives here rather than on `LogEntry` because it
+    is not a property of the line. It is a property of the
+    *encounter* between a declared rule and that line: the same
+    line matched by two signatures has two positions, and a line
+    a provider collected has none at all. `ARC-P-012` puts the
+    provider on the far side of that boundary — it observes and
+    concludes nothing, so it has nothing to say about a match.
+
+    **`match_at` may be `None`, and it means one specific
+    thing:** the pattern was found and its position in the
+    original text could not be determined. That happens when a
+    case-insensitive comparison folds characters whose folded
+    length differs from the original — `ß` folds to `ss` — so an
+    index into the folded text points somewhere else in the line
+    the container printed. Reporting that index would centre an
+    extract on the wrong characters and call it evidence.
+
+    It is `None` rather than zero, because zero is a real
+    position. FDN-0003 Article 12: the undetermined is declared,
+    not replaced by a plausible default.
+    """
+
+    entry: LogEntry
+    match_at: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.match_at is not None and self.match_at < 0:
+            raise ValueError(
+                f"a match position is an index into the line: "
+                f"{self.match_at}; use None when it could not be "
+                f"determined"
+            )
+
+        if (
+            self.match_at is not None
+            and self.match_at > len(self.entry.text)
+        ):
+            raise ValueError(
+                f"a match at {self.match_at} in a line of "
+                f"{len(self.entry.text)} characters points outside "
+                f"the evidence it cites"
+            )
+
+
+@dataclass(frozen=True)
 class RuntimeFinding:
     """
     One qualified statement about a running subject.
@@ -29,6 +78,14 @@ class RuntimeFinding:
     citation, and it is why the rule had to be declared and
     identified rather than written into a function.
 
+    Each piece of evidence is a `MatchedLine`: the line, and
+    where the pattern was found in it. The position exists so a
+    report can show what fired the rule. On 2026-08-22 the first
+    complete run produced eleven `frigate` lines carrying three
+    timestamps each, and the report's extract stopped before
+    `connection refused` — everything about the evidence except
+    what it proved.
+
     `interpretation` and `remediation` are copied from the
     signature at the moment of qualification, not looked up
     later. A finding read six months from now states what the
@@ -46,7 +103,7 @@ class RuntimeFinding:
     remediation: str
     confidence: str
     grounding: str
-    evidence: tuple[LogEntry, ...]
+    evidence: tuple[MatchedLine, ...]
 
     def __post_init__(self) -> None:
         if not self.subject.strip():
@@ -65,4 +122,24 @@ class RuntimeFinding:
                 f"{self.signature} produced a finding about "
                 f"{self.subject!r} citing no evidence; STD-0300 § VS-4 "
                 f"criterion 4.9 forbids it"
+            )
+
+        # An annotation is not a check. `tuple[MatchedLine, ...]`
+        # accepted bare `LogEntry` objects without complaint when
+        # this type changed on 2026-08-23, and every caller that
+        # had not been updated kept passing — a declaration that
+        # asserts a protection and delivers none, in the contract
+        # written to stop exactly that.
+        wrong = [
+            type(item).__name__
+            for item in self.evidence
+            if not isinstance(item, MatchedLine)
+        ]
+
+        if wrong:
+            raise ValueError(
+                f"{self.signature} cites evidence of type "
+                f"{sorted(set(wrong))}; a finding cites MatchedLine, "
+                f"which carries the line and where the pattern was "
+                f"found in it"
             )

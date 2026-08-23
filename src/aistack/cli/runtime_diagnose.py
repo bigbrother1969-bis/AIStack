@@ -43,12 +43,12 @@ DEFAULT_CATALOGUE = (
 # rule, `connection refused`, was outside the extract. A piece of
 # evidence that does not show what it proves.
 #
-# 200 covers that line and every other one this deployment
-# produced. It does not close the case: a verbose enough log will
-# put a match beyond it again, and the report would go back to
-# hiding what fired. Recorded as GOV-0002/OS-016 rather than
-# claimed as solved. The complete answer is a window centred on
-# the match, and it needs the finding to carry the position.
+# 200 covered that line and moved the boundary rather than
+# removing it: a verbose enough log would put a match beyond it
+# again. Since 2026-08-23 the extract is centred on the match
+# instead of taken from the start, so the width bounds how much
+# context is shown and no longer decides whether the pattern is
+# visible at all.
 EVIDENCE_WIDTH = 200
 
 
@@ -111,6 +111,48 @@ def containers(provider: DockerProvider) -> dict[str, str]:
     }
 
 
+def extract(text: str, match_at: int | None) -> str:
+    """
+    The part of a line a reader needs, around what fired the rule.
+
+    A line that fits is printed whole. A longer one is centred on
+    the match, so the pattern is visible whatever its position —
+    which is the difference between an extract and a prefix.
+
+    **What is cut is counted on the side it was cut from.** The
+    heritage already refuses to trim the number of evidence lines
+    in silence; the same rule applies inside a line, and a leading
+    ellipsis that did not say how much it hid would misplace the
+    match in the reader's head.
+
+    `match_at` of `None` means the pattern is present and its
+    position could not be determined — a folded comparison whose
+    indices do not map back. The extract then starts at the
+    beginning and says so by omission rather than centring on a
+    position nobody computed.
+    """
+
+    if len(text) <= EVIDENCE_WIDTH:
+        return text
+
+    if match_at is None:
+        return f"{text[:EVIDENCE_WIDTH]}… [+{len(text) - EVIDENCE_WIDTH}]"
+
+    # Centre the window, then push it back inside the line. A
+    # match near either end would otherwise waste half the width
+    # on nothing.
+    start = max(0, match_at - EVIDENCE_WIDTH // 2)
+    start = min(start, len(text) - EVIDENCE_WIDTH)
+
+    shown = text[start : start + EVIDENCE_WIDTH]
+
+    head = f"[{start} cut] …" if start else ""
+    tail_cut = len(text) - (start + EVIDENCE_WIDTH)
+    tail = f"… [{tail_cut} cut]" if tail_cut else ""
+
+    return f"{head}{shown}{tail}"
+
+
 def report(
     findings: list[RuntimeFinding],
     unobserved: list[tuple[str, str]],
@@ -143,26 +185,17 @@ def report(
         )
         print(f"    evidence: {len(finding.evidence)} line(s)")
 
-        for entry in finding.evidence[:3]:
+        for line in finding.evidence[:3]:
+            entry = line.entry
             when = (
                 entry.timestamp.isoformat(timespec="seconds")
                 if entry.timestamp
                 else "no timestamp"
             )
-            shown = entry.text[:EVIDENCE_WIDTH]
-
-            if len(entry.text) > EVIDENCE_WIDTH:
-                # Named, never silent — the same rule the line
-                # count below already follows. A cut extract that
-                # did not say it was cut would read as the whole
-                # line, and the pattern that fired may be in the
-                # part nobody sees.
-                shown = (
-                    f"{shown}… "
-                    f"[+{len(entry.text) - EVIDENCE_WIDTH} char cut]"
-                )
-
-            print(f"      -{entry.offset}  {when}  {shown}")
+            print(
+                f"      -{entry.offset}  {when}  "
+                f"{extract(line.entry.text, line.match_at)}"
+            )
 
         if len(finding.evidence) > 3:
             # Named, never silent: a report that trimmed without

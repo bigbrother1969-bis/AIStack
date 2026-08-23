@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from aistack.contracts.runtime_finding import RuntimeFinding
+from aistack.contracts.runtime_finding import (
+    MatchedLine,
+    RuntimeFinding,
+)
 from aistack.contracts.runtime_observation import (
     LogEntry,
     RuntimeObservation,
@@ -8,9 +11,18 @@ from aistack.contracts.runtime_observation import (
 from aistack.contracts.signature import Signature, SignatureCatalogue
 
 
-def matches(signature: Signature, entry: LogEntry) -> bool:
+# What `locate` returns when the pattern is present and its
+# position in the original text cannot be determined.
+FOUND_SOMEWHERE = -1
+
+
+def locate(signature: Signature, entry: LogEntry) -> int | None:
     """
-    Whether one declared pattern is present in one log line.
+    Where one declared pattern sits in one log line.
+
+    Returns the index, `FOUND_SOMEWHERE` when the pattern is
+    present but its position is not determinable, or `None` when
+    it is absent.
 
     Comparison is a property of the signature, not of this
     function. Three of the four rules the experimenter
@@ -18,12 +30,38 @@ def matches(signature: Signature, entry: LogEntry) -> bool:
     `logs.lower()`. `Signature.case_sensitive` carries that
     difference, and it has no default so that no rule inherits a
     comparison it never chose.
+
+    **The case-insensitive branch searches the folded text, and
+    the folded text can be a different length.** `ß` folds to
+    `ss`, and one such character before the match shifts every
+    index after it. The comparison stays exact — folding is what
+    decides presence — but the index is then a position in a
+    string no container printed, so it is refused rather than
+    reported. An extract centred on the wrong characters would
+    be worse than one centred on nothing.
     """
 
     if signature.case_sensitive:
-        return signature.pattern in entry.text
+        found = entry.text.find(signature.pattern)
+        return None if found < 0 else found
 
-    return signature.pattern.casefold() in entry.text.casefold()
+    folded = entry.text.casefold()
+
+    found = folded.find(signature.pattern.casefold())
+
+    if found < 0:
+        return None
+
+    if len(folded) != len(entry.text):
+        return FOUND_SOMEWHERE
+
+    return found
+
+
+def matches(signature: Signature, entry: LogEntry) -> bool:
+    """Whether one declared pattern is present in one log line."""
+
+    return locate(signature, entry) is not None
 
 
 def qualify(
@@ -87,10 +125,16 @@ def qualify(
             continue
 
         evidence = tuple(
-            entry
-            for entry in observation.entries
-            if entry.offset < signature.depth
-            and matches(signature, entry)
+            MatchedLine(
+                entry=entry,
+                match_at=None if at == FOUND_SOMEWHERE else at,
+            )
+            for entry, at in (
+                (entry, locate(signature, entry))
+                for entry in observation.entries
+                if entry.offset < signature.depth
+            )
+            if at is not None
         )
 
         if not evidence:

@@ -7,7 +7,12 @@ from aistack.contracts.runtime_observation import (
     RuntimeObservation,
 )
 from aistack.contracts.signature import Signature, SignatureCatalogue
-from aistack.runtime.qualification import matches, qualify
+from aistack.runtime.qualification import (
+    FOUND_SOMEWHERE,
+    locate,
+    matches,
+    qualify,
+)
 
 
 NOW = datetime(2026, 8, 22, 12, 0, 0, tzinfo=timezone.utc)
@@ -83,7 +88,7 @@ def test_a_signature_that_fires_produces_one_finding_citing_its_evidence():
     assert len(findings) == 1
     assert findings[0].subject == "gluetun"
     assert findings[0].signature == "OPS-0001/S-001"
-    assert [e.text for e in findings[0].evidence] == ["AUTH_FAILED"]
+    assert [m.entry.text for m in findings[0].evidence] == ["AUTH_FAILED"]
 
 
 def test_forty_matching_lines_are_one_condition_not_forty_findings():
@@ -305,3 +310,71 @@ def test_a_rule_out_of_state_is_not_evaluated_even_when_it_would_match():
     )
 
     assert findings == []
+
+
+# --------------------------------------------------------------------
+# Where the pattern sits, and when that cannot be said
+# --------------------------------------------------------------------
+
+
+def test_locate_returns_the_index_in_the_line():
+
+    rule = signature(pattern="AUTH_FAILED")
+
+    assert locate(rule, LogEntry(0, "xx AUTH_FAILED yy")) == 3
+
+
+def test_locate_returns_none_when_the_pattern_is_absent():
+
+    assert locate(signature(), LogEntry(0, "all quiet")) is None
+
+
+def test_locate_finds_a_case_insensitive_match_at_its_real_index():
+
+    rule = signature(pattern="connection refused", case_sensitive=False)
+
+    assert locate(rule, LogEntry(0, "err: Connection Refused")) == 5
+
+
+def test_a_folded_line_of_a_different_length_refuses_its_index():
+    """
+    `ß` folds to `ss`, so one such character before the match
+    shifts every index after it. The comparison stays exact —
+    folding is what decides presence — but the index then points
+    into a string no container printed.
+
+    Reporting it would centre the report's extract on the wrong
+    characters and call that evidence, so it is refused. The
+    finding still carries the line; only the position is
+    undetermined.
+    """
+
+    rule = signature(pattern="connection refused", case_sensitive=False)
+
+    entry = LogEntry(0, "straße: connection refused")
+
+    assert len(entry.text.casefold()) != len(entry.text)
+    assert locate(rule, entry) == FOUND_SOMEWHERE
+    assert matches(rule, entry)
+
+
+def test_an_undetermined_position_reaches_the_finding_as_none():
+
+    rule = signature(pattern="connection refused", case_sensitive=False)
+
+    finding = qualify(
+        observation(["straße: connection refused"]),
+        catalogue(rule),
+    )[0]
+
+    assert finding.evidence[0].match_at is None
+    assert finding.evidence[0].entry.text == "straße: connection refused"
+
+
+def test_a_determined_position_reaches_the_finding_intact():
+
+    finding = qualify(
+        observation(["xx AUTH_FAILED"]), catalogue(signature())
+    )[0]
+
+    assert finding.evidence[0].match_at == 3

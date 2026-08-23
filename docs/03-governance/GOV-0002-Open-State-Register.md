@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.19
+  version: 1.20
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -203,6 +203,56 @@ The other ten remain `unknown`, and this is the half no tool will ever close:
 `KnowledgePipeline`, `KnowledgeProvider`, `kernel.execution.task.Task` and
 `TransferTarget`. The entry stays open for them, and the figure the check
 publishes does not change: twenty orphans, ten of them now answered for.
+
+#### GOV-0002/OS-025 — The declared environment names an interpreter it does not provide
+
+**Nature** `contract-debt` · **Opened** 2026-08-23 · **State** open
+**Observed** On 2026-08-23 the owner ran the governed command,
+`source bin/aistack_env.sh && pytest -q`, on a shell where the virtual
+environment was not active. `python3` was the system 3.12. The file printed
+both of its warning lines and the suite ran anyway: 514 passed, and
+`test_the_suite_runs_on_the_interpreter_the_heritage_declares` failed — the
+test written the day before, catching the owner of the heritage that declares
+it.
+
+ADR-0001 designates `bin/aistack_env.sh` as the **single source of truth for
+the execution environment**, and ENG-TEST-0002 is C3 and promises
+*reproducibility, deterministic execution, portability across environments*.
+Since 2026-08-23 that file names the interpreter — `3.13` — and it provides
+nothing. Both machines carry a `uv`-created virtual environment holding a
+conforming interpreter, and **no artifact of this heritage names it, says
+where it lives, or says that it must be active**.
+
+So the governed command is not the whole command. What actually has to be
+typed is `source .venv/bin/activate` first, and that instruction exists in one
+person's shell history — the condition FDN-P-004 exists to end, and the same
+shape as the interpreter itself before OS-019.
+
+The warning is deliberate and stays: this file is sourced, so a `return` on a
+mismatch would drop the developer out of the setup they asked for. What is
+undeclared is not the warning, it is the environment the warning is about.
+**Derivable** partly, and already half-derived. That `python3` is not the
+declared version is detected twice over — by the file's own warning and by the
+test. That the machine holds a conforming interpreter elsewhere, and where, is
+not derivable from anything written.
+**Qualification** `unknown`. Three readings, and the third is what is in
+force today without being declared:
+
+- **the SPOT provides the environment.** `bin/aistack_env.sh` activates a
+  virtual environment at a declared path, and creates it if absent. The file
+  designated as the source of truth for the environment would then be the
+  environment. It also means a sourced file that mutates the caller's shell
+  well beyond exporting variables.
+- **the launchers refuse.** The declaration stays a declaration and the three
+  `bin/` entry points exit on a non-conforming interpreter. Enforcement moves
+  to the things that run, and the warning stays a warning for someone who
+  sources the file by hand.
+- **the environment is deployment configuration**, like the transfer route in
+  `config/context_bundle_transfer.yml`: not governed, not versioned, the
+  developer's responsibility, and the existing warning is the whole treatment.
+  This is what happens today. Choosing it would mean writing it down, so that
+  the next person to run the governed command on a bare shell learns it from
+  an artifact rather than from a red test.
 
 #### GOV-0002/OS-003 — `ARC-P-005` and FDN-0011's second principle state one rule twice
 

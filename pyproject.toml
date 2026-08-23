@@ -45,6 +45,34 @@ license = { text = "AGPL-3.0-or-later" }
 # already published inside every Context Bundle. It is not a
 # machine address: the git remote of a given clone may be a
 # tunnel or a loopback, and the export refuses to publish those.
+# What the governed test command needs, and did not declare.
+#
+# `pytest` was configured in this file — `[tool.pytest.ini_options]`
+# below, carrying STD-0002's testpaths — and declared as a dependency
+# nowhere. It was installed by hand on the laptop, by hand on the
+# agent's container, and nothing said which version either had.
+#
+# ENG-TEST-0002 is C3 and promises reproducibility and deterministic
+# execution. An undeclared tool cannot deliver either: two machines
+# running the same governed command on the same commit could run two
+# pytest versions and nothing would report it. That is the shape of
+# GOV-0002/OS-019, where the same measurement gave 20 orphan contracts
+# on one interpreter and 22 on another, minus the warning that caught
+# it.
+#
+# A floor, not a pin. There is no lock file yet, so this declares what
+# the suite needs rather than what one machine happens to hold —
+# recorded under GOV-0002/OS-025 rather than implied.
+#
+# This table sits after every key of `[project]` on purpose. A TOML
+# table header ends the table above it, so placing it beside
+# `dependencies` moved `authors` and `license` into it. Caught by
+# parsing the file rather than reading it.
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
 [project.urls]
 Repository = "https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git"
 

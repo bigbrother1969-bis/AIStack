@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.22
+  version: 1.23
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -204,7 +204,7 @@ The other ten remain `unknown`, and this is the half no tool will ever close:
 `TransferTarget`. The entry stays open for them, and the figure the check
 publishes does not change: twenty orphans, ten of them now answered for.
 
-#### GOV-0002/OS-025 — The declared environment names an interpreter it does not provide
+#### GOV-0002/OS-025 — The governed test command is not the command that works
 
 **Nature** `contract-debt` · **Opened** 2026-08-23 · **State** open
 **Observed** On 2026-08-23 the owner ran the governed command,
@@ -215,45 +215,63 @@ both of its warning lines and the suite ran anyway: 514 passed, and
 test written the day before, catching the owner of the heritage that declares
 it.
 
-ADR-0001 designates `bin/aistack_env.sh` as the **single source of truth for
-the execution environment**, and ENG-TEST-0002 is C3 and promises
-*reproducibility, deterministic execution, portability across environments*.
-Since 2026-08-23 that file names the interpreter — `3.13` — and it provides
-nothing. Both machines carry a `uv`-created virtual environment holding a
-conforming interpreter, and **no artifact of this heritage names it, says
-where it lives, or says that it must be active**.
+**This entry was opened on a claim that was false, and the correction is the
+entry.** Its first version stated that *no artifact of this heritage names
+the virtual environment, says where it lives, or says that it must be
+active*. `scripts/dev-env.sh` does all three:
 
-So the governed command is not the whole command. What actually has to be
-typed is `source .venv/bin/activate` first, and that instruction exists in one
-person's shell history — the condition FDN-P-004 exists to end, and the same
-shape as the interpreter itself before OS-019.
+```
+source "${PROJECT_ROOT}/bin/aistack_env.sh" || return 1
+export PATH="${PROJECT_ROOT}/.venv/bin:${PATH}"
+```
 
-The warning is deliberate and stays: this file is sourced, so a `return` on a
-mismatch would drop the developer out of the setup they asked for. What is
-undeclared is not the warning, it is the environment the warning is about.
-**Derivable** partly, and already half-derived. That `python3` is not the
-declared version is detected twice over — by the file's own warning and by the
-test. That the machine holds a conforming interpreter elsewhere, and where, is
-not derivable from anything written.
-**Qualification** `unknown`. Three readings, and the third is what is in
-force today without being declared:
+It names `.venv`, locates it under the repository root, puts it ahead of the
+system interpreter, and reports which `python` and which `pytest` are in use.
+It was written on 2026-08-21 and the agent had read this repository twice
+that day without opening it.
 
-- **the SPOT provides the environment.** `bin/aistack_env.sh` activates a
-  virtual environment at a declared path, and creates it if absent. The file
-  designated as the source of truth for the environment would then be the
-  environment. It also means a sourced file that mutates the caller's shell
-  well beyond exporting variables.
-- **the launchers refuse.** The declaration stays a declaration and the three
-  `bin/` entry points exit on a non-conforming interpreter. Enforcement moves
-  to the things that run, and the warning stays a warning for someone who
-  sources the file by hand.
-- **the environment is deployment configuration**, like the transfer route in
-  `config/context_bundle_transfer.yml`: not governed, not versioned, the
-  developer's responsibility, and the existing warning is the whole treatment.
-  This is what happens today. Choosing it would mean writing it down, so that
-  the next person to run the governed command on a bare shell learns it from
-  an artifact rather than from a red test.
+**What is actually wrong is smaller and worse.** ENG-TEST-0002 is C3 and
+states the standard test command as `source bin/aistack_env.sh && pytest -q`.
+That is the half that declares the environment; `scripts/dev-env.sh` is the
+half that completes it, and it sources the first, so nothing is bypassed by
+using it. **The governed command names the half that does not finish the
+job**, and that is precisely what was run and what failed.
 
+Two further gaps were measured while establishing this, and they are the ones
+that reach what ENG-TEST-0002 promises — *reproducibility, deterministic
+execution, portability across environments*:
+
+- **`pytest` is declared nowhere.** `pyproject.toml` configures it —
+  `[tool.pytest.ini_options]`, carrying STD-0002's `testpaths` — and does not
+  declare it as a dependency. The only declared dependency is `PyYAML>=6.0`,
+  with no upper bound, and there is no lock file. `scripts/dev-env.sh`
+  reports *where* pytest is; nothing states *which*. Two machines can run the
+  same governed command against different versions of both and nothing would
+  say so — the shape of OS-019 without even the warning.
+- **Nothing compares the declared interpreter with the images.**
+  `pyproject.toml` says `>=3.13`; `Dockerfile` and `Dockerfile.selection-ui`
+  both say `FROM python:3.13-slim`; no test relates them. The existing test's
+  own failure message reads *"the result says nothing about what the images
+  run"* — and nothing checks what the images run.
+
+The warning in `bin/aistack_env.sh` is deliberate and stays: the file is
+sourced, so a `return` on a mismatch would drop the developer out of the
+setup they asked for.
+**Derivable** yes, for all three. Which command a C3 principle names is
+readable; whether a configured tool is a declared dependency is readable; the
+interpreter of a Dockerfile is one line.
+**Qualification** **decided 2026-08-23 by the owner, after the entry was
+corrected.** The standard command of ENG-TEST-0002 becomes
+`source scripts/dev-env.sh`, which keeps declaring and providing in two files
+— ADR-0001 leaves `bin/aistack_env.sh` the SPOT of the declaration, and the
+other provides. `pytest` is declared as a development dependency, and a test
+compares the declared interpreter with what both images ship.
+
+The readings recorded before the correction — that the SPOT should activate
+the environment itself, that the launchers should refuse, or that the
+environment is deployment configuration — were all answers to a question that
+did not exist. The environment was declared; the principle pointed at the
+wrong file.
 #### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
 
 **Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open

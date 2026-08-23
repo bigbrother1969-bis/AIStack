@@ -17,10 +17,17 @@ readme = "README.md"
 # people ran the same command on two machines rather than
 # because anything checked (GOV-0002/OS-019).
 #
-# 3.13 is what the published images run and what the owner's
-# machine runs. Narrowing the range gives up a portability
-# nothing verified, and `tests/unit/test_declared_interpreter.py`
-# now refuses to let the claim drift from the interpreter in use.
+# 3.13 is what the published images run and what the SPOT host
+# runs. Narrowing the range gives up a portability nothing
+# verified, and `tests/unit/test_declared_interpreter.py` refuses
+# to let the claim drift from the interpreter in use.
+#
+# It caught the agent within the hour. The commit that introduced
+# it asserted that 3.13 was also what the owner's laptop ran —
+# read off a `python3 -VV` that had in fact executed on the SPOT
+# host. The laptop was 3.12, the suite went red on the machine
+# that runs it, and the owner aligned the laptop to 3.13 on
+# 2026-08-23 rather than widen the range back.
 requires-python = ">=3.13"
 dependencies = [
     "PyYAML>=6.0",

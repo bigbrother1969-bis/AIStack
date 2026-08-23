@@ -475,9 +475,22 @@ nothing about the interpreter, so the declared execution environment
 declares an incomplete environment — the same shape of gap the principle's
 own v2.0 was written to close.
 **Resolved 2026-08-23.** The owner narrowed the range:
-`requires-python = ">=3.13"`, which is what the published images run and
-what the owner's machine runs. A portability nothing verified is given up
-rather than claimed.
+`requires-python = ">=3.13"`, which is what the published images and the
+SPOT host run. A portability nothing verified is given up rather than
+claimed.
+
+**The check caught the agent before the owner did, in the commit that
+introduced it.** That commit stated 3.13 was also what the owner's laptop
+ran. It was 3.12. The figure had been read off a `python3 -VV` that executed
+on the SPOT host — the preceding `cd` had failed there, which said so — and
+the agent reported it as the laptop's without ever measuring the laptop.
+The suite went red on the one machine that runs it, with the reason in the
+assertion message.
+
+Measured 2026-08-23, after the fact and not before: laptop 3.12, SPOT host
+3.13.5, images `python:3.13-slim`, agent container 3.11 and 3.13. The owner
+aligned the laptop to 3.13 rather than widen the range back, so the
+declaration and the deployment now name one version.
 
 Narrowing alone would have moved the defect instead of closing it — the
 agent's container runs 3.11, so the suite would have kept passing on an

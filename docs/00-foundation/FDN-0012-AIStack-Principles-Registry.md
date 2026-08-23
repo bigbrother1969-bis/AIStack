@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 2.3
+  version: 2.4
   status: Draft
   owner: Foundation
   created: 2026-07-24
@@ -21,6 +21,28 @@ relations:
 ---
 
 # AIStack Principles Registry
+
+## Provenance of version 2.4
+
+`ENG-P-007 — Contracts derive from Policies` was registered on 2026-08-23.
+
+It had been in this registry since long before, and in no table. Four screens
+between the Engineering table and the Operations heading, declaring
+`Domain: Engineering`, `Criticality: C2 — Governed Principle` and the word
+**Principle**, with its full statement, its engineering chain and its
+architectural consequences — and no identifier. It was a governed principle by
+every property it declared about itself, and invisible to everything that
+reads this registry: uncountable, uncitable, and absent from the 49 the
+`principle-identifiers` check reports.
+
+It was found by that check being written. The reader walks the rows of every
+`| ID |` table, so it saw what the tables declare; a human reading what sits
+*between* them saw what they do not. GOV-0002/OS-024.
+
+The registration changes nothing about its content, and in particular the
+truncated sentence beginning *"Different"* travels with it — still recorded as
+lost under FDN-0003 Article 12 rather than quietly dropped by the act of
+numbering.
 
 ## Provenance of version 2.2
 
@@ -257,8 +279,9 @@ AIStack behavior:
 | ENG-P-004 | Improve generators instead of generated artifacts | C2 |
 | ENG-P-005 | Validate every architectural step independently | C2 |
 | ENG-P-006 | Prefer simple modular maintainable solutions | C1 |
+| ENG-P-007 | Contracts derive from Policies | C2 |
 
-Contracts Derive from Policies
+## ENG-P-007 — Contracts Derive from Policies
 
 Domain: Engineering
 

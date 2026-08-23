@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.20
+  version: 1.21
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -334,42 +334,6 @@ it named.*
 
 # Non-conforming instances
 
-#### GOV-0002/OS-024 — A principle sits in FDN-0012 with no identifier and no row
-
-**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
-**Observed** Found while writing the `principle-identifiers` check, by reading
-what the registry contains rather than what its tables declare.
-
-Between the Engineering table and the Operations heading, FDN-0012 carries
-*Contracts Derive from Policies* — four screens declaring `Domain: Engineering`,
-`Criticality: C2 — Governed Principle`, the word **Principle**, a full statement,
-an engineering chain and its architectural consequences. It has no identifier and
-no row in any table.
-
-So it is a governed principle by every property it declares about itself, and it
-is invisible to everything that reads the registry: the 49 the check counts do
-not include it, nothing can cite it, and `FDN-P-014` — *technical debt is a
-property of the contracts* — sits in a table three screens above while its
-fuller statement sits outside one.
-
-It also carries the truncated sentence beginning *"Different"*, introduced
-already incomplete by `685bcc8` on 2026-08-01 and recorded as lost under
-FDN-0003 Article 12. Whatever is decided about the principle, that note travels
-with it.
-
-**Derivable** partly. That a heading declaring `Criticality:` and `Principle`
-carries no identifier is detectable. Whether a block of prose *is* a principle is
-not, and this one was found by reading.
-**Qualification** **decided 2026-08-23 by the owner.** **It becomes
-`ENG-P-007`, with a row.** It is what the block already declares itself to be;
-registering it only makes that legible to everything that reads the registry.
-It becomes citable, the count goes from 49 to 50, and `principle-identifiers`
-verifies it like the others.
-
-The truncated sentence beginning *"Different"* travels with it, still recorded
-as lost under FDN-0003 Article 12 rather than quietly dropped by the
-registration.
-
 #### GOV-0002/OS-023 — `<ID>-<Title>.md` does not describe this heritage
 
 **Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
@@ -652,6 +616,51 @@ boundary, so a later reader who completes the rule to `semantic_type` and
 artifacts.
 **Derivable** yes — a check comparing declared types across the bundle
 **Qualification** none required; the rule is decided.
+
+#### GOV-0002/OS-024 — A principle sits in FDN-0012 with no identifier and no row
+
+**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** resolved 2026-08-23 by registering it as `ENG-P-007`
+**Observed** Found while writing the `principle-identifiers` check, by reading
+what the registry contains rather than what its tables declare.
+
+Between the Engineering table and the Operations heading, FDN-0012 carries
+*Contracts Derive from Policies* — four screens declaring `Domain: Engineering`,
+`Criticality: C2 — Governed Principle`, the word **Principle**, a full statement,
+an engineering chain and its architectural consequences. It has no identifier and
+no row in any table.
+
+So it is a governed principle by every property it declares about itself, and it
+is invisible to everything that reads the registry: the 49 the check counts do
+not include it, nothing can cite it, and `FDN-P-014` — *technical debt is a
+property of the contracts* — sits in a table three screens above while its
+fuller statement sits outside one.
+
+It also carries the truncated sentence beginning *"Different"*, introduced
+already incomplete by `685bcc8` on 2026-08-01 and recorded as lost under
+FDN-0003 Article 12. Whatever is decided about the principle, that note travels
+with it.
+
+**Derivable** partly. That a heading declaring `Criticality:` and `Principle`
+carries no identifier is detectable. Whether a block of prose *is* a principle is
+not, and this one was found by reading.
+**Qualification** **decided 2026-08-23 by the owner.** **It becomes
+`ENG-P-007`, with a row.** It is what the block already declares itself to be;
+registering it only makes that legible to everything that reads the registry.
+It becomes citable, the count goes from 49 to 50, and `principle-identifiers`
+verifies it like the others.
+
+The truncated sentence beginning *"Different"* travels with it, still recorded
+as lost under FDN-0003 Article 12 rather than quietly dropped by the
+registration.
+
+**Resolved 2026-08-23.** It is `ENG-P-007 — Contracts derive from Policies`,
+with a row in the Engineering table and a heading that carries the identifier.
+The count goes from 49 to 50, the two forward citations this register carried
+are gone, and `principle-identifiers` verifies it like the others.
+
+Its content is unchanged, and the truncated sentence beginning *"Different"*
+travels with it — still recorded as lost under FDN-0003 Article 12 rather than
+dropped by the act of numbering.
 
 #### GOV-0002/OS-007 — `ADR-0003-Selection-Engine.md` does not carry its full title
 

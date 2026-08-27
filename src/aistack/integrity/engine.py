@@ -43,6 +43,9 @@ from aistack.integrity.checks.transport_residue import (
 from aistack.integrity.checks.undated_assertions import (
     UndatedAssertionCheck,
 )
+from aistack.integrity.checks.unfinished_decisions import (
+    UnfinishedDecisionCheck,
+)
 
 
 def default_checks() -> list[IntegrityCheck]:
@@ -61,6 +64,7 @@ def default_checks() -> list[IntegrityCheck]:
         ContractDebtCheck(),
         ReferenceIntegrityCheck(),
         UndatedAssertionCheck(),
+        UnfinishedDecisionCheck(),
     ]
 
 

@@ -92,4 +92,5 @@ def test_default_composition_is_stable():
         "contract-debt",
         "reference-integrity",
         "undated-assertions",
+        "unfinished-decisions",
     ]

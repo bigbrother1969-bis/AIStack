@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.44
+  version: 1.45
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -213,9 +213,17 @@ open until then; the mitigation of 2026-08-21 holds meanwhile — bound to
 
 # Decisions
 
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-034 — A Runtime migration is announced in a docstring
 
-**Nature** `decision` · **Opened** 2026-08-27 · **State** open
+**Nature** `decision` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by abandoning the migration
 **Observed** `KnowledgeProvider` describes itself, in code:
 
 > *Backward-compatible discovery provider. This protocol remains compatible
@@ -260,13 +268,33 @@ are separable:
   continue is a Runtime migration whose only record is a comment in the
   contract it targets.
 
----
+**Resolved 2026-08-27.** The owner abandoned it, on the measurement the first
+qualification lacked.
 
-# Resolved
+Six call sites use `collect`. **None use `discover`** — and
+`aistack.cli.docker_discover`, the command named after the model, calls
+`collect` too, emitting the raw observation that FDN-0002 calls discovering.
+Five weeks after the contract was shaped for the destination, the Discovery
+model existed in two contracts, a registry's type parameter and a command
+name, and in no behaviour.
 
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
+`KnowledgeProvider` now declares one method, `collect`, over the `Provider`
+identity. `DiscoveryProvider` is removed, and `ProviderRegistry` is typed on
+what it actually holds — it was typed on the half nothing implemented, so its
+declared element type was satisfied by nothing it could ever contain.
+
+`ComposeProvider` and `DockerProvider` satisfy the contract that describes
+them. The debt goes from 51 contracts and 15 orphans to **50 and 13**.
+
+**This is the recommendation the agent withdrew two hours earlier**, and the
+withdrawal was right at the time. It had measured the glossary and the two
+implementations and concluded `discover` was unearned; the contract's own
+docstring said the opposite, and a recommendation contradicted by its subject
+is worth nothing. What returned it was the third measurement — the callers —
+which is the dimension OS-001 records as missing from the first pass.
+
+The word survives where it names the activity: FDN-0002's definition, and the
+CLI command. What is retired is the second *method*.
 
 #### GOV-0002/OS-001 — Twenty declared contracts are satisfied by nothing
 
@@ -366,7 +394,8 @@ figure the check publishes is 15 orphans of 51 contracts rather than 20 of 56.
 | `Task` | planned — FDN-0002 § Task, cited by eight artifacts |
 | `KnowledgePolicy` | planned — FDN-0002 § Knowledge Policy |
 | `EvidenceCollector` | planned — ADR-0008's Knowledge Acquisition Dimension |
-| `KnowledgeProvider`, `DiscoveryProvider` | planned — and GOV-0002/OS-034 |
+| `KnowledgeProvider` | satisfied since 2026-08-27 — OS-034 narrowed it |
+| `DiscoveryProvider` | abandoned, removed — OS-034 |
 | `KnowledgeEngine`, `KnowledgeGenerator`, `KnowledgeRenderer` | abandoned, removed |
 | `KnowledgePipeline` | abandoned, removed with `PipelineRegistry` |
 | `TransferTarget` | superseded by `BundleTransferConfiguration`, removed |

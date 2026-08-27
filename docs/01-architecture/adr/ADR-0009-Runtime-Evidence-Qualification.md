@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-08-22
-  updated: 2026-08-22
+  updated: 2026-08-27
 
 relations:
   references:
@@ -305,6 +305,60 @@ The web surface follows the pattern the repository already established.
 `selection_ui/` is 331 lines, lives at the repository root outside `src/`,
 imports the governed library, and ships as its own digest-pinned image. The
 new surface is built the same way. It is not part of `src/aistack`.
+
+### 7. What a running AIStack knows, and what it does not
+
+Section 2 makes `docs/` an input to execution. That has a boundary, and two
+questions found it on 2026-08-22 during the first real runs. Both were
+qualified by the owner on 2026-08-23 and are written here rather than left in
+the register.
+
+#### 7.1 An installed AIStack is a different subject from a governed one
+
+`OPS-0001` declares the signatures and `runtime_diagnose` resolves them from
+the repository root. The wheel contains `aistack/` and nothing else —
+verified 2026-08-22 by building it and reading its contents. An installed
+AIStack therefore fails with an explicit message and must be given
+`--catalogue`.
+
+**That is the decision, not a defect.** A governed AIStack requires the
+repository. An installed one is an executable without a heritage, and it is
+allowed to be: what it may not do is pretend to have one.
+
+`docs/` is not shipped in the wheel. Doing so would make governed knowledge an
+artifact of distribution, versioned by the wheel rather than by its Single
+Point Of Truth, and would put two copies of it in the world — which FDN-P-005
+forbids. `--catalogue` stays optional and the failure stays loud, because a
+tool that silently qualified evidence against no catalogue would report a
+clean deployment on an empty rulebook.
+
+Of the three readings the register laid out, this was recorded as the most
+inconvenient. It was chosen for the reason it was inconvenient
+(GOV-0002/OS-014).
+
+#### 7.2 The expected state of a deployment is not declared here
+
+First real sweep, 2026-08-22: 62 containers, one finding, eleven connection
+refusals inside `frigate`. `frigate` is stopped on purpose on that
+deployment — started on demand, shut down after — and those lines are what an
+nginx prints while its backend goes away.
+
+`Signature.applies_to` was added the same day and treats the symptom: a rule
+can state that it means something only on a running container. **It does not
+close the gap**, and it is deliberately a treatment of the symptom. The
+heritage cannot tell *stopped because broken* from *stopped on purpose*,
+because nothing states which containers a deployment expects to be running.
+
+That statement is not written here and will not be. **This repository
+describes a product; the set of containers one host expects describes that
+host**, and declaring it here would make every other installation contradict
+it. The gap is real and is now outside this repository's scope rather than
+pending inside it (GOV-0002/OS-015).
+
+The same boundary was applied twice more on 2026-08-27, and held both times:
+the machine that publishes this repository to the public internet is not
+named by the heritage, and OPS-0002 states the publication procedure in roles
+rather than machines.
 
 ## Consequences
 

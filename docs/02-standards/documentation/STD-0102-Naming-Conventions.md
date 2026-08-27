@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 2.2
+  version: 2.3
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-23
+  updated: 2026-08-27
 
 relations:
   references:
@@ -83,29 +83,75 @@ and shall not be normalized:
 
 # File Names
 
-Canonical Knowledge Artifacts shall follow the pattern:
+**A file name is not governed.** The rule that it must follow
+`<ID>-<Title>.md` was retired on 2026-08-27, and what replaced it
+is nothing: an artifact's identity is `id`, declared in its
+frontmatter, and where its text happens to sit is a convenience
+for whoever browses the tree.
 
-```text
-<ID>-<Title>.md
-```
+## Why it was retired
 
-Examples:
+The rule was measured against the heritage it governs on
+2026-08-23, before a check was written to enforce it. **25 of the
+65 artifacts did not follow it**, and they were not 25 mistakes.
+They were families, and at least three of them are deliberate:
 
-```text
-FDN-0003-Constitution.md
+- **components.** `CMP-0001` through `CMP-0012` each hold
+  `README.md`, `architecture.md` and `specification.md` inside
+  their own directory. That is a coherent convention — and it
+  produces four files named `architecture.md`, so a file name no
+  longer identifies an artifact even in principle;
+- **section READMEs.** `FDN-0001-README.md`, `STD-0001-README.md`,
+  and the repository's own `README.md`, whose declared title is
+  *AIStack Main README*;
+- **the Manifesto**, `The-Sustainable-Heritage-Manifesto.md`,
+  declaring `id: FDN-MANIFESTO` — a name chosen to be read, on the
+  document that opens the heritage.
 
-STD-0100-Documentation-Standard.md
+The rest are near-misses where the declared title is longer than
+the file name: `ADR-0005-Context-Bundle-Engine.md` declares
+*Context Bundle Engine Architecture*, and three others like it.
 
-ADR-0001-Python-Packaging-v1.md
+A rule that reports 38% of what it governs as non-conforming is
+not describing that heritage. Enforcing it would have meant
+renaming 25 files to satisfy a constraint that had stopped
+carrying anything.
 
-ARCH-0002-Kernel-Architecture.md
-```
+## What carries identity instead
 
-A file name carries the identifier and the title, and nothing
-else. Criticality in particular does not belong here: it is a
-declared qualification that may change, and encoding it in the
-name creates a second source for one fact and a rename the day
-it moves. Five architecture documents carried a `-C1` or `-C2`
+Since 2026-08-23 the Context Bundle is keyed on the declared `id`
+(GOV-0002/OS-021). Before that a bundle held 65 artifacts
+identified by content hash, and `FDN-0003` appeared nowhere in the
+model — which is the state in which a file name was the only
+human-readable handle an artifact had. That is no longer true, and
+the rule outlived the reason for it.
+
+`reference-integrity` resolves every declared reference against
+`id`. `principle-identifiers` reads the rows of FDN-0012. Neither
+looks at a path.
+
+## What is still true
+
+**Identifiers never change**, and that rule is untouched — it
+governs `id`, not the file holding it. A file may be renamed
+freely; renaming what it declares breaks every reference ever
+written.
+
+Two file names were corrected before the rule was retired, and
+both were right to correct: `FDN-PRINCIPLES` → `FDN-0012`
+(GOV-0002/OS-006), which was an *identifier* change and cost five
+citations, and `ADR-0003-Selection-Engine.md` →
+`ADR-0003-Selection-Engine-Strategy-Delegation.md`
+(GOV-0002/OS-007), a rename that touched nothing. A file whose
+name contradicts its declared title is still worth fixing when
+someone notices. What is retired is the obligation, not the
+courtesy.
+
+A file name carries whatever helps a reader find it.
+**Criticality does not belong there**, and that has not changed:
+it is a declared qualification that may move, and encoding it in
+a name creates a second source for one fact and a rename the day
+it changes. Five architecture documents carried a `-C1` or `-C2`
 suffix until 2026-08-21.
 
 ---

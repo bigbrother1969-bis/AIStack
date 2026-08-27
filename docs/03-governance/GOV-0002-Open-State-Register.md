@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.28
+  version: 1.29
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -355,50 +355,6 @@ The entry stays open until they are.
 comparing every remote against the declared name and chose not to: it would
 add a warning to every publication for a defect that has never broken
 anything, and remote names are machine facts.*
-
-#### GOV-0002/OS-023 — `<ID>-<Title>.md` does not describe this heritage
-
-**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
-**Observed** STD-0102 mandates `<ID>-<Title>.md`. Measured 2026-08-23 across
-the 65 artifacts of the projection: **25 do not follow it**. OS-006 and
-OS-007 were recorded as two isolated instances; they were the two that
-happened to be noticed.
-
-The 25 are not 25 mistakes. They are families, and at least three of them
-look deliberate:
-
-- **components.** `CMP-0001` through `CMP-0012` each hold `README.md`,
-  `architecture.md` and `specification.md` inside their own directory. That
-  is a coherent convention — and it produces four files named
-  `architecture.md`, so a filename no longer identifies an artifact.
-- **section READMEs.** `FDN-0001-README.md`, `STD-0001-README.md`, and the
-  repository's own `README.md`, whose declared title is *AIStack Main
-  README*.
-- **the Manifesto**, `The-Sustainable-Heritage-Manifesto.md`, declaring
-  `id: FDN-MANIFESTO` — a name chosen to be read, on a document that opens
-  the heritage.
-
-The rest are near-misses where the title is longer than the filename:
-`ADR-0005-Context-Bundle-Engine.md` declares *Context Bundle Engine
-Architecture*, and three others like it.
-
-*This entry exists because the agent wrote into OS-007 that a
-`filename-conformance` check now enforced the rule — before writing it, and
-before measuring. Measuring first is what turned a one-line check into a
-governance question.*
-**Derivable** yes — comparing `source` against `id` and `title` is one pass
-over the bundle, and it is written the moment the rule is settled
-**Qualification** **decided 2026-08-23 by the owner.** **The rule is
-retired.** `<ID>-<Title>.md` stops being governed. Since OS-021 the projection
-is keyed on `id`, so a filename carries no identity and the constraint had
-become decorative. STD-0102 is amended, no `filename-conformance` check is
-written, and no file is renamed.
-
-OS-006 and OS-007 stay resolved, and were not mistakes. A file whose name
-contradicted its declared title was worth fixing while the name was what a
-reader had. What is retired is the rule that turned those two into a
-permanent obligation over 25 artifacts following other conventions on
-purpose.
 
 ---
 
@@ -773,6 +729,70 @@ before saying what replaced it.
 
 What v2.1 was right about, and what stands: a principle restated in two
 registered rows would be a duplicate. That is not what these are.
+
+#### GOV-0002/OS-023 — `<ID>-<Title>.md` does not describe this heritage
+
+**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** resolved 2026-08-27 by retiring the rule
+**Observed** STD-0102 mandates `<ID>-<Title>.md`. Measured 2026-08-23 across
+the 65 artifacts of the projection: **25 do not follow it**. OS-006 and
+OS-007 were recorded as two isolated instances; they were the two that
+happened to be noticed.
+
+The 25 are not 25 mistakes. They are families, and at least three of them
+look deliberate:
+
+- **components.** `CMP-0001` through `CMP-0012` each hold `README.md`,
+  `architecture.md` and `specification.md` inside their own directory. That
+  is a coherent convention — and it produces four files named
+  `architecture.md`, so a filename no longer identifies an artifact.
+- **section READMEs.** `FDN-0001-README.md`, `STD-0001-README.md`, and the
+  repository's own `README.md`, whose declared title is *AIStack Main
+  README*.
+- **the Manifesto**, `The-Sustainable-Heritage-Manifesto.md`, declaring
+  `id: FDN-MANIFESTO` — a name chosen to be read, on a document that opens
+  the heritage.
+
+The rest are near-misses where the title is longer than the filename:
+`ADR-0005-Context-Bundle-Engine.md` declares *Context Bundle Engine
+Architecture*, and three others like it.
+
+*This entry exists because the agent wrote into OS-007 that a
+`filename-conformance` check now enforced the rule — before writing it, and
+before measuring. Measuring first is what turned a one-line check into a
+governance question.*
+**Derivable** yes — comparing `source` against `id` and `title` is one pass
+over the bundle, and it is written the moment the rule is settled
+**Qualification** **decided 2026-08-23 by the owner.** **The rule is
+retired.** `<ID>-<Title>.md` stops being governed. Since OS-021 the projection
+is keyed on `id`, so a filename carries no identity and the constraint had
+become decorative. STD-0102 is amended, no `filename-conformance` check is
+written, and no file is renamed.
+
+OS-006 and OS-007 stay resolved, and were not mistakes. A file whose name
+contradicted its declared title was worth fixing while the name was what a
+reader had. What is retired is the rule that turned those two into a
+permanent obligation over 25 artifacts following other conventions on
+purpose.
+
+**Resolved 2026-08-27.** STD-0102 v2.3 retires the rule. A file name is not
+governed: identity is `id`, declared in frontmatter, and where an artifact's
+text sits is a convenience for whoever browses the tree.
+
+No check was written and no file was renamed. The 25 keep their names, and
+the three deliberate families — the `CMP-XXXX` components, the section
+READMEs, the Manifesto — stop being non-conforming by being outside a rule
+rather than by being excused from one.
+
+**What the standard keeps** is the part that was never about file names:
+*identifiers never change*, which governs `id`; and criticality does not
+belong in a name, because it is a qualification that moves and would create a
+second source for one fact.
+
+It also keeps both corrections that preceded the retirement, and states that
+they were right. OS-006 was an *identifier* change and cost five citations.
+OS-007 was a rename that touched nothing. A file whose name contradicts its
+declared title is still worth fixing when someone notices — what is retired
+is the obligation, not the courtesy.
 
 #### GOV-0002/OS-024 — A principle sits in FDN-0012 with no identifier and no row
 

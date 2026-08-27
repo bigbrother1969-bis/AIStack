@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.54
+  version: 1.55
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -179,86 +179,13 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
-#### GOV-0002/OS-035 — Two consequences of ADR-0009 were never built
+None open. OS-001, OS-002, OS-016, OS-018, OS-019, OS-021, OS-022, OS-027 and
+OS-035 are in *Resolved*.
 
-**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
-**Observed** ADR-0009 was accepted on 2026-08-22 with two steps left, and its
-implementation table carried them as *not started* for five days. Retiring
-`aistack-backend` on 2026-08-27 discharged the exposure and left both:
-
-- **`runtime_ui/`, the web surface.** § 6 promises *iso-usage on capability*,
-  and the capability survives through the CLI — a global diagnostic, one
-  container named, and the runtime catalogue. What does not survive is the
-  interaction: there is no web surface, and there was one.
-- **The three-state qualification.** § 6 states that the experimenter's state
-  icon is *corrected rather than reproduced*, because
-  `health.get("Status", "healthy")` displays a container with no healthcheck
-  as healthy, and FDN-0003 Article 12 requires healthy, unhealthy and
-  undeclared. Measured 2026-08-27: **nothing implements those three states.**
-  `DockerRuntimeCatalogBuilder` carries Docker's raw `state` and `status`.
-
-The second is the sharper one. A correction that a C2 ADR announces and
-nothing performs is not a missing feature — it is the heritage stating that a
-defect was fixed when it was only described. The experimenter is gone, so the
-wrong icon is gone with it; what remains absent is the right one.
-
-*This entry exists because a table cell reading `not started` is not an open
-state. It sat in ADR-0009 from 2026-08-22 to 2026-08-27 and nothing surfaced
-it — the register did not know, and the projection publishes nothing about an
-ADR's unfinished rows.*
-**Derivable** partly. That no code computes three health states is measurable
-and was measured by reading. That an ADR's implementation table still holds
-undone rows is derivable and nothing derives it.
-**Qualification** `unknown`. Three questions, and they are not one:
-
-- **is `runtime_ui/` still wanted?** The capability is reachable from the CLI
-  and the experimenter it replaced is retired. A web surface may now be a
-  preference rather than a consequence;
-- **the three-state qualification is not optional in the same way.** It is a
-  correction ADR-0009 announced against FDN-0003 Article 12, and it stands
-  undone whether or not anything displays it;
-- **should an ADR's unfinished rows reach this register automatically?**
-  Five days of *not started* passed unnoticed, and the same shape produced
-  OS-012 — a retirement decided on 2026-08-23 and done on 2026-08-27 only
-  because something else made it visible.
-
-**The third is decided 2026-08-27 by the owner: a check, restricted.**
-`unfinished-decisions` reads the implementation table of an accepted ADR and
-observes every row in no terminal state — `done`, `abandoned`, `superseded`.
-`OBSERVATION`, because STD-P-002 puts specification before implementation and
-an unfinished row is not a fault; what was wrong is nobody being told.
-
-**Its reach was measured before it was written, and it is small.** Of nine
-accepted ADRs, one carries a table. Two carry the same knowledge in prose and
-are invisible to it. Six declare nothing at all. GOV-0002/OS-038 carries those
-eight, because a check whose blind spot is unwritten reads as coverage.
-
-**The first is decided 2026-08-27 by the owner: `runtime_ui/` is abandoned.**
-ADR-0009 § 6 says so and says why — *iso-usage on capability*, not on
-surface, which is the reading that already permitted retiring
-`aistack-backend` without its replacement. The three measured interactions
-are reachable from the CLI; what is lost is the interaction, and it had one
-user.
-
-The implementation row reads `abandoned — 2026-08-27` where it read *not
-built, and not a blocker*. **That is the substance of the decision, not its
-bookkeeping**: a row in a terminal state is a row nobody has to re-read,
-where a row that means *one day* is an open state filed in a place this
-register cannot see. OS-034 was closed the same way on 2026-08-27.
-
-**The second is decided 2026-08-27 by the owner: retract, then implement.**
-ADR-0009 v1.5 § 6 stops asserting a correction nobody performed — it read
-*are corrected*, in the present, for five days. The retraction is worth its
-own step because it is true the moment it is written, where the
-implementation is not; the same order was owed to STD-0100 on 2026-08-22 and
-to OPS-0002 § *The canonical name* on 2026-08-27, and paid neither time.
-
-What is left here is the implementation: three health states, computed, where
-`DockerRuntimeCatalogBuilder` carries Docker's raw `state` and `status`.
-
-*It was emptied on 2026-08-27 — the nature that carried nine entries this
-week, including OS-001, held nothing for the first time since the register
-was written on 2026-08-22 — and refilled the same hour by the entry above.*
+*Emptied twice on 2026-08-27. The nature that carried nine entries this week
+held nothing for the first time since the register was written, was refilled
+the same hour by OS-035, and was emptied again that evening when the last of
+OS-035's three questions was answered.*
 
 ---
 
@@ -364,6 +291,122 @@ a blind spot recorded only in a docstring is a blind spot nobody reviews.*
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-035 — Two consequences of ADR-0009 were never built
+
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by ADR-0009 v1.8 and `unfinished-decisions`
+**Observed** ADR-0009 was accepted on 2026-08-22 with two steps left, and its
+implementation table carried them as *not started* for five days. Retiring
+`aistack-backend` on 2026-08-27 discharged the exposure and left both:
+
+- **`runtime_ui/`, the web surface.** § 6 promises *iso-usage on capability*,
+  and the capability survives through the CLI — a global diagnostic, one
+  container named, and the runtime catalogue. What does not survive is the
+  interaction: there is no web surface, and there was one.
+- **The three-state qualification.** § 6 states that the experimenter's state
+  icon is *corrected rather than reproduced*, because
+  `health.get("Status", "healthy")` displays a container with no healthcheck
+  as healthy, and FDN-0003 Article 12 requires healthy, unhealthy and
+  undeclared. Measured 2026-08-27: **nothing implements those three states.**
+  `DockerRuntimeCatalogBuilder` carries Docker's raw `state` and `status`.
+
+The second is the sharper one. A correction that a C2 ADR announces and
+nothing performs is not a missing feature — it is the heritage stating that a
+defect was fixed when it was only described. The experimenter is gone, so the
+wrong icon is gone with it; what remains absent is the right one.
+
+*This entry exists because a table cell reading `not started` is not an open
+state. It sat in ADR-0009 from 2026-08-22 to 2026-08-27 and nothing surfaced
+it — the register did not know, and the projection publishes nothing about an
+ADR's unfinished rows.*
+
+**Resolved 2026-08-27.** All three questions answered, and each by a different
+kind of act:
+
+- **the web surface is abandoned** — ADR-0009 § 6, and the implementation row
+  reads `abandoned — 2026-08-27` rather than a sentence meaning *one day*;
+- **the health qualification is built** — `ContainerHealth` and `health_of`
+  derive health from what `docker ps` publishes, a missing verdict yields
+  `undeclared`, and the runtime catalogue carries it beside the status it came
+  from. The retraction came first, on its own, because it was true the moment
+  it was written and the implementation was not;
+- **the third produced a check and an entry** — `unfinished-decisions`, and
+  GOV-0002/OS-038 for the eight accepted ADRs it cannot reach.
+
+**The defect was measured before it was repaired**, which this entry did not
+do when it was opened: 44 of 61 containers on the reference deployment declare
+no healthcheck, and every one was displayed as sound. Seventy-two per cent.
+This entry had said *nothing implements those three states*, which was true
+and said nothing about what it cost.
+
+**A fourth state was added**, on the owner's decision of 2026-08-27:
+`starting`, for a healthcheck declared whose verdict has not returned. The
+measurement found none of it, and zero is an instant rather than an absence —
+the state is transitory, and every healthy container passes through it on each
+restart. Widening a vocabulary is a separate act, which is why it is recorded
+in ADR-0009 v1.8 § 6 and not only in the code.
+
+*Per § What a closure must carry: this condition lives inside the repository,
+so the suite and the projection are its measurement — 596 tests, seventeen of
+them on this vocabulary, and a mutation pass that removed each invariant and
+watched a test fail. The parentheses of the pattern survived theirs and are
+now watched by a test that says it asserts a boundary rather than a defect.
+What still asserted the old state: ADR-0009 § 6 itself, corrected in the same
+act, and nothing else — `health.get` appears nowhere in this heritage; it was
+the experimenter's, and the experimenter is gone.*
+**Derivable** partly. That no code computes three health states is measurable
+and was measured by reading. That an ADR's implementation table still holds
+undone rows is derivable and nothing derives it.
+**Qualification** `unknown`. Three questions, and they are not one:
+
+- **is `runtime_ui/` still wanted?** The capability is reachable from the CLI
+  and the experimenter it replaced is retired. A web surface may now be a
+  preference rather than a consequence;
+- **the three-state qualification is not optional in the same way.** It is a
+  correction ADR-0009 announced against FDN-0003 Article 12, and it stands
+  undone whether or not anything displays it;
+- **should an ADR's unfinished rows reach this register automatically?**
+  Five days of *not started* passed unnoticed, and the same shape produced
+  OS-012 — a retirement decided on 2026-08-23 and done on 2026-08-27 only
+  because something else made it visible.
+
+**The third is decided 2026-08-27 by the owner: a check, restricted.**
+`unfinished-decisions` reads the implementation table of an accepted ADR and
+observes every row in no terminal state — `done`, `abandoned`, `superseded`.
+`OBSERVATION`, because STD-P-002 puts specification before implementation and
+an unfinished row is not a fault; what was wrong is nobody being told.
+
+**Its reach was measured before it was written, and it is small.** Of nine
+accepted ADRs, one carries a table. Two carry the same knowledge in prose and
+are invisible to it. Six declare nothing at all. GOV-0002/OS-038 carries those
+eight, because a check whose blind spot is unwritten reads as coverage.
+
+**The first is decided 2026-08-27 by the owner: `runtime_ui/` is abandoned.**
+ADR-0009 § 6 says so and says why — *iso-usage on capability*, not on
+surface, which is the reading that already permitted retiring
+`aistack-backend` without its replacement. The three measured interactions
+are reachable from the CLI; what is lost is the interaction, and it had one
+user.
+
+The implementation row reads `abandoned — 2026-08-27` where it read *not
+built, and not a blocker*. **That is the substance of the decision, not its
+bookkeeping**: a row in a terminal state is a row nobody has to re-read,
+where a row that means *one day* is an open state filed in a place this
+register cannot see. OS-034 was closed the same way on 2026-08-27.
+
+**The second is decided 2026-08-27 by the owner: retract, then implement.**
+ADR-0009 v1.5 § 6 stops asserting a correction nobody performed — it read
+*are corrected*, in the present, for five days. The retraction is worth its
+own step because it is true the moment it is written, where the
+implementation is not; the same order was owed to STD-0100 on 2026-08-22 and
+to OPS-0002 § *The canonical name* on 2026-08-27, and paid neither time.
+
+What is left here is the implementation: three health states, computed, where
+`DockerRuntimeCatalogBuilder` carries Docker's raw `state` and `status`.
+
+*It was emptied on 2026-08-27 — the nature that carried nine entries this
+week, including OS-001, held nothing for the first time since the register
+was written on 2026-08-22 — and refilled the same hour by the entry above.*
 
 #### GOV-0002/OS-037 — A published procedure described a divergence that had been closed
 

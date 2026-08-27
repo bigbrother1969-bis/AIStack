@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Accepted
   owner: Architecture
   created: 2026-08-22
@@ -317,10 +317,47 @@ FDN-0003 Article 12, and it stands undone whether or not anything displays
 it — the wrong icon left with the experimenter, and the right one was never
 built.
 
-Decided 2026-08-27 by the owner: **retract first, implement second.** This
-paragraph is the retraction. GOV-0002/OS-035 carries the implementation, and
-carries it as an open state rather than as a sentence in an accepted decision
-that quietly means *one day*.
+Decided 2026-08-27 by the owner: **retract first, implement second.** The
+paragraph above is the retraction. What follows is the implementation, made
+the same day.
+
+#### The health vocabulary is four states, and the fourth is a separate act
+
+`ContainerHealth` and `health_of` derive health from what `docker ps`
+publishes — a parenthetical inside `Status`, since Docker exposes no field for
+it — and the runtime catalogue carries the result beside the sentence it came
+from. **A missing verdict yields `undeclared`.** That is the correction: the
+experimenter's `health.get("Status", "healthy")` replaced a missing verdict
+with a verdict, which is what Article 12 forbids in as many words.
+
+**The size of that defect was measured before the fix, on the reference
+deployment, 2026-08-27:**
+
+| What the runtime declares | Containers |
+|---|---|
+| nothing — no healthcheck | 44 |
+| `healthy` | 17 |
+| `unhealthy` | 0 |
+| `health: starting` | 0 |
+
+Seventy-two per cent of the deployment was displayed as sound on no evidence.
+This section said *most containers on this deployment declare none*; the
+number is 44 of 61.
+
+**A fourth state was added, and § *Status* of this record is why it is stated
+rather than done.** Widening a closed vocabulary is a separate act — this
+decision says so of `OPS-` and `Operations` in its own acceptance. The three
+names above have no cell for a container whose healthcheck is declared and
+whose verdict has not returned. `undeclared` would deny a healthcheck that
+exists; `unhealthy` would state a verdict nobody reached. Both are the
+original defect, pointed differently.
+
+**Decided 2026-08-27 by the owner**, on the measurement above, which found
+none of it. Zero is an instant and not an absence: the state is transitory by
+construction, and each of the seventeen passes through it on every restart for
+the length of its `--start-period`. Without the fourth member, the only moment
+a sound container is mislabelled is the moment it is watched most closely —
+just after someone restarted it.
 
 One behaviour is added, because VS-4 criterion 4.1 asks for detection
 *without being pointed at a service*: the qualifier evaluates every
@@ -447,6 +484,7 @@ none unobserved.
 | CLI — `aistack.cli.runtime_diagnose` | done — 2026-08-22 |
 | Web surface — `runtime_ui/` | **abandoned — 2026-08-27** — see § 6 |
 | Retirement of `aistack-backend` | done — 2026-08-27 |
+| Health qualification — `ContainerHealth`, four states | done — 2026-08-27 |
 
 *This section previously read "Nothing is implemented", which was true when
 it was written on 2026-08-21 and false the same evening. It is the fifth
@@ -480,10 +518,15 @@ surface, and the corrected qualification. Both were recorded as
 GOV-0002/OS-035 rather than left implicit in a table cell reading *not
 started*, which is how they survived from 2026-08-22 to 2026-08-27.
 
-**Both were qualified by the owner on 2026-08-27, and differently.** The web
-surface is abandoned (§ 6). The corrected qualification is owed, and § 6 no
-longer claims it was made. One of the two remains, and it is the one that was
-never a preference.
+**Both were qualified by the owner on 2026-08-27, and both were discharged the
+same day.** The web surface is abandoned (§ 6). The corrected qualification
+was retracted first and then built — `ContainerHealth`, four states, § 6 —
+and the row above says `done` where the register can now read it.
+
+*The order was deliberate and is the point of the pair: the retraction was
+true the moment it was written, the implementation was not, and separating
+them is what stopped an accepted decision from claiming a correction for a
+sixth day.*
 
 The exposure is why the order was inverted. `aistack-backend` answered an
 unauthenticated API while holding a writable Docker socket — root on the

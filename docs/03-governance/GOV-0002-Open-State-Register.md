@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.58
+  version: 1.59
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -222,10 +222,16 @@ three that place a contract and which nothing computes.
   removed three day-one protocols and `KnowledgePipeline` on 2026-08-27 under
   OS-001. The counter-argument is on the record: that pass nearly deleted
   `discover` for exactly this reason and was wrong;
-- **the consumer is the missing piece and it belongs elsewhere.** Nothing in
-  this repository selects anything today; `selection_ui` persists selections
-  made by a human. The engine may be waiting on a surface rather than on a
-  caller.
+- **the consumer is the missing piece and it belongs elsewhere.** Measured
+  2026-08-27: nothing in this repository selects anything, and `selection_ui`
+  persists selections made by a human. The engine may be waiting on a surface
+  rather than on a caller.
+
+*The sentence above read "nothing in this repository selects anything today"
+until minutes after it was published. It is the twentieth line
+`undated-assertions` counts, it was written into this register by the commit
+whose message describes that very disease, and the count going 19 → 20 is what
+found it.*
 
 *Opened on the owner's decision of 2026-08-27, in preference to a fifth table
 row — nothing calling the engine is not a step of a decision that commits to

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.47
+  version: 1.48
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -187,12 +187,49 @@ was written on 2026-08-22 — and refilled the same hour by the entry above.*
 
 # Non-conforming instances
 
-None open. OS-006, OS-007, OS-021, OS-023, OS-024 and OS-028 are in
-*Resolved*.
+#### GOV-0002/OS-036 — `aistack-backend` is still declared where its retirement was recorded as complete
 
-Worth noting what emptied it: three of those six closed by **retiring or
-narrowing the rule** rather than by conforming to it. A heritage that only
-ever fixed instances would end with rules nothing could satisfy.
+**Nature** `non-conforming` · **Opened** 2026-08-27 · **State** open
+**Observed** OS-012 was closed on 2026-08-27 against the condition OPS-0002
+v1.3 states in its own words — *a component is retired when nothing on any
+host still declares it*. **Nothing measured that condition.** The container
+was stopped and the image removed; what declared them was asked afterwards,
+by which time the Compose label that answers it had gone with the container.
+
+The recovery search named exactly one file:
+
+```text
+/srv/aistack/docker-compose.yml
+```
+
+`docker compose ls` lists no `aistack-backend` project among the 34 running,
+so nothing runs from that declaration. What survives is the declaration
+itself: the service block is intact, and one `docker compose up` in that
+directory rebuilds an unauthenticated API holding a writable Docker socket.
+
+The file is the ancestor's, which FDN-0005 declares an archive.
+**Derivable** no. This heritage describes a product and not a host (OS-015),
+and reads no compose file outside its own tree. What *is* derivable is the
+closure: an entry that names a condition and cites no measurement of it.
+**Qualification** `unknown`. Two questions, and the second outlives the first:
+
+- **what happens to the service block?** Removing it edits an archive, which
+  FDN-0005 permits — *whatever still lives in the ancestor migrates here or
+  ends there* — and `aistack-origin` holds the history either way. Leaving it
+  keeps a file that describes what the ancestor was, and keeps `docker compose
+  up` one command away from restoring the exposure;
+- **may an entry close on a condition nobody measured?** OS-012's closure
+  quotes the rule and cites no measurement. Nothing in this register requires
+  one. The entry that refused hardest to close early — it stayed open four
+  days on the argument that a written obligation retires nothing — is the one
+  that closed on an assumption.
+
+*Six entries of this nature closed before it: OS-006, OS-007, OS-021, OS-023,
+OS-024 and OS-028, all in* Resolved. *Three of the six closed by retiring or
+narrowing the rule rather than by conforming to it — a heritage that only ever
+fixed instances would end with rules nothing could satisfy. This one is the
+opposite case: the rule is three hours old and the instance is the run that
+followed it.*
 
 ---
 
@@ -222,6 +259,11 @@ thought to look.
 None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
 by retiring `aistack-backend` — six days after the exposure was recorded and
 four after its retirement was decided.
+
+The exposure is discharged: nothing answers and no image exists. What that
+closure asserted without measuring is OS-036, under *Non-conforming
+instances*, and it is filed there rather than here because a declaration in an
+archive is a rule violated and not a door left open.
 
 ---
 
@@ -285,6 +327,19 @@ when nothing on any host still declares it. This entry closes on that
 condition and not on the decision — which is why it stayed open through the
 four days between them, and why it was not closed on 2026-08-27 by the rule
 that states the obligation.*
+
+**Corrected 2026-08-27, hours after the paragraph above was written.** The
+condition it invokes was never measured. `/srv/aistack/docker-compose.yml`
+declared the service throughout, and the container had been removed before
+anything asked what declared it — so the Compose label that would have named
+that file went with the container. **GOV-0002/OS-036** carries the residue and
+the two questions it raises.
+
+What the retirement discharged is real and is left standing: no container
+answers, no image exists, the exposure this entry recorded is gone. What was
+asserted beyond the measurement is the completeness. The paragraph above is
+kept unedited, because an entry that insisted at length on not closing early
+and then closed on an assumption is worth more intact than corrected in place.
 
 #### GOV-0002/OS-034 — A Runtime migration is announced in a docstring
 

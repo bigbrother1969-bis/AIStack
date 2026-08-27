@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.59
+  version: 1.60
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -178,6 +178,66 @@ citable from anywhere; it exists inside the register that declares it.
 ---
 
 # Contract debt
+
+#### GOV-0002/OS-040 — Nothing reports a class declaring a base whose contract it does not satisfy
+
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Observed** `SshBundleTransfer` declared `BundleTransfer` from the day it was
+written until 2026-08-27 and never implemented it:
+
+```python
+def transfer(self, source: Path, target: str) -> bool:   # the contract
+def transfer(self, source: Path) -> bool:                # what it implemented
+```
+
+It builds its destination from configuration instead of receiving it. Python's
+ABC machinery checks that a method of the right *name* exists and never looks
+at the signature, so the class instantiated happily and
+`DefaultContextBundleService` went on annotating its parameter
+`ContextBundleTransferService | None` while production handed it a
+`BundleTransfer`.
+
+**The heritage's own instrument was not fooled, and that is the finding.**
+`aistack.conformance.structural.satisfies` compares call shapes — its docstring
+says so, and it was measured on 2026-08-27 against this exact shape:
+
+```text
+one-arg satisfies the two-arg contract: False
+  incompatible members: {'transfer': '(self, source, target) -> bool
+                                   vs (self, source) -> bool'}
+```
+
+So `contract-debt` never counted this class among `BundleTransfer`'s
+implementations, and never had to: `FileSystemBundleTransfer` satisfies that
+contract correctly. **The count was right the whole time.**
+
+What no instrument reports is **the declaration**. The inventory measures
+structurally and never consults what a class says it is — deliberately, because
+declarations are what it exists to check rather than to trust. The consequence
+is the inverse: a declaration that is false about itself produces no finding
+anywhere, and this one stood for weeks in a C2 subsystem.
+**Derivable** yes, and cheaply: for every class naming an ABC or Protocol as a
+base, compare `satisfies(base, class)`. The primitive exists and is used by
+`contract-debt`; nothing calls it in that direction.
+**Qualification** `unknown`. Two questions:
+
+- **is a false declaration a defect of the heritage or of the language?**
+  Python permits it, and the structural measurement is immune to it. The cost
+  is paid by readers and by type annotations — `DefaultContextBundleService`'s
+  parameter type was false on the live path, and no reader could tell without
+  running the comparison by hand;
+- **should it be a fifteenth check, or a test?** A check publishes it at every
+  projection; a test fails the suite. The condition is derivable and binary,
+  which is the profile of a test rather than of an observation.
+
+*This entry was opened on a decision the owner took on 2026-08-27 from a
+different claim: that `contract-debt` measured method names and not
+signatures. **That claim was wrong**, asserted from Python's ABC behaviour
+without reading `satisfies`. The condition is real, the entry is narrower than
+the one that was approved, and the difference is recorded here rather than
+quietly corrected.*
+
+---
 
 #### GOV-0002/OS-039 — The Selection Engine is implemented and consumed by nothing
 

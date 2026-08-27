@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.61
+  version: 1.62
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -463,6 +463,19 @@ has no way to tell the two apart.
   this heritage can read — STD-0100 v2.6;
 - **`unfinished-decisions` rises to `WARNING`**, and rises **in the commit
   that brings the count to 0 of 9**, not before.
+
+**Refined 2026-08-27, hours later, by a question the owner asked:** *what
+happens if the unqualified rows are deleted?* Only the first of the check's two
+findings rises. **A row in no terminal state stays an `OBSERVATION` for good.**
+
+Raised together, one open row would hold the heritage at `clean: False`
+indefinitely, every publication would need the OPS-0002 § 1 exception, and the
+cheapest way out would be to delete the row — while a table holding only `done`
+asserts that a decision is fully implemented. The severity would have made
+honesty expensive and silence free. STD-0100 v2.8 carries the split.
+
+*Recorded here rather than by editing the line above, which was accurate when
+it was written and imprecise afterwards.*
 
 **The sequencing is the substance of the second answer.** Raising it earlier
 would state that the heritage is non-conformant while OPS-0002 § 1 makes

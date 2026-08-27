@@ -137,13 +137,6 @@ class UnfinishedDecisionCheck(IntegrityCheck):
     accepted one whose implementation is unfinished is an open
     state of the system filed somewhere the register cannot see.
 
-    **`OBSERVATION`, and the severity is the design.** An
-    unfinished row is not a fault — STD-P-002 puts specification
-    before implementation, so a decision necessarily precedes its
-    code. What is wrong is nobody being told. A `WARNING` would
-    make `clean: False` on a heritage doing exactly what its own
-    principle prescribes.
-
     **Two findings, and the second was the larger half.** Measured
     2026-08-27 across nine accepted ADRs: one carried a table, two
     carried the same knowledge in prose — ADR-0003 (*four of the
@@ -159,13 +152,30 @@ class UnfinishedDecisionCheck(IntegrityCheck):
     decision declares its implementation state in a form this
     heritage can read; this reports the ones that do not.
 
-    Both findings are `OBSERVATION` while the eight are filled.
-    **The owner decided on 2026-08-27 that the second rises to
-    `WARNING`, and that it rises in the commit that brings the
-    count to 0 of 9** — not before. A check turned red earlier
-    would enforce a rule by blocking publication of its own fix,
-    since OPS-0002 § 1 makes `clean: True` a condition of
-    publishing.
+    **The two findings do not carry the same severity, decided
+    2026-08-27 by the owner**, and the reason is STD-P-002:
+
+    - *an accepted decision declaring no implementation state*
+      is a governance gap that STD-0100 v2.6 forbids. It rises to
+      `WARNING` **in the commit that brings the count to 0 of 9**,
+      not before — a check turned red earlier would enforce a rule
+      by blocking publication of its own fix, since OPS-0002 § 1
+      makes `clean: True` a condition of publishing;
+    - *an implementation row in no terminal state* stays
+      `OBSERVATION`, permanently. Specification precedes
+      implementation, so an unfinished row is the ordinary state
+      of work rather than a fault, and a row left `unqualified` is
+      FDN-0003 Article 12 working: the absence of a decision made
+      visible.
+
+    **The split was decided on a consequence rather than a
+    preference.** Raised together, an unfinished row would make
+    `clean: False` for as long as it stayed open, so every
+    publication would need the OPS-0002 § 1 exception and an open
+    register entry per row — which is pressure to delete the rows,
+    and a table holding only `done` asserts that a decision is
+    fully implemented. The severity that punished honesty would
+    have bought silence.
 
     That sequencing produced a rule of its own: OPS-0002 § 1 now
     admits a warning an open register entry names, so the next

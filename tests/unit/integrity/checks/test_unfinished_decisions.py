@@ -412,3 +412,49 @@ def test_a_declared_and_complete_decision_is_reported_by_neither():
     assert UnfinishedDecisionCheck().evaluate(
         bundle(decision("ADR-0000", with_rows()))
     ) == []
+
+
+# --------------------------------------------------------------------
+# The severities are a decision, and it is watched
+# --------------------------------------------------------------------
+
+
+def test_the_two_findings_carry_the_severity_the_owner_decided():
+    """
+    **Decided 2026-08-27 by the owner, and asserted here so the
+    decision is watched rather than remembered.**
+
+    An accepted decision declaring *no* implementation state is a
+    governance gap STD-0100 v2.6 forbids, and rises to `WARNING`
+    once every accepted decision declares — in that same commit,
+    not before, since `clean: False` would forbid publishing the
+    fix under OPS-0002 § 1. Until then it is an `OBSERVATION`, and
+    this test moves with it.
+
+    A *row* in no terminal state stays `OBSERVATION` for good.
+    STD-P-002 puts specification before implementation, so an
+    unfinished row is the ordinary state of work; a row reading
+    `unqualified` is FDN-0003 Article 12 working.
+
+    **The split was decided on a consequence.** Raised together,
+    one open row would hold the heritage at `clean: False`
+    indefinitely and the cheapest escape would be to delete the
+    row — while a table holding only `done` asserts a decision is
+    fully implemented. A severity that punished honesty would have
+    bought silence.
+    """
+
+    findings = UnfinishedDecisionCheck().evaluate(
+        bundle(
+            decision("ADR-0000", "# ADR-0000\n\n## Context\n"),
+            decision("ADR-0001", with_rows("| Migration | not started |")),
+        )
+    )
+
+    by_kind = {
+        ("declare no implementation state" in f.summary): f
+        for f in findings
+    }
+
+    assert by_kind[True].severity is IntegritySeverity.OBSERVATION
+    assert by_kind[False].severity is IntegritySeverity.OBSERVATION

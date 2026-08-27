@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.7
+  version: 2.8
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-27
@@ -293,6 +293,21 @@ their states.
 A step in none of those three is a step somebody has to read again, and that
 is the point of the table rather than a defect of it. `unfinished-decisions`
 lists them at every projection, as an `OBSERVATION`.
+
+**The two halves of that check carry different severities, decided 2026-08-27
+by the owner.** A decision declaring *no* implementation state is a gap this
+rule forbids, and rises to `WARNING` once every accepted decision declares. A
+*row* in no terminal state stays an `OBSERVATION` for good: STD-P-002 puts
+specification before implementation, so an unfinished row is the ordinary state
+of work, and a row reading `unqualified` is FDN-0003 Article 12 working rather
+than failing.
+
+**Decided on a consequence rather than on a preference.** Raised together, one
+open row would hold the whole heritage at `clean: False`, every publication
+would need the OPS-0002 § 1 exception, and the cheapest way out would be to
+delete the row — which cannot be right, because **a table holding only `done`
+asserts that the decision is fully implemented**. A severity that punished
+honesty would have bought silence.
 
 **A proposed decision declares nothing.** That is what proposing means, and
 STD-P-002 puts specification before implementation: a decision necessarily

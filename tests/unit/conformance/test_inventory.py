@@ -112,17 +112,27 @@ def test_only_classes_a_module_defines_are_counted():
 
 
 def test_a_contract_nothing_satisfies_is_an_orphan():
+    """
+    Named after a real orphan, and kept that way on purpose.
+
+    This fixture read `TransferTarget` until 2026-08-27, when that
+    contract was removed as superseded by
+    `BundleTransferConfiguration` — and the fixture went on naming a
+    module that no longer existed, in a test file about measuring
+    the package. A fixture that cites a deleted module is a stale
+    assertion like any other.
+    """
 
     contract = DeclaredContract(
-        name="TransferTarget",
-        module="aistack.contracts.transfer_target",
+        name="EvidenceCollector",
+        module="aistack.evidence.collectors",
         kind=ABSTRACT,
-        members=("send",),
+        members=("acquire",),
     )
 
     assert contract.is_orphan
     assert contract.qualified_name == (
-        "aistack.contracts.transfer_target.TransferTarget"
+        "aistack.evidence.collectors.EvidenceCollector"
     )
 
 

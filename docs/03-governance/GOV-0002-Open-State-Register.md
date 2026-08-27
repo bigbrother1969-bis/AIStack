@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.42
+  version: 1.43
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -187,8 +187,15 @@ would have left the other stranded.
 Ten of the orphans are one family:
 `PackageCapability` and its nine specialisations — `Compress`, `Decompress`,
 `Encrypt`, `Decrypt`, `Hash`, `Serialize`, `Deserialize`, `Sign`,
-`VerifySignature` — declared together and implemented never. `TransferTarget`
-is another: transfer code exists, and implements `BundleTransfer` instead.
+`VerifySignature` — declared together and implemented never.
+
+**`TransferTarget` was removed on 2026-08-27**, and the entry's earlier
+account of it was imprecise. It said transfer code implements
+`BundleTransfer` instead; measured, the contract it duplicates is
+`BundleTransferConfiguration`, which declares `enabled`, `host`, `user` and
+`destination_path` and *is* implemented. The two describe one knowledge item
+— a transfer destination — differing by one field name, which is what
+FDN-P-005 forbids. The superseded one went, with its contract test.
 
 *Three earlier measurements of this were wrong and are recorded in the
 session log: nominal inheritance (meaningless for structural Protocols), a

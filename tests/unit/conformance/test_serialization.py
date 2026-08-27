@@ -27,10 +27,10 @@ def sample() -> ContractInventory:
                 satisfied_by=("aistack.integrity.checks.x.XCheck",),
             ),
             DeclaredContract(
-                name="TransferTarget",
-                module="aistack.contracts.transfer_target",
+                name="EvidenceCollector",
+                module="aistack.evidence.collectors",
                 kind=PROTOCOL,
-                members=("send",),
+                members=("acquire",),
             ),
         ),
         unreadable=(("aistack.funnel.__main__", "ModuleNotFoundError"),),

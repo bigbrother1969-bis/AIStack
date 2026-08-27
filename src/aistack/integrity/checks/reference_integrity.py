@@ -14,11 +14,20 @@ def frontmatter(content: str) -> dict | None:
     The governance block an artifact carries, or `None`.
 
     Read from `content` because that is where it survives.
-    **`KnowledgeArtifact.id` is not the governed identifier** —
-    the builder sets it to the content hash, so a bundle holds 65
-    artifacts identified by SHA-256 and `FDN-0003` appears
-    nowhere in the model. That is recorded as GOV-0002/OS-021;
-    this check reads the frontmatter rather than waiting for it.
+
+    Until 2026-08-23 this paragraph said `KnowledgeArtifact.id`
+    was the content hash and that `FDN-0003` appeared nowhere in
+    the model, which was true when it was written and was
+    corrected by GOV-0002/OS-021 the same week — the field has
+    carried the declared identifier since, and
+    `register-coherence` selects on it. The sentence stayed for
+    four days, in a check written to compare declared references.
+
+    What survives the correction is the reason to read `content`
+    here and not the model: this check verifies what an artifact
+    *declares*, and a model field is already the product of
+    reading that declaration. Verifying a projection against
+    itself would pass on any artifact the builder misparsed.
     """
 
     if not content.startswith("---"):

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.52
+  version: 1.54
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -222,6 +222,17 @@ undone rows is derivable and nothing derives it.
   OS-012 — a retirement decided on 2026-08-23 and done on 2026-08-27 only
   because something else made it visible.
 
+**The third is decided 2026-08-27 by the owner: a check, restricted.**
+`unfinished-decisions` reads the implementation table of an accepted ADR and
+observes every row in no terminal state — `done`, `abandoned`, `superseded`.
+`OBSERVATION`, because STD-P-002 puts specification before implementation and
+an unfinished row is not a fault; what was wrong is nobody being told.
+
+**Its reach was measured before it was written, and it is small.** Of nine
+accepted ADRs, one carries a table. Two carry the same knowledge in prose and
+are invisible to it. Six declare nothing at all. GOV-0002/OS-038 carries those
+eight, because a check whose blind spot is unwritten reads as coverage.
+
 **The first is decided 2026-08-27 by the owner: `runtime_ui/` is abandoned.**
 ADR-0009 § 6 says so and says why — *iso-usage on capability*, not on
 surface, which is the reading that already permitted retiring
@@ -300,6 +311,51 @@ archive is a rule violated and not a door left open.
 ---
 
 # Decisions
+
+#### GOV-0002/OS-038 — Eight accepted decisions say nothing this heritage can read about their implementation
+
+**Nature** `decision` · **Opened** 2026-08-27 · **State** open
+**Observed** measured 2026-08-27 across the nine accepted ADRs, while scoping
+`unfinished-decisions`:
+
+| Form | Count | Which |
+|---|---|---|
+| an implementation table | 1 | ADR-0009 |
+| the same knowledge in prose | 2 | ADR-0003, ADR-0005 |
+| nothing at all | 6 | ADR-0001, ADR-0002, ADR-0004, ADR-0006, ADR-0007, ADR-0008 |
+
+**The two prose sections both declare undone work, and neither is in this
+register:**
+
+> ADR-0003 — *four of the five criteria this ADR anticipates have no strategy
+> yet.*
+>
+> ADR-0005 — ***The migration below has not happened.** […] One step of it
+> remains.*
+
+`undated-assertions` does not see them: *yet* and *has not happened* are not
+among its four markers, and adding them was measured and declined when that
+check was written.
+
+The six that declare nothing are the larger half. **An accepted decision
+silent about its implementation is not a decision that was implemented** — it
+is one nobody has asked about since the day it was accepted, and this heritage
+has no way to tell the two apart.
+**Derivable** yes, once the form is decided. That an accepted ADR carries a
+table with terminal states is checkable; that a prose paragraph means *undone*
+is not.
+**Qualification** `unknown`. One question, and it is about the ADR format
+rather than about a check:
+
+- **must an accepted decision declare its implementation state in a form this
+  heritage can read?** Yes means nine artifacts to touch and a governed table
+  format, with the positional fragility `principle-identifiers` and
+  `register-coherence` both carry. No means `unfinished-decisions` protects
+  one ADR of nine and the other eight rely on someone remembering.
+
+*Opened rather than folded into the check, on the owner's decision of
+2026-08-27. The measurement is worth more than the check it was taken for, and
+a blind spot recorded only in a docstring is a blind spot nobody reviews.*
 
 ---
 
@@ -431,6 +487,25 @@ not a claim about the present.
 
 *The grep took one command. It is written down because the rule is worth
 exactly what the first person to skip it makes it worth.*
+
+**A fourth instance, found the same evening by the habit rather than by the
+rule.** `src/aistack/integrity/checks/reference_integrity.py` carried, in a
+docstring: *`KnowledgeArtifact.id` is not the governed identifier — the builder
+sets it to the content hash […] recorded as GOV-0002/OS-021*. OS-021 was
+closed on 2026-08-23 by keying artifacts on their identifier; the field has
+carried the declared identifier since, and `register-coherence` selects on it.
+The sentence was false for four days, inside a check written to compare what
+artifacts declare.
+
+It is recorded here rather than in an entry of its own because it is the same
+condition OS-037 states, in a fourth location: **the closure of an entry does
+not close the sentences that agreed with it.** Corrected in place, with what
+survives the correction — the reason this check reads `content` and not the
+model — kept, because that reason was always the real one.
+
+*The rule was adopted hours earlier and this was found by following it out of
+habit rather than by applying it to a closure. A rule that only works when
+someone remembers to invoke it is worth what OS-038's last question is worth.*
 
 *Six entries of this nature closed before it: OS-006, OS-007, OS-021, OS-023,
 OS-024 and OS-028, all in* Resolved. *Three of the six closed by retiring or

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from aistack.contracts.container_health import health_of
+
 
 class DockerRuntimeCatalogBuilder:
     """Build canonical Docker infrastructure assets from raw observations."""
@@ -29,6 +31,15 @@ class DockerRuntimeCatalogBuilder:
                 "image": item.get("Image"),
                 "status": item.get("Status"),
                 "state": item.get("State"),
+                # What the runtime says of this container's
+                # health, separated from the sentence it says it
+                # in. Until 2026-08-27 the catalogue carried
+                # `status` and `state` and nothing else, so every
+                # consumer that wanted health had to parse a
+                # sentence — which is how the experimenter came to
+                # default a missing verdict to `healthy`.
+                # ADR-0009 § 6, GOV-0002/OS-035.
+                "health": health_of(item.get("Status")).value,
                 "ports": item.get("Ports"),
             }
             for item in containers

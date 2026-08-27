@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.1
+  version: 1.2
   status: Published
   owner: Foundation
   created: 2026-07-06
@@ -189,6 +189,47 @@ Mission
 Challenge assumptions and reveal weaknesses.
 
 Its purpose is to improve the quality of the Governed Heritage.
+
+---
+
+## Experimentation
+
+Mission
+
+Run proofs of concept outside the projection, and integrate them
+when they are ready.
+
+**The practice is deliberate.** Work that is not yet knowledge is
+carried out in a space of its own, and enters the heritage by
+being written as a Knowledge Artifact — never by being found
+there. `docs/99-meta/roadmap/` holds intentions and is not this:
+an experiment produces measurements, an intention produces none.
+
+Two campaigns have been run this way. Both produced a governed
+decision **after** the fact rather than under a rule, which is
+what this section corrects (GOV-0002/OS-022).
+
+### How a proof of concept is referred to
+
+An experiment carries an identifier and a state, and both may be
+cited by the heritage before it is complete. A campaign that is
+technically finished and awaiting human evaluation is a fact about
+the project; citing it as *pending* states more than silence does,
+and FDN-0003 Article 12 makes an undeclared state a governed one.
+
+**QUAL-0001** — a 64-test qualification of local language models
+against four levels of governed context — is complete in execution
+and pending in evaluation as of 2026-08-27. It is cited here so
+that it can be cited anywhere.
+
+### What this section does not decide
+
+The states a proof of concept passes through, the criteria that
+make one integrable, and who decides. Two observed cases justify
+declaring that the practice exists; they do not justify fixing its
+procedure in advance. When a third case shows what the rule should
+be, it will be written — and this paragraph is the record that it
+was deliberately left open on 2026-08-27.
 
 ---
 

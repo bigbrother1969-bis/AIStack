@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.31
+  version: 1.32
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -405,47 +405,6 @@ open until then; the mitigation of 2026-08-21 holds meanwhile — bound to
 
 # Decisions
 
-#### GOV-0002/OS-022 — Parallel experimentation is a practice nothing declares
-
-**Nature** `decision` · **Opened** 2026-08-23 · **State** open
-**Observed** The owner runs proof-of-concept work outside this repository and
-integrates it when it is ready. Two instances exist, and both produced a
-governed decision **after** the fact rather than under a rule:
-
-- the **ancestor**, `/srv/aistack`, qualified by ADR-0009 on 2026-08-22 as
-  *an initial experimenter*, whose four log signatures became `OPS-0001`;
-- **QUAL-0001**, in `/srv/aistack/ollama/governed-llm/`, a 64-test campaign
-  qualifying local LLMs against four levels of governed context. Technically
-  complete, `Human evaluation pending`, and cited by no artifact here.
-
-The practice is deliberate and it works. What is undeclared is the practice
-itself: nothing in the heritage says that an experimentation space exists
-outside the projection, how a POC enters it, what makes one integrable, or
-who decides. `docs/99-meta/roadmap/` holds intentions and is explicitly not
-this.
-
-The cost is visible in how both cases were handled. Each required an
-architecture decision written from scratch, and the second one — a campaign
-that measures a founding principle, since QUAL-0001/P005 shows a model
-asserting that AI is the source of truth, which GOV-P-001 forbids — is
-currently reachable only by someone who knows the directory exists.
-
-*An earlier version of this entry read that knowledge "keeps being born
-outside the repository", as if by accident. The owner corrected it: the
-experiments are parallel by design. The defect is not the practice, it is
-that the practice is undeclared.*
-**Derivable** no
-**Qualification** **decided 2026-08-23 by the owner.** **A section in
-FDN-0005, not an ADR.** The Project Operating Model states that an
-experimentation space exists outside the projection, and how a POC enters it.
-
-Two observed cases justify declaring that the practice exists. They do not
-justify deciding its states, its criteria and its authority in advance, which
-is what an ADR would have had to do.
-
-What the section has to make possible, and nothing more: that QUAL-0001 be
-citable by the heritage while its human evaluation is still pending.
-
 ---
 
 # Resolved
@@ -659,6 +618,64 @@ before saying what replaced it.
 
 What v2.1 was right about, and what stands: a principle restated in two
 registered rows would be a duplicate. That is not what these are.
+
+#### GOV-0002/OS-022 — Parallel experimentation is a practice nothing declares
+
+**Nature** `decision` · **Opened** 2026-08-23 · **State** resolved 2026-08-27 by FDN-0005 v1.2
+**Observed** The owner runs proof-of-concept work outside this repository and
+integrates it when it is ready. Two instances exist, and both produced a
+governed decision **after** the fact rather than under a rule:
+
+- the **ancestor**, `/srv/aistack`, qualified by ADR-0009 on 2026-08-22 as
+  *an initial experimenter*, whose four log signatures became `OPS-0001`;
+- **QUAL-0001**, in `/srv/aistack/ollama/governed-llm/`, a 64-test campaign
+  qualifying local LLMs against four levels of governed context. Technically
+  complete, `Human evaluation pending`, and cited by no artifact here.
+
+The practice is deliberate and it works. What is undeclared is the practice
+itself: nothing in the heritage says that an experimentation space exists
+outside the projection, how a POC enters it, what makes one integrable, or
+who decides. `docs/99-meta/roadmap/` holds intentions and is explicitly not
+this.
+
+The cost is visible in how both cases were handled. Each required an
+architecture decision written from scratch, and the second one — a campaign
+that measures a founding principle, since QUAL-0001/P005 shows a model
+asserting that AI is the source of truth, which GOV-P-001 forbids — is
+currently reachable only by someone who knows the directory exists.
+
+*An earlier version of this entry read that knowledge "keeps being born
+outside the repository", as if by accident. The owner corrected it: the
+experiments are parallel by design. The defect is not the practice, it is
+that the practice is undeclared.*
+**Derivable** no
+**Qualification** **decided 2026-08-23 by the owner.** **A section in
+FDN-0005, not an ADR.** The Project Operating Model states that an
+experimentation space exists outside the projection, and how a POC enters it.
+
+Two observed cases justify declaring that the practice exists. They do not
+justify deciding its states, its criteria and its authority in advance, which
+is what an ADR would have had to do.
+
+What the section has to make possible, and nothing more: that QUAL-0001 be
+citable by the heritage while its human evaluation is still pending.
+
+**Resolved 2026-08-27.** FDN-0005 § *Experimentation*, a workspace beside the
+nine already declared — which is what the practice always was, and what
+nothing said.
+
+It states three things and stops: that the space exists and is deliberate,
+that a proof of concept enters the heritage by being written as an artifact
+rather than by being found, and that an experiment carries an identifier and
+a state which the heritage may cite before it is complete. **QUAL-0001 is
+named there**, complete in execution and pending in evaluation, so that it
+can be cited anywhere.
+
+**What it deliberately does not decide** is written into the section itself:
+the states a POC passes through, the criteria that make one integrable, and
+who decides. Two observed cases justify declaring that the practice exists;
+they do not justify fixing its procedure in advance. The paragraph saying so
+is the record that it was left open on purpose.
 
 #### GOV-0002/OS-013 — The ancestor's relation to the heritage is undecided
 

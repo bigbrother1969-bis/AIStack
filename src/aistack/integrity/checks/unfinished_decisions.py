@@ -160,10 +160,16 @@ class UnfinishedDecisionCheck(IntegrityCheck):
     heritage can read; this reports the ones that do not.
 
     Both findings are `OBSERVATION` while the eight are filled.
-    Raising the second to `WARNING` afterwards is a decision of
-    its own, and GOV-0002/OS-038 holds it: a check turned red
-    before the work it demands is possible would be enforcing a
-    rule by blocking publication of the fix.
+    **The owner decided on 2026-08-27 that the second rises to
+    `WARNING`, and that it rises in the commit that brings the
+    count to 0 of 9** — not before. A check turned red earlier
+    would enforce a rule by blocking publication of its own fix,
+    since OPS-0002 § 1 makes `clean: True` a condition of
+    publishing.
+
+    That sequencing produced a rule of its own: OPS-0002 § 1 now
+    admits a warning an open register entry names, so the next
+    check to be raised does not have to be raised last.
     """
 
     @property

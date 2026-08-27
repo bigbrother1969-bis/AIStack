@@ -227,9 +227,10 @@ def test_a_header_row_is_not_a_step():
 
 def test_a_decision_with_no_implementation_section_reads_no_rows():
     """
-    Six of the nine accepted ADRs are in this case, measured
-    2026-08-27. It is not an error and it is not coverage either —
-    GOV-0002/OS-038 carries what that means.
+    Six of the nine accepted ADRs were in this case, measured
+    2026-08-27, and STD-0100 v2.6 made it a rule that day. Reading
+    no rows is not an error and is not coverage either; the
+    finding above is what says so out loud.
     """
 
     assert implementation_rows("# ADR-0000\n\n## Context\n\nSomething.\n") == []

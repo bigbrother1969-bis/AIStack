@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.56
+  version: 1.57
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -239,9 +239,31 @@ archive is a rule violated and not a door left open.
 
 # Decisions
 
+None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034 and OS-038 are in
+*Resolved*.
+
+**Every section of this register is empty as of 2026-08-27**, for the first
+time since it was written on 2026-08-22.
+
+*That is a fact about the register and not about the system.* The projection
+carries two standing observations the same evening — **8 of 9 accepted
+decisions declare no implementation state this heritage can read**, and 13 of
+50 declared contracts are satisfied by no class — and the first is work nobody
+has done. A register with nothing open means every known condition has been
+qualified, not that none exists. The instruments that keep counting are what
+say the rest.
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-038 — Eight accepted decisions say nothing this heritage can read about their implementation
 
-**Nature** `decision` · **Opened** 2026-08-27 · **State** open
+**Nature** `decision` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by STD-0100 v2.6 and OPS-0002 v1.7
 **Observed** measured 2026-08-27 across the nine accepted ADRs, while scoping
 `unfinished-decisions`:
 
@@ -268,6 +290,38 @@ The six that declare nothing are the larger half. **An accepted decision
 silent about its implementation is not a decision that was implemented** — it
 is one nobody has asked about since the day it was accepted, and this heritage
 has no way to tell the two apart.
+
+**Resolved 2026-08-27.** Both questions answered by the owner:
+
+- **yes**, an accepted decision declares its implementation state in a form
+  this heritage can read — STD-0100 v2.6;
+- **`unfinished-decisions` rises to `WARNING`**, and rises **in the commit
+  that brings the count to 0 of 9**, not before.
+
+**The sequencing is the substance of the second answer.** Raising it earlier
+would state that the heritage is non-conformant while OPS-0002 § 1 makes
+`clean: True` a condition of publishing — so the rule would forbid publishing
+the eight commits that repair it. **A rule that blocks its own repair enforces
+nothing; it only stops the work.**
+
+That produced a rule of its own rather than an exception for this case:
+**OPS-0002 v1.7 § 1 now admits a warning an open register entry names.** The
+next check to be raised does not have to be raised last, and the entry is what
+keeps the warning explained — a report carrying a warning nobody can account
+for teaches its readers to scroll past warnings.
+
+**This entry is `decision` by nature, and its questions are answered**, so it
+closes on the answers rather than on the work. What remains is execution, and
+it is **published rather than filed**: `unfinished-decisions` reports the count
+at every projection, recomputed, where an entry would be a sentence nobody
+recalculates. The precedent is exact and same-week — `contract-debt` publishes
+13 of 50 at every run and OS-001 closed on 2026-08-27.
+
+*Per § What a closure must carry, second rule: three sentences outside this
+register said this entry stays open — STD-0100 v2.6, the check's own docstring,
+and a test docstring. All three are corrected in the same act. It is the second
+closure to produce that work and the first where the grep found something in a
+test.*
 **Derivable** yes, once the form is decided. That an accepted ADR carries a
 table with terminal states is checkable; that a prose paragraph means *undone*
 is not.
@@ -299,23 +353,13 @@ means it would block publication of the very commits that fill the eight.
 **Raising it once they declare is a decision of its own and stays with this
 entry.***
 
-**This entry stays open until the eight declare**, and closing it will need
-the measurement the first rule of § *What a closure must carry* demands —
-except that this condition lives inside the repository, so the projection is
-that measurement, and the number above is what has to reach 0 of 9.
+**Both questions were answered the same day, and this entry closes on
+that** — see the resolution below.
 
 *What it will cost is not hidden: eight ADRs read, and for each one the three
 measurements OS-001 established — what implements the decision, what consumes
 it, and what governs it. Any one alone gives a confident wrong answer, and
 this register has that mistake twice.*
-
----
-
-# Resolved
-
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
 
 #### GOV-0002/OS-035 — Two consequences of ADR-0009 were never built
 

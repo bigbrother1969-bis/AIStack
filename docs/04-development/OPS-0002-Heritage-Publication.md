@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -170,6 +170,28 @@ environment, not merely the one that declares it.
 
 A change is not publishable until the suite passes and the integrity report
 reads `clean: True`. STD-0300 governs what that report must contain.
+
+**One exception, and it is narrow: a `WARNING` an open register entry names.**
+A blocking finding never — those stop the chain by exit code, and nothing here
+weakens that.
+
+The exception exists because without it **a rule can block its own repair.**
+Raising a check's severity states that the heritage is non-conformant; if that
+same state forbids publishing, the commits that bring the heritage into
+conformance cannot reach the SPOT. The rule would hold the fix hostage to
+itself. Decided 2026-08-27 by the owner, while sequencing exactly that case in
+GOV-0002/OS-038.
+
+**What the entry buys is that the warning is explained.** A report carrying a
+warning nobody can account for teaches its readers to scroll past warnings,
+which costs more than the warning was worth. The register entry names the
+condition, carries the work, and dates it.
+
+*Measured while writing this: `aistack.cli.knowledge_integrity` exits non-zero
+on a **blocking** finding only, so a warning has always published in practice —
+the chain never stopped for one. This paragraph does not loosen a gate; it
+states what the gate is, and adds a condition a reader can audit where there
+was an absolute rule the mechanism did not enforce.*
 
 **Patches apply on the workstation only.** Applying the same patches on a
 second machine produces different commits for the same content, and the

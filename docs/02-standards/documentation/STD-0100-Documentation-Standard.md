@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.6
+  version: 2.7
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-27
@@ -329,8 +329,11 @@ the section is silently unread. The check answers that with a control test
 asserting that real rows are *found by name*, because a silent check and a
 correct one look identical from the report.
 
-GOV-0002/OS-038 records the decision, on 2026-08-27, and stays open until the
-eight declare.
+GOV-0002/OS-038 records the decision, on 2026-08-27, and was closed the same
+day: the questions it held were answered, and what remains is execution. The
+count is published rather than filed — `unfinished-decisions` reports it at
+every projection, and **8 of 9 was the figure on the day this rule was
+written**.
 
 ---
 

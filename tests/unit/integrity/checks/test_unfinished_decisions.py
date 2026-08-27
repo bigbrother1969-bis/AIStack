@@ -5,6 +5,7 @@ from aistack.contracts.context_bundle import ContextBundle
 from aistack.contracts.integrity_finding import IntegritySeverity
 from aistack.integrity.checks.unfinished_decisions import (
     UnfinishedDecisionCheck,
+    declares_implementation,
     implementation_rows,
     is_terminal,
 )
@@ -309,3 +310,104 @@ def test_the_first_implementation_section_is_the_one_read():
     )
 
     assert implementation_rows(body) == []
+
+
+# --------------------------------------------------------------------
+# A decision that declares no implementation state at all
+# --------------------------------------------------------------------
+
+
+def test_an_accepted_decision_that_declares_nothing_is_reported():
+    """
+    **The larger half, and it was invisible until 2026-08-27.**
+    Six of the nine accepted ADRs carried no implementation
+    section, and a check reading only tables reported zero on
+    them — which reads as coverage.
+
+    An accepted decision silent about its implementation is not a
+    decision that was implemented. STD-0100 v2.6 says it must
+    declare one; this says which do not.
+    """
+
+    findings = UnfinishedDecisionCheck().evaluate(
+        bundle(decision("ADR-0000", "# ADR-0000\n\n## Context\n\nSomething.\n"))
+    )
+
+    assert len(findings) == 1
+    assert findings[0].severity is IntegritySeverity.OBSERVATION
+    assert findings[0].subjects == (
+        "ADR-0000 — no implementation state is declared",
+    )
+
+
+def test_a_section_with_no_readable_table_is_reported_differently():
+    """
+    ADR-0003 and ADR-0005 are in this case: the section exists and
+    says what the state is, in prose. The two are distinguished
+    because they are not the same omission — one author described
+    the state and one never asked.
+    """
+
+    body = (
+        "## Implementation state\n\n"
+        "Observed on 2026-08-21: one strategy exists, four do not.\n\n"
+        "## Consequences\n"
+    )
+
+    findings = UnfinishedDecisionCheck().evaluate(
+        bundle(decision("ADR-0000", body))
+    )
+
+    assert findings[0].subjects == (
+        "ADR-0000 — the section carries no readable table",
+    )
+
+    assert declares_implementation(body)
+
+
+def test_a_proposed_decision_declaring_nothing_is_not_reported():
+    """
+    The scope rule holds for both findings. A proposal has no
+    implementation to declare.
+    """
+
+    findings = UnfinishedDecisionCheck().evaluate(
+        bundle(
+            decision(
+                "ADR-0000",
+                "# ADR-0000\n\n## Context\n",
+                status="Proposed",
+            )
+        )
+    )
+
+    assert findings == []
+
+
+def test_the_two_findings_are_separate():
+    """
+    One decision missing its declaration and another holding an
+    unfinished row are different conditions with different
+    remedies, and a reader ranking them needs them apart.
+    """
+
+    findings = UnfinishedDecisionCheck().evaluate(
+        bundle(
+            decision("ADR-0000", "# ADR-0000\n\n## Context\n"),
+            decision("ADR-0001", with_rows("| Migration | not started |")),
+        )
+    )
+
+    assert len(findings) == 2
+
+    summaries = " ".join(f.summary for f in findings)
+
+    assert "declare no implementation state" in summaries
+    assert "no terminal state" in summaries
+
+
+def test_a_declared_and_complete_decision_is_reported_by_neither():
+
+    assert UnfinishedDecisionCheck().evaluate(
+        bundle(decision("ADR-0000", with_rows()))
+    ) == []

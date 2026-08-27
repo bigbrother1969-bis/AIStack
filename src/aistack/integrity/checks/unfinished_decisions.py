@@ -41,6 +41,23 @@ def is_terminal(state: str) -> bool:
     return plain(state).lower().startswith(TERMINAL)
 
 
+def declares_implementation(content: str) -> bool:
+    """
+    Whether the artifact carries the section at all.
+
+    Separate from having rows, because the two say different
+    things. A section with no rows is a decision whose author
+    described its state some other way; **no section is a
+    decision nobody has asked about since the day it was
+    accepted**, and until 2026-08-27 nothing here could tell that
+    from a decision fully implemented.
+    """
+
+    return any(
+        line.strip() == SECTION for line in content.splitlines()
+    )
+
+
 def implementation_rows(content: str) -> list[tuple[str, str]]:
     """
     The rows of the first table under `## Implementation state`.
@@ -127,16 +144,26 @@ class UnfinishedDecisionCheck(IntegrityCheck):
     make `clean: False` on a heritage doing exactly what its own
     principle prescribes.
 
-    **What this check does not reach, measured 2026-08-27 and
-    stated rather than left to be discovered:** of nine accepted
-    ADRs, one carries an implementation table, two carry the same
-    knowledge in prose — ADR-0003 (*four of the five criteria […]
-    have no strategy yet*) and ADR-0005 (*The migration below has
-    not happened*) — and six declare nothing at all about their
-    implementation. This check sees the first. GOV-0002/OS-038
-    carries the other eight, because a check whose blind spot is
-    known and unwritten is worse than no check: it reads as
-    coverage.
+    **Two findings, and the second was the larger half.** Measured
+    2026-08-27 across nine accepted ADRs: one carried a table, two
+    carried the same knowledge in prose — ADR-0003 (*four of the
+    five criteria […] have no strategy yet*) and ADR-0005 (*The
+    migration below has not happened*) — and six declared nothing
+    at all.
+
+    A check reading only tables would have reported zero on that
+    heritage and read as coverage. **An accepted decision silent
+    about its implementation is not a decision that was
+    implemented**, and until STD-0100 v2.6 nothing could tell the
+    two apart. The owner decided on 2026-08-27 that an accepted
+    decision declares its implementation state in a form this
+    heritage can read; this reports the ones that do not.
+
+    Both findings are `OBSERVATION` while the eight are filled.
+    Raising the second to `WARNING` afterwards is a decision of
+    its own, and GOV-0002/OS-038 holds it: a check turned red
+    before the work it demands is possible would be enforcing a
+    rule by blocking publication of the fix.
     """
 
     @property
@@ -155,32 +182,72 @@ class UnfinishedDecisionCheck(IntegrityCheck):
             and artifact.status == ACCEPTED
         ]
 
-        subjects: list[str] = []
+        unfinished: list[str] = []
+        undeclared: list[str] = []
 
         for artifact in decisions:
 
-            for step, state in implementation_rows(artifact.content):
+            rows = implementation_rows(artifact.content)
 
-                if is_terminal(state):
-                    continue
+            # `if/else` rather than an early `continue`: with no
+            # rows the loop below runs zero times anyway, so a
+            # `continue` there was dead — it survived its mutation
+            # because nothing could tell it from its own absence.
+            # The exclusivity is real and is now structural.
+            if not rows:
+                undeclared.append(
+                    f"{artifact.id} — "
+                    + (
+                        "the section carries no readable table"
+                        if declares_implementation(artifact.content)
+                        else "no implementation state is declared"
+                    )
+                )
 
-                subjects.append(f"{artifact.id} — {step} → {state}")
+            else:
+                for step, state in rows:
 
-        if not subjects:
-            return []
+                    if is_terminal(state):
+                        continue
 
-        return [
-            IntegrityFinding(
-                check=self.name,
-                severity=IntegritySeverity.OBSERVATION,
-                summary=(
-                    f"{len(subjects)} implementation row(s) of an "
-                    f"accepted decision are in no terminal state "
-                    f"({' · '.join(TERMINAL)})"
-                ),
-                affected=len(subjects),
-                total=len(decisions),
-                unit="rows",
-                subjects=tuple(sorted(subjects)),
+                    unfinished.append(
+                        f"{artifact.id} — {step} → {state}"
+                    )
+
+        findings: list[IntegrityFinding] = []
+
+        if undeclared:
+            findings.append(
+                IntegrityFinding(
+                    check=self.name,
+                    severity=IntegritySeverity.OBSERVATION,
+                    summary=(
+                        f"{len(undeclared)} accepted decision(s) "
+                        f"declare no implementation state this "
+                        f"heritage can read"
+                    ),
+                    affected=len(undeclared),
+                    total=len(decisions),
+                    unit="decisions",
+                    subjects=tuple(sorted(undeclared)),
+                )
             )
-        ]
+
+        if unfinished:
+            findings.append(
+                IntegrityFinding(
+                    check=self.name,
+                    severity=IntegritySeverity.OBSERVATION,
+                    summary=(
+                        f"{len(unfinished)} implementation row(s) of "
+                        f"an accepted decision are in no terminal "
+                        f"state ({' · '.join(TERMINAL)})"
+                    ),
+                    affected=len(unfinished),
+                    total=len(decisions),
+                    unit="rows",
+                    subjects=tuple(sorted(unfinished)),
+                )
+            )
+
+        return findings

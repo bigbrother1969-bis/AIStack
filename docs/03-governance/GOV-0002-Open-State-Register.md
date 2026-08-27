@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.55
+  version: 1.56
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -283,6 +283,31 @@ rather than about a check:
 *Opened rather than folded into the check, on the owner's decision of
 2026-08-27. The measurement is worth more than the check it was taken for, and
 a blind spot recorded only in a docstring is a blind spot nobody reviews.*
+
+**Decided 2026-08-27 by the owner: yes.** An accepted decision declares its
+implementation state in a form this heritage can read — a table of steps and
+terminal states, declared in STD-0100 v2.6 § *An accepted decision declares
+its implementation state*.
+
+`unfinished-decisions` gained the second half the same day and **the gap is
+now published rather than described**: 8 of 9 accepted decisions declare no
+implementation state this heritage can read, at every projection.
+
+*The check reports it at `OBSERVATION` and not `WARNING`, deliberately and
+temporarily. `clean: False` would block publication under OPS-0002 § 1 — which
+means it would block publication of the very commits that fill the eight.
+**Raising it once they declare is a decision of its own and stays with this
+entry.***
+
+**This entry stays open until the eight declare**, and closing it will need
+the measurement the first rule of § *What a closure must carry* demands —
+except that this condition lives inside the repository, so the projection is
+that measurement, and the number above is what has to reach 0 of 9.
+
+*What it will cost is not hidden: eight ADRs read, and for each one the three
+measurements OS-001 established — what implements the decision, what consumes
+it, and what governs it. Any one alone gives a confident wrong answer, and
+this register has that mistake twice.*
 
 ---
 

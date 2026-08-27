@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.5
+  version: 2.6
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-27
@@ -279,6 +279,58 @@ two of them inside the documents that state this rule, and the owner decided on
 what it lists are real; the rest are rhetoric — *Ollama today and another engine
 tomorrow* — or definitions. That figure is stated so that a reader knows what
 kind of instrument this is.
+
+## An accepted decision declares its implementation state
+
+An artifact whose `semantic_type` is `ADR` and whose `status` is `Accepted`
+shall carry a section `## Implementation state` holding a table of steps and
+their states.
+
+| Step | State |
+|---|---|
+| what the decision commits to | `done` · `abandoned` · `superseded`, each with a date — or what it is instead |
+
+A step in none of those three is a step somebody has to read again, and that
+is the point of the table rather than a defect of it. `unfinished-decisions`
+lists them at every projection, as an `OBSERVATION`.
+
+**A proposed decision declares nothing.** That is what proposing means, and
+STD-P-002 puts specification before implementation: a decision necessarily
+precedes its code. What acceptance adds is an obligation to say where the code
+has got to.
+
+### Why the form is governed and not the prose
+
+Two of the nine accepted ADRs already stated their implementation state, in
+sentences, and stated it well:
+
+> ADR-0003 — *four of the five criteria this ADR anticipates have no strategy
+> yet.*
+>
+> ADR-0005 — ***The migration below has not happened.** […] One step of it
+> remains.*
+
+Both are true, both are precise, and **nothing in this heritage could read
+either.** `undated-assertions` does not see them — *yet* and *has not
+happened* are not among its four markers, and the pass that chose those four
+measured what widening them would cost. So the knowledge existed, in the right
+artifact, and no report could carry it to anyone who had not opened the file.
+
+**Six of the nine said nothing at all**, measured 2026-08-27. That is the
+condition this section exists for: an accepted decision silent about its
+implementation is not a decision that was implemented — it is one nobody has
+asked about since the day it was accepted, and until this rule the two were
+indistinguishable.
+
+**What it costs is stated here rather than discovered later.** A governed
+table is a positional parse, with the fragility `principle-identifiers` and
+`register-coherence` both carry: a heading renamed or a separator restyled and
+the section is silently unread. The check answers that with a control test
+asserting that real rows are *found by name*, because a silent check and a
+correct one look identical from the report.
+
+GOV-0002/OS-038 records the decision, on 2026-08-27, and stays open until the
+eight declare.
 
 ---
 

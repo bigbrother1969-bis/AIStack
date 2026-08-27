@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.41
+  version: 1.42
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -176,6 +176,13 @@ first day, never modified in seven weeks, implemented by nothing, consumed by
 nothing but their own package re-export, and named by no artifact of the
 heritage. ARC-P-006 says an abstraction is earned; these three never were.
 The count went from 56 contracts and 20 orphans to 53 and 17.
+
+**`KnowledgePipeline` and its registry were removed the same day**, as a
+pair. The contract was consumed — `PipelineRegistry` typed its dictionary on
+it, registered on it, returned it — so it was not mute like the three above.
+It was half of a dead pair: a registry nothing constructs, not exported by
+its own package, holding a type nothing implements. Removing either alone
+would have left the other stranded.
 
 Ten of the orphans are one family:
 `PackageCapability` and its nine specialisations — `Compress`, `Decompress`,

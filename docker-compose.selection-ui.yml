@@ -1,17 +1,26 @@
 # An explicit project name.
 #
 # Compose derives the project from the directory when none is given.
-# This file lives in `AISTack/`, the backend's compose lives in the
-# parent directory `/srv/aistack/`, and both normalise to `aistack` —
-# one project, two files, each seeing the other's containers as
-# orphans. Compose says so on every run:
+# Until 2026-08-27 that was a live collision: this file sat in
+# `AISTack/`, the ancestor's compose sat in the parent directory
+# `/srv/aistack/`, and both normalised to `aistack` — one project, two
+# files, each seeing the other's containers as orphans. Compose said so
+# on every run:
 #
 #   Found orphan containers ([aistack-selection-ui]) for this project.
 #   … you can run this command with the --remove-orphans flag.
 #
 # Following that advice from the parent directory would have deleted
-# this service. Naming the project removes the ambiguity rather than
-# relying on nobody typing the suggested flag.
+# this service.
+#
+# Both halves of that collision went on 2026-08-27 — the ancestor's
+# compose was moved aside when `aistack-backend` was retired
+# (GOV-0002/OS-036), and the directory was renamed `AIStack`. The name
+# stays declared anyway, and not out of caution: it is what makes this
+# project independent of the directory it is invoked from. A project
+# identified by its working directory is identified by deployment
+# configuration, which is exactly what GOV-0002/OS-015 rules is not
+# knowledge about this product.
 name: aistack-selection-ui
 
 services:
@@ -37,6 +46,13 @@ services:
     # There are two nested repositories here — this one and the ancestor
     # at `/srv/aistack` — and a bare invocation records whichever one the
     # shell happens to be standing in. See 0.3 below.
+    #
+    # The path inside that command is the one that existed on
+    # 2026-08-21. The directory was renamed `AIStack` on 2026-08-27 and
+    # the command is left as it was run: it records a build rather than
+    # instructing a repetition, and rewriting it would produce a line
+    # nobody ever typed. What it demonstrates — `git -C <path>` over a
+    # bare invocation — does not depend on the path.
     #
     # ---------------------------------------------------------------
     # Verified before publication, not after:

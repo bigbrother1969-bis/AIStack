@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -214,6 +214,43 @@ interpreter is not the one it gets. A projection is a published artifact; a
 delayed one is a nuisance and a doubtful one is a lie. The refusal goes to
 standard error, which cron mails, rather than to the log file the paragraph
 above accepts nobody reads.
+
+---
+
+## Retiring a component
+
+Publishing is how something enters the world from this heritage. Retiring is
+how it leaves, and **it is not finished when the code is removed from the
+SPOT.**
+
+A component is retired when nothing on any host still declares it: no service
+unit, no schedule, no container, no image, no path referenced by any of them.
+Until then the repository has removed a component and the world has not.
+
+**The rule was written from two instances, four days apart.**
+
+- `aistack-backend` was decided for retirement on 2026-08-23 (GOV-0002/OS-012)
+  because it answers an unauthenticated API holding a writable Docker socket.
+  The decision was taken; the component runs.
+- `aistack-funnel-inbox.service` was found on 2026-08-27 enabled on the
+  publisher, with a restart counter at 30 103, for a component whose committed
+  half had been removed on 2026-08-23 and whose entry point had never been
+  committed at all (GOV-0002/OS-032). It had never once started.
+
+Neither was noticed by anything. The second had been failing every five
+seconds since 2026-07-31.
+
+**This is a procedure and not a check, and that is deliberate.** GOV-0002/OS-015
+settled that this repository describes a product rather than a host, and the
+heritage does not read service units or crontabs. What it can do is state that
+a removal has a second half, so that whoever performs the first knows the work
+is not done — and so that the register entry closing a retirement says both
+halves happened.
+
+The boundary is narrow on purpose. This does not make the expected state of a
+host governed knowledge; it makes the *consequence of a removal* part of the
+removal. A host may run whatever it likes. What it may not do is go on running
+something this heritage has decided to stop shipping, without anyone knowing.
 
 ---
 

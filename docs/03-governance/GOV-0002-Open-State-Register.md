@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.39
+  version: 1.40
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -234,65 +234,6 @@ thought to look.
 
 # Risks
 
-#### GOV-0002/OS-032 — A component left the SPOT and its deployment stayed
-
-**Nature** `risk` · **Opened** 2026-08-27 · **State** open
-**Observed** `aistack-funnel-inbox.service` was enabled on the publisher and
-had restarted **30 103 times**. Measured 2026-08-27:
-
-```
-Loaded: loaded (/etc/systemd/system/aistack-funnel-inbox.service; enabled)
-Active: activating (auto-restart) (Result: exit-code)
-Process: ExecStart=/srv/.../bin/aistack-funnel-inbox … status=226/NAMESPACE
-        Scheduled restart job, restart counter is at 30103.
-```
-
-**It has never once started.** The first journal entry is `Jul 31 15:34:57`,
-and it is the same failure as the last: systemd cannot set up the mount
-namespace, because `ReadWritePaths` names a directory that does not exist. It
-fails before reaching the executable — which does not exist either.
-
-Neither path has ever existed in this repository. `bin/aistack-funnel-inbox`
-and `docs/04-development/encapsulated-funnel/` have **no commit in the SPOT's
-history**, none in the ancestor's, and nothing on disk under either. The unit
-was installed on 2026-07-31 pointing at files that were never there.
-
-The repository did hold a `funnel` package, and OS-018 removed it on
-2026-08-23 because `aistack.funnel.__main__` imported a `core.py` that had
-never been committed. So the picture is consistent and worse than a stale
-unit: **a component whose code was half-committed, whose entry point was
-never committed, and whose service was installed and enabled anyway.** The
-committed half was removed four days ago; the deployment outlived it, and had
-already outlived its own never-working state by three weeks before that.
-
-**Nothing in this heritage could have seen it.** `runtime_diagnose` swept 62
-containers on 2026-08-22 and published one finding. It looks at containers. A
-systemd unit failing every five seconds on the machine that runs the
-observation tool is outside its field of view entirely — which is OS-015 seen
-from the other side. OS-015 says the heritage cannot tell *stopped because
-broken* from *stopped on purpose*; this says it does not see this class of
-object at all.
-
-The service was disabled on 2026-08-27, which stops the loop and decides
-nothing.
-**Derivable** no, and the boundary is deliberate. OS-015 settled that this
-repository describes a product rather than a host. What is arguably not host
-knowledge is **the seam**: this unit names this repository's paths and exists
-for its component, so the relationship between a component leaving the SPOT
-and its deployment being retired is a fact about the project.
-**Qualification** `unknown`. The immediate question is small — the unit is
-for software that exists nowhere, so removing the file is the obvious end —
-and the one behind it is not: **nothing connects the removal of a component
-from the SPOT to the retirement of its deployment.** OS-012 is the same
-question with the answer already chosen and the work not yet done; this is
-the second instance in four days, which is the argument for stating a rule
-rather than handling each case.
-
-Whether that rule belongs in this repository at all is the prior question,
-and it is the same one OS-015 answered *no* to. The difference a reader
-should weigh: OS-015 concerned the expected state of a host, while this
-concerns what the project owes a host when it removes something from itself.
-
 #### GOV-0002/OS-012 — `aistack-backend` exposes an unauthenticated API holding a writable Docker socket
 
 **Nature** `risk` · **Opened** 2026-08-21 · **State** partially mitigated
@@ -304,7 +245,14 @@ containers including WordPress. Mitigated the same day: bound to
 another container. **The API itself is unchanged.**
 **Derivable** no
 **Qualification** **decided 2026-08-23 by the owner.** Neither authenticate
-nor accept: **retire the component.** ADR-0009 already decides the migration
+nor accept: **retire the component.**
+
+*This entry was not closed by the rule OPS-0002 v1.3 states, and the departure
+from what was proposed is deliberate. A rule saying that a retirement includes
+its deployment does not retire anything. `aistack-backend` still answers an
+unauthenticated API holding a writable Docker socket; closing the entry
+because the obligation is now written would be the false closure this register
+exists to prevent. It closes when the component stops running.* ADR-0009 already decides the migration
 of `aistack-backend`'s function, and authenticating something scheduled for
 removal is work thrown away.
 
@@ -1171,6 +1119,79 @@ change the running process, and that the structural guard is present — a
 guard nothing watches is removed by the next person who finds it odd.
 **Derivable** no
 **Qualification** none required.
+
+#### GOV-0002/OS-032 — A component left the SPOT and its deployment stayed
+
+**Nature** `risk` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by OPS-0002 v1.3
+**Observed** `aistack-funnel-inbox.service` was enabled on the publisher and
+had restarted **30 103 times**. Measured 2026-08-27:
+
+```
+Loaded: loaded (/etc/systemd/system/aistack-funnel-inbox.service; enabled)
+Active: activating (auto-restart) (Result: exit-code)
+Process: ExecStart=/srv/.../bin/aistack-funnel-inbox … status=226/NAMESPACE
+        Scheduled restart job, restart counter is at 30103.
+```
+
+**It has never once started.** The first journal entry is `Jul 31 15:34:57`,
+and it is the same failure as the last: systemd cannot set up the mount
+namespace, because `ReadWritePaths` names a directory that does not exist. It
+fails before reaching the executable — which does not exist either.
+
+Neither path has ever existed in this repository. `bin/aistack-funnel-inbox`
+and `docs/04-development/encapsulated-funnel/` have **no commit in the SPOT's
+history**, none in the ancestor's, and nothing on disk under either. The unit
+was installed on 2026-07-31 pointing at files that were never there.
+
+The repository did hold a `funnel` package, and OS-018 removed it on
+2026-08-23 because `aistack.funnel.__main__` imported a `core.py` that had
+never been committed. So the picture is consistent and worse than a stale
+unit: **a component whose code was half-committed, whose entry point was
+never committed, and whose service was installed and enabled anyway.** The
+committed half was removed four days ago; the deployment outlived it, and had
+already outlived its own never-working state by three weeks before that.
+
+**Nothing in this heritage could have seen it.** `runtime_diagnose` swept 62
+containers on 2026-08-22 and published one finding. It looks at containers. A
+systemd unit failing every five seconds on the machine that runs the
+observation tool is outside its field of view entirely — which is OS-015 seen
+from the other side. OS-015 says the heritage cannot tell *stopped because
+broken* from *stopped on purpose*; this says it does not see this class of
+object at all.
+
+The service was disabled on 2026-08-27, which stops the loop and decides
+nothing.
+**Derivable** no, and the boundary is deliberate. OS-015 settled that this
+repository describes a product rather than a host. What is arguably not host
+knowledge is **the seam**: this unit names this repository's paths and exists
+for its component, so the relationship between a component leaving the SPOT
+and its deployment being retired is a fact about the project.
+**Qualification** `unknown`. The immediate question is small — the unit is
+for software that exists nowhere, so removing the file is the obvious end —
+and the one behind it is not: **nothing connects the removal of a component
+from the SPOT to the retirement of its deployment.** OS-012 is the same
+question with the answer already chosen and the work not yet done; this is
+the second instance in four days, which is the argument for stating a rule
+rather than handling each case.
+
+Whether that rule belongs in this repository at all is the prior question,
+and it is the same one OS-015 answered *no* to. The difference a reader
+should weigh: OS-015 concerned the expected state of a host, while this
+concerns what the project owes a host when it removes something from itself.
+
+**Resolved 2026-08-27.** OPS-0002 § *Retiring a component* states the rule the
+owner chose: a component is retired when nothing on any host still declares
+it, and removing the code from the SPOT is only the first half.
+
+It is a procedure and not a check, deliberately. OS-015 settled that this
+repository describes a product rather than a host, and the heritage reads no
+service unit. What it can do is state that a removal has a second half, so
+that whoever performs the first knows the work is not done.
+
+The unit was disabled on 2026-08-27, which stopped the loop. Removing
+`/etc/systemd/system/aistack-funnel-inbox.service` and reloading systemd is
+the application of the rule, on the owner's host, and is not tracked here —
+the register records conditions of the system, not a task list.
 
 #### GOV-0002/OS-031 — Scheduled execution reports correctly to nobody
 

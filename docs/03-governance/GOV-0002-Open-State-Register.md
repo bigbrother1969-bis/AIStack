@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.37
+  version: 1.38
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -1221,6 +1221,48 @@ change the running process, and that the structural guard is present — a
 guard nothing watches is removed by the next person who finds it odd.
 **Derivable** no
 **Qualification** none required.
+
+#### GOV-0002/OS-033 — Compiled bytecode can defeat mutation testing silently
+
+**Nature** `defect` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by declaring `PYTHONDONTWRITEBYTECODE`
+**Observed** On 2026-08-27, two tests of `undated-assertions` failed against
+source that was already correct. The reported line numbers were off by one —
+the signature of a mutation that had been reverted minutes earlier.
+
+The cause is CPython's bytecode cache. A mutation pass rewrites a module and
+re-runs the suite in under a second, which is faster than the filesystem
+timestamp resolution the interpreter uses to decide whether its cached
+`.pyc` is stale. It served the previous version.
+
+**The direction that matters is the other one.** A mutation can appear to
+*survive* when it was never executed — and in this project a surviving
+mutation is read as an invariant nothing watches, which is the signal the
+whole method exists to produce. More than eighty mutations have been applied
+here since 2026-08-21, and this is the first evidence that any of them could
+have lied.
+
+`Dockerfile` has set `PYTHONDONTWRITEBYTECODE=1` since the image existed.
+`bin/aistack_env.sh`, which ADR-0001 designates as the single source of truth
+for the execution environment, did not. A developer and an image ran Python
+two different ways, and ENG-TEST-0002 is C3 and asks for *portability across
+environments*.
+**Resolved 2026-08-27.** The declared environment exports it, and two tests
+compare the declaration with what the image ships — the same shape as the
+comparison between `requires-python` and the images' base.
+
+*It does not restore confidence in the mutations already applied.* Nothing
+recorded which ones ran against a warm cache, and re-running eighty
+mutations to find out would cost more than it could return. What is recorded
+is that the method had this hole until 2026-08-27, so that a reader weighing
+an old "the mutation was killed" knows what it rested on.
+**Derivable** yes, and now derived
+**Qualification** none required; an interpreter running yesterday's code is
+not a judgement call.
+
+*Misfiled on its first writing, under `Risks`, and reported by
+`register-coherence` before the commit — both of its rules at once, a
+resolved entry among open ones and a section holding two natures. The check
+was three hours old.*
 
 #### GOV-0002/OS-030 — The register states each entry's condition twice
 

@@ -211,3 +211,38 @@ def test_the_declared_roots_come_first_and_stay_first():
 
     assert entries[:2] == [str(ROOT / "src"), str(ROOT)]
     assert "/somewhere/else" in entries
+
+
+def test_the_declaration_forbids_compiled_bytecode():
+    """
+    `Dockerfile` has set `PYTHONDONTWRITEBYTECODE` since the image
+    existed; `bin/aistack_env.sh` did not until 2026-08-27, so a
+    developer and an image ran Python two different ways.
+    ENG-TEST-0002 is C3 and asks for *portability across
+    environments*.
+
+    The cost was measured, and it is not the disk. A mutation pass
+    rewrites a module and re-runs the suite in under a second —
+    faster than the filesystem timestamp resolution CPython uses to
+    decide whether its cached bytecode is stale. Two tests failed
+    against source that was already correct.
+
+    It defeats the method in the other direction too: a mutation
+    can appear to survive when it was never executed, and a
+    surviving mutation is read here as an invariant nobody
+    watches. GOV-0002/OS-033.
+    """
+
+    assert "PYTHONDONTWRITEBYTECODE=1" in DECLARATION.read_text()
+
+
+def test_the_images_and_the_declaration_agree_on_bytecode():
+    """
+    Two projections of one decision, and the check is the same
+    shape as the one comparing the declared interpreter with what
+    the images ship.
+    """
+
+    image = (ROOT / "Dockerfile").read_text()
+
+    assert "PYTHONDONTWRITEBYTECODE=1" in image

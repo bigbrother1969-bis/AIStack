@@ -101,6 +101,26 @@ cd "$AISTACK_REPO_ROOT" || return 1
 # A warning, never an exit: this file is sourced, so a `return`
 # here on a mismatch would drop the developer out of the very
 # setup they asked for. It states the fact and lets them decide.
+# Never leave compiled bytecode behind.
+#
+# `Dockerfile` has set this since the image existed; the declared
+# environment did not, so a developer and an image ran Python two
+# different ways. ENG-TEST-0002 is C3 and asks for *portability
+# across environments*.
+#
+# The cost was measured on 2026-08-27, and it is not the disk. A
+# mutation-testing pass rewrites a module and re-runs the suite in
+# under a second — faster than the filesystem timestamp resolution
+# CPython uses to decide whether its cached bytecode is stale. Two
+# tests then failed against source that was already correct,
+# because the interpreter was running the previous version.
+#
+# **That defeats the method silently in the other direction too.**
+# A mutation can appear to survive when it was never executed, and
+# a surviving mutation is read here as an invariant nobody
+# watches. This project has applied more than eighty of them.
+export PYTHONDONTWRITEBYTECODE=1
+
 AISTACK_PYTHON_REQUIRED="3.13"
 
 AISTACK_PYTHON_FOUND="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)"

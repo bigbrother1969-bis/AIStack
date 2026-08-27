@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.51
+  version: 1.52
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -102,6 +102,49 @@ The defect was not the deferral — a deferral honoured within a day is the
 method working. The defect was that **nothing distinguished a live deferral
 from a discharged one**. Deleting resolved entries here would rebuild that
 same blindness.
+
+## What a closure must carry
+
+Two rules, adopted 2026-08-27 by the owner. Both come from entries that closed
+wrongly on the day they were written.
+
+### A condition about the world outside this repository cites its measurement
+
+Inside the repository the suite and the projection *are* the measurement: an
+entry closing because a check exists closes against a check that runs. Outside
+it — a host, a mirror, a forge, a published image — nothing runs, and the
+closure states what was measured and when.
+
+GOV-0002/OS-012 closed on *nothing on any host still declares it*, which is a
+condition about a host, and nobody looked. OS-011 and OS-032 are the same
+shape and were the same risk.
+
+The rule is deliberately narrow. A closure citing a measurement for everything
+would produce citations for the sake of citing, and a formal citation nobody
+can falsify is the defect this register keeps finding rather than a protection
+against it. That is also why this is prose and not a check: `register-coherence`
+could require a resolved entry to carry a date and a command, and could not
+tell whether either was true.
+
+### A closure names what still asserts the condition
+
+An entry states a condition of the system, and the heritage usually says the
+same thing elsewhere in its own words. Closing the entry does not close those
+sentences.
+
+GOV-0002/OS-028 closed the two-spelling divergence on the morning of
+2026-08-27 **and cited its measurement** — the rule above was satisfied.
+OPS-0002 § *The canonical name* went on describing that divergence as current
+until the evening, on three forges, in a C2 artifact revised three times that
+afternoon. The closure was right and the heritage was wrong.
+
+So a closure names the artifacts that carried the condition. Producing the
+list is a `grep` — *who else says `AISTack`?* — and the value is in having to
+ask rather than in the list.
+
+**A check on citations would not have caught it.** The failing paragraph did
+not cite OS-028; that is why it survived. What is derivable is the sentences
+that name an entry, and the sentences that matter are the ones that do not.
 
 ## Qualification is dated and attributed
 
@@ -210,9 +253,95 @@ was written on 2026-08-22 — and refilled the same hour by the entry above.*
 
 # Non-conforming instances
 
+None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028 and OS-036 are in
+*Resolved*.
+
+Three of those seven closed by **retiring or narrowing the rule** rather than
+by conforming to it. A heritage that only ever fixed instances would end with
+rules nothing could satisfy.
+
+*Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
+by OS-036, and emptied again by the rule OS-036 produced.*
+
+---
+
+# Defects
+
+None open. OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
+were resolved on 2026-08-23 and are in *Resolved*.
+
+An empty section is kept rather than removed: a register with no defects
+section could not be told from one that never looked for any.
+
+---
+
+# Published artifacts
+
+None open. OS-011 and OS-037 are in *Resolved*.
+
+An empty section is kept rather than removed, for the same reason as
+*Defects*: it states that this heritage publishes artifacts and currently
+has none in a doubtful state, which is not the same as a register that never
+thought to look.
+
+---
+
+# Risks
+
+None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
+by retiring `aistack-backend` — six days after the exposure was recorded and
+four after its retirement was decided.
+
+The exposure is discharged: nothing answers and no image exists. What that
+closure asserted without measuring is OS-036, under *Non-conforming
+instances*, and it is filed there rather than here because a declaration in an
+archive is a rule violated and not a door left open.
+
+---
+
+# Decisions
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
+#### GOV-0002/OS-037 — A published procedure described a divergence that had been closed
+
+**Nature** `published` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by OPS-0002 v1.6 and GOV-0002 § *What a closure must carry*
+**Observed** OPS-0002 § *The canonical name* read, from its first version on
+the morning of 2026-08-27 until v1.6 that evening:
+
+> *Read off the publication output of 2026-08-23, and still true as of
+> 2026-08-27: the repository is addressed as `AISTack` on Codeberg and in the
+> publisher's `origin`…*
+
+GOV-0002/OS-028 closed that divergence earlier the same day — the Codeberg
+repository was renamed and the publisher's remotes corrected, verified through
+each forge's API. Read off the publication output of 2026-08-27 at 15:02, all
+four routes name `AIStack`.
+
+The artifact is C2 and reached the SPOT and both mirrors carrying the
+sentence. It was revised three times that afternoon — v1.3, v1.4, v1.5 — and
+the section was re-read on none of them.
+**Derivable** no, and the reason is the entry. `undated-assertions` exists for
+exactly this shape and passes it: the sentence carries a date and the date was
+right. **A date is not a measurement.** A citation check would not have caught
+it either — the paragraph never cited OS-028, which is why it survived.
+**Qualification** **decided 2026-08-27 by the owner.** A closure names the
+artifacts that carried the condition it changes. GOV-0002 § *What a closure
+must carry*, second rule.
+
+**Resolved 2026-08-27.** OPS-0002 v1.6 carries the correction and the
+measurement. The rule is written so that the next closure has to ask the
+question this one did not.
+
 #### GOV-0002/OS-036 — `aistack-backend` is still declared where its retirement was recorded as complete
 
-**Nature** `non-conforming` · **Opened** 2026-08-27 · **State** open
+**Nature** `non-conforming` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by GOV-0002 § *What a closure must carry*
 **Observed** OS-012 was closed on 2026-08-27 against the condition OPS-0002
 v1.3 states in its own words — *a component is retired when nothing on any
 host still declares it*. **Nothing measured that condition.** The container
@@ -271,58 +400,44 @@ two sentences is the subject of the second question.
 
 **The second stays open, and this entry stays with it.**
 
+**Resolved 2026-08-27.** GOV-0002 § *What a closure must carry*, first rule: a
+condition about the world outside this repository cites its measurement. The
+second question is answered — not by permitting the closure that produced this
+entry, but by requiring of the next one what this one lacked.
+
+The first question was decided and executed the same day, above. Both halves
+are discharged.
+
+*The rule is narrower than the question was. It does not say an entry may
+never close on judgement. It says that where the condition lives on a host, a
+mirror or a forge, judgement is not available to whoever reads the entry
+later.*
+
+**What still asserted the condition**, per the second rule, applied to this
+closure rather than described by it. Three sentences outside this register
+name `aistack-backend`:
+
+| Where | Reading |
+|---|---|
+| OPS-0002 § *Retiring a component*, two bullets | records of what happened, in the past tense — left as written |
+| ADR-0009 § *What the retirement delivered* | written after the retirement — accurate |
+| ADR-0009 § *Context*, first sentence | **read as current and was not** — *has been running on this deployment* |
+
+The third is corrected in ADR-0009 v1.7, and corrected the way the compose
+file was earlier the same day: the sentence stays as the decision was taken,
+and a dated note says the section describes 2026-08-22 and is not rewritten
+as the situation moves. A decision's context is evidence of what was known,
+not a claim about the present.
+
+*The grep took one command. It is written down because the rule is worth
+exactly what the first person to skip it makes it worth.*
+
 *Six entries of this nature closed before it: OS-006, OS-007, OS-021, OS-023,
 OS-024 and OS-028, all in* Resolved. *Three of the six closed by retiring or
 narrowing the rule rather than by conforming to it — a heritage that only ever
 fixed instances would end with rules nothing could satisfy. This one is the
 opposite case: the rule is three hours old and the instance is the run that
 followed it.*
-
----
-
-# Defects
-
-None open. OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
-were resolved on 2026-08-23 and are in *Resolved*.
-
-An empty section is kept rather than removed: a register with no defects
-section could not be told from one that never looked for any.
-
----
-
-# Published artifacts
-
-None open. The only entry of this nature, OS-011, is in *Resolved*.
-
-An empty section is kept rather than removed, for the same reason as
-*Defects*: it states that this heritage publishes artifacts and currently
-has none in a doubtful state, which is not the same as a register that never
-thought to look.
-
----
-
-# Risks
-
-None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
-by retiring `aistack-backend` — six days after the exposure was recorded and
-four after its retirement was decided.
-
-The exposure is discharged: nothing answers and no image exists. What that
-closure asserted without measuring is OS-036, under *Non-conforming
-instances*, and it is filed there rather than here because a declaration in an
-archive is a rule violated and not a door left open.
-
----
-
-# Decisions
-
----
-
-# Resolved
-
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
 
 #### GOV-0002/OS-012 — `aistack-backend` exposes an unauthenticated API holding a writable Docker socket
 

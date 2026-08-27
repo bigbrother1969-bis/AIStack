@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Accepted
   owner: Architecture
   created: 2026-08-22
@@ -56,6 +56,11 @@ Two revisions this decision carries — `OPS-` in STD-0102, `Operations` in
 acceptance. They are separate acts.
 
 ## Context
+
+*This section states the situation as measured on 2026-08-22, the day this
+decision was accepted, and is not rewritten as that situation changes. The
+container it describes was retired on 2026-08-27 — GOV-0002/OS-012 — and the
+tense below is the tense in which the decision was taken.*
 
 A container named `aistack-backend` has been running on this deployment
 since before the governed repository existed. Its image was built on

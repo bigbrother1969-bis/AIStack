@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.40
+  version: 1.41
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -169,6 +169,13 @@ run before OS-008 was closed, so it walked past 33 files including the
 integrity validator — and it ran an instrument with two defects, one of
 which under-declared the debt by reading `__annotations__` instead of the
 attributes a contract declares.
+
+**Three were removed on 2026-08-27** — `KnowledgeEngine`,
+`KnowledgeGenerator` and `KnowledgeRenderer`. Declared on the repository's
+first day, never modified in seven weeks, implemented by nothing, consumed by
+nothing but their own package re-export, and named by no artifact of the
+heritage. ARC-P-006 says an abstraction is earned; these three never were.
+The count went from 56 contracts and 20 orphans to 53 and 17.
 
 Ten of the orphans are one family:
 `PackageCapability` and its nine specialisations — `Compress`, `Decompress`,

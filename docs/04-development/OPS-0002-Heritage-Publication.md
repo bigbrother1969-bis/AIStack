@@ -10,8 +10,8 @@ artifact:
   version: 1.0
   status: Draft
   owner: Operations
-  created: 2026-08-23
-  updated: 2026-08-23
+  created: 2026-08-27
+  updated: 2026-08-27
 
 relations:
   references:
@@ -28,7 +28,7 @@ relations:
 This procedure states how a validated change reaches the Single Point Of
 Truth, and how the SPOT reaches its mirrors.
 
-Until 2026-08-23 it was stated nowhere. The README declared the *principle* —
+Until 2026-08-27 it was stated nowhere. The README declared the *principle* —
 the Gitea repository is the SPOT, GitHub and Codeberg are publication mirrors
 and shall never be the origin of governed knowledge — and no artifact said
 which role pushes where, in what order, or what must hold before each step.
@@ -88,10 +88,11 @@ another, and a clone whose remote is a tunnel or a loopback is not a lesser
 clone — which is why the Context Bundle publishes `repository_url` from the
 declared project fact and not from any clone's remote.
 
-What a route may not do is change the name. On 2026-08-23 the repository was
-addressed as `AISTack` on Codeberg and in the publisher's `origin`, and as
-`AIStack` on GitHub and in `pyproject.toml`. Gitea tolerates case in
-repository names, so nothing ever failed and nobody saw it for weeks.
+What a route may not do is change the name. Read off the publication output
+of 2026-08-23, and still true as of 2026-08-27: the repository is addressed
+as `AISTack` on Codeberg and in the publisher's `origin`, and as `AIStack` on
+GitHub and in `pyproject.toml`. Gitea tolerates case in repository names, so
+nothing ever failed and nobody saw it for weeks.
 
 ---
 

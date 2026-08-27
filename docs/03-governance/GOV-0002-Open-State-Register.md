@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.26
+  version: 1.27
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-08-23
+  updated: 2026-08-27
 
 relations:
   references:
@@ -267,8 +267,9 @@ it named.*
 
 #### GOV-0002/OS-028 — The repository is addressed under two spellings
 
-**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
-**Observed** Read off the publication output of 2026-08-23:
+**Nature** `non-conforming` · **Opened** 2026-08-27 · **State** open
+**Observed** Read off the publication output of 2026-08-23, and still true
+on 2026-08-27:
 
 ```
 workstation → https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git
@@ -277,7 +278,7 @@ github      → bigbrother1969-bis/AIStack.git
 codeberg    → bigbrother1969/AISTack.git
 ```
 
-**The canonical spelling is `AIStack`**, decided by the owner on 2026-08-23
+**The canonical spelling is `AIStack`**, decided by the owner on 2026-08-27
 and declared in `pyproject.toml` under `[project.urls] Repository` — a
 project fact, identical on every machine, which is why the Context Bundle
 publishes `repository_url` from there rather than from any clone's remote.
@@ -294,7 +295,7 @@ the two mirrors of one SPOT carry two names.
 canonical name is asserted, and that OPS-0002 states the same one. What a
 given clone's remotes are called is a machine fact and is not derivable from
 the heritage — the same boundary as OS-015.
-**Qualification** **decided 2026-08-23 by the owner.** Correct both, and
+**Qualification** **decided 2026-08-27 by the owner.** Correct both, and
 state the canonical name in OPS-0002 — done. **Two actions remain, and they
 are on the owner's services rather than in this repository:** rename the
 Codeberg repository to `AIStack` and update the publisher's `origin` URL.
@@ -782,16 +783,66 @@ that check was the plan; measuring first showed it would accuse 25 of the 65
 artifacts, so the rule has to be settled before it can be enforced.
 **Qualification** none required; a rename of the file, not of the identifier.
 
+#### GOV-0002/OS-029 — A date can be wrong at the moment it is written
+
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Observed** OPS-0002 was written on 2026-08-27 and dated **2026-08-23**
+throughout — its frontmatter, its prose, and the two register entries created
+with it. Seventeen occurrences in one patch, in a C2 artifact and a C2
+register, published to the SPOT and both mirrors before anyone noticed.
+
+The cause is not a typing slip. The agent carried the date from a
+conversation record rather than reading a clock, across a four-day gap it did
+not know had happened. `date` was available throughout, and three
+independent sources disagreed with what it wrote: its own container, the
+bundle identifier generated on the owner's workstation
+(`aistack-context-2026-08-27`), and the `date` printed by
+`scripts/sync_mirrors.sh` on the publisher.
+
+**It was found by reading a terminal output, not by any check**, and by
+comparing three clocks that happened to be in the same screen.
+
+This is the sibling of OS-017 and not the same defect. OS-017 records a
+sentence that was **true when written and became false**; the remedy there is
+to carry a date. Here the date itself was false at the moment of writing, so
+carrying one is exactly what went wrong. A rule that says *state your date*
+is worth nothing if the date is assumed rather than measured — which is the
+same failure as an allow list built from assumed prefixes (FDN-0012 v2.2), a
+`.dockerignore` matching an assumed root, and a `PYTHONPATH` declaring one of
+two source roots. Each looked exhaustive and covered a subset; this one
+looked dated and was wrong.
+
+Corrected on 2026-08-27. Where the artifacts refer to events of 2026-08-23 —
+the HTTP 530, the false topology inference, the OS-015 ruling — those dates
+were right and are kept.
+**Derivable** partly, and the derivable half is worth having. An artifact's
+`updated:` field can be compared with the commit that last touched the file:
+a document claiming to have been updated four days before the commit that
+wrote it is detectable in one pass over the projection and the log. Whether a
+date *inside prose* is right is not derivable.
+**Qualification** `unknown`. Two readings for the owner:
+
+- **write the check.** Every artifact's `updated:` must not precede the
+  commit date of its last change. It would have caught this patch before it
+  reached the SPOT. It also fires on legitimate cases — a document edited
+  across days, or a patch applied later than it was written, which is this
+  project's normal delivery mode — so its severity would have to be
+  `OBSERVATION` and its false positives accepted;
+- **treat it as method rather than machinery**, and require the agent to
+  measure the date at the start of every session, as it measures everything
+  else before asserting it. That places the remedy where the defect was, and
+  leaves nothing to catch a lapse.
+
 #### GOV-0002/OS-027 — The publication procedure is stated nowhere
 
-**Nature** `contract-debt` · **Opened** 2026-08-23 · **State** resolved 2026-08-23 by OPS-0002
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by OPS-0002
 **Observed** The README declares the principle — the Gitea repository is the
 SPOT, GitHub and Codeberg are publication mirrors and shall never be the
 origin of governed knowledge — and no artifact said which role pushes where,
-in what order, or what must hold before each step. Searched on 2026-08-23
+in what order, or what must hold before each step. Searched on 2026-08-27
 across the README, `docs/` and ADR-0009: nothing.
 
-**The cost was measured the same day.** An agent read a `git remote -v`
+**The cost was measured on 2026-08-23.** An agent read a `git remote -v`
 listing, inferred a publication topology from it, and stated it confidently
 and wrongly, because there was nothing to check the inference against. It
 then retracted the reasoning while the conclusion happened to be right —
@@ -800,14 +851,14 @@ which is worse, not better, since only the owner could tell the two apart.
 FDN-P-004 makes knowledge the primary engineering asset. A procedure that
 lives in the owner's habits is not an asset; it is a dependency on one person
 being available.
-**Resolved 2026-08-23.** OPS-0002 — *Heritage Publication*, Operations, C2.
+**Resolved 2026-08-27.** OPS-0002 — *Heritage Publication*, Operations, C2.
 
 It states **roles rather than machines**: workstation, SPOT, publisher,
 mirror. Which machine holds which role is deployment configuration and stays
-out, which is the boundary the owner drew the same day in OS-015. One machine
+out, which is the boundary the owner drew on 2026-08-23 in OS-015. One machine
 may hold several roles; what the procedure fixes is the order.
 
-It also records what the day established: that patches apply on the
+It also records what 2026-08-23 established: that patches apply on the
 workstation only, since applying them twice produces two commits for one
 change; that the agent holds no role, because in its throwaway clone `origin`
 is a mirror and publishing from it would invert the SPOT; and that a broken

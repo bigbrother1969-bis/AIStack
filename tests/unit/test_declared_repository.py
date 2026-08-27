@@ -23,10 +23,11 @@ def test_the_declared_repository_carries_the_canonical_name():
     is why the Context Bundle publishes `repository_url` from here
     rather than from any clone's remote.
 
-    It was addressed as `AISTack` on Codeberg and in the publisher's
-    `origin` until 2026-08-23, and as `AIStack` on GitHub and here.
-    Gitea tolerates case in repository names, so nothing ever failed
-    and nobody saw it for weeks. GOV-0002/OS-028.
+    It is addressed as `AISTack` on Codeberg and in the publisher's
+    `origin`, and as `AIStack` on GitHub and here — measured
+    2026-08-23 and still true on 2026-08-27. Gitea tolerates case in
+    repository names, so nothing ever failed and nobody saw it for
+    weeks. GOV-0002/OS-028.
     """
 
     assert declared_repository().endswith(f"/{CANONICAL}.git")

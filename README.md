@@ -174,7 +174,7 @@ GitHub and Codeberg are publication mirrors. They are not authoritative and shal
 never be used as the origin of governed knowledge.
 
 **OPS-0002 states the publication procedure** — which role pushes where, in what
-order, and what must hold before each step. Until 2026-08-23 this section
+order, and what must hold before each step. Until 2026-08-27 this section
 declared the principle and no artifact declared the procedure.
 
 The **Context Bundle** is the official portable projection of the governed

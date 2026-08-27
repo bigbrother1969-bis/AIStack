@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-08-22
@@ -405,8 +405,8 @@ none unobserved.
 | Normalization — `normalize_log_evidence` | done — 2026-08-22 |
 | Qualification — `qualify` | done — 2026-08-22 |
 | CLI — `aistack.cli.runtime_diagnose` | done — 2026-08-22 |
-| Web surface — `runtime_ui/` | not started |
-| Retirement of `aistack-backend` | not started |
+| Web surface — `runtime_ui/` | **not built, and not a blocker** — see below |
+| Retirement of `aistack-backend` | done — 2026-08-27 |
 
 *This section previously read "Nothing is implemented", which was true when
 it was written on 2026-08-21 and false the same evening. It is the fifth
@@ -414,6 +414,37 @@ sentence of that kind found on 2026-08-22, and the first found after
 STD-0100 v2.3 made the rule explicit — an assertion about the code carries
 the date it was measured. Recorded rather than quietly rewritten, per
 GOV-0002/OS-017.*
+
+### What the retirement delivered, and what it did not
+
+`aistack-backend` was retired on 2026-08-27 **without the web surface**, and
+the reading that permits it is this section's own title: *iso-usage on
+capability*, not on surface. The three measured interactions are doable:
+
+| Interaction | Replacement |
+|---|---|
+| request a global diagnostic | `python3 -m aistack.cli.runtime_diagnose` |
+| analyse one container's logs | the same command, with the container named |
+| list containers with a state icon | `docker_catalog`, which carries each container's `state` and `status` |
+
+**The third is a capability and not the correction this section promised.**
+§ 6 says the experimenter's state icon computes
+`health.get("Status", "healthy")`, so a container with no healthcheck reads
+as healthy, and that FDN-0003 Article 12 requires three states — healthy,
+unhealthy, undeclared. Measured 2026-08-27: **nothing implements those three
+states.** The catalogue carries Docker's raw `state` and `status`; the
+correction was decided and never built.
+
+So the retirement discharges the exposure and leaves two things undone: the
+web surface, and the corrected qualification. Both are recorded as
+GOV-0002/OS-035 rather than left implicit in a table cell reading *not
+started*, which is how they survived from 2026-08-22 to 2026-08-27.
+
+The exposure is why the order was inverted. `aistack-backend` answered an
+unauthenticated API while holding a writable Docker socket — root on the
+host — and GOV-0002/OS-012 had carried that since 2026-08-21, mitigated on
+the network and unchanged in itself. A surface that has not been built is a
+smaller thing than a door that is open.
 
 Three fields the accepted decision did not foresee were added during
 implementation: `Signature.case_sensitive`, `Signature.applies_to` and

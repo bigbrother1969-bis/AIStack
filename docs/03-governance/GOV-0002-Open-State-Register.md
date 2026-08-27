@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.45
+  version: 1.47
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -136,15 +136,52 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
-None open, as of 2026-08-27. The nature that carried nine entries this week —
-including OS-001, which held the whole contract inventory — is empty for the
-first time since the register was written on 2026-08-22.
+#### GOV-0002/OS-035 — Two consequences of ADR-0009 were never built
 
-It is also the only derivable nature: `contract-debt` walks the package at
-every projection and publishes what it finds. An empty section here does not
-mean no debt. It means every declared contract carries a qualification, and
-the fifteen orphans the check still reports are answered for rather than
-unexamined.
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Observed** ADR-0009 was accepted on 2026-08-22 with two steps left, and its
+implementation table carried them as *not started* for five days. Retiring
+`aistack-backend` on 2026-08-27 discharged the exposure and left both:
+
+- **`runtime_ui/`, the web surface.** § 6 promises *iso-usage on capability*,
+  and the capability survives through the CLI — a global diagnostic, one
+  container named, and the runtime catalogue. What does not survive is the
+  interaction: there is no web surface, and there was one.
+- **The three-state qualification.** § 6 states that the experimenter's state
+  icon is *corrected rather than reproduced*, because
+  `health.get("Status", "healthy")` displays a container with no healthcheck
+  as healthy, and FDN-0003 Article 12 requires healthy, unhealthy and
+  undeclared. Measured 2026-08-27: **nothing implements those three states.**
+  `DockerRuntimeCatalogBuilder` carries Docker's raw `state` and `status`.
+
+The second is the sharper one. A correction that a C2 ADR announces and
+nothing performs is not a missing feature — it is the heritage stating that a
+defect was fixed when it was only described. The experimenter is gone, so the
+wrong icon is gone with it; what remains absent is the right one.
+
+*This entry exists because a table cell reading `not started` is not an open
+state. It sat in ADR-0009 from 2026-08-22 to 2026-08-27 and nothing surfaced
+it — the register did not know, and the projection publishes nothing about an
+ADR's unfinished rows.*
+**Derivable** partly. That no code computes three health states is measurable
+and was measured by reading. That an ADR's implementation table still holds
+undone rows is derivable and nothing derives it.
+**Qualification** `unknown`. Three questions, and they are not one:
+
+- **is `runtime_ui/` still wanted?** The capability is reachable from the CLI
+  and the experimenter it replaced is retired. A web surface may now be a
+  preference rather than a consequence;
+- **the three-state qualification is not optional in the same way.** It is a
+  correction ADR-0009 announced against FDN-0003 Article 12, and it stands
+  undone whether or not anything displays it;
+- **should an ADR's unfinished rows reach this register automatically?**
+  Five days of *not started* passed unnoticed, and the same shape produced
+  OS-012 — a retirement decided on 2026-08-23 and done on 2026-08-27 only
+  because something else made it visible.
+
+*It was emptied on 2026-08-27 — the nature that carried nine entries this
+week, including OS-001, held nothing for the first time since the register
+was written on 2026-08-22 — and refilled the same hour by the entry above.*
 
 ---
 
@@ -182,9 +219,25 @@ thought to look.
 
 # Risks
 
+None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
+by retiring `aistack-backend` — six days after the exposure was recorded and
+four after its retirement was decided.
+
+---
+
+# Decisions
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-012 — `aistack-backend` exposes an unauthenticated API holding a writable Docker socket
 
-**Nature** `risk` · **Opened** 2026-08-21 · **State** partially mitigated
+**Nature** `risk` · **Opened** 2026-08-21 · **State** resolved 2026-08-27 by retiring the component
 **Observed** `GET /api/docker/containers` answers 200 with no credentials,
 and `[ -w /var/run/docker.sock ]` is true inside the container — which is
 root on the host. Until 2026-08-21 it also sat on the `proxy` network with 43
@@ -209,17 +262,29 @@ closes when the surface disappears rather than when it is defended. It stays
 open until then; the mitigation of 2026-08-21 holds meanwhile — bound to
 `127.0.0.1:8010`, off the `proxy` network.
 
----
+**Resolved 2026-08-27.** The component is retired. An unauthenticated API
+holding a writable Docker socket — root on the host — stopped existing six
+days after it was recorded and four after its retirement was decided.
 
-# Decisions
+**It was retired without the web surface ADR-0009 § 6 anticipated**, and the
+reading that permits that is the section's own title: *iso-usage on
+capability*, not on surface. The three measured interactions are doable from
+the CLI, and ADR-0009 v1.4 states which command replaces which.
 
----
+What that leaves undone is GOV-0002/OS-035, and it is stated there rather
+than carried in this entry: the web surface, and the three-state
+qualification § 6 announced and nothing ever built.
 
-# Resolved
+**The order was inverted deliberately.** A surface that has not been built is
+a smaller thing than a door that is open. The retirement discharges the
+exposure; the two consequences remain, visible, in an entry of their own
+rather than as a table cell reading *not started*.
 
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
+*Per OPS-0002 v1.3 a retirement has a second half: the component is retired
+when nothing on any host still declares it. This entry closes on that
+condition and not on the decision — which is why it stayed open through the
+four days between them, and why it was not closed on 2026-08-27 by the rule
+that states the obligation.*
 
 #### GOV-0002/OS-034 — A Runtime migration is announced in a docstring
 
@@ -1487,6 +1552,13 @@ would be one more pair of projections to drift apart — which is the defect
 STD-0100 names for the classification vocabulary, and which this entry is an
 instance of. Homogeneity catches the same misfiling without restating
 anything.
+
+*A limit of the second rule, observed 2026-08-27 while filing OS-035: a
+`contract-debt` entry placed alone in `Risks` passes homogeneity, because a
+section holding one nature is homogeneous by definition. The check compares
+neighbours and cannot map a nature to a section name — deliberately, since
+that mapping lives in this register's prose. A misfiled entry that is the
+only one in its section is invisible to it, and a human found this one.*
 
 Ten mutations were applied. The tenth survived the first pass: removing the
 reset of the current entry at a section heading produced no failure, because

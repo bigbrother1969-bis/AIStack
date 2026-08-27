@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-07-07
-  updated: 2026-08-21
+  updated: 2026-08-27
 ---
 
 # ADR-0003 - Selection Engine Strategy Delegation
@@ -91,6 +91,51 @@ the observation had been looking at the wrong tree.
 
 What remains open is coverage, not structure: four of the five criteria this
 ADR anticipates have no strategy yet.
+
+### Re-measured 2026-08-27
+
+| Step | State |
+|---|---|
+| `SelectionStrategy` — the contract the engine delegates to | done — 2026-08-27 |
+| `SelectionEngine` — generic, no criterion inside | done — 2026-08-27 |
+| `ByIdsSelectionStrategy` | done — 2026-08-27 |
+| `ByLabelsStrategy`, `ByTagsStrategy`, `ByPolicyStrategy`, `ByRuleStrategy` | not implemented — measured 2026-08-27 |
+
+The table exists because STD-0100 v2.6 requires it: the paragraphs above were
+true and precise, and **nothing in this heritage could read them**. *Yet* and
+*have no implementation* are not among `undated-assertions`' four markers, so
+the knowledge sat in the right artifact and no report could carry it to anyone
+who had not opened the file.
+
+**The re-measurement said more than the paragraphs did**, and that is why it
+was taken rather than converted. The prose above describes a coverage gap —
+four criteria of five. Measured across the whole repository on 2026-08-27:
+
+```text
+SelectionEngine        → 0 callers, 0 tests
+ByIdsSelectionStrategy → 1 instantiation, in bootstrap, with an empty list,
+                         registered as `by-ids` and never retrieved
+```
+
+`selection_ui/app.py` imports `Selection`, the model, not the engine.
+`docker_selection_catalog` builds a `SelectionCatalog` and writes JSON without
+passing through the engine or `CatalogView`. `kernel/selection/__init__.py`
+does not export the engine at all.
+
+**So the delegation is complete for one criterion and consumed by nothing**,
+and no instrument sees it: `contract-debt` does not count `SelectionStrategy`,
+because `ByIdsSelectionStrategy` satisfies it, and `SelectionEngine` is not a
+contract. That is GOV-0002/OS-039, and it is not a row of this table — this
+decision commits to the engine delegating, not to anything calling it.
+
+*The search covered the whole repository and not only `src/`, which is the
+mistake GOV-0002/OS-001 recorded: a contract's position is what implements it,
+what consumes it, and what governs it, and any one alone gives a confident
+wrong answer.*
+
+*One divergence noted while measuring and left as an observation rather than
+repaired here: the Protocol declares `select(view) -> tuple[str, ...]` and the
+one implementation returns `list[str]`.*
 
 ## Consequences
 

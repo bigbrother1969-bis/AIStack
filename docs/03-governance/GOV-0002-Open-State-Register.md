@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.57
+  version: 1.58
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -179,13 +179,57 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
-None open. OS-001, OS-002, OS-016, OS-018, OS-019, OS-021, OS-022, OS-027 and
-OS-035 are in *Resolved*.
+#### GOV-0002/OS-039 — The Selection Engine is implemented and consumed by nothing
 
-*Emptied twice on 2026-08-27. The nature that carried nine entries this week
-held nothing for the first time since the register was written, was refilled
-the same hour by OS-035, and was emptied again that evening when the last of
-OS-035's three questions was answered.*
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Observed** measured 2026-08-27 across the whole repository, while giving
+ADR-0003 the implementation table STD-0100 v2.6 requires:
+
+```text
+SelectionEngine        → 0 callers, 0 tests
+ByIdsSelectionStrategy → 1 instantiation, in bootstrap, with an empty list,
+                         registered as `by-ids` and never retrieved
+```
+
+`selection_ui/app.py` imports `Selection`, the model, not the engine.
+`docker_selection_catalog` builds a `SelectionCatalog` and writes JSON without
+passing through the engine or `CatalogView`. `kernel/selection/__init__.py`
+does not export the engine at all.
+
+**The delegation ADR-0003 decides is complete for one criterion**, and that is
+not the finding. The finding is that nothing calls it, and that **no
+instrument sees it**: `contract-debt` does not count `SelectionStrategy`,
+because `ByIdsSelectionStrategy` satisfies it, and `SelectionEngine` is not a
+contract — so a Protocol with an implementation and no consumer measures as
+healthy.
+
+*ADR-0003's own prose said something narrower and said it since 2026-08-21:
+four of five criteria have no strategy. That is a coverage gap. This is a
+different condition, and the difference only appeared because the section was
+**re-measured** rather than converted into a table.*
+**Derivable** partly, and not by anything that exists. That a class has no
+caller is measurable — `contract-debt` measures the neighbouring question and
+would need a second dimension, *consumed by*, which OS-001 named as one of the
+three that place a contract and which nothing computes.
+**Qualification** `unknown`. The three readings that were live on 2026-08-27:
+
+- **it is a moving part waiting for its caller.** `docs/99-meta/roadmap/`
+  carries *Selection Engine Completion*, and STD-P-002 puts specification
+  before implementation. Then this is early rather than orphaned — and the
+  roadmap is outside the projection, which is exactly how ADR-0009's two
+  unfinished consequences survived five days (OS-035);
+- **it is an unearned abstraction.** ARC-P-006, and the same reasoning that
+  removed three day-one protocols and `KnowledgePipeline` on 2026-08-27 under
+  OS-001. The counter-argument is on the record: that pass nearly deleted
+  `discover` for exactly this reason and was wrong;
+- **the consumer is the missing piece and it belongs elsewhere.** Nothing in
+  this repository selects anything today; `selection_ui` persists selections
+  made by a human. The engine may be waiting on a surface rather than on a
+  caller.
+
+*Opened on the owner's decision of 2026-08-27, in preference to a fifth table
+row — nothing calling the engine is not a step of a decision that commits to
+the engine delegating.*
 
 ---
 
@@ -242,16 +286,20 @@ archive is a rule violated and not a door left open.
 None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034 and OS-038 are in
 *Resolved*.
 
-**Every section of this register is empty as of 2026-08-27**, for the first
-time since it was written on 2026-08-22.
+**Every section of this register was empty on 2026-08-27**, for the first time
+since it was written on 2026-08-22 — *and it lasted about forty minutes.*
 
-*That is a fact about the register and not about the system.* The projection
-carries two standing observations the same evening — **8 of 9 accepted
-decisions declare no implementation state this heritage can read**, and 13 of
-50 declared contracts are satisfied by no class — and the first is work nobody
-has done. A register with nothing open means every known condition has been
-qualified, not that none exists. The instruments that keep counting are what
-say the rest.
+That paragraph read *every section of this register is empty*, in the present,
+and OS-039 was opened the same evening by the first of the eight measurements
+STD-0100 v2.6 had just made obligatory. It is corrected here rather than
+quietly, because it is the fourth time in one day that a sentence true when
+written stopped being true — § *What a closure must carry* was written that
+afternoon for exactly this.
+
+*What was said then still holds, and is why the emptiness was worth so little.*
+A register with nothing open means every known condition has been qualified,
+not that none exists. The projection kept counting through it, and the first
+ADR anyone re-measured produced an entry.
 
 ---
 

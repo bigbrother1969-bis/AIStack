@@ -11,7 +11,7 @@ artifact:
   confidence: Declared
   created: 2026-07-24
   version: 1.1
-  updated: 2026-07-24
+  updated: 2026-08-21
 ---
 
 # Mandatory Unit Testing Principle

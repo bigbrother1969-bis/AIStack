@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.32
+  version: 1.33
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -204,56 +204,6 @@ The other ten remain `unknown`, and this is the half no tool will ever close:
 `TransferTarget`. The entry stays open for them, and the figure the check
 publishes does not change: twenty orphans, ten of them now answered for.
 
-
-#### GOV-0002/OS-029 — A date can be wrong at the moment it is written
-
-**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
-**Observed** OPS-0002 was written on 2026-08-27 and dated **2026-08-23**
-throughout — its frontmatter, its prose, and the two register entries created
-with it. Seventeen occurrences in one patch, in a C2 artifact and a C2
-register, published to the SPOT and both mirrors before anyone noticed.
-
-The cause is not a typing slip. The agent carried the date from a
-conversation record rather than reading a clock, across a four-day gap it did
-not know had happened. `date` was available throughout, and three
-independent sources disagreed with what it wrote: its own container, the
-bundle identifier generated on the owner's workstation
-(`aistack-context-2026-08-27`), and the `date` printed by
-`scripts/sync_mirrors.sh` on the publisher.
-
-**It was found by reading a terminal output, not by any check**, and by
-comparing three clocks that happened to be in the same screen.
-
-This is the sibling of OS-017 and not the same defect. OS-017 records a
-sentence that was **true when written and became false**; the remedy there is
-to carry a date. Here the date itself was false at the moment of writing, so
-carrying one is exactly what went wrong. A rule that says *state your date*
-is worth nothing if the date is assumed rather than measured — which is the
-same failure as an allow list built from assumed prefixes (FDN-0012 v2.2), a
-`.dockerignore` matching an assumed root, and a `PYTHONPATH` declaring one of
-two source roots. Each looked exhaustive and covered a subset; this one
-looked dated and was wrong.
-
-Corrected on 2026-08-27. Where the artifacts refer to events of 2026-08-23 —
-the HTTP 530, the false topology inference, the OS-015 ruling — those dates
-were right and are kept.
-**Derivable** partly, and the derivable half is worth having. An artifact's
-`updated:` field can be compared with the commit that last touched the file:
-a document claiming to have been updated four days before the commit that
-wrote it is detectable in one pass over the projection and the log. Whether a
-date *inside prose* is right is not derivable.
-**Qualification** `unknown`. Two readings for the owner:
-
-- **write the check.** Every artifact's `updated:` must not precede the
-  commit date of its last change. It would have caught this patch before it
-  reached the SPOT. It also fires on legitimate cases — a document edited
-  across days, or a patch applied later than it was written, which is this
-  project's normal delivery mode — so its severity would have to be
-  `OBSERVATION` and its false positives accepted;
-- **treat it as method rather than machinery**, and require the agent to
-  measure the date at the start of every session, as it measures everything
-  else before asserting it. That places the remedy where the defect was, and
-  leaves nothing to catch a lapse.
 
 #### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
 
@@ -618,6 +568,92 @@ before saying what replaced it.
 
 What v2.1 was right about, and what stands: a principle restated in two
 registered rows would be a duplicate. That is not what these are.
+
+#### GOV-0002/OS-029 — A date can be wrong at the moment it is written
+
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by a test against the git author date
+**Observed** OPS-0002 was written on 2026-08-27 and dated **2026-08-23**
+throughout — its frontmatter, its prose, and the two register entries created
+with it. Seventeen occurrences in one patch, in a C2 artifact and a C2
+register, published to the SPOT and both mirrors before anyone noticed.
+
+The cause is not a typing slip. The agent carried the date from a
+conversation record rather than reading a clock, across a four-day gap it did
+not know had happened. `date` was available throughout, and three
+independent sources disagreed with what it wrote: its own container, the
+bundle identifier generated on the owner's workstation
+(`aistack-context-2026-08-27`), and the `date` printed by
+`scripts/sync_mirrors.sh` on the publisher.
+
+**It was found by reading a terminal output, not by any check**, and by
+comparing three clocks that happened to be in the same screen.
+
+This is the sibling of OS-017 and not the same defect. OS-017 records a
+sentence that was **true when written and became false**; the remedy there is
+to carry a date. Here the date itself was false at the moment of writing, so
+carrying one is exactly what went wrong. A rule that says *state your date*
+is worth nothing if the date is assumed rather than measured — which is the
+same failure as an allow list built from assumed prefixes (FDN-0012 v2.2), a
+`.dockerignore` matching an assumed root, and a `PYTHONPATH` declaring one of
+two source roots. Each looked exhaustive and covered a subset; this one
+looked dated and was wrong.
+
+Corrected on 2026-08-27. Where the artifacts refer to events of 2026-08-23 —
+the HTTP 530, the false topology inference, the OS-015 ruling — those dates
+were right and are kept.
+**Derivable** partly, and the derivable half is worth having. An artifact's
+`updated:` field can be compared with the commit that last touched the file:
+a document claiming to have been updated four days before the commit that
+wrote it is detectable in one pass over the projection and the log. Whether a
+date *inside prose* is right is not derivable.
+**Qualification** `unknown`. Two readings for the owner:
+
+- **write the check.** Every artifact's `updated:` must not precede the
+  commit date of its last change. It would have caught this patch before it
+  reached the SPOT. It also fires on legitimate cases — a document edited
+  across days, or a patch applied later than it was written, which is this
+  project's normal delivery mode — so its severity would have to be
+  `OBSERVATION` and its false positives accepted;
+- **treat it as method rather than machinery**, and require the agent to
+  measure the date at the start of every session, as it measures everything
+  else before asserting it. That places the remedy where the defect was, and
+  leaves nothing to catch a lapse.
+
+**Resolved 2026-08-27**, by the first of the two readings: a test, not an
+integrity check.
+
+**It could not have been a check.** The Context Bundle carries `source_commit`
+as a hash and no commit date, so nothing inside a projection can tell when an
+artifact was written. The test lives in the integration suite and asks git.
+
+**The rule is narrowed to revisions, and the narrowing was measured.**
+Comparing `updated:` with the last commit to touch a file at all reports **31
+of 65 artifacts** — mechanical sweeps touch files without revising them. A
+rule accusing half of what it governs is not describing it, which is what
+retired the file-name rule three patches earlier. Bumping the `version:` is
+what makes an edit a revision, and under that reading the heritage held
+**one** exception.
+
+That one was real: `eb43842` moved ENG-TEST-0001 from version 1.0 to 1.1 on
+2026-08-21 and left `updated: 2026-07-24`. A C3 artifact whose declared update
+date preceded its own revision by four weeks, corrected here.
+
+Three details each cost a measurement:
+
+- **author date, not committer date.** `git format-patch` carries the author
+  date and `git am` preserves it, so it means *when the artifact was written*
+  on both machines. The committer date means *when the patch was applied* —
+  later on every delivery this project makes, so reading it would fire on
+  correct work and stay silent on the defect;
+- **`--follow`.** Without it a rename reads as the whole file being added, and
+  `ADR-0003` reported a revision it never had;
+- **precedes, not differs.** A date *after* the last revision is legitimate —
+  a typo fixed without a version bump. `FDN-0009` is that case, and an
+  equality rule accused it.
+
+The second reading — measure the date at the start of every session — is kept
+as method alongside the test. The test catches at the workstation, before the
+push; the method catches before the date is written at all.
 
 #### GOV-0002/OS-022 — Parallel experimentation is a practice nothing declares
 

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.25
+  version: 1.26
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -264,6 +264,46 @@ it named.*
 ---
 
 # Non-conforming instances
+
+#### GOV-0002/OS-028 — The repository is addressed under two spellings
+
+**Nature** `non-conforming` · **Opened** 2026-08-23 · **State** open
+**Observed** Read off the publication output of 2026-08-23:
+
+```
+workstation → https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git
+publisher   → ssh://git@127.0.0.1:2222/fabrice.persiaut/AISTack.git
+github      → bigbrother1969-bis/AIStack.git
+codeberg    → bigbrother1969/AISTack.git
+```
+
+**The canonical spelling is `AIStack`**, decided by the owner on 2026-08-23
+and declared in `pyproject.toml` under `[project.urls] Repository` — a
+project fact, identical on every machine, which is why the Context Bundle
+publishes `repository_url` from there rather than from any clone's remote.
+
+Gitea tolerates case in repository names, so the SPOT answers to both and
+**nothing has ever failed**. That is why it survived: a defect that produces
+no symptom is found by reading, and nobody had reason to read four remote
+URLs side by side until a publication chain was being written down.
+
+Codeberg does not tolerate it. `bigbrother1969/AISTack` is genuinely a
+differently-named repository from `bigbrother1969-bis/AIStack` on GitHub, so
+the two mirrors of one SPOT carry two names.
+**Derivable** partly, and half-derived. That `pyproject.toml` carries the
+canonical name is asserted, and that OPS-0002 states the same one. What a
+given clone's remotes are called is a machine fact and is not derivable from
+the heritage — the same boundary as OS-015.
+**Qualification** **decided 2026-08-23 by the owner.** Correct both, and
+state the canonical name in OPS-0002 — done. **Two actions remain, and they
+are on the owner's services rather than in this repository:** rename the
+Codeberg repository to `AIStack` and update the publisher's `origin` URL.
+The entry stays open until they are.
+
+*Deliberately not enforced by `sync_mirrors.sh`. The owner weighed a check
+comparing every remote against the declared name and chose not to: it would
+add a warning to every publication for a defect that has never broken
+anything, and remote names are machine facts.*
 
 #### GOV-0002/OS-023 — `<ID>-<Title>.md` does not describe this heritage
 
@@ -741,6 +781,46 @@ identifier and no reference.
 that check was the plan; measuring first showed it would accuse 25 of the 65
 artifacts, so the rule has to be settled before it can be enforced.
 **Qualification** none required; a rename of the file, not of the identifier.
+
+#### GOV-0002/OS-027 — The publication procedure is stated nowhere
+
+**Nature** `contract-debt` · **Opened** 2026-08-23 · **State** resolved 2026-08-23 by OPS-0002
+**Observed** The README declares the principle — the Gitea repository is the
+SPOT, GitHub and Codeberg are publication mirrors and shall never be the
+origin of governed knowledge — and no artifact said which role pushes where,
+in what order, or what must hold before each step. Searched on 2026-08-23
+across the README, `docs/` and ADR-0009: nothing.
+
+**The cost was measured the same day.** An agent read a `git remote -v`
+listing, inferred a publication topology from it, and stated it confidently
+and wrongly, because there was nothing to check the inference against. It
+then retracted the reasoning while the conclusion happened to be right —
+which is worse, not better, since only the owner could tell the two apart.
+
+FDN-P-004 makes knowledge the primary engineering asset. A procedure that
+lives in the owner's habits is not an asset; it is a dependency on one person
+being available.
+**Resolved 2026-08-23.** OPS-0002 — *Heritage Publication*, Operations, C2.
+
+It states **roles rather than machines**: workstation, SPOT, publisher,
+mirror. Which machine holds which role is deployment configuration and stays
+out, which is the boundary the owner drew the same day in OS-015. One machine
+may hold several roles; what the procedure fixes is the order.
+
+It also records what the day established: that patches apply on the
+workstation only, since applying them twice produces two commits for one
+change; that the agent holds no role, because in its throwaway clone `origin`
+is a mirror and publishing from it would invert the SPOT; and that a broken
+public route to the SPOT does not reach the chain SPOT → mirrors, because the
+publisher is co-located with it.
+
+The three failure modes are written from occurrences rather than imagined —
+the 530 of 2026-08-23, the rate-limited mirror of 2026-08-21 (OS-009), and
+the script replaced by its own pull (OS-010).
+**Derivable** no. A procedure is a decision about how people work.
+**Qualification** none required beyond the choice of where it lives, which
+the owner made: an artifact of its own rather than a section of the README or
+of FDN-0005.
 
 #### GOV-0002/OS-026 — Sourcing the declared environment twice declares it twice
 

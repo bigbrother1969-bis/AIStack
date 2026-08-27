@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-07-24
@@ -92,6 +92,18 @@ of anything: it is an entry point that configures and calls.
 **Decided 2026-08-27 by the owner:** obtained by another route, closed.
 Forcing the script to become an internal brick would add a layer so that the
 code matches a sentence.
+
+**Corrected the same day: the route was not accidental, it was decided.**
+ADR-0006 § *Decision*, accepted after this one, states that
+`python3 scripts/export_project_sources.py` **is** the official Context Bundle
+generation entry point and that it invokes the service. This row is superseded
+by that decision, and not merely by what the code turned out to be.
+
+*The qualification was put to the owner after measuring what implements this
+decision and what consumes it, and without reading the artifact that governs
+the same subject — the third of the three measurements GOV-0002/OS-001 named,
+missed on the day the register recorded that any one alone gives a confident
+wrong answer.*
 
 ## Context
 

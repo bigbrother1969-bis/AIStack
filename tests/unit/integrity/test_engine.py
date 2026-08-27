@@ -86,6 +86,7 @@ def test_default_composition_is_stable():
         "classification-declaration",
         "classification-coherence",
         "principle-identifiers",
+        "register-coherence",
         "duplicate-titles",
         "transport-residue",
         "contract-debt",

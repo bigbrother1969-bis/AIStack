@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.27
+  version: 1.28
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -204,6 +204,56 @@ The other ten remain `unknown`, and this is the half no tool will ever close:
 `TransferTarget`. The entry stays open for them, and the figure the check
 publishes does not change: twenty orphans, ten of them now answered for.
 
+
+#### GOV-0002/OS-029 — A date can be wrong at the moment it is written
+
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Observed** OPS-0002 was written on 2026-08-27 and dated **2026-08-23**
+throughout — its frontmatter, its prose, and the two register entries created
+with it. Seventeen occurrences in one patch, in a C2 artifact and a C2
+register, published to the SPOT and both mirrors before anyone noticed.
+
+The cause is not a typing slip. The agent carried the date from a
+conversation record rather than reading a clock, across a four-day gap it did
+not know had happened. `date` was available throughout, and three
+independent sources disagreed with what it wrote: its own container, the
+bundle identifier generated on the owner's workstation
+(`aistack-context-2026-08-27`), and the `date` printed by
+`scripts/sync_mirrors.sh` on the publisher.
+
+**It was found by reading a terminal output, not by any check**, and by
+comparing three clocks that happened to be in the same screen.
+
+This is the sibling of OS-017 and not the same defect. OS-017 records a
+sentence that was **true when written and became false**; the remedy there is
+to carry a date. Here the date itself was false at the moment of writing, so
+carrying one is exactly what went wrong. A rule that says *state your date*
+is worth nothing if the date is assumed rather than measured — which is the
+same failure as an allow list built from assumed prefixes (FDN-0012 v2.2), a
+`.dockerignore` matching an assumed root, and a `PYTHONPATH` declaring one of
+two source roots. Each looked exhaustive and covered a subset; this one
+looked dated and was wrong.
+
+Corrected on 2026-08-27. Where the artifacts refer to events of 2026-08-23 —
+the HTTP 530, the false topology inference, the OS-015 ruling — those dates
+were right and are kept.
+**Derivable** partly, and the derivable half is worth having. An artifact's
+`updated:` field can be compared with the commit that last touched the file:
+a document claiming to have been updated four days before the commit that
+wrote it is detectable in one pass over the projection and the log. Whether a
+date *inside prose* is right is not derivable.
+**Qualification** `unknown`. Two readings for the owner:
+
+- **write the check.** Every artifact's `updated:` must not precede the
+  commit date of its last change. It would have caught this patch before it
+  reached the SPOT. It also fires on legitimate cases — a document edited
+  across days, or a patch applied later than it was written, which is this
+  project's normal delivery mode — so its severity would have to be
+  `OBSERVATION` and its false positives accepted;
+- **treat it as method rather than machinery**, and require the agent to
+  measure the date at the start of every session, as it measures everything
+  else before asserting it. That places the remedy where the defect was, and
+  leaves nothing to catch a lapse.
 
 #### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
 
@@ -783,56 +833,6 @@ that check was the plan; measuring first showed it would accuse 25 of the 65
 artifacts, so the rule has to be settled before it can be enforced.
 **Qualification** none required; a rename of the file, not of the identifier.
 
-#### GOV-0002/OS-029 — A date can be wrong at the moment it is written
-
-**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
-**Observed** OPS-0002 was written on 2026-08-27 and dated **2026-08-23**
-throughout — its frontmatter, its prose, and the two register entries created
-with it. Seventeen occurrences in one patch, in a C2 artifact and a C2
-register, published to the SPOT and both mirrors before anyone noticed.
-
-The cause is not a typing slip. The agent carried the date from a
-conversation record rather than reading a clock, across a four-day gap it did
-not know had happened. `date` was available throughout, and three
-independent sources disagreed with what it wrote: its own container, the
-bundle identifier generated on the owner's workstation
-(`aistack-context-2026-08-27`), and the `date` printed by
-`scripts/sync_mirrors.sh` on the publisher.
-
-**It was found by reading a terminal output, not by any check**, and by
-comparing three clocks that happened to be in the same screen.
-
-This is the sibling of OS-017 and not the same defect. OS-017 records a
-sentence that was **true when written and became false**; the remedy there is
-to carry a date. Here the date itself was false at the moment of writing, so
-carrying one is exactly what went wrong. A rule that says *state your date*
-is worth nothing if the date is assumed rather than measured — which is the
-same failure as an allow list built from assumed prefixes (FDN-0012 v2.2), a
-`.dockerignore` matching an assumed root, and a `PYTHONPATH` declaring one of
-two source roots. Each looked exhaustive and covered a subset; this one
-looked dated and was wrong.
-
-Corrected on 2026-08-27. Where the artifacts refer to events of 2026-08-23 —
-the HTTP 530, the false topology inference, the OS-015 ruling — those dates
-were right and are kept.
-**Derivable** partly, and the derivable half is worth having. An artifact's
-`updated:` field can be compared with the commit that last touched the file:
-a document claiming to have been updated four days before the commit that
-wrote it is detectable in one pass over the projection and the log. Whether a
-date *inside prose* is right is not derivable.
-**Qualification** `unknown`. Two readings for the owner:
-
-- **write the check.** Every artifact's `updated:` must not precede the
-  commit date of its last change. It would have caught this patch before it
-  reached the SPOT. It also fires on legitimate cases — a document edited
-  across days, or a patch applied later than it was written, which is this
-  project's normal delivery mode — so its severity would have to be
-  `OBSERVATION` and its false positives accepted;
-- **treat it as method rather than machinery**, and require the agent to
-  measure the date at the start of every session, as it measures everything
-  else before asserting it. That places the remedy where the defect was, and
-  leaves nothing to catch a lapse.
-
 #### GOV-0002/OS-027 — The publication procedure is stated nowhere
 
 **Nature** `contract-debt` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by OPS-0002
@@ -958,6 +958,48 @@ change the running process, and that the structural guard is present — a
 guard nothing watches is removed by the next person who finds it odd.
 **Derivable** no
 **Qualification** none required.
+
+#### GOV-0002/OS-030 — The register states each entry's condition twice
+
+**Nature** `defect` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by `register-coherence`
+**Observed** An entry declares its condition in its `**State**` field, and
+again by the section it sits in. Two statements of one fact, and they drifted
+twice in two days:
+
+- **2026-08-23** — OS-023 and OS-024 were filed under *Defects* while
+  declaring `non-conforming`, beside the two real defects of
+  `sync_mirrors.sh`. Corrected in the same patch that closed OS-009 and
+  OS-010, by an agent who happened to look;
+- **2026-08-27** — OS-029 was filed under *Resolved* while declaring
+  `State open`. An entry announcing itself as open, inside the section for
+  closed ones, in the artifact whose entire purpose is to state what is open.
+
+Both were found by reading. Neither was found by anything that runs.
+**Resolved 2026-08-27.** `register-coherence`, the twelfth check, on two
+rules:
+
+- **a state and its section agree.** `resolved` belongs under *Resolved* and
+  nothing else does. `partially mitigated` — OS-012's state — is not
+  resolved, and a check treating any non-`open` word as closed would have
+  moved it;
+- **the open sections are homogeneous.** Every open entry in a section
+  declares the nature of its neighbours.
+
+**The second rule deliberately does not map natures to section names.** That
+mapping lives in this register's prose, and a copy of it inside the check
+would be one more pair of projections to drift apart — which is the defect
+STD-0100 names for the classification vocabulary, and which this entry is an
+instance of. Homogeneity catches the same misfiling without restating
+anything.
+
+Ten mutations were applied. The tenth survived the first pass: removing the
+reset of the current entry at a section heading produced no failure, because
+no test had an entry declaring no fields. It causes a *false* incoherence —
+an unfinished entry adopts a state read from prose in the next section — and
+that is now the case that holds it.
+**Derivable** yes, and now derived
+**Qualification** none required; a register that contradicts itself is not a
+judgement call.
 
 #### GOV-0002/OS-016 — An evidence extract can omit the pattern that fired the rule
 

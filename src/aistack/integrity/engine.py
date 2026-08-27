@@ -28,6 +28,9 @@ from aistack.integrity.checks.principle_identifiers import (
 from aistack.integrity.checks.projection_fidelity import (
     ProjectionFidelityCheck,
 )
+from aistack.integrity.checks.register_coherence import (
+    RegisterCoherenceCheck,
+)
 from aistack.integrity.checks.reference_integrity import (
     ReferenceIntegrityCheck,
 )
@@ -49,6 +52,7 @@ def default_checks() -> list[IntegrityCheck]:
         ClassificationDeclarationCheck(),
         ClassificationCoherenceCheck(),
         PrincipleIdentifierCheck(),
+        RegisterCoherenceCheck(),
         DuplicateTitleCheck(),
         TransportResidueCheck(),
         ContractDebtCheck(),

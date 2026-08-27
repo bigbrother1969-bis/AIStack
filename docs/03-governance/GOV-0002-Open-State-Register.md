@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.60
+  version: 1.61
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -178,6 +178,58 @@ citable from anywhere; it exists inside the register that declares it.
 ---
 
 # Contract debt
+
+#### GOV-0002/OS-041 — The Execution Dimension is built, tested, and has nothing to execute
+
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Observed** measured 2026-08-27 while giving ADR-0008 the implementation
+table STD-0100 v2.6 requires. That decision separates an **Execution
+Dimension** from a **Knowledge Acquisition Dimension**. The second is live —
+four CLIs exercise it and ADR-0009 applies it end to end. The first:
+
+```text
+KernelRuntime.boot()   → called by tests only; no CLI boots the Runtime
+nine capabilities      → no caller outside their own package and the tests
+tasks registered       → 0
+```
+
+**The third line is the finding.** `create_kernel()` registers catalog views,
+providers and selection strategies, and registers **no task**. `TaskResolver`
+therefore resolves against an empty registry: the dimension is not merely
+uncalled, **it has nothing to execute**. `Request`, `Task`, `KernelRuntime`,
+`RuntimeExecutor`, `ExecutionTrace` and nine `PackageCapability`
+implementations exist, with tests.
+
+*Stated narrowly on purpose: `create_kernel()` **is** live. What has no
+production caller is the Runtime layer above the Kernel, and saying "the kernel
+is unused" would be the confident wrong answer this register keeps recording.*
+
+**Two names of ADR-0008's execution chain exist nowhere** — `Observation
+Service` and `Action` — which is why two of that ADR's rows are unqualified
+rather than marked absent.
+**Derivable** partly, and by nothing that exists. That a class has no caller is
+measurable; `contract-debt` measures the neighbouring question and would need
+the *consumed by* dimension GOV-0002/OS-001 named and nothing computes. That a
+registry is empty at boot is trivially derivable and nothing derives it.
+**Qualification** `unknown`. The readings that were live on 2026-08-27:
+
+- **it is the prescribed order.** STD-P-002 puts specification before
+  implementation, and ADR-0008 says in its own words that *migration remains
+  incremental*. Then this is a half-built decision proceeding as decided, and
+  what is missing is a date by which the other half is expected;
+- **it is an unearned abstraction at architectural scale.** ARC-P-006, and the
+  reasoning that removed three day-one protocols and `KnowledgePipeline` under
+  OS-001. The counter-argument is on the record: that pass nearly deleted
+  `discover` on the same argument and was wrong;
+- **the missing piece is a task, not a caller.** Zero registered tasks may mean
+  the dimension is waiting for its first real one, in which case the question
+  is which task, rather than whether the layer should exist.
+
+*Opened on the owner's decision of 2026-08-27, in preference to widening
+OS-039. That entry asks a question about one engine; this one is about half of
+an architecture a C2 decision defines, and merging them would lose both.*
+
+---
 
 #### GOV-0002/OS-040 — Nothing reports a class declaring a base whose contract it does not satisfy
 

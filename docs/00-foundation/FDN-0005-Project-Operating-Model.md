@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.0
+  version: 1.1
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-07-06
+  updated: 2026-08-27
 
 relations:
   references:
@@ -281,6 +281,28 @@ The Git repository is the official Single Point of Truth.
 Every canonical Knowledge Artifact is stored and versioned there.
 
 Knowledge is never published directly into conversations.
+
+## The ancestor
+
+AIStack has a predecessor repository, backed up on 2026-08-22 as
+`aistack-origin`. It holds the source of the experimenter that
+preceded this project, built three days before this repository's
+first commit, and it contains this repository as a subdirectory —
+which is why the question of which one is the product was open,
+and defensible either way.
+
+**This repository is the product. The ancestor is an archive.**
+Decided by the owner on 2026-08-23 (GOV-0002/OS-013).
+
+The consequence is that whatever still lives in the ancestor
+migrates here or ends there, and that `aistack-origin` is a
+permanent backup rather than a second line of development. The
+migration of its function is decided separately, in ADR-0009.
+
+*Named by its repository rather than by its path on any machine.
+A filesystem location is a route, and this document describes a
+product rather than a host — the same boundary ADR-0009 § 7.2
+draws for the expected state of a deployment.*
 
 ---
 

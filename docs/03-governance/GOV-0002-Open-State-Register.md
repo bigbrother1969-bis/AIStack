@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.30
+  version: 1.31
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -446,24 +446,6 @@ is what an ADR would have had to do.
 What the section has to make possible, and nothing more: that QUAL-0001 be
 citable by the heritage while its human evaluation is still pending.
 
-#### GOV-0002/OS-013 — The ancestor's relation to the heritage is undecided
-
-**Nature** `decision` · **Opened** 2026-08-21 · **State** open
-**Observed** `/srv/aistack` is a git repository that contains the governed
-one as a subdirectory. It holds the source of `aistack-backend:0.10`, built
-2026-07-01, three days before this repository's first commit. Backed up
-2026-08-22 to a private Gitea repository, `aistack-origin`. ADR-0009 decides
-the migration of its function; it decides nothing about the repository
-itself.
-**Derivable** no
-**Qualification** **decided 2026-08-23 by the owner.** **This repository is
-the product; `/srv/aistack` is an archive.**
-
-Both readings were defensible and led to opposite architectures. The one
-chosen means that whatever still lives in the ancestor migrates here or ends
-there, and that `aistack-origin` is a permanent backup rather than a second
-line of development.
-
 ---
 
 # Resolved
@@ -677,6 +659,34 @@ before saying what replaced it.
 
 What v2.1 was right about, and what stands: a principle restated in two
 registered rows would be a duplicate. That is not what these are.
+
+#### GOV-0002/OS-013 — The ancestor's relation to the heritage is undecided
+
+**Nature** `decision` · **Opened** 2026-08-21 · **State** resolved 2026-08-27 by FDN-0005 v1.1
+**Observed** `/srv/aistack` is a git repository that contains the governed
+one as a subdirectory. It holds the source of `aistack-backend:0.10`, built
+2026-07-01, three days before this repository's first commit. Backed up
+2026-08-22 to a private Gitea repository, `aistack-origin`. ADR-0009 decides
+the migration of its function; it decides nothing about the repository
+itself.
+**Derivable** no
+**Qualification** **decided 2026-08-23 by the owner.** **This repository is
+the product; `/srv/aistack` is an archive.**
+
+Both readings were defensible and led to opposite architectures. The one
+chosen means that whatever still lives in the ancestor migrates here or ends
+there, and that `aistack-origin` is a permanent backup rather than a second
+line of development.
+
+**Resolved 2026-08-27.** FDN-0005 § *The ancestor*. Whatever still lives in
+the ancestor migrates here or ends there, and `aistack-origin` is a permanent
+backup rather than a second line of development. The migration of its
+function stays with ADR-0009.
+
+The ancestor is named there by its repository rather than by its path on any
+machine — a filesystem location is a route, and FDN-0005 describes a product
+rather than a host. That is the boundary of OS-015, applied while writing the
+answer to a different entry.
 
 #### GOV-0002/OS-014 — An installed AIStack cannot read the governed catalogue
 

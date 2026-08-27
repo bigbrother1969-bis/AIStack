@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.33
+  version: 1.34
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -264,47 +264,6 @@ it named.*
 ---
 
 # Non-conforming instances
-
-#### GOV-0002/OS-028 — The repository is addressed under two spellings
-
-**Nature** `non-conforming` · **Opened** 2026-08-27 · **State** open
-**Observed** Read off the publication output of 2026-08-23, and still true
-on 2026-08-27:
-
-```
-workstation → https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git
-publisher   → ssh://git@127.0.0.1:2222/fabrice.persiaut/AISTack.git
-github      → bigbrother1969-bis/AIStack.git
-codeberg    → bigbrother1969/AISTack.git
-```
-
-**The canonical spelling is `AIStack`**, decided by the owner on 2026-08-27
-and declared in `pyproject.toml` under `[project.urls] Repository` — a
-project fact, identical on every machine, which is why the Context Bundle
-publishes `repository_url` from there rather than from any clone's remote.
-
-Gitea tolerates case in repository names, so the SPOT answers to both and
-**nothing has ever failed**. That is why it survived: a defect that produces
-no symptom is found by reading, and nobody had reason to read four remote
-URLs side by side until a publication chain was being written down.
-
-Codeberg does not tolerate it. `bigbrother1969/AISTack` is genuinely a
-differently-named repository from `bigbrother1969-bis/AIStack` on GitHub, so
-the two mirrors of one SPOT carry two names.
-**Derivable** partly, and half-derived. That `pyproject.toml` carries the
-canonical name is asserted, and that OPS-0002 states the same one. What a
-given clone's remotes are called is a machine fact and is not derivable from
-the heritage — the same boundary as OS-015.
-**Qualification** **decided 2026-08-27 by the owner.** Correct both, and
-state the canonical name in OPS-0002 — done. **Two actions remain, and they
-are on the owner's services rather than in this repository:** rename the
-Codeberg repository to `AIStack` and update the publisher's `origin` URL.
-The entry stays open until they are.
-
-*Deliberately not enforced by `sync_mirrors.sh`. The owner weighed a check
-comparing every remote against the declared name and chose not to: it would
-add a warning to every publication for a defect that has never broken
-anything, and remote names are machine facts.*
 
 ---
 
@@ -568,6 +527,65 @@ before saying what replaced it.
 
 What v2.1 was right about, and what stands: a principle restated in two
 registered rows would be a duplicate. That is not what these are.
+
+#### GOV-0002/OS-028 — The repository is addressed under two spellings
+
+**Nature** `non-conforming` · **Opened** 2026-08-27 · **State** resolved 2026-08-27 by renaming the Codeberg repository and correcting the remotes
+**Observed** Read off the publication output of 2026-08-23, and still true
+on 2026-08-27:
+
+```
+workstation → https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git
+publisher   → ssh://git@127.0.0.1:2222/fabrice.persiaut/AISTack.git
+github      → bigbrother1969-bis/AIStack.git
+codeberg    → bigbrother1969/AISTack.git
+```
+
+**The canonical spelling is `AIStack`**, decided by the owner on 2026-08-27
+and declared in `pyproject.toml` under `[project.urls] Repository` — a
+project fact, identical on every machine, which is why the Context Bundle
+publishes `repository_url` from there rather than from any clone's remote.
+
+Gitea tolerates case in repository names, so the SPOT answers to both and
+**nothing has ever failed**. That is why it survived: a defect that produces
+no symptom is found by reading, and nobody had reason to read four remote
+URLs side by side until a publication chain was being written down.
+
+Codeberg does not tolerate it. `bigbrother1969/AISTack` is genuinely a
+differently-named repository from `bigbrother1969-bis/AIStack` on GitHub, so
+the two mirrors of one SPOT carry two names.
+**Derivable** partly, and half-derived. That `pyproject.toml` carries the
+canonical name is asserted, and that OPS-0002 states the same one. What a
+given clone's remotes are called is a machine fact and is not derivable from
+the heritage — the same boundary as OS-015.
+**Qualification** **decided 2026-08-27 by the owner.** Correct both, and
+state the canonical name in OPS-0002 — done. **Two actions remain, and they
+are on the owner's services rather than in this repository:** rename the
+Codeberg repository to `AIStack` and update the publisher's `origin` URL.
+The entry stays open until they are.
+
+*Deliberately not enforced by `sync_mirrors.sh`. The owner weighed a check
+comparing every remote against the declared name and chose not to: it would
+add a warning to every publication for a defect that has never broken
+anything, and remote names are machine facts.*
+
+**Resolved 2026-08-27.** The Codeberg repository was renamed and the
+publisher's `origin` and `codeberg` remotes corrected. Verified through each
+forge's API rather than through the URL that was typed at it, because a
+successful fetch proves nothing: Forgejo redirects a renamed repository, and
+Gitea resolves a name whatever its case. The `name` field a server returns is
+the name it holds.
+
+```
+codeberg  → AIStack
+gitea     → AIStack
+github    → AIStack   (never wrong)
+```
+
+**The directory holding the publisher's clone is deliberately left alone.**
+It is a path, OPS-0002 states that the heritage governs roles rather than
+machines, and renaming it would break two scheduled jobs that carry it
+hard-coded — which is how those jobs were discovered at all.
 
 #### GOV-0002/OS-029 — A date can be wrong at the moment it is written
 

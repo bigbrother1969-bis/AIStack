@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Accepted
   owner: Architecture
   created: 2026-08-22
@@ -288,7 +288,7 @@ request a global diagnostic, analyse one container's logs. Two of its routes
 — `/{name}/logs` and `/api/ollama/models` — have no caller in its own
 interface and are not usage.
 
-Two behaviours are corrected rather than reproduced:
+Two behaviours were to be corrected rather than reproduced:
 
 - the state icon computes `health.get("Status", "healthy")`, so **a container
   with no healthcheck is displayed as healthy**. Most containers on this
@@ -296,6 +296,26 @@ Two behaviours are corrected rather than reproduced:
   healthy, unhealthy, undeclared;
 - the global diagnostic renders `JSON.stringify(data, null, 2)` in a `<pre>`.
   The capability is kept; that rendering is not a view.
+
+**Neither was performed, and this section said otherwise for five days.**
+Until 2026-08-27 the sentence above read *are corrected*, in the present, of
+work nobody had done. Measured 2026-08-27: nothing computes three health
+states — `DockerRuntimeCatalogBuilder` carries Docker's raw `state` and
+`status`, and no type in the package names *undeclared*.
+
+The second correction is discharged rather than owed: the `<pre>` it applied
+to belonged to the experimenter, which was retired on 2026-08-27, and a
+rendering that no longer exists does not need replacing.
+
+**The first is owed.** It is a correction this C2 decision announced against
+FDN-0003 Article 12, and it stands undone whether or not anything displays
+it — the wrong icon left with the experimenter, and the right one was never
+built.
+
+Decided 2026-08-27 by the owner: **retract first, implement second.** This
+paragraph is the retraction. GOV-0002/OS-035 carries the implementation, and
+carries it as an open state rather than as a sentence in an accepted decision
+that quietly means *one day*.
 
 One behaviour is added, because VS-4 criterion 4.1 asks for detection
 *without being pointed at a service*: the qualifier evaluates every

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.49
+  version: 1.50
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -178,6 +178,16 @@ undone rows is derivable and nothing derives it.
   Five days of *not started* passed unnoticed, and the same shape produced
   OS-012 — a retirement decided on 2026-08-23 and done on 2026-08-27 only
   because something else made it visible.
+
+**The second is decided 2026-08-27 by the owner: retract, then implement.**
+ADR-0009 v1.5 § 6 stops asserting a correction nobody performed — it read
+*are corrected*, in the present, for five days. The retraction is worth its
+own step because it is true the moment it is written, where the
+implementation is not; the same order was owed to STD-0100 on 2026-08-22 and
+to OPS-0002 § *The canonical name* on 2026-08-27, and paid neither time.
+
+What is left here is the implementation: three health states, computed, where
+`DockerRuntimeCatalogBuilder` carries Docker's raw `state` and `status`.
 
 *It was emptied on 2026-08-27 — the nature that carried nine entries this
 week, including OS-001, held nothing for the first time since the register

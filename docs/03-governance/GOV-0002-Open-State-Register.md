@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.36
+  version: 1.37
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -204,62 +204,6 @@ The other ten remain `unknown`, and this is the half no tool will ever close:
 `TransferTarget`. The entry stays open for them, and the figure the check
 publishes does not change: twenty orphans, ten of them now answered for.
 
-
-#### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
-
-**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
-**Observed** Six occurrences, in three C2 artifacts. Four were found on
-2026-08-22; two more on 2026-08-23, both inside the two documents that state
-the rule — STD-0100 and this register. The count is dated because it will
-grow.
-
-STD-0100 v2.0 carried *"the validator shall also observe `version`, `created` and
-`updated`, **which it does not today**"* from 2026-08-20 until 2026-08-21, one day
-after `085fe3b` had done the work. That one is already the reason this register
-never deletes a resolved entry.
-
-The other three are in STD-0300, and were found by reading it rather than by any
-check:
-
-- criterion 2.5 recorded **failing** since 2026-08-14 on *no artifact is declared
-  C3*, a cause that had gone on 2026-07-24 — three weeks before the note was
-  written. Eight days of a validation suite declaring itself in failure.
-- the acceptance section headed *State as of 2026-08-14, repository `45710f3`*
-  while the criteria under it had moved.
-- the engraving block asserting that `criticality` *remains undeclared* while the
-  front-matter of the same file declared `C2`, both dated 2026-08-21.
-
-The fifth and sixth were produced by closing OS-004. STD-0100 said the
-`type` → `domain` rule *"is stated and not yet enforced"* and this register said it
-*"is enforced by nothing"*; the check written on 2026-08-23 made both false, and
-neither would have been noticed by anything but a reader following the citations.
-
-All six share one shape: a true statement about a moving system, written without
-the date that made it true. Nothing distinguishes such a sentence from a live one,
-and the cost is asymmetric — a stale *"it does not do X"* makes a heritage look
-worse than it is, and a stale *"it does X"* makes it look better.
-
-**Derivable** partly. The temporal markers that hide a date — *today*,
-*currently*, *still*, *not yet*, *remains*, *for now* — are detectable by pattern.
-Whether the sentence carrying one is stale is not.
-**Qualification** **decided 2026-08-23 by the owner.** **The pattern check is
-written, and it publishes `OBSERVATION`.**
-
-The markers that hide a date — *today*, *currently*, *still*, *not yet*,
-*remains*, *for now* — are listed at every projection. Whether a sentence
-carrying one has gone stale stays a reading, so the check states where to look
-and never says `clean: False`. A `WARNING` would fail on the historical
-quotations this heritage keeps on purpose, which is the trap
-`principle-identifiers` avoided the same day by refusing to read prose for the
-retired three-digit form.
-
-Six occurrences in two days is the argument. A false positive costs a reading
-here; a stale sentence costs a decision taken on it.
-
-*This paragraph read "like the `type` → `domain` rule of OS-004, it is enforced by
-nothing" until 2026-08-23, when OS-004 was closed. A fifth occurrence of the shape
-this entry exists to record, inside the entry itself, found while closing the rule
-it named.*
 
 ---
 
@@ -636,6 +580,91 @@ before saying what replaced it.
 
 What v2.1 was right about, and what stands: a principle restated in two
 registered rows would be a duplicate. That is not what these are.
+
+#### GOV-0002/OS-017 — A sentence about the code can become false and nothing sees it
+
+**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** resolved 2026-08-27 by `undated-assertions`
+**Observed** Six occurrences, in three C2 artifacts. Four were found on
+2026-08-22; two more on 2026-08-23, both inside the two documents that state
+the rule — STD-0100 and this register. The count is dated because it will
+grow.
+
+STD-0100 v2.0 carried *"the validator shall also observe `version`, `created` and
+`updated`, **which it does not today**"* from 2026-08-20 until 2026-08-21, one day
+after `085fe3b` had done the work. That one is already the reason this register
+never deletes a resolved entry.
+
+The other three are in STD-0300, and were found by reading it rather than by any
+check:
+
+- criterion 2.5 recorded **failing** since 2026-08-14 on *no artifact is declared
+  C3*, a cause that had gone on 2026-07-24 — three weeks before the note was
+  written. Eight days of a validation suite declaring itself in failure.
+- the acceptance section headed *State as of 2026-08-14, repository `45710f3`*
+  while the criteria under it had moved.
+- the engraving block asserting that `criticality` *remains undeclared* while the
+  front-matter of the same file declared `C2`, both dated 2026-08-21.
+
+The fifth and sixth were produced by closing OS-004. STD-0100 said the
+`type` → `domain` rule *"is stated and not yet enforced"* and this register said it
+*"is enforced by nothing"*; the check written on 2026-08-23 made both false, and
+neither would have been noticed by anything but a reader following the citations.
+
+All six share one shape: a true statement about a moving system, written without
+the date that made it true. Nothing distinguishes such a sentence from a live one,
+and the cost is asymmetric — a stale *"it does not do X"* makes a heritage look
+worse than it is, and a stale *"it does X"* makes it look better.
+
+**Derivable** partly. The temporal markers that hide a date — *today*,
+*currently*, *still*, *not yet*, *remains*, *for now* — are detectable by pattern.
+Whether the sentence carrying one is stale is not.
+**Qualification** **decided 2026-08-23 by the owner.** **The pattern check is
+written, and it publishes `OBSERVATION`.**
+
+The markers that hide a date — *today*, *currently*, *still*, *not yet*,
+*remains*, *for now* — are listed at every projection. Whether a sentence
+carrying one has gone stale stays a reading, so the check states where to look
+and never says `clean: False`. A `WARNING` would fail on the historical
+quotations this heritage keeps on purpose, which is the trap
+`principle-identifiers` avoided the same day by refusing to read prose for the
+retired three-digit form.
+
+Six occurrences in two days is the argument. A false positive costs a reading
+here; a stale sentence costs a decision taken on it.
+
+*This paragraph read "like the `type` → `domain` rule of OS-004, it is enforced by
+nothing" until 2026-08-23, when OS-004 was closed. A fifth occurrence of the shape
+this entry exists to record, inside the entry itself, found while closing the rule
+it named.*
+
+**Resolved 2026-08-27.** `undated-assertions`, the thirteenth check, at
+`OBSERVATION` as the owner decided on 2026-08-23. It lists every line
+carrying a marker without a date or a commit, at every projection — 19 when
+it was written.
+
+**Building it corrected the rule.** STD-0100 had listed six markers since
+2026-08-22, written from intuition. Measured across the 66 artifacts:
+`remains` accounts for 50 of 113 occurrences and `still` for 27, and reading
+them shows why — they overwhelmingly introduce statements that hide no date
+at all. *The repository remains the authoritative source of governed
+knowledge* is not a dated claim. Keeping them would have published over a
+hundred lines, and a report nobody can read is not a report. STD-0100 v2.5
+carries four markers and the measurement that removed two.
+
+**A quotation is not an assertion**, and the check knows it: the marker list
+inside STD-0100, the ✗ example beneath it, and this register's own quotations
+of the rule are all excluded by parity of emphasis, backticks and block
+quotes. That is also why **no artifact is excluded by name** — excluding a
+file for being noisy would be a check adapting to the data rather than to the
+rule, and the register would have been the first candidate.
+
+**The precision is stated rather than hoped for.** Roughly a third of the 19
+are assertions that have gone or could go stale; the rest are rhetoric —
+*Ollama today and another engine tomorrow* — or definitions. A reader scans
+nineteen lines and decides. The check does not know which sentences are
+wrong, and OS-017 said from the start that it could not: *the temporal
+markers are detectable by pattern; whether the sentence carrying one is stale
+is not.*
 
 #### GOV-0002/OS-028 — The repository is addressed under two spellings
 

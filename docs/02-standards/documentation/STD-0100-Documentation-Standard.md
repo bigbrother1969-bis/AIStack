@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.4
+  version: 2.5
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-23
+  updated: 2026-08-27
 
 relations:
   references:
@@ -248,18 +248,37 @@ property of it.
 >   `updated` (discharged 2026-08-21 by `085fe3b`)
 
 The words that require this treatment are the ones that hide a date inside
-themselves: *today*, *currently*, *still*, *not yet*, *remains*, *for now*. Each
-means "at the time of writing", and none says when that was.
+themselves: *today*, *currently*, *not yet*, *for now*. Each means "at the time
+of writing", and none says when that was.
 
-**As of 2026-08-23, this rule is enforced by nothing.** It holds by being
-applied — recorded as GOV-0002/OS-017. Until 2026-08-23 this paragraph named the
-`type` → `domain` rule as being in the same position; that rule is now derived by
-`classification-coherence`, and the sentence saying otherwise was true for one
-day. It is the second occurrence of the shape this very section describes, in the
-section that describes it. It is written because
-four such sentences were found in two C2 artifacts on 2026-08-22, one of them
-false for eight days and one contradicted by the front-matter four screens above
-it, and because none of them would have survived carrying its own date.
+**Two words were removed from that list on 2026-08-27, by measuring it.** It
+had read *today, currently, still, not yet, remains, for now* since 2026-08-22,
+written from intuition. Across the 66 artifacts, `remains` accounted for 50 of
+113 occurrences and `still` for 27, and reading them showed why: they
+overwhelmingly introduce statements that hide no date at all — *the repository
+remains the authoritative source of governed knowledge*, *refactoring remains
+safe*. Keeping them would have published over a hundred lines, and a report
+nobody can read is not a report.
+
+**Since 2026-08-27 the rule is observed rather than enforced.** The
+`undated-assertions` check lists every line carrying one of the four markers
+without a date or a commit, at every projection, as an `OBSERVATION` — 19 lines
+when it was written. It never says `clean: False`, because whether a sentence
+carrying a marker has gone stale is not derivable and this standard does not
+pretend otherwise. What is derivable is where to look.
+
+A quotation is not an assertion, and the check knows it: the marker list two
+paragraphs above, and the ✗ example above that, are quotations of the rule and
+are not reported. That is also why no artifact is excluded by name — excluding
+a file for being noisy would be a check adapting to the data rather than to the
+rule.
+
+GOV-0002/OS-017 recorded six occurrences in three C2 artifacts over two days,
+two of them inside the documents that state this rule, and the owner decided on
+2026-08-23 that the check was worth its false positives. Roughly a third of
+what it lists are real; the rest are rhetoric — *Ollama today and another engine
+tomorrow* — or definitions. That figure is stated so that a reader knows what
+kind of instrument this is.
 
 ---
 

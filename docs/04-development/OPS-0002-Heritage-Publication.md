@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -88,11 +88,33 @@ another, and a clone whose remote is a tunnel or a loopback is not a lesser
 clone — which is why the Context Bundle publishes `repository_url` from the
 declared project fact and not from any clone's remote.
 
-What a route may not do is change the name. Read off the publication output
-of 2026-08-23, and still true as of 2026-08-27: the repository is addressed
-as `AISTack` on Codeberg and in the publisher's `origin`, and as `AIStack` on
-GitHub and in `pyproject.toml`. Gitea tolerates case in repository names, so
-nothing ever failed and nobody saw it for weeks.
+What a route may not do is change the name, and for weeks the routes did not
+agree. Read off the publication output of 2026-08-23, the repository was
+addressed as `AISTack` on Codeberg and in the publisher's `origin`, and as
+`AIStack` on GitHub and in `pyproject.toml`. Gitea tolerates case in
+repository names, so nothing ever failed and nobody saw it. Codeberg does not
+tolerate it, and the two mirrors of one SPOT carried two names.
+
+Corrected on 2026-08-27 by GOV-0002/OS-028, and read off the publication
+output of the same day at 15:02 — which is where a remote name can be
+observed rather than asserted:
+
+```text
+workstation → https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack.git
+publisher   → ssh://127.0.0.1:2222/fabrice.persiaut/AIStack
+github      → github.com:bigbrother1969-bis/AIStack.git
+codeberg    → codeberg.org:bigbrother1969/AIStack.git
+```
+
+**This paragraph went on describing the divergence as current for the rest of
+that day**, hours after OS-028 closed it, on three forges. It read *still true
+as of 2026-08-27*, and the date was right.
+
+`undated-assertions` cannot see a sentence like that: it is dated, and **a
+date is not a measurement.** The file was revised three times the same
+afternoon — v1.3, v1.4, v1.5 — and this section was re-read on none of them.
+The same disease is the subject of GOV-0002/OS-036, in a register entry rather
+than in a procedure.
 
 ---
 

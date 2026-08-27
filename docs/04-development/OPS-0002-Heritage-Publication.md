@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -227,18 +227,65 @@ A component is retired when nothing on any host still declares it: no service
 unit, no schedule, no container, no image, no path referenced by any of them.
 Until then the repository has removed a component and the world has not.
 
-**The rule was written from two instances, four days apart.**
+### The order, and why it is an order
+
+**1. Inventory what declares it, while it still runs.**
+
+```bash
+docker inspect <container> \
+  --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}'
+docker inspect <container> \
+  --format '{{index .Config.Labels "com.docker.compose.project"}}'
+
+systemctl list-unit-files | grep <name>
+crontab -l | grep <name>
+```
+
+A running container carries the absolute path of the file that declared it,
+written into its own labels by Compose. **That evidence is stored in the
+container and is destroyed by the removal it is needed for.**
+
+**2. Stop and remove** — container, then image.
+
+**3. Remove every declaration found in step 1**, and only then record the
+retirement.
+
+### When step 1 was skipped
+
+It is recoverable, and it is not equivalent. What is left is a search:
+
+```bash
+docker compose ls --all
+grep -rln "<name>" /srv ~ --include="*.yml" --include="*.yaml"
+```
+
+A search proves what it walked. The label proved what declared the component.
+The difference is not academic: a declaration under a path nobody thought to
+search reads exactly like no declaration at all.
+
+### The rule was written from three instances
 
 - `aistack-backend` was decided for retirement on 2026-08-23 (GOV-0002/OS-012)
   because it answers an unauthenticated API holding a writable Docker socket.
-  The decision was taken; the component runs.
+  The decision was taken; the component ran for four more days.
 - `aistack-funnel-inbox.service` was found on 2026-08-27 enabled on the
   publisher, with a restart counter at 30 103, for a component whose committed
   half had been removed on 2026-08-23 and whose entry point had never been
   committed at all (GOV-0002/OS-032). It had never once started.
+- `aistack-backend` again, on 2026-08-27: the container and the image were
+  removed before anything asked what declared them, so the Compose label went
+  with the container. The recovery search named exactly one file — the
+  ancestor's `docker-compose.yml`, which FDN-0005 declares an archive — and by
+  then the retirement had been recorded as complete. GOV-0002/OS-036.
 
-Neither was noticed by anything. The second had been failing every five
-seconds since 2026-07-31.
+Neither of the first two was noticed by anything; the second had been failing
+every five seconds since 2026-07-31.
+
+**The third is what turned an obligation into an order.** Version 1.3 of this
+section, written the same morning, stated that a retirement has a second half.
+It did not state that the first half destroys the evidence for the second, and
+the run that followed it three hours later removed a container without reading
+its labels.
 
 **This is a procedure and not a check, and that is deliberate.** GOV-0002/OS-015
 settled that this repository describes a product rather than a host, and the

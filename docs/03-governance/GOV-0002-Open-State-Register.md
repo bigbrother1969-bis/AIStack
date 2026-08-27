@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.43
+  version: 1.44
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -136,9 +136,141 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
+None open, as of 2026-08-27. The nature that carried nine entries this week —
+including OS-001, which held the whole contract inventory — is empty for the
+first time since the register was written on 2026-08-22.
+
+It is also the only derivable nature: `contract-debt` walks the package at
+every projection and publishes what it finds. An empty section here does not
+mean no debt. It means every declared contract carries a qualification, and
+the fifteen orphans the check still reports are answered for rather than
+unexamined.
+
+---
+
+# Non-conforming instances
+
+None open. OS-006, OS-007, OS-021, OS-023, OS-024 and OS-028 are in
+*Resolved*.
+
+Worth noting what emptied it: three of those six closed by **retiring or
+narrowing the rule** rather than by conforming to it. A heritage that only
+ever fixed instances would end with rules nothing could satisfy.
+
+---
+
+# Defects
+
+None open. OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
+were resolved on 2026-08-23 and are in *Resolved*.
+
+An empty section is kept rather than removed: a register with no defects
+section could not be told from one that never looked for any.
+
+---
+
+# Published artifacts
+
+None open. The only entry of this nature, OS-011, is in *Resolved*.
+
+An empty section is kept rather than removed, for the same reason as
+*Defects*: it states that this heritage publishes artifacts and currently
+has none in a doubtful state, which is not the same as a register that never
+thought to look.
+
+---
+
+# Risks
+
+#### GOV-0002/OS-012 — `aistack-backend` exposes an unauthenticated API holding a writable Docker socket
+
+**Nature** `risk` · **Opened** 2026-08-21 · **State** partially mitigated
+**Observed** `GET /api/docker/containers` answers 200 with no credentials,
+and `[ -w /var/run/docker.sock ]` is true inside the container — which is
+root on the host. Until 2026-08-21 it also sat on the `proxy` network with 43
+containers including WordPress. Mitigated the same day: bound to
+`127.0.0.1:8010`, removed from `proxy`, verified unreachable by name from
+another container. **The API itself is unchanged.**
+**Derivable** no
+**Qualification** **decided 2026-08-23 by the owner.** Neither authenticate
+nor accept: **retire the component.**
+
+*This entry was not closed by the rule OPS-0002 v1.3 states, and the departure
+from what was proposed is deliberate. A rule saying that a retirement includes
+its deployment does not retire anything. `aistack-backend` still answers an
+unauthenticated API holding a writable Docker socket; closing the entry
+because the obligation is now written would be the false closure this register
+exists to prevent. It closes when the component stops running.* ADR-0009 already decides the migration
+of `aistack-backend`'s function, and authenticating something scheduled for
+removal is work thrown away.
+
+The remainder of ADR-0009 therefore becomes the priority, and this entry
+closes when the surface disappears rather than when it is defended. It stays
+open until then; the mitigation of 2026-08-21 holds meanwhile — bound to
+`127.0.0.1:8010`, off the `proxy` network.
+
+---
+
+# Decisions
+
+#### GOV-0002/OS-034 — A Runtime migration is announced in a docstring
+
+**Nature** `decision` · **Opened** 2026-08-27 · **State** open
+**Observed** `KnowledgeProvider` describes itself, in code:
+
+> *Backward-compatible discovery provider. This protocol remains compatible
+> with the current Runtime. **The legacy `collect()` method will be removed
+> once the Runtime migrates to the Discovery model.***
+
+So there is a migration: from `collect` to `discover`, of the Kernel Runtime,
+with a contract already shaped for the destination. `DiscoveryProvider`
+declares `discover`; `KnowledgeProvider` extends it with the legacy
+`collect`; the two providers that exist — `ComposeProvider` and
+`DockerProvider` — implement `collect` and not `discover`.
+
+**No artifact of this heritage says any of that.** FDN-0002 defines a
+*Knowledge Provider* as *responsible for discovering observations […] they
+only collect evidence*, using both verbs for one activity and settling
+nothing. No ADR decides the migration, nothing dates it, nothing says what
+would make it complete.
+
+It was found on 2026-08-27 while qualifying OS-001, and it reversed the
+qualification in progress. The agent had measured the glossary and the two
+implementations, concluded that `discover` was an unearned abstraction, and
+recommended narrowing the contracts to `collect` under ARC-P-006. The
+docstring says the opposite: `collect` is what leaves. **The recommendation
+was withdrawn before anything was written**, and the owner qualified both
+contracts as planned instead.
+
+FDN-P-004 makes knowledge the primary engineering asset. An intention that
+lives in a comment is not one — and this one nearly caused the heritage to
+delete its own destination.
+**Derivable** no. That a docstring announces a migration is not detectable;
+that the two providers implement the legacy method and not the target is,
+and `contract-debt` publishes it as two orphans without saying why.
+**Qualification** `unknown`. Two questions the owner must answer, and they
+are separable:
+
+- **is the migration still intended?** The docstring was written when the
+  Discovery model was decided; nothing since names it. If it is not, then
+  `discover` is unearned after all and the narrowing that was withdrawn
+  becomes the right move;
+- **if it is, where does it live?** An ADR deciding the Discovery model, or a
+  line in ARCH-0012, or an entry here with what would end it. What may not
+  continue is a Runtime migration whose only record is a comment in the
+  contract it targets.
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-001 — Twenty declared contracts are satisfied by nothing
 
-**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** open
+**Nature** `contract-debt` · **Opened** 2026-08-22 · **State** resolved 2026-08-27 by qualifying every orphan
 
 **Where the current figure lives.** Since `4010d1f` the count is published
 by the `contract-debt` integrity check at every projection, and carried in
@@ -225,74 +357,38 @@ The other ten remain `unknown`, and this is the half no tool will ever close:
 `TransferTarget`. The entry stays open for them, and the figure the check
 publishes does not change: twenty orphans, ten of them now answered for.
 
+**Resolved 2026-08-27.** Every declared contract is now qualified, and the
+figure the check publishes is 15 orphans of 51 contracts rather than 20 of 56.
 
----
+| Contract | Qualification |
+|---|---|
+| `PackageCapability` and its nine specialisations | planned — 2026-08-23 |
+| `Task` | planned — FDN-0002 § Task, cited by eight artifacts |
+| `KnowledgePolicy` | planned — FDN-0002 § Knowledge Policy |
+| `EvidenceCollector` | planned — ADR-0008's Knowledge Acquisition Dimension |
+| `KnowledgeProvider`, `DiscoveryProvider` | planned — and GOV-0002/OS-034 |
+| `KnowledgeEngine`, `KnowledgeGenerator`, `KnowledgeRenderer` | abandoned, removed |
+| `KnowledgePipeline` | abandoned, removed with `PipelineRegistry` |
+| `TransferTarget` | superseded by `BundleTransferConfiguration`, removed |
 
-# Non-conforming instances
+**Every qualification rests on a measurement, and two of them reversed the
+answer that measurement first suggested.**
 
----
+`KnowledgePipeline` was presented as approached by nothing, because the scan
+looked for classes that *implement* each orphan and not for code that *uses*
+them. `PipelineRegistry` used it. It was still removed, but as half of a dead
+pair rather than as a mute contract, and removing it alone would have left a
+registry typed on a deleted name.
 
-# Defects
+`KnowledgeProvider` was nearly narrowed. The glossary and the two live
+providers both pointed at `collect`, so `discover` looked unearned under
+ARC-P-006 — until the contract's own docstring said `collect` is the legacy
+method and `discover` the destination. The recommendation was withdrawn
+before anything was written, and the migration it revealed is OS-034.
 
-None open. OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
-were resolved on 2026-08-23 and are in *Resolved*.
-
-An empty section is kept rather than removed: a register with no defects
-section could not be told from one that never looked for any.
-
----
-
-# Published artifacts
-
-None open. The only entry of this nature, OS-011, is in *Resolved*.
-
-An empty section is kept rather than removed, for the same reason as
-*Defects*: it states that this heritage publishes artifacts and currently
-has none in a doubtful state, which is not the same as a register that never
-thought to look.
-
----
-
-# Risks
-
-#### GOV-0002/OS-012 — `aistack-backend` exposes an unauthenticated API holding a writable Docker socket
-
-**Nature** `risk` · **Opened** 2026-08-21 · **State** partially mitigated
-**Observed** `GET /api/docker/containers` answers 200 with no credentials,
-and `[ -w /var/run/docker.sock ]` is true inside the container — which is
-root on the host. Until 2026-08-21 it also sat on the `proxy` network with 43
-containers including WordPress. Mitigated the same day: bound to
-`127.0.0.1:8010`, removed from `proxy`, verified unreachable by name from
-another container. **The API itself is unchanged.**
-**Derivable** no
-**Qualification** **decided 2026-08-23 by the owner.** Neither authenticate
-nor accept: **retire the component.**
-
-*This entry was not closed by the rule OPS-0002 v1.3 states, and the departure
-from what was proposed is deliberate. A rule saying that a retirement includes
-its deployment does not retire anything. `aistack-backend` still answers an
-unauthenticated API holding a writable Docker socket; closing the entry
-because the obligation is now written would be the false closure this register
-exists to prevent. It closes when the component stops running.* ADR-0009 already decides the migration
-of `aistack-backend`'s function, and authenticating something scheduled for
-removal is work thrown away.
-
-The remainder of ADR-0009 therefore becomes the priority, and this entry
-closes when the surface disappears rather than when it is defended. It stays
-open until then; the mitigation of 2026-08-21 holds meanwhile — bound to
-`127.0.0.1:8010`, off the `proxy` network.
-
----
-
-# Decisions
-
----
-
-# Resolved
-
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
+What the entry established beyond its own subject: a contract's position is
+three measurements, not one — what implements it, what consumes it, and what
+governs it. Any one of the three alone gives a confident wrong answer.
 
 #### GOV-0002/OS-005 — The `<DOMAIN>-P-NNN` convention is enforced by nothing
 

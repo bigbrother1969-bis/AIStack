@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.48
+  version: 1.49
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -223,6 +223,30 @@ closure: an entry that names a condition and cites no measurement of it.
   one. The entry that refused hardest to close early — it stayed open four
   days on the argument that a written obligation retires nothing — is the one
   that closed on an assumption.
+
+**The first is decided 2026-08-27 by the owner: the discovery path is
+removed.** And it was measured first, which is the whole of what changed
+between this decision and the one that produced the entry. A sweep of every
+running container's `com.docker.compose.project.config_files` returned exactly
+one path under `/srv/aistack`:
+
+```text
+/srv/aistack/AIStack/docker-compose.selection-ui.yml
+```
+
+Inside the governed repository. Nothing alive descended from the ancestor's
+compose, and it was moved to `docker-compose.yml.archived`.
+
+**That removes a default and not a capability.** `docker compose -f
+…/docker-compose.yml.archived up` still works; what has ended is `docker
+compose up` typed in that directory, which is the shape the exposure would
+have come back through. An archive is read, and a file Compose finds by
+walking is not being read.
+
+Recorded this way rather than as *done*, because the difference between the
+two sentences is the subject of the second question.
+
+**The second stays open, and this entry stays with it.**
 
 *Six entries of this nature closed before it: OS-006, OS-007, OS-021, OS-023,
 OS-024 and OS-028, all in* Resolved. *Three of the six closed by retiring or

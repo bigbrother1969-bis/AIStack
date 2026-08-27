@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Accepted
   owner: Architecture
   created: 2026-08-22
@@ -321,10 +321,25 @@ One behaviour is added, because VS-4 criterion 4.1 asks for detection
 *without being pointed at a service*: the qualifier evaluates every
 container, where the experimenter requires a container name.
 
-The web surface follows the pattern the repository already established.
-`selection_ui/` is 331 lines, lives at the repository root outside `src/`,
-imports the governed library, and ships as its own digest-pinned image. The
-new surface is built the same way. It is not part of `src/aistack`.
+**The web surface is abandoned. Decided 2026-08-27 by the owner.**
+
+It was to follow the pattern the repository already established:
+`selection_ui/`, 331 lines at the repository root outside `src/`, importing
+the governed library and shipping as its own digest-pinned image. That
+pattern stands and is unaffected; nothing is built on it here.
+
+The reading that permits the abandonment is this section's own title —
+*iso-usage on capability*, not on surface — and it is the same reading that
+permitted retiring `aistack-backend` without the replacement. The three
+measured interactions are reachable from the CLI, and the table in § *What the
+retirement delivered* names which command replaces which. What is lost is the
+interaction and not the capability, and that interaction had one user.
+
+**This is an abandonment, not a deferral.** The row in the implementation
+table reads *abandoned* with a date, where it read *not built, and not a
+blocker* for five days while nothing surfaced it (GOV-0002/OS-035). The same
+distinction closed GOV-0002/OS-034 on 2026-08-27: a migration announced in a
+docstring, measured to have no caller, and ended rather than left standing.
 
 ### 7. What a running AIStack knows, and what it does not
 
@@ -425,7 +440,7 @@ none unobserved.
 | Normalization — `normalize_log_evidence` | done — 2026-08-22 |
 | Qualification — `qualify` | done — 2026-08-22 |
 | CLI — `aistack.cli.runtime_diagnose` | done — 2026-08-22 |
-| Web surface — `runtime_ui/` | **not built, and not a blocker** — see below |
+| Web surface — `runtime_ui/` | **abandoned — 2026-08-27** — see § 6 |
 | Retirement of `aistack-backend` | done — 2026-08-27 |
 
 *This section previously read "Nothing is implemented", which was true when
@@ -455,10 +470,15 @@ unhealthy, undeclared. Measured 2026-08-27: **nothing implements those three
 states.** The catalogue carries Docker's raw `state` and `status`; the
 correction was decided and never built.
 
-So the retirement discharges the exposure and leaves two things undone: the
-web surface, and the corrected qualification. Both are recorded as
+So the retirement discharged the exposure and left two things undone: the web
+surface, and the corrected qualification. Both were recorded as
 GOV-0002/OS-035 rather than left implicit in a table cell reading *not
 started*, which is how they survived from 2026-08-22 to 2026-08-27.
+
+**Both were qualified by the owner on 2026-08-27, and differently.** The web
+surface is abandoned (§ 6). The corrected qualification is owed, and § 6 no
+longer claims it was made. One of the two remains, and it is the one that was
+never a preference.
 
 The exposure is why the order was inverted. `aistack-backend` answered an
 unauthenticated API while holding a writable Docker socket — root on the

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.50
+  version: 1.51
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -178,6 +178,19 @@ undone rows is derivable and nothing derives it.
   Five days of *not started* passed unnoticed, and the same shape produced
   OS-012 — a retirement decided on 2026-08-23 and done on 2026-08-27 only
   because something else made it visible.
+
+**The first is decided 2026-08-27 by the owner: `runtime_ui/` is abandoned.**
+ADR-0009 § 6 says so and says why — *iso-usage on capability*, not on
+surface, which is the reading that already permitted retiring
+`aistack-backend` without its replacement. The three measured interactions
+are reachable from the CLI; what is lost is the interaction, and it had one
+user.
+
+The implementation row reads `abandoned — 2026-08-27` where it read *not
+built, and not a blocker*. **That is the substance of the decision, not its
+bookkeeping**: a row in a terminal state is a row nobody has to re-read,
+where a row that means *one day* is an open state filed in a place this
+register cannot see. OS-034 was closed the same way on 2026-08-27.
 
 **The second is decided 2026-08-27 by the owner: retract, then implement.**
 ADR-0009 v1.5 § 6 stops asserting a correction nobody performed — it read

@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -113,16 +113,34 @@ Workstation                SPOT                 Publisher            Mirrors
 
 ### 1. Apply and verify, on the workstation
 
+Run this from the workstation's clone, as one sequence:
+
 ```bash
-git status --porcelain          # must be empty
-git rev-parse --abbrev-ref HEAD # must be main
-
-git am --3way <patch>...        # in the order they were produced
-
-source scripts/dev-env.sh
-pytest -q
-python3 -m aistack.cli.knowledge_integrity
+test -z "$(git status --porcelain)" \
+  && test "$(git rev-parse --abbrev-ref HEAD)" = main \
+  && git am --3way <patch>... \
+  && source scripts/dev-env.sh \
+  && pytest -q \
+  && python3 -m aistack.cli.knowledge_integrity
 ```
+
+**The chaining is the procedure, not a shell habit.** Until version 1.5 the
+same six commands were shown as six lines, the first two carrying `# must be
+empty` and `# must be main` as comments. A precondition written in a comment
+is checked by whoever reads it, which is to say on the days they are looking.
+`test` fails, and a failure stops what follows.
+
+It makes the last line a gate rather than a report:
+`aistack.cli.knowledge_integrity` exits non-zero on a blocking finding, and
+nothing chained after it runs. In six separate lines that exit code is printed
+and discarded.
+
+**The block names no path**, and that is the same decision as *Roles, not
+machines*. It was written otherwise on 2026-08-27 — a session prefixed this
+sequence with a `cd` to the publisher's path while instructing the
+workstation. The `cd` failed, the lines after it ran anyway, and the patches
+were applied wherever the shell happened to be. It was the right repository by
+coincidence.
 
 The environment command is the one ENG-TEST-0002 names, and the reason it
 names that one is recorded there: it is the file that *provides* the

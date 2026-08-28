@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.9
+  version: 2.10
   owner: Foundation
   created: 2026-07-06
   updated: 2026-08-28
@@ -275,10 +275,29 @@ rule.
 
 GOV-0002/OS-017 recorded six occurrences in three C2 artifacts over two days,
 two of them inside the documents that state this rule, and the owner decided on
-2026-08-23 that the check was worth its false positives. Roughly a third of
-what it lists are real; the rest are rhetoric — *Ollama today and another engine
-tomorrow* — or definitions. That figure is stated so that a reader knows what
-kind of instrument this is.
+2026-08-23 that the check was worth its false positives. *Roughly a third of
+what it lists are real* was the estimate written then.
+
+**The list was read line by line on 2026-08-28, and the estimate held.** Of 19
+lines, **9 were corrected and 10 remain**, and what remains is stated here so
+that the next reader does not repeat the pass:
+
+| What stays | Lines | Why |
+|---|---|---|
+| rhetoric | 3 | *Ollama today and another engine tomorrow*, twice, and *an engineer does not only solve today's problems*. A contrast device, not a claim about a state |
+| definitions | 4 | *observed, stated, and not yet closed* defines an open state; *work that is not yet knowledge*; *the work not yet done*; *a scenario requiring interactive judgement is not yet a criterion* |
+| quotations | 2 | retired sentences this heritage prints on purpose, which the parity heuristic scores as assertions when the quotation nests `*`, `` ` `` and `"` |
+| a heading | 1 | *## What is not yet decided* — a section title takes no date |
+
+**What the nine were is the useful half.** Four were resolved entries speaking
+in the present about the day they were opened — including one saying *nothing
+measures it* about a check written hours later, in the entry that check
+resolved. Two were assertions about the code, re-measured and dated. Three were
+statements about this register and about a concept document, true and
+undated.
+
+*So the instrument's yield is not the ratio but the shape: what it finds is
+almost never a lie, and often a tense.*
 
 ## An accepted decision declares its implementation state
 

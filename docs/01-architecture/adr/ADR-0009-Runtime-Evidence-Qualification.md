@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Accepted
   owner: Architecture
   created: 2026-08-22
-  updated: 2026-08-27
+  updated: 2026-08-28
 
 relations:
   references:
@@ -216,7 +216,7 @@ remediation the right one. *"Check the VPN credentials used by the
 container"* is only actionable if those credentials have a declared
 location; *"check the target service, port and Docker network"* presupposes
 that a dependency between two services is declared somewhere. Neither rule
-exists in this heritage today.
+exists in this heritage, measured 2026-08-28 across every governed artifact.
 
 The owner's position, recorded 2026-08-22: **ideally every signature is
 grounded, and a system that is well-founded and explainable is the target;
@@ -287,7 +287,7 @@ knowledge.
 
 ### 6. Scope: iso-usage on capability, not on defects
 
-Everything the experimenter lets a person do today remains doable. Its
+Everything the experimenter let a person do remains doable. Its
 measured usage is three interactions: list containers with a state icon,
 request a global diagnostic, analyse one container's logs. Two of its routes
 — `/{name}/logs` and `/api/ollama/models` — have no caller in its own

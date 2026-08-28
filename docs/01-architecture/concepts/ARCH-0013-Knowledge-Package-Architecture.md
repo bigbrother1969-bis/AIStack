@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Architecture
   created: 2026-07-25
-  updated: 2026-08-21
+  updated: 2026-08-28
 ---
 
 # ARCH-0013 — Knowledge Package Architecture
@@ -131,7 +131,7 @@ A Custom Profile does not replace or modify the governing KnowledgePolicies.
 
 Profile Types
 
-AIStack currently distinguishes two Profile types.
+This document distinguishes two Profile types.
 
 Artifact Profile
 

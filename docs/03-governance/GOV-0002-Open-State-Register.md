@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.68
+  version: 1.69
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -39,7 +39,7 @@ third possibility — observed, and quietly forgotten.
 ## What belongs here
 
 An entry states one condition of the system that is known and unresolved.
-Six natures are used today:
+Six natures are declared, and the table below is the declaration:
 
 | Nature | What it is |
 |---|---|
@@ -449,8 +449,8 @@ section could not be told from one that never looked for any.
 None open. OS-011 and OS-037 are in *Resolved*.
 
 An empty section is kept rather than removed, for the same reason as
-*Defects*: it states that this heritage publishes artifacts and currently
-has none in a doubtful state, which is not the same as a register that never
+*Defects*: it states that this heritage publishes artifacts and had none in a
+doubtful state on 2026-08-28, which is not the same as a register that never
 thought to look.
 
 ---
@@ -1703,8 +1703,8 @@ this.
 The cost is visible in how both cases were handled. Each required an
 architecture decision written from scratch, and the second one — a campaign
 that measures a founding principle, since QUAL-0001/P005 shows a model
-asserting that AI is the source of truth, which GOV-P-001 forbids — is
-currently reachable only by someone who knows the directory exists.
+asserting that AI is the source of truth, which GOV-P-001 forbids — was
+reachable only by someone who knew the directory existed.
 
 *An earlier version of this entry read that knowledge "keeps being born
 outside the repository", as if by accident. The owner corrected it: the
@@ -2201,15 +2201,15 @@ Both facts are now stated in OPS-0002 v1.1. What to *do* about them is not.
 **Derivable** no. The heritage cannot see a crontab, and OS-015 settled that
 it does not try. What is derivable is the second fact's consequence — two
 projections of the same commit carrying different inventories — and nothing
-compares them today.
+compares them, measured 2026-08-28: `projection-fidelity` compares a projection
+against the frontmatter it carries, not two projections against each other.
 **Qualification** `unknown`. Two questions, and they are separable:
 
 - **the unread report.** Options range from doing nothing — the schedules are
   a convenience and the manual run is the governed one — through mailing the
   failure, to having the daily run write its verdict where the next session
-  reads it. Doing nothing is defensible and is what happens today; what is
-  not defensible is leaving it undecided a second time now that it is
-  observed;
+  reads it. Doing nothing was defensible and was what happened; what was not
+  defensible was leaving it undecided a second time once it was observed;
 - **the undeclared interpreter.** Making the six-hourly job source
   `scripts/dev-env.sh` is one line and would put it inside ENG-TEST-0002.
   Whether a scheduled regeneration is *validation* — which the principle
@@ -2484,12 +2484,12 @@ identifiers are cited, and one designated nothing** —
 `FDN-PRINCIPLES`. The five were the Manifesto, FDN-0009, FDN-0010, FDN-0011
 and STD-0300; four of the five are C3.
 
-They were corrected on 2026-08-23 with the rename of OS-006, so the count is
-zero today. **What is not corrected is that nothing measures it.** No
-integrity check compares the set of cited identifiers against the set of
-declared ones, so the next broken reference will be as invisible as these
-five were — and a reference is how the heritage says two artifacts belong
-together.
+They were corrected on 2026-08-23 with the rename of OS-006, so the count went
+to zero. **What was not corrected on that day was that nothing measured it.**
+No integrity check compared the set of cited identifiers against the set of
+declared ones, so the next broken reference would have been as invisible as
+these five were — and a reference is how the heritage says two artifacts
+belong together. The resolution below is what ended that, hours later.
 
 The measurement is one pass over the bundle and needs no new input: both
 sets are already in the projection.

@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-07-31
-  updated: 2026-08-27
+  updated: 2026-08-28
 
 relations:
   references:
@@ -64,13 +64,13 @@ halves are not in the same state.**
 | Execution — `Request` | done — 2026-08-27 |
 | Execution — `Task`, `TaskRegistry`, `TaskResolver` | done — 2026-08-27 |
 | Execution — Kernel Runtime, `KernelRuntime` / `RuntimeExecutor` / `ExecutionTrace` | done — 2026-08-27 |
-| Execution — Observation Service | unqualified — 2026-08-27 |
+| Execution — Observation Service | abandoned — 2026-08-28 |
 | Execution — Capability, `PackageCapability` and nine implementations | done — 2026-08-27 |
-| Execution — Action | unqualified — 2026-08-27 |
+| Execution — Action | abandoned — 2026-08-28 |
 | Discovery produces Evidence, never Knowledge | done — 2026-08-27 |
 | Qualification is independent from acquisition | done — 2026-08-27 |
-| Location abstracts where reality is observed | unqualified — 2026-08-27 |
-| Technical access through interchangeable Adapters | unqualified — 2026-08-27 |
+| Location abstracts where reality is observed | done — 2026-08-28 |
+| Technical access through interchangeable Adapters | superseded — 2026-08-28 |
 
 *The fifth key decision — *migration remains incremental* — is **not in the
 table**. It is a policy this decision adopts about how the rest arrives, not a
@@ -118,22 +118,53 @@ kernel is unused* and is what the measurement supports.
 
 **`Observation Service` and `Action` exist nowhere.** There is an `Observation`
 and an `ObservationContext`, but they are *results* produced by execution
-components and recorded in the trace, not a stage of the chain. Both rows are
-left unqualified rather than guessed.
+components and recorded in the trace, not a stage of the chain. Both rows were
+left unqualified on 2026-08-27 rather than guessed, and **the owner qualified
+them `abandoned` on 2026-08-28**: the chain that was built has no such stages,
+and nothing in it waits for one. What this decision anticipated stays written in
+§ *Decision*, which is what an abandoned row is for — the intention is preserved
+and the table stops reporting it as work in progress.
 
 ### Two of the five key decisions
 
 **Location** exists — `aistack/location/`, `LocationResolver`,
-`FilesystemLocationResolver` — and its only consumer is
-`transport/filesystem/filesystem_writer.py`. **No observation path uses it.**
-The abstraction is built; the use this decision names it for is not there.
+`FilesystemLocationResolver` — and is consumed by
+`transport/filesystem/filesystem_writer.py` **and**
+`transport/filesystem/filesystem_receiver.py`. **No observation path uses it.**
 
-**Adapters**: nothing carries the name. The Providers play the role behind
-`KnowledgeProvider`, which is interchangeable exactly as described. The same
-shape as ADR-0007's `BundleTransferManager` — the substance under another name
-— and left unqualified for the same reason: calling it *superseded* would close
-a question nobody has looked at.
+*This paragraph said "its only consumer is `filesystem_writer.py`" until
+2026-08-28. There are two, both in the same package, and the second was missed
+because the first was found first. The measurement was re-run when the row was
+qualified, which is why it was caught.*
 
-*Four unqualified rows is a large number for one decision, and it is the honest
+**Qualified `done` by the owner on 2026-08-28.** The abstraction this row names
+exists and is consumed, and the contract holds. That no observation path uses
+it is a missing consumer — the condition GOV-0002/OS-039 and OS-041 record for
+other components — and not a step of this decision left undone.
+
+**Adapters**: nothing carries the name, measured 2026-08-28 across the whole
+repository. The Providers play the role behind `KnowledgeProvider`, which is
+interchangeable exactly as described. The same shape as ADR-0007's
+`BundleTransferManager` — the substance under another name — and it was left
+unqualified on 2026-08-27 for the same reason: calling it *superseded* would
+have closed a question nobody had looked at.
+
+**Both were qualified `superseded` on 2026-08-28, by the owner, in the same
+pass**, and the pair is the argument: two decisions naming a component that
+exists nowhere, whose responsibilities are carried by a contract under another
+name, in the same heritage and by the same kind of decomposition. A decision
+that got its substance is not unfinished.
+
+*The reading declined is on the record: an Adapter is narrower than a Provider —
+one accesses, the other collects and concludes on what it accessed — and nothing
+separates the two in the code. Under that reading the row would be `not
+implemented`. It was declined because this decision names the Adapter for
+**interchangeable technical access**, and that is what `KnowledgeProvider`
+delivers.*
+
+*Four unqualified rows is a large number for one decision, and it was the honest
 one. FDN-0003 Article 12 makes the absence of a decision a governed state that
-must remain visible.*
+must remain visible — and visible is what it was: the four were reported at
+every projection for a day and qualified on 2026-08-28, two `abandoned`, one
+`done`, one `superseded`. **None of the four went to `not implemented`**, which
+is the reading the first measurement suggested for all of them.*

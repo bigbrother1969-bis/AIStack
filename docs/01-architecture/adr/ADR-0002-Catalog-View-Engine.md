@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-07-07
@@ -128,7 +128,7 @@ path that runs produces a Catalog View.**
 | One Catalog View Engine — `MusicSelectionViewEngine` | done — 2026-08-28 |
 | A Catalog View is derived from a catalog and traceable to it | done — 2026-08-28 |
 | A Catalog View is reproducible | done — 2026-08-28 |
-| A Catalog View is limited to the purpose it serves | unqualified — 2026-08-28 |
+| A Catalog View is limited to the purpose it serves | done — 2026-08-28 |
 | The Selection Engine consumes a Catalog View, never a raw provider observation | done — 2026-08-28 |
 | Infrastructure Data Catalog → Catalog View Engine → consumer, on a path that runs | not implemented — measured 2026-08-28 |
 | The Selection UI as the first Catalog View consumer | not implemented — measured 2026-08-28 |
@@ -142,7 +142,7 @@ What each was read against:
 | the engine | `src/aistack/catalog/views/music/selection.py`, registered as `music-selection` by `kernel/bootstrap/catalog_views.py` |
 | derived and traceable | `build` takes the `Catalog`, and the view it returns sets `source_catalog_id` from `catalog.catalog_id` |
 | reproducible | `MusicSelectionViewEngine.build` reads no clock, no file and no environment: its result is a function of its argument. Read off the one implementation — **nothing verifies it for the next one** |
-| limited to its purpose | `CatalogItem` carries `id`, `label`, `kind`, `source`, `metadata`; `CatalogViewItem` carries `id`, `label`, `metadata`, and the one engine moves `kind` and `source` into `metadata`. **It drops nothing** |
+| limited to its purpose | `CatalogItem` carries `id`, `label`, `kind`, `source`, `metadata`; `CatalogViewItem` carries `id`, `label`, `metadata`, and the one engine moves `kind` and `source` into `metadata`. **It drops nothing** — qualified `done` by the owner on 2026-08-28, see below |
 | the Selection Engine's input | `SelectionEngine.select(view: CatalogView, …)` and `SelectionStrategy.select(view: CatalogView)`. The type is the guarantee: no provider observation reaches either |
 | the flow | measured across the repository — below |
 | the Selection UI | `selection_ui/app.py` imports `load_catalog_yaml`, `Selection`, `load_selection_yaml` and `RepositoryProvider`. It never names `CatalogView` |
@@ -193,6 +193,28 @@ of the two is the Catalog View is not derivable from the code — both readings
 are coherent — and it is left as an open row here rather than answered, because
 answering it is a decision and not a measurement. **GOV-0002/OS-042** holds the
 question, opened 2026-08-28 with the three readings that were live that day.
+
+### The row that measured badly and was qualified anyway
+
+**A Catalog View is limited to the purpose it serves** was left `unqualified` on
+the measurement above: the one engine narrows nothing. **The owner qualified it
+`done` on 2026-08-28**, and the reading is that a view is a purpose-oriented
+*re-shaping* rather than a subtraction. `MusicSelectionViewEngine` reads a music
+catalogue whose items carry nothing a selection does not need, so there is
+nothing to drop and dropping nothing is the correct output.
+
+*The argument that was declined is on the record, because it is not weak.*
+§ *Rationale* illustrates the principle with the opposite case — a Docker
+runtime catalogue of eight fields against a selection view of four — and under
+that reading the principle is about subtraction and the one existing engine does
+not honour it. What settles it is that the principle constrains the **view**,
+not the engine: a view limited to its purpose is one that carries what the
+purpose needs, and whether that is fewer fields depends on the catalogue.
+
+**The row is therefore closed on a decision and not on a measurement**, and it
+says so. What the measurement establishes is that this heritage has one engine
+over one catalogue, and that the case the § *Rationale* draws its example from
+is the one no engine builds — which is a different row of this table.
 
 ### What is not a row
 

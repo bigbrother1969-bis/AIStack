@@ -9,9 +9,9 @@ artifact:
   confidence: Declared
   status: Accepted
   owner: Architecture
-  version: 1.1
+  version: 1.2
   created: 2026-07-24
-  updated: 2026-08-27
+  updated: 2026-08-28
 ---
 
 # ADR-0007 - Context Bundle Transfer Capability
@@ -114,7 +114,7 @@ Measured 2026-08-27.
 | Step | State |
 |---|---|
 | Transfer is an explicit component, not a shell command hidden inside an exporter | done — 2026-08-27 |
-| `BundleTransferManager`, the component § *Decision* names | **unqualified — 2026-08-27, under investigation** |
+| `BundleTransferManager`, the component § *Decision* names | superseded — 2026-08-28 |
 | transferring generated bundles | done — 2026-08-27 |
 | transferring bootstrap documentation | done — 2026-08-27 |
 | validating transfer success and reporting status | done — 2026-08-27 |
@@ -136,27 +136,44 @@ What each was read against:
 That is the configuration rule working, and it means this path has never run
 in the governed tree.
 
-### The second row, and why it is not `superseded`
+### The second row, qualified `superseded` on 2026-08-28
 
 `BundleTransferManager` **exists nowhere**: no class, no module, no other
 artifact carries the name. Its four responsibilities are met, spread across
 `SshBundleTransfer`, `DefaultContextBundleService.transfer_error` and the
 entry-point script.
 
-The obvious reading is that the name was superseded by another decomposition,
-and the owner declined it on 2026-08-27: **unqualified, to investigate.** The
-reason is that the correction made the same day sharpened the question rather
-than answering it. There are now two implementations of the orchestration
-contract — `SshBundleTransfer`, which holds a configuration and no policy, and
-`DefaultContextBundleTransferService`, which holds a policy and delegates to a
-`BundleTransfer` — and **only the first has a caller outside the tests.**
-Which of the two is the manager this decision names is exactly what has to be
-looked at.
+The obvious reading is that the name was superseded by another decomposition.
+The owner declined it on 2026-08-27 — **unqualified, to investigate** — because
+the correction made the same day sharpened the question rather than answering
+it, and **accepted it on 2026-08-28** once the investigation was done.
 
-*A row saying `superseded` would close that. This one keeps
-`unfinished-decisions` reporting it at every projection, which is what an
-undeclared state is for — FDN-0003 Article 12: the absence of a decision is a
-governed state and must remain visible.*
+What the investigation found, measured 2026-08-28 across the repository:
+
+```text
+ContextBundleTransferService
+  SshBundleTransfer                     1 production caller — scripts/export_project_sources.py
+  DefaultContextBundleTransferService   0 production callers, tests only
+BundleTransferManager                   no class, no module, no artifact
+```
+
+Two implementations of the orchestration contract: `SshBundleTransfer`, which
+holds a configuration and no policy, and `DefaultContextBundleTransferService`,
+which holds a policy and delegates to a `BundleTransfer`. The second is the
+decomposition this decision describes, and the first is the one that runs.
+
+**`superseded` is what that supports and nothing more.** The role the decision
+names is carried by a contract under another name; which class occupies it is a
+question about consumers, not about whether this step was taken. Same shape as
+ADR-0008's *Adapters* row, qualified the same day and for the same reason: the
+substance exists, the name does not, and a decision that got its substance is
+not unfinished.
+
+*What `superseded` does not say: that the orchestration is settled.
+`DefaultContextBundleTransferService` has no production caller, which is the
+condition GOV-0002/OS-039 records for the Selection Engine and is not a row of
+this table — this decision commits to the transfer being an explicit component,
+not to which of two components the export script picks.*
 
 ## Principles Applied
 

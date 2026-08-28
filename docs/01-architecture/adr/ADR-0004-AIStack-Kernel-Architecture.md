@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-07-07
@@ -103,8 +103,12 @@ The Kernel shall know contracts and registries, not concrete implementations.
 
 ## Implementation state
 
-Measured 2026-08-28 at `1174078`. **The Kernel is built and the boundary it
-decides is drawn in one place the code contradicts.**
+Measured 2026-08-28 at `1174078`. **The Kernel is built and its boundary holds;
+what this decision names and what was built are two different sets.**
+
+*The first version of this section read that the boundary was drawn in one place
+the code contradicts. The owner qualified that place on 2026-08-28 — the
+Composition Root may name technologies — and the sentence went with the row.*
 
 | Step | State |
 |---|---|
@@ -114,7 +118,7 @@ decides is drawn in one place the code contradicts.**
 | The Kernel exposes generic engines | done — 2026-08-28 |
 | Technology-specific implementations connect through contracts and registries | done — 2026-08-28 |
 | Those implementations remain replaceable — registered and resolved by name | done — 2026-08-28 |
-| The Kernel depends on no specific infrastructure technology | unqualified — 2026-08-28 |
+| The Kernel depends on no specific infrastructure technology | done — 2026-08-28 |
 | The target Kernel structure — `lifecycle/`, `discovery/`, `dependency/` | not implemented — measured 2026-08-28 |
 | The six registries § *Consequences* names follow the same pattern | not implemented — measured 2026-08-28 |
 
@@ -158,8 +162,22 @@ kernel/services/core.py           → aistack.transport (three modules)
 
 Which one is right is not derivable from the code, and it is not a measurement:
 it is a decision about where the boundary is drawn. ARCH-0002 § *Boundary*
-restates the rule without saying which package carries it. The row is left
-`unqualified` rather than answered here.
+restates the rule without saying which package carries it.
+
+**Decided 2026-08-28 by the owner: the first.** The Kernel is the architectural
+layer, `bootstrap/` is its Composition Root, and naming technologies is what a
+composition root is for — a root that could not name `DockerProvider` could not
+compose anything. The row is `done`: the boundary this decision draws is
+honoured, and the four CLIs reach Docker through `providers.get("docker")`
+rather than through a class.
+
+**What that decision leaves open is narrower and is not a row.** The Composition
+Root is packaged inside the thing it composes, so `git grep docker
+src/aistack/kernel` answers *yes* on a Kernel that depends on no technology, and
+every future reader will measure it the same way and reach the same wrong
+conclusion the first reading reached here. Whether `bootstrap/` moves out of
+`src/aistack/kernel/` is a question about packaging, not about this decision's
+boundary, and it is recorded rather than answered.
 
 *The `aistack.transport` imports are a different question and are not what that
 row is about*: nothing under `aistack/transport/` names an infrastructure

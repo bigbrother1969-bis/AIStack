@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Draft
   owner: Architecture
   created: 2026-07-08
@@ -53,18 +53,18 @@ of which one exists — the two documents were wrong about different registries 
 neither checked the other.
 
 *What still asserts a Knowledge Pipeline, per GOV-0002 § What a closure must
-carry, rule 2:* ARCH-0001 § *Architecture Map* names them, ARCH-0002 § *Core
-Components* says they *execute deterministic knowledge flows*, and ARCH-0005
-§ *Current Pipelines* lists a Docker Runtime Pipeline and a Compose Runtime
-Pipeline while its § *Contract* says a pipeline exposes an identifier, a name and
-a deterministic run operation. **No `Pipeline` type exists.** What runs under
-those two names is `aistack.cli.docker_catalog` and `aistack.cli.compose_catalog`
-— two `main()` functions calling a provider, a catalog builder and a generator in
-order, carrying no identifier, no name and no run operation. Those three sections
-are not corrected here: one commit, one concept, and what they raise is a
-question for the owner rather than a measurement — whether the Knowledge Pipeline
-is an architecture element still to build, or a name for a sequence that already
-runs.
+carry, rule 2:* **No `Pipeline` type exists** — `KnowledgePipeline` was removed
+with `PipelineRegistry` on 2026-08-27 under GOV-0002/OS-001 and qualified
+`abandoned`, which is why this section named a registry that had stopped
+existing the day before.
+
+ARCH-0005 § *Contract* declared that pair's contract and was corrected on
+2026-08-28, on the owner's decision: a Knowledge Pipeline is a named sequence
+and not an object, and its § *Current Pipelines* now measures the four commands
+that collect from a provider rather than naming two. ARCH-0001 § *Architecture
+Map* lists the concept, which ARCH-0005 keeps and defines. **ARCH-0002 § *Core
+Components* still lists it among components**, which under that definition it is
+not; left to ARCH-0002 rather than corrected from here.
 
 ## Discovery Model
 

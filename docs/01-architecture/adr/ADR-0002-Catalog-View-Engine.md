@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-07-07
@@ -189,9 +189,10 @@ docker provider → DockerRuntimeCatalogBuilder → dict
 
 **So the concept this decision governs exists twice**: once as the governed type
 that nothing running produces, once as the type the running path produces. Which
-of the two is the Catalog View is not derivable from the code — both are
-coherent — and no artifact records the question. It is left as an open row here
-rather than answered, because answering it is a decision and not a measurement.
+of the two is the Catalog View is not derivable from the code — both readings
+are coherent — and it is left as an open row here rather than answered, because
+answering it is a decision and not a measurement. **GOV-0002/OS-042** holds the
+question, opened 2026-08-28 with the three readings that were live that day.
 
 ### What is not a row
 

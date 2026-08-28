@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.63
+  version: 1.64
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -178,6 +178,89 @@ citable from anywhere; it exists inside the register that declares it.
 ---
 
 # Contract debt
+
+#### GOV-0002/OS-042 — The Catalog View exists twice, and the path that runs builds the one no contract governs
+
+**Nature** `contract-debt` · **Opened** 2026-08-28 · **State** open
+**Observed** measured 2026-08-28 across the whole repository, `archive/`
+excluded, while giving ADR-0002 the implementation table STD-0100 v2.6
+requires:
+
+```text
+kernel.registries.catalog_views    → 1 write site, 0 read sites
+MusicSelectionViewEngine           → 1 instantiation, in bootstrap; 0 callers
+CatalogViewEngine.build            → 0 call sites
+tests exercising a Catalog View    → 0
+```
+
+ADR-0002 governs a **Catalog View**: derived from the Infrastructure Data
+Catalog, traceable to it, produced by a **Catalog View Engine**. Every part
+exists — `CatalogView`, `CatalogViewItem`, the `CatalogViewEngine` Protocol,
+`CatalogViewRegistry`, one engine — and nothing that runs produces one.
+
+**The path that runs builds a different type.** `aistack.cli.docker_selection_catalog`
+produces the exact example ADR-0002 § *Rationale* uses — a Docker container
+selection view exposing name, image, state and display metadata:
+
+```text
+docker provider → DockerRuntimeCatalogBuilder → dict
+               → DockerSelectionCatalogBuilder → SelectionCatalog → JSON
+```
+
+- `DockerRuntimeCatalogBuilder.build` returns a `dict` where
+  `ComposeRuntimeCatalogBuilder.build` returns a `Catalog`. The two sit side by
+  side under `src/aistack/catalog/` and do not return the same kind of thing;
+- `DockerSelectionCatalogBuilder.build(dict) -> SelectionCatalog` satisfies
+  `CatalogViewEngine` in neither its argument nor its return, and is registered
+  in no registry;
+- `SelectionCatalog` is documented in `kernel/selection/core.py` as *"Catalog
+  view exposed to a selection workflow"*. Its fields agree with `CatalogView` on
+  `title`, `items` and `metadata` and differ on the identity pair —
+  `catalog_id` against `view_id` and `source_catalog_id`. Their item types,
+  `SelectionItem` and `CatalogViewItem`, are field for field identical.
+
+**No instrument sees it.** `contract-debt` counts a declared contract satisfied
+by no class, and `CatalogViewEngine` is satisfied — measured 2026-08-28,
+`satisfied_by: MusicSelectionViewEngine` — so it measures as healthy while
+having no producer on any live path. `DockerSelectionCatalogBuilder` declares no
+base, so the check OS-040 asks for would not see it either. A concept
+implemented twice, once governed and unused and once ungoverned and live, is
+visible to nothing here.
+
+*This is not OS-039 restated. That entry says the Selection Engine has no
+caller; this one says the type that engine consumes has no producer on a path
+that runs, and that a second type does the job under another name. They were
+measured a day apart from two different ADRs, and they are different
+conditions.*
+**Derivable** partly, and by nothing that exists. That a registry has no read
+site and a class no caller is measurable, and needs the *consumed by* dimension
+OS-001 named and nothing computes. **That two types are one concept is not
+derivable at all**: they share no name and no base, and only a reader concludes
+it from the fields and the docstring.
+**Qualification** `unknown`. The readings that were live on 2026-08-28:
+
+- **`SelectionCatalog` is the Catalog View, and `CatalogView` is the unearned
+  abstraction.** ARC-P-006, and the pass that removed three day-one protocols
+  under OS-001. Then the repair is to retire `CatalogView`, give
+  `DockerSelectionCatalogBuilder` the contract, and ADR-0002 keeps its decision
+  with one type where it has two;
+- **`CatalogView` is the Catalog View, and the Docker path is the debt.**
+  ADR-0002 is an accepted C2 decision and the governed type is the one it names.
+  Then `DockerRuntimeCatalogBuilder` returns a `Catalog`, a Docker view engine
+  satisfies `CatalogViewEngine`, and `SelectionCatalog` is retired. The cost is
+  stated rather than discovered: the JSON `docker_selection_catalog` writes
+  changes shape, and nothing in this repository measures who reads it;
+- **both are right and the names are wrong.** A selection catalog and a catalog
+  view may be two purposes of one mechanism, in which case the question is which
+  name the heritage keeps, and the work is a rename and one merge rather than a
+  deletion.
+
+*Opened on the owner's decision of 2026-08-28, in preference to a row of
+ADR-0002's table. That table records that no path produces a Catalog View; which
+of the two types **is** the Catalog View is a question about the architecture,
+and answering it in a row would have qualified it without asking.*
+
+---
 
 #### GOV-0002/OS-041 — The Execution Dimension is built, tested, and has nothing to execute
 

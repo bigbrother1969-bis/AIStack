@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.2
+  version: 1.3
   status: Published
   owner: Foundation
   created: 2026-07-06
@@ -124,6 +124,29 @@ It represents the primary value added by human expertise within AIStack.
 
 ---
 
+## Evidence
+
+Raw material collected from reality by a Knowledge Provider, carrying no
+interpretation.
+
+Evidence is what discovery produces. `ADR-0008` states it as a frozen decision —
+*Discovery produces Evidence, never Knowledge* — and `ARC-P-012` cuts the
+acquisition chain at that point: a provider collects and concludes nothing.
+
+**Evidence is not an Observation.** The chain is `Reality → Evidence → Evidence
+Normalization → Canonical Observations`. Evidence is untyped and shaped by the
+technology it came from — *`docker logs` output, collected and not interpreted*,
+per `ADR-0009` § 3.1 — and an Observation is the canonical form it takes once
+normalized. Defining them as one thing would give this heritage two words for
+one concept, which the Purpose above forbids.
+
+*Written 2026-08-28. The word was already used **by this Glossary** — § *Knowledge
+Provider*: "They only collect evidence" — and by twelve governed artifacts, with
+no definition anywhere. GOV-0002 records it as W-14 of the 2026-08-13 boot
+report.*
+
+---
+
 ## Observation
 
 A raw fact collected from the Digital Ecosystem.
@@ -141,6 +164,25 @@ A component responsible for discovering observations from a Digital Ecosystem.
 Knowledge Providers never interpret observations.
 
 They only collect evidence.
+
+---
+
+## Service
+
+A composed part of the Kernel that owns a domain, exposes contracts, and evolves
+independently of the others. `ARCH-0010` § 5 names the concept *KernelServices*
+and states those three properties.
+
+**A Service is not a Knowledge Provider.** A Provider faces the Digital
+Ecosystem, collects evidence from it and interprets nothing; a Service faces
+inward, is assembled by the Kernel's composition root, and coordinates one
+domain of the platform. The two were used side by side across the architecture
+with no statement of the difference until 2026-08-28.
+
+*`ARCH-0010` § 5 introduces its list with **Example:** — the services it names
+are illustrations rather than a closed set. That is why one of them being
+qualified `abandoned` on 2026-08-28 — the Observation Service, `ADR-0008` —
+removes an example instead of contradicting the concept.*
 
 ---
 
@@ -192,6 +234,28 @@ It assists reasoning and explanation.
 The unique authoritative location where a governed knowledge element is defined.
 
 Every governed concept has exactly one SPOT.
+
+---
+
+## Contract
+
+The explicit, governed representation of a concept: what an implementation must
+provide, stated once and stated deliberately.
+
+**Its SPOT is `FDN-0011 — Contract-Based Engineering`**, C3 and Published, whose
+first principle requires that *every concept is represented by a single,
+coherent, explicit and governed contract*, and derives technical debt from
+violations of that architecture rather than from code review. This entry exists
+so that the term resolves from the Glossary; `FDN-0011` governs it.
+
+In code a contract is a `Protocol` or a class carrying unimplemented abstract
+methods, and it is satisfied **structurally** rather than by declaration —
+`contract-debt` compares call shapes, and `false-declarations` reports a class
+naming a contract it does not satisfy. Both are published at every projection.
+
+*Written 2026-08-28. The concept was governed at C3 since 2026-07-24 and had no
+Glossary entry, which is the shape W-13 and W-15 also had: the answer existed
+with more authority than the question.*
 
 ---
 

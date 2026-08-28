@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-08-27
+  updated: 2026-08-28
 
 relations:
   references:
@@ -389,6 +389,81 @@ the script. Everything it does now lives inside a function invoked on the
 last line, so the whole file is parsed before any of it runs
 (GOV-0002/OS-010). Observed on 2026-08-23: the run that delivered that very
 fix executed the old file to completion, printing the old messages.
+
+---
+
+## The Context Bundle, and handing one over
+
+**A Context Bundle is regenerated whenever the governed documentary heritage
+changes.** Decided 2026-08-28 by the owner. This is not an added constraint: it
+states what step 1 already does, so the property becomes opposable instead of
+depending on the order in which someone typed two commands.
+
+`pytest` regenerates the projection, at the `HEAD` the workstation is standing
+on. In the sequence above that `HEAD` is the commit just applied, so the bundle
+declares the commit it projects.
+
+**Two different things keep that true, and neither covers the other.**
+`test_the_projection_declares_the_commit_it_projects` refuses a projection that
+names no commit — the export falls back to `unknown` whenever git cannot answer,
+silently. What it cannot see is an uncommitted change under `docs/`: it reads
+`git rev-parse HEAD` and so does the export, so the content can be ahead of the
+commit the bundle declares and the comparison still holds. **That half is this
+procedure's job**: step 1 refuses to start on a dirty tree, which is why
+`test -z "$(git status --porcelain)"` is the first term of its chain and not a
+convenience.
+
+*Both statements were measured by mutation on 2026-08-28, in that order: the
+test was written believing it refused a premature regeneration, and it does
+not.*
+
+**The bundle is not in the repository.** `context/bundles/` is in `.gitignore`:
+a projection is a generated artifact, disposable, and rebuilt from the SPOT at
+will. Two consequences that a reader should not have to derive:
+
+- **there is no bundle to keep up to date** — there is a command that produces
+  a current one, and it is the one step 1 runs;
+- **freshness is not an age.** A bundle is current when it declares the commit
+  it projects and that commit is the SPOT's; it goes stale the moment governed
+  documents change, whatever its date. `content_hash` in `manifest.json` decides
+  it in one comparison, for anyone holding the repository.
+
+### Handing a bundle to someone
+
+A bundle that leaves this machine is one produced by step 1, and it carries what
+a recipient needs to check it without trusting the sender:
+
+| What the recipient reads | In | What it settles |
+|---|---|---|
+| `source_commit` | `manifest.json` | which commit the projection claims |
+| `content_hash`, `hash_algorithm` | `manifest.json` | whether two bundles carry the same heritage |
+| `repository_url` | `manifest.json` | where the claim can be verified |
+| `artifact_count`, `format_version` | `manifest.json` | what shape the archive has |
+
+A recipient who can reach the repository regenerates and compares
+`content_hash`; identical means current, whatever the dates. **A recipient who
+cannot reach it cannot decide**, and should say so rather than assume — FDN-0003
+Article 12 applied to the projection itself.
+
+*Two bundles of the same heritage built from different working trees are the
+same projection: measured 2026-08-14, the 1 August bundle and the 14 August one
+shared 80 of their 81 artifact identities, the single difference being a README
+fixed in between.*
+
+**The automated transfer has never run in the governed tree**, measured
+2026-08-27 and stated here so this section is not read as describing a live
+path: `SshBundleTransfer` is configured by `config/context_bundle_transfer.yml`,
+which does not exist — only `context_bundle_transfer.yml.example` does — so the
+export skips the transfer block entirely. That is the configuration rule working
+as intended, and it means every bundle handed over so far left by a route this
+procedure does not describe.
+
+*Written on the owner's decision of 2026-08-28, and the risk was named before
+it was taken: writing a procedure for something that has never run is what
+produced W-07 of the 2026-08-13 boot report and the `PipelineRegistry` that
+ARCH-0007 announced for a month after it was deleted. The mitigation is the
+paragraph above — the section says what is verifiable and says which part does
+not run.*
 
 ---
 

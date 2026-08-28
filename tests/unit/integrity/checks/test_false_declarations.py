@@ -179,14 +179,23 @@ def test_a_bundle_with_no_inventory_is_left_to_contract_debt():
 
 def test_the_finding_carries_the_severity_the_owner_decided():
     """
-    `OBSERVATION` on 2026-08-28, deliberately. A class lying about
-    itself is a fault rather than STD-P-002's prescribed order, so
-    `WARNING` is defensible — and a check turned red in the commit
-    that introduces it forbids publishing its own repair, since
-    OPS-0002 § 1 makes `clean: True` a condition of publishing.
-    The question belongs to the commit that brings the count to
-    zero, which is where `unfinished-decisions` answered it on
-    2026-08-27.
+    `WARNING`, raised 2026-08-28 in the commit that brought the
+    count to 0 of 40 and not before.
+
+    The owner qualified a false declaration that day as **a defect
+    of the heritage**: STD-P-002 makes a contract ahead of its
+    implementation the prescribed order, which keeps an orphan
+    contract a fact rather than a fault, and a class claiming a
+    contract it does not honour is on the other side of that line.
+
+    It lived one commit at `OBSERVATION`, with the count at 1 of
+    40, because a check turned red in the commit that introduces
+    it forbids publishing its own repair under OPS-0002 § 1.
+
+    **The unmeasured finding below stays `OBSERVATION`**, and the
+    two are asserted separately: *nobody looked* is not *somebody
+    lied*, and a projection that predates the measurement must not
+    hold this heritage at `clean: False`.
     """
 
     findings = FalseDeclarationCheck().evaluate(
@@ -201,7 +210,7 @@ def test_the_finding_carries_the_severity_the_owner_decided():
         )
     )
 
-    assert findings[0].severity is IntegritySeverity.OBSERVATION
+    assert findings[0].severity is IntegritySeverity.WARNING
 
 
 # --------------------------------------------------------------------

@@ -38,8 +38,9 @@ class SshBundleTransfer(ContextBundleTransferService):
 
     `aistack.conformance.structural.satisfies` was not fooled —
     it compares call shapes, and never counted this class among
-    `BundleTransfer`'s implementations. What nothing reports is
-    the declaration itself: GOV-0002/OS-040.
+    `BundleTransfer`'s implementations. What nothing reported
+    was the declaration itself, until `false-declarations` was
+    written on 2026-08-28: GOV-0002/OS-040.
 
     What it actually satisfies is `ContextBundleTransferService`
     — `transfer(bundle_path)` — which is the contract

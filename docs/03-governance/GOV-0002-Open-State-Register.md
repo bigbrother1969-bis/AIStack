@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.64
+  version: 1.65
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -223,7 +223,8 @@ docker provider → DockerRuntimeCatalogBuilder → dict
 by no class, and `CatalogViewEngine` is satisfied — measured 2026-08-28,
 `satisfied_by: MusicSelectionViewEngine` — so it measures as healthy while
 having no producer on any live path. `DockerSelectionCatalogBuilder` declares no
-base, so the check OS-040 asks for would not see it either. A concept
+base, so `false-declarations` — the check OS-040 asked for, written the same
+day — does not see it either. A concept
 implemented twice, once governed and unused and once ungoverned and live, is
 visible to nothing here.
 
@@ -311,66 +312,6 @@ registry is empty at boot is trivially derivable and nothing derives it.
 *Opened on the owner's decision of 2026-08-27, in preference to widening
 OS-039. That entry asks a question about one engine; this one is about half of
 an architecture a C2 decision defines, and merging them would lose both.*
-
----
-
-#### GOV-0002/OS-040 — Nothing reports a class declaring a base whose contract it does not satisfy
-
-**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
-**Observed** `SshBundleTransfer` declared `BundleTransfer` from the day it was
-written until 2026-08-27 and never implemented it:
-
-```python
-def transfer(self, source: Path, target: str) -> bool:   # the contract
-def transfer(self, source: Path) -> bool:                # what it implemented
-```
-
-It builds its destination from configuration instead of receiving it. Python's
-ABC machinery checks that a method of the right *name* exists and never looks
-at the signature, so the class instantiated happily and
-`DefaultContextBundleService` went on annotating its parameter
-`ContextBundleTransferService | None` while production handed it a
-`BundleTransfer`.
-
-**The heritage's own instrument was not fooled, and that is the finding.**
-`aistack.conformance.structural.satisfies` compares call shapes — its docstring
-says so, and it was measured on 2026-08-27 against this exact shape:
-
-```text
-one-arg satisfies the two-arg contract: False
-  incompatible members: {'transfer': '(self, source, target) -> bool
-                                   vs (self, source) -> bool'}
-```
-
-So `contract-debt` never counted this class among `BundleTransfer`'s
-implementations, and never had to: `FileSystemBundleTransfer` satisfies that
-contract correctly. **The count was right the whole time.**
-
-What no instrument reports is **the declaration**. The inventory measures
-structurally and never consults what a class says it is — deliberately, because
-declarations are what it exists to check rather than to trust. The consequence
-is the inverse: a declaration that is false about itself produces no finding
-anywhere, and this one stood for weeks in a C2 subsystem.
-**Derivable** yes, and cheaply: for every class naming an ABC or Protocol as a
-base, compare `satisfies(base, class)`. The primitive exists and is used by
-`contract-debt`; nothing calls it in that direction.
-**Qualification** `unknown`. Two questions:
-
-- **is a false declaration a defect of the heritage or of the language?**
-  Python permits it, and the structural measurement is immune to it. The cost
-  is paid by readers and by type annotations — `DefaultContextBundleService`'s
-  parameter type was false on the live path, and no reader could tell without
-  running the comparison by hand;
-- **should it be a fifteenth check, or a test?** A check publishes it at every
-  projection; a test fails the suite. The condition is derivable and binary,
-  which is the profile of a test rather than of an observation.
-
-*This entry was opened on a decision the owner took on 2026-08-27 from a
-different claim: that `contract-debt` measured method names and not
-signatures. **That claim was wrong**, asserted from Python's ABC behaviour
-without reading `satisfies`. The condition is real, the entry is narrower than
-the one that was approved, and the difference is recorded here rather than
-quietly corrected.*
 
 ---
 
@@ -509,6 +450,113 @@ ADR anyone re-measured produced an entry.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-040 — Nothing reports a class declaring a base whose contract it does not satisfy
+
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** resolved 2026-08-28 by `false-declarations` and `test_no_class_declares_a_contract_it_does_not_satisfy`
+**Observed** `SshBundleTransfer` declared `BundleTransfer` from the day it was
+written until 2026-08-27 and never implemented it:
+
+```python
+def transfer(self, source: Path, target: str) -> bool:   # the contract
+def transfer(self, source: Path) -> bool:                # what it implemented
+```
+
+It builds its destination from configuration instead of receiving it. Python's
+ABC machinery checks that a method of the right *name* exists and never looks
+at the signature, so the class instantiated happily and
+`DefaultContextBundleService` went on annotating its parameter
+`ContextBundleTransferService | None` while production handed it a
+`BundleTransfer`.
+
+**The heritage's own instrument was not fooled, and that is the finding.**
+`aistack.conformance.structural.satisfies` compares call shapes — its docstring
+says so, and it was measured on 2026-08-27 against this exact shape:
+
+```text
+one-arg satisfies the two-arg contract: False
+  incompatible members: {'transfer': '(self, source, target) -> bool
+                                   vs (self, source) -> bool'}
+```
+
+So `contract-debt` never counted this class among `BundleTransfer`'s
+implementations, and never had to: `FileSystemBundleTransfer` satisfies that
+contract correctly. **The count was right the whole time.**
+
+What no instrument reported was **the declaration**. The inventory measured
+structurally and never consulted what a class said it was — deliberately,
+because declarations are what it exists to check rather than to trust. The
+consequence was the inverse: a declaration false about itself produced a finding
+nowhere, and this one stood for weeks in a C2 subsystem.
+**Derivable** yes, and cheaply: for every class naming an ABC or Protocol as a
+base, compare `satisfies(base, class)`. The primitive exists and is used by
+`contract-debt`; nothing calls it in that direction.
+**Qualification** `unknown`. Two questions:
+
+- **is a false declaration a defect of the heritage or of the language?**
+  Python permits it, and the structural measurement is immune to it. The cost
+  is paid by readers and by type annotations — `DefaultContextBundleService`'s
+  parameter type was false on the live path, and no reader could tell without
+  running the comparison by hand;
+- **should it be a fifteenth check, or a test?** A check publishes it at every
+  projection; a test fails the suite. The condition is derivable and binary,
+  which is the profile of a test rather than of an observation.
+
+*This entry was opened on a decision the owner took on 2026-08-27 from a
+different claim: that `contract-debt` measured method names and not
+signatures. **That claim was wrong**, asserted from Python's ABC behaviour
+without reading `satisfies`. The condition is real, the entry is narrower than
+the one that was approved, and the difference is recorded here rather than
+quietly corrected.*
+
+**Qualification** **decided 2026-08-28 by the owner: a defect of the
+heritage.** Python permits it and the structural measurement is immune to it,
+and neither makes it the language's fault. STD-P-002 puts specification before
+implementation, which is what makes an orphan contract an order rather than a
+fault; a class *claiming* a contract it does not honour is on the other side of
+that line — it is not work not yet done, it is a statement about the code that
+the code contradicts. The cost is paid by readers and by type annotations:
+`DefaultContextBundleService` annotated its parameter with a contract
+production did not honour, and no reader could tell without running the
+comparison by hand.
+
+**Second question, decided the same day: both, in sequence.** A check publishes
+the condition of any projection, including one produced elsewhere or by an
+older pipeline; a test refuses it in this repository. Sequenced deliberately —
+the check first, so that it was seen catching a real case before it was
+believed; the repair second; the test third.
+
+**Resolved 2026-08-28**, and the measurement is the suite and the projection,
+per § *What a closure must carry*, first rule:
+
+```text
+false-declarations   1 of 40 → 0 of 40 class-contract declarations
+suite                619 passed
+```
+
+The check found what the correction of 2026-08-27 had missed on the same class:
+`transfer(self, source: Path)` against the declared
+`transfer(self, bundle_path: Path)`. One parameter name, so
+`service.transfer(bundle_path=…)` raised on the only implementation the export
+pipeline uses; every call site passes positionally, which is why nothing ever
+failed. **The docstring asserting conformance sat three lines above the
+signature that denied it**, in the file written to record the first correction,
+and the test that accompanied it asserted `issubclass` — the declaration, the
+half that was never in doubt — and never `satisfies`.
+
+*The severity was raised to `WARNING` in this same commit, with the count at
+0 of 40 and not before: a check turned red earlier would have forbidden
+publishing its own repair under OPS-0002 § 1. Same sequencing as
+`unfinished-decisions` on 2026-08-27, and it is now the second entry to use
+it.*
+
+*Per § What a closure must carry, second rule, three sentences outside this
+register said no instrument reported the declaration — `SshBundleTransfer`'s
+docstring, its test's docstring, and `false_declarations.py` itself. All three
+are corrected in the same act. It is the third closure to produce that work and
+the second where the grep found something in a test.*
+
+---
 
 #### GOV-0002/OS-038 — Eight accepted decisions say nothing this heritage can read about their implementation
 

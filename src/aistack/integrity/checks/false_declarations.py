@@ -30,9 +30,9 @@ class FalseDeclarationCheck(IntegrityCheck):
     compares call shapes, so `contract-debt` never counted that
     class among the contract's implementations and never had to.
     What no instrument reported was the **declaration**: the
-    inventory measures what a class provides and, until
-    2026-08-28, never consulted what it says it is. A declaration
-    false about itself produced a finding nowhere.
+    inventory measured what a class provides and, until
+    2026-08-28, never consulted what it said it was. A
+    declaration false about itself produced a finding nowhere.
 
     So this reads the other half of the same inventory —
     `declared_by` against `satisfied_by` — and needs no new
@@ -40,16 +40,29 @@ class FalseDeclarationCheck(IntegrityCheck):
     and it is `satisfies()` called in the direction nothing called
     it in.
 
-    **`OBSERVATION`, and the alternative is named rather than
-    silent.** The condition is a fault and not an order — a class
-    lying about itself is not STD-P-002's *specification before
-    implementation* — so `WARNING` is defensible. It is not taken
-    here for the reason 2026-08-27 established: a check turned red
-    in the commit that introduces it forbids publishing its own
-    repair, since OPS-0002 § 1 makes `clean: True` a condition of
-    publishing. The severity question belongs to the commit that
-    brings the count to zero, which is where
-    `unfinished-decisions` answered it.
+    **`WARNING`, raised 2026-08-28 in the commit that brought the
+    count to 0 of 40, and not before.** The owner qualified a
+    false declaration that day as **a defect of the heritage**:
+    STD-P-002 makes a contract ahead of its implementation the
+    prescribed order, which is what keeps an orphan contract a
+    fact rather than a fault, and a class *claiming* a contract it
+    does not honour is on the other side of that line — not work
+    not yet done, but a statement about the code that the code
+    contradicts.
+
+    It was introduced at `OBSERVATION` for one commit, with the
+    count at 1 of 40, for the reason 2026-08-27 established: a
+    check turned red in the commit that introduces it forbids
+    publishing its own repair, since OPS-0002 § 1 makes
+    `clean: True` a condition of publishing. Second entry to use
+    that sequencing, after `unfinished-decisions`.
+
+    From here a false declaration holds the heritage at
+    `clean: False` until an open register entry names it, which is
+    OPS-0002 § 1 working as written. The suite refuses it first —
+    `test_no_class_declares_a_contract_it_does_not_satisfy` — so
+    the `WARNING` is what remains for a projection produced
+    elsewhere, or by a pipeline that skipped the suite.
 
     **What it does not see.** A class satisfying a contract
     without naming it is invisible here and is meant to be:
@@ -102,7 +115,7 @@ class FalseDeclarationCheck(IntegrityCheck):
         return [
             IntegrityFinding(
                 check=self.name,
-                severity=IntegritySeverity.OBSERVATION,
+                severity=IntegritySeverity.WARNING,
                 summary=(
                     f"{len(false)} of {inventory.declaring} "
                     f"class-contract declaration(s) name a base "

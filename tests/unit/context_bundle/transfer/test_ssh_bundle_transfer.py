@@ -38,9 +38,11 @@ def test_it_declares_the_contract_it_actually_satisfies():
     **The heritage's own instrument was not fooled**, and that is
     the interesting half: `aistack.conformance.structural.satisfies`
     compares call shapes, so it never counted this class among
-    `BundleTransfer`'s implementations. What no instrument reports
-    is the declaration itself — a class naming a base whose
-    contract it does not satisfy. GOV-0002/OS-040.
+    `BundleTransfer`'s implementations. What no instrument
+    reported was the declaration itself — a class naming a base
+    whose contract it does not satisfy — until
+    `false-declarations` was written on 2026-08-28.
+    GOV-0002/OS-040.
 
     **This test asserted only the first two lines until
     2026-08-28, and that is why the correction was incomplete.**

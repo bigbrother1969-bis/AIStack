@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.8
+  version: 2.9
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-27
+  updated: 2026-08-28
 
 relations:
   references:
@@ -296,7 +296,8 @@ lists them at every projection, as an `OBSERVATION`.
 
 **The two halves of that check carry different severities, decided 2026-08-27
 by the owner.** A decision declaring *no* implementation state is a gap this
-rule forbids, and rises to `WARNING` once every accepted decision declares. A
+rule forbids, and is a `WARNING` — raised 2026-08-28, in the commit that brought
+the count to 0 of 9, and not before. A
 *row* in no terminal state stays an `OBSERVATION` for good: STD-P-002 puts
 specification before implementation, so an unfinished row is the ordinary state
 of work, and a row reading `unqualified` is FDN-0003 Article 12 working rather
@@ -345,10 +346,12 @@ asserting that real rows are *found by name*, because a silent check and a
 correct one look identical from the report.
 
 GOV-0002/OS-038 records the decision, on 2026-08-27, and was closed the same
-day: the questions it held were answered, and what remains is execution. The
+day: the questions it held were answered, and what remained was execution. The
 count is published rather than filed — `unfinished-decisions` reports it at
 every projection, and **8 of 9 was the figure on the day this rule was
-written**.
+written**. It reached **0 of 9 on 2026-08-28**, which is what raised the
+severity; from there the rule bites on the next accepted decision that declares
+nothing, which is what it was written for.
 
 ---
 

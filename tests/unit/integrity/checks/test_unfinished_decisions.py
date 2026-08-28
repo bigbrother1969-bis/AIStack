@@ -335,7 +335,7 @@ def test_an_accepted_decision_that_declares_nothing_is_reported():
     )
 
     assert len(findings) == 1
-    assert findings[0].severity is IntegritySeverity.OBSERVATION
+    assert findings[0].severity is IntegritySeverity.WARNING
     assert findings[0].subjects == (
         "ADR-0000 — no implementation state is declared",
     )
@@ -425,11 +425,11 @@ def test_the_two_findings_carry_the_severity_the_owner_decided():
     decision is watched rather than remembered.**
 
     An accepted decision declaring *no* implementation state is a
-    governance gap STD-0100 v2.6 forbids, and rises to `WARNING`
-    once every accepted decision declares — in that same commit,
-    not before, since `clean: False` would forbid publishing the
-    fix under OPS-0002 § 1. Until then it is an `OBSERVATION`, and
-    this test moves with it.
+    governance gap STD-0100 v2.6 forbids. It is a `WARNING`,
+    raised on 2026-08-28 in the commit that brought the count to
+    0 of 9 — in that same commit and not before, since
+    `clean: False` would have forbidden publishing the fix under
+    OPS-0002 § 1.
 
     A *row* in no terminal state stays `OBSERVATION` for good.
     STD-P-002 puts specification before implementation, so an
@@ -456,5 +456,5 @@ def test_the_two_findings_carry_the_severity_the_owner_decided():
         for f in findings
     }
 
-    assert by_kind[True].severity is IntegritySeverity.OBSERVATION
+    assert by_kind[True].severity is IntegritySeverity.WARNING
     assert by_kind[False].severity is IntegritySeverity.OBSERVATION

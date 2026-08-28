@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.62
+  version: 1.63
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-08-27
+  updated: 2026-08-28
 
 relations:
   references:
@@ -462,7 +462,7 @@ has no way to tell the two apart.
 - **yes**, an accepted decision declares its implementation state in a form
   this heritage can read — STD-0100 v2.6;
 - **`unfinished-decisions` rises to `WARNING`**, and rises **in the commit
-  that brings the count to 0 of 9**, not before.
+  that brings the count to 0 of 9**, not before. *Done 2026-08-28.*
 
 **Refined 2026-08-27, hours later, by a question the owner asked:** *what
 happens if the unqualified rows are deleted?* Only the first of the check's two
@@ -523,14 +523,16 @@ terminal states, declared in STD-0100 v2.6 § *An accepted decision declares
 its implementation state*.
 
 `unfinished-decisions` gained the second half the same day and **the gap is
-now published rather than described**: 8 of 9 accepted decisions declare no
-implementation state this heritage can read, at every projection.
+published rather than described**: 8 of 9 accepted decisions declared no
+implementation state this heritage could read on 2026-08-27, republished at
+every projection until the count reached 0 of 9 on 2026-08-28.
 
-*The check reports it at `OBSERVATION` and not `WARNING`, deliberately and
-temporarily. `clean: False` would block publication under OPS-0002 § 1 — which
-means it would block publication of the very commits that fill the eight.
-**Raising it once they declare is a decision of its own and stays with this
-entry.***
+*The check reported it at `OBSERVATION` and not `WARNING`, deliberately and
+temporarily. `clean: False` would have blocked publication under OPS-0002 § 1 —
+which means it would have blocked publication of the very commits that filled
+the eight. **Raising it once they declared was a decision of its own and stayed
+with this entry**; it was raised on 2026-08-28, in the commit that brought the
+count to 0 of 9.*
 
 **Both questions were answered the same day, and this entry closes on
 that** — see the resolution below.

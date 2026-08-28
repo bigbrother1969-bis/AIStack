@@ -156,11 +156,14 @@ class UnfinishedDecisionCheck(IntegrityCheck):
     2026-08-27 by the owner**, and the reason is STD-P-002:
 
     - *an accepted decision declaring no implementation state*
-      is a governance gap that STD-0100 v2.6 forbids. It rises to
-      `WARNING` **in the commit that brings the count to 0 of 9**,
-      not before — a check turned red earlier would enforce a rule
-      by blocking publication of its own fix, since OPS-0002 § 1
-      makes `clean: True` a condition of publishing;
+      is a governance gap that STD-0100 v2.6 forbids. It is a
+      `WARNING`, **raised on 2026-08-28 in the commit that brought
+      the count to 0 of 9** and not before — a check turned red
+      earlier would have enforced a rule by blocking publication
+      of its own fix, since OPS-0002 § 1 makes `clean: True` a
+      condition of publishing. From here the rule bites on the
+      next accepted decision that declares nothing, which is what
+      it was written for;
     - *an implementation row in no terminal state* stays
       `OBSERVATION`, permanently. Specification precedes
       implementation, so an unfinished row is the ordinary state
@@ -236,7 +239,7 @@ class UnfinishedDecisionCheck(IntegrityCheck):
             findings.append(
                 IntegrityFinding(
                     check=self.name,
-                    severity=IntegritySeverity.OBSERVATION,
+                    severity=IntegritySeverity.WARNING,
                     summary=(
                         f"{len(undeclared)} accepted decision(s) "
                         f"declare no implementation state this "

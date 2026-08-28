@@ -41,8 +41,19 @@ def test_it_declares_the_contract_it_actually_satisfies():
     `BundleTransfer`'s implementations. What no instrument reports
     is the declaration itself — a class naming a base whose
     contract it does not satisfy. GOV-0002/OS-040.
+
+    **This test asserted only the first two lines until
+    2026-08-28, and that is why the correction was incomplete.**
+    `issubclass` is the declaration — the half that was never in
+    doubt after the base was changed — and the class went on
+    declaring `transfer(bundle_path)` while implementing
+    `transfer(source)`. `false-declarations` found it on the day
+    it was written. The third assertion is the one that was
+    missing: a declaration is checked against the call shape, not
+    against the class hierarchy.
     """
 
+    from aistack.conformance.structural import satisfies
     from aistack.contracts.bundle_transfer import BundleTransfer
     from aistack.contracts.context_bundle_transfer_service import (
         ContextBundleTransferService,
@@ -51,6 +62,8 @@ def test_it_declares_the_contract_it_actually_satisfies():
     assert issubclass(SshBundleTransfer, ContextBundleTransferService)
 
     assert not issubclass(SshBundleTransfer, BundleTransfer)
+
+    assert satisfies(ContextBundleTransferService, SshBundleTransfer)
 
 
 def test_the_transport_contract_keeps_an_implementation_that_honours_it():

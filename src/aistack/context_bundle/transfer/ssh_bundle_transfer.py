@@ -48,6 +48,24 @@ class SshBundleTransfer(ContextBundleTransferService):
     to the contract that was always being honoured; no
     behaviour changes.
 
+    **And it did not satisfy that one either, until 2026-08-28.**
+    The paragraph above was written on 2026-08-27 and named
+    `transfer(bundle_path)` while this class declared
+    `transfer(source)`. One parameter name, so
+    `service.transfer(bundle_path=…)` raised on the only
+    implementation the pipeline uses, and the sentence asserting
+    conformance was in the docstring written to record the first
+    correction. The test that accompanied it asserted
+    `issubclass`, which is the declaration — the thing that was
+    never in doubt — rather than `satisfies`, which is the thing
+    that was wrong.
+
+    Found by `false-declarations`, the fifteenth integrity check,
+    in the commit that introduced it: 1 of 40 declarations, this
+    one. The parameter is renamed here and the test now asserts
+    the call shape. *A correction verified by the same instrument
+    that was already saying no.*
+
     **What the correction makes visible rather than fixes:**
     there are now two implementations of the orchestration
     contract — this one, which holds a configuration and no
@@ -76,10 +94,10 @@ class SshBundleTransfer(ContextBundleTransferService):
 
     def transfer(
         self,
-        source: Path,
+        bundle_path: Path,
     ) -> bool:
 
-        source = Path(source)
+        source = Path(bundle_path)
 
         target = (
             f"{self.configuration.user}"

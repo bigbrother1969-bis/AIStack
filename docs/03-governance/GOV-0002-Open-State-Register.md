@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.65
+  version: 1.66
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -514,8 +514,8 @@ heritage.** Python permits it and the structural measurement is immune to it,
 and neither makes it the language's fault. STD-P-002 puts specification before
 implementation, which is what makes an orphan contract an order rather than a
 fault; a class *claiming* a contract it does not honour is on the other side of
-that line — it is not work not yet done, it is a statement about the code that
-the code contradicts. The cost is paid by readers and by type annotations:
+that line — it is not deferred work, it is a statement about the code that the
+code contradicts. The cost is paid by readers and by type annotations:
 `DefaultContextBundleService` annotated its parameter with a contract
 production did not honour, and no reader could tell without running the
 comparison by hand.

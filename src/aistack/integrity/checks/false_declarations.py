@@ -46,8 +46,8 @@ class FalseDeclarationCheck(IntegrityCheck):
     STD-P-002 makes a contract ahead of its implementation the
     prescribed order, which is what keeps an orphan contract a
     fact rather than a fault, and a class *claiming* a contract it
-    does not honour is on the other side of that line — not work
-    not yet done, but a statement about the code that the code
+    does not honour is on the other side of that line — not
+    deferred work, but a statement about the code that the code
     contradicts.
 
     It was introduced at `OBSERVATION` for one commit, with the

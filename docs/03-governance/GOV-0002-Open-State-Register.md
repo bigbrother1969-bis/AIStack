@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.67
+  version: 1.68
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -263,6 +263,37 @@ concludes it from the fields and the docstring.
 ADR-0002's table. That table records that no path produces a Catalog View; which
 of the two types **is** the Catalog View is a question about the architecture,
 and answering it in a row would have qualified it without asking.*
+
+**The cost the second reading carried is measured, on the reference deployment,
+2026-08-28**, per § *What a closure must carry*, first rule — a condition about
+the world outside this repository cites its measurement:
+
+```text
+grep -rIl "docker-selection-catalog\|docker_selection_catalog" \
+     /srv/aistack /etc/cron.d /etc/systemd/system
+  → the CLI that writes it, four governed documents that discuss it,
+    the projection carrying them, and an egg-info manifest. No reader.
+crontab -l | grep -i selection             → nothing
+docker inspect, every running container    → no mount of reports/
+ls -l /srv/aistack/AIStack/reports/generated/
+  → docker-selection-catalog.json, 12 302 bytes, 2026-07-07 16:49
+```
+
+**Nothing reads that file, and nothing has written it since 2026-07-07.** Every
+file in that directory carries a July mtime, so the four provider commands have
+not run into it on that host for seven weeks.
+
+*Stated narrowly, because the wider claim is not what was measured: this says
+the commands have not run into that directory on that host since 2026-07-07. It
+does not say nobody ran them elsewhere, and `reports/generated/` is a working
+directory relative to whoever invokes the command.*
+
+The second reading — keep `CatalogView`, retire `SelectionCatalog` — priced its
+own consequence as *the JSON changes shape, and nothing in this repository
+measures who reads it*. That sentence is still true of this repository, and the
+host now answers the part the repository could not: the consumer the cost was
+about does not exist. Which reading is right remains the owner's, and this
+removes a cost from one of them rather than choosing it.
 
 ---
 

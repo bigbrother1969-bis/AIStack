@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.66
+  version: 1.67
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -233,11 +233,14 @@ caller; this one says the type that engine consumes has no producer on a path
 that runs, and that a second type does the job under another name. They were
 measured a day apart from two different ADRs, and they are different
 conditions.*
-**Derivable** partly, and by nothing that exists. That a registry has no read
-site and a class no caller is measurable, and needs the *consumed by* dimension
-OS-001 named and nothing computes. **That two types are one concept is not
-derivable at all**: they share no name and no base, and only a reader concludes
-it from the fields and the docstring.
+**Derivable** partly, **and half of it is, since 2026-08-28**:
+`unused-registrations`, the sixteenth check, publishes at every projection that
+`catalog_views` holds `music-selection` and that nothing retrieves it. What it
+does not derive is the other side — `DockerSelectionCatalogBuilder` registers
+nothing and declares no base, so it is invisible to every instrument here, which
+is what makes an ungoverned path the live one. **That two types are one concept
+is not derivable at all**: they share no name and no base, and only a reader
+concludes it from the fields and the docstring.
 **Qualification** `unknown`. The readings that were live on 2026-08-28:
 
 - **`SelectionCatalog` is the Catalog View, and `CatalogView` is the unearned
@@ -291,10 +294,17 @@ is unused" would be the confident wrong answer this register keeps recording.*
 **Two names of ADR-0008's execution chain exist nowhere** — `Observation
 Service` and `Action` — which is why two of that ADR's rows are unqualified
 rather than marked absent.
-**Derivable** partly, and by nothing that exists. That a class has no caller is
-measurable; `contract-debt` measures the neighbouring question and would need
-the *consumed by* dimension GOV-0002/OS-001 named and nothing computes. That a
-registry is empty at boot is trivially derivable and nothing derives it.
+**Derivable** partly, **and the finding itself is, since 2026-08-28**. *Tasks
+registered → 0* is published at every projection by `unused-registrations`, the
+sixteenth check, and published as the sharper of its two conditions — not a
+capability waiting for a consumer but `tasks — asked by a retrieval site that
+cannot succeed`. The line about a registry empty at boot being trivially
+derivable while nothing derived it stood for one day. What is still derived by
+nothing is the rest of the dimension: that `KernelRuntime.boot()` has no
+production caller, and that nine capabilities have none. `contract-debt`
+measures the neighbouring question and would need the *consumed by* dimension
+GOV-0002/OS-001 named, which is computed here only where the Kernel makes
+consumption explicit.
 **Qualification** `unknown`. The readings that were live on 2026-08-27:
 
 - **it is the prescribed order.** STD-P-002 puts specification before
@@ -343,10 +353,14 @@ healthy.
 four of five criteria have no strategy. That is a coverage gap. This is a
 different condition, and the difference only appeared because the section was
 **re-measured** rather than converted into a table.*
-**Derivable** partly, and not by anything that exists. That a class has no
-caller is measurable — `contract-debt` measures the neighbouring question and
-would need a second dimension, *consumed by*, which OS-001 named as one of the
-three that place a contract and which nothing computes.
+**Derivable** partly, **and the second line of the measurement is, since
+2026-08-28**: `unused-registrations`, the sixteenth check, publishes at every
+projection that `selection_strategies` holds `by-ids` and that nothing
+retrieves it. The first line is not. `SelectionEngine` is a class and not a
+registration, and the *consumed by* dimension OS-001 named is computed here
+only where the Kernel makes consumption explicit — registration, and resolution
+by identifier. A class with no caller stays outside every instrument this
+heritage has.
 **Qualification** `unknown`. The three readings that were live on 2026-08-27:
 
 - **it is a moving part waiting for its caller.** `docs/99-meta/roadmap/`

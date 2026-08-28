@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.1
+  version: 1.2
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-21
+  updated: 2026-08-28
 
 relations:
   references:
@@ -39,6 +39,22 @@ All other Knowledge Artifacts must reference these definitions rather than redef
 ## AIStack
 
 A semantic system for building, governing and exploiting the Governed Heritage of Digital Ecosystems.
+
+**This entry is the Single Point Of Truth for what AIStack is**, and
+`FDN-0003` § *Closing Statement* states it in the same words. Two other
+descriptions circulate in the heritage, and neither is a competing definition —
+they answer different questions, which is stated here because nothing stated it
+until 2026-08-28:
+
+| Description | Where | What it answers |
+|---|---|---|
+| *Infrastructure Knowledge Platform (IKP)* | `README.md`, first line | the **category of product** AIStack presents itself as to a reader who has not opened the heritage |
+| *Knowledge Operating System* | `ARCH-0010` § *Vision*, `ADR-0004` § *Context* | the **architecture it is built toward**. `FDN-0004` and `FDN-0008` use the term the same way — *the architecture can emerge incrementally*, *the first operational demonstration of* — never as a definition of what AIStack is |
+
+*Recorded because the three coexisted with no declared relation from at least
+2026-08-13, when an external boot report raised it (W-13) as a reason two AI
+agents could not converge on the same identity. The relation was missing, not
+the answer: this entry and the Constitution have agreed since 2026-07-06.*
 
 ---
 

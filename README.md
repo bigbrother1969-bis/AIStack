@@ -20,6 +20,12 @@ artifact:
 
 **AIStack** is an open-source **Infrastructure Knowledge Platform (IKP)** designed to transform digital infrastructures into governed, explainable, portable, and sustainable knowledge.
 
+*IKP is the category this project presents itself in. What AIStack **is** is
+defined once, in `FDN-0002` § *AIStack*: a semantic system for building,
+governing and exploiting the Governed Heritage of Digital Ecosystems. The
+architecture it is built toward is named a Knowledge Operating System —
+`ARCH-0010`.*
+
 AIStack does not aim to build the most powerful infrastructure.
 
 **Its ambition is to build the best understood and most sustainable one.**

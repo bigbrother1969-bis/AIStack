@@ -4,6 +4,7 @@ from pathlib import Path
 
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.contract_inventory import ContractInventory
+from aistack.contracts.registry_inventory import RegistryInventory
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,26 @@ class ContextBundle:
     # the same heritage built from different working trees are
     # still the same projection.
     contract_inventory: ContractInventory | None = None
+
+    # What the Kernel registers at bootstrap, and what asks for
+    # it, measured at generation.
+    #
+    # The second of the three dimensions GOV-0002/OS-001 named as
+    # placing a contract — what implements it, what **consumes**
+    # it, what governs it — for the one form of consumption the
+    # Kernel makes explicit: a capability registered under an
+    # identifier and resolved by that identifier. ADR-0004
+    # § *Discovery Model* decides that form; nothing measured it
+    # until 2026-08-28.
+    #
+    # `None`, and `measured` false inside it, carry the same
+    # distinction as the contract inventory: a bundle produced
+    # without the measurement is not a heritage in which nothing
+    # is registered.
+    #
+    # Outside `content_hash` for the same reason: a measurement of
+    # the code, not a governed artifact.
+    registry_inventory: RegistryInventory | None = None
 
     # Generated output location
     output_path: Path | None = None

@@ -29,8 +29,13 @@ class DefaultContextBundleBuilder(ContextBundleBuilder):
     across every test that builds a bundle.
     """
 
-    def __init__(self, measure_contracts=None) -> None:
+    def __init__(
+        self,
+        measure_contracts=None,
+        measure_registries=None,
+    ) -> None:
         self.measure_contracts = measure_contracts
+        self.measure_registries = measure_registries
 
     def build(
         self,
@@ -53,6 +58,11 @@ class DefaultContextBundleBuilder(ContextBundleBuilder):
             contract_inventory=(
                 self.measure_contracts()
                 if self.measure_contracts
+                else None
+            ),
+            registry_inventory=(
+                self.measure_registries()
+                if self.measure_registries
                 else None
             ),
         )

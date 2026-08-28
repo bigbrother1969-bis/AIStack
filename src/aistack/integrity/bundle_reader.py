@@ -3,6 +3,9 @@ from pathlib import Path
 import json
 import zipfile
 
+from aistack.conformance.registry_serialization import (
+    deserialize_registries,
+)
 from aistack.conformance.serialization import deserialize_inventory
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.classification import (
@@ -40,6 +43,7 @@ def read_bundle(path: Path) -> ContextBundle:
     path = Path(path)
 
     inventory = None
+    registries = None
 
     if zipfile.is_zipfile(path):
 
@@ -52,6 +56,13 @@ def read_bundle(path: Path) -> ContextBundle:
                 inventory = deserialize_inventory(
                     json.loads(
                         archive.read("contract-inventory.json")
+                    )
+                )
+
+            if "registry-inventory.json" in archive.namelist():
+                registries = deserialize_registries(
+                    json.loads(
+                        archive.read("registry-inventory.json")
                     )
                 )
 
@@ -99,4 +110,5 @@ def read_bundle(path: Path) -> ContextBundle:
         source_commit=payload["source_commit"],
         artifacts=artifacts,
         contract_inventory=inventory,
+        registry_inventory=registries,
     )

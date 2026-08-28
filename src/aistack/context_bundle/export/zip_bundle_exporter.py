@@ -3,6 +3,9 @@ from tempfile import TemporaryDirectory
 import json
 import zipfile
 
+from aistack.conformance.registry_serialization import (
+    serialize_registries,
+)
 from aistack.conformance.serialization import serialize_inventory
 
 from aistack.contracts.bundle_exporter import BundleExporter
@@ -143,6 +146,18 @@ class ZipBundleExporter(BundleExporter):
                         json.dumps(
                             serialize_inventory(
                                 bundle.contract_inventory
+                            ),
+                            indent=2,
+                            ensure_ascii=False,
+                        ),
+                    )
+
+                if bundle.registry_inventory is not None:
+                    archive.writestr(
+                        "registry-inventory.json",
+                        json.dumps(
+                            serialize_registries(
+                                bundle.registry_inventory
                             ),
                             indent=2,
                             ensure_ascii=False,

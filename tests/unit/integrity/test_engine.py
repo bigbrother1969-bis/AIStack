@@ -91,6 +91,7 @@ def test_default_composition_is_stable():
         "transport-residue",
         "contract-debt",
         "false-declarations",
+        "unused-registrations",
         "reference-integrity",
         "undated-assertions",
         "unfinished-decisions",

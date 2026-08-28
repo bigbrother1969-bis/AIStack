@@ -215,6 +215,10 @@ def main() -> None:
 
     from aistack.conformance.inventory import take_inventory
 
+    from aistack.conformance.registries import (
+        take_registry_inventory,
+    )
+
     from aistack.context_bundle.service import (
         DefaultContextBundleService,
     )
@@ -269,6 +273,7 @@ def main() -> None:
     service = DefaultContextBundleService(
         transfer_service=transfer_service,
         measure_contracts=take_inventory,
+        measure_registries=lambda: take_registry_inventory(ROOT),
     )
 
 

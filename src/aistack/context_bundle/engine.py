@@ -40,6 +40,7 @@ class DefaultContextBundleEngine(ContextBundleEngine):
         bundle_builder=None,
         exporter=None,
         measure_contracts=None,
+        measure_registries=None,
     ) -> None:
 
         self.discovery = (
@@ -58,6 +59,7 @@ class DefaultContextBundleEngine(ContextBundleEngine):
             bundle_builder
             or DefaultContextBundleBuilder(
                 measure_contracts=measure_contracts,
+                measure_registries=measure_registries,
             )
         )
 

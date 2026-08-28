@@ -43,6 +43,9 @@ from aistack.integrity.checks.structural_integrity import (
 from aistack.integrity.checks.transport_residue import (
     TransportResidueCheck,
 )
+from aistack.integrity.checks.unused_registrations import (
+    UnusedRegistrationCheck,
+)
 from aistack.integrity.checks.undated_assertions import (
     UndatedAssertionCheck,
 )
@@ -66,6 +69,7 @@ def default_checks() -> list[IntegrityCheck]:
         TransportResidueCheck(),
         ContractDebtCheck(),
         FalseDeclarationCheck(),
+        UnusedRegistrationCheck(),
         ReferenceIntegrityCheck(),
         UndatedAssertionCheck(),
         UnfinishedDecisionCheck(),

@@ -16,6 +16,9 @@ from aistack.integrity.checks.contract_debt import (
 from aistack.integrity.checks.duplicate_titles import (
     DuplicateTitleCheck,
 )
+from aistack.integrity.checks.false_declarations import (
+    FalseDeclarationCheck,
+)
 from aistack.integrity.checks.knowledge_state import (
     KnowledgeStateCheck,
 )
@@ -62,6 +65,7 @@ def default_checks() -> list[IntegrityCheck]:
         DuplicateTitleCheck(),
         TransportResidueCheck(),
         ContractDebtCheck(),
+        FalseDeclarationCheck(),
         ReferenceIntegrityCheck(),
         UndatedAssertionCheck(),
         UnfinishedDecisionCheck(),

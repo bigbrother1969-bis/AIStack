@@ -23,7 +23,12 @@ from aistack.contracts.contract_inventory import (
 )
 
 
-FORMAT_VERSION = "1.0"
+# 1.1 adds `declarations_measured` and each contract's
+# `declared_by`. A 1.0 payload carries neither, and deserializes
+# with `declarations_measured` False rather than with an empty
+# list read as an answer: not measured is not zero, which is the
+# rule `contract-debt` already applies to a missing inventory.
+FORMAT_VERSION = "1.1"
 
 
 def serialize_inventory(inventory: ContractInventory) -> dict[str, Any]:
@@ -33,6 +38,7 @@ def serialize_inventory(inventory: ContractInventory) -> dict[str, Any]:
         "package": inventory.package,
         "modules": inventory.modules,
         "implementations": inventory.implementations,
+        "declarations_measured": inventory.declarations_measured,
         "unreadable": [
             {"module": module, "error": error}
             for module, error in inventory.unreadable
@@ -44,6 +50,7 @@ def serialize_inventory(inventory: ContractInventory) -> dict[str, Any]:
                 "kind": contract.kind,
                 "members": list(contract.members),
                 "satisfied_by": list(contract.satisfied_by),
+                "declared_by": list(contract.declared_by),
             }
             for contract in inventory.contracts
         ],
@@ -71,11 +78,15 @@ def deserialize_inventory(payload: dict[str, Any]) -> ContractInventory:
                 kind=entry["kind"],
                 members=tuple(entry.get("members", ())),
                 satisfied_by=tuple(entry.get("satisfied_by", ())),
+                declared_by=tuple(entry.get("declared_by", ())),
             )
             for entry in payload.get("contracts", ())
         ),
         unreadable=tuple(
             (entry["module"], entry["error"])
             for entry in payload.get("unreadable", ())
+        ),
+        declarations_measured=payload.get(
+            "declarations_measured", False
         ),
     )

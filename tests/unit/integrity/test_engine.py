@@ -90,6 +90,7 @@ def test_default_composition_is_stable():
         "duplicate-titles",
         "transport-residue",
         "contract-debt",
+        "false-declarations",
         "reference-integrity",
         "undated-assertions",
         "unfinished-decisions",

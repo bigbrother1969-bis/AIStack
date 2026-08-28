@@ -219,7 +219,7 @@ def test_the_integrity_checks_satisfy_their_contract():
     )
 
     assert not check.is_orphan
-    assert len(check.satisfied_by) == 14
+    assert len(check.satisfied_by) == 15
     assert all(
         "integrity.checks" in name for name in check.satisfied_by
     )

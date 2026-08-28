@@ -69,7 +69,7 @@ def test_the_payload_is_json_and_carries_its_format_version():
     payload = serialize_inventory(sample())
 
     assert json.loads(json.dumps(payload)) == payload
-    assert payload["format_version"] == "1.0"
+    assert payload["format_version"] == "1.1"
 
 
 def test_the_counts_are_read_and_never_recomputed():

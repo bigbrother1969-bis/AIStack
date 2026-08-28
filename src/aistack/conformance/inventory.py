@@ -147,6 +147,28 @@ def take_inventory(package: str = "aistack") -> ContractInventory:
             else:
                 contracts[subject] = kind
 
+    # What each class says it is, read from its `__mro__` and not
+    # from its members. `satisfied_by` below answers the other
+    # question — what it provides — and the two are measured
+    # separately because Python lets them disagree: the ABC
+    # machinery checks that a method of the right *name* exists
+    # and never looks at the signature (GOV-0002/OS-040).
+    #
+    # Contracts themselves are not counted as declaring: a
+    # Protocol extending a Protocol is a contract refining a
+    # contract, not an implementation claiming one.
+    declarations: dict[type, list[str]] = {
+        contract: [] for contract in contracts
+    }
+
+    for implementation in concrete:
+        for base in implementation.__mro__[1:]:
+            if base in declarations:
+                declarations[base].append(
+                    f"{implementation.__module__}."
+                    f"{implementation.__name__}"
+                )
+
     declared = tuple(
         DeclaredContract(
             name=contract.__name__,
@@ -160,6 +182,7 @@ def take_inventory(package: str = "aistack") -> ContractInventory:
                     if satisfies(contract, c)
                 )
             ),
+            declared_by=tuple(sorted(declarations[contract])),
         )
         for contract, kind in sorted(
             contracts.items(),
@@ -173,4 +196,5 @@ def take_inventory(package: str = "aistack") -> ContractInventory:
         implementations=len(concrete),
         contracts=declared,
         unreadable=tuple(unreadable),
+        declarations_measured=True,
     )

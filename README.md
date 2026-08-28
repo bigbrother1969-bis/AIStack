@@ -268,6 +268,11 @@ Context Bundle Regeneration
 
 Knowledge is always validated before becoming part of the project's heritage.
 
+*This is `FDN-0007`'s Governed Engineering Cycle at the scope of a repository
+change. `FDN-0007` is the SPOT of the lifecycle; `FDN-0001` § *Working Workflow*
+is its other instance, for Foundation contributions. The last two steps are
+carried out by the procedure `OPS-0002` § 1 states command by command.*
+
 ---
 
 ## AIStack Architectural Model

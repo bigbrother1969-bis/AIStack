@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.0
+  version: 1.1
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-07-06
+  updated: 2026-08-28
 
 relations:
   references:
@@ -64,6 +64,11 @@ Only validated Knowledge Artifacts committed to the repository become part of th
 ## Working Workflow
 
 Every Foundation contribution follows the same lifecycle.
+
+*This is `FDN-0007`'s Governed Engineering Cycle at the scope of a Foundation
+contribution — that cycle is the SPOT of the lifecycle, and this is one of its
+two declared instances. Stated 2026-08-28; both had existed since 2026-07-06
+with no sentence relating them.*
 
 ```text
 Exploration

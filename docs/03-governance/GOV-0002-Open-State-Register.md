@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.78
+  version: 1.79
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -219,9 +219,40 @@ measures the neighbouring question and would need the *consumed by* dimension
 GOV-0002/OS-001 named, which is computed here only where the Kernel makes
 consumption explicit.
 **Qualification** **The missing piece is a task, not a caller. Decided
-2026-08-29 by the owner.** The layer stands; what it lacks is its first real
-subject. The entry stays open, and what it now carries is a **work item rather
-than a question**.
+2026-08-29 by the owner** — and **re-qualified the same day, on a measurement
+the first qualification did not have.**
+
+**The layer does not stand. Half of what would execute could not exist.**
+Measured 2026-08-29, when the first task was being scoped:
+
+```text
+CompressCapability … VerifySignatureCapability   9 classes
+own methods=[]        CANNOT INSTANTIATE ('process', 'supports')
+```
+
+The nine `PackageCapability` implementations were empty subclasses of an ABC
+with two abstract methods. **None could be instantiated**, and
+`KnowledgePackage` carries one field — `id` — so a capability processing one
+would have had nothing to process. Removed the same day under ARC-P-006;
+`ADR-0008`'s row went from `done` to `not implemented`.
+
+**So the condition is sharper than this entry stated.** It read *built, tested,
+and has nothing to execute*. Measured: **`Request`, `Task`, `TaskRegistry`,
+`TaskResolver`, `KernelRuntime`, `RuntimeExecutor` and `ExecutionTrace` exist
+and work** — that half of the *Observed* block holds. What does not is the
+capability half, and it was never built.
+
+*Registering a first task before this was measured would have produced a task
+orchestrating nine classes that raise on construction — and, if it orchestrated
+none of them, a registration nothing retrieves. **That is the `by-ids`
+registration removed the same morning**, at architectural scale.*
+
+**What this leaves as work**, and the entry stays open for it: the dimension
+needs a first `Task` whose subject exists. `PackageCapability` remains as the
+contract a real packaging operation will be written against, and **the nine
+names it anticipated — serialize, compress, hash — describe what the Context
+Bundle export already does by hand**, beside the dimension built for it. That
+is `OS-042`'s shape a second time, recorded here and not qualified.
 
 **What that work is, measured 2026-08-29.** The machinery is complete and idle:
 `TaskRegistry(Registry[Task])` exists, `TaskResolver` holds a `TaskSource`, and
@@ -232,10 +263,12 @@ only things in this repository that execute anything on request — and turning
 one into a registered task is the measurement that would tell whether the
 abstraction earns itself.
 
-*This is the only one of the four open entries that 2026-08-29's measurements
-did not move. It was qualified on the reading the entry itself already carried
-third, which is worth recording: the readings were laid out on 2026-08-27 and
-the one that held is the one nobody had evidence for either way.*
+*This was the only one of the four open entries that the morning's measurements
+did not move — for about an hour. It was qualified on the reading the entry
+itself already carried third, and the afternoon's measurement showed why nobody
+had evidence for it either way: **the thing it was a reading about had not been
+looked at.** The readings were laid out on 2026-08-27 from the code's shape, and
+nobody instantiated a capability.*
 
 *Scoped deliberately narrow. This says the dimension needs a task; it does not
 say which, and it does not commit to a date. `unfinished-decisions` keeps

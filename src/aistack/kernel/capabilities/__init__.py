@@ -1,3 +1,0 @@
-"""
-Kernel capability implementations.
-"""

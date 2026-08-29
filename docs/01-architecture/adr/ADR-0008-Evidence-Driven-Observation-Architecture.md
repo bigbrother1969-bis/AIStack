@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Accepted
   owner: Architecture
   created: 2026-07-31
@@ -65,7 +65,7 @@ halves are not in the same state.**
 | Execution — `Task`, `TaskRegistry`, `TaskResolver` | done — 2026-08-27 |
 | Execution — Kernel Runtime, `KernelRuntime` / `RuntimeExecutor` / `ExecutionTrace` | done — 2026-08-27 |
 | Execution — Observation Service | abandoned — 2026-08-28 |
-| Execution — Capability, `PackageCapability` and nine implementations | done — 2026-08-27 |
+| Execution — Capability, `PackageCapability` and nine implementations | not implemented — measured 2026-08-29 |
 | Execution — Action | abandoned — 2026-08-28 |
 | Discovery produces Evidence, never Knowledge | done — 2026-08-27 |
 | Qualification is independent from acquisition | done — 2026-08-27 |
@@ -147,6 +147,94 @@ them `abandoned` on 2026-08-28**: the chain that was built has no such stages,
 and nothing in it waits for one. What this decision anticipated stays written in
 § *Decision*, which is what an abandoned row is for — the intention is preserved
 and the table stops reporting it as work in progress.
+
+### The nine capabilities could not be instantiated
+
+**Qualified `done` on 2026-08-27, and measured false on 2026-08-29.**
+
+```text
+CompressCapability           own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+DecompressCapability         own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+DecryptCapability            own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+DeserializeCapability        own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+EncryptCapability            own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+HashCapability               own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+SerializeCapability          own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+SignCapability               own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+VerifySignatureCapability    own methods=[]  CANNOT INSTANTIATE ('process', 'supports')
+```
+
+Each was `class XCapability(PackageCapability): pass`. `PackageCapability` is an
+ABC with two `@abstractmethod`s, so **none of the nine could exist**. They were
+not uncalled — they were unusable, and `KnowledgePackage` carries one field,
+`id`, so a capability that processed one would have had nothing to process.
+
+**Removed 2026-08-29 by the owner under ARC-P-006**, with the contract kept: a
+real packaging operation will be written against `PackageCapability`, and what
+is refused is declaring it and stopping there. The row is `not implemented`
+because that is now what it is.
+
+### `contract-debt` had been reporting them all along
+
+**This section first said that no instrument saw them. That was wrong, and the
+removal itself proved it:**
+
+```text
+before   contract-debt   13 of 50 declared contracts satisfied by no class
+after    contract-debt    4 of 41
+```
+
+**Nine of the thirteen orphans were the nine capabilities.** A class carrying
+unimplemented abstract methods *is* a declared contract by this heritage's own
+definition — `conformance/inventory.py` inventories it as one, and `FDN-0002`
+§ *Contract* says so in words. So each empty subclass was inventoried as a
+contract, satisfied by nothing, and **published at every single projection for
+five weeks.**
+
+**The check was right and the reading was wrong.** `contract-debt` cannot
+distinguish *a contract written before its implementation* — which STD-P-002
+makes the prescribed order — from *an implementation that implements nothing*.
+Both are a declared contract nobody satisfies.
+
+**And the qualification is what closed the reader's eyes.** Ten of the orphans
+were qualified `planned` on 2026-08-23 under `GOV-0002/OS-001`, and the check's
+own message says *STD-P-002 makes this an order, not a fault*. **Nine broken
+classes were sitting inside a figure that had been declared acceptable** —
+qualified debt is still read every day, and read as debt.
+
+*That is the sharpest thing measured on 2026-08-29, and it is not about an
+instrument being blind. A qualification is a decision to stop looking at a
+number, and it was the right decision for the number. The nine were not in the
+number's subject.*
+
+**What the other two instruments did say, measured 2026-08-29:**
+
+- **`false-declarations` reports a class naming a base it does not satisfy.**
+  The base **is** satisfied structurally — an empty subclass inherits `supports`
+  and `process` with the right call shapes — so it saw nothing, correctly;
+- **the test asserted `issubclass`.** `test_package_capabilities_implement_contract`
+  checked the declaration and named itself after the implementation. **That is
+  the identical mistake recorded on 2026-08-27 for `SshBundleTransfer`**, where
+  a test asserted `issubclass` while the claim was `satisfies` — second
+  occurrence, in a test written to prove the opposite.
+
+`tests/unit/kernel/test_no_class_declares_a_contract_and_implements_nothing.py`
+is the guard: a class whose abstract methods are all inherited and none of which
+it declares is an empty declaration. Mutation 2026-08-29 — restoring one of the
+nine turns it red; every legitimate abstract base declares its own methods and
+is untouched.
+
+*Two neighbours measured the same day and **not** removed, because removing them
+is a different decision: `PackageManager` — `kernel/engines/package_manager.py`
+— returns its argument unchanged from both methods and its docstring says it
+*orchestrates package capabilities*, which are the nine; and its only test
+asserts `isinstance(manager, PackageManager)`. It is one of the engines
+`ADR-0004`'s § *Implementation state* reads as `done`. Named here, not acted on.*
+
+*And the whole sub-dimension is the shape `GOV-0002/OS-042` recorded for the
+Catalog View: **the nine names — serialize, compress, hash — describe exactly
+what the Context Bundle export already does by hand**, beside the dimension
+built for it. Recorded, not qualified.*
 
 ### Two of the five key decisions
 

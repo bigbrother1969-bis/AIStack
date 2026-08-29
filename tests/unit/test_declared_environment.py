@@ -236,6 +236,136 @@ def test_the_declaration_forbids_compiled_bytecode():
     assert "PYTHONDONTWRITEBYTECODE=1" in DECLARATION.read_text()
 
 
+def declared_interpreter() -> str:
+    """
+    The interpreter version the declaration names, read from it.
+
+    Read rather than restated: a test that hardcoded "3.13" would
+    be a second declaration of the knowledge ADR-0001 puts in one
+    file, which is what FDN-P-005 forbids.
+    """
+
+    found = re.search(
+        r'^AISTACK_PYTHON_REQUIRED="([^"]+)"', DECLARATION.read_text(), re.M
+    )
+
+    assert found, "the declaration names no interpreter"
+
+    return found.group(1)
+
+
+def sourced_interpreter(command: str) -> tuple[str, str]:
+    """
+    What sourcing `command` warns, and which `python3` it leaves.
+
+    Both from one real shell, because the defect is the distance
+    between the two. Reading the files and reasoning about them is
+    exactly what agreed with their author for six days.
+    """
+
+    script = (
+        f"source {command} >/dev/null; "
+        "python3 -c 'import sys; print(f\"{sys.version_info.major}."
+        "{sys.version_info.minor}\")' 2>/dev/null"
+    )
+
+    result = subprocess.run(
+        ["bash", "-c", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        env={"PATH": "/usr/bin:/bin", "HOME": str(ROOT)},
+    )
+
+    return result.stderr, result.stdout.strip()
+
+
+def test_the_provider_warns_about_the_interpreter_it_provides():
+    """
+    The command ENG-TEST-0002 prints must describe the interpreter
+    that command runs — not the one it found on the way in.
+
+    Until 2026-08-29 `bin/aistack_env.sh` verified at source time
+    and `scripts/dev-env.sh` changed the interpreter afterwards.
+    Measured on the owner's laptop in a bare shell: the first
+    source warned "python3 is 3.12", the second was silent, and
+    `python3 --version` printed 3.13.15. The suite had been
+    running on the declared interpreter throughout, and the false
+    reading had been copied into the boot report as a residual.
+
+    The assertion is an equivalence, so it stays honest on a
+    machine whose distribution already ships the declared
+    interpreter: there it holds because both halves are true, and
+    it is on every other machine that it bites.
+    """
+
+    warning, interpreter = sourced_interpreter("scripts/dev-env.sh")
+
+    assert (interpreter == declared_interpreter()) is (
+        "verified on" not in warning
+    )
+
+
+def test_the_declaration_warns_about_the_interpreter_the_launchers_run():
+    """
+    The other half, and it is why the check stayed in the
+    declaration rather than moving to the provider.
+
+    The three launchers beside `bin/aistack_env.sh` source it and
+    immediately run `python3 -m …` without touching the search
+    path. For them the interpreter measured at source time is the
+    one that executes, and the warning was never wrong. Deferring
+    it unconditionally would have taken a correct warning away
+    from `run_selection_ui.sh` to fix a wrong one elsewhere.
+    """
+
+    warning, interpreter = sourced_interpreter("bin/aistack_env.sh")
+
+    assert (interpreter == declared_interpreter()) is (
+        "verified on" not in warning
+    )
+
+
+def test_the_provider_pays_the_check_it_defers(tmp_path):
+    """
+    Deferring and never calling is silence, and silence is exactly
+    what the warning exists to prevent.
+
+    The equivalence asserted above cannot see this: on a machine
+    whose provider does deliver the declared interpreter, a
+    provider that warns about nothing and a provider that checks
+    nothing are indistinguishable. Found by mutation — removing
+    the call left the suite green.
+
+    So the situation is built rather than waited for: the two
+    scripts in a tree with no virtual environment, and an
+    interpreter on the search path that is certainly not the
+    declared one. There the provider has nothing to put ahead of
+    it, and it must say so.
+    """
+
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "bin" / "aistack_env.sh").write_text(DECLARATION.read_text())
+    (tmp_path / "scripts" / "dev-env.sh").write_text(PROVIDER.read_text())
+
+    stub = tmp_path / "stub"
+    stub.mkdir()
+    (stub / "python3").write_text('#!/bin/sh\nprintf "0.0\\n"\n')
+    (stub / "python3").chmod(0o755)
+
+    result = subprocess.run(
+        ["bash", "-c", "source scripts/dev-env.sh >/dev/null"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        env={"PATH": f"{stub}:/usr/bin:/bin", "HOME": str(tmp_path)},
+    )
+
+    assert "verified on" in result.stderr
+    assert "0.0" in result.stderr
+
+
 def test_the_images_and_the_declaration_agree_on_bytecode():
     """
     Two projections of one decision, and the check is the same

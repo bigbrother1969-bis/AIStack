@@ -123,11 +123,51 @@ export PYTHONDONTWRITEBYTECODE=1
 
 AISTACK_PYTHON_REQUIRED="3.13"
 
-AISTACK_PYTHON_FOUND="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)"
+# The declaration stays here. The *moment* of verification belongs
+# to whoever has finished establishing the interpreter.
+#
+# Until 2026-08-29 this check ran once, inline, at source time.
+# That is correct for the three launchers next to this file: they
+# source it and immediately run `python3 -m …`, so the interpreter
+# measured here is the one that executes. It was wrong for exactly
+# one caller — `scripts/dev-env.sh`, which sources this file and
+# only afterwards puts the developer's interpreter ahead of the
+# distribution's. The warning then described an interpreter that
+# the governed command never runs.
+#
+# Measured on the owner's laptop, 2026-08-29, in a bare shell: the
+# first source warned "python3 is 3.12", the second was silent,
+# and `python3 --version` printed 3.13.15 — the suite had been
+# running on the declared interpreter the whole time.
+#
+# Two costs, and neither is the noise. A report that differs
+# between the first and the second source is the defect this file
+# corrected for PYTHONPATH on 2026-08-23, in the same file, for
+# the same reason: ENG-TEST-0002 is C3 and asks for *deterministic
+# execution*. And the false reading had already been copied into
+# the owner's boot report as a residual — "the heritage runs in no
+# governed environment" — which nobody re-measured for six days.
+#
+# A verification that fires before the interpreter is settled is
+# not a weaker verification. It is a measurement of something
+# else.
+aistack_verify_interpreter() {
 
-if [ "$AISTACK_PYTHON_FOUND" != "$AISTACK_PYTHON_REQUIRED" ]; then
-    echo "AIStack: python3 is $AISTACK_PYTHON_FOUND, this heritage is verified on $AISTACK_PYTHON_REQUIRED" >&2
+    local found
+
+    found="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)"
+
+    [ "$found" = "$AISTACK_PYTHON_REQUIRED" ] && return 0
+
+    echo "AIStack: python3 is ${found:-absent}, this heritage is verified on $AISTACK_PYTHON_REQUIRED" >&2
     echo "AIStack: the suite will run, and it will not be running what the images ship" >&2
-fi
+
+    return 0
+}
 
 export AISTACK_PYTHON_REQUIRED
+
+# Deferred only by a caller that will change the answer, and that
+# caller then owes the call. The launchers set nothing and are
+# verified here, as before.
+[ "${AISTACK_ENV_DEFER_INTERPRETER_CHECK:-}" = "1" ] || aistack_verify_interpreter

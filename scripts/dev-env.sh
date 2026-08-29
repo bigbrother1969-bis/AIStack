@@ -25,7 +25,16 @@
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# This file changes which `python3` runs, so it defers the
+# declaration's interpreter check and owes it once the change is
+# made. Verified before that point, the check described the
+# distribution's interpreter while the command went on to use the
+# project's — and said so only on the first source of a shell.
+AISTACK_ENV_DEFER_INTERPRETER_CHECK=1
+
 source "${PROJECT_ROOT}/bin/aistack_env.sh" || return 1
+
+unset AISTACK_ENV_DEFER_INTERPRETER_CHECK
 
 # Idempotent for the same reason `bin/aistack_env.sh` is: this
 # file is sourced, often more than once in a session, and a PATH
@@ -48,6 +57,9 @@ IFS="$_aistack_ifs"
 export PATH="${_aistack_venv}${_aistack_kept:+:$_aistack_kept}"
 
 unset _aistack_venv _aistack_kept _aistack_entry _aistack_ifs
+
+# The debt owed above, paid now that the interpreter is settled.
+aistack_verify_interpreter
 
 echo "AIStack development environment activated."
 echo "Python     : $(command -v python)"

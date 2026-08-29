@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -423,10 +423,58 @@ will. Two consequences that a reader should not have to derive:
 
 - **there is no bundle to keep up to date** — there is a command that produces
   a current one, and it is the one step 1 runs;
-- **freshness is not an age.** A bundle is current when it declares the commit
-  it projects and that commit is the SPOT's; it goes stale the moment governed
-  documents change, whatever its date. `content_hash` in `manifest.json` decides
-  it in one comparison, for anyone holding the repository.
+- **freshness is not an age.** A bundle is current when the governed documents
+  it projects are the SPOT's, whatever its date. `content_hash` in
+  `manifest.json` decides it in one comparison, for anyone holding the
+  repository.
+
+### A moved `HEAD` is not by itself a stale bundle
+
+**Two statements of this rule sat side by side and did not say the same thing**,
+which was found on 2026-08-29 by running the published image on a host one
+commit behind and reading what it validated:
+
+| | What makes a bundle stale |
+|---|---|
+| this section | a **governed artifact** changed |
+| `test_the_projection_declares_the_commit_it_projects` | **`HEAD` moved**, for any reason |
+
+They are both right about their own subject and neither is the whole rule. **The
+procedure protects content; the test protects traceability.** A commit that
+touches no governed artifact — `f6a9580`, which changed only `docker-compose.yml`
+— leaves an existing bundle exact in content while its `source_commit` becomes an
+ancestor of the SPOT's `HEAD`.
+
+**So the rule, stated once and completely.** A bundle is stale when either holds:
+
+- **a governed artifact changed** since the commit it declares. The bundle then
+  describes a heritage that no longer exists, and regenerating is the only
+  answer;
+- **it declares no commit, or one the SPOT does not carry.** Then nobody can
+  check it at all, whatever its content — which is what the guard test refuses
+  and why it compares against `HEAD` rather than against a content hash.
+
+**A `source_commit` that is merely an ancestor of `HEAD` is neither.** It is a
+bundle that can still be checked and whose content may be exact, and a recipient
+holding the repository settles it in one command:
+
+```bash
+git diff --name-only <source_commit>..main -- docs README.md \
+  | grep -E '\.md$' \
+  | grep -v '^docs/99-meta/'
+```
+
+Empty output means the governed heritage did not change and **the bundle is
+current despite naming an older commit**. The paths are not a convention: they
+are `INCLUDED_PATHS` and `EXCLUDED_PATHS` in
+`src/aistack/context_bundle/eligibility/rules.py`, which is the allow list that
+decides what a projection carries.
+
+*Written 2026-08-29 on the owner's decision, after the ambiguity was measured
+rather than argued. **Neither statement was wrong and nothing had to be
+repaired** — what was missing was the sentence relating them, which is the same
+shape W-13 and W-15 had on 2026-08-28 and the third time this week that two true
+statements of one rule turned out never to have been introduced to each other.*
 
 ### Handing a bundle to someone
 

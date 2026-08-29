@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.74
+  version: 1.75
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -518,11 +518,76 @@ by OS-036, and emptied again by the rule OS-036 produced.*
 
 # Defects
 
-None open. OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
+#### GOV-0002/OS-044 — The four provider CLIs cannot run, and three governed artifacts say they do
+
+**Nature** `defect` · **Opened** 2026-08-29 · **State** open
+**Observed** measured 2026-08-29, by running them:
+
+```text
+$ python3 -m aistack.cli.docker_catalog
+    observation = ctx.providers.get("docker").collect()
+                  ^^^^^^^^^^^^^
+AttributeError: 'Kernel' object has no attribute 'providers'
+```
+
+`docker_catalog`, `docker_discover`, `docker_selection_catalog` and
+`compose_catalog` raise the same error **on the second line of `main()`**,
+before reaching any provider. `Kernel` carries `registries` and `services`; the
+access that resolves is `ctx.registries.providers`.
+
+**Introduced by `f685f97`, 2026-07-20** — *refactor(kernel): introduce
+registries/services architecture* — which moved `providers` under `registries`
+and **touched none of the four CLIs**. Forty days.
+
+**What it falsifies.** This is the part that makes it a register entry rather
+than a fix:
+
+| Statement | Condition |
+|---|---|
+| `ADR-0008` § *The Knowledge Dimension is live* — *Four CLIs exercise it* | false since 2026-07-20 |
+| `ADR-0002` § *Implementation state* and `OS-042` — *the concept exists twice and the ungoverned copy is the live one* | **neither copy is live.** The qualification of 2026-08-29 stands on its other three measurements; this premise does not |
+| `OS-042`'s host measurement — *`docker-selection-catalog.json`, 2026-07-07 16:49, nothing has written it since* | **the cause was here.** Read as disuse; it is inability |
+| `unused-registrations` — `providers` is retrieved | **the four retrieval sites it counts are these four broken lines** |
+
+**Derivable** no, and two instruments looked straight at it:
+
+- **`unused-registrations` reads retrieval sites by AST shape** —
+  `<expr>.<registry>.get(...)` — without checking that `<expr>` carries the
+  attribute. Its own docstring states that limit. What this entry measures is
+  what the limit costs: the one registry reported as *retrieved* is retrieved
+  only by code that raises;
+- **no test imports any of the four.** 646 tests, and not one calls a provider
+  CLI's `main()` — while `evidence_extract`, `knowledge_integrity` and
+  `runtime_diagnose` each have one. The practice exists and these four are
+  outside it.
+
+**Qualification** **A defect of the heritage, and the tests are the repair.
+Decided 2026-08-29 by the owner.** The fix is four attribute accesses; what
+makes it an entry is that nothing could see it for forty days. **One test per
+`main()`, with the provider stubbed**, so the next rename fails loudly rather
+than silently — the rename that caused this was correct everywhere it looked,
+and looked at everything that had a test.
+
+*Opened before the fix rather than after, on the owner's decision. An entry
+describing a condition already closed is a closure with no measurement behind
+it, which is what § *What a closure must carry* exists to refuse.*
+
+*This entry does not reopen `OS-042`. That qualification rests on the v0
+ancestry, on the identity pair the engine reads, and on three contracts
+consuming `CatalogView` — none of which needed the Docker path to run. What it
+changes is the value of the repair: fixing the type without fixing the access
+would produce a governed path still unable to execute.*
+
+---
+
+OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
 were resolved on 2026-08-23 and are in *Resolved*.
 
-An empty section is kept rather than removed: a register with no defects
-section could not be told from one that never looked for any.
+*The note that stood here — an empty section is kept rather than removed,
+because a register with no defects section could not be told from one that
+never looked for any — was written while this section was empty. It stopped
+being empty on 2026-08-29, and the argument it made is now demonstrated rather
+than hypothetical: the section was looked at, and something was in it.*
 
 ---
 

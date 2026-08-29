@@ -20,7 +20,7 @@ class SelectionEngine:
         return Selection(
             selection_id=selection_id,
             catalog_id=view.source_catalog_id,
-            selected_ids=selected,
+            selected_ids=list(selected),
             metadata={
                 "source_view": view.view_id,
                 **(metadata or {}),

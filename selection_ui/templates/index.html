@@ -34,7 +34,7 @@
 <body>
   <header>
     <h1>Synchroniser le smartphone</h1>
-    <p class="meta">{{ definition.title }} — Catalog: {{ catalog.catalog_id }}</p>
+    <p class="meta">{{ definition.title }} — Catalog: {{ view.source_catalog_id }}</p>
   </header>
 
   {% if status %}
@@ -44,7 +44,7 @@
   <section class="dashboard">
     <div class="card">
       <div class="label">Catalogue</div>
-      <div class="value">{{ catalog.items | length }}</div>
+      <div class="value">{{ view.items | length }}</div>
       <div class="meta">artistes disponibles</div>
     </div>
 
@@ -101,7 +101,7 @@
     </div>
 
     <div id="items">
-      {% for item in catalog.items %}
+      {% for item in view.items %}
         {% set is_selected = item.id in selected %}
         {% set is_synced = item.id in synced %}
         <div class="item"
@@ -134,7 +134,7 @@
   </form>
 
   <script>
-    const total = {{ catalog.items | length }};
+    const total = {{ view.items | length }};
 
     function visibleItems() {
       return Array.from(document.querySelectorAll(".item"))

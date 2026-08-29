@@ -11,13 +11,21 @@ from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
 from aistack.catalog.yaml import load_catalog_yaml
-from aistack.kernel.selection import Selection
+from aistack.kernel.bootstrap import create_kernel
+from aistack.selection.workflow import build_view, select_from_view
 from aistack.selection.yaml import load_selection_yaml, save_selection_yaml
 from aistack.providers.repository import RepositoryProvider
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 repository = RepositoryProvider(REPO_ROOT)
+
+# **The first Catalog View consumer** — ADR-0002's ninth step,
+# closed 2026-08-29. This screen displayed `catalog.items` and
+# built its `Selection` by hand; it now shows a Catalog View
+# produced by an engine retrieved from the Kernel, and selects
+# through the Selection Engine. GOV-0002/OS-039's surface half.
+kernel = create_kernel()
 
 APP_DEF = repository.resolve("selection_ui/definitions/music_android.yml")
 
@@ -85,6 +93,7 @@ def get_syncthing_status() -> dict:
 def index(request: Request):
     definition = load_app_definition()
     catalog = load_catalog_yaml(repository.resolve(definition["catalog_file"]))
+    view = build_view(kernel, catalog, definition["view_id"])
     selection = load_selection_yaml(repository.resolve(definition["selection_file"]))
     selected = set(selection.selected_ids) if selection else set()
 
@@ -98,14 +107,14 @@ def index(request: Request):
         name="index.html",
         context={
             "definition": definition,
-            "catalog": catalog,
+            "view": view,
             "selected": selected,
             "synced": synced,
             "selected_synced": selected_synced,
             "selected_pending": selected_pending,
             "synced_not_selected": synced_not_selected,
             "selected_synced_percent": round((len(selected_synced) / len(selected) * 100), 1) if selected else 100,
-            "catalog_selected_percent": round((len(selected) / len(catalog.items) * 100), 1) if catalog.items else 0,
+            "catalog_selected_percent": round((len(selected) / len(view.items) * 100), 1) if view.items else 0,
             "status": request.query_params.get("status"),
             "syncthing": get_syncthing_status(),
         },
@@ -116,11 +125,12 @@ def index(request: Request):
 def save(selected_ids: list[str] = Form(default=[])):
     definition = load_app_definition()
     catalog = load_catalog_yaml(repository.resolve(definition["catalog_file"]))
+    view = build_view(kernel, catalog, definition["view_id"])
     selection_path = repository.resolve(definition["selection_file"])
 
-    selection = Selection(
+    selection = select_from_view(
+        view=view,
         selection_id=definition["app_id"],
-        catalog_id=catalog.catalog_id,
         selected_ids=selected_ids,
         metadata={
             "source_catalog": definition["catalog_file"],

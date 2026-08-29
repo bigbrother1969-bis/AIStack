@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Accepted
   owner: Architecture
   created: 2026-07-07
@@ -131,7 +131,7 @@ path that runs produces a Catalog View.**
 | A Catalog View is limited to the purpose it serves | done — 2026-08-28 |
 | The Selection Engine consumes a Catalog View, never a raw provider observation | done — 2026-08-28 |
 | Infrastructure Data Catalog → Catalog View Engine → consumer, on a path that runs | done — 2026-08-29 |
-| The Selection UI as the first Catalog View consumer | not implemented — measured 2026-08-28 |
+| The Selection UI as the first Catalog View consumer | done — 2026-08-29 |
 
 What each was read against:
 
@@ -145,7 +145,7 @@ What each was read against:
 | limited to its purpose | `CatalogItem` carries `id`, `label`, `kind`, `source`, `metadata`; `CatalogViewItem` carries `id`, `label`, `metadata`, and the one engine moves `kind` and `source` into `metadata`. **It drops nothing** — qualified `done` by the owner on 2026-08-28, see below |
 | the Selection Engine's input | `SelectionEngine.select(view: CatalogView, …)` and `SelectionStrategy.select(view: CatalogView)`. The type is the guarantee: no provider observation reaches either |
 | the flow | `aistack.cli.docker_selection_catalog`, and the five tests of `tests/unit/cli/test_the_provider_commands_run.py` that drive it — below |
-| the Selection UI | `selection_ui/app.py` imports `load_catalog_yaml`, `Selection`, `load_selection_yaml` and `RepositoryProvider`. It never names `CatalogView` |
+| the Selection UI | `selection_ui/app.py` builds a view through `aistack.selection.workflow`, and six tests drive that workflow — below |
 
 ### The flow, closed 2026-08-29
 
@@ -174,6 +174,69 @@ not: it serialised with `write_text` and a `default=lambda item: item.__dict__`
 hook. `CatalogViewArtifactGenerator` is generic, because a Catalog View names no
 technology.*
 
+### The consumer, closed 2026-08-29
+
+`selection_ui` displayed `catalog.items` and built its `Selection` by hand,
+passing through no view, no engine and no strategy. It now does both through the
+Kernel:
+
+```text
+index  load_catalog_yaml → build_view(kernel, catalog, definition["view_id"]) → template
+save   build_view(...) → select_from_view(view, app_id, ticked_ids) → save_selection_yaml
+```
+
+**The engine that had waited for this is the one that existed.** `music-selection`
+was registered from the day the registry existed and retrieved by nothing; the
+screen it was written for was building its own list beside it.
+
+**Which view a screen shows is governed data.** `view_id: music-selection` is
+declared in the application definition, not named in application code — the same
+rule the Docker path follows by retrieving `docker-containers` by identifier.
+
+**The logic is not in the HTTP handler**, and that is a packaging fact rather
+than taste. `selection_ui` is a top-level package whose dependencies —
+`fastapi`, `starlette`, `jinja2` — this project does not declare: `pyproject.toml`
+declares `PyYAML` and nothing else. Testing the handlers would mean adding
+dependencies to the heritage, which ADR-0001 governs. `aistack.selection.workflow`
+holds the chain, six tests drive it, and each handler is two lines. *ADR-0003's
+delegation is exercised for the first time: the engine holds a strategy and no
+criterion, and a stale identifier is dropped by the strategy rather than carried
+into governed knowledge — which the hand-built `Selection` did not do.*
+
+**Two things were repaired in passing, and neither had an instrument.**
+`ByIdsSelectionStrategy.select` returned `list[str]` while its Protocol declared
+`tuple[str, ...]` — recorded by ADR-0003 on 2026-08-27 and left, correctly,
+because nothing consumed the chain. And the `by-ids` registration held
+`ByIdsSelectionStrategy([])`: an instance selecting nothing, under a name nobody
+could use, because the strategy carries its identifiers in its constructor.
+Removed by the owner on 2026-08-29. *Neither `contract-debt` nor
+`false-declarations` sees a return type; both compare call shapes.*
+
+### The report got quieter, and not only because things improved
+
+Measured 2026-08-29, after this row closed:
+
+```text
+unused-registrations   0 registered identifiers retrieved by nothing (was 2)
+unused-registrations   2 of 4 registries empty after bootstrap (was 1)
+unused-registrations   2 retrieval sites name a computed identifier (was 1)
+```
+
+**The first line is not the whole truth.** `music-selection` is no longer
+reported as unretrieved — but the reason is that `catalog_views` now carries a
+**computed** retrieval site, `catalog_views.get(view_id)`, and the check excludes
+a registry it cannot resolve statically. Making the view identifier governed data
+is what put it there. *The instrument reports less because it can see less, and
+what actually establishes the retrieval is a test —
+`test_the_view_is_produced_by_an_engine_retrieved_by_identifier` — not the
+report.*
+
+**The second line is a true statement newly published.** `selection_strategies`
+is empty because nothing belongs in it, which is a decision and is recorded in
+`kernel/bootstrap/default.py`; `tasks` is empty because GOV-0002/OS-041's work
+has not been done. **A report cannot tell those two apart**, which is why both
+are written down where a reader will meet them.
+
 ### The engine was registered and never retrieved
 
 Measured across the whole repository on 2026-08-28, excluding `archive/` — and
@@ -195,11 +258,11 @@ This was GOV-0002/OS-039 one layer up. That entry records that `SelectionEngine`
 has no caller; the engine that would build what it consumes had none either, and
 the registry that would hand it over was written to once and read never.
 
-**Half of that closed on 2026-08-29.** `catalog_views` now has a read site, and
-a Catalog View is built by a command and asserted by four tests.
-`MusicSelectionViewEngine` is still registered and still retrieved by nothing,
-and `SelectionEngine` still has no caller: **producing a view is not consuming
-one**, and the consumer is the row below.
+**All of it closed on 2026-08-29**, in two commits and in that order: the
+producer first — a command builds a Catalog View through a registered engine —
+then the consumer, when the Selection UI began retrieving `music-selection` and
+selecting through the engine. **Producing a view is not consuming one**, and the
+two were separate rows because they were separate absences.
 
 ### The path that runs builds a second view type
 

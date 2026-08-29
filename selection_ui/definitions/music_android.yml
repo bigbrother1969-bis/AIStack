@@ -1,6 +1,9 @@
 app_id: music_android
 title: Music Android Selection
 catalog_file: examples/catalogs/music-library-catalog.yml
+# Which Catalog View Engine produces what this screen shows.
+# Governed data rather than a class named in application code.
+view_id: music-selection
 selection_file: examples/selections/music-android-selection-real.yml
 generation_command:
   - python3

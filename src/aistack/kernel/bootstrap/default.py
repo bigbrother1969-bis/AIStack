@@ -10,9 +10,6 @@ from aistack.kernel.bootstrap.providers import (
     register_default_providers,
 )
 
-from aistack.kernel.bootstrap.selection import (
-    register_default_selection_strategies,
-)
 
 from aistack.kernel.registries import KernelRegistries
 
@@ -122,6 +119,24 @@ def create_kernel() -> Kernel:
 
     register_default_catalog_views(kernel)
 
-    register_default_selection_strategies(kernel)
-
     return kernel
+
+
+# **No Selection Strategy is registered, and that is a decision.**
+#
+# `register_default_selection_strategies` registered
+# `ByIdsSelectionStrategy([])` under `by-ids` until 2026-08-29 — an
+# instance holding an empty list, so retrieving it yielded a
+# strategy that selects nothing. `unused-registrations` had
+# reported it as registered and never retrieved since the check
+# was written; it could not be retrieved usefully at all.
+#
+# `ByIdsSelectionStrategy` carries its identifiers in its
+# constructor, so a strategy configured per use is not a registry
+# entry: a registry of instances can only hold pre-configured
+# ones. `aistack.selection.workflow` constructs one per selection.
+#
+# The registry itself stays — it is the mechanism ADR-0003
+# decides, and `unused-registrations` reporting it empty after
+# bootstrap is the true statement to publish. Removed by the
+# owner's decision of 2026-08-29.

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-07-07
@@ -135,6 +135,45 @@ wrong answer.*
 *One divergence noted while measuring and left as an observation rather than
 repaired here: the Protocol declares `select(view) -> tuple[str, ...]` and the
 one implementation returns `list[str]`.*
+
+### The delegation became live on 2026-08-29
+
+Every statement in the measurement above changed that day, and the entry is
+dated rather than rewritten:
+
+```text
+2026-08-27                                  2026-08-29
+SelectionEngine  → 0 callers, 0 tests       → called by aistack.selection.workflow, 6 tests
+ByIdsSelectionStrategy → registered as      → registration removed; constructed per
+  `by-ids` with an empty list, never          selection by the workflow
+  retrieved
+selection_ui imports Selection, not the     → imports the workflow, which holds
+  engine                                      engine and strategy
+docker_selection_catalog builds a           → builds a CatalogView through a
+  SelectionCatalog                            registered engine
+```
+
+**The `by-ids` registration was removed rather than fixed.** `ByIdsSelectionStrategy`
+carries its identifiers in its **constructor**, so the registered instance held
+an empty list and selected nothing; a registry of instances can only hold
+pre-configured strategies, and a strategy configured per use is not a registry
+entry. Decided by the owner on 2026-08-29. *The registry itself stays — it is
+the mechanism this decision names — and `unused-registrations` now reports
+`selection_strategies` as empty after bootstrap, which is the true statement to
+publish.*
+
+**The return type was repaired the same day**, because the divergence stopped
+being harmless the moment something consumed the chain. It had been correct to
+leave it: nothing called the engine, so nothing could observe the difference.
+*Neither `contract-debt` nor `false-declarations` sees a return type — both
+compare call shapes — so the only instrument on it is a test.*
+
+**What this decision commits to is now exercised rather than asserted.** The
+engine holds a `SelectionStrategy` and no criterion; the criterion is the
+strategy; and a stale identifier is dropped by the strategy rather than carried
+into governed knowledge, which the Selection UI's hand-built `Selection` did
+not do. **Coverage is unchanged** — one criterion of the five named — and that
+is not a row, for the reason below.
 
 ### The four named strategies are not a row
 

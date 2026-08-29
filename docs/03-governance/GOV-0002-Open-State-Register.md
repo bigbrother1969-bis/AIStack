@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.72
+  version: 1.73
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -365,7 +365,32 @@ production caller, and that nine capabilities have none. `contract-debt`
 measures the neighbouring question and would need the *consumed by* dimension
 GOV-0002/OS-001 named, which is computed here only where the Kernel makes
 consumption explicit.
-**Qualification** `unknown`. The readings that were live on 2026-08-27:
+**Qualification** **The missing piece is a task, not a caller. Decided
+2026-08-29 by the owner.** The layer stands; what it lacks is its first real
+subject. The entry stays open, and what it now carries is a **work item rather
+than a question**.
+
+**What that work is, measured 2026-08-29.** The machinery is complete and idle:
+`TaskRegistry(Registry[Task])` exists, `TaskResolver` holds a `TaskSource`, and
+`TaskSource.get(task_id, /)` declares the lookup — positional-only, and the
+docstring says why. Nothing registers a `Task`, so the resolver resolves against
+an empty registry. **The four provider CLIs are the candidates** — they are the
+only things in this repository that execute anything on request — and turning
+one into a registered task is the measurement that would tell whether the
+abstraction earns itself.
+
+*This is the only one of the four open entries that 2026-08-29's measurements
+did not move. It was qualified on the reading the entry itself already carried
+third, which is worth recording: the readings were laid out on 2026-08-27 and
+the one that held is the one nobody had evidence for either way.*
+
+*Scoped deliberately narrow. This says the dimension needs a task; it does not
+say which, and it does not commit to a date. `unfinished-decisions` keeps
+ADR-0008's rows visible either way, so the work stays reported without this
+entry having to promise a calendar.*
+
+The readings decided against are kept, per § *Qualification is dated and
+attributed*:
 
 - **it is the prescribed order.** STD-P-002 puts specification before
   implementation, and ADR-0008 says in its own words that *migration remains

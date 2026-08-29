@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.79
+  version: 1.80
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -179,9 +179,103 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
+None open. OS-001, OS-039, OS-041 and OS-042 are in *Resolved*.
+
+**Every section of this register is empty on 2026-08-29**, for the second time
+since it was written on 2026-08-22. *The first time was 2026-08-27 and it
+lasted about forty minutes* — the note under § *Decisions* records how it
+ended, and what it was worth.
+
+**What it means is unchanged and worth restating rather than assuming.** A
+register with nothing open means every **known** condition has been qualified.
+It does not mean none exists. On 2026-08-29 the projection kept counting
+through an empty register while four provider commands could not run, nine
+classes could not be instantiated and one concept was declared three times —
+all three found that day, none of them by the register.
+
+---
+
+# Non-conforming instances
+
+None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028 and OS-036 are in
+*Resolved*.
+
+Three of those seven closed by **retiring or narrowing the rule** rather than
+by conforming to it. A heritage that only ever fixed instances would end with
+rules nothing could satisfy.
+
+*Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
+by OS-036, and emptied again by the rule OS-036 produced.*
+
+---
+
+# Defects
+
+None open. OS-009, OS-010 and OS-044 are in *Resolved*.
+
+*An empty section is kept rather than removed: a register with no defects
+section could not be told from one that never looked for any. That argument was
+hypothetical when it was written and stopped being so on 2026-08-29 — the
+section held an entry for a few hours, between the measurement that found a
+forty-day defect and the host that closed it.*
+
+---
+
+# Published artifacts
+
+None open. OS-011 and OS-037 are in *Resolved*.
+
+An empty section is kept rather than removed, for the same reason as
+*Defects*: it states that this heritage publishes artifacts and had none in a
+doubtful state on 2026-08-28, which is not the same as a register that never
+thought to look.
+
+---
+
+# Risks
+
+None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
+by retiring `aistack-backend` — six days after the exposure was recorded and
+four after its retirement was decided.
+
+The exposure is discharged: nothing answers and no image exists. What that
+closure asserted without measuring is OS-036, under *Non-conforming
+instances*, and it is filed there rather than here because a declaration in an
+archive is a rule violated and not a door left open.
+
+---
+
+# Decisions
+
+None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and
+OS-043 are in *Resolved*.
+
+**Every section of this register was empty on 2026-08-27**, for the first time
+since it was written on 2026-08-22 — *and it lasted about forty minutes.*
+
+That paragraph read *every section of this register is empty*, in the present,
+and OS-039 was opened the same evening by the first of the eight measurements
+STD-0100 v2.6 had just made obligatory. It is corrected here rather than
+quietly, because it is the fourth time in one day that a sentence true when
+written stopped being true — § *What a closure must carry* was written that
+afternoon for exactly this.
+
+*What was said then still holds, and is why the emptiness was worth so little.*
+A register with nothing open means every known condition has been qualified,
+not that none exists. The projection kept counting through it, and the first
+ADR anyone re-measured produced an entry.
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-041 — The Execution Dimension is built, tested, and has nothing to execute
 
-**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** resolved 2026-08-29 by declaring the dimension unearned — ADR-0008 v1.6, FDN-0002 v1.7
 **Observed** measured 2026-08-27 while giving ADR-0008 the implementation
 table STD-0100 v2.6 requires. That decision separates an **Execution
 Dimension** from a **Knowledge Acquisition Dimension**. The second is live —
@@ -294,85 +388,55 @@ attributed*:
 OS-039. That entry asks a question about one engine; this one is about half of
 an architecture a C2 decision defines, and merging them would lose both.*
 
----
+**Resolved 2026-08-29**, and **by qualifying the condition rather than by
+building anything** — the form `OS-015` closed in: a question answered by
+saying where it does not belong.
 
-# Non-conforming instances
+**The Execution Dimension awaits a real need. Decided by the owner**, on
+ARC-P-006 and on the day's own precedents: the nine capabilities, the
+`GeneratorRegistry` that was declined, and the `by-ids` registration that was
+removed. **Inventing a task to move a counter is the act this heritage refused
+three times that morning**, and wrapping the Runtime around a command that
+already works would have made the command worse.
 
-None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028 and OS-036 are in
-*Resolved*.
+What stands and is not touched: `Request`, `Task`, `TaskRegistry`,
+`TaskResolver`, `KernelRuntime`, `RuntimeExecutor` and `ExecutionTrace` exist,
+are tested, and remain available to the first operation that needs them. **The
+mechanism is not the debt; the absent subject was.**
 
-Three of those seven closed by **retiring or narrowing the rule** rather than
-by conforming to it. A heritage that only ever fixed instances would end with
-rules nothing could satisfy.
+**What discharged the subject**, and it is the finding this entry ends on:
 
-*Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
-by OS-036, and emptied again by the rule OS-036 produced.*
+```text
+kernel/models/knowledge_package.py     KnowledgePackage(id: str)
+kernel/knowledge/package.py            KnowledgePackage(identifier: str)
+Context Bundle                         groups artifacts, hashes, travels
+```
 
----
+The dimension's vocabulary — serialize, compress, hash, sign a package —
+described an operation that **runs every day under another name**. The owner
+declared on 2026-08-29 that **the Context Bundle is the Knowledge Package**
+(`FDN-0002` v1.7); the two empty classes, the contract, the facade and the nine
+capabilities were removed; `ADR-0008`'s row is `abandoned`.
 
-# Defects
+*Three declarations of one concept, one of them alive and not the one the
+architecture named. That is `OS-042`'s shape a third time, at the largest
+scale — and it is why this entry could not be closed by registering a task: it
+was never about the registry being empty.*
 
-None open. OS-009, OS-010 and OS-044 are in *Resolved*.
+**What still asserts nothing against this**, per rule 2: `ADR-0008`
+§ *The Execution Dimension is built and nothing runs it* keeps the 2026-08-27
+measurement and carries the correction; `unfinished-decisions` reports **zero
+rows**; `unused-registrations` reports `tasks` as empty after bootstrap, which
+is now a true statement about a dimension deliberately at rest rather than an
+unfinished one.
 
-*An empty section is kept rather than removed: a register with no defects
-section could not be told from one that never looked for any. That argument was
-hypothetical when it was written and stopped being so on 2026-08-29 — the
-section held an entry for a few hours, between the measurement that found a
-forty-day defect and the host that closed it.*
-
----
-
-# Published artifacts
-
-None open. OS-011 and OS-037 are in *Resolved*.
-
-An empty section is kept rather than removed, for the same reason as
-*Defects*: it states that this heritage publishes artifacts and had none in a
-doubtful state on 2026-08-28, which is not the same as a register that never
-thought to look.
-
----
-
-# Risks
-
-None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
-by retiring `aistack-backend` — six days after the exposure was recorded and
-four after its retirement was decided.
-
-The exposure is discharged: nothing answers and no image exists. What that
-closure asserted without measuring is OS-036, under *Non-conforming
-instances*, and it is filed there rather than here because a declaration in an
-archive is a rule violated and not a door left open.
+*The neighbouring entry is stated so the two are not confused later:
+`selection_strategies` is also empty after bootstrap, **by a different decision
+and for a different reason** — a strategy configured per use is not a registry
+entry. A report cannot tell the two apart, which is why both are written where
+a reader meets them.*
 
 ---
-
-# Decisions
-
-None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and
-OS-043 are in *Resolved*.
-
-**Every section of this register was empty on 2026-08-27**, for the first time
-since it was written on 2026-08-22 — *and it lasted about forty minutes.*
-
-That paragraph read *every section of this register is empty*, in the present,
-and OS-039 was opened the same evening by the first of the eight measurements
-STD-0100 v2.6 had just made obligatory. It is corrected here rather than
-quietly, because it is the fourth time in one day that a sentence true when
-written stopped being true — § *What a closure must carry* was written that
-afternoon for exactly this.
-
-*What was said then still holds, and is why the emptiness was worth so little.*
-A register with nothing open means every known condition has been qualified,
-not that none exists. The projection kept counting through it, and the first
-ADR anyone re-measured produced an entry.
-
----
-
-# Resolved
-
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
 
 #### GOV-0002/OS-042 — The Catalog View exists twice, and the path that runs builds the one no contract governs
 

@@ -23,21 +23,37 @@ services:
   #     python -m aistack.cli.knowledge_integrity \
   #     /app/bundles/AIStack-Context-Bundle.zip
   #
-  # Published on 2026-08-21, pinned by digest so the record is
-  # not a label someone can move:
+  # ---------------------------------------------------------------
+  # Published images, pinned by digest so a record is not a label
+  # someone can move. OPS-0002 § *Publishing an image* governs the
+  # act; this is where it is recorded.
+  # ---------------------------------------------------------------
+  #
+  # **0.2.0 — published 2026-08-29, current.**
+  #
+  #   bigbrother1969/aistack-core:0.2.0
+  #   @sha256:3ee7cf1fae80cce7c84f404f5354f5edeeeddbf950e299c4a2a8dcb1f4aa194f
+  #
+  # Built from 0a7ec1a on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 668 tests with `clean: True`.
+  # 66 artifacts, 16 checks.
+  #
+  # **0.1.0 — published 2026-08-19, deleted 2026-08-23.**
   #
   #   bigbrother1969/aistack-core:0.1.0
   #   @sha256:c8ca0fa791e63f8165910b84d913a74a4d084444680518a4a3db13aaaf6359ba
   #
-  # Built from ef28e16 with:
+  # Built from ef28e16, before a publication procedure existed. It
+  # carried bytecode the heritage did not know about, and the owner
+  # deleted it rather than rebuilding — GOV-0002/OS-011. **The record
+  # is kept**: a register that erased what it had unpublished could
+  # not show that a rule ever bound anything.
   #
-  #   docker build -f Dockerfile \
-  #     --label org.opencontainers.image.source="https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack" \
-  #     --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
-  #     --label org.opencontainers.image.version="0.1.0" \
-  #     --label org.opencontainers.image.licenses="AGPL-3.0-or-later" \
-  #     --label org.opencontainers.image.description="AIStack Knowledge Integrity validator" \
-  #     -t bigbrother1969/aistack-core:0.1.0 .
+  # The build command is not repeated here. It lives in OPS-0002
+  # § *Publishing an image*, once, and reads the version from
+  # `pyproject.toml` rather than carrying a literal — the defect
+  # `src/aistack/__main__.py` carried until 2026-08-29.
   #
   # The service below builds locally instead, so a change is
   # validated before it is published.

@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-08-28
+  updated: 2026-08-29
 
 relations:
   references:
@@ -464,6 +464,130 @@ produced W-07 of the 2026-08-13 boot report and the `PipelineRegistry` that
 ARCH-0007 announced for a month after it was deleted. The mitigation is the
 paragraph above — the section says what is verifiable and says which part does
 not run.*
+
+---
+
+## Publishing an image
+
+An image is not the heritage. It is a **build of one commit of it**, and this
+section exists so that a published image can be traced back to that commit by
+someone who has only the image.
+
+**Why the procedure comes before the publication, and not after.** The last
+image this project published — `aistack-core:0.1.0`, 2026-08-19 — was built
+without one, carried bytecode the heritage did not know about, and was
+**deleted rather than rebuilt** on 2026-08-23. `GOV-0002/OS-011` records the
+argument the owner closed it with:
+
+> *A rebuilt image would have to be verified before publication and then stay
+> verified; an image nobody pulls cannot diverge from the heritage that
+> describes it.*
+
+**Publishing again reopens exactly that condition.** What makes it acceptable is
+not that the defect was fixed — `.dockerignore` was corrected on 2026-08-21 —
+but that the image now carries what it takes to check it.
+
+### What is published, and what is not
+
+**Only `aistack-core`**, the one-shot integrity validator built from
+`Dockerfile`. Decided 2026-08-29 by the owner.
+
+`selection-ui` is **not** published, for two measured reasons rather than one:
+`Dockerfile.selection-ui` installs `fastapi`, `uvicorn`, `jinja2` and
+`python-multipart`, none of which `pyproject.toml` declares — **the image
+declares dependencies the heritage does not** — and the Selection UI is entering
+redevelopment, so a *stable* tag would name a version already being replaced.
+
+### The order
+
+An image is built **after** the heritage is published, never before. The commit
+it names must already be reachable in the SPOT, or the label points at nothing
+a recipient can fetch.
+
+```bash
+test -z "$(git status --porcelain)" \
+  && test "$(git rev-parse --abbrev-ref HEAD)" = main \
+  && git fetch origin \
+  && test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" \
+  && source scripts/dev-env.sh \
+  && pytest -q \
+  && python3 -m aistack.cli.knowledge_integrity
+```
+
+Four terms, and each refuses a different way of publishing something nobody can
+check: a dirty tree makes the label a lie; a branch other than `main` publishes
+what the SPOT does not carry; **a `HEAD` ahead of `origin/main` names a commit
+no recipient can fetch**; and a red suite or a blocking finding publishes a
+state this heritage says is unsound.
+
+Then, from the repository directory:
+
+```bash
+VERSION="$(python3 -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+
+docker build -f Dockerfile \
+  --label org.opencontainers.image.source="https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack" \
+  --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
+  --label org.opencontainers.image.version="$VERSION" \
+  --label org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+  --label org.opencontainers.image.description="AIStack Knowledge Integrity validator" \
+  -t "bigbrother1969/aistack-core:$VERSION" .
+
+docker push "bigbrother1969/aistack-core:$VERSION"
+```
+
+**The version is read, not typed.** `pyproject.toml` declares it once and
+`src/aistack/__main__.py` reads it from the installed metadata; a number typed
+into a build command would be a third declaration, and the one that drifts
+silently because nothing runs it twice.
+
+**No credential appears here.** The owner authenticates to the registry
+personally, as for every other step of this procedure.
+
+### How a recipient checks an image
+
+This is the part `OS-011` said was missing, and it is three commands:
+
+```bash
+docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' \
+  bigbrother1969/aistack-core:<version>
+
+git -C <clone> cat-file -t <that revision>          # the commit exists in the SPOT
+git -C <clone> log -1 --format=%H <that revision>   # and this is what it is
+```
+
+**What that establishes and what it does not.** It establishes which commit the
+image was built from, and that the commit is real. **It does not establish that
+the image contains that commit's bytes** — a label is metadata, and anyone who
+can build an image can write any label into it. The guarantee is the procedure,
+not the label: the four terms above are what make the label true, and they run
+on the owner's machine under his hand.
+
+*Stated rather than implied, because the opposite reading is available and
+comfortable: a label that looks like a checksum invites being read as one.*
+
+### What is watched, and what is not
+
+`tests/unit/test_the_image_declares_what_it_ships.py` guards the two conditions
+that produced `OS-011`: that `.dockerignore` excludes bytecode **anywhere** in
+the build context rather than only at its root, and that `Dockerfile` sets
+`PYTHONDONTWRITEBYTECODE`. Both were true on 2026-08-29 and neither was watched
+by anything until then.
+
+**Nothing verifies a published image**, and no test can: the suite has no
+registry, and a check receives a projection rather than a network — the same
+boundary § *The Context Bundle, and handing one over* draws for bundles. What
+the heritage can do is refuse to build from a state it calls unsound, and say
+what it did not check.
+
+### Recording the publication
+
+The publication is recorded in `docker-compose.yml`, beside the service, **with
+the digest and not only the tag** — a tag is a label someone can move, and a
+digest is the image. The comment already carries that shape for the 0.1.0
+publication, and it is kept: a record of what was published and then deleted is
+what lets `OS-011` be read as something that happened rather than something
+asserted.
 
 ---
 

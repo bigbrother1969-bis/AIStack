@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.71
+  version: 1.72
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -421,7 +421,35 @@ registration, and the *consumed by* dimension OS-001 named is computed here
 only where the Kernel makes consumption explicit — registration, and resolution
 by identifier. A class with no caller stays outside every instrument this
 heritage has.
-**Qualification** `unknown`. The three readings that were live on 2026-08-27:
+**Qualification** **It is waiting on a producer, and separately on a surface.
+Decided 2026-08-29 by the owner.** The entry stays open, because neither exists
+yet and closing on a promise is what § *What a closure must carry* refuses.
+
+**The producer.** `SelectionEngine.select` takes a `CatalogView`, and nothing on
+a live path produces one — which is GOV-0002/OS-042 seen from the other end.
+The two were opened a day apart from two different ADRs and read as two
+conditions; measured together on 2026-08-29 they are **one chain**, and the
+engine's missing caller is downstream of the missing producer. **OS-042's repair
+is the prerequisite**, and this entry does not close before it.
+
+**The surface, and this was not in the entry.** Measured 2026-08-29:
+`selection_ui/app.py` loads a `Catalog` with `load_catalog_yaml`, builds a
+`Selection` directly from the identifiers a human ticked, and writes YAML. It
+imports `Selection`, the model, and neither view type nor the engine. **In the
+system that runs, selecting happens with no view and no engine at all.**
+
+So repairing OS-042 gives the engine an input and still leaves it uncalled: the
+one place that selects does it by hand. ADR-0002's row *the Selection UI as the
+first consumer of Catalog View* is the work that would close both, and it is
+unstarted rather than partial.
+
+*The third reading below anticipated this — `the consumer is the missing piece
+and it belongs elsewhere` — and named a surface without measuring what that
+surface does. It does not use the engine; it bypasses the whole abstraction.
+Qualified on the sharper reading rather than the one that was written first.*
+
+The readings decided against are kept, per § *Qualification is dated and
+attributed*:
 
 - **it is a moving part waiting for its caller.** `docs/99-meta/roadmap/`
   carries *Selection Engine Completion*, and STD-P-002 puts specification

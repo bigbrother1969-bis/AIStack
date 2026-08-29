@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.76
+  version: 1.77
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -410,9 +410,87 @@ an architecture a C2 decision defines, and merging them would lose both.*
 
 ---
 
+# Non-conforming instances
+
+None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028 and OS-036 are in
+*Resolved*.
+
+Three of those seven closed by **retiring or narrowing the rule** rather than
+by conforming to it. A heritage that only ever fixed instances would end with
+rules nothing could satisfy.
+
+*Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
+by OS-036, and emptied again by the rule OS-036 produced.*
+
+---
+
+# Defects
+
+None open. OS-009, OS-010 and OS-044 are in *Resolved*.
+
+*An empty section is kept rather than removed: a register with no defects
+section could not be told from one that never looked for any. That argument was
+hypothetical when it was written and stopped being so on 2026-08-29 — the
+section held an entry for a few hours, between the measurement that found a
+forty-day defect and the host that closed it.*
+
+---
+
+# Published artifacts
+
+None open. OS-011 and OS-037 are in *Resolved*.
+
+An empty section is kept rather than removed, for the same reason as
+*Defects*: it states that this heritage publishes artifacts and had none in a
+doubtful state on 2026-08-28, which is not the same as a register that never
+thought to look.
+
+---
+
+# Risks
+
+None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
+by retiring `aistack-backend` — six days after the exposure was recorded and
+four after its retirement was decided.
+
+The exposure is discharged: nothing answers and no image exists. What that
+closure asserted without measuring is OS-036, under *Non-conforming
+instances*, and it is filed there rather than here because a declaration in an
+archive is a rule violated and not a door left open.
+
+---
+
+# Decisions
+
+None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and
+OS-043 are in *Resolved*.
+
+**Every section of this register was empty on 2026-08-27**, for the first time
+since it was written on 2026-08-22 — *and it lasted about forty minutes.*
+
+That paragraph read *every section of this register is empty*, in the present,
+and OS-039 was opened the same evening by the first of the eight measurements
+STD-0100 v2.6 had just made obligatory. It is corrected here rather than
+quietly, because it is the fourth time in one day that a sentence true when
+written stopped being true — § *What a closure must carry* was written that
+afternoon for exactly this.
+
+*What was said then still holds, and is why the emptiness was worth so little.*
+A register with nothing open means every known condition has been qualified,
+not that none exists. The projection kept counting through it, and the first
+ADR anyone re-measured produced an entry.
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-039 — The Selection Engine is implemented and consumed by nothing
 
-**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
+**Nature** `contract-debt` · **Opened** 2026-08-27 · **State** resolved 2026-08-29 by ADR-0002 v1.5 and `aistack.selection.workflow`
 **Observed** measured 2026-08-27 across the whole repository, while giving
 ADR-0003 the implementation table STD-0100 v2.6 requires:
 
@@ -500,85 +578,48 @@ found it.*
 row — nothing calling the engine is not a step of a decision that commits to
 the engine delegating.*
 
----
+**Resolved 2026-08-29.** Both halves this entry was qualified on arrived, in
+two commits and in that order:
 
-# Non-conforming instances
+- **the producer.** The Docker path builds a `CatalogView` through an engine
+  retrieved from the registry — `OS-042`'s repair. Until then nothing on a live
+  path produced what `SelectionEngine.select` takes;
+- **the surface.** `selection_ui` retrieves `music-selection`, displays the
+  view, and selects through `SelectionEngine` with a `ByIdsSelectionStrategy`.
+  The screen had been building its `Selection` by hand beside the engine written
+  for it.
 
-None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028 and OS-036 are in
-*Resolved*.
+```text
+2026-08-27                                  2026-08-29
+SelectionEngine  → 0 callers, 0 tests       → called by aistack.selection.workflow, 6 tests
+ByIdsSelectionStrategy → registered with    → registration removed; constructed per
+  an empty list, never retrieved              selection
+```
 
-Three of those seven closed by **retiring or narrowing the rule** rather than
-by conforming to it. A heritage that only ever fixed instances would end with
-rules nothing could satisfy.
+**What still asserts nothing against this**, per § *What a closure must carry*,
+rule 2: `ADR-0002` § *Implementation state* is `done` on both rows and carries
+the measurement; `ADR-0003` § *The delegation became live on 2026-08-29* records
+the same change from its own decision's side; six tests in
+`tests/unit/selection/test_the_selection_workflow.py` drive the chain, and one
+of them states that `selection_strategies` is empty **by decision** rather than
+by omission.
 
-*Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
-by OS-036, and emptied again by the rule OS-036 produced.*
+*A closure that a report would not confirm, and the entry says so rather than
+letting a future reader find it. `unused-registrations` stopped naming
+`music-selection` as unretrieved on 2026-08-29 — **not because it measured the
+retrieval**, but because `catalog_views.get(view_id)` is a computed identifier
+and the check excludes a registry it cannot resolve statically. Making the view
+identifier governed data is what put it there. The retrieval is established by
+a test; the report is quieter for a reason that is not entirely improvement, and
+`ADR-0002` § *The report got quieter* holds the measurement.*
 
----
-
-# Defects
-
-None open. OS-009, OS-010 and OS-044 are in *Resolved*.
-
-*An empty section is kept rather than removed: a register with no defects
-section could not be told from one that never looked for any. That argument was
-hypothetical when it was written and stopped being so on 2026-08-29 — the
-section held an entry for a few hours, between the measurement that found a
-forty-day defect and the host that closed it.*
-
----
-
-# Published artifacts
-
-None open. OS-011 and OS-037 are in *Resolved*.
-
-An empty section is kept rather than removed, for the same reason as
-*Defects*: it states that this heritage publishes artifacts and had none in a
-doubtful state on 2026-08-28, which is not the same as a register that never
-thought to look.
-
----
-
-# Risks
-
-None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
-by retiring `aistack-backend` — six days after the exposure was recorded and
-four after its retirement was decided.
-
-The exposure is discharged: nothing answers and no image exists. What that
-closure asserted without measuring is OS-036, under *Non-conforming
-instances*, and it is filed there rather than here because a declaration in an
-archive is a rule violated and not a door left open.
+*The third reading this entry was qualified against — `the consumer is the
+missing piece and it belongs elsewhere` — was right about the shape and had not
+measured the surface it named. The surface did not use the engine; it bypassed
+the abstraction. Recorded on 2026-08-29 when the entry was qualified, and it is
+why the closure names two absences rather than one.*
 
 ---
-
-# Decisions
-
-None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and
-OS-043 are in *Resolved*.
-
-**Every section of this register was empty on 2026-08-27**, for the first time
-since it was written on 2026-08-22 — *and it lasted about forty minutes.*
-
-That paragraph read *every section of this register is empty*, in the present,
-and OS-039 was opened the same evening by the first of the eight measurements
-STD-0100 v2.6 had just made obligatory. It is corrected here rather than
-quietly, because it is the fourth time in one day that a sentence true when
-written stopped being true — § *What a closure must carry* was written that
-afternoon for exactly this.
-
-*What was said then still holds, and is why the emptiness was worth so little.*
-A register with nothing open means every known condition has been qualified,
-not that none exists. The projection kept counting through it, and the first
-ADR anyone re-measured produced an entry.
-
----
-
-# Resolved
-
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
 
 #### GOV-0002/OS-044 — The four provider CLIs cannot run, and three governed artifacts say they do
 

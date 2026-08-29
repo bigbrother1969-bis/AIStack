@@ -9,7 +9,7 @@ from aistack.kernel.bootstrap import create_kernel
 
 def main() -> None:
     ctx = create_kernel()
-    observation = ctx.providers.get("docker").collect()
+    observation = ctx.registries.providers.get("docker").collect()
     catalog = DockerRuntimeCatalogBuilder().build(observation)
 
     output_path = DockerCatalogArtifactGenerator().generate(

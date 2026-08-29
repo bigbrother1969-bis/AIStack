@@ -10,7 +10,7 @@ from aistack.selection.from_docker_catalog import DockerSelectionCatalogBuilder
 
 def main() -> None:
     ctx = create_kernel()
-    observation = ctx.providers.get("docker").collect()
+    observation = ctx.registries.providers.get("docker").collect()
     docker_catalog = DockerRuntimeCatalogBuilder().build(observation)
     selection_catalog = DockerSelectionCatalogBuilder().build(docker_catalog)
 

@@ -9,7 +9,7 @@ from aistack.kernel.bootstrap import create_kernel
 
 def main() -> None:
     ctx = create_kernel()
-    observation = ctx.providers.get("compose").collect()
+    observation = ctx.registries.providers.get("compose").collect()
     catalog = ComposeRuntimeCatalogBuilder().build(observation)
 
     output_path = ComposeCatalogArtifactGenerator().generate(

@@ -8,7 +8,7 @@ from aistack.kernel.bootstrap import create_kernel
 
 def main() -> None:
     ctx = create_kernel()
-    observation = ctx.providers.get("docker").collect()
+    observation = ctx.registries.providers.get("docker").collect()
 
     output_path = DockerObservationArtifactGenerator().generate(
         observation=observation,

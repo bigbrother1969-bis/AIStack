@@ -145,8 +145,13 @@ def test_docker_catalog_writes_a_catalog(stubbed_providers, workspace):
 
     catalog = written(workspace, "docker-runtime-catalog.json")
 
-    assert catalog["catalog_type"] == "docker_runtime_catalog"
-    assert catalog["infrastructure_assets"]["containers"]
+    assert catalog["catalog_id"] == "docker-runtime"
+    assert [item["kind"] for item in catalog["items"]] == [
+        "container",
+        "image",
+        "network",
+        "volume",
+    ]
 
 
 def test_docker_discover_writes_the_observation(stubbed_providers, workspace):
@@ -173,20 +178,26 @@ def test_docker_selection_catalog_writes_its_artifact(
     """
     The fourth command, asserted on what it writes today.
 
-    Its output changes shape in the commit that repairs
-    GOV-0002/OS-042 — the Docker path is about to produce a
-    `CatalogView` rather than a `SelectionCatalog`. **The
-    assertion is written against the current artifact on
-    purpose**: a test shaped for the destination would pass
-    before the work and prove nothing about the defect this file
-    exists for.
+    Its output changed shape in the commit that repaired
+    GOV-0002/OS-042: the path produces a `CatalogView` and no
+    longer a `SelectionCatalog`. **The first version of this
+    assertion was written against the artifact of the day
+    before** — a test shaped for the destination would have
+    passed before the work and proved nothing about the defect
+    this file exists for.
+
+    `view_id` and `source_catalog_id` are the pair the retired
+    type did not carry, and they are what makes a view traceable
+    to the catalog it derives from.
     """
 
     docker_selection_catalog.main()
 
-    catalog = written(workspace, "docker-selection-catalog.json")
+    view = written(workspace, "docker-selection-catalog.json")
 
-    assert catalog["items"]
+    assert view["view_id"] == "docker-containers"
+    assert view["source_catalog_id"] == "docker-runtime"
+    assert [item["label"] for item in view["items"]] == ["aistack-web"]
 
 
 def test_every_provider_command_reaches_its_provider(

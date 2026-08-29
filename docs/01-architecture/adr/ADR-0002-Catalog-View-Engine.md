@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-07-07
-  updated: 2026-08-28
+  updated: 2026-08-29
 ---
 
 # ADR-0002 - Catalog View Engine
@@ -130,7 +130,7 @@ path that runs produces a Catalog View.**
 | A Catalog View is reproducible | done — 2026-08-28 |
 | A Catalog View is limited to the purpose it serves | done — 2026-08-28 |
 | The Selection Engine consumes a Catalog View, never a raw provider observation | done — 2026-08-28 |
-| Infrastructure Data Catalog → Catalog View Engine → consumer, on a path that runs | not implemented — measured 2026-08-28 |
+| Infrastructure Data Catalog → Catalog View Engine → consumer, on a path that runs | done — 2026-08-29 |
 | The Selection UI as the first Catalog View consumer | not implemented — measured 2026-08-28 |
 
 What each was read against:
@@ -144,12 +144,41 @@ What each was read against:
 | reproducible | `MusicSelectionViewEngine.build` reads no clock, no file and no environment: its result is a function of its argument. Read off the one implementation — **nothing verifies it for the next one** |
 | limited to its purpose | `CatalogItem` carries `id`, `label`, `kind`, `source`, `metadata`; `CatalogViewItem` carries `id`, `label`, `metadata`, and the one engine moves `kind` and `source` into `metadata`. **It drops nothing** — qualified `done` by the owner on 2026-08-28, see below |
 | the Selection Engine's input | `SelectionEngine.select(view: CatalogView, …)` and `SelectionStrategy.select(view: CatalogView)`. The type is the guarantee: no provider observation reaches either |
-| the flow | measured across the repository — below |
+| the flow | `aistack.cli.docker_selection_catalog`, and the five tests of `tests/unit/cli/test_the_provider_commands_run.py` that drive it — below |
 | the Selection UI | `selection_ui/app.py` imports `load_catalog_yaml`, `Selection`, `load_selection_yaml` and `RepositoryProvider`. It never names `CatalogView` |
 
-### The engine is registered and never retrieved
+### The flow, closed 2026-08-29
 
-Measured across the whole repository on 2026-08-28, excluding `archive/`:
+`aistack.cli.docker_selection_catalog` runs it end to end:
+
+```text
+providers.get("docker").collect()
+    → DockerRuntimeCatalogBuilder.build(observation) -> Catalog
+    → registries.catalog_views.get("docker-containers").build(catalog) -> CatalogView
+    → CatalogViewArtifactGenerator.generate(view, path)
+```
+
+**Three things had to be true at once, and none of them was.** The builder
+returned a `dict` where a Catalog View Engine takes a `Catalog`; the live path
+built a `SelectionCatalog`, a v0 type satisfying no contract (GOV-0002/OS-042,
+qualified 2026-08-29); and the command itself raised on its second line and had
+since 2026-08-20 (GOV-0002/OS-044). *A row can be `not implemented` for more
+than one reason at a time, and this one was for three.*
+
+**The engine is retrieved from the registry by identifier**, not instantiated.
+That is what makes the producer governed knowledge rather than a class named in
+a command — and it gives `catalog_views` its first read site.
+
+*The artifact goes through an Artifact Generator, which the retired path did
+not: it serialised with `write_text` and a `default=lambda item: item.__dict__`
+hook. `CatalogViewArtifactGenerator` is generic, because a Catalog View names no
+technology.*
+
+### The engine was registered and never retrieved
+
+Measured across the whole repository on 2026-08-28, excluding `archive/` — and
+this is the state the row above was closed *out of*, kept because a decision
+that erased what it looked like before cannot show that anything moved:
 
 ```text
 kernel.registries.catalog_views    → 1 write site, 0 read sites
@@ -162,9 +191,15 @@ The last line is measured rather than inferred: `tests/unit/catalog/views/test_i
 is the only test that names these types, and it asserts that three of them are
 not `None`.
 
-This is GOV-0002/OS-039 one layer up. That entry records that `SelectionEngine`
-has no caller; the engine that would build what it consumes has none either,
-and the registry that would hand it over is written to once and read never.
+This was GOV-0002/OS-039 one layer up. That entry records that `SelectionEngine`
+has no caller; the engine that would build what it consumes had none either, and
+the registry that would hand it over was written to once and read never.
+
+**Half of that closed on 2026-08-29.** `catalog_views` now has a read site, and
+a Catalog View is built by a command and asserted by four tests.
+`MusicSelectionViewEngine` is still registered and still retrieved by nothing,
+and `SelectionEngine` still has no caller: **producing a view is not consuming
+one**, and the consumer is the row below.
 
 ### The path that runs builds a second view type
 

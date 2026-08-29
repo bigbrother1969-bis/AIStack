@@ -1,21 +1,75 @@
 from aistack.catalog.docker.assets import DockerRuntimeCatalogBuilder
+from aistack.kernel.catalog import Catalog
 
 
-def observation(*containers: dict) -> dict:
+def observation(
+    *containers: dict,
+    images: list[dict] | None = None,
+    networks: list[dict] | None = None,
+    volumes: list[dict] | None = None,
+) -> dict:
     return {
         "provider": {"id": "aistack.provider.docker"},
         "collected_at": "2026-08-27T15:00:00+00:00",
         "docker": {
             "containers": list(containers),
-            "images": [],
-            "networks": [],
-            "volumes": [],
+            "images": images or [],
+            "networks": networks or [],
+            "volumes": volumes or [],
         },
     }
 
 
-def containers_of(catalogue: dict) -> list[dict]:
-    return catalogue["infrastructure_assets"]["containers"]
+def containers_of(catalog: Catalog) -> list:
+    return [item for item in catalog.items if item.kind == "container"]
+
+
+def test_the_builder_returns_a_governed_catalog():
+    """
+    GOV-0002/OS-042, qualified 2026-08-29: `CatalogView` is the
+    Catalog View, and the Docker path is the debt.
+
+    This builder returned a `dict` while its Compose twin
+    returned a `Catalog`, and the two sat side by side under
+    `aistack/catalog/` returning different kinds of thing. A
+    Catalog View Engine takes a `Catalog`; until this returned
+    one, no engine could consume the Docker path.
+    """
+
+    catalog = DockerRuntimeCatalogBuilder().build(
+        observation({"ID": "a", "Names": "one", "Status": "Up 2 hours"})
+    )
+
+    assert isinstance(catalog, Catalog)
+    assert catalog.catalog_id == "docker-runtime"
+    assert catalog.metadata["source_provider"] == "aistack.provider.docker"
+    assert catalog.metadata["collected_at"] == "2026-08-27T15:00:00+00:00"
+
+
+def test_the_four_families_reach_one_catalog_and_keep_their_kind():
+    """
+    A `Catalog` is flat; the Docker runtime holds four families.
+    `CatalogItem.kind` is what a flat list has for saying which
+    family an item belongs to — decided 2026-08-29 by the owner.
+
+    **Nothing is dropped.** The alternative readings were four
+    catalogs, and one catalog of containers only; the second would
+    have left images, networks and volumes ungoverned, which is
+    the loss this asserts against.
+    """
+
+    catalog = DockerRuntimeCatalogBuilder().build(
+        observation(
+            {"ID": "c1", "Names": "web", "Image": "nginx:1.27"},
+            images=[{"Repository": "nginx", "Tag": "1.27", "ID": "i1"}],
+            networks=[{"ID": "n1", "Name": "bridge", "Driver": "bridge"}],
+            volumes=[{"Name": "data", "Driver": "local"}],
+        )
+    )
+
+    kinds = [item.kind for item in catalog.items]
+
+    assert kinds == ["container", "image", "network", "volume"]
 
 
 def test_the_catalogue_carries_health_beside_the_sentence_it_came_from():
@@ -27,22 +81,24 @@ def test_the_catalogue_carries_health_beside_the_sentence_it_came_from():
     ADR-0009 § 6).
 
     `status` is kept verbatim beside it. The derived value does
-    not replace the observation it was derived from.
+    not replace the observation it was derived from. **Both moved
+    into `CatalogItem.metadata` on 2026-08-29 and neither was
+    lost**, which is what this asserts across the type change.
     """
 
-    catalogue = DockerRuntimeCatalogBuilder().build(
+    catalog = DockerRuntimeCatalogBuilder().build(
         observation(
             {"ID": "a", "Names": "one", "Status": "Up 2 hours (healthy)"},
             {"ID": "b", "Names": "two", "Status": "Up 3 days"},
         )
     )
 
-    assert [c["health"] for c in containers_of(catalogue)] == [
+    assert [c.metadata["health"] for c in containers_of(catalog)] == [
         "healthy",
         "undeclared",
     ]
 
-    assert containers_of(catalogue)[0]["status"] == "Up 2 hours (healthy)"
+    assert containers_of(catalog)[0].metadata["status"] == "Up 2 hours (healthy)"
 
 
 def test_a_container_the_collection_returned_without_a_status():
@@ -52,11 +108,11 @@ def test_a_container_the_collection_returned_without_a_status():
     default.
     """
 
-    catalogue = DockerRuntimeCatalogBuilder().build(
+    catalog = DockerRuntimeCatalogBuilder().build(
         observation({"ID": "a", "Names": "one"})
     )
 
-    assert containers_of(catalogue)[0]["health"] == "undeclared"
+    assert containers_of(catalog)[0].metadata["health"] == "undeclared"
 
 
 def test_the_health_field_is_a_value_and_not_an_enum_member():
@@ -67,11 +123,45 @@ def test_the_health_field_is_a_value_and_not_an_enum_member():
     sees until a consumer reads it.
     """
 
-    catalogue = DockerRuntimeCatalogBuilder().build(
+    catalog = DockerRuntimeCatalogBuilder().build(
         observation({"ID": "a", "Status": "Up 2 hours (healthy)"})
     )
 
-    health = containers_of(catalogue)[0]["health"]
+    health = containers_of(catalog)[0].metadata["health"]
 
     assert type(health) is str
     assert health == "healthy"
+
+
+def test_a_container_with_no_name_is_kept():
+    """
+    The retired `DockerSelectionCatalogBuilder` skipped a
+    nameless container silently — `if container.get("name")`. A
+    catalog that omits what it observed is worse than one
+    carrying an ugly identifier, so the runtime id is used
+    instead.
+    """
+
+    catalog = DockerRuntimeCatalogBuilder().build(
+        observation({"ID": "abc123", "Status": "Up 1 hour"})
+    )
+
+    assert [c.id for c in containers_of(catalog)] == ["abc123"]
+
+
+def test_every_metadata_value_is_a_string():
+    """
+    `CatalogItem.metadata` is `dict[str, str]` and the
+    observation is whatever the runtime printed. The previous
+    builder passed `None` through and the JSON carried `null`;
+    a consumer reading `metadata["ports"]` would get `None` where
+    the type says `str`.
+    """
+
+    catalog = DockerRuntimeCatalogBuilder().build(
+        observation({"ID": "a", "Names": "one"})
+    )
+
+    values = containers_of(catalog)[0].metadata.values()
+
+    assert all(type(value) is str for value in values)

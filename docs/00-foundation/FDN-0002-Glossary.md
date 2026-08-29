@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.4
+  version: 1.5
   status: Published
   owner: Foundation
   created: 2026-07-06
@@ -303,6 +303,34 @@ It is produced from observations, explicit rules, evidence and documented polici
 A governed rule defining how knowledge is evaluated, qualified or interpreted.
 
 Knowledge Policies are explicit and versioned.
+
+---
+
+## Profile
+
+An operational contract consumed by an Engine, stating the operational
+requirements applicable to a Knowledge Artifact or a Knowledge Package.
+
+**A Profile is never a SPOT.** By default it is derived from the applicable
+Knowledge Policies, which remain the governing authority; a Custom Profile may
+be supplied for a single operation, and modifies no Policy.
+
+**Its SPOT is `ARCH-0013 — Knowledge Package Architecture`**, which defines the
+two resolution modes — Policy-based and Custom — and the two types, *Artifact
+Profile* and *Package Profile*. This entry exists so that the term resolves from
+the Glossary; `ARCH-0013` governs it.
+
+**`ARCH-0013` is `status: Draft`, and this entry defers to it anyway.** The
+alternative was to wait, and waiting has a measured cost: `FDN-0012`, C3 and
+Published, already uses the term normatively — *Contracts are the operational
+expression of the applicable Policies under a given Profile*. **The word already
+governs.** Deferring to a Draft is stated here rather than hidden, so that a
+reader knows the ground can move; qualifying `ARCH-0013` is the act that removes
+this paragraph.
+
+*Written 2026-08-29, decided by the owner. Measured the same day: 20 of the
+term's 24 occurrences in the repository are inside `ARCH-0013`, and no class
+carries the name.*
 
 ---
 

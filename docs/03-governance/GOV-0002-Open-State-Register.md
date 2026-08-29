@@ -860,6 +860,19 @@ verified on 3.13. `ADR-0001` names `bin/aistack_env.sh` the SPOT of the
 execution environment, and it describes a development workstation. That is a
 separate condition, measured 2026-08-29 and not opened.*
 
+*The workstation half of that sentence was wrong, and wrong in the direction
+that costs. **Re-measured 2026-08-29 in the afternoon**, in a bare shell on the
+owner's laptop: `source scripts/dev-env.sh` followed by `python3 --version`
+prints **3.13.15**, the declared interpreter. What is 3.12 there is the
+distribution's `python3` — which the governed command replaces, and which the
+three launchers beside `bin/aistack_env.sh` do not. The first reading came from
+the warning `bin/aistack_env.sh` printed before `scripts/dev-env.sh` had
+changed the interpreter, and it was written down here without being
+re-measured; a second `source` in the same shell was already silent. The
+warning was corrected the same day. What survives of the condition: the
+reference host's `PYTHONPATH=src`, and the launchers — `run_selection_ui.sh`
+among them — running whatever interpreter the host distribution installs.*
+
 ---
 
 #### GOV-0002/OS-043 — `Policy` names a family of at least three members, and nothing declares the family

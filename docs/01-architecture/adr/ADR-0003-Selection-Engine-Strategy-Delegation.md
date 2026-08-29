@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-07-07
-  updated: 2026-08-27
+  updated: 2026-08-29
 ---
 
 # ADR-0003 - Selection Engine Strategy Delegation
@@ -99,7 +99,6 @@ ADR anticipates have no strategy yet.
 | `SelectionStrategy` — the contract the engine delegates to | done — 2026-08-27 |
 | `SelectionEngine` — generic, no criterion inside | done — 2026-08-27 |
 | `ByIdsSelectionStrategy` | done — 2026-08-27 |
-| `ByLabelsStrategy`, `ByTagsStrategy`, `ByPolicyStrategy`, `ByRuleStrategy` | not implemented — measured 2026-08-27 |
 
 The table exists because STD-0100 v2.6 requires it: the paragraphs above were
 true and precise, and **nothing in this heritage could read them**. *Yet* and
@@ -136,6 +135,39 @@ wrong answer.*
 *One divergence noted while measuring and left as an observation rather than
 repaired here: the Protocol declares `select(view) -> tuple[str, ...]` and the
 one implementation returns `list[str]`.*
+
+### The four named strategies are not a row
+
+`ByLabelsStrategy`, `ByTagsStrategy`, `ByPolicyStrategy` and `ByRuleStrategy`
+sat in this table as one row, `not implemented`, from 2026-08-27 until
+2026-08-29. **They are illustrations of an open list, and the decision says so
+in its own words.**
+
+§ *Context*: *by identity, by label, by tag, by policy, by rule — **and there is
+no reason to believe the list is closed***. § *Decision*'s diagram ends on
+`└── ...`. A row built from an open list can never reach a terminal state:
+writing the four would not close it, because the sentence that produced them
+anticipates a sixth.
+
+**Removed 2026-08-29 by the owner**, on the rule this heritage had already
+applied twice and not to itself here: `ADR-0001` § *Implementation state* leaves
+out its decisions 2 and 4, `ADR-0004` § *What is not a row* leaves out
+seventeen, and `ADR-0008` leaves out *migration remains incremental* — each
+because *such as*, *includes* and a policy about how work arrives are not steps.
+**This one was missed for two days while the rule was being cited in three other
+files.**
+
+*What the row was carrying that is true stays written, in the prose above and
+below: one criterion of the five named has a strategy. That is coverage, it is
+governed knowledge, and it never needed a row that reports it as unfinished work
+for ever.*
+
+*Measured 2026-08-29, so the alternative is on the record rather than implied:
+the four are implementable. `ByLabelsStrategy` would read `CatalogViewItem.label`
+and `ByTagsStrategy` its `metadata`. They were not written because four
+strategies with no caller is `GOV-0002/OS-039` four times over — and
+`ByPolicyStrategy` would name a family `OS-043` had declared non-existent hours
+earlier.*
 
 ## Consequences
 

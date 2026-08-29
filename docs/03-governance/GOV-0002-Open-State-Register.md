@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.70
+  version: 1.71
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -241,7 +241,36 @@ nothing and declares no base, so it is invisible to every instrument here, which
 is what makes an ungoverned path the live one. **That two types are one concept
 is not derivable at all**: they share no name and no base, and only a reader
 concludes it from the fields and the docstring.
-**Qualification** `unknown`. The readings that were live on 2026-08-28:
+**Qualification** **`CatalogView` is the Catalog View. Decided 2026-08-29 by
+the owner**, on three measurements taken that day and not available when the
+entry was opened:
+
+- **`SelectionCatalog` is a v0 survivor, not a competing design.**
+  `archive/heritage/AIStack-v0/selection_engine/core.py` carries the same three
+  dataclasses, same fields, same order; the Kernel copy adds docstrings and
+  narrows `dict[str, Any]` to `dict[str, str]`. The two types are not two
+  intentions — they are one carried forward and never reconciled;
+- **the identity pair is exactly the traceability ADR-0002 decides, and the
+  engine reads both fields.** `SelectionEngine.select` sets
+  `Selection.catalog_id` from `view.source_catalog_id` and records
+  `view.view_id` as `source_view`. `SelectionCatalog` has only `catalog_id`, so
+  keeping it costs the traceability § *Decision* names — and restoring that
+  means adding the two fields, at which point it **is** `CatalogView` renamed;
+- **three contracts consume `CatalogView` and none consumes `SelectionCatalog`**
+  — `CatalogViewEngine.build`, `SelectionStrategy.select`,
+  `SelectionEngine.select`. The second type is produced by one CLI and
+  serialized.
+
+**What that leaves as work**, and why this entry stays open: the Docker path is
+the debt. `DockerRuntimeCatalogBuilder` returns a `dict` where its Compose twin
+returns a `Catalog`; a Docker view engine must satisfy `CatalogViewEngine`; and
+`SelectionCatalog` is retired. **The cost that reading carried was measured nul
+on 2026-08-28** — nothing reads the JSON and nothing has written it since
+2026-07-07 — which is what made the decision cheap rather than what made it
+right.
+
+The readings decided against are kept, per § *Qualification is dated and
+attributed*:
 
 - **`SelectionCatalog` is the Catalog View, and `CatalogView` is the unearned
   abstraction.** ARC-P-006, and the pass that removed three day-one protocols

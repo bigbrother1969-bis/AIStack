@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-07-31
-  updated: 2026-08-28
+  updated: 2026-08-29
 
 relations:
   references:
@@ -142,18 +142,43 @@ exists and is consumed, and the contract holds. That no observation path uses
 it is a missing consumer — the condition GOV-0002/OS-039 and OS-041 record for
 other components — and not a step of this decision left undone.
 
-**Adapters**: nothing carries the name, measured 2026-08-28 across the whole
-repository. The Providers play the role behind `KnowledgeProvider`, which is
-interchangeable exactly as described. The same shape as ADR-0007's
-`BundleTransferManager` — the substance under another name — and it was left
-unqualified on 2026-08-27 for the same reason: calling it *superseded* would
-have closed a question nobody had looked at.
+**Adapters**: **no class** carries the name, measured 2026-08-28 and confirmed
+2026-08-29 across the whole repository — a package does, and the paragraph below
+names it. This sentence read *nothing carries the name* until the term was
+defined in the Glossary on 2026-08-29, which is when the package was found: a
+claim about class names, written in words that covered the repository. The
+Providers play the role behind `KnowledgeProvider`, which is interchangeable
+exactly as described. The same shape as ADR-0007's `BundleTransferManager` — the
+substance under another name — and it was left unqualified on 2026-08-27 for the
+same reason: calling it *superseded* would have closed a question nobody had
+looked at.
 
 **Both were qualified `superseded` on 2026-08-28, by the owner, in the same
-pass**, and the pair is the argument: two decisions naming a component that
-exists nowhere, whose responsibilities are carried by a contract under another
+pass**, and the pair is the argument: two decisions naming a component **no
+class carries**, whose responsibilities are held by a contract under another
 name, in the same heritage and by the same kind of decomposition. A decision
 that got its substance is not unfinished.
+
+*That sentence read "a component that exists nowhere" until 2026-08-29. For
+`BundleTransferManager` it is still exact; for the Adapter it was not, and the
+difference is a package. Corrected rather than left, because the pair is used
+here as an argument and an argument built on one imprecise half is worth less
+than the qualification it supports.*
+
+**What still asserts the Adapter, named per GOV-0002 § *What a closure must
+carry*, rule 2.** `ARCH-0013 — Knowledge Package Architecture` (C2, in the
+projection) declares the Adapter **a layer of the architecture** —
+*Axioms → Concepts → Engines → Adapters* — with a section stating that Adapters
+implement capabilities and remain replaceable. `aistack/transaction/adapters/`
+implements the concept at package level. `FDN-0002` defines the term since
+2026-08-29.
+
+**None of that reopens this row**, and the distinction is the point: what is
+`superseded` here is *this decision's mechanism for technical access*, which
+`KnowledgeProvider` carries. The concept is live and governed elsewhere. *This
+paragraph was written on 2026-08-29, the day after the qualification: the closure was
+taken without it, and rule 2 exists because a closure that names nothing reads
+as the retirement of everything the term touches.*
 
 *The reading declined is on the record: an Adapter is narrower than a Provider —
 one accesses, the other collects and concludes on what it accessed — and nothing

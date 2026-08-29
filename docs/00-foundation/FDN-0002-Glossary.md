@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.3
+  version: 1.4
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-28
+  updated: 2026-08-29
 
 relations:
   references:
@@ -226,6 +226,35 @@ A reasoning component operating on governed knowledge.
 The AI Engine never replaces governance.
 
 It assists reasoning and explanation.
+
+---
+
+## Adapter
+
+The component that connects an external technology to a governed capability.
+
+An Adapter implements a capability; it never defines one. It remains
+replaceable, and the architecture never depends on a specific adapter.
+
+**Its SPOT is `ARCH-0013 — Knowledge Package Architecture`**, which places the
+Adapter as the last of four layers — *Axioms → Concepts → Engines → Adapters* —
+and states that Adapters implement capabilities and remain replaceable. This
+entry exists so that the term resolves from the Glossary; `ARCH-0013` governs
+it.
+
+Measured 2026-08-29: **no class carries the name.** The concept is implemented
+at package level — `aistack/transaction/adapters/`, whose
+`TransportOperationEngine` adapts the Knowledge Transport Layer to the generic
+`OperationEngine` contract — and the Providers play the same role behind
+`KnowledgeProvider`. An architectural layer with no class named after it is a
+naming fact, not an absence.
+
+*Written 2026-08-29. `ADR-0008` qualified its own row — technical access through
+interchangeable Adapters — as `superseded` on 2026-08-28. **That qualification
+concerns that decision's mechanism, not the concept**, which `ARCH-0013`
+declares as a layer and this entry defines. The two do not contradict each
+other, and the distinction is written here because reading either alone
+suggests they do.*
 
 ---
 

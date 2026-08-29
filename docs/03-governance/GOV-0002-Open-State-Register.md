@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.77
+  version: 1.78
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -179,153 +179,6 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
-#### GOV-0002/OS-042 — The Catalog View exists twice, and the path that runs builds the one no contract governs
-
-**Nature** `contract-debt` · **Opened** 2026-08-28 · **State** open
-**Observed** measured 2026-08-28 across the whole repository, `archive/`
-excluded, while giving ADR-0002 the implementation table STD-0100 v2.6
-requires:
-
-```text
-kernel.registries.catalog_views    → 1 write site, 0 read sites
-MusicSelectionViewEngine           → 1 instantiation, in bootstrap; 0 callers
-CatalogViewEngine.build            → 0 call sites
-tests exercising a Catalog View    → 0
-```
-
-ADR-0002 governs a **Catalog View**: derived from the Infrastructure Data
-Catalog, traceable to it, produced by a **Catalog View Engine**. Every part
-exists — `CatalogView`, `CatalogViewItem`, the `CatalogViewEngine` Protocol,
-`CatalogViewRegistry`, one engine — and nothing that runs produces one.
-
-**The path that runs builds a different type.** `aistack.cli.docker_selection_catalog`
-produces the exact example ADR-0002 § *Rationale* uses — a Docker container
-selection view exposing name, image, state and display metadata:
-
-```text
-docker provider → DockerRuntimeCatalogBuilder → dict
-               → DockerSelectionCatalogBuilder → SelectionCatalog → JSON
-```
-
-- `DockerRuntimeCatalogBuilder.build` returns a `dict` where
-  `ComposeRuntimeCatalogBuilder.build` returns a `Catalog`. The two sit side by
-  side under `src/aistack/catalog/` and do not return the same kind of thing;
-- `DockerSelectionCatalogBuilder.build(dict) -> SelectionCatalog` satisfies
-  `CatalogViewEngine` in neither its argument nor its return, and is registered
-  in no registry;
-- `SelectionCatalog` is documented in `kernel/selection/core.py` as *"Catalog
-  view exposed to a selection workflow"*. Its fields agree with `CatalogView` on
-  `title`, `items` and `metadata` and differ on the identity pair —
-  `catalog_id` against `view_id` and `source_catalog_id`. Their item types,
-  `SelectionItem` and `CatalogViewItem`, are field for field identical.
-
-**No instrument sees it.** `contract-debt` counts a declared contract satisfied
-by no class, and `CatalogViewEngine` is satisfied — measured 2026-08-28,
-`satisfied_by: MusicSelectionViewEngine` — so it measures as healthy while
-having no producer on any live path. `DockerSelectionCatalogBuilder` declares no
-base, so `false-declarations` — the check OS-040 asked for, written the same
-day — does not see it either. A concept
-implemented twice, once governed and unused and once ungoverned and live, is
-visible to nothing here.
-
-*This is not OS-039 restated. That entry says the Selection Engine has no
-caller; this one says the type that engine consumes has no producer on a path
-that runs, and that a second type does the job under another name. They were
-measured a day apart from two different ADRs, and they are different
-conditions.*
-**Derivable** partly, **and half of it is, since 2026-08-28**:
-`unused-registrations`, the sixteenth check, publishes at every projection that
-`catalog_views` holds `music-selection` and that nothing retrieves it. What it
-does not derive is the other side — `DockerSelectionCatalogBuilder` registers
-nothing and declares no base, so it is invisible to every instrument here, which
-is what makes an ungoverned path the live one. **That two types are one concept
-is not derivable at all**: they share no name and no base, and only a reader
-concludes it from the fields and the docstring.
-**Qualification** **`CatalogView` is the Catalog View. Decided 2026-08-29 by
-the owner**, on three measurements taken that day and not available when the
-entry was opened:
-
-- **`SelectionCatalog` is a v0 survivor, not a competing design.**
-  `archive/heritage/AIStack-v0/selection_engine/core.py` carries the same three
-  dataclasses, same fields, same order; the Kernel copy adds docstrings and
-  narrows `dict[str, Any]` to `dict[str, str]`. The two types are not two
-  intentions — they are one carried forward and never reconciled;
-- **the identity pair is exactly the traceability ADR-0002 decides, and the
-  engine reads both fields.** `SelectionEngine.select` sets
-  `Selection.catalog_id` from `view.source_catalog_id` and records
-  `view.view_id` as `source_view`. `SelectionCatalog` has only `catalog_id`, so
-  keeping it costs the traceability § *Decision* names — and restoring that
-  means adding the two fields, at which point it **is** `CatalogView` renamed;
-- **three contracts consume `CatalogView` and none consumes `SelectionCatalog`**
-  — `CatalogViewEngine.build`, `SelectionStrategy.select`,
-  `SelectionEngine.select`. The second type is produced by one CLI and
-  serialized.
-
-**What that leaves as work**, and why this entry stays open: the Docker path is
-the debt. `DockerRuntimeCatalogBuilder` returns a `dict` where its Compose twin
-returns a `Catalog`; a Docker view engine must satisfy `CatalogViewEngine`; and
-`SelectionCatalog` is retired. **The cost that reading carried was measured nul
-on 2026-08-28** — nothing reads the JSON and nothing has written it since
-2026-07-07 — which is what made the decision cheap rather than what made it
-right.
-
-The readings decided against are kept, per § *Qualification is dated and
-attributed*:
-
-- **`SelectionCatalog` is the Catalog View, and `CatalogView` is the unearned
-  abstraction.** ARC-P-006, and the pass that removed three day-one protocols
-  under OS-001. Then the repair is to retire `CatalogView`, give
-  `DockerSelectionCatalogBuilder` the contract, and ADR-0002 keeps its decision
-  with one type where it has two;
-- **`CatalogView` is the Catalog View, and the Docker path is the debt.**
-  ADR-0002 is an accepted C2 decision and the governed type is the one it names.
-  Then `DockerRuntimeCatalogBuilder` returns a `Catalog`, a Docker view engine
-  satisfies `CatalogViewEngine`, and `SelectionCatalog` is retired. The cost is
-  stated rather than discovered: the JSON `docker_selection_catalog` writes
-  changes shape, and nothing in this repository measures who reads it;
-- **both are right and the names are wrong.** A selection catalog and a catalog
-  view may be two purposes of one mechanism, in which case the question is which
-  name the heritage keeps, and the work is a rename and one merge rather than a
-  deletion.
-
-*Opened on the owner's decision of 2026-08-28, in preference to a row of
-ADR-0002's table. That table records that no path produces a Catalog View; which
-of the two types **is** the Catalog View is a question about the architecture,
-and answering it in a row would have qualified it without asking.*
-
-**The cost the second reading carried is measured, on the reference deployment,
-2026-08-28**, per § *What a closure must carry*, first rule — a condition about
-the world outside this repository cites its measurement:
-
-```text
-grep -rIl "docker-selection-catalog\|docker_selection_catalog" \
-     /srv/aistack /etc/cron.d /etc/systemd/system
-  → the CLI that writes it, four governed documents that discuss it,
-    the projection carrying them, and an egg-info manifest. No reader.
-crontab -l | grep -i selection             → nothing
-docker inspect, every running container    → no mount of reports/
-ls -l /srv/aistack/AIStack/reports/generated/
-  → docker-selection-catalog.json, 12 302 bytes, 2026-07-07 16:49
-```
-
-**Nothing reads that file, and nothing has written it since 2026-07-07.** Every
-file in that directory carries a July mtime, so the four provider commands have
-not run into it on that host for seven weeks.
-
-*Stated narrowly, because the wider claim is not what was measured: this says
-the commands have not run into that directory on that host since 2026-07-07. It
-does not say nobody ran them elsewhere, and `reports/generated/` is a working
-directory relative to whoever invokes the command.*
-
-The second reading — keep `CatalogView`, retire `SelectionCatalog` — priced its
-own consequence as *the JSON changes shape, and nothing in this repository
-measures who reads it*. That sentence is still true of this repository, and the
-host now answers the part the repository could not: the consumer the cost was
-about does not exist. Which reading is right remains the owner's, and this
-removes a cost from one of them rather than choosing it.
-
----
-
 #### GOV-0002/OS-041 — The Execution Dimension is built, tested, and has nothing to execute
 
 **Nature** `contract-debt` · **Opened** 2026-08-27 · **State** open
@@ -487,6 +340,194 @@ ADR anyone re-measured produced an entry.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-042 — The Catalog View exists twice, and the path that runs builds the one no contract governs
+
+**Nature** `contract-debt` · **Opened** 2026-08-28 · **State** resolved 2026-08-29 by ADR-0002 v1.5 and the reference host
+**Observed** measured 2026-08-28 across the whole repository, `archive/`
+excluded, while giving ADR-0002 the implementation table STD-0100 v2.6
+requires:
+
+```text
+kernel.registries.catalog_views    → 1 write site, 0 read sites
+MusicSelectionViewEngine           → 1 instantiation, in bootstrap; 0 callers
+CatalogViewEngine.build            → 0 call sites
+tests exercising a Catalog View    → 0
+```
+
+ADR-0002 governs a **Catalog View**: derived from the Infrastructure Data
+Catalog, traceable to it, produced by a **Catalog View Engine**. Every part
+exists — `CatalogView`, `CatalogViewItem`, the `CatalogViewEngine` Protocol,
+`CatalogViewRegistry`, one engine — and nothing that runs produces one.
+
+**The path that runs builds a different type.** `aistack.cli.docker_selection_catalog`
+produces the exact example ADR-0002 § *Rationale* uses — a Docker container
+selection view exposing name, image, state and display metadata:
+
+```text
+docker provider → DockerRuntimeCatalogBuilder → dict
+               → DockerSelectionCatalogBuilder → SelectionCatalog → JSON
+```
+
+- `DockerRuntimeCatalogBuilder.build` returns a `dict` where
+  `ComposeRuntimeCatalogBuilder.build` returns a `Catalog`. The two sit side by
+  side under `src/aistack/catalog/` and do not return the same kind of thing;
+- `DockerSelectionCatalogBuilder.build(dict) -> SelectionCatalog` satisfies
+  `CatalogViewEngine` in neither its argument nor its return, and is registered
+  in no registry;
+- `SelectionCatalog` is documented in `kernel/selection/core.py` as *"Catalog
+  view exposed to a selection workflow"*. Its fields agree with `CatalogView` on
+  `title`, `items` and `metadata` and differ on the identity pair —
+  `catalog_id` against `view_id` and `source_catalog_id`. Their item types,
+  `SelectionItem` and `CatalogViewItem`, are field for field identical.
+
+**No instrument sees it.** `contract-debt` counts a declared contract satisfied
+by no class, and `CatalogViewEngine` is satisfied — measured 2026-08-28,
+`satisfied_by: MusicSelectionViewEngine` — so it measures as healthy while
+having no producer on any live path. `DockerSelectionCatalogBuilder` declares no
+base, so `false-declarations` — the check OS-040 asked for, written the same
+day — does not see it either. A concept
+implemented twice, once governed and unused and once ungoverned and live, is
+visible to nothing here.
+
+*This is not OS-039 restated. That entry says the Selection Engine has no
+caller; this one says the type that engine consumes has no producer on a path
+that runs, and that a second type does the job under another name. They were
+measured a day apart from two different ADRs, and they are different
+conditions.*
+**Derivable** partly, **and half of it is, since 2026-08-28**:
+`unused-registrations`, the sixteenth check, publishes at every projection that
+`catalog_views` holds `music-selection` and that nothing retrieves it. What it
+does not derive is the other side — `DockerSelectionCatalogBuilder` registers
+nothing and declares no base, so it is invisible to every instrument here, which
+is what makes an ungoverned path the live one. **That two types are one concept
+is not derivable at all**: they share no name and no base, and only a reader
+concludes it from the fields and the docstring.
+**Qualification** **`CatalogView` is the Catalog View. Decided 2026-08-29 by
+the owner**, on three measurements taken that day and not available when the
+entry was opened:
+
+- **`SelectionCatalog` is a v0 survivor, not a competing design.**
+  `archive/heritage/AIStack-v0/selection_engine/core.py` carries the same three
+  dataclasses, same fields, same order; the Kernel copy adds docstrings and
+  narrows `dict[str, Any]` to `dict[str, str]`. The two types are not two
+  intentions — they are one carried forward and never reconciled;
+- **the identity pair is exactly the traceability ADR-0002 decides, and the
+  engine reads both fields.** `SelectionEngine.select` sets
+  `Selection.catalog_id` from `view.source_catalog_id` and records
+  `view.view_id` as `source_view`. `SelectionCatalog` has only `catalog_id`, so
+  keeping it costs the traceability § *Decision* names — and restoring that
+  means adding the two fields, at which point it **is** `CatalogView` renamed;
+- **three contracts consume `CatalogView` and none consumes `SelectionCatalog`**
+  — `CatalogViewEngine.build`, `SelectionStrategy.select`,
+  `SelectionEngine.select`. The second type is produced by one CLI and
+  serialized.
+
+**What that leaves as work**, and why this entry stays open: the Docker path is
+the debt. `DockerRuntimeCatalogBuilder` returns a `dict` where its Compose twin
+returns a `Catalog`; a Docker view engine must satisfy `CatalogViewEngine`; and
+`SelectionCatalog` is retired. **The cost that reading carried was measured nul
+on 2026-08-28** — nothing reads the JSON and nothing has written it since
+2026-07-07 — which is what made the decision cheap rather than what made it
+right.
+
+The readings decided against are kept, per § *Qualification is dated and
+attributed*:
+
+- **`SelectionCatalog` is the Catalog View, and `CatalogView` is the unearned
+  abstraction.** ARC-P-006, and the pass that removed three day-one protocols
+  under OS-001. Then the repair is to retire `CatalogView`, give
+  `DockerSelectionCatalogBuilder` the contract, and ADR-0002 keeps its decision
+  with one type where it has two;
+- **`CatalogView` is the Catalog View, and the Docker path is the debt.**
+  ADR-0002 is an accepted C2 decision and the governed type is the one it names.
+  Then `DockerRuntimeCatalogBuilder` returns a `Catalog`, a Docker view engine
+  satisfies `CatalogViewEngine`, and `SelectionCatalog` is retired. The cost is
+  stated rather than discovered: the JSON `docker_selection_catalog` writes
+  changes shape, and nothing in this repository measures who reads it;
+- **both are right and the names are wrong.** A selection catalog and a catalog
+  view may be two purposes of one mechanism, in which case the question is which
+  name the heritage keeps, and the work is a rename and one merge rather than a
+  deletion.
+
+*Opened on the owner's decision of 2026-08-28, in preference to a row of
+ADR-0002's table. That table records that no path produces a Catalog View; which
+of the two types **is** the Catalog View is a question about the architecture,
+and answering it in a row would have qualified it without asking.*
+
+**The cost the second reading carried is measured, on the reference deployment,
+2026-08-28**, per § *What a closure must carry*, first rule — a condition about
+the world outside this repository cites its measurement:
+
+```text
+grep -rIl "docker-selection-catalog\|docker_selection_catalog" \
+     /srv/aistack /etc/cron.d /etc/systemd/system
+  → the CLI that writes it, four governed documents that discuss it,
+    the projection carrying them, and an egg-info manifest. No reader.
+crontab -l | grep -i selection             → nothing
+docker inspect, every running container    → no mount of reports/
+ls -l /srv/aistack/AIStack/reports/generated/
+  → docker-selection-catalog.json, 12 302 bytes, 2026-07-07 16:49
+```
+
+**Nothing reads that file, and nothing has written it since 2026-07-07.** Every
+file in that directory carries a July mtime, so the four provider commands have
+not run into it on that host for seven weeks.
+
+*Stated narrowly, because the wider claim is not what was measured: this says
+the commands have not run into that directory on that host since 2026-07-07. It
+does not say nobody ran them elsewhere, and `reports/generated/` is a working
+directory relative to whoever invokes the command.*
+
+The second reading — keep `CatalogView`, retire `SelectionCatalog` — priced its
+own consequence as *the JSON changes shape, and nothing in this repository
+measures who reads it*. That sentence is still true of this repository, and the
+host now answers the part the repository could not: the consumer the cost was
+about does not exist. Which reading is right remains the owner's, and this
+removes a cost from one of them rather than choosing it.
+
+**Resolved 2026-08-29**, the day after it was opened and the same day it was
+qualified. The three items the qualification named as work are done:
+
+```text
+DockerRuntimeCatalogBuilder.build → Catalog          one catalog, four kinds
+DockerContainerViewEngine                            satisfies CatalogViewEngine,
+                                                     registered as `docker-containers`
+SelectionCatalog, SelectionItem,                     removed
+  DockerSelectionCatalogBuilder
+```
+
+**And the live path was measured on the reference host, not only in tests**, per
+§ *What a closure must carry*, first rule:
+
+```text
+$ PYTHONPATH=src python3 -m aistack.cli.docker_selection_catalog
+Docker container catalog view written to reports/generated/docker-selection-catalog.json
+  Jul  7 16:49 → Aug 29 11:31 · 12 302 → 25 227 bytes
+```
+
+The file that had not moved since 2026-07-07 now carries a `CatalogView` with
+`view_id` and `source_catalog_id` — the identity pair the retired type did not
+have, and the reason this entry resolved the way it did.
+
+**What still asserts the condition, per rule 2**: `ADR-0002` § *Implementation
+state* is `done` on both rows and carries the flow; `ADR-0003` records the same
+change from its own side; `FDN-0002` § *Adapter* and § *Profile* are unaffected.
+`tests/unit/catalog/docker/test_runtime_catalog.py` and
+`tests/unit/cli/test_the_provider_commands_run.py` assert the type and the
+artifact, and `tests/unit/selection/test_the_selection_workflow.py` the consumer.
+
+*The second premise of this entry was false, and the correction is dated rather
+than folded in. It read* the concept exists twice and the **ungoverned** copy is
+the live one*. Measured 2026-08-29 (`GOV-0002/OS-044`): **neither copy was
+live** — all four provider commands had raised on their second line since
+2026-07-20. The qualification stands on its other three measurements: the v0
+ancestry, the identity pair the engine reads, and three contracts consuming
+`CatalogView`. **None of them needed the path to run**, which is why the
+qualification survived a false premise — and is not a reason to be comfortable
+about having held one.*
+
+---
 
 #### GOV-0002/OS-039 — The Selection Engine is implemented and consumed by nothing
 

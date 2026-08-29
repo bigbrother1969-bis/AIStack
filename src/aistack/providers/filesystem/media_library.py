@@ -72,16 +72,29 @@ class MediaLibraryProvider:
     lets a human tick any node of the tree needs the second to
     show what ticking costs, and the first to tell a container
     apart from a leaf. Both are gathered in one walk, which on the
-    reference host takes **1,05 s** for 2644 directories and
-    30 015 files — measured 2026-08-29, on this provider.
+    reference host takes a median of **1,42 s** for 2644
+    directories and 30 015 files — five consecutive runs on
+    2026-08-29 giving 1,36 · 1,40 · 1,42 · 1,43 · 1,59.
 
-    That figure replaces one this docstring carried for the length
-    of a single commit. It said 87 ms, and 87 ms is what
-    `find . -type f | wc -l` takes on the same tree: a directory
-    traversal in C that stats no file. This walk stats every media
-    file it counts. A figure measured on one command was written
-    down to justify a decision about another — the failure this
-    heritage names first, committed in the commit that cites it.
+    That figure is the third this paragraph has carried in one
+    day, and the two it replaces were wrong in the same way.
+
+    It said **87 ms** first, and used it to justify not caching.
+    87 ms is what `find . -type f | wc -l` takes on that tree — a
+    directory traversal in C that stats no file. This walk stats
+    every media file it counts. A figure measured on one command
+    had been written down to support a decision about another.
+
+    It then said **1,05 s**, measured on this provider, which was
+    honest and still not a measurement: one run, taken before the
+    unrecognised-file census existed, on a host that had just
+    finished pushing to two mirrors. A single sample cannot say
+    whether the number it gives is the number.
+
+    The decision it supports is unchanged — 1,4 s at each display,
+    no cache, the catalog always current, decided 2026-08-29 by
+    the owner. What changed is that the sentence supporting it now
+    reports a median and the spread it came from.
 
     Symbolic links are not followed. The library reached by one —
     `/media/Multimedia/Music` is a link to

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.75
+  version: 1.76
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -518,9 +518,71 @@ by OS-036, and emptied again by the rule OS-036 produced.*
 
 # Defects
 
+None open. OS-009, OS-010 and OS-044 are in *Resolved*.
+
+*An empty section is kept rather than removed: a register with no defects
+section could not be told from one that never looked for any. That argument was
+hypothetical when it was written and stopped being so on 2026-08-29 — the
+section held an entry for a few hours, between the measurement that found a
+forty-day defect and the host that closed it.*
+
+---
+
+# Published artifacts
+
+None open. OS-011 and OS-037 are in *Resolved*.
+
+An empty section is kept rather than removed, for the same reason as
+*Defects*: it states that this heritage publishes artifacts and had none in a
+doubtful state on 2026-08-28, which is not the same as a register that never
+thought to look.
+
+---
+
+# Risks
+
+None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
+by retiring `aistack-backend` — six days after the exposure was recorded and
+four after its retirement was decided.
+
+The exposure is discharged: nothing answers and no image exists. What that
+closure asserted without measuring is OS-036, under *Non-conforming
+instances*, and it is filed there rather than here because a declaration in an
+archive is a rule violated and not a door left open.
+
+---
+
+# Decisions
+
+None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and
+OS-043 are in *Resolved*.
+
+**Every section of this register was empty on 2026-08-27**, for the first time
+since it was written on 2026-08-22 — *and it lasted about forty minutes.*
+
+That paragraph read *every section of this register is empty*, in the present,
+and OS-039 was opened the same evening by the first of the eight measurements
+STD-0100 v2.6 had just made obligatory. It is corrected here rather than
+quietly, because it is the fourth time in one day that a sentence true when
+written stopped being true — § *What a closure must carry* was written that
+afternoon for exactly this.
+
+*What was said then still holds, and is why the emptiness was worth so little.*
+A register with nothing open means every known condition has been qualified,
+not that none exists. The projection kept counting through it, and the first
+ADR anyone re-measured produced an entry.
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-044 — The four provider CLIs cannot run, and three governed artifacts say they do
 
-**Nature** `defect` · **Opened** 2026-08-29 · **State** open
+**Nature** `defect` · **Opened** 2026-08-29 · **State** resolved 2026-08-29 by the repair, five tests, and the reference host
 **Observed** measured 2026-08-29, by running them:
 
 ```text
@@ -578,70 +640,48 @@ consuming `CatalogView` — none of which needed the Docker path to run. What it
 changes is the value of the repair: fixing the type without fixing the access
 would produce a governed path still unable to execute.*
 
----
+**Resolved 2026-08-29**, and the closure carries its measurement rather than a
+green suite, per § *What a closure must carry*, first rule — a condition about
+the world outside this repository cites its measurement:
 
-OS-009 and OS-010, the two defects of `sync_mirrors.sh`,
-were resolved on 2026-08-23 and are in *Resolved*.
+```text
+$ cd /srv/aistack/AIStack
+$ for c in docker_discover docker_catalog docker_selection_catalog compose_catalog; do
+    PYTHONPATH=src python3 -m aistack.cli.$c
+  done
+Docker observation written to reports/generated/docker-provider-observation.json
+Docker runtime catalog written to reports/generated/docker-runtime-catalog.json
+Docker container catalog view written to reports/generated/docker-selection-catalog.json
+Compose runtime catalog written to reports/generated/compose-runtime-catalog.json
+```
 
-*The note that stood here — an empty section is kept rather than removed,
-because a register with no defects section could not be told from one that
-never looked for any — was written while this section was empty. It stopped
-being empty on 2026-08-29, and the argument it made is now demonstrated rather
-than hypothetical: the section was looked at, and something was in it.*
+```text
+docker-provider-observation.json   Jul  7 16:46 → Aug 29 11:31
+docker-runtime-catalog.json        Jul  7 16:46 → Aug 29 11:31
+docker-selection-catalog.json      Jul  7 16:49 → Aug 29 11:31
+compose-runtime-catalog.json       Jul  8 16:10 → Aug 29 11:31
+```
 
----
+**Fifty-two days.** The mtimes of that directory were the defect's own record,
+and they now date it from both ends: the four commands ran until 8 July at the
+latest, and never between 20 July and 29 August.
 
-# Published artifacts
+**What discharged it, and what still asserts nothing against it.** The repair is
+four attribute accesses; **five tests** drive each `main()` to the artifact it
+writes, and mutation on 2026-08-29 — restoring `ctx.providers` in
+`docker_catalog` — turns two of the five red. `ADR-0008` § *The Knowledge
+Dimension* and `ADR-0009` § *What the retirement delivered* were corrected in
+the same series and no longer claim what was false.
 
-None open. OS-011 and OS-037 are in *Resolved*.
-
-An empty section is kept rather than removed, for the same reason as
-*Defects*: it states that this heritage publishes artifacts and had none in a
-doubtful state on 2026-08-28, which is not the same as a register that never
-thought to look.
-
----
-
-# Risks
-
-None open. OS-012, the only entry of this nature, was resolved on 2026-08-27
-by retiring `aistack-backend` — six days after the exposure was recorded and
-four after its retirement was decided.
-
-The exposure is discharged: nothing answers and no image exists. What that
-closure asserted without measuring is OS-036, under *Non-conforming
-instances*, and it is filed there rather than here because a declaration in an
-archive is a rule violated and not a door left open.
-
----
-
-# Decisions
-
-None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and
-OS-043 are in *Resolved*.
-
-**Every section of this register was empty on 2026-08-27**, for the first time
-since it was written on 2026-08-22 — *and it lasted about forty minutes.*
-
-That paragraph read *every section of this register is empty*, in the present,
-and OS-039 was opened the same evening by the first of the eight measurements
-STD-0100 v2.6 had just made obligatory. It is corrected here rather than
-quietly, because it is the fourth time in one day that a sentence true when
-written stopped being true — § *What a closure must carry* was written that
-afternoon for exactly this.
-
-*What was said then still holds, and is why the emptiness was worth so little.*
-A register with nothing open means every known condition has been qualified,
-not that none exists. The projection kept counting through it, and the first
-ADR anyone re-measured produced an entry.
+*One condition this closure does not discharge, stated rather than left to be
+rediscovered: **the four commands run in no governed environment.** The
+reference host needed `PYTHONPATH=src` because `aistack` is not on its import
+path; the owner's workstation has a PATH `python3` of 3.12 where the heritage is
+verified on 3.13. `ADR-0001` names `bin/aistack_env.sh` the SPOT of the
+execution environment, and it describes a development workstation. That is a
+separate condition, measured 2026-08-29 and not opened.*
 
 ---
-
-# Resolved
-
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
 
 #### GOV-0002/OS-043 — `Policy` names a family of at least three members, and nothing declares the family
 

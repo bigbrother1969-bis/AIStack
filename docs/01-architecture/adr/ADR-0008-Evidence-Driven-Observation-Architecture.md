@@ -65,7 +65,7 @@ halves are not in the same state.**
 | Execution — `Task`, `TaskRegistry`, `TaskResolver` | done — 2026-08-27 |
 | Execution — Kernel Runtime, `KernelRuntime` / `RuntimeExecutor` / `ExecutionTrace` | done — 2026-08-27 |
 | Execution — Observation Service | abandoned — 2026-08-28 |
-| Execution — Capability, `PackageCapability` and nine implementations | not implemented — measured 2026-08-29 |
+| Execution — Capability, `PackageCapability` and nine implementations | abandoned — 2026-08-29 |
 | Execution — Action | abandoned — 2026-08-28 |
 | Discovery produces Evidence, never Knowledge | done — 2026-08-27 |
 | Qualification is independent from acquisition | done — 2026-08-27 |
@@ -169,10 +169,24 @@ ABC with two `@abstractmethod`s, so **none of the nine could exist**. They were
 not uncalled — they were unusable, and `KnowledgePackage` carries one field,
 `id`, so a capability that processed one would have had nothing to process.
 
-**Removed 2026-08-29 by the owner under ARC-P-006**, with the contract kept: a
-real packaging operation will be written against `PackageCapability`, and what
-is refused is declaring it and stopping there. The row is `not implemented`
-because that is now what it is.
+**Removed 2026-08-29 by the owner under ARC-P-006**, and the row went from
+`done` to `not implemented` to **`abandoned` within the hour** — each step on a
+measurement the previous one did not have.
+
+**`abandoned`, and the contract went with them.** The owner declared the same
+day that **the Context Bundle is the Knowledge Package** (`FDN-0002` v1.7):
+the subject these capabilities were written for already exists, ships in every
+projection, and has its own mechanisms — serialisation, a content hash, a
+manifest, a transfer. The nine described a decomposition of an operation that
+was implemented elsewhere under another name, and nothing asked for it.
+
+*What was removed with them: `PackageCapability`, the two `KnowledgePackage`
+classes, `PackageManager` — whose two methods returned their argument
+unchanged — and the three Kernel packages those left empty. Fourteen modules.
+`contract-debt` 13 of 50 → 4 of 41; `unfinished-decisions` → 0.*
+
+*The intention stays written in § *Decision*, which is what an abandoned row is
+for.*
 
 ### `contract-debt` had been reporting them all along
 

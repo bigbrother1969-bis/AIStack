@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-07-07
@@ -126,12 +126,12 @@ What each was read against:
 
 | Step | Evidence |
 |---|---|
-| the Kernel | `src/aistack/kernel/` holds seventeen packages; `Catalog`, `CatalogView`, `Selection`, `SelectionStrategy`, `Registry` and `KnowledgeArtifact` are all declared inside it |
-| contracts | `kernel/contracts/` — eight modules, all `Protocol` or base classes: provider, catalog view, selection, registry, mutable registry, package capability, task source, base provider |
+| the Kernel | `src/aistack/kernel/` holds **thirteen** packages (seventeen until 2026-08-29); `Catalog`, `CatalogView`, `Selection`, `SelectionStrategy`, `Registry` and `KnowledgeArtifact` are all declared inside it |
+| contracts | `kernel/contracts/` — **seven** modules, all `Protocol` or base classes: base provider, catalog view, provider, registry, mutable registry, selection, task source. *`package_capability` was the eighth until 2026-08-29 and was abandoned with the nine classes that declared it — ADR-0008.* |
 | registries | `kernel/registry/core.py` defines `Registry[T]`; five classes subclass it — provider, catalog view, selection strategy, task, contract — and `KernelRegistries` aggregates four of them, frozen |
-| engines | `kernel/selection/engine/core.py` and `kernel/engines/package_manager.py`. Neither names a technology |
+| engines | `kernel/selection/engine/core.py`. It names no technology. **`kernel/engines/package_manager.py` was the second until 2026-08-29** — both its methods returned their argument unchanged, it had no caller, and it was removed with the Knowledge Package classes it orchestrated (ADR-0008, `GOV-0002/OS-041`). One engine still satisfies this row; the evidence is corrected rather than the row |
 | the connection | `aistack/providers/`, `aistack/generators/`, `aistack/catalog/` sit outside `kernel/` and reach it through `KnowledgeProvider`, `CatalogViewEngine` and `SelectionStrategy` |
-| replaceable | `kernel.registries.providers.register("docker", …)` and `ctx.providers.get("docker")` — resolution is by identifier, and no consumer names a class |
+| replaceable | `kernel.registries.providers.register("docker", …)` and `ctx.registries.providers.get("docker")` — resolution is by identifier, and no consumer names a class. *This line read `ctx.providers.get(...)` until 2026-08-29, copied from four CLIs that had been raising `AttributeError` on that exact expression since 2026-07-20 — `GOV-0002/OS-044`. Evidence transcribed from code nobody had run.* |
 | the boundary | ten imports inside `kernel/` leave the kernel package, two of them naming a technology — below |
 | the target structure | `contracts/`, `registry/`, `registries/` and `context/` exist; `lifecycle/`, `discovery/` and `dependency/` do not |
 | the six registries | measured across the repository, `archive/` excluded — below |
@@ -237,10 +237,16 @@ corrected in this commit — one commit, one concept. Named here per GOV-0002
 
 Of the seven directories § *Kernel Structure* names, four exist. `lifecycle/`,
 `discovery/` and `dependency/` do not, and that is what the row records, because
-those are what the decision names. The kernel also holds thirteen packages the
-target does not name — `bootstrap`, `capabilities`, `catalog`, `engines`,
-`execution`, `knowledge`, `models`, `repositories`, `resolution`, `runtime`,
-`selection`, `services`, `tracing`.
+those are what the decision names. The kernel also holds packages the target
+does not name — measured 2026-08-29: `bootstrap`, `catalog`, `execution`,
+`knowledge`, `resolution`, `runtime`, `selection`, `services`, `tracing`.
+
+*That list held four more on 2026-08-28 — `capabilities`, `engines`, `models`
+and `repositories`. **All four were removed on 2026-08-29 because they were
+empty or held only classes that could not run**: nine capabilities that could
+not be instantiated, two `KnowledgePackage` declarations, and a facade
+returning its argument. The divergence from the target narrowed by four
+directories, and not one line of behaviour changed.*
 
 Whether a structure declared on 2026-07-07 is still the target is a question for
 the owner and not a measurement, so it was recorded and not answered.

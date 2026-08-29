@@ -179,15 +179,34 @@ def test_the_registry_names_come_from_the_kernel_context():
 
 def test_the_measurement_over_this_repository():
     """
-    What was measured on 2026-08-28, stated so that a silent
-    instrument is distinguishable from a clean heritage. Floors,
-    not equalities: the repository is meant to grow.
+    What was measured, stated so that a silent instrument is
+    distinguishable from a clean heritage.
+
+    **The source floor was 490 on 2026-08-28 and broke on
+    2026-08-29 — because the repository shrank.** Fourteen
+    modules were removed that day: nine capabilities that could
+    not be instantiated, two `KnowledgePackage` classes, a
+    contract with no implementation, a facade returning its
+    argument, and three packages left empty by the rest. 490 →
+    485.
+
+    *A floor is a bet that a number only rises, and this one lost
+    it the first time the heritage was correctly cleaned. It
+    cannot tell **dead code removed** from **an instrument that
+    stopped seeing files**, which is the whole reason it exists.*
+
+    So the floor is set well below the current count rather than
+    just under it. What it must catch is an inventory that
+    collapses — a `git ls-files` that answers nothing, a walk that
+    finds one file — and 400 catches that while leaving room for
+    the removals this heritage keeps making. **Floors are for
+    silence, not for growth.**
     """
 
     inventory = take_registry_inventory(ROOT)
 
     assert inventory.measured
-    assert inventory.sources >= 490
+    assert inventory.sources >= 400
     assert len(inventory.registered) >= 4
     assert len(inventory.retrievals) >= 5
     assert not inventory.is_partial

@@ -1,7 +1,3 @@
-from aistack.kernel.knowledge.package import (
-    KnowledgePackage,
-)
-
 from aistack.kernel.knowledge.artifact import (
     KnowledgeArtifact,
     KnowledgeLifecycle,
@@ -11,7 +7,6 @@ from aistack.kernel.knowledge.artifact import (
 
 
 __all__ = [
-    "KnowledgePackage",
     "KnowledgeArtifact",
     "KnowledgeLifecycle",
     "KnowledgeProvenance",

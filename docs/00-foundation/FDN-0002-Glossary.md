@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.6
+  version: 1.7
   status: Published
   owner: Foundation
   created: 2026-07-06
@@ -409,6 +409,35 @@ Artifacts between environments.
 A KnowledgePackage is not a Single Point Of Truth.
 
 The repository remains the authoritative source of governed knowledge.
+
+**The Context Bundle is the Knowledge Package of AIStack.** Decided
+2026-08-29 by the owner. It is the only thing in this heritage that does what
+this definition describes: it groups Knowledge Artifacts, declares a
+`source_commit` and a `content_hash`, travels, and is explicitly not a SPOT —
+`OPS-0002` § *The Context Bundle, and handing one over* governs how one is
+produced and handed over.
+
+**Two classes named `KnowledgePackage` were declared in the Kernel and
+carried nothing.** Measured 2026-08-29:
+
+```text
+kernel/models/knowledge_package.py     KnowledgePackage(id: str)
+kernel/knowledge/package.py            KnowledgePackage(identifier: str)
+```
+
+Two frozen dataclasses, same name, one field each, differently named, in the
+same Kernel — FDN-P-005's subject. Neither was consumed by anything but a
+contract with no implementation and a facade returning its argument unchanged.
+Both were removed the same day, with `PackageCapability` and `PackageManager`.
+**The concept was declared three times and implemented once, under another
+name** — the shape `GOV-0002/OS-042` recorded for the Catalog View, a third
+time and at the largest scale.
+
+*`ARCH-0013 — Knowledge Package Architecture` is the architectural SPOT of the
+concept and is `status: Draft`. This entry does not wait for it: measured
+2026-08-29, the term appears in four governed artifacts — this Glossary,
+`ARCH-0013`, `ADR-0008` and the register — and the thing it names ships in
+every projection while the classes that bore the name did not run at all.*
 
 ------------------------------------------------------------------------
 

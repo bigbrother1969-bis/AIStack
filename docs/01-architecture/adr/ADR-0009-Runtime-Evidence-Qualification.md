@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Accepted
   owner: Architecture
   created: 2026-08-22
-  updated: 2026-08-28
+  updated: 2026-08-29
 
 relations:
   references:
@@ -503,9 +503,18 @@ capability*, not on surface. The three measured interactions are doable:
 |---|---|
 | request a global diagnostic | `python3 -m aistack.cli.runtime_diagnose` |
 | analyse one container's logs | the same command, with the container named |
-| list containers with a state icon | `docker_catalog`, which carries each container's `state` and `status` |
+| list containers with a state icon | `docker_catalog`, which carries each container's `state` and `status` — **and which could not run when this table was written** |
 
-**The third is a capability and not the correction this section promised.**
+**The third replacement was offered by a command that raised on its second
+line.** Measured 2026-08-29: `docker_catalog` had carried
+`ctx.providers.get("docker")` — an attribute `Kernel` does not carry — since
+`f685f97` on 2026-07-20, which is before this table was written on 2026-08-27.
+GOV-0002/OS-044, repaired the same day. *The retirement of `aistack-backend`
+was therefore justified in part by a replacement nobody had run. What made that
+possible is that the replacement was named rather than executed — the same
+distinction ADR-0008 § *The Knowledge Dimension* had to correct.*
+
+**The third is also a capability and not the correction this section promised.**
 § 6 says the experimenter's state icon computes
 `health.get("Status", "healthy")`, so a container with no healthcheck reads
 as healthy, and that FDN-0003 Article 12 requires three states — healthy,

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-07-31
@@ -91,11 +91,27 @@ left open — and the prose here had already claimed all four were reported. A
 sentence asserting a protection that was not delivered, in the artifact written
 to end that pattern, within the hour.*
 
-### The Knowledge Dimension is live
+### The Knowledge Dimension is built, and its four commands were broken
 
-Four CLIs exercise it — `docker_catalog`, `docker_discover`,
+Four CLIs implement it — `docker_catalog`, `docker_discover`,
 `docker_selection_catalog`, `compose_catalog` — and ADR-0009 applies the chain
 end to end.
+
+**This section read *Four CLIs exercise it* until 2026-08-29, and that was false
+for forty days.** Measured by running them: each raised `AttributeError` on the
+second line of `main()`, at `ctx.providers.get(...)` — an attribute `Kernel`
+does not carry — so none reached a provider. Introduced by `f685f97` on
+2026-07-20, which moved `providers` under `registries` and touched none of the
+four. **GOV-0002/OS-044**, repaired the same day with one test per `main()`.
+
+*The word matters and is the reason this heading changed. **Exercise** is a
+claim about execution; **implement** is a claim about code. This section made
+the first while only the second had been measured — the four modules were read,
+not run — and a heading that says a dimension is live is exactly where that
+distinction has to hold.*
+
+*What ADR-0009 applies end to end is a different chain, through
+`runtime_diagnose`, which has its own tests and was never affected.*
 
 ### The Execution Dimension is built and nothing runs it
 
@@ -115,6 +131,13 @@ uncalled: it has nothing to execute. GOV-0002/OS-041.
 `create_kernel()` itself is live — the four CLIs use it. What has no production
 caller is the **Runtime layer above the Kernel**, which is narrower than *the
 kernel is unused* and is what the measurement supports.
+
+*Narrowed 2026-08-29. Between 2026-07-20 and that day the four CLIs called
+`create_kernel()` and then raised on the next line, so the Kernel was composed
+in processes that never completed — GOV-0002/OS-044. The sentence stays because
+it is about composition and remains true of it; the qualifier is added because
+`live` was doing work the measurement did not support. Since the repair the
+four run, and five tests drive them to the artifacts they write.*
 
 **`Observation Service` and `Action` exist nowhere.** There is an `Observation`
 and an `ObservationContext`, but they are *results* produced by execution

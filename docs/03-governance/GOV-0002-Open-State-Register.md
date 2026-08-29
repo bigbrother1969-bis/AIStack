@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.73
+  version: 1.74
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -552,50 +552,8 @@ archive is a rule violated and not a door left open.
 
 # Decisions
 
-#### GOV-0002/OS-043 — `Policy` names a family of at least three members, and nothing declares the family
-
-**Nature** `decision` · **Opened** 2026-08-29 · **State** open
-**Observed** measured 2026-08-29 across the repository, `git ls-files`:
-
-```text
-class KnowledgePolicy(Protocol)          contracts/policy.py
-class BundleTransferPolicy(ABC)          contracts/bundle_transfer_policy.py
-class DefaultBundleTransferPolicy        context_bundle/transfer/policy.py
-PackagingPolicy                          defined in FDN-0002, no class
-PolicyRegistry                           named by ADR-0004 § Consequences; exists nowhere
-```
-
-`FDN-0002` defines **Knowledge Policy** and **PackagingPolicy** and nothing
-above them. `FDN-0012` (C3) and `ARCH-0013` use the plural *Policies*
-normatively — *Contracts are the operational expression of the applicable
-Policies under a given Profile* — as if the family were a governed concept.
-`ARCH-0013` goes further and makes the Policies the **governing SPOT** of every
-Profile.
-
-**Derivable** no. Every member is measurable; whether they are members *of one
-thing* is a statement about intent, and no instrument reads intent.
-
-**Qualification** unknown. Two readings, and the cost is not symmetric:
-
-- **the family is intended** — then `FDN-0002` owes a `Policy` entry the two
-  existing ones defer to, and `PolicyRegistry` is a missing implementation
-  rather than a name ADR-0004 happened to write. That decision's row for the
-  six registries is already `not implemented`, so this changes what that row
-  means, not whether it is open;
-- **the family is not intended** — then `Policy` is an English word that
-  several unrelated concepts happen to end with, `FDN-0002` is complete as it
-  stands, and *Policies* in `FDN-0012` and `ARCH-0013` means *Knowledge
-  Policies* and should say so.
-
-*Opened rather than answered on 2026-08-29, by the owner's decision, when
-`FDN-0002` was completed for the other six terms of W-14. Writing a generic
-`Policy` entry would have closed the last warning of the 2026-08-13 boot report
-by asserting the first reading in a C3 artifact — which is the shape of
-qualification-by-redaction this register exists to prevent.*
-
----
-
-OS-003, OS-013, OS-014, OS-015, OS-022, OS-034 and OS-038 are in *Resolved*.
+None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and
+OS-043 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -619,6 +577,77 @@ ADR anyone re-measured produced an entry.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-043 — `Policy` names a family of at least three members, and nothing declares the family
+
+**Nature** `decision` · **Opened** 2026-08-29 · **State** resolved 2026-08-29 by FDN-0002 v1.6
+**Observed** measured 2026-08-29 across the repository, `git ls-files`:
+
+```text
+class KnowledgePolicy(Protocol)          contracts/policy.py
+class BundleTransferPolicy(ABC)          contracts/bundle_transfer_policy.py
+class DefaultBundleTransferPolicy        context_bundle/transfer/policy.py
+PackagingPolicy                          defined in FDN-0002, no class
+PolicyRegistry                           named by ADR-0004 § Consequences; exists nowhere
+```
+
+`FDN-0002` defines **Knowledge Policy** and **PackagingPolicy** and nothing
+above them. `FDN-0012` (C3) and `ARCH-0013` use the plural *Policies*
+normatively — *Contracts are the operational expression of the applicable
+Policies under a given Profile* — as if the family were a governed concept.
+`ARCH-0013` goes further and makes the Policies the **governing SPOT** of every
+Profile.
+
+**Derivable** no. Every member is measurable; whether they are members *of one
+thing* is a statement about intent, and no instrument reads intent.
+
+**Qualification** **There is no governed `Policy` family. Decided 2026-08-29 by
+the owner**, on a measurement taken the same day: `KnowledgePolicy` declares
+`name` and `validate(artifact) -> bool` — a predicate — and
+`BundleTransferPolicy` declares `enabled` and `target` — a configuration.
+**They share no member and no base.** Nothing in the code supports reading them
+as two instances of one concept; the shared token is the English word.
+
+**Resolved by `FDN-0002` v1.6**, which states it at the SPOT of terminology
+rather than in the artifacts that use the plural: the bare *Policies* means
+Knowledge Policies, and `PackagingPolicy` and `BundleTransferPolicy` are
+unrelated concepts whose names end in the same word. `PolicyRegistry` stays what
+`ADR-0004` § *Consequences* made it — a name that decision wrote — and its row
+stays `not implemented`.
+
+*The corollary was first proposed as a rewording of `FDN-0012` and `ARCH-0013`,
+and measurement moved it. `ARCH-0013` already says* Knowledge Policies *five
+times of eight and its two bare plurals sit between them, so it needs nothing.
+`FDN-0012`'s bare plural is the **title of a principle** — `ENG-P-007 —
+Contracts derive from Policies` — in three places including a table row and a
+section heading, and renaming a principle in a C3 registry to clarify one word
+is heavier than the corollary earns. One sentence at the SPOT does the whole
+job.*
+
+The readings decided against are kept, per § *Qualification is dated and
+attributed*. The cost was not symmetric:
+
+- **the family is intended** — then `FDN-0002` owes a `Policy` entry the two
+  existing ones defer to, and `PolicyRegistry` is a missing implementation
+  rather than a name ADR-0004 happened to write. That decision's row for the
+  six registries is already `not implemented`, so this changes what that row
+  means, not whether it is open;
+- **the family is not intended** — then `Policy` is an English word that
+  several unrelated concepts happen to end with, `FDN-0002` is complete as it
+  stands, and *Policies* in `FDN-0012` and `ARCH-0013` means *Knowledge
+  Policies* and should say so.
+
+*Opened rather than answered earlier the same day, by the owner's decision,
+when `FDN-0002` was completed for the other six terms of W-14. **It was opened
+and resolved on 2026-08-29, hours apart**, and that is not a wasted entry: what
+it bought is the measurement. Between the two acts someone read the two
+contracts side by side and found they share nothing — which is what turned a
+question about intent into an observation about members. Writing a generic
+`Policy` entry would have closed the last warning of the 2026-08-13 boot report
+by asserting the first reading in a C3 artifact — which is the shape of
+qualification-by-redaction this register exists to prevent.*
+
+---
 
 #### GOV-0002/OS-040 — Nothing reports a class declaring a base whose contract it does not satisfy
 

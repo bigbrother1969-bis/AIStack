@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.5
+  version: 1.6
   status: Published
   owner: Foundation
   created: 2026-07-06
@@ -303,6 +303,24 @@ It is produced from observations, explicit rules, evidence and documented polici
 A governed rule defining how knowledge is evaluated, qualified or interpreted.
 
 Knowledge Policies are explicit and versioned.
+
+**The bare plural *Policies*, used normatively across the heritage, means
+Knowledge Policies.** `FDN-0012 § ENG-P-007` — *Contracts derive from Policies*
+— and `ARCH-0013`, which makes them the governing SPOT of every Profile, both
+mean these. The sentence exists because the word alone does not say so, and a
+reader meeting *the applicable Policies* has to guess otherwise.
+
+**There is no governed `Policy` family, and the names are a coincidence of
+English.** Measured 2026-08-29: `KnowledgePolicy` declares `name` and
+`validate(artifact) -> bool` — a predicate; `BundleTransferPolicy` declares
+`enabled` and `target` — a configuration. **They share no member and no base.**
+`PackagingPolicy`, defined below in this Glossary, is a third unrelated concept.
+
+*Decided 2026-08-29 by the owner, resolving `GOV-0002/OS-043`. The alternative
+was a generic `Policy` entry the others would defer to, which would have made
+`PolicyRegistry` — named by `ADR-0004` § Consequences and existing nowhere — a
+missing implementation rather than a name that decision happened to write. It
+stays the second.*
 
 ---
 

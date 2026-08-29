@@ -63,12 +63,37 @@ class MediaLibraryCatalogBuilder:
                 "root": library["root"],
                 "exists": str(library["exists"]),
                 "unreadable": str(library["unreadable"]),
+                # What the observation held and this catalog does
+                # not: the files no rule could place. A node
+                # missing because its format is unknown looks
+                # exactly like a node missing because it is empty,
+                # and this is the difference, carried to the
+                # surface that displays the catalog.
+                "unrecognized_extensions": self._census(
+                    library["unrecognized_extensions"]
+                ),
             },
             items=tuple(
                 self._item(entry, root)
                 for entry in library["directories"]
                 if self._is_node(entry)
             ),
+        )
+
+    def _census(self, unrecognized: dict[str, int]) -> str:
+        """
+        The unrecognised extensions, heaviest first, as one line.
+
+        `Catalog.metadata` is `dict[str, str]`; a census that has
+        to survive that is a census that gets read.
+        """
+
+        ordered = sorted(
+            unrecognized.items(), key=lambda pair: (-pair[1], pair[0])
+        )
+
+        return " ".join(
+            f"{extension or '(none)'}={count}" for extension, count in ordered
         )
 
     def _is_node(self, entry: dict[str, Any]) -> bool:

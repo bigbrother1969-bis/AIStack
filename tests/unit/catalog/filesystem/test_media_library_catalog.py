@@ -154,3 +154,47 @@ def test_the_catalog_is_named_by_its_caller(library):
 
     assert catalog.catalog_id == "comics-library"
     assert catalog.title == "Comics Library"
+
+
+def test_the_catalog_carries_what_no_rule_could_place(library):
+    """
+    A node missing because its format is unknown looks exactly
+    like a node missing because it is empty. The census is the
+    difference, and it has to reach the surface that displays the
+    catalog — which runs on a machine nobody reviewing this code
+    can observe.
+
+    Heaviest first, because the format worth adding is the one
+    with the most files behind it.
+    """
+
+    write(library / "Unknown" / "01.xyz", 1)
+    write(library / "Unknown" / "02.xyz", 1)
+    write(library / "Unknown" / "03.zzz", 1)
+
+    catalog = MediaLibraryCatalogBuilder(
+        catalog_id="music-library",
+        title="Music Library",
+    ).build(MediaLibraryProvider(library).collect())
+
+    census = catalog.metadata["unrecognized_extensions"]
+
+    assert census.startswith(".xyz=2 ")
+    assert ".zzz=1" in census
+    assert ".jpg=1" in census
+
+
+def test_a_file_without_extension_is_named_in_the_census(library):
+    """
+    An empty string in a space-separated line is a hole. The
+    census says `(none)` rather than producing `=3`.
+    """
+
+    write(library / "Unknown" / "README", 1)
+
+    catalog = MediaLibraryCatalogBuilder(
+        catalog_id="music-library",
+        title="Music Library",
+    ).build(MediaLibraryProvider(library).collect())
+
+    assert "(none)=1" in catalog.metadata["unrecognized_extensions"]

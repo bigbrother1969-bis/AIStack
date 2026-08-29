@@ -234,3 +234,86 @@ def test_the_observation_names_the_provider_that_made_it(library):
         "aistack.provider.filesystem.media-library"
     )
     assert collected["library"]["root"] == str(library)
+
+
+def test_a_directory_of_unrecognised_files_is_not_an_empty_one(tmp_path: Path):
+    """
+    The distinction that cost a composer.
+
+    Until 2026-08-29 an unrecognised file left no trace, so an
+    album holding twelve `.ape` tracks observed exactly like an
+    empty directory — zero — and the catalog rule excluded both
+    while stating the same reason for each. On the owner's
+    library, `Nelly Furtado` really was empty and
+    `Classique/Schubert` really was not, and nothing in the
+    observation told them apart.
+    """
+
+    root = tmp_path / "library"
+
+    write(root / "Unknown format" / "01.xyz", 4)
+    (root / "Genuinely empty").mkdir(parents=True)
+
+    entries = observed(root)
+
+    assert entries["Unknown format"]["media_files"] == 0
+    assert entries["Unknown format"]["other_files"] == 1
+
+    assert entries["Genuinely empty"]["other_files"] == 0
+
+
+def test_the_observation_names_what_it_did_not_recognise(tmp_path: Path):
+    """
+    A list of extensions will be wrong again. What changes is that
+    the next missing format announces itself here, instead of
+    waiting for someone to run a census by hand — which is how
+    `.mpc`, `.ape` and `.dts` were found missing on 2026-08-29,
+    after they had already been shipped.
+    """
+
+    root = tmp_path / "library"
+
+    write(root / "Artist" / "01.mp3", 1)
+    write(root / "Artist" / "02.xyz", 1)
+    write(root / "Artist" / "03.xyz", 1)
+    write(root / "Artist" / "cover.jpg", 1)
+    write(root / "Artist" / "README", 1)
+
+    census = MediaLibraryProvider(root).collect()["library"][
+        "unrecognized_extensions"
+    ]
+
+    assert census == {"": 1, ".jpg": 1, ".xyz": 2}
+
+
+def test_the_census_does_not_depend_on_the_filesystem(tmp_path: Path):
+    """
+    Same requirement as the directory order, same reason:
+    STD-0300 § 6, an unchanged input produces an identical output.
+    """
+
+    root = tmp_path / "library"
+
+    for name in ("d.xyz", "a.zzz", "c.xyz", "b.aaa"):
+        write(root / "Artist" / name, 1)
+
+    census = MediaLibraryProvider(root).collect()["library"][
+        "unrecognized_extensions"
+    ]
+
+    assert list(census) == sorted(census)
+
+
+def test_the_default_extensions_are_the_measured_ones():
+    """
+    `.mpc`, `.ape` and `.dts` are in the default because a census
+    of the owner's library found them there on 2026-08-29 — 113,
+    22 and 101 files, 26 catalog nodes and 6,84 Gio that the
+    plausible list had made invisible, `Classique/Schubert`
+    entire among them.
+
+    Asserted so that removing one is a decision someone takes
+    rather than a tidy-up nobody notices.
+    """
+
+    assert {".mpc", ".ape", ".dts"} <= DEFAULT_MEDIA_EXTENSIONS

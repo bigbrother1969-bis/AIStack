@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -18,15 +19,29 @@ DEFAULT_MEDIA_EXTENSIONS = frozenset(
     {
         ".aac",
         ".aiff",
+        ".ape",
+        ".dts",
         ".flac",
         ".m4a",
         ".mp3",
+        ".mpc",
         ".ogg",
         ".opus",
         ".wav",
         ".wma",
     }
 )
+
+
+@dataclass
+class _Counted:
+    """What one directory yielded, recognised and not."""
+
+    media_files: int = 0
+    media_bytes: int = 0
+    failures: int = 0
+    other_files: int = 0
+    unrecognized: dict[str, int] = field(default_factory=dict)
 
 
 class MediaLibraryProvider:
@@ -56,9 +71,17 @@ class MediaLibraryProvider:
     `total_media_files` includes every descendant. A screen that
     lets a human tick any node of the tree needs the second to
     show what ticking costs, and the first to tell a container
-    apart from a leaf. Both are gathered in one walk: the full
-    traversal of that library takes 87 ms on the reference host,
-    measured 2026-08-29, which is why nothing here caches.
+    apart from a leaf. Both are gathered in one walk, which on the
+    reference host takes **1,05 s** for 2644 directories and
+    30 015 files — measured 2026-08-29, on this provider.
+
+    That figure replaces one this docstring carried for the length
+    of a single commit. It said 87 ms, and 87 ms is what
+    `find . -type f | wc -l` takes on the same tree: a directory
+    traversal in C that stats no file. This walk stats every media
+    file it counts. A figure measured on one command was written
+    down to justify a decision about another — the failure this
+    heritage names first, committed in the commit that cites it.
 
     Symbolic links are not followed. The library reached by one —
     `/media/Multimedia/Music` is a link to
@@ -69,9 +92,26 @@ class MediaLibraryProvider:
     What is not observed is counted rather than dropped.
     `unreadable` says how many directories refused or vanished
     mid-walk, `symlinks_not_followed` how many were skipped by the
-    rule above. A library that quietly shrinks is the failure this
-    heritage keeps finding; a library that shrinks and says by how
-    much is a measurement.
+    rule above, `other_files` how many files a directory holds
+    that this provider did not recognise, and
+    `unrecognized_extensions` what those files were.
+
+    **The last one exists because its absence cost a composer.**
+    Until 2026-08-29 an unrecognised file left no trace, so an
+    album holding twelve `.ape` tracks and an empty directory
+    produced the same observation — zero — and the catalog rule
+    excluded both while stating the same reason for each. The
+    default list was plausible rather than measured, and a census
+    run by hand on the owner's library found `.mpc`, `.ape` and
+    `.dts` missing from it: 26 nodes and 6,84 Gio absent from the
+    catalog, `Classique/Schubert` entire among them, on a screen
+    whose whole subject is fitting inside 64 Go.
+
+    A list of extensions will be wrong again — this one is a
+    default, and the governed value travels in the application
+    definition. What changes is that the next missing format
+    announces itself in the observation instead of waiting for
+    someone to notice an absence.
     """
 
     provider_id = "aistack.provider.filesystem.media-library"
@@ -88,7 +128,7 @@ class MediaLibraryProvider:
         )
 
     def collect(self) -> dict[str, Any]:
-        directories, unreadable, symlinks = self._walk()
+        directories, unreadable, symlinks, unrecognized = self._walk()
 
         return {
             "provider": {
@@ -102,11 +142,12 @@ class MediaLibraryProvider:
                 "media_extensions": sorted(self.media_extensions),
                 "unreadable": unreadable,
                 "symlinks_not_followed": symlinks,
+                "unrecognized_extensions": unrecognized,
                 "directories": directories,
             },
         }
 
-    def _walk(self) -> tuple[list[dict[str, Any]], int, int]:
+    def _walk(self) -> tuple[list[dict[str, Any]], int, int, dict[str, int]]:
         """
         Every directory of the tree, with its media counted twice.
 
@@ -122,12 +163,13 @@ class MediaLibraryProvider:
         """
 
         if not self.root.is_dir():
-            return [], 0, 0
+            return [], 0, 0, {}
 
         totals: dict[str, tuple[int, int]] = {}
         entries: dict[str, dict[str, Any]] = {}
         unreadable = 0
         symlinks = 0
+        unrecognized: dict[str, int] = {}
 
         walker = os.walk(self.root, topdown=False, onerror=lambda _: None)
 
@@ -135,14 +177,17 @@ class MediaLibraryProvider:
 
             relative = self._relative(current)
 
-            direct_files, direct_bytes, failures = self._count(
-                current, filenames
-            )
+            counted = self._count(current, filenames)
 
-            unreadable += failures
+            unreadable += counted.failures
 
-            total_files = direct_files
-            total_bytes = direct_bytes
+            for extension, count in counted.unrecognized.items():
+                unrecognized[extension] = (
+                    unrecognized.get(extension, 0) + count
+                )
+
+            total_files = counted.media_files
+            total_bytes = counted.media_bytes
 
             for name in subdirectories:
 
@@ -174,36 +219,63 @@ class MediaLibraryProvider:
                 "relative_path": relative,
                 "parent": self._parent(relative),
                 "depth": 0 if relative == "" else len(Path(relative).parts),
-                "media_files": direct_files,
-                "media_bytes": direct_bytes,
+                "media_files": counted.media_files,
+                "media_bytes": counted.media_bytes,
+                # A directory holding files this provider does not
+                # recognise is a different fact from an empty one,
+                # and the difference is what makes a missing
+                # format announce itself.
+                "other_files": counted.other_files,
                 "total_media_files": total_files,
                 "total_media_bytes": total_bytes,
             }
 
-        return [entries[key] for key in sorted(entries)], unreadable, symlinks
+        return (
+            [entries[key] for key in sorted(entries)],
+            unreadable,
+            symlinks,
+            {key: unrecognized[key] for key in sorted(unrecognized)},
+        )
 
-    def _count(
-        self, directory: str, filenames: list[str]
-    ) -> tuple[int, int, int]:
-        files = 0
-        size = 0
-        failures = 0
+    def _count(self, directory: str, filenames: list[str]) -> _Counted:
+        """
+        What is media here, and what was left out.
+
+        The second half is the point. Until 2026-08-29 this
+        returned only what it recognised, so a directory holding
+        twelve `.ape` tracks and a directory holding nothing
+        produced the same observation — zero — and the catalog
+        rule above excluded both for the same stated reason. The
+        owner had to run a census by hand to find that three audio
+        formats were missing from the default list, one of which
+        hid an entire composer.
+        """
+
+        counted = _Counted()
 
         for name in filenames:
 
-            if Path(name).suffix.lower() not in self.media_extensions:
+            extension = Path(name).suffix.lower()
+
+            if extension not in self.media_extensions:
+                counted.other_files += 1
+                counted.unrecognized[extension] = (
+                    counted.unrecognized.get(extension, 0) + 1
+                )
                 continue
 
             try:
-                size += os.path.getsize(os.path.join(directory, name))
+                counted.media_bytes += os.path.getsize(
+                    os.path.join(directory, name)
+                )
 
             except OSError:
-                failures += 1
+                counted.failures += 1
                 continue
 
-            files += 1
+            counted.media_files += 1
 
-        return files, size, failures
+        return counted
 
     def _relative(self, path: str) -> str:
         relative = os.path.relpath(path, self.root)

@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-07-07
-  updated: 2026-08-28
+  updated: 2026-08-29
 ---
 
 # ADR-0004 - AIStack Kernel Architecture
@@ -119,8 +119,8 @@ Composition Root may name technologies — and the sentence went with the row.*
 | Technology-specific implementations connect through contracts and registries | done — 2026-08-28 |
 | Those implementations remain replaceable — registered and resolved by name | done — 2026-08-28 |
 | The Kernel depends on no specific infrastructure technology | done — 2026-08-28 |
-| The target Kernel structure — `lifecycle/`, `discovery/`, `dependency/` | not implemented — measured 2026-08-28 |
-| The six registries § *Consequences* names follow the same pattern | not implemented — measured 2026-08-28 |
+| The target Kernel structure — `lifecycle/`, `discovery/`, `dependency/` | superseded — 2026-08-29 |
+| The six registries § *Consequences* names follow the same pattern | superseded — 2026-08-29 |
 
 What each was read against:
 
@@ -202,6 +202,30 @@ recorded here, not the boundary.
 it — provider, catalog view, selection strategy, task, contract. What this
 decision named and what was built are two sets that overlap in one place.
 
+**Qualified `superseded` on 2026-08-29 by the owner**, and the measurement that
+decided it is per registry rather than per count:
+
+| Registry | What it would hold, measured 2026-08-29 |
+|---|---|
+| `GeneratorRegistry` | **four real classes** — `DockerCatalogArtifactGenerator`, `DockerObservationArtifactGenerator`, the Compose generator, the filesystem copy generator. The only one of the five with members |
+| `RendererRegistry` | **nothing.** `src/aistack/renderers/` holds one empty `__init__.py` and declares no class |
+| `PolicyRegistry` | **a family `GOV-0002/OS-043` resolved as non-existent** the same day: `KnowledgePolicy` is a predicate, `BundleTransferPolicy` a configuration, and they share no member |
+| `PortRegistry` | no class named `Port` exists anywhere |
+| `PathRegistry` | no class named `Path` exists anywhere |
+
+**Five of the six have no subject, and building them would manufacture exactly
+what ARC-P-006 refuses** — four empty registries, one of them for a family this
+heritage decided that morning does not exist. What the decision was reaching for
+is delivered: `Registry[T]` and resolution by identifier, followed by five
+registries the decision did not name. **The row is superseded by the pattern
+rather than left unfinished by the list.**
+
+*`GeneratorRegistry` is the one that could be built, and was not. Nothing would
+retrieve a generator by identifier: the CLIs instantiate them directly. A sixth
+registration nobody retrieves is what `unused-registrations` was written to
+report, and building it to close a row would be writing the finding into the
+code on purpose. Recorded here so that a future reader knows it was considered.*
+
 **What still asserts otherwise.** ARCH-0007 § *Current Registries* lists
 `PipelineRegistry: registered Knowledge Pipelines`, and no class of that name
 exists in the repository; the same section omits `TaskRegistry` and
@@ -219,7 +243,23 @@ target does not name — `bootstrap`, `capabilities`, `catalog`, `engines`,
 `selection`, `services`, `tracing`.
 
 Whether a structure declared on 2026-07-07 is still the target is a question for
-the owner and not a measurement, so it is recorded and not answered.
+the owner and not a measurement, so it was recorded and not answered.
+
+**Answered 2026-08-29: `superseded`.** The Kernel diverged in both directions
+and works — four of the seven named directories exist, and thirteen the target
+never named carry the concepts this decision is about. A structure the code has
+outgrown in both directions is not a target that remains unreached; it is a
+target that was replaced by what was built.
+
+*The alternative was to create `lifecycle/`, `discovery/` and `dependency/`.
+Declined because nothing in this heritage says what they would contain, so the
+work is not three packages — it is deciding three responsibilities, which is a
+new decision and not this one's unfinished step. Two empty re-export façades
+were removed on 2026-08-21 for the same reason (`ADR-0003`).*
+
+*§ *Kernel Structure* is left standing above rather than rewritten. An
+intention declared on 2026-07-07 is what this ADR is a record of, and a decision
+that edited its own § *Decision* to match the code would stop being one.*
 
 ### What is not a row
 

@@ -1,30 +1,50 @@
-from pathlib import Path
-import json
+from __future__ import annotations
+
 import os
-import subprocess
-import urllib.request
-import yaml
+from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
-from aistack.catalog.yaml import load_catalog_yaml
+from aistack.application.yaml import load_application_definition_yaml
+from aistack.catalog.filesystem import MediaLibraryCatalogBuilder
+from aistack.generators.filesystem.hardlink import (
+    MaterialisationReport,
+    materialise_by_hardlink,
+)
+from aistack.generators.filesystem.yaml import (
+    load_last_generation_yaml,
+    save_last_generation_yaml,
+)
+from aistack.kernel.application import ApplicationDefinition
 from aistack.kernel.bootstrap import create_kernel
+from aistack.providers.filesystem import (
+    DEFAULT_MEDIA_EXTENSIONS,
+    MediaLibraryProvider,
+)
+from aistack.providers.repository import RepositoryProvider
+from aistack.providers.syncthing.provider import SyncthingProvider
+from aistack.selection.capacity import assess_capacity
+from aistack.selection.materialisation_status import materialized_nodes
+from aistack.selection.subtree import resolve_subtrees
 from aistack.selection.workflow import build_view, select_from_view
 from aistack.selection.yaml import load_selection_yaml, save_selection_yaml
-from aistack.providers.repository import RepositoryProvider
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 repository = RepositoryProvider(REPO_ROOT)
 
-# **The first Catalog View consumer** — ADR-0002's ninth step,
-# closed 2026-08-29. This screen displayed `catalog.items` and
-# built its `Selection` by hand; it now shows a Catalog View
-# produced by an engine retrieved from the Kernel, and selects
-# through the Selection Engine. GOV-0002/OS-039's surface half.
+# **The first Application Definition consumer.** Until step 7 this
+# screen read `catalog_file`, a static YAML nobody rewrote when the
+# library changed, and `generation_command`, a shell-out to a
+# destructive, untested generator. Both are gone: the catalog is
+# scanned live from `definition.source_root` on every request
+# (decision #8, 2026-08-29), and materialisation calls
+# `materialise_by_hardlink` in process. GOV-0002/OS-039's surface
+# half, closed.
 kernel = create_kernel()
 
 APP_DEF = repository.resolve("selection_ui/definitions/music_android.yml")
@@ -35,116 +55,163 @@ templates = Jinja2Templates(
 )
 
 
-def load_app_definition() -> dict:
-    return yaml.safe_load(APP_DEF.read_text(encoding="utf-8"))
+def load_app_definition() -> ApplicationDefinition:
+    return load_application_definition_yaml(APP_DEF)
 
 
-def get_synced_items(target_root: Path) -> set[str]:
-    if not target_root.exists():
-        return set()
+def _last_generation_path(definition: ApplicationDefinition) -> Path:
+    return repository.resolve(definition.selection_file).with_name(
+        f"{definition.app_id}-last-generation.yml"
+    )
+
+
+def _catalog(definition: ApplicationDefinition):
+    observation = MediaLibraryProvider(Path(definition.source_root)).collect()
+
+    return MediaLibraryCatalogBuilder(
+        catalog_id=definition.catalog_id,
+        title=definition.catalog_title,
+    ).build(observation)
+
+
+def _syncthing_status(definition: ApplicationDefinition) -> dict[str, Any] | None:
+    """
+    `None` when this instance of the family declared no Syncthing
+    block at all — a future member of the family might not sync to
+    a phone. Never a dict standing in for "not configured", which
+    would read on the screen as a daemon that answered.
+    """
+
+    if not definition.syncthing:
+        return None
+
+    provider = SyncthingProvider(
+        url=definition.syncthing.url,
+        api_key=os.environ.get(definition.syncthing.api_key_env, ""),
+        folder_id=definition.syncthing.folder_id,
+        device_id=definition.syncthing.device_id,
+        timeout=definition.syncthing.timeout_seconds,
+    )
+
+    return provider.collect()["syncthing"]
+
+
+def _page_context(definition: ApplicationDefinition) -> dict[str, Any]:
+    """
+    Everything one page load needs, assembled once.
+
+    A dry run of `materialise_by_hardlink` is part of *reading* the
+    page — it writes nothing — and it is the single source both the
+    per-node materialised/pending status and the "N fichiers à
+    créer, M à retirer" summary read from, rather than two separate
+    computations that could disagree.
+    """
+
+    catalog = _catalog(definition)
+    view = build_view(kernel, catalog, definition.view_id)
+
+    selection = load_selection_yaml(
+        repository.resolve(definition.selection_file)
+    )
+    selected = set(selection.selected_ids) if selection else set()
+
+    resolution = resolve_subtrees(catalog, selected)
+    capacity = assess_capacity(resolution, definition.capacity_declared_bytes)
+
+    pending = materialise_by_hardlink(
+        catalog=catalog,
+        resolution=resolution,
+        capacity=capacity,
+        target_root=Path(definition.target_root),
+        media_extensions=DEFAULT_MEDIA_EXTENSIONS,
+        dry_run=True,
+    )
+
+    materialized = (
+        materialized_nodes(pending, resolution)
+        if not pending.refused
+        else frozenset()
+    )
 
     return {
-        path.name
-        for path in target_root.iterdir()
-        if path.is_dir() and path.name != ".stfolder"
+        "definition": definition,
+        "view": view,
+        "selected": selected,
+        "covered": set(resolution.covered),
+        "redundant": set(resolution.redundant),
+        "absent": resolution.absent,
+        "capacity": capacity,
+        "pending": pending,
+        "materialized": materialized,
+        "syncthing": _syncthing_status(definition),
+        "last_generation": load_last_generation_yaml(
+            _last_generation_path(definition)
+        ),
     }
-
-
-def get_syncthing_status() -> dict:
-    url = os.getenv("SYNCTHING_URL", "http://syncthing:8384").rstrip("/")
-    api_key = os.getenv("SYNCTHING_API_KEY")
-    folder_id = os.getenv("SYNCTHING_FOLDER_ID", "music-android")
-
-    if not api_key:
-        return {
-            "available": False,
-            "status": "Missing API key",
-        }
-
-    try:
-        req = urllib.request.Request(
-            f"{url}/rest/db/status?folder={folder_id}",
-            headers={"X-API-Key": api_key},
-        )
-
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.load(response)
-
-        return {
-            "available": True,
-            "folder_id": folder_id,
-            "state": data.get("state", "unknown"),
-            "global_files": data.get("globalFiles"),
-            "global_bytes": data.get("globalBytes"),
-            "local_files": data.get("localFiles"),
-            "local_bytes": data.get("localBytes"),
-            "need_files": data.get("needFiles"),
-            "need_bytes": data.get("needBytes"),
-        }
-
-    except Exception as exc:
-        return {
-            "available": False,
-            "status": str(exc),
-        }
 
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     definition = load_app_definition()
-    catalog = load_catalog_yaml(repository.resolve(definition["catalog_file"]))
-    view = build_view(kernel, catalog, definition["view_id"])
-    selection = load_selection_yaml(repository.resolve(definition["selection_file"]))
-    selected = set(selection.selected_ids) if selection else set()
-
-    synced = get_synced_items(Path("/media/TechData/Storage/Music-Android"))
-    selected_synced = selected & synced
-    selected_pending = selected - synced
-    synced_not_selected = synced - selected
+    context = _page_context(definition)
+    context["status"] = request.query_params.get("status")
 
     return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={
-            "definition": definition,
-            "view": view,
-            "selected": selected,
-            "synced": synced,
-            "selected_synced": selected_synced,
-            "selected_pending": selected_pending,
-            "synced_not_selected": synced_not_selected,
-            "selected_synced_percent": round((len(selected_synced) / len(selected) * 100), 1) if selected else 100,
-            "catalog_selected_percent": round((len(selected) / len(view.items) * 100), 1) if view.items else 0,
-            "status": request.query_params.get("status"),
-            "syncthing": get_syncthing_status(),
-        },
+        request=request, name="index.html", context=context
     )
 
 
 @app.post("/save")
 def save(selected_ids: list[str] = Form(default=[])):
     definition = load_app_definition()
-    catalog = load_catalog_yaml(repository.resolve(definition["catalog_file"]))
-    view = build_view(kernel, catalog, definition["view_id"])
-    selection_path = repository.resolve(definition["selection_file"])
+    catalog = _catalog(definition)
+    view = build_view(kernel, catalog, definition.view_id)
 
     selection = select_from_view(
         view=view,
-        selection_id=definition["app_id"],
+        selection_id=definition.app_id,
         selected_ids=selected_ids,
         metadata={
-            "source_catalog": definition["catalog_file"],
+            "source_catalog": definition.catalog_id,
             "managed_by": "selection_ui",
         },
     )
 
-    save_selection_yaml(selection, selection_path)
+    save_selection_yaml(
+        selection, repository.resolve(definition.selection_file)
+    )
 
-    command = definition.get("generation_command")
-    if command:
-        subprocess.run(command, cwd=repository.root, check=True)
+    resolution = resolve_subtrees(catalog, selection.selected_ids)
+    capacity = assess_capacity(resolution, definition.capacity_declared_bytes)
+
+    report = materialise_by_hardlink(
+        catalog=catalog,
+        resolution=resolution,
+        capacity=capacity,
+        target_root=Path(definition.target_root),
+        media_extensions=DEFAULT_MEDIA_EXTENSIONS,
+    )
+
+    save_last_generation_yaml(report, _last_generation_path(definition))
 
     return RedirectResponse(
-        f"/?status=Selection saved. Generation command executed. {len(selected_ids)} items selected.",
+        f"/?status={_status_message(report, len(selection.selected_ids))}",
         status_code=303,
+    )
+
+
+def _status_message(report: MaterialisationReport, selected_count: int) -> str:
+    if report.refused:
+        return report.refused
+
+    changed = len(report.linked) + len(report.relinked) + len(report.removed)
+
+    if changed == 0:
+        return f"{selected_count} répertoires sélectionnés, déjà à jour."
+
+    return (
+        f"{selected_count} répertoires sélectionnés — "
+        f"{len(report.linked)} créés, {len(report.relinked)} mis à jour, "
+        f"{len(report.removed)} retirés, "
+        f"{len(report.pruned)} répertoires vidés."
     )

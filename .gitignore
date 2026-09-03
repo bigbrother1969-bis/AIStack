@@ -12,6 +12,11 @@ __pycache__/
 *.egg-info/
 .venv/
 
+# selection_ui's own environment, deliberately separate from
+# .venv (decision #9, 2026-08-29 — see
+# selection_ui/requirements.txt and scripts/setup_selection_ui_env.sh).
+.venv-selection-ui/
+
 # Local environment and secrets. Never committed: these carry
 # per-machine values, and one of them carries credentials.
 .env

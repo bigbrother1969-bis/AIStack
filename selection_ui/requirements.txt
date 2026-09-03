@@ -1,0 +1,29 @@
+# selection_ui's own dependencies, deliberately not in pyproject.toml.
+#
+# Decision #9, 2026-08-29 (claude/PLAN-UI-SELECTION-2026-08-29.md):
+# fastapi, uvicorn, jinja2 and python-multipart are not knowledge
+# this heritage is verified on — nothing under src/aistack imports
+# them, and pulling them into the governed venv would make every
+# pytest run depend on packages the test suite never touches.
+#
+# Installed into a dedicated environment by
+# scripts/setup_selection_ui_env.sh, never into .venv. See
+# run_selection_ui.sh, which calls that environment by path rather
+# than relying on PATH order — the gap found 2026-09-03, when a
+# terminal with .venv already ahead on PATH ran uvicorn's absence
+# as an error instead of uvicorn itself.
+
+fastapi
+uvicorn
+jinja2
+python-multipart
+
+# Not ungoverned: pyproject.toml already declares PyYAML as the
+# heritage's one dependency, and this line does not redeclare that
+# decision — it exists because this file installs into a second,
+# separate interpreter (see above), and PYTHONPATH alone (set by
+# bin/aistack_env.sh) makes `import aistack` resolve here but does
+# not install what aistack itself depends on. Found the same run,
+# right after the fix above: uvicorn started, then selection_ui/
+# app.py's own first import failed on `import yaml`.
+PyYAML>=6.0

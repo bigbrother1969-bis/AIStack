@@ -60,22 +60,25 @@
     <div class="card">
       <div class="label">Sélection</div>
       <div class="value"><span id="selected-count">{{ selected | length }}</span></div>
-      <div class="meta">nœuds cochés directement — {{ covered | length }} avec les sous-arbres inclus</div>
+      <div class="meta">nœuds cochés directement — <span id="covered-count">{{ covered | length }}</span> avec les sous-arbres inclus</div>
     </div>
 
-    <div class="card">
+    <div class="card" id="capacity-card"
+         data-declared="{{ 'true' if capacity.declared else 'false' }}"
+         data-declared-bytes="{{ capacity.declared_bytes }}">
       <div class="label">Capacité</div>
-      {% if capacity.declared %}
-        <div class="value">{{ "%.1f"|format(capacity.percent_used) }}%</div>
-        <div class="bar"><div class="fill {{ 'ok' if capacity.fits else 'warn' }}" style="width: {{ [capacity.percent_used, 100] | min }}%"></div></div>
-        <div class="meta">
+      <div id="capacity-declared-view" {% if not capacity.declared %}style="display:none"{% endif %}>
+        <div class="value"><span id="capacity-percent">{{ "%.1f"|format(capacity.percent_used) }}</span>%</div>
+        <div class="bar"><div id="capacity-fill" class="fill {{ 'ok' if capacity.fits else 'warn' }}" style="width: {{ [capacity.percent_used, 100] | min }}%"></div></div>
+        <div class="meta" id="capacity-meta">
           {{ "%.1f"|format(capacity.selected_bytes / 1000000000) }} Go sélectionnés sur {{ "%.0f"|format(capacity.declared_bytes / 1000000000) }} Go déclarés
           {% if not capacity.fits %} — {{ "%.1f"|format(capacity.overflow_bytes / 1000000000) }} Go de trop{% endif %}
         </div>
-      {% else %}
-        <div class="value">{{ "%.1f"|format(capacity.selected_bytes / 1000000000) }} Go</div>
+      </div>
+      <div id="capacity-undeclared-view" {% if capacity.declared %}style="display:none"{% endif %}>
+        <div class="value"><span id="capacity-undeclared-value">{{ "%.1f"|format(capacity.selected_bytes / 1000000000) }}</span> Go</div>
         <div class="meta">aucun quota déclaré — rien ne limite la sélection</div>
-      {% endif %}
+      </div>
     </div>
 
     <div class="card">
@@ -88,19 +91,23 @@
       <div class="label">Syncthing — dossier {{ definition.syncthing.folder_id if definition.syncthing else "" }}</div>
       {% if not definition.syncthing %}
         <div class="meta">non configuré pour cette instance</div>
-      {% elif not syncthing.reachable %}
-        <div id="syncthing-unreachable" class="value">injoignable</div>
-        <div class="meta">{{ syncthing.unreachable_reason }}</div>
       {% else %}
-        <div class="value">{{ syncthing.folder.state | default("?") }}</div>
-        {% if syncthing.device.completion is defined %}
-          <div class="bar"><div class="fill {{ 'ok' if syncthing.device.completion == 100 else '' }}" style="width: {{ syncthing.device.completion }}%"></div></div>
-          <div class="meta">{{ syncthing.device.completion }}% reçu par le téléphone — {{ syncthing.device.needBytes | default(0) }} octets restants (dossier entier)</div>
-        {% elif syncthing.device.unavailable_reason is defined %}
-          <div class="meta">avancement vers le téléphone : {{ syncthing.device.unavailable_reason }}</div>
-        {% else %}
-          <div class="meta">appareil non renseigné — état du dossier serveur seulement</div>
-        {% endif %}
+        <div id="syncthing-body">
+          {% if not syncthing.reachable %}
+            <div id="syncthing-unreachable" class="value">injoignable</div>
+            <div class="meta">{{ syncthing.unreachable_reason }}</div>
+          {% else %}
+            <div class="value">{{ syncthing.folder.state | default("?") }}</div>
+            {% if syncthing.device.completion is defined %}
+              <div class="bar"><div class="fill {{ 'ok' if syncthing.device.completion == 100 else '' }}" style="width: {{ syncthing.device.completion }}%"></div></div>
+              <div class="meta">{{ syncthing.device.completion }}% reçu par le téléphone — {{ syncthing.device.needBytes | default(0) }} octets restants (dossier entier)</div>
+            {% elif syncthing.device.unavailable_reason is defined %}
+              <div class="meta">avancement vers le téléphone : {{ syncthing.device.unavailable_reason }}</div>
+            {% else %}
+              <div class="meta">appareil non renseigné — état du dossier serveur seulement</div>
+            {% endif %}
+          {% endif %}
+        </div>
       {% endif %}
     </div>
   </section>
@@ -151,6 +158,7 @@
              data-depth="{{ depth }}"
              data-collapsed="0"
              data-label="{{ (item.label or item.id) | lower }} {{ item.metadata.relative_path | lower }}"
+             data-bytes="{{ item.metadata.total_media_bytes }}"
              style="padding-left: calc({{ depth - 1 }} * 1.25rem);">
           {% if has_children %}
             <button type="button" class="fold" onclick="toggleFold(this)">▾</button>
@@ -260,7 +268,204 @@
       });
     }
 
+    // Mirrors aistack.selection.subtree.resolve_subtrees exactly,
+    // on the DOM instead of the catalog: a ticked node is a "root"
+    // — and its own total_media_bytes (already a subtree total,
+    // not just its direct files) counts toward the selection —
+    // only when none of its ancestors is also ticked. A ticked
+    // descendant of a ticked node is "redundant": already counted
+    // by its ancestor's total, so counting it again would double
+    // the weight the capacity card shows. The same left-to-right
+    // pass, keyed on depth exactly like applyFolds above, tracks
+    // one thing per open ancestor: whether it or one of *its*
+    // ancestors was ticked.
+    function selectionTotals() {
+      const rows = Array.from(document.querySelectorAll(".row"));
+      const stack = [];
+
+      let directCount = 0;
+      let coveredCount = 0;
+      let selectedBytes = 0;
+
+      rows.forEach(row => {
+        const depth = parseInt(row.dataset.depth, 10);
+
+        while (stack.length && depth <= stack[stack.length - 1].depth) {
+          stack.pop();
+        }
+
+        const ancestorTicked = stack.length > 0 && stack[stack.length - 1].ticked;
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const isChecked = checkbox.checked;
+        const isCovered = isChecked || ancestorTicked;
+
+        if (isChecked) {
+          directCount += 1;
+        }
+
+        if (isCovered) {
+          coveredCount += 1;
+        }
+
+        if (isChecked && !ancestorTicked) {
+          selectedBytes += Number(row.dataset.bytes || 0);
+        }
+
+        stack.push({ depth, ticked: isCovered });
+      });
+
+      return { directCount, coveredCount, selectedBytes };
+    }
+
+    // Ticking or unticking a box changes what would be selected,
+    // long before any click on "Synchroniser" — the capacity card
+    // exists to be seen before that click, so it has to answer
+    // right away rather than only after the next page load. Called
+    // once at page load too, as a standing check that this and
+    // assess_capacity agree from the very first paint.
+    function updateCapacity() {
+      const totals = selectionTotals();
+
+      document.getElementById("selected-count").textContent = totals.directCount;
+
+      const coveredElement = document.getElementById("covered-count");
+      if (coveredElement) {
+        coveredElement.textContent = totals.coveredCount;
+      }
+
+      const card = document.getElementById("capacity-card");
+      if (!card) {
+        return;
+      }
+
+      const selectedGo = totals.selectedBytes / 1000000000;
+
+      if (card.dataset.declared === "true") {
+        const declaredBytes = Number(card.dataset.declaredBytes);
+        const percent = declaredBytes > 0 ? (totals.selectedBytes / declaredBytes) * 100 : 0;
+        const fits = totals.selectedBytes <= declaredBytes;
+
+        document.getElementById("capacity-percent").textContent = percent.toFixed(1);
+
+        const fill = document.getElementById("capacity-fill");
+        fill.style.width = Math.min(percent, 100) + "%";
+        fill.classList.toggle("ok", fits);
+        fill.classList.toggle("warn", !fits);
+
+        let meta = selectedGo.toFixed(1) + " Go sélectionnés sur "
+          + (declaredBytes / 1000000000).toFixed(0) + " Go déclarés";
+
+        if (!fits) {
+          meta += " — " + ((totals.selectedBytes - declaredBytes) / 1000000000).toFixed(1) + " Go de trop";
+        }
+
+        document.getElementById("capacity-meta").textContent = meta;
+
+      } else {
+        const undeclaredValue = document.getElementById("capacity-undeclared-value");
+        if (undeclaredValue) {
+          undeclaredValue.textContent = selectedGo.toFixed(1);
+        }
+      }
+    }
+
+    document.getElementById("tree").addEventListener("change", event => {
+      if (event.target.matches('input[type="checkbox"]')) {
+        updateCapacity();
+      }
+    });
+
+    // Escaped through textContent rather than trusted as markup:
+    // this text last came from Syncthing's own API, by way of a
+    // JSON endpoint rather than Jinja's auto-escaping.
+    function textNode(text) {
+      const span = document.createElement("span");
+      span.textContent = text == null ? "" : String(text);
+      return span;
+    }
+
+    function renderSyncthing(syncthing) {
+      const body = document.getElementById("syncthing-body");
+
+      if (!body) {
+        return; // this instance declares no Syncthing block at all
+      }
+
+      body.replaceChildren();
+
+      if (!syncthing || !syncthing.reachable) {
+        const unreachable = document.createElement("div");
+        unreachable.id = "syncthing-unreachable";
+        unreachable.className = "value";
+        unreachable.textContent = "injoignable";
+
+        const reason = document.createElement("div");
+        reason.className = "meta";
+        reason.appendChild(textNode(syncthing ? syncthing.unreachable_reason : ""));
+
+        body.append(unreachable, reason);
+        return;
+      }
+
+      const state = document.createElement("div");
+      state.className = "value";
+      state.appendChild(textNode((syncthing.folder && syncthing.folder.state) || "?"));
+      body.append(state);
+
+      const device = syncthing.device || {};
+
+      if (typeof device.completion === "number") {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const fill = document.createElement("div");
+        fill.className = "fill" + (device.completion === 100 ? " ok" : "");
+        fill.style.width = device.completion + "%";
+        bar.appendChild(fill);
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = device.completion + "% reçu par le téléphone — "
+          + (device.needBytes || 0) + " octets restants (dossier entier)";
+
+        body.append(bar, meta);
+
+      } else if (device.unavailable_reason !== undefined) {
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = "avancement vers le téléphone : ";
+        meta.appendChild(textNode(device.unavailable_reason));
+        body.appendChild(meta);
+
+      } else {
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = "appareil non renseigné — état du dossier serveur seulement";
+        body.appendChild(meta);
+      }
+    }
+
+    // Not a measured interval — a compromise: often enough that a
+    // multi-minute phone sync over the VPN visibly moves, rarely
+    // enough not to hammer the daemon for a folder that will not
+    // finish for minutes regardless of how often it is asked.
+    const SYNCTHING_POLL_MS = 5000;
+
+    function refreshSyncthing() {
+      fetch("/syncthing-status")
+        .then(response => response.ok ? response.json() : null)
+        .then(renderSyncthing)
+        // A single failed poll leaves the card showing what it
+        // last knew rather than erasing it — the next poll, five
+        // seconds later, tries again on its own.
+        .catch(() => {});
+    }
+
+    if (document.getElementById("syncthing-body")) {
+      setInterval(refreshSyncthing, SYNCTHING_POLL_MS);
+    }
+
     applyFolds();
+    updateCapacity();
   </script>
 </body>
 </html>

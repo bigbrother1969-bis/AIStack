@@ -161,6 +161,26 @@ def index(request: Request):
     )
 
 
+@app.get("/syncthing-status")
+def syncthing_status() -> dict[str, Any] | None:
+    """
+    The same question `_page_context` asks Syncthing, answered on
+    its own so the screen can ask it again every few seconds
+    without reloading the whole page — the catalog scan and the
+    dry-run materialisation behind the rest of the page cost real
+    time on a 2393-node library, and a phone sync over a VPN takes
+    minutes: nothing about that justifies redoing the expensive
+    half of the page just to learn the completion percentage moved.
+
+    `None` when this instance declares no Syncthing block, exactly
+    as `_syncthing_status` already returns it — the screen's own
+    JavaScript treats that as "nothing to poll" rather than a
+    failure.
+    """
+
+    return _syncthing_status(load_app_definition())
+
+
 @app.post("/save")
 def save(selected_ids: list[str] = Form(default=[])):
     definition = load_app_definition()

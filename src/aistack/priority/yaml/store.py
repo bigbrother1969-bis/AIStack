@@ -184,6 +184,59 @@ def _require(data: dict, fields: tuple[str, ...], label: str) -> None:
         raise ValueError(f"{label} is missing: {', '.join(missing)}")
 
 
+_HEADER_COMMENT = """\
+# Resource priority definition — priority apps vs. background containers.
+#
+# Loaded by `load_resource_priority_yaml`
+# (`src/aistack/priority/yaml/store.py`), and read by the étape 4
+# monitor (`aistack.cli.resource_priority_monitor`).
+#
+# **This header and the section comments below are written by
+# `save_resource_priority_yaml` on every save, not preserved from
+# whatever was here before** — found live on GIGABYTE, 2026-09-03
+# (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`): a first
+# version of this function used a plain `yaml.safe_dump`, which has
+# no notion of comments at all, so a save from `priority_ui` was
+# silently discarding this file's entire documentation. A comment
+# that named one past decision (a date, a `docker inspect` reading,
+# a container that no longer exists) would go stale exactly when the
+# owner used `priority_ui` to change what it described, so what
+# replaced it is generic and structural rather than historical —
+# `git log` on this path is where that history now lives.
+
+"""
+
+_PRIORITY_COMMENT = """\
+# One entry per priority app — boosted to its own `boosted_cpus`
+# while its own `detector` reports activity, restored to
+# `normal_cpus` otherwise. Each app follows only its own activity,
+# never another app's.
+"""
+
+_UNLIMITED_COMMENT = """\
+# The host's own core count. Docker cannot clear a CPU limit once
+# one has been set, so "unlimited" is written as a cap at every core
+# the host has — operationally the same thing.
+"""
+
+_GRACE_COMMENT = """\
+# Seconds a priority app must sit idle before its background
+# containers are throttled back down — long enough to absorb a short
+# gap without thrashing, short enough that closing the app for good
+# gives the machine back promptly.
+"""
+
+_BACKGROUND_COMMENT = """\
+# `default_throttled_cpus` applies to every container below while
+# any priority app is active. A container's own `normal_cpus`, if
+# given, is only its resting-state value — omit it for "no limit at
+# rest". What is classified here (or as `priority` above) is an
+# owner decision made through `priority_ui`, or by hand; anything
+# Docker reports that is classified in neither place is left alone
+# entirely.
+"""
+
+
 def save_resource_priority_yaml(
     definition: ResourcePriorityDefinition, path: Path
 ) -> Path:
@@ -207,39 +260,63 @@ def save_resource_priority_yaml(
     absence, which `_load_container`'s `data.get("normal_cpus")`
     already reads back as "unlimited", the same convention this
     whole feature carries throughout.
+
+    **Written section by section, each with its own static comment,
+    rather than one `yaml.safe_dump` over the whole tree.** PyYAML
+    carries no comments at all — a single combined dump was found
+    live discarding this file's entire documentation on every
+    `priority_ui` save (see `_HEADER_COMMENT`). Splitting the dump
+    per top-level key is what lets a comment sit above each one,
+    the same shape this file has always had.
     """
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    data: dict[str, Any] = {
-        "priority": [
-            {
-                "container": app.container,
-                "normal_cpus": app.normal_cpus,
-                "boosted_cpus": app.boosted_cpus,
-                "detector": _dump_detector(app.detector),
-            }
-            for app in definition.priority
+    priority_data = [
+        {
+            "container": app.container,
+            "normal_cpus": app.normal_cpus,
+            "boosted_cpus": app.boosted_cpus,
+            "detector": _dump_detector(app.detector),
+        }
+        for app in definition.priority
+    ]
+
+    background_data = {
+        "default_throttled_cpus": definition.background.default_throttled_cpus,
+        "containers": [
+            (
+                {"name": container.name, "normal_cpus": container.normal_cpus}
+                if container.normal_cpus is not None
+                else {"name": container.name}
+            )
+            for container in definition.background.containers
         ],
-        "unlimited_cpus": definition.unlimited_cpus,
-        "grace_seconds": definition.grace_seconds,
-        "background": {
-            "default_throttled_cpus": definition.background.default_throttled_cpus,
-            "containers": [
-                (
-                    {"name": container.name, "normal_cpus": container.normal_cpus}
-                    if container.normal_cpus is not None
-                    else {"name": container.name}
-                )
-                for container in definition.background.containers
-            ],
-        },
     }
 
     with path.open("w", encoding="utf-8") as stream:
-        yaml.safe_dump(data, stream, sort_keys=False, allow_unicode=True)
+        stream.write(_HEADER_COMMENT)
+
+        stream.write(_PRIORITY_COMMENT)
+        _dump_section(stream, "priority", priority_data)
+        stream.write("\n")
+
+        stream.write(_UNLIMITED_COMMENT)
+        _dump_section(stream, "unlimited_cpus", definition.unlimited_cpus)
+        stream.write("\n")
+
+        stream.write(_GRACE_COMMENT)
+        _dump_section(stream, "grace_seconds", definition.grace_seconds)
+        stream.write("\n")
+
+        stream.write(_BACKGROUND_COMMENT)
+        _dump_section(stream, "background", background_data)
 
     return path
+
+
+def _dump_section(stream: Any, key: str, value: Any) -> None:
+    yaml.safe_dump({key: value}, stream, sort_keys=False, allow_unicode=True)
 
 
 def _dump_detector(detector: DetectorDefinition) -> dict[str, Any]:

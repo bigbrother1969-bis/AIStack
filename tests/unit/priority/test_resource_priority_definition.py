@@ -578,3 +578,44 @@ def test_saving_omits_normal_cpus_for_an_unlimited_background_container(
     raw = path.read_text(encoding="utf-8")
 
     assert "normal_cpus" not in raw.split("containers:")[1]
+
+
+def test_saving_writes_the_files_own_documentation_comments(tmp_path: Path):
+    """
+    Found live on GIGABYTE, 2026-09-03
+    (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`): a first
+    version of `save_resource_priority_yaml` used one combined
+    `yaml.safe_dump`, which carries no notion of comments at all, so
+    a `priority_ui` save silently stripped this file's entire
+    documentation (88 lines to 29). This does not assert the exact
+    wording — that is expected to be revised — only that a save
+    keeps producing a documented file rather than a bare one, and
+    that a comment sits above each of its four top-level sections,
+    the same shape this file has always had.
+    """
+
+    original = ResourcePriorityDefinition(
+        priority=(),
+        background=BackgroundPriorityDefinition(
+            default_throttled_cpus=0.1,
+            containers=(ContainerPriorityDefinition(name="radarr"),),
+        ),
+        unlimited_cpus=4.0,
+        grace_seconds=60.0,
+    )
+
+    path = tmp_path / "documented.yml"
+    save_resource_priority_yaml(original, path)
+
+    raw = path.read_text(encoding="utf-8")
+    lines = raw.splitlines()
+
+    assert lines[0].startswith("#")
+
+    for key in ("priority:", "unlimited_cpus:", "grace_seconds:", "background:"):
+        line_index = next(
+            i for i, line in enumerate(lines) if line == key or line.startswith(key)
+        )
+        assert lines[line_index - 1].startswith("#"), (
+            f"no comment directly above {key!r}"
+        )

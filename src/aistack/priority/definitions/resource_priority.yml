@@ -2,87 +2,68 @@
 #
 # Loaded by `load_resource_priority_yaml`
 # (`src/aistack/priority/yaml/store.py`), and read by the étape 4
-# monitor (`aistack.cli.resource_priority_monitor`). Decisions taken
-# with the owner on 2026-09-03
-# (`claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md`); measured live
-# against GIGABYTE the same day.
+# monitor (`aistack.cli.resource_priority_monitor`).
 #
-# **Reshaped 2026-09-03, same day, to a generic
-# priority-list/detector-abstraction form** —
-# `claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`. `jellyfin:`
-# (a single named block) became one entry of `priority:` (a list),
-# so a second priority app can be added — through the new
-# `priority_ui` screen, or by hand — without this file's shape
-# changing again. Only one priority app exists today; nothing below
-# is hypothetical, it is what GIGABYTE actually runs.
+# **This header and the section comments below are written by
+# `save_resource_priority_yaml` on every save, not preserved from
+# whatever was here before** — found live on GIGABYTE, 2026-09-03
+# (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`): a first
+# version of this function used a plain `yaml.safe_dump`, which has
+# no notion of comments at all, so a save from `priority_ui` was
+# silently discarding this file's entire documentation. A comment
+# that named one past decision (a date, a `docker inspect` reading,
+# a container that no longer exists) would go stale exactly when the
+# owner used `priority_ui` to change what it described, so what
+# replaced it is generic and structural rather than historical —
+# `git log` on this path is where that history now lives.
 
+# One entry per priority app — boosted to its own `boosted_cpus`
+# while its own `detector` reports activity, restored to
+# `normal_cpus` otherwise. Each app follows only its own activity,
+# never another app's.
 priority:
-  - container: jellyfin
-    # Already configured today (decision baseline, confirmed live via
-    # `docker inspect`: NanoCpus=3000000000).
-    normal_cpus: 3
-    # The machine's full 4 cores (`nproc`) while a session plays —
-    # decision #6: the cores freed by throttling the background
-    # containers have to go somewhere.
-    boosted_cpus: 4
-    detector:
-      type: jellyfin
-      # The monitor runs on the host (decided 2026-09-03), same as
-      # the Selection UI — the host-published address, not the
-      # Docker-internal one confirmed the same day.
-      url: http://127.0.0.1:8096
-      # Never the key itself — GOV-P-001, same convention as
-      # SYNCTHING_API_KEY. The owner created a key named "AIStack"
-      # in Jellyfin's own Dashboard → Clés API, 2026-09-03.
-      api_key_env: JELLYFIN_API_KEY
-      timeout_seconds: 5
+- container: jellyfin
+  normal_cpus: 3.0
+  boosted_cpus: 4.0
+  detector:
+    type: jellyfin
+    url: http://127.0.0.1:8096
+    api_key_env: JELLYFIN_API_KEY
+    timeout_seconds: 5.0
 
-# The host's own core count (`nproc`, measured 2026-09-03) — not a
-# policy choice. Docker cannot clear a CPU limit once one has been
-# set (verified live building the apply layer, étape 3b); restoring
-# "unlimited" is written as a cap at every core the host has, which
-# is operationally the same thing.
-unlimited_cpus: 4
+# The host's own core count. Docker cannot clear a CPU limit once
+# one has been set, so "unlimited" is written as a cap at every core
+# the host has — operationally the same thing.
+unlimited_cpus: 4.0
 
-# Decision of 2026-09-03 (the original build) — long enough to
-# absorb a bathroom break or a phone call without the background
-# containers being unbridled and rebridled minutes apart; short
-# enough that closing a priority app for the night gives them the
-# machine back inside a minute, not after it. Moved here from a
-# monitor constant the same day this file gained a `priority:` list,
-# since it was already the owner's own decision.
-grace_seconds: 60
+# Seconds a priority app must sit idle before its background
+# containers are throttled back down — long enough to absorb a short
+# gap without thrashing, short enough that closing the app for good
+# gives the machine back promptly.
+grace_seconds: 60.0
 
+# `default_throttled_cpus` applies to every container below while
+# any priority app is active. A container's own `normal_cpus`, if
+# given, is only its resting-state value — omit it for "no limit at
+# rest". What is classified here (or as `priority` above) is an
+# owner decision made through `priority_ui`, or by hand; anything
+# Docker reports that is classified in neither place is left alone
+# entirely.
 background:
-  # Decision #7 — one shared throttled ceiling, not a per-container
-  # value: enough to stay alive and answer, little enough to barely
-  # contest a priority app on a 4-core machine.
   default_throttled_cpus: 0.1
-
-  # Decision #5 — the eleven containers measured with no CPU limit
-  # at all, plus seerr, mularr and komf. Membership here is now an
-  # owner decision made through `priority_ui`
-  # (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`, decision
-  # 3: anything Docker reports that is not classified here or in
-  # `priority` above is left alone entirely), not a hardcoded list a
-  # code change was required to revise — this is simply what that
-  # decision currently reads as, unchanged from the original build.
   containers:
-    - name: radarr
-    - name: sonarr
-    - name: lidarr
-    - name: readarr
-    - name: mylar3
-    - name: bazarr
-    - name: prowlarr
-    - name: autobrr
-    - name: qbittorrent
-    - name: gluetun
-    - name: unpackerr
-    - name: seerr
-    - name: mularr
-    - name: komf
-      # Exception to the rest of this list: already limited to 0.5
-      # CPU today (confirmed live via `docker inspect`,
-      # 2026-09-03) — "normal" restores that value, not "no limit".
-      normal_cpus: 0.5
+  - name: radarr
+  - name: sonarr
+  - name: lidarr
+  - name: readarr
+  - name: mylar3
+  - name: bazarr
+  - name: prowlarr
+  - name: autobrr
+  - name: qbittorrent
+  - name: gluetun
+  - name: unpackerr
+  - name: seerr
+  - name: mularr
+  - name: komf
+    normal_cpus: 0.5

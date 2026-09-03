@@ -1,11 +1,12 @@
 """
-Each of the four generators wired into Observation History
-(`write_artifact_with_history`, 2026-09-03), asserted through its
-own `generate()` — not through the shared `write_artifact_with_history`
+Each generator wired into Observation History
+(`write_artifact_with_history`, 2026-09-03 for Docker/Compose,
+extended to Jellyfin the same day), asserted through its own
+`generate()` — not through the shared `write_artifact_with_history`
 tests (`test_history.py`, which never import a generator) and not
 only through `tests/unit/cli/test_the_provider_commands_run.py`
-(which drives these same generators end to end via the four CLI
-`main()`s, but its `written()` helper only reads
+(which drives the four Docker/Compose generators end to end via
+their CLI `main()`s, but its `written()` helper only reads
 `reports/generated/<name>.json`, never `history/<stem>/`).
 
 **Why this file exists.** `test_the_provider_commands_run.py`'s own
@@ -28,6 +29,9 @@ from pathlib import Path
 from aistack.generators.catalog_view import CatalogViewArtifactGenerator
 from aistack.generators.compose.catalog_artifact import ComposeCatalogArtifactGenerator
 from aistack.generators.docker.catalog_artifact import DockerCatalogArtifactGenerator
+from aistack.generators.jellyfin.observation_artifact import (
+    JellyfinObservationArtifactGenerator,
+)
 from aistack.generators.docker.observation_artifact import (
     DockerObservationArtifactGenerator,
 )
@@ -118,6 +122,21 @@ def test_catalog_view_artifact_generator_keeps_history(tmp_path: Path):
     assert json.loads(history_files[0].read_text(encoding="utf-8"))["view_id"] == (
         "docker-containers"
     )
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_jellyfin_observation_artifact_generator_keeps_history(tmp_path: Path):
+    generator = JellyfinObservationArtifactGenerator()
+    output_path = tmp_path / "reports" / "generated" / "jellyfin-observation.json"
+    observation = {"provider": {"id": "aistack.provider.jellyfin"}, "jellyfin": {}}
+
+    generator.generate(observation=observation, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert json.loads(history_files[0].read_text(encoding="utf-8")) == observation
     assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
         encoding="utf-8"
     )

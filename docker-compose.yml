@@ -29,7 +29,24 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **0.3.0 — published 2026-09-03, current.**
+  # **0.4.0 — published 2026-09-03, current.**
+  #
+  #   bigbrother1969/aistack-core:0.4.0
+  #   @sha256:daf46c76b309e047c8801a25857b1328c01fc69c84c25d1ac333e05c8bb2f9fb
+  #
+  # Built from 8757605 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 853 tests with `clean: True`.
+  # 66 artifacts, 16 checks. Freezes the generalized resource-priority
+  # system (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`) —
+  # dynamic Docker container discovery, pluggable per-app detectors
+  # (Jellyfin playback, CPU threshold), and the priority_ui screen —
+  # replacing 0.3.0's single hardcoded Jellyfin app and fourteen
+  # hardcoded background containers. All three run on the host, not
+  # from this image, but their governed modules under `src/aistack`
+  # are part of what `pip install .` now ships.
+  #
+  # **0.3.0 — published 2026-09-03.**
   #
   #   bigbrother1969/aistack-core:0.3.0
   #   @sha256:55f9cd02711462306eb434a6c4184936b7a7fa1a28ddc7f374bea2248fde0376

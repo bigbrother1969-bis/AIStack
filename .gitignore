@@ -46,7 +46,15 @@ context/bundles/
 reports/generated/
 examples/catalog_engine/music-library-catalog.yml
 examples/render_engine/*.html
-examples/selection_engine/music-android-selection-real.yml
+
+# Wrong path since whatever commit moved this generator's output
+# directory from examples/selection_engine/ to examples/selections/
+# — the pattern kept naming the old path, matched nothing, and the
+# file it was meant to exclude was committed instead. Found live on
+# GIGABYTE, 2026-09-03: it kept showing as locally modified and
+# blocking OPS-0002's clean-tree gate on every publication. Corrected
+# path, plus `git rm --cached` on the file this same commit.
+examples/selections/music-android-selection-real.yml
 
 # Runtime logs
 logs/*.log

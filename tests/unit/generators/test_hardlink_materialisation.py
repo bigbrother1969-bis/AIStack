@@ -157,6 +157,34 @@ def test_a_directory_left_empty_is_pruned(library, target):
     assert not (target / "Classique" / "Berlioz").exists()
 
 
+def test_a_chain_of_directories_left_empty_is_pruned_to_the_top(
+    library, target
+):
+    """
+    `os.walk(topdown=False)` visits `AC  DC/Back in Black` before
+    `AC  DC`, but the tuple it yields for `AC  DC` still lists
+    `Back in Black` among its subdirectories — captured when the
+    walk first descended into `AC  DC`, before that child was
+    removed. A prune that trusted that list would leave `AC  DC`
+    behind: empty, still on the target, still a folder the phone
+    keeps showing.
+
+    Found materialising a two-level unselection in the Selection
+    UI's own smoke test, 2026-09-03 — the case the single-level
+    fixture above cannot exercise, since the walk never has to
+    revisit a parent it already pruned a child of.
+    """
+
+    materialise(library, target, ["AC  DC/Back in Black"])
+
+    report = materialise(library, target, [])
+
+    assert "AC  DC/Back in Black" in report.pruned
+    assert "AC  DC" in report.pruned
+
+    assert not (target / "AC  DC").exists()
+
+
 def test_a_replaced_source_is_relinked_rather_than_left_stale(
     library, target
 ):

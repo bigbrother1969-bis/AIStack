@@ -375,6 +375,18 @@ def _prune(target_root: Path, dry_run: bool) -> list[str]:
     be empty today as *would be pruned* would be a claim about a
     state that does not exist.
 
+    **Emptiness is read from the disk at the moment each directory
+    is visited, not from the tuple `os.walk` handed back.** With
+    `topdown=False`, `os.walk` still reports the subdirectories a
+    parent had when it first descended into it — before the walk
+    pruned any of them. A chain two levels deep left `AC  DC`
+    behind, empty and still on the target, because the walk's own
+    record of `AC  DC` still listed `Back in Black` after this
+    function had already removed it earlier in the same pass.
+    Found materialising the Selection UI's own smoke test,
+    2026-09-03, a case the single-directory fixture this function
+    already had could not exercise.
+
     Never the target root itself.
     """
 
@@ -383,14 +395,18 @@ def _prune(target_root: Path, dry_run: bool) -> list[str]:
 
     pruned: list[str] = []
 
-    for current, subdirectories, filenames in os.walk(
+    for current, _subdirectories, _filenames in os.walk(
         target_root, topdown=False
     ):
 
         if Path(current) == target_root:
             continue
 
-        if filenames or subdirectories:
+        try:
+            if os.listdir(current):
+                continue
+
+        except OSError:
             continue
 
         relative = os.path.relpath(current, target_root)

@@ -10,6 +10,10 @@ from aistack.kernel.bootstrap.providers import (
     register_default_providers,
 )
 
+from aistack.kernel.bootstrap.tasks import (
+    register_default_tasks,
+)
+
 
 from aistack.kernel.registries import KernelRegistries
 
@@ -118,6 +122,10 @@ def create_kernel() -> Kernel:
     register_default_providers(kernel)
 
     register_default_catalog_views(kernel)
+
+    # Must run after `register_default_providers`: it looks up the
+    # provider its one task wraps.
+    register_default_tasks(kernel)
 
     return kernel
 

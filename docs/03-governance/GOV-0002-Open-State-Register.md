@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.80
+  version: 1.81
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-08-29
+  updated: 2026-09-03
 
 relations:
   references:
@@ -179,12 +179,15 @@ citable from anywhere; it exists inside the register that declares it.
 
 # Contract debt
 
-None open. OS-001, OS-039, OS-041 and OS-042 are in *Resolved*.
+None open. OS-001, OS-039, OS-041, OS-042 and OS-045 are in *Resolved*.
 
-**Every section of this register is empty on 2026-08-29**, for the second time
-since it was written on 2026-08-22. *The first time was 2026-08-27 and it
+**Every section of this register was empty on 2026-08-29**, for the second
+time since it was written on 2026-08-22. *The first time was 2026-08-27 and it
 lasted about forty minutes* — the note under § *Decisions* records how it
-ended, and what it was worth.
+ended, and what it was worth. `OS-045`, opened and resolved the same day
+2026-09-03, is the register's own proof that "empty" describes a moment, not a
+property: `OS-041`'s resolution named its own reopening condition, and it was
+met.
 
 **What it means is unchanged and worth restating rather than assuming.** A
 register with nothing open means every **known** condition has been qualified.
@@ -435,6 +438,82 @@ unfinished one.
 and for a different reason** — a strategy configured per use is not a registry
 entry. A report cannot tell the two apart, which is why both are written where
 a reader meets them.*
+
+**Note added 2026-09-03 — the paragraph above no longer holds.** `tasks` is not
+empty after bootstrap any more; see `GOV-0002/OS-045`, opened and resolved the
+same day. This entry's own resolution is not rewritten — *the Execution
+Dimension awaits a real need* was the correct reading on 2026-08-29, on what
+existed then — but a reader who stops here would carry a stale fact forward,
+which is the exact failure § *What a closure must carry* exists to name. Go to
+`OS-045` for what changed.
+
+---
+
+#### GOV-0002/OS-045 — The real need OS-041 named has arrived: one Task, registered and executed in production
+
+**Nature** `contract-debt` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by registering `docker.discover` as a Task and routing `aistack.cli.docker_discover` through `KernelRuntime.execute()`
+
+**Observed** `OS-041` closed by qualifying the condition rather than by
+building anything, and named its own reopening test in the same breath: *"the
+four provider CLIs are the candidates... turning one into a registered task is
+the measurement that would tell whether the abstraction earns itself."* On
+2026-09-03 the owner named the real need `OS-041` said this dimension was
+waiting for: Runtime Operation History — the third of four historisation
+dimensions the owner opened the same day (`claude/ROADMAP-SYNTHESIS-2026-09-03.md`,
+Observation History's own extension) — records what AIStack *executed*, and an
+execution trace only means something once at least one execution is real.
+`docker_discover` was chosen as the candidate: the CLI with the least ceremony
+among the four (one provider call, one generator call, no branching), so the
+first production `Request` traverses the Runtime rather than a case worth
+arguing about on its own terms.
+
+**What was built, measured against `OS-041`'s own inventory:**
+
+```text
+before                                   after
+tasks registered      → 0                tasks registered      → 1 (docker.discover)
+KernelRuntime.boot()  → tests only       KernelRuntime.boot()  → aistack.cli.docker_discover
+```
+
+`aistack.kernel.tasks.DockerDiscoverTask` wraps the same two calls
+`docker_discover.py`'s `main()` made directly before this change —
+`DockerProvider.collect()`, `DockerObservationArtifactGenerator.generate()` —
+unchanged; only who calls them moved. `aistack.kernel.bootstrap.tasks
+.register_default_tasks` is the first function ever to populate
+`kernel.registries.tasks`, called from `create_kernel()` after
+`register_default_providers`, whose registration it reads. 908 tests pass
+(up from 899), including nine new to this change; the mutation this entry's
+own measurement depends on — removing the registration — was applied and
+reverted, failing five tests while it stood.
+
+**What this does not do.** `PackageCapability`, `Action` and `Observation
+Service` — the half of `ADR-0008`'s chain removed 2026-08-29 under `ARC-P-006`
+for being unusable — stay removed. This registers one `Task` for one real,
+named consumer; it is not a reversal of the capability removal, which rested
+on a different measurement (nine classes that could not be instantiated) that
+nothing here revisits.
+
+**Derivable** yes — `unused-registrations` now reports `tasks` as non-empty
+after bootstrap at every projection, the same check `OS-041` cited for the
+opposite fact.
+
+**Qualification** **Reopening `OS-041` is the owner's decision, made
+knowingly.** Told plainly that this reverses a decision reasoned through
+`ARC-P-006` five days prior, the owner's answer: *"Je connais la règle, mais je
+considère également que l'historisation doit faire partie des fonctions
+socles"* — historisation is a foundational function of this heritage, not an
+incidental one, and that is the real need `ARC-P-006` asks for before an
+abstraction is earned. `OS-041` is not overridden; its own condition for
+reopening is satisfied.
+
+**Resolved 2026-09-03.** `ADR-0008` § *The Execution Dimension is built and
+nothing runs it* carries a dated note alongside its 2026-08-27 measurement,
+per § *What a closure must carry*; its implementation table gains a row for
+this. What remains open, named here and not qualified: `ExecutionTrace` is
+still saved only to an `InMemoryTraceRepository` — this entry makes the trace
+real, not yet durable. Persisting it, the way Observation History already
+persists provider artifacts, is the next lot of the same historisation
+workstream and is not this entry's subject.
 
 ---
 

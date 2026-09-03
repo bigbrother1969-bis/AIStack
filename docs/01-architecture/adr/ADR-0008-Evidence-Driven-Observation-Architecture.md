@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Accepted
   owner: Architecture
   created: 2026-07-31
-  updated: 2026-08-29
+  updated: 2026-09-03
 
 relations:
   references:
@@ -64,6 +64,7 @@ halves are not in the same state.**
 | Execution — `Request` | done — 2026-08-27 |
 | Execution — `Task`, `TaskRegistry`, `TaskResolver` | done — 2026-08-27 |
 | Execution — Kernel Runtime, `KernelRuntime` / `RuntimeExecutor` / `ExecutionTrace` | done — 2026-08-27 |
+| Execution — first production Task registered and executed (`docker.discover`, via `aistack.cli.docker_discover`) | done — 2026-09-03 |
 | Execution — Observation Service | abandoned — 2026-08-28 |
 | Execution — Capability, `PackageCapability` and nine implementations | abandoned — 2026-08-29 |
 | Execution — Action | abandoned — 2026-08-28 |
@@ -138,6 +139,18 @@ in processes that never completed — GOV-0002/OS-044. The sentence stays becaus
 it is about composition and remains true of it; the qualifier is added because
 `live` was doing work the measurement did not support. Since the repair the
 four run, and five tests drive them to the artifacts they write.*
+
+**Superseded in part, 2026-09-03 — GOV-0002/OS-045.** *Tasks registered → 0*
+above is a measurement of that day, not of today: `docker.discover` is now a
+registered Task, and `aistack.cli.docker_discover` boots the Runtime and
+executes it, in production, not only in a test. The section is kept rather
+than rewritten — it was true on 2026-08-27, and the reasoning that resolved
+`GOV-0002/OS-041` two days later still explains why nothing was built before a
+real subject existed. What changed is that a real subject now does: Runtime
+Operation History (the historisation workstream the owner opened 2026-09-03)
+needs at least one real execution to have anything to record. The nine
+capabilities and `Observation Service`/`Action` are unaffected by this — see
+below, still abandoned, on a different measurement this note does not revisit.
 
 **`Observation Service` and `Action` exist nowhere.** There is an `Observation`
 and an `ObservationContext`, but they are *results* produced by execution

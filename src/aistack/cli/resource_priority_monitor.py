@@ -171,6 +171,33 @@ def log_cycle(boosted: bool, report: ApplyReport, label: str = "") -> None:
 
 def main(argv: list[str] | None = None) -> None:
 
+    # Under systemd, stdout is a pipe to journald, not a terminal —
+    # and Python block-buffers a pipe by default, only flushing on a
+    # full buffer or process exit. This process runs for hours and
+    # prints one short line per state change, so the default buffer
+    # (several KB) can sit unflushed indefinitely: a `docker update`
+    # already ran, correctly, with nothing in the journal to show
+    # for it.
+    #
+    # Found needed 2026-09-03: a confirmed state transition — verified
+    # independently via `docker inspect` on the affected containers —
+    # produced no journal line at all, 28 minutes after the fact,
+    # with the service still `active (running)`. Reproduced and fixed
+    # live in a disposable sandbox before touching this file: a
+    # script printing two lines a few seconds apart, run with stdout
+    # redirected to a file and `PYTHONUNBUFFERED` unset (matching
+    # this project's systemd unit, which does not set it), left that
+    # file empty seconds after both prints had executed; the same
+    # script with `line_buffering=True` wrote both lines immediately.
+    #
+    # Line buffering costs nothing here — this process never writes a
+    # partial line — and makes every `print()` reach the journal as
+    # soon as it is written, matching what running this by hand in a
+    # terminal already looked like. Host-touching (it reconfigures
+    # this process's own stdout stream), so verified live rather than
+    # in the governed suite, per decision #9.
+    sys.stdout.reconfigure(line_buffering=True)
+
     definition_path, once, dry_run = parse(
         sys.argv[1:] if argv is None else argv
     )

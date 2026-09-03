@@ -37,9 +37,24 @@ class KernelRuntime:
     state: RuntimeState = RuntimeState.READY
 
     @classmethod
-    def boot(cls) -> "KernelRuntime":
+    def boot(
+        cls,
+        trace_repository: TraceRepository | None = None,
+    ) -> "KernelRuntime":
         """
         Boot the Runtime through the default Kernel Composition Root.
+
+        **`trace_repository` defaults to in-memory, never to durable
+        storage.** Every existing caller — the Runtime's own test
+        suite among them — gets the same `InMemoryTraceRepository`
+        it always has unless it asks for something else explicitly.
+        A caller that wants Runtime Operation History
+        (`aistack.kernel.tracing.FileTraceRepository`, 2026-09-03)
+        passes one in, the same way `aistack.cli.docker_discover`
+        does — defaulting `.boot()` itself to writing files would
+        make every test that boots the Runtime write into this
+        repository's own `reports/generated/` without having asked
+        to.
         """
 
         kernel = create_kernel()
@@ -52,7 +67,7 @@ class KernelRuntime:
             resolver=resolver,
         )
 
-        trace_repository = InMemoryTraceRepository()
+        trace_repository = trace_repository or InMemoryTraceRepository()
 
         return cls(
             kernel=kernel,

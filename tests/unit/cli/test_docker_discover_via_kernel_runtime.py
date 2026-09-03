@@ -93,6 +93,29 @@ def test_the_cli_itself_writes_the_observation_through_the_runtime(
     )
 
 
+def test_the_cli_persists_its_own_execution_trace(stubbed_provider, workspace):
+    """
+    The actual point of GOV-0002/OS-045: not just that a trace is
+    produced (the previous test), but that it survives the process —
+    Runtime Operation History, not an in-memory fact nobody can look
+    at again once the CLI exits.
+    """
+
+    docker_discover.main()
+
+    trace_path = workspace / "reports" / "generated" / "execution-trace.json"
+    trace = json.loads(trace_path.read_text(encoding="utf-8"))
+
+    assert trace["request"]["task_id"] == "docker.discover"
+    assert trace["resolution"]["task_id"] == "docker.discover"
+    assert trace["observation"]["data"]["output_path"] == (
+        "reports/generated/docker-provider-observation.json"
+    )
+
+    history_dir = trace_path.parent / "history" / "execution-trace"
+    assert len(list(history_dir.glob("*.json"))) == 1
+
+
 def test_two_cli_runs_get_different_request_ids(stubbed_provider, workspace, monkeypatch):
     """
     Each invocation is meant to be told apart once traces are

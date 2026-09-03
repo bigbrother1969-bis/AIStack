@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Accepted
   owner: Architecture
   created: 2026-07-31
@@ -65,6 +65,7 @@ halves are not in the same state.**
 | Execution — `Task`, `TaskRegistry`, `TaskResolver` | done — 2026-08-27 |
 | Execution — Kernel Runtime, `KernelRuntime` / `RuntimeExecutor` / `ExecutionTrace` | done — 2026-08-27 |
 | Execution — first production Task registered and executed (`docker.discover`, via `aistack.cli.docker_discover`) | done — 2026-09-03 |
+| Execution — `ExecutionTrace` persisted durably (`FileTraceRepository`, Runtime Operation History) | done — 2026-09-03 |
 | Execution — Observation Service | abandoned — 2026-08-28 |
 | Execution — Capability, `PackageCapability` and nine implementations | abandoned — 2026-08-29 |
 | Execution — Action | abandoned — 2026-08-28 |
@@ -151,6 +152,14 @@ Operation History (the historisation workstream the owner opened 2026-09-03)
 needs at least one real execution to have anything to record. The nine
 capabilities and `Observation Service`/`Action` are unaffected by this — see
 below, still abandoned, on a different measurement this note does not revisit.
+
+**Closed further, 2026-09-03 — the same day.** The note above still named one
+gap: the trace this section's own measurement made possible was real but only
+in-memory, gone when the process exited. `FileTraceRepository` closes it —
+`ExecutionTrace` now persists through `write_artifact_with_history`, the same
+mechanism every provider observation already uses, wired in explicitly by
+`aistack.cli.docker_discover` rather than by changing what `KernelRuntime
+.boot()` defaults to. GOV-0002/OS-045 carries the fuller account.
 
 **`Observation Service` and `Action` exist nowhere.** There is an `Observation`
 and an `ObservationContext`, but they are *results* produced by execution

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.81
+  version: 1.82
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -514,6 +514,21 @@ still saved only to an `InMemoryTraceRepository` — this entry makes the trace
 real, not yet durable. Persisting it, the way Observation History already
 persists provider artifacts, is the next lot of the same historisation
 workstream and is not this entry's subject.
+
+**Note added 2026-09-03 — the paragraph above no longer holds.**
+`ExecutionTrace` is durable now: `aistack.kernel.tracing.repository.file
+.FileTraceRepository` writes each trace through the same
+`write_artifact_with_history` mechanism every provider observation already
+uses, and `aistack.cli.docker_discover` passes it to `KernelRuntime.boot()`
+explicitly (`KernelRuntime.boot()` itself keeps defaulting to
+`InMemoryTraceRepository`, so no existing caller's behaviour changed). This
+was scoped as "not this entry's subject" above on purpose — it is execution
+of a need this entry already established, not a new decision — so it closes
+here rather than opening its own numbered item; `ADR-0008`'s implementation
+table gains a row for it. 921 tests pass (up from 908); the two pieces of new
+logic — the dual write (memory list, disk history) and `boot()`'s
+default-preservation when a repository is passed — were each mutation-tested
+by removal and reverted.
 
 ---
 

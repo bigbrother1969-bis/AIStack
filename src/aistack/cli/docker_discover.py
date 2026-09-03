@@ -4,16 +4,18 @@ import uuid
 
 from aistack.kernel.runtime import KernelRuntime, Request
 from aistack.kernel.tasks.docker_discover import DEFAULT_OUTPUT_PATH
+from aistack.kernel.tracing import FileTraceRepository
 
 
 def main() -> None:
-    runtime = KernelRuntime.boot()
+    # Durable, not the Runtime's own in-memory default — Runtime
+    # Operation History (2026-09-03) needs this command's executions
+    # to survive the process, the same way every provider's
+    # Observation History already does.
+    runtime = KernelRuntime.boot(trace_repository=FileTraceRepository())
 
-    # A fresh id per invocation: once traces are historicised
-    # (Runtime Operation History, the reason this command was moved
-    # onto the Runtime at all — GOV-0002/OS-041, reopened
-    # 2026-09-03), two runs must be told apart, not just their
-    # observations.
+    # A fresh id per invocation: two runs must be told apart in that
+    # history, not just their observations.
     request = Request(
         request_id=str(uuid.uuid4()),
         task_id="docker.discover",

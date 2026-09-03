@@ -1,0 +1,45 @@
+# Resource priority definition — Jellyfin front-line vs. background containers.
+#
+# Loaded by `load_resource_priority_yaml`
+# (`src/aistack/priority/yaml/store.py`). Decisions taken with the
+# owner on 2026-09-03
+# (`claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md`); measured live
+# against GIGABYTE the same day.
+
+jellyfin:
+  container: jellyfin
+  # Already configured today (decision baseline, confirmed live via
+  # `docker inspect`: NanoCpus=3000000000).
+  normal_cpus: 3
+  # The machine's full 4 cores (`nproc`) while a session plays —
+  # decision #6: the cores freed by throttling the background
+  # containers have to go somewhere.
+  boosted_cpus: 4
+
+background:
+  # Decision #7 — one shared throttled ceiling, not a per-container
+  # value: enough to stay alive and answer, little enough to barely
+  # contest Jellyfin on a 4-core machine.
+  default_throttled_cpus: 0.1
+
+  # Decision #5 — the eleven containers measured with no CPU limit
+  # at all, plus seerr, mularr and komf.
+  containers:
+    - name: radarr
+    - name: sonarr
+    - name: lidarr
+    - name: readarr
+    - name: mylar3
+    - name: bazarr
+    - name: prowlarr
+    - name: autobrr
+    - name: qbittorrent
+    - name: gluetun
+    - name: unpackerr
+    - name: seerr
+    - name: mularr
+    - name: komf
+      # Exception to the rest of this list: already limited to 0.5
+      # CPU today (confirmed live via `docker inspect`,
+      # 2026-09-03) — "normal" restores that value, not "no limit".
+      normal_cpus: 0.5

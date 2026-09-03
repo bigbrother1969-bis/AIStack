@@ -134,9 +134,9 @@
     <button type="button" onclick="setAllFolds(false)">Tout déplier</button>
   </div>
 
-  <form method="post" action="/save">
+  <form method="post" action="/save" onsubmit="onSynchronise()">
     <div class="footer-actions">
-      <button class="primary" type="submit">Synchroniser avec le smartphone</button>
+      <button class="primary" type="submit" data-role="sync-button">Synchroniser avec le smartphone</button>
     </div>
 
     <div id="tree">
@@ -181,7 +181,7 @@
     </div>
 
     <div class="footer-actions">
-      <button class="primary" type="submit">Synchroniser avec le smartphone</button>
+      <button class="primary" type="submit" data-role="sync-button">Synchroniser avec le smartphone</button>
     </div>
   </form>
 
@@ -241,6 +241,23 @@
 
     function filterItems() {
       applyVisibility();
+    }
+
+    // The round trip — materialising, then Syncthing being told —
+    // takes long enough on the owner's library that a click with no
+    // feedback reads as "nothing happened", and a second click on
+    // either button below then races the first one on the same
+    // files (found 2026-09-03: a clean run and a failing run of the
+    // same click, only the slower one's report left to read). This
+    // does not prevent that on its own — the server now serialises
+    // concurrent runs so a second click is merely redundant rather
+    // than corrupting — but a click that visibly can't be repeated
+    // is the one that is never tried.
+    function onSynchronise() {
+      document.querySelectorAll('[data-role="sync-button"]').forEach(button => {
+        button.disabled = true;
+        button.textContent = "Synchronisation en cours…";
+      });
     }
 
     applyFolds();

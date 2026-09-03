@@ -56,6 +56,21 @@ examples/render_engine/*.html
 # path, plus `git rm --cached` on the file this same commit.
 examples/selections/music-android-selection-real.yml
 
+# selection_ui's own materialisation report, one per Application
+# Definition — `_last_generation_path` (`selection_ui/app.py`) names
+# it `{app_id}-last-generation.yml`, written beside that
+# definition's own `selection_file`. Generated on every "générer"
+# click (`materialise_by_hardlink`, ENG-P-003 disposable, same as
+# the selection file itself). A pattern, not a literal path: found
+# live on GIGABYTE, 2026-09-03, as
+# `music_android-last-generation.yml` (`app_id: music_android`,
+# underscore — `selection_ui/definitions/music_android.yml` already
+# names a second instance of the family as the reason this file's
+# own shape can change), and the definition anticipates a second
+# `app_id` existing later, which would write a second, differently
+# named report right beside it.
+examples/selections/*-last-generation.yml
+
 # Runtime logs
 logs/*.log
 

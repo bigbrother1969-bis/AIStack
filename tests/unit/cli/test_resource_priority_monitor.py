@@ -5,65 +5,9 @@ import pytest
 from aistack.cli.resource_priority_monitor import (
     USAGE,
     ApplyReport,
-    is_playing_now,
     log_cycle,
     parse,
 )
-
-
-class FakeJellyfinProvider:
-    """
-    A provider that answers without a Jellyfin daemon.
-
-    `is_playing_now` is the chain under test: reachability and
-    session shape in, a boolean out. `JellyfinProvider` itself is
-    covered by its own tests against a real `ThreadingHTTPServer`,
-    and `has_active_playback` by its own — this stays a stand-in
-    for the one interface both are read through, `collect()`.
-    """
-
-    def __init__(self, jellyfin: dict):
-        self._jellyfin = jellyfin
-
-    def collect(self):
-        return {"jellyfin": self._jellyfin}
-
-
-def test_playing_now_is_true_when_reachable_and_playing():
-    provider = FakeJellyfinProvider(
-        {
-            "reachable": True,
-            "sessions": [
-                {
-                    "NowPlayingItem": {"Name": "A Film"},
-                    "PlayState": {"IsPaused": False},
-                }
-            ],
-        }
-    )
-
-    assert is_playing_now(provider) is True
-
-
-def test_playing_now_is_false_when_reachable_but_idle():
-    provider = FakeJellyfinProvider({"reachable": True, "sessions": []})
-
-    assert is_playing_now(provider) is False
-
-
-def test_playing_now_is_false_when_unreachable():
-    """
-    Decision #4: an unreachable Jellyfin falls back to full power
-    for the background containers rather than leaving them
-    throttled by a supervision failure — read here as "not playing"
-    regardless of what `sessions` (empty, stale, or absent) says.
-    """
-
-    provider = FakeJellyfinProvider(
-        {"reachable": False, "unreachable_reason": "timed out", "sessions": []}
-    )
-
-    assert is_playing_now(provider) is False
 
 
 def test_parse_defaults_to_the_real_definition_looping_forever():
@@ -107,18 +51,38 @@ def test_usage_names_every_flag_parse_accepts():
 
 
 def test_log_cycle_is_silent_when_nothing_changed(capsys):
-    log_cycle(boosted=False, report=ApplyReport())
+    log_cycle(boosted={"jellyfin": False}, report=ApplyReport())
 
     assert capsys.readouterr().out == ""
 
 
 def test_log_cycle_prints_when_something_was_applied(capsys):
-    log_cycle(boosted=True, report=ApplyReport(applied=("jellyfin",)))
+    log_cycle(
+        boosted={"jellyfin": True}, report=ApplyReport(applied=("jellyfin",))
+    )
 
     out = capsys.readouterr().out
 
-    assert "state=boosted" in out
-    assert "jellyfin" in out
+    assert "jellyfin=boosted" in out
+    assert "applied=['jellyfin']" in out
+
+
+def test_log_cycle_names_every_priority_app_by_its_own_state(capsys):
+    """
+    Generalised 2026-09-03: with more than one priority app
+    possible, `state=` has to name which app is which rather than
+    carry one implied boolean.
+    """
+
+    log_cycle(
+        boosted={"jellyfin": True, "some-app": False},
+        report=ApplyReport(applied=("jellyfin",)),
+    )
+
+    out = capsys.readouterr().out
+
+    assert "jellyfin=boosted" in out
+    assert "some-app=normal" in out
 
 
 def test_log_cycle_always_prints_a_labelled_line(capsys):
@@ -128,7 +92,7 @@ def test_log_cycle_always_prints_a_labelled_line(capsys):
     rather than the reason a container quietly stayed throttled.
     """
 
-    log_cycle(boosted=False, report=ApplyReport(), label="releasing on exit")
+    log_cycle(boosted={}, report=ApplyReport(), label="releasing on exit")
 
     assert "releasing on exit" in capsys.readouterr().out
 
@@ -141,7 +105,9 @@ def test_log_cycle_prints_a_timestamp(capsys):
     line is enough to compare two prints against a wall clock.
     """
 
-    log_cycle(boosted=True, report=ApplyReport(applied=("jellyfin",)))
+    log_cycle(
+        boosted={"jellyfin": True}, report=ApplyReport(applied=("jellyfin",))
+    )
 
     out = capsys.readouterr().out
 

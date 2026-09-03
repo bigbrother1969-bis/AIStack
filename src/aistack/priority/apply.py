@@ -34,6 +34,26 @@ class ApplyReport:
     failed: tuple[tuple[str, str], ...] = ()
     dry_run: bool = False
 
+    @property
+    def changed(self) -> bool:
+        """
+        Whether this report is worth surfacing to a human or to
+        history — the one condition `aistack.cli
+        .resource_priority_monitor.log_cycle` already prints on and
+        `aistack.priority.decision_history.record_decision` (CPU
+        decision history, 2026-09-03) now persists on, kept here as
+        the single place either could drift from the other.
+
+        `unchanged` alone is the quiet case: every container was
+        already at its target, nothing for a poll cycle to say.
+        `not_found` counts as a change worth surfacing even though
+        nothing was written — a container the owner removed is
+        still something worth a line, the same reasoning `not_found
+        is not failed` already draws for a different distinction.
+        """
+
+        return bool(self.applied or self.failed or self.not_found)
+
 
 def apply_resource_priority(
     targets: Mapping[str, float | None],

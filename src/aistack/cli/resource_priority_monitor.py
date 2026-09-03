@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from aistack.priority.apply import ApplyReport, apply_resource_priority
+from aistack.priority.decision_history import record_decision
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.detectors.base import Detector
 from aistack.priority.detectors.factory import build_detector
@@ -174,9 +175,16 @@ def log_cycle(
     boolean.** With any number of priority apps possible since
     2026-09-03, a single `state=boosted`/`state=normal` no longer
     says which app that was about.
+
+    **The print condition is `report.changed`, not reimplemented
+    here.** CPU decision history (`aistack.priority
+    .decision_history.record_decision`, 2026-09-03) persists on the
+    same condition — kept as one property on `ApplyReport` so what
+    a human sees in the journal and what history keeps cannot say
+    different things about the same cycle.
     """
 
-    if not (report.applied or report.failed or report.not_found or label):
+    if not (report.changed or label):
         return
 
     prefix = f"{label}: " if label else ""
@@ -248,6 +256,7 @@ def main(argv: list[str] | None = None) -> None:
             )
 
             log_cycle(boosted, report)
+            record_decision(boosted, report)
 
             if once:
                 return
@@ -273,6 +282,7 @@ def main(argv: list[str] | None = None) -> None:
                     dry_run=dry_run,
                 )
                 log_cycle({}, release, label="releasing on exit")
+                record_decision({}, release)
             except Exception as error:
                 print(
                     "resource-priority-monitor: could not release on "

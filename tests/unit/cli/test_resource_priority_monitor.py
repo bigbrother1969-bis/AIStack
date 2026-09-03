@@ -97,6 +97,19 @@ def test_log_cycle_always_prints_a_labelled_line(capsys):
     assert "releasing on exit" in capsys.readouterr().out
 
 
+def test_log_cycle_prints_when_a_container_is_not_found(capsys):
+    """
+    Regression for the 2026-09-03 refactor onto `ApplyReport
+    .changed`: `not_found` alone must still print, the same as
+    before the print condition became one shared property instead
+    of being spelled out here.
+    """
+
+    log_cycle(boosted={"jellyfin": False}, report=ApplyReport(not_found=("radarr",)))
+
+    assert "not_found=['radarr']" in capsys.readouterr().out
+
+
 def test_log_cycle_prints_a_timestamp(capsys):
     """
     Found needed 2026-09-03: a transition observed as "faster than

@@ -13,14 +13,23 @@
 # hit 2026-09-03, when a terminal with .venv already ahead on PATH
 # ran uvicorn's absence as an error instead of uvicorn.
 #
-# No python-multipart here: this screen's own `/save` reads
-# `await request.form()` against a form with no file upload — the
-# one thing python-multipart exists for in selection_ui's own
-# requirements, and this screen has none.
+# python-multipart is required, and its absence was found live on
+# GIGABYTE, 2026-09-03: `/save` reads `await request.form()`, and
+# Starlette's own `Request._get_form` asserts `python-multipart` is
+# installed before parsing *any* form body — urlencoded or
+# multipart alike — not only the multipart/file-upload case its own
+# name suggests. This file used to omit it on the reasoning that
+# this screen has no file upload; that reasoning was wrong, and a
+# sandbox smoke test before delivery did not catch it because it
+# reused an existing virtualenv (.venv-selection-ui) that already
+# carried python-multipart for an unrelated reason — a false
+# positive from environment reuse, not a real verification. The fix
+# was verified in a virtualenv built from this file alone.
 
 fastapi
 uvicorn
 jinja2
+python-multipart
 
 # Not ungoverned: pyproject.toml already declares PyYAML as the
 # heritage's one dependency, and this line does not redeclare that

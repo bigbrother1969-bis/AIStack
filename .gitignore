@@ -17,10 +17,15 @@ __pycache__/
 # selection_ui/requirements.txt and scripts/setup_selection_ui_env.sh).
 .venv-selection-ui/
 
+# priority_ui's own environment, same reasoning, 2026-09-03 — see
+# priority_ui/requirements.txt and scripts/setup_priority_ui_env.sh.
+.venv-priority-ui/
+
 # Local environment and secrets. Never committed: these carry
 # per-machine values, and one of them carries credentials.
 .env
 .env.selection-ui
+.env.priority-ui
 .env.resource-priority
 
 # Deployment-specific transfer target. The path a given host

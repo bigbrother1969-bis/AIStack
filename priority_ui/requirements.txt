@@ -1,0 +1,31 @@
+# priority_ui's own dependencies, deliberately not in pyproject.toml.
+#
+# Same reasoning as selection_ui/requirements.txt (decision #9,
+# 2026-08-29): fastapi, uvicorn and jinja2 are not knowledge this
+# heritage is verified on — nothing under src/aistack imports them,
+# and pulling them into the governed venv would make every pytest
+# run depend on packages the test suite never touches.
+#
+# Installed into a dedicated environment by
+# scripts/setup_priority_ui_env.sh, never into .venv. See
+# run_priority_ui.sh, which calls that environment by path rather
+# than relying on PATH order — the gap selection_ui's own launcher
+# hit 2026-09-03, when a terminal with .venv already ahead on PATH
+# ran uvicorn's absence as an error instead of uvicorn.
+#
+# No python-multipart here: this screen's own `/save` reads
+# `await request.form()` against a form with no file upload — the
+# one thing python-multipart exists for in selection_ui's own
+# requirements, and this screen has none.
+
+fastapi
+uvicorn
+jinja2
+
+# Not ungoverned: pyproject.toml already declares PyYAML as the
+# heritage's one dependency, and this line does not redeclare that
+# decision — it exists because this file installs into a second,
+# separate interpreter (see above), and PYTHONPATH alone (set by
+# bin/aistack_env.sh) makes `import aistack` resolve here but does
+# not install what aistack itself depends on.
+PyYAML>=6.0

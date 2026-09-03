@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>AIStack — Priorité des containers</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .status { padding: .8rem 1rem; border-radius: 6px; background: #e8f5e9; border: 1px solid #a5d6a7; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; }
+    .row-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: .8rem; background: #fafafa; }
+    .row-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+    .row-head .name { font-weight: bold; font-size: 1.05rem; }
+    .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .72rem; }
+    .badge.running { background: #dff6dd; color: #116329; }
+    .badge.stopped { background: #f0f0f0; color: #666; }
+    .badge.unknown { background: #fff1cc; color: #7d4e00; }
+    .classification { display: flex; gap: 1rem; margin: .6rem 0; }
+    .classification label { font-weight: normal; cursor: pointer; }
+    .fields { display: none; gap: .8rem; flex-wrap: wrap; padding: .6rem; background: white; border: 1px solid #eee; border-radius: 6px; margin-top: .4rem; }
+    .fields.shown { display: flex; }
+    .field { display: flex; flex-direction: column; font-size: .82rem; color: #444; }
+    .field input, .field select { margin-top: .2rem; padding: .35rem; font-size: .9rem; }
+    .footer-actions { margin: 1.5rem 0; }
+    button { padding: .7rem 1rem; font-size: .95rem; cursor: pointer; border: 1px solid #bbb; border-radius: 6px; background: white; }
+    button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Priorité des containers</h1>
+    <p class="meta">
+      {{ rows | length }} container(s) — ralenti par défaut : {{ default_throttled_cpus }} CPU,
+      cœurs de la machine : {{ unlimited_cpus }}, fenêtre de grâce : {{ grace_seconds }}s
+    </p>
+  </header>
+
+  {% if status %}
+    <div class="status">{{ status }}</div>
+  {% endif %}
+
+  <form method="post" action="/save">
+    <div class="footer-actions">
+      <button class="primary" type="submit">Enregistrer la classification</button>
+    </div>
+
+    {% for row in rows %}
+      {% set n = row.name %}
+      <div class="row-card">
+        <div class="row-head">
+          <span class="name">{{ n }}</span>
+          {% if row.running is none %}
+            <span class="badge unknown">absent de Docker</span>
+          {% elif row.running %}
+            <span class="badge running">actif</span>
+          {% else %}
+            <span class="badge stopped">arrêté</span>
+          {% endif %}
+          <span class="meta">{{ row.image }} — {{ row.status }}</span>
+        </div>
+
+        <div class="classification">
+          <label>
+            <input type="radio" name="classification__{{ n }}" value="ignored"
+                   onchange="onClassificationChange('{{ n }}')"
+                   {% if row.classification == "ignored" %}checked{% endif %}>
+            Ignoré, non touché
+          </label>
+          <label>
+            <input type="radio" name="classification__{{ n }}" value="throttled"
+                   onchange="onClassificationChange('{{ n }}')"
+                   {% if row.classification == "throttled" %}checked{% endif %}>
+            Au ralenti
+          </label>
+          <label>
+            <input type="radio" name="classification__{{ n }}" value="priority"
+                   onchange="onClassificationChange('{{ n }}')"
+                   {% if row.classification == "priority" %}checked{% endif %}>
+            Prioritaire
+          </label>
+        </div>
+
+        <div class="fields" id="throttled-fields__{{ n }}"
+             data-classification="throttled" data-container="{{ n }}">
+          <label class="field">
+            CPU normal (vide = illimité)
+            <input type="number" step="0.1" name="throttled_normal_cpus__{{ n }}"
+                   value="{{ row.background_container.normal_cpus if row.background_container and row.background_container.normal_cpus is not none else '' }}">
+          </label>
+        </div>
+
+        <div class="fields" id="priority-fields__{{ n }}"
+             data-classification="priority" data-container="{{ n }}">
+          <label class="field">
+            CPU normal
+            <input type="number" step="0.1" name="normal_cpus__{{ n }}"
+                   value="{{ row.priority_app.normal_cpus if row.priority_app else '' }}">
+          </label>
+          <label class="field">
+            CPU boosté
+            <input type="number" step="0.1" name="boosted_cpus__{{ n }}"
+                   value="{{ row.priority_app.boosted_cpus if row.priority_app else '' }}">
+          </label>
+          <label class="field">
+            Détecteur
+            <select name="detector_type__{{ n }}" onchange="onDetectorChange('{{ n }}')">
+              <option value="jellyfin"
+                {% if not row.priority_app or row.priority_app.detector.__class__.__name__ == "JellyfinDetectorDefinition" %}selected{% endif %}>
+                Jellyfin (/Sessions)
+              </option>
+              <option value="cpu_threshold"
+                {% if row.priority_app and row.priority_app.detector.__class__.__name__ == "CpuThresholdDetectorDefinition" %}selected{% endif %}>
+                Seuil CPU soutenu
+              </option>
+            </select>
+          </label>
+
+          <div class="fields shown" id="jellyfin-detector__{{ n }}" style="display:flex">
+            <label class="field">
+              URL Jellyfin
+              <input type="text" name="jellyfin_url__{{ n }}"
+                     value="{{ row.priority_app.detector.url if row.priority_app and row.priority_app.detector.__class__.__name__ == 'JellyfinDetectorDefinition' else 'http://127.0.0.1:8096' }}">
+            </label>
+            <label class="field">
+              Variable d'environnement (clé API)
+              <input type="text" name="jellyfin_api_key_env__{{ n }}"
+                     value="{{ row.priority_app.detector.api_key_env if row.priority_app and row.priority_app.detector.__class__.__name__ == 'JellyfinDetectorDefinition' else '' }}">
+            </label>
+            <label class="field">
+              Timeout (s)
+              <input type="number" step="0.5" name="jellyfin_timeout__{{ n }}"
+                     value="{{ row.priority_app.detector.timeout_seconds if row.priority_app and row.priority_app.detector.__class__.__name__ == 'JellyfinDetectorDefinition' else 5 }}">
+            </label>
+          </div>
+
+          <div class="fields" id="cpu-threshold-detector__{{ n }}">
+            <label class="field">
+              Seuil CPU (%)
+              <input type="number" step="1" name="cpu_threshold_percent__{{ n }}"
+                     value="{{ row.priority_app.detector.threshold_percent if row.priority_app and row.priority_app.detector.__class__.__name__ == 'CpuThresholdDetectorDefinition' else 50 }}">
+            </label>
+            <label class="field">
+              Durée soutenue (s)
+              <input type="number" step="1" name="cpu_sustained_seconds__{{ n }}"
+                     value="{{ row.priority_app.detector.sustained_seconds if row.priority_app and row.priority_app.detector.__class__.__name__ == 'CpuThresholdDetectorDefinition' else 15 }}">
+            </label>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="footer-actions">
+      <button class="primary" type="submit">Enregistrer la classification</button>
+    </div>
+  </form>
+
+  <script>
+    function onClassificationChange(name) {
+      const throttled = document.getElementById("throttled-fields__" + name);
+      const priority = document.getElementById("priority-fields__" + name);
+      const selected = document.querySelector(
+        'input[name="classification__' + name + '"]:checked'
+      ).value;
+
+      throttled.classList.toggle("shown", selected === "throttled");
+      priority.classList.toggle("shown", selected === "priority");
+    }
+
+    function onDetectorChange(name) {
+      const jellyfin = document.getElementById("jellyfin-detector__" + name);
+      const cpuThreshold = document.getElementById("cpu-threshold-detector__" + name);
+      const select = document.querySelector('select[name="detector_type__' + name + '"]');
+
+      jellyfin.style.display = select.value === "jellyfin" ? "flex" : "none";
+      cpuThreshold.style.display = select.value === "cpu_threshold" ? "flex" : "none";
+    }
+
+    // Every row starts folded to whatever classification the
+    // definition already carries — this only sets the *visibility*
+    // to match the radio Jinja already rendered as checked.
+    document.querySelectorAll('.row-card').forEach(card => {
+      const radio = card.querySelector('input[type="radio"]:checked');
+      if (!radio) return;
+      const name = radio.name.replace("classification__", "");
+      onClassificationChange(name);
+      const detectorSelect = card.querySelector('select[name="detector_type__' + name + '"]');
+      if (detectorSelect) onDetectorChange(name);
+    });
+  </script>
+</body>
+</html>

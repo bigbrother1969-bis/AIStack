@@ -1,0 +1,55 @@
+# AIStack — Priority UI
+#
+# Lets the owner choose which containers are priority apps and which
+# are throttled, by tagging what Docker currently reports rather
+# than hand-editing `src/aistack/priority/definitions/
+# resource_priority.yml`
+# (claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md, decision 2).
+# Deployed as a systemd unit from the start, mirroring
+# deploy/systemd/aistack-selection-ui.service exactly — this project
+# already learned the day this file was written that "launched by
+# hand" is not a permanent deployment.
+#
+# Runs on the host, not in a container: reads the governed YAML and
+# calls `docker ps -a` (via `aistack.providers.docker.DockerProvider`,
+# already how this repository observes Docker elsewhere) — nothing
+# here needs the Docker socket mounted into a container, the same
+# reasoning `aistack-resource-priority-monitor.service` already
+# documents for itself.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-priority-ui.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-priority-ui
+#
+# Before enabling it as a service, confirm nothing else already
+# holds port 8182 — the Selection UI's own unit hit exactly this
+# once (an old Docker container still holding 8181):
+#
+#   ss -ltnp | grep :8182
+#
+# Watch it with:
+#
+#   journalctl -u aistack-priority-ui -f
+
+[Unit]
+Description=AIStack Priority UI (choose priority/throttled containers)
+After=network.target docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_priority_ui.sh
+Restart=on-failure
+RestartSec=5
+
+# uvicorn already shuts down cleanly on SIGTERM (drains in-flight
+# requests, then exits) — same as the Selection UI's own unit; this
+# screen never holds a Docker CPU cap open, so there is no
+# release-on-exit concern the way the resource-priority monitor has.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

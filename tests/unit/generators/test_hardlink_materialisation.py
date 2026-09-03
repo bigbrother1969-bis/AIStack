@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 
 import pytest
@@ -343,6 +344,71 @@ def test_a_node_ticked_twice_over_materialises_its_files_once(
     assert files_under(target) == {
         "Classique/Bach/01.mp3",
         "Classique/Berlioz/01.mp3",
+    }
+
+
+def test_concurrent_runs_on_the_same_target_do_not_corrupt_each_other(
+    library, target
+):
+    """
+    Two clicks on "Synchroniser" close enough together run this
+    function in two threads at once — the screen gives no feedback
+    while a run is in flight, so a second click is not misuse.
+    Found on the owner's own screen, 2026-09-03: a clean run and a
+    428-failure run of the same selection, and only the slower
+    run's report survived to be read, because `_link`/`_unlink` are
+    check-then-act and nothing serialised the two threads writing
+    to the same target.
+
+    Without `_lock_for`, this reliably reproduces `[Errno 17] File
+    exists` and `[Errno 2] No such file or directory` in `.failed`
+    — confirmed by running it against the pre-fix code before this
+    test was written. With the lock, every concurrent run finishes
+    with an empty `.failed`, whichever order the threads actually
+    ran in underneath.
+    """
+
+    catalog = catalog_of(library)
+    ticked = ["Classique", "AC  DC"]
+    resolution = resolve_subtrees(catalog, ticked)
+    capacity = assess_capacity(resolution, 0)
+
+    runs = 6
+    barrier = threading.Barrier(runs)
+    reports: list = []
+    reports_guard = threading.Lock()
+
+    def run() -> None:
+        barrier.wait()
+
+        report = materialise_by_hardlink(
+            catalog=catalog,
+            resolution=resolution,
+            capacity=capacity,
+            target_root=target,
+            media_extensions=DEFAULT_MEDIA_EXTENSIONS,
+        )
+
+        with reports_guard:
+            reports.append(report)
+
+    threads = [threading.Thread(target=run) for _ in range(runs)]
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    assert len(reports) == runs
+
+    for report in reports:
+        assert report.failed == ()
+
+    assert files_under(target) == {
+        "Classique/Bach/01.mp3",
+        "Classique/Berlioz/01.mp3",
+        "AC  DC/Back in Black/01.mp3",
     }
 
 

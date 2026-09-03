@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,6 +18,49 @@ from aistack.selection.subtree import SubtreeResolution
 # generator preserved it by name and nothing else, which was
 # enough because it never descended.
 SYNC_ARTEFACTS = frozenset({".stfolder", ".stignore", ".stversions"})
+
+
+_TARGET_LOCKS_GUARD = threading.Lock()
+_TARGET_LOCKS: dict[str, threading.Lock] = {}
+
+
+def _lock_for(target_root: Path) -> threading.Lock:
+    """
+    One lock per target, so two materialisations never write to the
+    same folder at once.
+
+    The Selection UI's `/save` route is synchronous, and Starlette
+    runs a synchronous route in a thread pool: two clicks on
+    "Synchroniser" close enough together — the screen gives no
+    feedback while a run is in flight, so a second click is not a
+    misuse — run this function in two threads at the same time.
+    `_link` and `_unlink` below are check-then-act, not atomic, so
+    two threads reconciling the same target can each act on the
+    other's half-finished work: `os.link` raising `FileExistsError`
+    because the other thread already relinked the path, `unlink`
+    raising `FileNotFoundError` because the other thread already
+    removed it.
+
+    Found on the owner's own screen, 2026-09-03: a clean run and a
+    428-failure run of the same click, minutes apart in log terms
+    but overlapping on disk, and only the slower one's report was
+    still there to read — `save_last_generation_yaml` is called
+    unconditionally by whichever thread finishes last, so the
+    banner shown and the report saved were answers to two different
+    runs.
+
+    Keyed by target rather than global: a dry run assembling one
+    application's page should not wait on a write to another's.
+    """
+
+    key = str(target_root)
+
+    with _TARGET_LOCKS_GUARD:
+
+        if key not in _TARGET_LOCKS:
+            _TARGET_LOCKS[key] = threading.Lock()
+
+        return _TARGET_LOCKS[key]
 
 
 @dataclass(frozen=True)
@@ -109,20 +153,30 @@ def materialise_by_hardlink(
     2026-08-29, and materialising it would have filled the phone
     until Syncthing reported write errors — seven weeks later,
     with nothing on the screen to explain why.
+
+    **Serialised per target, for the same reason.** Nothing here
+    stops two calls from overlapping — a second click on the
+    screen while the first is still running reaches this function
+    a thread away from the first. `_lock_for` closes that: the
+    body below runs for one caller at a time per target, so the
+    snapshot `_present` takes and the writes `_reconcile` makes
+    from it are never invalidated by another run in between.
     """
 
-    root = Path(catalog.metadata.get("root", ""))
+    with _lock_for(target_root):
 
-    refusal = _refuse(root, target_root, capacity, dry_run)
+        root = Path(catalog.metadata.get("root", ""))
 
-    if refusal:
-        return MaterialisationReport(refused=refusal, dry_run=dry_run)
+        refusal = _refuse(root, target_root, capacity, dry_run)
 
-    desired = _desired(catalog, resolution, media_extensions)
+        if refusal:
+            return MaterialisationReport(refused=refusal, dry_run=dry_run)
 
-    present = _present(target_root, preserve_names)
+        desired = _desired(catalog, resolution, media_extensions)
 
-    return _reconcile(desired, present, target_root, dry_run)
+        present = _present(target_root, preserve_names)
+
+        return _reconcile(desired, present, target_root, dry_run)
 
 
 def _refuse(

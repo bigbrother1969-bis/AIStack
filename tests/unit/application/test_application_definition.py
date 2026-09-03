@@ -183,3 +183,6 @@ def test_the_real_music_android_definition_loads():
     assert definition.syncthing is not None
     assert definition.syncthing.folder_id == "music-android"
     assert definition.syncthing.api_key_env == "SYNCTHING_API_KEY"
+    assert definition.syncthing.device_id == (
+        "PNTJYZD-7353GUU-YLN7M6G-G3YCMBE-DZIWJ72-67XBQWQ-SXQYEJC-2ZIMWAP"
+    )

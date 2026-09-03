@@ -29,17 +29,14 @@ selection_file: examples/selections/music-android-selection-real.yml
 capacity_declared_bytes: 64000000000
 
 syncthing:
-  # Standard local port; not separately measured this session
-  # because the app and the daemon share a host (decision #1). À
-  # confirmer par toi avant l'étape 8 si ton démon écoute ailleurs.
+  # Confirmed live from the GIGABYTE on 2026-09-03: reachable,
+  # /rest/db/status and /rest/db/completion both answered.
   url: http://127.0.0.1:8384
   folder_id: music-android
-  # À renseigner : l'identifiant de l'appareil "smartphone" côté
-  # Syncthing (visible dans l'UI Syncthing, onglet "Cet appareil"
-  # sur le téléphone, ou "Appareils distants" sur le GIGABYTE).
-  # Tant qu'il est vide, SyncthingProvider ne pose que la première
-  # question — l'état du dossier sur le serveur, pas l'avancement
-  # vers le téléphone.
-  device_id: ""
+  # SM-A176B, read from /rest/config/devices on 2026-09-03 and
+  # confirmed by a live /rest/db/completion call the same day
+  # (completion: 100, remoteState: valid against the folder's
+  # then-current 757 files).
+  device_id: PNTJYZD-7353GUU-YLN7M6G-G3YCMBE-DZIWJ72-67XBQWQ-SXQYEJC-2ZIMWAP
   api_key_env: SYNCTHING_API_KEY
   timeout_seconds: 5

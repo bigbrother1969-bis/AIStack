@@ -29,8 +29,14 @@ from pathlib import Path
 from aistack.generators.catalog_view import CatalogViewArtifactGenerator
 from aistack.generators.compose.catalog_artifact import ComposeCatalogArtifactGenerator
 from aistack.generators.docker.catalog_artifact import DockerCatalogArtifactGenerator
+from aistack.generators.filesystem.media_library_artifact import (
+    MediaLibraryObservationArtifactGenerator,
+)
 from aistack.generators.jellyfin.observation_artifact import (
     JellyfinObservationArtifactGenerator,
+)
+from aistack.generators.syncthing.observation_artifact import (
+    SyncthingObservationArtifactGenerator,
 )
 from aistack.generators.docker.observation_artifact import (
     DockerObservationArtifactGenerator,
@@ -131,6 +137,46 @@ def test_jellyfin_observation_artifact_generator_keeps_history(tmp_path: Path):
     generator = JellyfinObservationArtifactGenerator()
     output_path = tmp_path / "reports" / "generated" / "jellyfin-observation.json"
     observation = {"provider": {"id": "aistack.provider.jellyfin"}, "jellyfin": {}}
+
+    generator.generate(observation=observation, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert json.loads(history_files[0].read_text(encoding="utf-8")) == observation
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_syncthing_observation_artifact_generator_keeps_history(tmp_path: Path):
+    generator = SyncthingObservationArtifactGenerator()
+    output_path = (
+        tmp_path / "reports" / "generated" / "music_android-syncthing-observation.json"
+    )
+    observation = {"provider": {"id": "aistack.provider.syncthing"}, "syncthing": {}}
+
+    generator.generate(observation=observation, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert json.loads(history_files[0].read_text(encoding="utf-8")) == observation
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_media_library_observation_artifact_generator_keeps_history(tmp_path: Path):
+    generator = MediaLibraryObservationArtifactGenerator()
+    output_path = (
+        tmp_path
+        / "reports"
+        / "generated"
+        / "music_android-media-library-observation.json"
+    )
+    observation = {
+        "provider": {"id": "aistack.provider.filesystem.media-library"},
+        "library": {},
+    }
 
     generator.generate(observation=observation, output_path=output_path)
 

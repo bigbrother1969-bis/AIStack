@@ -4,6 +4,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from aistack.generators.history import write_artifact_with_history
 from aistack.kernel.catalog import Catalog
 
 
@@ -15,12 +16,12 @@ class DockerCatalogArtifactGenerator:
     returned one. Both moved in the same commit: a generator that
     accepts whatever shape its producer happens to emit cannot
     state what it writes.
+
+    **Keeps Observation History since 2026-09-03** — see
+    `write_artifact_with_history`.
     """
 
     def generate(self, catalog: Catalog, output_path: Path) -> Path:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(asdict(catalog), indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+        content = json.dumps(asdict(catalog), indent=2, ensure_ascii=False) + "\n"
+        write_artifact_with_history(content, output_path)
         return output_path

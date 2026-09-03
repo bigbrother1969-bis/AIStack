@@ -4,6 +4,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from aistack.generators.history import write_artifact_with_history
 from aistack.kernel.catalog.views import CatalogView
 
 
@@ -22,12 +23,12 @@ class CatalogViewArtifactGenerator:
     `write_text` and a `default=lambda item: item.__dict__` hook
     — ADR-0002 § *Implementation state* recorded that the live
     path wrote its artifact with no Artifact Generator at all.
+
+    **Keeps Observation History since 2026-09-03** — see
+    `write_artifact_with_history`.
     """
 
     def generate(self, view: CatalogView, output_path: Path) -> Path:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(asdict(view), indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+        content = json.dumps(asdict(view), indent=2, ensure_ascii=False) + "\n"
+        write_artifact_with_history(content, output_path)
         return output_path

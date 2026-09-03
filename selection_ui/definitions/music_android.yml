@@ -1,11 +1,45 @@
+# Application definition — Music Android Selection.
+#
+# Loaded by `load_application_definition_yaml`
+# (`src/aistack/application/yaml/store.py`), and the reason
+# `selection_ui/app.py` no longer names a filesystem path or a
+# Syncthing identifier once the screen is rewired onto it
+# (step 8). This file is what changes to run a second instance of
+# the family — decision of 2026-08-29.
+#
+# `catalog_file` and `generation_command` are gone on purpose: the
+# catalog is scanned live from `source_root` on every request
+# (decision #8), and materialisation calls
+# `materialise_by_hardlink` directly instead of shelling out to
+# `generate_copy_folder` — the destructive, untested command this
+# definition used to name.
+
 app_id: music_android
 title: Music Android Selection
-catalog_file: examples/catalogs/music-library-catalog.yml
-# Which Catalog View Engine produces what this screen shows.
-# Governed data rather than a class named in application code.
-view_id: music-selection
+view_id: media-tree
+
+# Real filesystem paths on the host the app runs on (GIGABYTE,
+# decision #1) — not repository-relative.
+source_root: /media/TechData/Storage/Music
+target_root: /media/TechData/Storage/Music-Android
+
 selection_file: examples/selections/music-android-selection-real.yml
-generation_command:
-  - python3
-  - -m
-  - examples.generation_engine.generate_music_android_folder
+
+# 64 Go décimaux, decision #5 of 2026-08-29.
+capacity_declared_bytes: 64000000000
+
+syncthing:
+  # Standard local port; not separately measured this session
+  # because the app and the daemon share a host (decision #1). À
+  # confirmer par toi avant l'étape 8 si ton démon écoute ailleurs.
+  url: http://127.0.0.1:8384
+  folder_id: music-android
+  # À renseigner : l'identifiant de l'appareil "smartphone" côté
+  # Syncthing (visible dans l'UI Syncthing, onglet "Cet appareil"
+  # sur le téléphone, ou "Appareils distants" sur le GIGABYTE).
+  # Tant qu'il est vide, SyncthingProvider ne pose que la première
+  # question — l'état du dossier sur le serveur, pas l'avancement
+  # vers le téléphone.
+  device_id: ""
+  api_key_env: SYNCTHING_API_KEY
+  timeout_seconds: 5

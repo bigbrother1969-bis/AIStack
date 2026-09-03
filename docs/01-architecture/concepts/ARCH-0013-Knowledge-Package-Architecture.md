@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Draft
   owner: Architecture
   created: 2026-07-25
-  updated: 2026-08-28
+  updated: 2026-09-03
 ---
 
 # ARCH-0013 — Knowledge Package Architecture
@@ -77,7 +77,7 @@ A Profile is not a Single Point Of Truth (SPOT).
 
 The governing SPOT always remains the applicable Knowledge Policies.
 
-A Profile defines the operational requirements applicable to a specificKnowledge Artifact or Knowledge Package, including:
+A Profile defines the operational requirements applicable to a specific Knowledge Artifact or Knowledge Package, including:
 
 required Capabilities;
 
@@ -109,13 +109,13 @@ Policies govern the requirements.
 
 The Profile exposes those requirements as an operational contract.
 
-The Engine consumes the Profile without redefining or interpreting thegoverning Policies.
+The Engine consumes the Profile without redefining or interpreting the governing Policies.
 
 Custom Profile (exception)
 
 A Profile may also be explicitly supplied for a specific operation.
 
-A Custom Profile is used when the default Policy-based resolution doesnot represent the intended operational requirements.
+A Custom Profile is used when the default Policy-based resolution does not represent the intended operational requirements.
 
 A Custom Profile shall remain:
 
@@ -127,7 +127,7 @@ validated;
 
 limited to the operation for which it was supplied.
 
-A Custom Profile does not replace or modify the governing KnowledgePolicies.
+A Custom Profile does not replace or modify the governing Knowledge Policies.
 
 Profile Types
 
@@ -174,7 +174,7 @@ Capabilities implement.
 
 Engines shall consume resolved Profiles.
 
-Engines shall never embed Policy resolution or Profile definition insidetheir business logic.
+Engines shall never embed Policy resolution or Profile definition inside their business logic.
 
 ------------------------------------------------------------------------
 

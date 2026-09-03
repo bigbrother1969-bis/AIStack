@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from aistack.kernel.catalog import Catalog
+from aistack.selection.capacity import CapacityVerdict
 from aistack.selection.subtree import SubtreeResolution
 
 
@@ -49,6 +50,7 @@ class MaterialisationReport:
 def materialise_by_hardlink(
     catalog: Catalog,
     resolution: SubtreeResolution,
+    capacity: CapacityVerdict,
     target_root: Path,
     media_extensions: frozenset[str],
     preserve_names: frozenset[str] = SYNC_ARTEFACTS,
@@ -93,11 +95,25 @@ def materialise_by_hardlink(
     names the reason, refuses, and writes nothing — the day the
     owner moves either directory to another disk, that is what he
     will read.
+
+    **The capacity is a parameter and not an option**, so that
+    materialising without having weighed the selection is not
+    something a caller can express. The verdict comes in already
+    made; this refuses when it does not fit, and says by how much.
+
+    The screen is where a human sees the weight, long before
+    clicking. This is where the machine refuses to write it. The
+    two are the same rule enforced at two moments, and only the
+    second one is impossible to forget: the owner's saved
+    selection weighed 118 Gio against a 64 Go quota on
+    2026-08-29, and materialising it would have filled the phone
+    until Syncthing reported write errors — seven weeks later,
+    with nothing on the screen to explain why.
     """
 
     root = Path(catalog.metadata.get("root", ""))
 
-    refusal = _refuse(root, target_root, dry_run)
+    refusal = _refuse(root, target_root, capacity, dry_run)
 
     if refusal:
         return MaterialisationReport(refused=refusal, dry_run=dry_run)
@@ -109,15 +125,33 @@ def materialise_by_hardlink(
     return _reconcile(desired, present, target_root, dry_run)
 
 
-def _refuse(root: Path, target_root: Path, dry_run: bool) -> str:
+def _refuse(
+    root: Path,
+    target_root: Path,
+    capacity: CapacityVerdict,
+    dry_run: bool,
+) -> str:
     """
     Everything checked before a single byte is written.
+
+    The capacity comes first, because it is the refusal a human
+    can act on: the other two describe a machine that is not set
+    up as expected, this one describes a choice that has to be
+    revised.
 
     The filesystem comparison is made against the nearest existing
     ancestor of the target, so a dry run answers it too — and so
     the answer arrives before a directory is created on a disk
     that could never have held the links anyway.
     """
+
+    if not capacity.fits:
+        return (
+            "the selection is larger than the declared capacity: "
+            f"{capacity.selected_bytes} bytes selected against "
+            f"{capacity.declared_bytes} declared, "
+            f"{capacity.overflow_bytes} bytes too many"
+        )
 
     if not root or not root.is_dir():
         return f"the library root does not exist or is not a directory: {root}"

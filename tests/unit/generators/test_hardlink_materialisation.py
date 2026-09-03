@@ -11,6 +11,7 @@ from aistack.providers.filesystem import (
     DEFAULT_MEDIA_EXTENSIONS,
     MediaLibraryProvider,
 )
+from aistack.selection.capacity import assess_capacity
 from aistack.selection.subtree import resolve_subtrees
 
 
@@ -44,12 +45,15 @@ def catalog_of(root: Path):
     ).build(MediaLibraryProvider(root).collect())
 
 
-def materialise(root: Path, target: Path, ticked, **kwargs):
+def materialise(root: Path, target: Path, ticked, quota: int = 0, **kwargs):
     catalog = catalog_of(root)
+
+    resolution = resolve_subtrees(catalog, ticked)
 
     return materialise_by_hardlink(
         catalog=catalog,
-        resolution=resolve_subtrees(catalog, ticked),
+        resolution=resolution,
+        capacity=assess_capacity(resolution, quota),
         target_root=target,
         media_extensions=DEFAULT_MEDIA_EXTENSIONS,
         **kwargs,
@@ -254,9 +258,12 @@ def test_a_target_on_another_filesystem_is_refused_before_any_write(
 
     catalog = catalog_of(library)
 
+    resolution = resolve_subtrees(catalog, ["Classique"])
+
     report = materialise_by_hardlink(
         catalog=catalog,
-        resolution=resolve_subtrees(catalog, ["Classique"]),
+        resolution=resolution,
+        capacity=assess_capacity(resolution, 0),
         target_root=Path("/proc/aistack-elsewhere"),
         media_extensions=DEFAULT_MEDIA_EXTENSIONS,
     )
@@ -276,9 +283,12 @@ def test_a_missing_library_root_is_refused_with_its_reason(
 
     catalog = catalog_of(tmp_path / "gone")
 
+    resolution = resolve_subtrees(catalog, [])
+
     report = materialise_by_hardlink(
         catalog=catalog,
-        resolution=resolve_subtrees(catalog, []),
+        resolution=resolution,
+        capacity=assess_capacity(resolution, 0),
         target_root=target,
         media_extensions=DEFAULT_MEDIA_EXTENSIONS,
     )

@@ -1,0 +1,50 @@
+# AIStack — Selection UI
+#
+# Chooses, under a declared quota, what leaves the music library for
+# Syncthing to carry to the phone (claude/PLAN-UI-SELECTION-2026-08-29.md).
+# Previously launched by hand with `./run_selection_ui.sh`, in a
+# terminal that had to stay open — this unit makes that the same
+# command systemd supervises, restarts, and starts at boot.
+#
+# Runs on the host, not in a container: `run_selection_ui.sh` already
+# calls its own dedicated interpreter by explicit path
+# (`.venv-selection-ui`, correctif 5), so nothing here needs the
+# Docker socket — unlike the resource-priority monitor, this is not a
+# security trade-off, just the launcher this project already had.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-selection-ui.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-selection-ui
+#
+# Before enabling it as a service, confirm nothing else already holds
+# port 8181 — this project has hit that once before (an old
+# `aistack-selection-ui` Docker container, `docker-compose.selection-
+# ui.yml`, policy `unless-stopped`, found and stopped 2026-09-03):
+#
+#   ss -ltnp | grep :8181
+#
+# Watch it with:
+#
+#   journalctl -u aistack-selection-ui -f
+
+[Unit]
+Description=AIStack Selection UI (choose what syncs to the phone)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_selection_ui.sh
+Restart=on-failure
+RestartSec=5
+
+# uvicorn already shuts down cleanly on SIGTERM (drains in-flight
+# requests, then exits) — no release-on-exit logic needed here the
+# way the resource-priority monitor needs one for Docker CPU caps.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

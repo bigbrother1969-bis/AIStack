@@ -19,6 +19,10 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
           container: jellyfin
           normal_cpus: 3
           boosted_cpus: 4
+          url: http://127.0.0.1:8096
+          api_key_env: JELLYFIN_API_KEY
+          timeout_seconds: 5
+        unlimited_cpus: 4
         background:
           default_throttled_cpus: 0.1
           containers:
@@ -33,6 +37,11 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
     assert definition.jellyfin.container == "jellyfin"
     assert definition.jellyfin.normal_cpus == 3.0
     assert definition.jellyfin.boosted_cpus == 4.0
+    assert definition.jellyfin.url == "http://127.0.0.1:8096"
+    assert definition.jellyfin.api_key_env == "JELLYFIN_API_KEY"
+    assert definition.jellyfin.timeout_seconds == 5.0
+
+    assert definition.unlimited_cpus == 4.0
 
     assert definition.background.default_throttled_cpus == 0.1
     assert len(definition.background.containers) == 2
@@ -44,6 +53,34 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
 
     assert komf.name == "komf"
     assert komf.normal_cpus == 0.5
+
+
+def test_jellyfins_api_key_env_and_timeout_default(tmp_path: Path):
+    """
+    Mirrors `SyncthingDefinition`: a second member of the family — or
+    a first draft of this one — need not name an environment
+    variable or a timeout to be valid.
+    """
+
+    path = write(
+        tmp_path / "resource_priority.yml",
+        """
+        jellyfin:
+          container: jellyfin
+          normal_cpus: 3
+          boosted_cpus: 4
+          url: http://127.0.0.1:8096
+        unlimited_cpus: 4
+        background:
+          default_throttled_cpus: 0.1
+          containers: []
+        """,
+    )
+
+    definition = load_resource_priority_yaml(path)
+
+    assert definition.jellyfin.api_key_env == ""
+    assert definition.jellyfin.timeout_seconds == 5.0
 
 
 def test_a_container_with_no_normal_cpus_reads_as_unlimited(tmp_path: Path):
@@ -61,6 +98,8 @@ def test_a_container_with_no_normal_cpus_reads_as_unlimited(tmp_path: Path):
           container: jellyfin
           normal_cpus: 3
           boosted_cpus: 4
+          url: http://127.0.0.1:8096
+        unlimited_cpus: 4
         background:
           default_throttled_cpus: 0.1
           containers:
@@ -81,6 +120,8 @@ def test_a_definition_with_no_containers_is_valid(tmp_path: Path):
           container: jellyfin
           normal_cpus: 3
           boosted_cpus: 4
+          url: http://127.0.0.1:8096
+        unlimited_cpus: 4
         background:
           default_throttled_cpus: 0.1
           containers: []
@@ -98,10 +139,30 @@ def test_a_missing_top_level_field_is_named(tmp_path: Path):
           container: jellyfin
           normal_cpus: 3
           boosted_cpus: 4
+          url: http://127.0.0.1:8096
         """,
     )
 
     with pytest.raises(ValueError, match="background"):
+        load_resource_priority_yaml(path)
+
+
+def test_unlimited_cpus_missing_is_named(tmp_path: Path):
+    path = write(
+        tmp_path / "no_unlimited.yml",
+        """
+        jellyfin:
+          container: jellyfin
+          normal_cpus: 3
+          boosted_cpus: 4
+          url: http://127.0.0.1:8096
+        background:
+          default_throttled_cpus: 0.1
+          containers: []
+        """,
+    )
+
+    with pytest.raises(ValueError, match="unlimited_cpus"):
         load_resource_priority_yaml(path)
 
 
@@ -114,6 +175,8 @@ def test_a_jellyfin_block_missing_its_own_required_field_is_named(
         jellyfin:
           container: jellyfin
           normal_cpus: 3
+          url: http://127.0.0.1:8096
+        unlimited_cpus: 4
         background:
           default_throttled_cpus: 0.1
           containers: []
@@ -121,6 +184,25 @@ def test_a_jellyfin_block_missing_its_own_required_field_is_named(
     )
 
     with pytest.raises(ValueError, match="jellyfin.*boosted_cpus"):
+        load_resource_priority_yaml(path)
+
+
+def test_jellyfins_url_missing_is_named(tmp_path: Path):
+    path = write(
+        tmp_path / "no_url.yml",
+        """
+        jellyfin:
+          container: jellyfin
+          normal_cpus: 3
+          boosted_cpus: 4
+        unlimited_cpus: 4
+        background:
+          default_throttled_cpus: 0.1
+          containers: []
+        """,
+    )
+
+    with pytest.raises(ValueError, match="jellyfin.*url"):
         load_resource_priority_yaml(path)
 
 
@@ -134,6 +216,8 @@ def test_a_background_block_missing_its_own_required_field_is_named(
           container: jellyfin
           normal_cpus: 3
           boosted_cpus: 4
+          url: http://127.0.0.1:8096
+        unlimited_cpus: 4
         background:
           containers: []
         """,
@@ -151,6 +235,8 @@ def test_a_container_missing_its_name_is_named_by_position(tmp_path: Path):
           container: jellyfin
           normal_cpus: 3
           boosted_cpus: 4
+          url: http://127.0.0.1:8096
+        unlimited_cpus: 4
         background:
           default_throttled_cpus: 0.1
           containers:
@@ -171,6 +257,8 @@ def test_containers_that_are_not_a_list_are_refused(tmp_path: Path):
           container: jellyfin
           normal_cpus: 3
           boosted_cpus: 4
+          url: http://127.0.0.1:8096
+        unlimited_cpus: 4
         background:
           default_throttled_cpus: 0.1
           containers: radarr
@@ -191,9 +279,10 @@ def test_a_definition_that_is_not_a_mapping_is_refused(tmp_path: Path):
 def test_the_real_resource_priority_definition_loads():
     """
     `src/aistack/priority/definitions/resource_priority.yml` is not
-    a fixture — it is the artefact the future monitor (étape 4)
-    will read. Loading it here means a typo in the real, hand-
-    written file is caught by the test suite.
+    a fixture — it is the artefact the étape 4 monitor
+    (`aistack.cli.resource_priority_monitor`) reads. Loading it here
+    means a typo in the real, hand-written file is caught by the
+    test suite.
     """
 
     repo_root = Path(__file__).resolve().parents[3]
@@ -210,6 +299,11 @@ def test_the_real_resource_priority_definition_loads():
     assert definition.jellyfin.container == "jellyfin"
     assert definition.jellyfin.normal_cpus == 3.0
     assert definition.jellyfin.boosted_cpus == 4.0
+    assert definition.jellyfin.url == "http://127.0.0.1:8096"
+    assert definition.jellyfin.api_key_env == "JELLYFIN_API_KEY"
+    assert definition.jellyfin.timeout_seconds == 5.0
+
+    assert definition.unlimited_cpus == 4.0
 
     assert definition.background.default_throttled_cpus == 0.1
 

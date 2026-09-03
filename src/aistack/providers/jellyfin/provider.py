@@ -33,17 +33,17 @@ class JellyfinProvider:
     lives, the caller reads it and passes it here — GOV-P-001, the
     same handling as the Syncthing key.
 
-    **The field names below are not yet verified against a real
-    Jellyfin.** `NowPlayingItem` and `PlayState.IsPaused` are
-    Jellyfin's documented session shape, but this codebase's own
-    history has one instance of a documented shape not surviving
-    contact with the real daemon (the Syncthing `device_id` that
-    was still a literal placeholder string on first contact,
-    2026-09-03). Nothing here has been run against the owner's own
-    Jellyfin yet — `collect()` returns the sessions unqualified
-    for exactly this reason: whatever the real shape turns out to
-    be, it is visible in full rather than filtered through a wrong
-    assumption before anyone gets to see it.
+    **The session shape was verified against the owner's real
+    Jellyfin, 2026-09-03.** `collect()` returns the sessions
+    unqualified precisely so that whatever the real shape turned
+    out to be would be visible in full rather than filtered through
+    a wrong assumption — the same caution the Syncthing `device_id`
+    precedent earned (a documented shape that was still a literal
+    placeholder string on first real contact). Two real payloads
+    from the owner's own daemon confirmed `NowPlayingItem` and
+    `PlayState.IsPaused` are exactly right; `aistack.priority.
+    playback.has_active_playback`, which reads them, carries the
+    same confirmation.
     """
 
     provider_id = "aistack.provider.jellyfin"

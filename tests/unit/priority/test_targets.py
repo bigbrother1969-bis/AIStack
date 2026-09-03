@@ -10,7 +10,10 @@ from aistack.priority.targets import resolve_resource_targets
 def definition() -> ResourcePriorityDefinition:
     return ResourcePriorityDefinition(
         jellyfin=JellyfinPriorityDefinition(
-            container="jellyfin", normal_cpus=3, boosted_cpus=4
+            container="jellyfin",
+            normal_cpus=3,
+            boosted_cpus=4,
+            url="http://127.0.0.1:8096",
         ),
         background=BackgroundPriorityDefinition(
             default_throttled_cpus=0.1,
@@ -19,6 +22,7 @@ def definition() -> ResourcePriorityDefinition:
                 ContainerPriorityDefinition(name="komf", normal_cpus=0.5),
             ),
         ),
+        unlimited_cpus=4,
     )
 
 
@@ -65,9 +69,13 @@ def test_komfs_own_normal_is_not_unlimited():
 def test_jellyfin_is_keyed_by_its_own_container_name():
     custom = ResourcePriorityDefinition(
         jellyfin=JellyfinPriorityDefinition(
-            container="jellyfin-main", normal_cpus=3, boosted_cpus=4
+            container="jellyfin-main",
+            normal_cpus=3,
+            boosted_cpus=4,
+            url="http://127.0.0.1:8096",
         ),
         background=BackgroundPriorityDefinition(default_throttled_cpus=0.1),
+        unlimited_cpus=4,
     )
 
     targets = resolve_resource_targets(custom, playing=True)
@@ -78,9 +86,13 @@ def test_jellyfin_is_keyed_by_its_own_container_name():
 def test_no_background_containers_still_resolves_jellyfin_alone():
     empty = ResourcePriorityDefinition(
         jellyfin=JellyfinPriorityDefinition(
-            container="jellyfin", normal_cpus=3, boosted_cpus=4
+            container="jellyfin",
+            normal_cpus=3,
+            boosted_cpus=4,
+            url="http://127.0.0.1:8096",
         ),
         background=BackgroundPriorityDefinition(default_throttled_cpus=0.1),
+        unlimited_cpus=4,
     )
 
     assert resolve_resource_targets(empty, playing=False) == {"jellyfin": 3}

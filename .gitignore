@@ -21,6 +21,7 @@ __pycache__/
 # per-machine values, and one of them carries credentials.
 .env
 .env.selection-ui
+.env.resource-priority
 
 # Deployment-specific transfer target. The path a given host
 # ships bundles to is a property of that host, not of AIStack.

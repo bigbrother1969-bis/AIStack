@@ -1,8 +1,9 @@
 # Resource priority definition — Jellyfin front-line vs. background containers.
 #
 # Loaded by `load_resource_priority_yaml`
-# (`src/aistack/priority/yaml/store.py`). Decisions taken with the
-# owner on 2026-09-03
+# (`src/aistack/priority/yaml/store.py`), and read by the étape 4
+# monitor (`aistack.cli.resource_priority_monitor`). Decisions taken
+# with the owner on 2026-09-03
 # (`claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md`); measured live
 # against GIGABYTE the same day.
 
@@ -15,6 +16,22 @@ jellyfin:
   # decision #6: the cores freed by throttling the background
   # containers have to go somewhere.
   boosted_cpus: 4
+  # The monitor runs on the host (decided 2026-09-03), same as the
+  # Selection UI — the host-published address, not the Docker-
+  # internal one confirmed the same day.
+  url: http://127.0.0.1:8096
+  # Never the key itself — GOV-P-001, same convention as
+  # SYNCTHING_API_KEY. The owner created a key named "AIStack" in
+  # Jellyfin's own Dashboard → Clés API, 2026-09-03.
+  api_key_env: JELLYFIN_API_KEY
+  timeout_seconds: 5
+
+# The host's own core count (`nproc`, measured 2026-09-03) — not a
+# policy choice. Docker cannot clear a CPU limit once one has been
+# set (verified live building the apply layer, étape 3b); restoring
+# "unlimited" is written as a cap at every core the host has, which
+# is operationally the same thing.
+unlimited_cpus: 4
 
 background:
   # Decision #7 — one shared throttled ceiling, not a per-container

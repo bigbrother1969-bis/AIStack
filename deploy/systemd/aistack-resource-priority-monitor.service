@@ -1,0 +1,47 @@
+# AIStack — resource-priority monitor
+#
+# Keeps every governed container's CPU ceiling in sync with whether
+# Jellyfin is being watched (claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md).
+# Runs on the host, not in a container — same reasoning
+# selection_ui/app.py's launcher already documents: this process
+# needs the Docker socket, and a container with that socket mounted
+# is a security surface this project has chosen not to add.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-resource-priority-monitor.service \
+#       /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-resource-priority-monitor
+#
+# Before enabling it as a service, run it once by hand to check it
+# against the real containers without risking an unattended loop:
+#
+#   ./run_resource_priority_monitor.sh --once --dry-run
+#
+# Watch it with:
+#
+#   journalctl -u aistack-resource-priority-monitor -f
+
+[Unit]
+Description=AIStack resource-priority monitor (Jellyfin front-line vs. background containers)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_resource_priority_monitor.sh
+Restart=on-failure
+RestartSec=5
+
+# SIGTERM is what lets the monitor release any throttled containers
+# before exiting (aistack.cli.resource_priority_monitor's own
+# shutdown handling) rather than leaving them capped by a stopped
+# service — the same reasoning as decision #4's Jellyfin-unreachable
+# fallback, applied to the monitor's own process stopping.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

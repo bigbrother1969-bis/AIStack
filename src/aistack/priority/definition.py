@@ -6,18 +6,29 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class JellyfinPriorityDefinition:
     """
-    What "boosted" means for Jellyfin itself while it is watched.
+    What "boosted" means for Jellyfin itself while it is watched,
+    and where the monitor (étape 4) reaches it to find out.
 
     Decision #6 of 2026-09-03: the cores freed by throttling the
     background containers have to go somewhere, so Jellyfin's own
     ceiling rises too — from its already-configured 3 cores to the
     machine's full 4 — while a session is playing, and drops back
     to `normal_cpus` the moment it is not.
+
+    **`url` and `api_key_env` mirror `SyncthingDefinition`
+    exactly** — the monitor runs on the host, same as the Selection
+    UI, so `url` is the host-published address
+    (`http://127.0.0.1:8096`, not the Docker-internal one). GOV-P-001
+    holds here too: `api_key_env` names an environment variable, it
+    is never the key.
     """
 
     container: str
     normal_cpus: float
     boosted_cpus: float
+    url: str
+    api_key_env: str = ""
+    timeout_seconds: float = 5.0
 
 
 @dataclass(frozen=True)
@@ -67,7 +78,19 @@ class ResourcePriorityDefinition:
     ceilings are data the owner decided on 2026-09-03
     (`claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md`), not constants
     a future change should require touching code to revise.
+
+    **`unlimited_cpus` is a Docker fact, not a policy choice** —
+    added at étape 4, deliberately not at étape 3, so it would not
+    move a file already deployed before anything consumed it. Once
+    a container's CPU ceiling has ever been set, Docker cannot
+    clear it back to "no limit" (`apply_resource_priority`'s own
+    docstring has the verified detail); restoring "unlimited" is
+    instead written as a concrete cap at this many cores, the whole
+    host's own count. It is host data the same way `source_root`
+    is for the Selection UI family — real, not repository-relative,
+    and wrong on any machine but GIGABYTE.
     """
 
     jellyfin: JellyfinPriorityDefinition
     background: BackgroundPriorityDefinition
+    unlimited_cpus: float

@@ -12,8 +12,8 @@ from aistack.priority.definition import (
     ResourcePriorityDefinition,
 )
 
-_REQUIRED_FIELDS = ("jellyfin", "background")
-_REQUIRED_JELLYFIN_FIELDS = ("container", "normal_cpus", "boosted_cpus")
+_REQUIRED_FIELDS = ("jellyfin", "background", "unlimited_cpus")
+_REQUIRED_JELLYFIN_FIELDS = ("container", "normal_cpus", "boosted_cpus", "url")
 _REQUIRED_BACKGROUND_FIELDS = ("default_throttled_cpus", "containers")
 _REQUIRED_CONTAINER_FIELDS = ("name",)
 
@@ -42,6 +42,7 @@ def load_resource_priority_yaml(path: Path) -> ResourcePriorityDefinition:
     return ResourcePriorityDefinition(
         jellyfin=_load_jellyfin(data["jellyfin"], path),
         background=_load_background(data["background"], path),
+        unlimited_cpus=float(data["unlimited_cpus"]),
     )
 
 
@@ -57,6 +58,9 @@ def _load_jellyfin(data: Any, path: Path) -> JellyfinPriorityDefinition:
         container=data["container"],
         normal_cpus=float(data["normal_cpus"]),
         boosted_cpus=float(data["boosted_cpus"]),
+        url=data["url"],
+        api_key_env=data.get("api_key_env", ""),
+        timeout_seconds=float(data.get("timeout_seconds") or 5.0),
     )
 
 

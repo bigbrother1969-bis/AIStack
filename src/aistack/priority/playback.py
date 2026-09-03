@@ -33,11 +33,16 @@ def has_active_playback(sessions: Iterable[dict[str, Any]]) -> bool:
     playing is nothing to protect — because there the missing field
     *is* the fact.
 
-    **Not yet verified against a real Jellyfin.** `NowPlayingItem`
-    and `PlayState.IsPaused` are Jellyfin's documented session
-    shape; nothing here has been run against the owner's own daemon
-    yet, and this codebase already has one instance of a documented
-    shape not matching the field on first live contact.
+    **Verified against the owner's real Jellyfin, 2026-09-03.**
+    `NowPlayingItem` and `PlayState.IsPaused` were Jellyfin's
+    documented session shape when this was written, and this
+    codebase already had one instance of a documented shape not
+    matching the field on first live contact (Syncthing's
+    `device_id`) — so this was not trusted until it was run against
+    two real payloads from the owner's own daemon: an idle session
+    (no `NowPlayingItem`) and one playing *Le Calendrier*
+    (`NowPlayingItem` present, `PlayState.IsPaused: false`). Both
+    field names matched exactly; no correction was needed.
     """
 
     return any(_is_playing(session) for session in sessions)

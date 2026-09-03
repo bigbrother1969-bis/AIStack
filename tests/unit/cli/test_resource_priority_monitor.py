@@ -131,3 +131,19 @@ def test_log_cycle_always_prints_a_labelled_line(capsys):
     log_cycle(boosted=False, report=ApplyReport(), label="releasing on exit")
 
     assert "releasing on exit" in capsys.readouterr().out
+
+
+def test_log_cycle_prints_a_timestamp(capsys):
+    """
+    Found needed 2026-09-03: a transition observed as "faster than
+    the 60-second grace period" had no timestamp on either log line
+    to check the claim against. An ISO date at the start of the
+    line is enough to compare two prints against a wall clock.
+    """
+
+    log_cycle(boosted=True, report=ApplyReport(applied=("jellyfin",)))
+
+    out = capsys.readouterr().out
+
+    assert out[:4].isdigit()  # a year, not "state=..." straight away
+    assert "T" in out.split(" ", 1)[0]  # ISO 8601 date/time separator

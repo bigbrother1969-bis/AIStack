@@ -4,6 +4,7 @@ import os
 import signal
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -142,15 +143,26 @@ def log_cycle(boosted: bool, report: ApplyReport, label: str = "") -> None:
     bury the one line that matters under thousands that do not —
     printed only when something changed, or on the explicit
     shutdown line `label` carries.
+
+    **Timestamped, so a transition can be checked against the
+    grace period rather than guessed at.** Found needed 2026-09-03:
+    the owner watched a restore that looked faster than 60 seconds,
+    and there was no timestamp on either the "boosted" or the
+    "normal" line to check it against — only two log lines and an
+    unknown gap between them. Wall-clock (`datetime.now`), not
+    `time.monotonic()`: this is for a human reading a terminal
+    against their own watch, not for the grace-period arithmetic
+    itself, which stays on the monotonic clock in `grace.py`.
     """
 
     if not (report.applied or report.failed or report.not_found or label):
         return
 
     prefix = f"{label}: " if label else ""
+    when = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     print(
-        f"{prefix}state={'boosted' if boosted else 'normal'} "
+        f"{when} {prefix}state={'boosted' if boosted else 'normal'} "
         f"applied={list(report.applied)} "
         f"not_found={list(report.not_found)} "
         f"failed={list(report.failed)}"

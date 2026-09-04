@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.12
+  version: 1.13
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -205,7 +205,8 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2, 3.3, 4.1 and 4.7 (4.1 and 4.7 advanced, not yet satisfied).
+1.4, 3.1, 3.2, 3.3, 4.1, 4.3 and 4.7 (4.1, 4.3 and 4.7 advanced, not yet
+satisfied).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -465,6 +466,28 @@ as abnormal. `DEFAULT_THRESHOLD_PERCENT` (5 %) is a proposed starting number,
 the same kind of guess `CpuThresholdDetectorDefinition`'s 50 %/15 s was,
 chosen to be sensitive rather than fitted to the one incident measured — not
 yet checked against a live sweep of containers nobody has classified.
+
+**4.3 remains `not verified`, and 2026-09-04 acquires most of it.** The
+criterion, literally: "it identifies the development option enabled in a
+permanent service." `DockerProvider.collect_commands` reads every container's
+own launch command with `docker ps --no-trunc` — untruncated, unlike
+`collect()`'s own call, which never read `Command` at all before today — and
+`aistack.runtime.development_flags.find_development_flags` matches it against
+`KNOWN_DEVELOPMENT_FLAGS`: one declared pattern, `--reload`, which is the
+literal cause of the reference incident. `test_a_reload_flag_is_reported`
+proves the CLI reads a command carrying it and reports it; `runtime_diagnose`
+carries the wiring, no container named, the same shape 4.1 and 4.7 already
+established.
+
+**What is not yet acquired: "permanent".** Nothing here reads whether a
+service is meant to run continuously — every container's command is checked
+alike, and a one-off container legitimately started with `--reload` for a
+human's own use would be flagged the same as a permanent one wrongly left
+running with it. That distinction is `OPS-0003`'s own territory
+(`continuous`/`intermittent`), not yet connected to this finding. `--reload`
+is also the only pattern declared: `GOV-P-001` holds here as it does for
+`OPS-0001`'s signatures — a second pattern is added once a second real case
+names one, not guessed at now.
 
 **4.7 remains `not verified`, and the gap has a name.** A finding does cite the
 policy that produced it — `OPS-0001/S-004` — which is the citation the criterion

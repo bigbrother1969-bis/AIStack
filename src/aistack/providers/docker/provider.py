@@ -190,6 +190,36 @@ class DockerProvider:
 
         return tuple(readings)
 
+    def collect_commands(self) -> dict[str, str]:
+        """
+        Every container's own launch command, untruncated.
+
+        `docker ps` truncates `Command` by default — under
+        `--format '{{json .}}'` exactly as it does in the table
+        view — so a flag appearing past the truncation point would
+        be invisible to anything reading the field. `--no-trunc` is
+        what makes this call different from `collect()`'s own
+        `docker ps`, which never reads `Command` at all today; a
+        second, dedicated call is made here rather than widening
+        `collect()`'s output — and its own tested determinism —
+        for a field only this caller needs.
+
+        `STD-0300` § VS-4 criterion 4.3 is what this exists for:
+        the reference incident's `--reload` is a property of the
+        command a container was started with, not of anything it
+        prints afterward.
+        """
+
+        entries = self._run_json_lines(
+            ["docker", "ps", "-a", "--no-trunc", "--format", "{{json .}}"]
+        )
+
+        return {
+            entry["Names"]: entry.get("Command", "")
+            for entry in entries
+            if isinstance(entry, dict) and entry.get("Names")
+        }
+
     def _run(self, command: list[str]) -> str:
         result = subprocess.run(
             command,

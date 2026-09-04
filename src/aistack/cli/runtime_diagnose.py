@@ -4,6 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from aistack.contracts.development_flag import DevelopmentFlagFinding
 from aistack.contracts.lifecycle import LifecycleRegister
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.contracts.signature import SignatureCatalogue
@@ -19,6 +20,7 @@ from aistack.policies.signature_catalogue import (
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.yaml import load_resource_priority_yaml
 from aistack.providers.docker import DockerProvider
+from aistack.runtime.development_flags import find_development_flags
 from aistack.runtime.grounding import ground_findings
 from aistack.runtime.idle_consumption import find_unexplained_consumption
 from aistack.runtime.qualification import qualify
@@ -259,6 +261,8 @@ def report(
     lifecycle_note: str = "",
     consumption: tuple[UnexplainedConsumption, ...] = (),
     resource_note: str = "",
+    development_flags: tuple[DevelopmentFlagFinding, ...] = (),
+    commands_note: str = "",
 ) -> None:
 
     print("Runtime Diagnosis Report")
@@ -272,6 +276,9 @@ def report(
 
     if resource_note:
         print(f"- Resource priority: {resource_note}")
+
+    if commands_note:
+        print(f"- Commands: {commands_note}")
 
     print("")
 
@@ -330,10 +337,19 @@ def report(
             )
         print("")
 
+    if development_flags:
+        print("Development options enabled:")
+        for item in development_flags:
+            print(f"    [{item.container}] {item.pattern}")
+            print(f"        {item.interpretation}")
+            print(f"        command: {item.command}")
+        print("")
+
     print(
         f"findings: {len(findings)}   "
         f"unobserved: {len(unobserved)}   "
-        f"unexplained consumption: {len(consumption)}"
+        f"unexplained consumption: {len(consumption)}   "
+        f"development options: {len(development_flags)}"
     )
 
 
@@ -399,6 +415,19 @@ def main() -> None:
         else:
             consumption = find_unexplained_consumption(readings, definition)
 
+    development_flags: tuple[DevelopmentFlagFinding, ...] = ()
+    commands_note = ""
+
+    try:
+        commands = provider.collect_commands()
+    except (subprocess.SubprocessError, OSError) as error:
+        commands_note = (
+            f"container commands could not be collected ({error}); "
+            f"development options are not checked"
+        )
+    else:
+        development_flags = find_development_flags(commands)
+
     report(
         findings,
         unobserved,
@@ -408,6 +437,8 @@ def main() -> None:
         note,
         consumption,
         resource_note,
+        development_flags,
+        commands_note,
     )
 
     # A subject that could not be read makes the sweep partial,
@@ -417,7 +448,7 @@ def main() -> None:
     if unobserved:
         raise SystemExit(2)
 
-    if findings or consumption:
+    if findings or consumption or development_flags:
         raise SystemExit(1)
 
 

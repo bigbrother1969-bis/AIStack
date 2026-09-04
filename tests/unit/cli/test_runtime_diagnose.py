@@ -53,9 +53,11 @@ class FakeProvider:
         self,
         logs: dict[str, list[str] | Exception],
         cpu: dict[str, float] | Exception | None = None,
+        commands: dict[str, str] | Exception | None = None,
     ):
         self._logs = logs
         self._cpu = cpu
+        self._commands = commands
 
     def collect_cpu_readings(self):
         if isinstance(self._cpu, Exception):
@@ -65,6 +67,12 @@ class FakeProvider:
             ContainerCpuReading(container=name, cpu_percent=percent)
             for name, percent in (self._cpu or {}).items()
         )
+
+    def collect_commands(self):
+        if isinstance(self._commands, Exception):
+            raise self._commands
+
+        return dict(self._commands or {})
 
     def collect(self):
         return {
@@ -97,8 +105,10 @@ class FakeProvider:
         )
 
 
-def run(monkeypatch, catalogue_file, logs, argv=(), cpu=None) -> int:
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeProvider(logs, cpu))
+def run(monkeypatch, catalogue_file, logs, argv=(), cpu=None, commands=None) -> int:
+    monkeypatch.setattr(
+        cli, "DockerProvider", lambda: FakeProvider(logs, cpu, commands)
+    )
     monkeypatch.setattr(
         "sys.argv",
         ["runtime_diagnose", "--catalogue", str(catalogue_file), *argv],
@@ -599,3 +609,75 @@ def test_the_governed_resource_priority_definition_is_the_default():
 
     assert cli.DEFAULT_RESOURCE_PRIORITY.exists()
     assert cli.DEFAULT_RESOURCE_PRIORITY.name == "resource_priority.yml"
+
+
+# --------------------------------------------------------------------
+# Development options in a container's own launch command, STD-0300 4.3
+# --------------------------------------------------------------------
+
+
+def test_a_reload_flag_is_reported(monkeypatch, catalogue_file, capsys):
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={
+            "aistack-selection-ui": "python3 -m uvicorn app:app --reload"
+        },
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "Development options enabled:" in out
+    assert "[aistack-selection-ui] --reload" in out
+    assert "development options: 1" in out
+
+
+def test_a_command_without_a_declared_flag_is_not_reported(
+    monkeypatch, catalogue_file, capsys
+):
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={"sonarr": "/init"},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "Development options enabled:" not in out
+    assert "development options: 0" in out
+
+
+def test_commands_that_cannot_be_collected_are_reported_and_do_not_crash(
+    monkeypatch, catalogue_file, capsys
+):
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands=OSError("docker not found"),
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "container commands could not be collected" in out
+
+
+def test_a_development_flag_alone_raises_the_exit_code(
+    monkeypatch, catalogue_file, capsys
+):
+    """
+    A dev flag left on is worth reporting even with no log finding
+    and no unexplained CPU — the same severity a log finding gets.
+    """
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={"aistack-selection-ui": "uvicorn app:app --reload"},
+    )
+
+    assert code == 1

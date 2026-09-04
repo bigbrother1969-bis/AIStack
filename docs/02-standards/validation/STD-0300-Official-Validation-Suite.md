@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.15
+  version: 1.16
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -205,8 +205,9 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.6 and 4.7 (4.1, 4.2, 4.3, 4.6 and 4.7
-advanced, not yet satisfied).
+1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.5, 4.6 and 4.7 (4.1, 4.2, 4.3, 4.5, 4.6
+and 4.7 advanced, not yet satisfied; 4.5's own wording was corrected the
+same day).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -412,15 +413,19 @@ below: the point is that AIStack reproduces the reasoning.
 | 4.2 | The finding correlates process, container and deployment definition, each with an observation reference | not verified |
 | 4.3 | It identifies the development option enabled in a permanent service | not verified |
 | 4.4 | Technical evidence is collected and attached to the finding, down to system-call level or equivalent | not verified |
-| 4.5 | The issue is classified **simultaneously** as technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly | not verified |
+| 4.5 | Each qualification the evidence supports, among technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly, is cited to a distinct policy; more than one found together is what makes the finding derived knowledge rather than an opinion about severity | not verified |
 | 4.6 | The root cause is explained, derived from the collected evidence | not verified |
 | 4.7 | A safe remediation is recommended, citing the policies it derives from by identifier | not verified |
 | 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 48–58 % → 0.2 %) | not verified |
 | 4.9 | No finding is emitted without at least one evidence reference | **satisfied** — 2026-08-22 |
 
 Criterion 4.5 is not a formality. A single label would make the finding an opinion
-about severity; four simultaneous qualifications make it derived knowledge, each
-traceable to a distinct policy.
+about severity; more than one qualification, each traceable to a distinct policy,
+is what makes it derived knowledge instead. Reworded 2026-09-04: the criterion no
+longer reads "simultaneously as [all four]" — the reference incident, examined by
+the owner against the full vocabulary, carries three of the four and explicitly
+not the fourth (`OPS-0004`), and a criterion that its own reference incident could
+never satisfy was wrong, not the incident.
 
 #### What 2026-08-22 verified, and what it did not
 
@@ -598,6 +603,32 @@ against: time-series CPU sampling and access-log pattern correlation are
 now named, concretely, as what 4.6 requires and 4.2 does not provide —
 not implemented, not guessed at, until a second real case confirms the
 shape worth automating.
+
+**4.5 remains `not verified`, and the criterion itself was corrected
+before being advanced.** Asked to qualify the reference incident against
+all four labels, the owner found three present — technical debt, energy
+inefficiency, sustainability anomaly — and the fourth, deployment
+misconfiguration, explicitly not pertinent. A criterion reading
+"simultaneously as [all four]" that its own reference incident could not
+satisfy was a defect in the criterion, not a gap to force closed by
+relabelling `--reload` as a deployment misconfiguration it was not judged
+to be. `OPS-0004` records the correction: the vocabulary stays closed at
+four, a finding cites whichever the evidence supports, and "deployment
+misconfiguration" keeps no definition at all rather than one invented to
+fill the fourth slot — the same `GOV-P-001` discipline that left
+`OPS-0001`'s `S-001`–`S-003` `unknown` rather than guessed.
+
+**What is proven and what is not.** `OPS-0004` proves three definitions
+exist, stated by the owner, each anchored to the one case this heritage
+has measured. Nothing wires them to a live finding: `RuntimeFinding`
+carries no qualification field, and each of the three still-open
+definitions needs evidence no current provider collects — a corrections
+backlog a fixed issue can be removed from, for technical debt; the "no
+incoming request, no active session" absence-of-benefit evidence the
+reference incident had, for energy inefficiency; a real temperature
+reading correlated to the CPU reading, for sustainability anomaly. One
+case is a policy, not yet a pattern worth automating — `ARC-P-006` holds
+here as it does for 4.1's threshold and 4.3's single flag.
 
 ---
 

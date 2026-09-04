@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.10
+  version: 1.11
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -463,6 +463,10 @@ adds the owner's context to any finding whose subject `OPS-0003` names, citing
 `OPS-0003/frigate` rather than `unknown` — verified end to end,
 `test_the_frigate_finding_is_grounded_after_qualification`, from a real
 `OPS-0001/S-004` qualification through to the grounded citation.
+`aistack.cli.runtime_diagnose` carries the same wiring — every finding it
+reports is grounded against `OPS-0003` before printing — so the next live
+sweep on the reference deployment is where this reaches a real host rather
+than only a fixture.
 
 **This is not the criterion satisfied, only advanced.** `4.7` reads on *a safe
 remediation*, singular in form but general in the state it describes — every

@@ -4,13 +4,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+from aistack.contracts.lifecycle import LifecycleRegister
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.contracts.signature import SignatureCatalogue
+from aistack.policies.lifecycle_register import (
+    RegisterError,
+    read_lifecycle_register,
+)
 from aistack.policies.signature_catalogue import (
     CatalogueError,
     read_signature_catalogue,
 )
 from aistack.providers.docker import DockerProvider
+from aistack.runtime.grounding import ground_findings
 from aistack.runtime.qualification import qualify
 
 
@@ -32,6 +38,50 @@ DEFAULT_CATALOGUE = (
     / "04-development"
     / "OPS-0001-Container-Log-Signatures.md"
 )
+
+
+# The governed lifecycle register, next to the catalogue for the
+# same reason and with the same consequence for a packaged install.
+#
+# **Optional, unlike the catalogue.** A finding is qualified against
+# `OPS-0001` or it does not exist; grounding it against `OPS-0003`
+# only adds owner context where one has been declared. A missing or
+# unreadable register is reported and the run continues with no
+# declarations, rather than refusing to diagnose because an
+# enrichment step could not enrich anything.
+DEFAULT_LIFECYCLE_REGISTER = (
+    Path(__file__).resolve().parents[3]
+    / "docs"
+    / "04-development"
+    / "OPS-0003-Container-Lifecycle-Declarations.md"
+)
+
+
+def lifecycle_register(path: Path) -> tuple[LifecycleRegister, str]:
+    """
+    Read the lifecycle register at `path`, or an empty one with a
+    note explaining why.
+
+    Returns the register and a note for the report — never raises.
+    `STD-0300` § VS-4 criterion 4.7 is advanced by this register
+    where one is declared; a host with none yet, or a packaged
+    install carrying no `docs/`, still diagnoses, just without that
+    context.
+    """
+
+    if not path.exists():
+        return LifecycleRegister(artifact="none"), (
+            f"no lifecycle register at {path}; findings are not "
+            f"grounded against one"
+        )
+
+    try:
+        return read_lifecycle_register(path.read_text(encoding="utf-8")), ""
+    except RegisterError as error:
+        return LifecycleRegister(artifact="none"), (
+            f"lifecycle register not readable ({error}); findings "
+            f"are not grounded against one"
+        )
 
 
 # How much of an evidence line the report prints.
@@ -159,6 +209,7 @@ def report(
     catalogue: SignatureCatalogue,
     examined: int,
     states: dict[str, str],
+    lifecycle_note: str = "",
 ) -> None:
 
     print("Runtime Diagnosis Report")
@@ -166,6 +217,10 @@ def report(
     print(f"- Signatures: {len(catalogue.signatures)}")
     print(f"- Subjects examined: {examined}")
     print(f"- Window: {catalogue.deepest} lines")
+
+    if lifecycle_note:
+        print(f"- Lifecycle: {lifecycle_note}")
+
     print("")
 
     if not findings:
@@ -262,7 +317,10 @@ def main() -> None:
 
         findings.extend(qualify(observation, catalogue))
 
-    report(findings, unobserved, catalogue, len(subjects), declared)
+    register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
+    findings = list(ground_findings(findings, register))
+
+    report(findings, unobserved, catalogue, len(subjects), declared, note)
 
     # A subject that could not be read makes the sweep partial,
     # and a partial sweep reporting "no finding" would be read as

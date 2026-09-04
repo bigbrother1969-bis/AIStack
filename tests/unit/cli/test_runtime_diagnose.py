@@ -363,3 +363,89 @@ def test_the_governed_catalogue_is_the_default(monkeypatch):
     assert cli.DEFAULT_CATALOGUE.name == (
         "OPS-0001-Container-Log-Signatures.md"
     )
+
+
+# --------------------------------------------------------------------
+# Grounding a finding against the lifecycle register, STD-0300 4.7
+# --------------------------------------------------------------------
+
+
+LIFECYCLE = """# A register
+
+```lifecycle
+artifact: OPS-TEST-LC
+declarations:
+  - container: frigate
+    expected: intermittent
+    reason: "Stopped most of the time to save resources."
+```
+"""
+
+
+def test_a_finding_about_a_declared_container_is_grounded(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    register = tmp_path / "OPS-TEST-LC.md"
+    register.write_text(LIFECYCLE, encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_LIFECYCLE_REGISTER", register)
+
+    run(monkeypatch, catalogue_file, {"frigate": ["AUTH_FAILED"]})
+    out = capsys.readouterr().out
+
+    assert "grounding: OPS-TEST-LC/frigate" in out
+    assert "Stopped most of the time to save resources" in out
+
+
+def test_a_finding_about_an_undeclared_container_stays_unknown(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    register = tmp_path / "OPS-TEST-LC.md"
+    register.write_text(LIFECYCLE, encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_LIFECYCLE_REGISTER", register)
+
+    run(monkeypatch, catalogue_file, {"gluetun": ["AUTH_FAILED"]})
+    out = capsys.readouterr().out
+
+    assert "grounding: unknown" in out
+
+
+def test_a_missing_lifecycle_register_still_diagnoses_and_says_so(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    monkeypatch.setattr(
+        cli, "DEFAULT_LIFECYCLE_REGISTER", tmp_path / "absent.md"
+    )
+
+    code = run(monkeypatch, catalogue_file, {"gluetun": ["AUTH_FAILED"]})
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "no lifecycle register at" in out
+    assert "grounding: unknown" in out
+
+
+def test_an_unreadable_lifecycle_register_still_diagnoses_and_says_why(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    register = tmp_path / "broken.md"
+    register.write_text("# no block here\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_LIFECYCLE_REGISTER", register)
+
+    code = run(monkeypatch, catalogue_file, {"gluetun": ["AUTH_FAILED"]})
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "lifecycle register not readable" in out
+
+
+def test_the_governed_lifecycle_register_is_the_default():
+    """
+    Mirrors `test_the_governed_catalogue_is_the_default`: the
+    default path resolves to the governed artifact, and fails
+    loudly rather than silently if the layout moves.
+    """
+
+    assert cli.DEFAULT_LIFECYCLE_REGISTER.exists()
+    assert cli.DEFAULT_LIFECYCLE_REGISTER.name == (
+        "OPS-0003-Container-Lifecycle-Declarations.md"
+    )

@@ -30,6 +30,13 @@ priority:
     url: http://127.0.0.1:8096
     api_key_env: JELLYFIN_API_KEY
     timeout_seconds: 5.0
+- container: immich_machine_learning
+  normal_cpus: 1.0
+  boosted_cpus: 3.0
+  detector:
+    type: cpu_threshold
+    threshold_percent: 50.0
+    sustained_seconds: 15.0
 
 # The host's own core count. Docker cannot clear a CPU limit once
 # one has been set, so "unlimited" is written as a cap at every core

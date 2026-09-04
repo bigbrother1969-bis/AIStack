@@ -445,8 +445,10 @@ def test_the_real_resource_priority_definition_loads():
         / "resource_priority.yml"
     )
 
-    assert len(definition.priority) == 1
-    jellyfin = definition.priority[0]
+    assert len(definition.priority) == 2
+    by_container = {app.container: app for app in definition.priority}
+    jellyfin = by_container["jellyfin"]
+    immich = by_container["immich_machine_learning"]
 
     assert jellyfin.container == "jellyfin"
     assert jellyfin.normal_cpus == 3.0
@@ -457,6 +459,14 @@ def test_the_real_resource_priority_definition_loads():
     assert detector.url == "http://127.0.0.1:8096"
     assert detector.api_key_env == "JELLYFIN_API_KEY"
     assert detector.timeout_seconds == 5.0
+
+    assert immich.normal_cpus == 1.0
+    assert immich.boosted_cpus == 3.0
+
+    immich_detector = immich.detector
+    assert isinstance(immich_detector, CpuThresholdDetectorDefinition)
+    assert immich_detector.threshold_percent == 50.0
+    assert immich_detector.sustained_seconds == 15.0
 
     assert definition.unlimited_cpus == 4.0
     assert definition.grace_seconds == 60.0

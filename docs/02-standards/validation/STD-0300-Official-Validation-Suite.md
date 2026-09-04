@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.18
+  version: 1.19
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -207,7 +207,8 @@ which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
 1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.5, 4.6, 4.7 and 4.8 (4.1, 4.2, 4.3, 4.5,
 4.6 and 4.7 advanced, not yet satisfied; 4.5's own wording was corrected the
-same day; 4.8 satisfied by a live reading).
+same day, and one piece of its energy-inefficiency evidence was closed;
+4.8 satisfied by a live reading).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -631,6 +632,29 @@ reference incident had, for energy inefficiency; a real temperature
 reading correlated to the CPU reading, for sustainability anomaly. One
 case is a policy, not yet a pattern worth automating — `ARC-P-006` holds
 here as it does for 4.1's threshold and 4.3's single flag.
+
+**One piece of that list is closed, the same day, deliberately scoped
+to less than the whole.** `aistack.runtime.activity_evidence.
+no_incoming_requests` reads an already-collected `RuntimeObservation`
+(the same `collect_logs` call `qualify()` already makes — no new
+provider method) and reports whether any entry matches the "combined"
+HTTP access-log line format nginx, Apache and most application servers
+emit alike. `GOV-P-001` does not govern this pattern: it is a published
+logging convention, not an owner's operational fact, the standing
+`extract_dockerfile_command`'s `CMD` parsing already holds.
+`test_a_real_access_log_line_is_recognised_as_an_incoming_request`
+proves it against `firefly`'s own log line from `OPS-0004`'s
+investigation.
+
+This is half of the energy-inefficiency evidence the reference incident
+lists, not all of it — "no active browser session" stays unchecked, and
+nothing here constructs a qualified finding: `RuntimeFinding` still
+carries no qualification field, so `no_incoming_requests` is proven
+correct in isolation, not yet wired to anything a live sweep would
+report. The owner declined to build the corrections-backlog register
+technical debt needs and the temperature reading sustainability anomaly
+needs until a real case exists for each — the same discipline that kept
+this one narrow rather than complete.
 
 **4.8 — satisfied, 2026-09-04.** The criterion, literally: "before/after
 verification measures a CPU reduction ≥ 95 %."

@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.6
+  version: 1.7
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -203,8 +203,8 @@ Each criterion carries its own state and, when it has one, the date its
 verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
-criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3
-and 1.4.
+criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
+1.4 and 3.3.
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -315,7 +315,37 @@ interaction · Regeneration.
 |---|---|---|
 | 3.1 | The same catalog and the same policy produce the same selection | not verified |
 | 3.2 | Every included and excluded item carries the rule that decided it | not verified |
-| 3.3 | After a user modification, regeneration differs only by the modified items | not verified |
+| 3.3 | After a user modification, regeneration differs only by the modified items | **satisfied** — 2026-09-04 |
+
+#### What 2026-09-04 checked, prompted by the owner citing 2026-09-03's Syncthing work
+
+The owner considered VS-3 done, citing the previous day's `selection_ui` work
+(hardlink materialisation, quota, Syncthing status). Checked against the three
+criteria individually rather than accepted as one claim (§ 7 — a criterion is
+recorded satisfied only through its own executed verification).
+
+**3.3 is satisfied.**
+`tests/unit/generators/test_hardlink_materialisation.py::test_unticking_removes_what_is_no_longer_designated`
+materialises `["Classique"]`, regenerates with `["Classique/Bach"]` — the
+user's modification — and asserts `report.removed == ("Classique/Berlioz/01.mp3",)`
+and that only `Classique/Bach/01.mp3` remains under the target: the
+regeneration changed exactly what the modification removed, nothing else.
+`test_a_second_run_writes_nothing` reinforces it at the boundary case: an
+unmodified selection, regenerated, writes nothing at all. Both tests run in
+the governed suite, per commit.
+
+**3.1 and 3.2 stay `not verified`, and not for the same reason.** For 3.1,
+`ByIdsSelectionStrategy.select()` (`src/aistack/kernel/selection/strategies/by_ids.py`)
+is a pure, sort-normalised function — nothing in it explains a non-deterministic
+result — but no executed test calls it twice with identical inputs and asserts
+identical output; the claim is plausible, not demonstrated. For 3.2, the gap is
+not a missing test: `Selection` (`src/aistack/kernel/selection/core.py`) carries
+`selected_ids` and a flat `metadata` dict, nothing per-item, and excluded items
+are not represented at all — a ticked ID is simply present or absent, with no
+rule, reason or policy attached to that fact anywhere in the selection code.
+The criterion describes a policy-driven selector explaining each of its
+decisions; what exists is a manual by-IDs selector with no decisions to
+explain. This moves only when that concept is built, not when it is tested.
 
 ### VS-4 — Sustainability & Technical Debt Analysis
 
@@ -404,9 +434,10 @@ measures. This criterion moves when a remediation policy is written, not before.
 
 ---
 
-**Suite state: 22 criteria — 10 satisfied, 0 failing, 12 not verified. VS-1 is
-the first scenario satisfied in full: every one of its four criteria holds
-(§ 7 — a scenario is satisfied only when every one of its criteria holds).**
+**Suite state: 22 criteria — 11 satisfied, 0 failing, 11 not verified. VS-1 is
+the only scenario satisfied in full so far: every one of its four criteria
+holds (§ 7 — a scenario is satisfied only when every one of its criteria
+holds). VS-3 holds one of three.**
 
 ---
 

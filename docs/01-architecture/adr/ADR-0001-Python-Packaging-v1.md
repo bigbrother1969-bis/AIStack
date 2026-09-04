@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-07-04
@@ -194,11 +194,14 @@ This is additive to decision 1, not a change to it: `bin/aistack_env.sh`
 stays the SPOT for a development workstation; a deployment host now has
 its own named pattern rather than an ad hoc workaround.
 
-**Not measured live on GIGABYTE as of 2026-09-04.** Per § *What a closure must carry*,
-a condition about a host outside this repository is closed only against
-its own measurement — `GOV-0002/OS-048` records the decision and stays
-open until the command above is run there and `PYTHONPATH=src` is
-confirmed no longer necessary.
+**Measured live on GIGABYTE 2026-09-04.** The three commands above were
+run there: `aistack==0.4.0` installed editable, and
+`.venv-deploy/bin/python -m aistack.cli.docker_discover` wrote
+`reports/generated/docker-provider-observation.json` with no
+`PYTHONPATH` set. `GOV-0002/OS-048` closes on that measurement, per
+§ *What a closure must carry* — a condition about a host outside this
+repository closes only against its own measurement, and this one now has
+it.
 
 ## Consequences
 

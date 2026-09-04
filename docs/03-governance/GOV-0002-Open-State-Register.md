@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.90
+  version: 1.91
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -255,9 +255,8 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
-**One open: `OS-048`.** OS-003, OS-013, OS-014, OS-015, OS-022, OS-034,
-OS-038, OS-043, OS-046, OS-049, OS-050, OS-051 and OS-054 are in
-*Resolved*.
+None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038, OS-043,
+OS-046, OS-048, OS-049, OS-050, OS-051 and OS-054 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -278,40 +277,10 @@ ADR anyone re-measured produced an entry.
 "proposed for a register entry, not opened", and stayed that way for five
 days** (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4) until opened here —
 the residual this register's own § *Purpose* names: *"observed, and quietly
-forgotten."* One remains below; `OS-049`, `OS-050`, `OS-051` and `OS-054`
-are in *Resolved*.
+forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
+`OS-051` and `OS-054`.
 
 ---
-
-#### GOV-0002/OS-048 — The heritage's one declared execution environment does not cover either host it actually runs on
-
-**Nature** `decision` · **Opened** 2026-09-03 · **State** open
-**Observed** `ADR-0001` § *Decision* names `bin/aistack_env.sh` the SPOT
-for the execution environment, and its implementation table carries *"1 —
-Single Execution Environment, `bin/aistack_env.sh` as SPOT — done —
-2026-08-27."* Measured 2026-08-29 (`claude/SESSION-2026-08-29.md`) and
-reconfirmed this session (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4):
-the laptop's `PATH` `python3` is 3.12 against a heritage verified on 3.13,
-masked only when `scripts/dev-env.sh` is sourced by hand; GIGABYTE, the
-reference deployment host, has no `aistack` on its import path at all and
-needs `PYTHONPATH=src` supplied by hand on every provider CLI invocation.
-`bin/aistack_env.sh` itself, and the ADR that names it SPOT, describe a
-development workstation; neither names a deployment host.
-**Derivable** yes, once a check runs `python3 --version` (or reads
-`PYTHONPATH`) against a declared expectation on each named host — no such
-check exists, and none could without a way to reach GIGABYTE from the
-suite.
-**Decided 2026-09-04, not yet closed.** The owner chose to extend rather
-than accept: `ADR-0001` § *Deployment host, 2026-09-04* (v1.2) names the
-pattern — an editable install (`pip install -e .`) into a dedicated venv
-on the deployment host, the same thing `Dockerfile` already does for the
-published image, in place of `PYTHONPATH` set by hand. Per § *What a
-closure must carry*, a condition about GIGABYTE is closed only against
-its own measurement: this entry stays open until the command is run there
-and a provider CLI is confirmed to work without `PYTHONPATH=src`.
-**Qualification** decided 2026-09-04 by the owner: extend `ADR-0001` and
-install the package on the deployment host, rather than document manual
-`PYTHONPATH=src` as accepted.
 
 ---
 
@@ -521,6 +490,42 @@ than architecture is the unearned motion `ARC-P-006` refuses. `ADR-0004`
 leaving the question standing for the next reader to reopen.
 **Qualification** decided 2026-09-04 by the owner: `bootstrap/` stays
 inside `kernel/`; no code moved.
+
+---
+
+#### GOV-0002/OS-048 — The heritage's one declared execution environment does not cover either host it actually runs on
+
+**Nature** `decision` · **Opened** 2026-09-03 · **State** resolved 2026-09-04 by installing the package on GIGABYTE, measured live — ADR-0001 v1.3
+**Observed** `ADR-0001` § *Decision* named `bin/aistack_env.sh` the SPOT
+for the execution environment, and its implementation table carried *"1 —
+Single Execution Environment, `bin/aistack_env.sh` as SPOT — done —
+2026-08-27."* Measured 2026-08-29 (`claude/SESSION-2026-08-29.md`) and
+reconfirmed this session (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4):
+the laptop's `PATH` `python3` was 3.12 against a heritage verified on 3.13,
+masked only when `scripts/dev-env.sh` is sourced by hand; GIGABYTE, the
+reference deployment host, had no `aistack` on its import path at all and
+needed `PYTHONPATH=src` supplied by hand on every provider CLI invocation.
+`bin/aistack_env.sh` itself, and the ADR that named it SPOT, described a
+development workstation; neither named a deployment host.
+**Derivable** yes, once a check runs `python3 --version` (or reads
+`PYTHONPATH`) against a declared expectation on each named host — no such
+check exists, and none could without a way to reach GIGABYTE from the
+suite.
+**Resolved 2026-09-04.** Decided 2026-09-04: the owner chose to extend
+rather than accept, naming the pattern in `ADR-0001` § *Deployment host,
+2026-09-04* (v1.2) — an editable install (`pip install -e .`) into a
+dedicated venv on the deployment host, the same thing `Dockerfile`
+already does for the published image, in place of `PYTHONPATH` set by
+hand. Per § *What a closure must carry*, a condition about GIGABYTE
+closes only against its own measurement, and the owner ran it the same
+day: `python3 -m venv .venv-deploy`, `.venv-deploy/bin/pip install -e .`,
+then `.venv-deploy/bin/python -m aistack.cli.docker_discover` — no
+`PYTHONPATH` set — installed `aistack==0.4.0` editable and wrote
+`reports/generated/docker-provider-observation.json`, confirming a
+provider CLI runs on GIGABYTE without `PYTHONPATH=src`.
+**Qualification** decided and measured 2026-09-04 by the owner: `ADR-0001`
+extended and the package installed on the deployment host, confirmed live
+rather than left as a documented intention.
 
 ---
 

@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Operations
   created: 2026-09-04
@@ -101,15 +101,34 @@ records, not a gap.
 It does not wire any of the four qualifications into a runtime finding.
 `RuntimeFinding` carries no qualification field today, and no code reads
 this register — `STD-0300` § VS-4 4.5 records the criterion as advanced,
-not satisfied, and the reasons are named there: attaching "technical
-debt" to a live finding needs a backlog register this heritage does not
-have yet (something a corrected issue can be removed from); attaching
-"energy inefficiency" needs the "no functional benefit" evidence the
-reference incident had (no incoming requests, no active session) and no
-current provider collects; attaching "sustainability anomaly" needs a
-real temperature reading correlated to the CPU reading, and no current
-provider reads one. Building any of this from one case would be exactly
-what `ARC-P-006` warns against.
+not satisfied. Some of the evidence each qualification needs now exists,
+piece by piece, and each piece is named here precisely because a piece
+existing is not the same as a finding carrying the qualification it
+would support:
+
+- **technical debt** — needs a backlog register this heritage does not
+  have yet, something a corrected issue can be removed from. Not built:
+  the owner declined to build one ahead of a real pending correction to
+  seed it with, 2026-09-04.
+- **energy inefficiency** — needs the "no functional benefit" evidence
+  the reference incident had: no incoming requests, no active session.
+  `aistack.runtime.activity_evidence.no_incoming_requests` reads the
+  first half, from a log window already collected. "No active browser
+  session" is not checked by anything.
+- **sustainability anomaly** — needs a real temperature reading
+  correlated to a CPU reading. `HostProvider.collect_temperatures`
+  (`src/aistack/providers/host/provider.py`) reads `sensors` — the same
+  source the owner's own Uptime Kuma temperature check reads — into
+  `TemperatureReading`, which compares itself against the sensor chip's
+  *own* declared "high"/"crit" limits rather than a threshold `aistack`
+  proposed. Nothing correlates one of these against a `ContainerCpuReading`
+  yet; the two readings exist, independently, with no function that
+  reads them together.
+
+Three separate providers, three separate pieces of evidence, and no
+finding built from any of them — building the correlation itself from
+one case (the reference incident, the one machine this has ever been
+measured on) would be exactly what `ARC-P-006` warns against.
 
 It does not define "deployment misconfiguration". A finding that is one,
 when a real case names it, gets its definition the same way `frigate`'s

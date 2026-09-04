@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.19
+  version: 1.20
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -207,8 +207,8 @@ which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
 1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.5, 4.6, 4.7 and 4.8 (4.1, 4.2, 4.3, 4.5,
 4.6 and 4.7 advanced, not yet satisfied; 4.5's own wording was corrected the
-same day, and one piece of its energy-inefficiency evidence was closed;
-4.8 satisfied by a live reading).
+same day, and its energy-inefficiency and sustainability-anomaly evidence
+each gained one piece; 4.8 satisfied by a live reading).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -651,10 +651,29 @@ lists, not all of it — "no active browser session" stays unchecked, and
 nothing here constructs a qualified finding: `RuntimeFinding` still
 carries no qualification field, so `no_incoming_requests` is proven
 correct in isolation, not yet wired to anything a live sweep would
-report. The owner declined to build the corrections-backlog register
-technical debt needs and the temperature reading sustainability anomaly
-needs until a real case exists for each — the same discipline that kept
-this one narrow rather than complete.
+report.
+
+**A second piece, the same day: sustainability anomaly's temperature
+reading.** Asked how GIGABYTE's own temperature is read today, the owner
+named `sensors` (lm-sensors) — the same source the owner's own Uptime
+Kuma keyword check reads. `HostProvider.collect_temperatures`
+(`src/aistack/providers/host/provider.py`) runs it; `parse_sensors_
+output` (`src/aistack/providers/host/sensors.py`) reads its output into
+`TemperatureReading`, tested against the real block captured live on
+GIGABYTE the same day: `k10temp-pci-00c3/temp1` at 70.5 °C — already at
+the chip's own declared "high" of 70.0 °C, not merely close to it.
+`at_or_above_high` compares a reading against the sensor's *own*
+threshold rather than one `aistack` proposed, the same reasoning that
+keeps `idle_consumption.DEFAULT_THRESHOLD_PERCENT` named as a guess.
+
+Three separate providers now exist for three separate pieces of this
+criterion's evidence — commands and processes (4.2), log activity, host
+temperature — and nothing correlates any of them into a qualified
+finding. The owner declined to build the corrections-backlog register
+technical debt needs until a real pending correction exists to seed it
+with. Building the correlation itself from the one machine this has
+ever been measured on would be exactly what `ARC-P-006` warns against —
+narrower evidence, not a finished criterion, is what today closes.
 
 **4.8 — satisfied, 2026-09-04.** The criterion, literally: "before/after
 verification measures a CPU reduction ≥ 95 %."

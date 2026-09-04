@@ -7,17 +7,18 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Draft
   owner: Operations
   created: 2026-08-22
-  updated: 2026-08-22
+  updated: 2026-09-04
 
 relations:
   references:
     - ADR-0009
     - FDN-0002
     - STD-0300
+    - OPS-0003
 ---
 
 # OPS-0001 — Container Log Signatures
@@ -89,10 +90,21 @@ it applied every rule to whatever container a human had clicked, whatever its
 state. Nothing observed says whether that is right for them, and nothing here
 pretends otherwise.
 
-**A deeper gap has no field.** The heritage cannot tell "stopped because
-broken" from "stopped on purpose", because nothing declares which containers
-are expected to run. `applies_to` treats the symptom; the knowledge that
-`frigate` is deliberately idle exists in one person's head.
+**A deeper gap has no field — had no field.** The heritage could not tell
+"stopped because broken" from "stopped on purpose", because nothing
+declared which containers are expected to run. `applies_to` treats the
+symptom; the knowledge that `frigate` is deliberately idle existed in one
+person's head.
+
+`OPS-0003`, written 2026-09-04, is that field. It declares `frigate` as
+`intermittent`, in the owner's own words, and `ground_findings`
+(`src/aistack/runtime/grounding.py`) adds that context to any finding whose
+subject `OPS-0003` names — carrying the signature's own interpretation and
+remediation forward unchanged, never suppressing them. This signature's own
+`applies_to` and `grounding` are unchanged by that: `S-004` still declares
+`grounding: unknown`, because the general remediation this signature
+presupposes for any subject remains ungrounded. What `OPS-0003` grounds is
+the one finding it has a stated fact about, not the rule.
 
 **Every `grounding` below is `unknown`.** The field names the rule that makes
 a remediation the right one — not the signature itself, which is the rule for

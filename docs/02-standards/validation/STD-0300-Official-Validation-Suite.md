@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.9
+  version: 1.10
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -22,6 +22,7 @@ relations:
     - FDN-0012
     - ADR-0009
     - OPS-0001
+    - OPS-0003
 ---
 
 # STD-0300 — Official Validation Suite
@@ -204,7 +205,7 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2 and 3.3.
+1.4, 3.1, 3.2, 3.3 and 4.7 (advanced, not yet satisfied).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -453,6 +454,27 @@ heritage, and none is. The field was added on 2026-08-22 to make that absence
 countable under FDN-0003 Article 12; using its existence to declare the criterion
 satisfied would turn an instrument of visibility into a way of hiding what it
 measures. This criterion moves when a remediation policy is written, not before.
+
+**2026-09-04 — a remediation policy was written, for one subject.** `OPS-0003`
+declares `frigate` as `intermittent`, in the owner's own words: stopped most of
+the time to save resources, started back up on demand. `ground_findings`
+(`src/aistack/runtime/grounding.py`) reads that register after `qualify()` and
+adds the owner's context to any finding whose subject `OPS-0003` names, citing
+`OPS-0003/frigate` rather than `unknown` — verified end to end,
+`test_the_frigate_finding_is_grounded_after_qualification`, from a real
+`OPS-0001/S-004` qualification through to the grounded citation.
+
+**This is not the criterion satisfied, only advanced.** `4.7` reads on *a safe
+remediation*, singular in form but general in the state it describes — every
+signature `OPS-0001` declares still presupposes an undeclared policy for any
+subject it has not been told about, and `S-001`, `S-002` and `S-003` are
+untouched by this: no fact has been given yet for a VPN credential's declared
+location, or for a dependency between two services. `test_every_governed_
+signature_declares_its_grounding_as_unknown` still passes, deliberately — the
+signature was not the thing to change. One finding, for one container, on one
+declared fact, now carries a real citation instead of `unknown`; the criterion
+stays `not verified` until that is true of what it asks for generally, not of
+one case that happens to be provable today.
 
 ---
 

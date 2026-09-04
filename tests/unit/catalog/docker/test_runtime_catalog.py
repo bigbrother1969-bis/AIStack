@@ -180,6 +180,30 @@ def test_a_container_with_no_mounts_reads_as_empty_not_none():
     assert containers_of(catalog)[0].metadata["mounts"] == ""
 
 
+def test_mounts_are_sorted_regardless_of_docker_s_own_order():
+    """
+    `STD-0300` VS-1 criterion 1.3 (regeneration determinism) failed
+    on its first live execution, 2026-09-04, against GIGABYTE: two
+    consecutive `docker ps` calls with no host change rendered the
+    same container's `Mounts` string in a different order. Sorting
+    here is what makes two observations that differ only in
+    Docker's own ordering produce an identical catalog entry.
+    """
+
+    first = DockerRuntimeCatalogBuilder().build(
+        observation({"ID": "a", "Names": "one", "Mounts": "media,config,backup"})
+    )
+    second = DockerRuntimeCatalogBuilder().build(
+        observation({"ID": "a", "Names": "one", "Mounts": "backup,media,config"})
+    )
+
+    assert (
+        containers_of(first)[0].metadata["mounts"]
+        == containers_of(second)[0].metadata["mounts"]
+        == "backup,config,media"
+    )
+
+
 def test_every_metadata_value_is_a_string():
     """
     `CatalogItem.metadata` is `dict[str, str]` and the

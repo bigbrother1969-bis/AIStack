@@ -78,8 +78,17 @@ class DockerRuntimeCatalogBuilder:
                     # asked for it before `STD-0300` § *VS-1*
                     # criterion 1.2 named "published ports and
                     # mounts" as what a catalog entry must carry,
-                    # 2026-09-04.
-                    "mounts": self._text(item.get("Mounts")),
+                    # 2026-09-04. Sorted rather than passed
+                    # through: a live run against GIGABYTE the
+                    # same day showed Docker's own comma-joined
+                    # order for this field is not stable across
+                    # two `docker ps` invocations with no host
+                    # change, which broke `STD-0300` criterion
+                    # 1.3 (regeneration determinism) on its first
+                    # execution. Sorting is a property of this
+                    # catalog, not a claim about Docker's mount
+                    # order meaning anything.
+                    "mounts": self._sorted_csv(item.get("Mounts")),
                 },
             )
             for item in containers
@@ -169,3 +178,25 @@ class DockerRuntimeCatalogBuilder:
         """
 
         return "" if value is None else str(value)
+
+    def _sorted_csv(self, value: Any) -> str:
+        """
+        Sort a Docker comma-joined field alphabetically by entry.
+
+        `mounts` is the one field this builder sorts. Discovered
+        2026-09-04, against GIGABYTE: two consecutive
+        `docker ps --format '{{json .}}'` calls with no host
+        change rendered the same container's `Mounts` string in a
+        different order — `STD-0300/VS-1` criterion 1.3 failed on
+        its first live execution because of it, not because
+        anything on the host had changed. No other field this
+        builder reads showed the same instability that day, so
+        only this one is sorted (`ARC-P-006`).
+        """
+
+        text = self._text(value)
+
+        if not text:
+            return text
+
+        return ",".join(sorted(part.strip() for part in text.split(",")))

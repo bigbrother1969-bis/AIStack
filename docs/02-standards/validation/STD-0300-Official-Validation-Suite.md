@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.4
+  version: 1.5
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-08-22
+  updated: 2026-09-04
 
 relations:
   references:
@@ -203,7 +203,8 @@ Each criterion carries its own state and, when it has one, the date its
 verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
-criteria below had moved on. Last change: 2026-08-22, criteria 2.5, 2.6 and 4.9.
+criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3
+and 1.4.
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -215,10 +216,46 @@ Artifact generation · Infrastructure explanation.
 
 | # | Criterion | State |
 |---|---|---|
-| 1.1 | Given a host running N containers, the generated catalog contains exactly N entries | not verified |
-| 1.2 | Each entry carries identity, image, state, published ports and mounts | not verified |
-| 1.3 | Regenerating from an unchanged host produces an identical catalog | not verified |
-| 1.4 | Every statement in the generated explanation references an observation present in the catalog | not verified |
+| 1.1 | Given a host running N containers, the generated catalog contains exactly N entries | **satisfied** — 2026-09-04 |
+| 1.2 | Each entry carries identity, image, state, published ports and mounts | **satisfied** — 2026-09-04 |
+| 1.3 | Regenerating from an unchanged host produces an identical catalog | **failing** — 2026-09-04 |
+| 1.4 | Every statement in the generated explanation references an observation present in the catalog | **satisfied** — 2026-09-04 |
+
+#### What 2026-09-04 verified, and what it did not
+
+Executed against GIGABYTE, the production host, with no state change between the
+two runs 1.3 compares.
+
+**1.1 is satisfied.** `python3 -m aistack.cli.docker_catalog` produced a catalog
+with 61 container entries; `docker ps -a --format '{{.Names}}' | wc -l` — the `-a`
+matching what `DockerProvider.collect()` itself calls — independently counted 61.
+Both readings taken from the same host state.
+
+**1.2 is satisfied.** Every one of the 61 container entries carries `docker_id`,
+`label`, `image`, `state`, `ports` and `mounts` — populated where Docker reports
+something, and an explicit empty string rather than an absent key where it does
+not (`cyberchef`, `gluetun`, `it-tools`, among others, carry `"mounts": ""`).
+
+**1.4 is satisfied.** `docker-runtime-explanation.txt` was checked against the
+catalog it was generated from: every field named in a sentence — image, state,
+ports, mounts — is the value the corresponding `CatalogItem.metadata` carries for
+that container, spot-checked on `jellyfin`, `sonarr` and the containers with no
+mounts (rendered as `'no mounts'`, per `explain_docker_catalog`'s stated-absence
+rule).
+
+**1.3 fails, and the failure is real.** Two runs of `docker_catalog.main()`
+against the unchanged host, diffed with `collected_at` excluded, are not
+identical: container, image, network and volume ordering held stable across the
+two runs, but the `mounts` field's internal ordering did not, for at least
+`bazarr`, `frigate`, `booklore`, `beszel-agent`, `komga` and `filebrowser` —
+each rendered its own mount paths in a different order the second time.
+`DockerRuntimeCatalogBuilder._containers()` reads Docker's `Mounts` field and
+joins it in the order Docker returns it; that order is not guaranteed stable
+across two `docker ps` invocations. This is not a defect this session's patch
+introduced — `mounts` is the field that patch added — but it is the reason 1.3
+cannot move to `satisfied` yet. The fix is to sort the mounts before joining
+them, closing 1.3 the same way 1.2 and 1.4 were closed: a small code change,
+followed by another live run to confirm the ordering no longer varies.
 
 ### VS-2 — Context Bundle / Self-Onboarding
 
@@ -364,7 +401,7 @@ measures. This criterion moves when a remediation policy is written, not before.
 
 ---
 
-**Suite state: 22 criteria — 6 satisfied, 0 failing, 16 not verified.**
+**Suite state: 22 criteria — 9 satisfied, 1 failing, 12 not verified.**
 
 ---
 

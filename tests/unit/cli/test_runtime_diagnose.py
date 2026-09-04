@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import runtime_diagnose as cli
+from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import (
     LogEntry,
     RuntimeObservation,
@@ -48,8 +49,22 @@ class FakeProvider:
     daemon would make these results depend on this machine.
     """
 
-    def __init__(self, logs: dict[str, list[str] | Exception]):
+    def __init__(
+        self,
+        logs: dict[str, list[str] | Exception],
+        cpu: dict[str, float] | Exception | None = None,
+    ):
         self._logs = logs
+        self._cpu = cpu
+
+    def collect_cpu_readings(self):
+        if isinstance(self._cpu, Exception):
+            raise self._cpu
+
+        return tuple(
+            ContainerCpuReading(container=name, cpu_percent=percent)
+            for name, percent in (self._cpu or {}).items()
+        )
 
     def collect(self):
         return {
@@ -82,8 +97,8 @@ class FakeProvider:
         )
 
 
-def run(monkeypatch, catalogue_file, logs, argv=()) -> int:
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeProvider(logs))
+def run(monkeypatch, catalogue_file, logs, argv=(), cpu=None) -> int:
+    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeProvider(logs, cpu))
     monkeypatch.setattr(
         "sys.argv",
         ["runtime_diagnose", "--catalogue", str(catalogue_file), *argv],
@@ -449,3 +464,138 @@ def test_the_governed_lifecycle_register_is_the_default():
     assert cli.DEFAULT_LIFECYCLE_REGISTER.name == (
         "OPS-0003-Container-Lifecycle-Declarations.md"
     )
+
+
+# --------------------------------------------------------------------
+# Unexplained CPU consumption, STD-0300 4.1
+# --------------------------------------------------------------------
+
+
+RESOURCE_PRIORITY = """
+priority:
+  - container: jellyfin
+    normal_cpus: 3.0
+    boosted_cpus: 4.0
+    detector:
+      type: cpu_threshold
+      threshold_percent: 50.0
+      sustained_seconds: 15.0
+unlimited_cpus: 4.0
+background:
+  default_throttled_cpus: 0.1
+  containers:
+    - name: sonarr
+"""
+
+
+@pytest.fixture
+def resource_priority_file(tmp_path: Path) -> Path:
+    path = tmp_path / "resource_priority.yml"
+    path.write_text(RESOURCE_PRIORITY, encoding="utf-8")
+    return path
+
+
+def test_an_undeclared_container_over_threshold_is_reported(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        cpu={"aistack-selection-ui": 52.0},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "Unexplained consumption:" in out
+    assert "aistack-selection-ui: 52.0%" in out
+    assert "unexplained consumption: 1" in out
+
+
+def test_a_declared_container_over_threshold_is_not_reported(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    """
+    `jellyfin` is declared as a priority app — its own CPU may
+    legitimately run high while boosted, and nothing here has any
+    basis to call that unexplained.
+    """
+
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        cpu={"jellyfin": 90.0, "sonarr": 20.0},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "Unexplained consumption:" not in out
+    assert "unexplained consumption: 0" in out
+
+
+def test_an_undeclared_container_under_threshold_is_not_reported(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        cpu={"some-cron-container": 0.4},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "unexplained consumption: 0" in out
+
+
+def test_a_missing_resource_priority_definition_still_diagnoses(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", tmp_path / "absent.yml"
+    )
+
+    code = run(monkeypatch, catalogue_file, {"gluetun": ["quiet"]})
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "no resource-priority definition at" in out
+
+
+def test_a_cpu_finding_and_a_log_finding_both_raise_the_exit_code(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["AUTH_FAILED"]},
+        cpu={"aistack-selection-ui": 52.0},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "findings: 1" in out
+    assert "unexplained consumption: 1" in out
+
+
+def test_the_governed_resource_priority_definition_is_the_default():
+
+    assert cli.DEFAULT_RESOURCE_PRIORITY.exists()
+    assert cli.DEFAULT_RESOURCE_PRIORITY.name == "resource_priority.yml"

@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.11
+  version: 1.12
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -205,7 +205,7 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2, 3.3 and 4.7 (advanced, not yet satisfied).
+1.4, 3.1, 3.2, 3.3, 4.1 and 4.7 (4.1 and 4.7 advanced, not yet satisfied).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -434,15 +434,37 @@ run of 2026-08-22 produced one finding carrying eleven log entries, each
 identified by an offset counting back from the newest line and by the timestamp
 Docker recorded. Verified at `9e27da3`.
 
-**4.1 remains `not verified`, and only half of it is acquired.** The chain
-detects *without being pointed at a service*: run with no argument, it examines
-every container the host declares, which is what the criterion asks and what the
-ancestor could not do — `analyze_container` required a container name. The other
-half is untouched: this chain reads logs and measures no resource whatsoever.
-The reference incident above is a CPU consumption diagnosed through system-call
-observation, and nothing in the heritage observes system calls. Recording the
-acquired half here rather than in the state column is deliberate: a criterion is
-satisfied by its whole statement or not at all.
+**4.1 remains `not verified`.** The chain detects *without being pointed at a
+service*: run with no argument, it examines every container the host declares,
+which is what the criterion asks and what the ancestor could not do —
+`analyze_container` required a container name. Until 2026-09-04 the rest was
+untouched: this chain read logs and measured no resource whatsoever. The
+reference incident above is a CPU consumption diagnosed through system-call
+observation, and nothing in the heritage observes system calls yet.
+
+**2026-09-04 — resource measurement exists, and it reproduces the shape of the
+reference incident, not only its symptom.** `DockerProvider.collect_cpu_readings`
+calls `docker stats` with no container named — the same "every container, no
+argument" mechanism `runtime_diagnose` already uses for logs — and
+`aistack.runtime.idle_consumption.find_unexplained_consumption` flags a reading
+against `resource_priority.yml`: any container absent from both `priority` and
+`background`, at or above a threshold, is unexplained. `aistack-selection-ui`
+was exactly that shape at the time — 48-58 % of one core, declared nowhere —
+and `test_an_undeclared_container_over_threshold_is_flagged` proves the
+function reproduces it; `runtime_diagnose` carries the wiring end to end,
+proven the same way `4.7`'s CLI wiring was: a full sweep, no container named.
+
+**What is still missing is named, not hidden.** This detects "elevated and
+undeclared", not "idle" — nothing here distinguishes a legitimately busy,
+merely unclassified container from one wasting resources at rest, because that
+distinction needs the evidence 4.2 and 4.4 ask for (no incoming requests, no
+active session, system-call observation), none of which exists yet. A
+container doing real, undeclared work today would be flagged the same as a
+`--reload` bug would be — correctly unexplained, not yet correctly diagnosed
+as abnormal. `DEFAULT_THRESHOLD_PERCENT` (5 %) is a proposed starting number,
+the same kind of guess `CpuThresholdDetectorDefinition`'s 50 %/15 s was,
+chosen to be sensitive rather than fitted to the one incident measured — not
+yet checked against a live sweep of containers nobody has classified.
 
 **4.7 remains `not verified`, and the gap has a name.** A finding does cite the
 policy that produced it — `OPS-0001/S-004` — which is the citation the criterion

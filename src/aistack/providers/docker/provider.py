@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime, timezone
 from typing import Any
 
+from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import RuntimeObservation
 
 from aistack.providers.docker.log_normalization import (
@@ -128,6 +129,66 @@ class DockerProvider:
             depth=depth,
             collected_at=datetime.now(timezone.utc),
         )
+
+    def collect_cpu_readings(self) -> tuple[ContainerCpuReading, ...]:
+        """
+        Every running container's own CPU usage, in one call.
+
+        No container is named. `docker stats` with no argument
+        reports every container Docker knows of, the same family of
+        call `CpuThresholdDetector._read_cpu_percent` already makes
+        for one — this is that call without the trailing name,
+        which is the mechanism `STD-0300` § VS-4 criterion 4.1 asks
+        for: detection without being pointed at a service.
+
+        **Docker's field here is `Name`, singular — not `Names`,
+        which is what `docker ps` prints for the same container.**
+        Reading the wrong one would silently return no readings at
+        all rather than an error, so it is named explicitly here
+        rather than assumed to match `collect()`'s own containers.
+
+        An unreadable `CPUPerc` is folded to `0.0`, the convention
+        `CpuThresholdDetector` already carries: what could not be
+        measured must never be read as busy. A line naming no
+        container at all is dropped — there is nothing to attach a
+        reading to.
+        """
+
+        result = subprocess.run(
+            ["docker", "stats", "--no-stream", "--format", "{{json .}}"],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode != 0:
+            return ()
+
+        readings: list[ContainerCpuReading] = []
+
+        for line in result.stdout.splitlines():
+            if not line.strip():
+                continue
+
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            name = payload.get("Name")
+
+            if not name:
+                continue
+
+            try:
+                cpu_percent = float(str(payload.get("CPUPerc", "0%")).rstrip("%"))
+            except (ValueError, AttributeError):
+                cpu_percent = 0.0
+
+            readings.append(
+                ContainerCpuReading(container=name, cpu_percent=cpu_percent)
+            )
+
+        return tuple(readings)
 
     def _run(self, command: list[str]) -> str:
         result = subprocess.run(

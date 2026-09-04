@@ -7,6 +7,7 @@ from pathlib import Path
 from aistack.contracts.lifecycle import LifecycleRegister
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.contracts.signature import SignatureCatalogue
+from aistack.contracts.unexplained_consumption import UnexplainedConsumption
 from aistack.policies.lifecycle_register import (
     RegisterError,
     read_lifecycle_register,
@@ -15,8 +16,11 @@ from aistack.policies.signature_catalogue import (
     CatalogueError,
     read_signature_catalogue,
 )
+from aistack.priority.definition import ResourcePriorityDefinition
+from aistack.priority.yaml import load_resource_priority_yaml
 from aistack.providers.docker import DockerProvider
 from aistack.runtime.grounding import ground_findings
+from aistack.runtime.idle_consumption import find_unexplained_consumption
 from aistack.runtime.qualification import qualify
 
 
@@ -81,6 +85,49 @@ def lifecycle_register(path: Path) -> tuple[LifecycleRegister, str]:
         return LifecycleRegister(artifact="none"), (
             f"lifecycle register not readable ({error}); findings "
             f"are not grounded against one"
+        )
+
+
+# The governed resource-priority definition, the same file
+# `aistack.cli.resource_priority_monitor` reads.
+#
+# **Optional, the same way the lifecycle register is.** Criterion
+# 4.1 asks whether AIStack can flag a container nobody has
+# classified; a host with no definition yet has classified nothing
+# at all, which is a fact worth reporting, not a reason to refuse
+# the rest of the diagnosis.
+DEFAULT_RESOURCE_PRIORITY = (
+    Path(__file__).resolve().parents[1]
+    / "priority"
+    / "definitions"
+    / "resource_priority.yml"
+)
+
+
+def resource_priority_definition(
+    path: Path,
+) -> tuple[ResourcePriorityDefinition | None, str]:
+    """
+    Read the resource-priority definition at `path`, or `None` with
+    a note explaining why — never raises.
+
+    `STD-0300` § VS-4 criterion 4.1 needs this to know which
+    containers are already declared; without it, "undeclared" cannot
+    be told from "everything is undeclared because nothing loaded".
+    """
+
+    if not path.exists():
+        return None, (
+            f"no resource-priority definition at {path}; consumption "
+            f"is not checked"
+        )
+
+    try:
+        return load_resource_priority_yaml(path), ""
+    except (ValueError, OSError) as error:
+        return None, (
+            f"resource-priority definition not readable ({error}); "
+            f"consumption is not checked"
         )
 
 
@@ -210,6 +257,8 @@ def report(
     examined: int,
     states: dict[str, str],
     lifecycle_note: str = "",
+    consumption: tuple[UnexplainedConsumption, ...] = (),
+    resource_note: str = "",
 ) -> None:
 
     print("Runtime Diagnosis Report")
@@ -220,6 +269,9 @@ def report(
 
     if lifecycle_note:
         print(f"- Lifecycle: {lifecycle_note}")
+
+    if resource_note:
+        print(f"- Resource priority: {resource_note}")
 
     print("")
 
@@ -268,9 +320,20 @@ def report(
             print(f"    {subject}: {reason}")
         print("")
 
+    if consumption:
+        print("Unexplained consumption:")
+        for item in consumption:
+            print(
+                f"    {item.container}: {item.cpu_percent:.1f}% "
+                f"(threshold {item.threshold_percent:.1f}%) — not in "
+                f"resource_priority.yml"
+            )
+        print("")
+
     print(
         f"findings: {len(findings)}   "
-        f"unobserved: {len(unobserved)}"
+        f"unobserved: {len(unobserved)}   "
+        f"unexplained consumption: {len(consumption)}"
     )
 
 
@@ -320,7 +383,32 @@ def main() -> None:
     register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
     findings = list(ground_findings(findings, register))
 
-    report(findings, unobserved, catalogue, len(subjects), declared, note)
+    definition, resource_note = resource_priority_definition(
+        DEFAULT_RESOURCE_PRIORITY
+    )
+    consumption: tuple[UnexplainedConsumption, ...] = ()
+
+    if definition is not None:
+        try:
+            readings = provider.collect_cpu_readings()
+        except (subprocess.SubprocessError, OSError) as error:
+            resource_note = (
+                f"CPU readings could not be collected ({error}); "
+                f"consumption is not checked"
+            )
+        else:
+            consumption = find_unexplained_consumption(readings, definition)
+
+    report(
+        findings,
+        unobserved,
+        catalogue,
+        len(subjects),
+        declared,
+        note,
+        consumption,
+        resource_note,
+    )
 
     # A subject that could not be read makes the sweep partial,
     # and a partial sweep reporting "no finding" would be read as
@@ -329,7 +417,7 @@ def main() -> None:
     if unobserved:
         raise SystemExit(2)
 
-    if findings:
+    if findings or consumption:
         raise SystemExit(1)
 
 

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.91
+  version: 1.92
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -256,7 +256,7 @@ again — resolved the day after it was opened.*
 # Decisions
 
 None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038, OS-043,
-OS-046, OS-048, OS-049, OS-050, OS-051 and OS-054 are in *Resolved*.
+OS-046, OS-048, OS-049, OS-050, OS-051, OS-054 and OS-055 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -289,6 +289,36 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-055 — A published version carried no readable account of what changed
+
+**Nature** `decision` · **Opened** 2026-09-04 · **State** resolved 2026-09-04 by adding a required step to `OPS-0002` — RELEASE-NOTES v1.0, `OPS-0002` v1.12
+**Observed** `0.5.0` shipped, like every version before it, with its
+content recorded nowhere a human lands on first: `docker-compose.yml`
+carries a digest and a paragraph of governance prose, aimed at whoever
+already reads this heritage's own vocabulary, not at someone opening the
+repository for the first time. Named directly by the owner rather than
+measured: *"On a oublié de faire un 'what's new'… il faudra qu'on le
+fasse à chaque nouvelle version à partir de maintenant."*
+**Derivable** no — whether a release note was written for a given version
+is a procedure step, not a fact a check can read off the repository; the
+same category `OPS-0002` § *Recording the publication* already names for
+the digest, watched by convention rather than by an automated check.
+**Resolved 2026-09-04.** `docs/03-handbook/RELEASE-NOTES.md`
+(`RELEASE-NOTES`, a new artifact) was created and backfilled with one
+entry per version already published — `0.1.0` through `0.5.0` — from
+`docker-compose.yml`'s own record, plus a standing summary of what
+AIStack does as of the latest one. `README.md` § *What AIStack Does*
+gained a concrete capabilities list and a pointer to it (v4). `OPS-0002`
+§ *Publishing an image* gained § *Recording what's new*: from this
+version on, a `RELEASE-NOTES` entry is part of what publishing a version
+means, the same way a `docker-compose.yml` entry already is for the
+image.
+**Qualification** decided 2026-09-04 by the owner: every future version
+carries a release note, going forward from `0.5.0` — nothing before it is
+retroactively required beyond the backfill already written here.
+
+---
 
 #### GOV-0002/OS-052 — `ARCH-0013` carries paste damage no check catches
 

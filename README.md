@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 3
+  version: 4
   created: 2026-07-04
-  updated: 2026-08-14
+  updated: 2026-09-04
 ---
 
 # AIStack
@@ -68,6 +68,27 @@ AIStack helps organizations to:
 - Facilitate infrastructure evolution and migration.
 
 AIStack transforms observations into sustainable knowledge assets.
+
+### Concrete capabilities, as of 0.5.0
+
+- **Docker infrastructure discovery** — a governed catalog of a live
+  Docker host: identity, image, state, ports, mounts, regenerated from
+  the host itself every time.
+- **Context Bundle self-onboarding** — a portable, integrity-checked
+  archive of the whole governed knowledge base, so a new AI session or
+  contributor can get up to speed without reading the repository's
+  entire history.
+- **Knowledge integrity validation** — sixteen checks run against the
+  governed documentation on every test suite and before every
+  publication.
+- **CPU resource priority scheduling** — declared priority applications
+  get more CPU while active and give it back once idle, background
+  containers throttle down for the duration, and every decision is
+  recorded.
+- **Music sync selection** — choosing, under a real capacity limit, what
+  part of a media library syncs to a device.
+
+**Full history of what changed release by release: `docs/03-handbook/RELEASE-NOTES.md`.**
 
 ---
 

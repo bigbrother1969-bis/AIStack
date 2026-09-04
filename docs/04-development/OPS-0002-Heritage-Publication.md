@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.11
+  version: 1.12
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -19,6 +19,7 @@ relations:
     - ENG-TEST-0002
     - GOV-0002
     - STD-0300
+    - RELEASE-NOTES
 ---
 
 # OPS-0002 — Heritage Publication
@@ -669,6 +670,27 @@ digest is the image. The comment already carries that shape for the 0.1.0
 publication, and it is kept: a record of what was published and then deleted is
 what lets `OS-011` be read as something that happened rather than something
 asserted.
+
+### Recording what's new
+
+**Narrowed 2026-09-04 — `GOV-0002/OS-055`.** `docker-compose.yml`'s record
+proves what a build *is* — the digest, the commit, the test count. It says
+nothing to a reader who has not already learned this heritage's own
+vocabulary, and until `0.5.0` nothing else said it either: five published
+versions, no readable account of what any of them changed.
+
+Before, or alongside, bumping `pyproject.toml`'s version, an entry is
+written to `docs/03-handbook/RELEASE-NOTES.md` (`RELEASE-NOTES`) — what
+changed, in plain language, for someone who has not read this procedure.
+The section at the foot of that document, naming what AIStack does taken
+as a whole, is revised in the same pass whenever a version adds or changes
+a capability.
+
+This is a required step of publishing a version, the same standing as
+§ *Recording the publication* above for the image — watched by
+convention, not by an automated check, for the same reason: whether a
+release note was written is not a fact a check can read off the
+repository, only that one exists somewhere or does not.
 
 ---
 

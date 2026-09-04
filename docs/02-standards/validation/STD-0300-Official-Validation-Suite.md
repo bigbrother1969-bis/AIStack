@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.20
+  version: 1.21
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -205,10 +205,12 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.5, 4.6, 4.7 and 4.8 (4.1, 4.2, 4.3, 4.5,
-4.6 and 4.7 advanced, not yet satisfied; 4.5's own wording was corrected the
-same day, and its energy-inefficiency and sustainability-anomaly evidence
-each gained one piece; 4.8 satisfied by a live reading).
+1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7 and 4.8 (4.1, 4.2, 4.3,
+4.5, 4.6 and 4.7 advanced, not yet satisfied; 4.5's own wording was corrected
+the same day, and its energy-inefficiency and sustainability-anomaly evidence
+each gained one piece; 4.2, 4.4, 4.5 and 4.6 recognised, later the same day,
+as coupled to foundational functions not yet built rather than to work
+specific to this scenario; 4.8 satisfied by a live reading).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -698,6 +700,48 @@ instrument. Against the reference incident's 58 % upper bound, that is a
 observation rather than an inherited comment — the same standard `4.7`
 held itself to before citing `OPS-0003` as more than a register nobody had
 exercised end to end.
+
+**2026-09-04 — 4.2, 4.4, 4.5 and 4.6 are named as coupled to foundational
+functions, not to work specific to this scenario.** The owner's own
+precedent for this distinction predates VS-4: `GOV-0002/OS-045`
+(2026-09-03) reopened `OS-041` on the qualification "l'historisation doit
+faire partie des fonctions socles" — historisation was not a one-off to
+solve for a single Task, it was a capability the whole heritage needed,
+and treating it that way is what turned `docker.discover` into the
+Execution Dimension's first real `Task` rather than an invented exercise.
+The same reasoning applies to what remains open here. A project record
+(`claude/PLAN-TRAJECTOIRE-2026-09-04.md`) names `evaluate` and its own
+foundation — Evidence, Observation and Correlation contracts, the first
+two phases of the Knowledge Time Machine — as jalons independent of any
+one validation scenario.
+
+Read against that: 4.2's correlation, once a Correlation contract exists
+rather than a function built for this criterion alone, becomes a
+demonstration of the socle applied here, not a bespoke build. 4.4's
+system-call-level evidence has no current collector because no Collector
+contract exists yet — the same gap, not a separate one. 4.5 is the
+clearest case: the criterion asks for a `RuntimeFinding` qualified from
+correlated evidence, which is exactly what the `evaluate` operation is
+for — nothing in this heritage can close 4.5 without `evaluate` existing
+as a socle function first, and the three separate providers named above
+stay separate providers until it does. 4.6's generalisation risk changes
+shape rather than disappearing: deriving a root cause from evidence held
+in governed, reusable contracts is a different act than generalising from
+one case's ad hoc types — it still waits on a second real case per
+`ARC-P-006`, but the wait no longer blocks the contracts themselves from
+existing.
+
+4.1, 4.3 and 4.7 are not recharacterised by this. Each is a specific
+pattern detector or a fact the owner stated about one service — a
+resource threshold, one declared flag, one container's lifecycle — not a
+capability the rest of the heritage also needs. They remain scoped as
+written above.
+
+One consequence follows for how this scenario closes as a whole: 4.2,
+4.4, 4.5 and 4.6 are now expected to move together, at or after the
+foundational work `PLAN-TRAJECTOIRE-2026-09-04` calls J5, rather than
+independently of each other — one more reason that record names J5 as the
+boundary the project's own versioning treats as 1.0.
 
 ---
 

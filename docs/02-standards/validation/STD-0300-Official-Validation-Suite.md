@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.13
+  version: 1.14
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -205,8 +205,8 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2, 3.3, 4.1, 4.3 and 4.7 (4.1, 4.3 and 4.7 advanced, not yet
-satisfied).
+1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3 and 4.7 (4.1, 4.2, 4.3 and 4.7 advanced,
+not yet satisfied).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -466,6 +466,34 @@ as abnormal. `DEFAULT_THRESHOLD_PERCENT` (5 %) is a proposed starting number,
 the same kind of guess `CpuThresholdDetectorDefinition`'s 50 %/15 s was,
 chosen to be sensitive rather than fitted to the one incident measured — not
 yet checked against a live sweep of containers nobody has classified.
+
+**4.2 remains `not verified`, and it is now scoped rather than merely
+absent.** Literally: "the finding correlates process, container and
+deployment definition, each with an observation reference." Until
+2026-09-04 nothing correlated anything — 4.1 and 4.3 each produced their
+own finding, independently, citing one observation apiece.
+
+`CorrelatedFinding` (`src/aistack/contracts/correlated_finding.py`) carries
+all three, and `aistack.runtime.correlation.correlate_findings` builds one
+per container that 4.1 or 4.3 already flagged — never a fresh sweep, since
+`docker top` takes one container at a time and correlating all 61 regardless
+of whether anything was found would answer a question nobody asked.
+`DockerProvider.collect_process` reads the container's own live PID
+namespace (`docker top`), independent of `collect_commands`'s configured
+read; `deployment_definitions()` reads the two Dockerfiles this repository
+actually builds and extracts their `CMD`. `test_a_named_container_is_
+correlated_from_all_three_maps` proves the stitch; `runtime_diagnose` reports
+each of the three with its own reference, `deployment` printing `undeclared`
+rather than a guess when none exists.
+
+**The scope, decided with the owner 2026-09-04:** a deployment definition is
+readable only for `aistack-core` and `aistack-selection-ui`. The other ~60
+containers on the reference deployment are deployed and managed entirely
+outside this repository — `frigate`, `gluetun`, the *arr suite — and no path
+exists here to read one for them. `CorrelatedFinding` declares that state
+explicitly (`deployment_command`/`deployment_reference` both `None`) rather
+than inventing a source, per `GOV-P-001`; extending the mapping happens when
+the owner names where a definition actually lives, not before.
 
 **4.3 remains `not verified`, and 2026-09-04 acquires most of it.** The
 criterion, literally: "it identifies the development option enabled in a

@@ -4,6 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from aistack.contracts.correlated_finding import CorrelatedFinding
 from aistack.contracts.development_flag import DevelopmentFlagFinding
 from aistack.contracts.lifecycle import LifecycleRegister
 from aistack.contracts.runtime_finding import RuntimeFinding
@@ -20,6 +21,8 @@ from aistack.policies.signature_catalogue import (
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.yaml import load_resource_priority_yaml
 from aistack.providers.docker import DockerProvider
+from aistack.runtime.correlation import correlate_findings
+from aistack.runtime.deployment_definition import extract_dockerfile_command
 from aistack.runtime.development_flags import find_development_flags
 from aistack.runtime.grounding import ground_findings
 from aistack.runtime.idle_consumption import find_unexplained_consumption
@@ -131,6 +134,52 @@ def resource_priority_definition(
             f"resource-priority definition not readable ({error}); "
             f"consumption is not checked"
         )
+
+
+# The two containers this repository actually builds, and the
+# Dockerfile each one's `CMD` is read from.
+#
+# **This is all of it, and it is not a coincidence.** `STD-0300` §
+# VS-4 criterion 4.2's "deployment definition" needs an artifact
+# this repository can read; the owner's other ~60 containers are
+# deployed and managed entirely outside it (confirmed 2026-09-04),
+# so no path exists here to read for them. Extending this mapping to
+# another container happens when the owner names where its own
+# definition lives, per `GOV-P-001` — not by guessing a path that
+# looks plausible.
+KNOWN_DEPLOYMENT_DEFINITIONS = {
+    "aistack-selection-ui": (
+        Path(__file__).resolve().parents[3] / "Dockerfile.selection-ui"
+    ),
+    "aistack-core": Path(__file__).resolve().parents[3] / "Dockerfile",
+}
+
+
+def deployment_definitions() -> dict[str, tuple[str, str]]:
+    """
+    `container -> (command, reference)` for every container
+    `KNOWN_DEPLOYMENT_DEFINITIONS` names a readable file for.
+
+    A file that does not exist, or declares no `CMD` at all, is
+    simply absent from the returned mapping —
+    `correlate_findings`/`CorrelatedFinding` already treat that as
+    the real, declared state it is, not an error to raise here.
+    """
+
+    resolved: dict[str, tuple[str, str]] = {}
+
+    for container, path in KNOWN_DEPLOYMENT_DEFINITIONS.items():
+        if not path.exists():
+            continue
+
+        command = extract_dockerfile_command(
+            path.read_text(encoding="utf-8")
+        )
+
+        if command is not None:
+            resolved[container] = (command, f"{path.name}:CMD")
+
+    return resolved
 
 
 # How much of an evidence line the report prints.
@@ -263,6 +312,7 @@ def report(
     resource_note: str = "",
     development_flags: tuple[DevelopmentFlagFinding, ...] = (),
     commands_note: str = "",
+    correlated: tuple[CorrelatedFinding, ...] = (),
 ) -> None:
 
     print("Runtime Diagnosis Report")
@@ -345,11 +395,36 @@ def report(
             print(f"        command: {item.command}")
         print("")
 
+    if correlated:
+        print("Correlated evidence:")
+        for item in correlated:
+            print(f"    [{item.container}]")
+            print(
+                f"        container    {item.container_command!r}  "
+                f"({item.container_reference})"
+            )
+            print(
+                f"        process      {item.process_command!r}  "
+                f"({item.process_reference})"
+            )
+            if item.deployment_command is not None:
+                print(
+                    f"        deployment   {item.deployment_command!r}  "
+                    f"({item.deployment_reference})"
+                )
+            else:
+                print(
+                    "        deployment   undeclared — no readable "
+                    "definition for this container"
+                )
+        print("")
+
     print(
         f"findings: {len(findings)}   "
         f"unobserved: {len(unobserved)}   "
         f"unexplained consumption: {len(consumption)}   "
-        f"development options: {len(development_flags)}"
+        f"development options: {len(development_flags)}   "
+        f"correlated: {len(correlated)}"
     )
 
 
@@ -417,6 +492,7 @@ def main() -> None:
 
     development_flags: tuple[DevelopmentFlagFinding, ...] = ()
     commands_note = ""
+    commands: dict[str, str] = {}
 
     try:
         commands = provider.collect_commands()
@@ -427,6 +503,21 @@ def main() -> None:
         )
     else:
         development_flags = find_development_flags(commands)
+
+    # 4.2 correlates a subject a prior check already named — never a
+    # fresh sweep of the host, since `docker top` takes one container
+    # at a time and sixty findings nobody asked for is not the point.
+    to_correlate = {item.container for item in development_flags} | {
+        item.container for item in consumption
+    }
+
+    processes = {
+        name: provider.collect_process(name) for name in to_correlate
+    }
+
+    correlated = correlate_findings(
+        to_correlate, commands, processes, deployment_definitions()
+    )
 
     report(
         findings,
@@ -439,6 +530,7 @@ def main() -> None:
         resource_note,
         development_flags,
         commands_note,
+        correlated,
     )
 
     # A subject that could not be read makes the sweep partial,

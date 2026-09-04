@@ -220,6 +220,67 @@ class DockerProvider:
             if isinstance(entry, dict) and entry.get("Names")
         }
 
+    def collect_process(self, container: str) -> str:
+        """
+        What is actually running inside one container's own PID
+        namespace, right now.
+
+        `docker top <container>` requires a name — unlike
+        `collect_cpu_readings`, this cannot sweep every container in
+        one call, which is exactly why `STD-0300` § VS-4 criterion
+        4.2 only calls it for a container a prior check already
+        named: correlating a finding, not sweeping the host a second
+        time.
+
+        **Independent of `collect_commands`, on purpose.** That read
+        is what Docker recorded the container was *configured* to
+        run; this is what its own process table says is *actually*
+        running — a shell wrapper, a supervisor, a re-exec with
+        different arguments could make the two diverge, and 4.2 asks
+        for both, each citing where it came from.
+
+        Returns the first process's own `CMD` column, plain text —
+        docker's own table output, not JSON; column widths are not
+        fixed, so the header's own position of `CMD` is read first
+        and every line is split up to that many fields, leaving the
+        command itself — which can contain spaces — intact as the
+        remainder. Empty on any failure: no daemon, no such
+        container, no process found. Never raises.
+        """
+
+        try:
+            result = subprocess.run(
+                ["docker", "top", container], capture_output=True, text=True
+            )
+        except OSError:
+            return ""
+
+        if result.returncode != 0:
+            return ""
+
+        lines = result.stdout.splitlines()
+
+        if not lines:
+            return ""
+
+        header = lines[0].split()
+
+        if "CMD" not in header:
+            return ""
+
+        cmd_index = header.index("CMD")
+
+        for line in lines[1:]:
+            if not line.strip():
+                continue
+
+            fields = line.split(None, cmd_index)
+
+            if len(fields) > cmd_index:
+                return fields[cmd_index]
+
+        return ""
+
     def _run(self, command: list[str]) -> str:
         result = subprocess.run(
             command,

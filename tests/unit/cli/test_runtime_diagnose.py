@@ -54,10 +54,15 @@ class FakeProvider:
         logs: dict[str, list[str] | Exception],
         cpu: dict[str, float] | Exception | None = None,
         commands: dict[str, str] | Exception | None = None,
+        processes: dict[str, str] | None = None,
     ):
         self._logs = logs
         self._cpu = cpu
         self._commands = commands
+        self._processes = processes or {}
+
+    def collect_process(self, container: str) -> str:
+        return self._processes.get(container, "")
 
     def collect_cpu_readings(self):
         if isinstance(self._cpu, Exception):
@@ -105,9 +110,19 @@ class FakeProvider:
         )
 
 
-def run(monkeypatch, catalogue_file, logs, argv=(), cpu=None, commands=None) -> int:
+def run(
+    monkeypatch,
+    catalogue_file,
+    logs,
+    argv=(),
+    cpu=None,
+    commands=None,
+    processes=None,
+) -> int:
     monkeypatch.setattr(
-        cli, "DockerProvider", lambda: FakeProvider(logs, cpu, commands)
+        cli,
+        "DockerProvider",
+        lambda: FakeProvider(logs, cpu, commands, processes),
     )
     monkeypatch.setattr(
         "sys.argv",
@@ -681,3 +696,124 @@ def test_a_development_flag_alone_raises_the_exit_code(
     )
 
     assert code == 1
+
+
+# --------------------------------------------------------------------
+# Correlating process, container and deployment definition, STD-0300 4.2
+# --------------------------------------------------------------------
+
+
+def test_a_flagged_container_is_correlated_with_its_process(
+    monkeypatch, catalogue_file, capsys
+):
+    monkeypatch.setattr(cli, "KNOWN_DEPLOYMENT_DEFINITIONS", {})
+
+    run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={"aistack-selection-ui": "uvicorn app:app --reload"},
+        processes={"aistack-selection-ui": "python3 -m uvicorn app:app --reload"},
+    )
+    out = capsys.readouterr().out
+
+    assert "Correlated evidence:" in out
+    assert "[aistack-selection-ui]" in out
+    assert "container    'uvicorn app:app --reload'" in out
+    assert "(docker ps --no-trunc)" in out
+    assert "process      'python3 -m uvicorn app:app --reload'" in out
+    assert "(docker top aistack-selection-ui)" in out
+    assert "correlated: 1" in out
+
+
+def test_a_container_with_no_readable_deployment_definition_says_so(
+    monkeypatch, catalogue_file, capsys
+):
+    monkeypatch.setattr(cli, "KNOWN_DEPLOYMENT_DEFINITIONS", {})
+
+    run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={"aistack-selection-ui": "uvicorn app:app --reload"},
+    )
+    out = capsys.readouterr().out
+
+    assert "deployment   undeclared" in out
+
+
+def test_a_container_with_a_readable_deployment_definition_cites_it(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    dockerfile = tmp_path / "Dockerfile.selection-ui"
+    dockerfile.write_text(
+        'CMD ["python3","-m","uvicorn","app:app","--reload"]\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        cli,
+        "KNOWN_DEPLOYMENT_DEFINITIONS",
+        {"aistack-selection-ui": dockerfile},
+    )
+
+    run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={"aistack-selection-ui": "uvicorn app:app --reload"},
+    )
+    out = capsys.readouterr().out
+
+    assert "deployment   'python3 -m uvicorn app:app --reload'" in out
+    assert "(Dockerfile.selection-ui:CMD)" in out
+
+
+def test_a_container_with_no_finding_at_all_is_not_correlated(
+    monkeypatch, catalogue_file, capsys
+):
+    """
+    4.2 enriches a finding 4.1 or 4.3 already produced — it is not
+    a fresh sweep of every container on the host.
+    """
+
+    run(monkeypatch, catalogue_file, {"gluetun": ["quiet"]})
+    out = capsys.readouterr().out
+
+    assert "Correlated evidence:" not in out
+    assert "correlated: 0" in out
+
+
+def test_an_unexplained_consumption_finding_is_also_correlated(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+    monkeypatch.setattr(cli, "KNOWN_DEPLOYMENT_DEFINITIONS", {})
+
+    run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        cpu={"aistack-selection-ui": 52.0},
+    )
+    out = capsys.readouterr().out
+
+    assert "[aistack-selection-ui]" in out
+    assert "correlated: 1" in out
+
+
+def test_the_known_deployment_definitions_are_the_two_aistack_services():
+    """
+    Exactly the two containers this repository builds — the other
+    ~60 are deployed outside it, and no path exists here to read
+    for them (confirmed by the owner, 2026-09-04).
+    """
+
+    assert set(cli.KNOWN_DEPLOYMENT_DEFINITIONS) == {
+        "aistack-core",
+        "aistack-selection-ui",
+    }
+
+    for path in cli.KNOWN_DEPLOYMENT_DEFINITIONS.values():
+        assert path.exists()

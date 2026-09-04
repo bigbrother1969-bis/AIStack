@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.17
+  version: 1.18
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -206,8 +206,8 @@ to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
 1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.5, 4.6, 4.7 and 4.8 (4.1, 4.2, 4.3, 4.5,
-4.6, 4.7 and 4.8 advanced, not yet satisfied; 4.5's own wording was
-corrected the same day).
+4.6 and 4.7 advanced, not yet satisfied; 4.5's own wording was corrected the
+same day; 4.8 satisfied by a live reading).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -418,7 +418,7 @@ below: the point is that AIStack reproduces the reasoning.
 | 4.5 | Each qualification the evidence supports, among technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly, is cited to a distinct policy; more than one found together is what makes the finding derived knowledge rather than an opinion about severity | not verified |
 | 4.6 | The root cause is explained, derived from the collected evidence | not verified |
 | 4.7 | A safe remediation is recommended, citing the policies it derives from by identifier | not verified |
-| 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 58 % → 0.32 %, 99.4 %) | not verified |
+| 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 58 % → 0.00 %, live) | **satisfied** — 2026-09-04 |
 | 4.9 | No finding is emitted without at least one evidence reference | **satisfied** — 2026-08-22 |
 
 Criterion 4.5 is not a formality. A single label would make the finding an opinion
@@ -632,35 +632,33 @@ reading correlated to the CPU reading, for sustainability anomaly. One
 case is a policy, not yet a pattern worth automating — `ARC-P-006` holds
 here as it does for 4.1's threshold and 4.3's single flag.
 
-**4.8 remains `not verified`, and the arithmetic it needs now exists,
-separately from a live reading.** The criterion, literally: "before/after
+**4.8 — satisfied, 2026-09-04.** The criterion, literally: "before/after
 verification measures a CPU reduction ≥ 95 %."
 `CpuReductionMeasurement` (`src/aistack/contracts/cpu_reduction.py`) refuses
 construction unless both the before- and after-reading carry their own
 observation reference — the same discipline `CorrelatedFinding` already
 holds each of its three readings to — and exposes the reduction as a
 computed percentage against a declared threshold, defaulting to the 95 %
-this criterion names.
-`test_the_reference_incidents_upper_bound_meets_the_threshold` applies it
-to the numbers already in this repository: 58 % (this reference incident's
-own upper bound) to 0.32 % (`docker-compose.selection-ui.yml`'s own
-comment, measured after two minutes of inactivity) is 99.4 %, and the
-class agrees.
+this criterion names. `test_the_reference_incidents_upper_bound_meets_
+the_threshold` proved the arithmetic first against
+`docker-compose.selection-ui.yml`'s own comment (58 % to 0.32 %, 99.4 %) —
+correct, but a figure written once by a human, not a reading `aistack`
+had taken itself.
 
-**What keeps this `not verified` rather than satisfied.** The 0.32 %
-figure the arithmetic above trusts is a comment in a compose file, written
-once by a human, not a reading `aistack` took itself — the same gap `4.1`
-closed for "undeclared," not yet closed here for "after." A live
-`collect_cpu_readings()` sweep confirming `aistack-selection-ui` still
-reads near 0.32 % today, cited as its own observation reference in place
-of the compose comment, is what turns this from arithmetic proven correct
-into a verification proven current — the same standard `4.7` held itself
-to before citing `OPS-0003` as more than a register nobody had exercised
-end to end.
+**The same day, a live reading closed that gap.** `docker stats --no-stream
+--format '{{.Name}}: {{.CPUPerc}}' aistack-selection-ui`, run on the
+reference deployment, read `0.00 %` — the same command
+`DockerProvider.collect_cpu_readings()` itself wraps, not a second
+instrument. Against the reference incident's 58 % upper bound, that is a
+100 % reduction; against its 48 % lower bound, the same. Both clear the
+95 % this criterion asks for, and the after-reading is now a live
+observation rather than an inherited comment — the same standard `4.7`
+held itself to before citing `OPS-0003` as more than a register nobody had
+exercised end to end.
 
 ---
 
-**Suite state: 22 criteria — 13 satisfied, 0 failing, 9 not verified. Two
+**Suite state: 22 criteria — 14 satisfied, 0 failing, 8 not verified. Two
 scenarios satisfied in full: VS-1 (four of four) and VS-3 (three of three) —
 § 7, a scenario is satisfied only when every one of its criteria holds.**
 

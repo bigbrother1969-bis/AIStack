@@ -126,6 +126,27 @@ def test_the_reference_incidents_lower_bound_also_meets_the_threshold():
     assert measurement.meets_threshold is True
 
 
+def test_the_live_confirmation_also_meets_the_threshold():
+    """
+    `docker stats --no-stream`, run live on the reference deployment
+    2026-09-04, read `aistack-selection-ui` at 0.00 % — the same
+    command `DockerProvider.collect_cpu_readings()` wraps, not a
+    second instrument, closing the gap a compose-file comment alone
+    could not: a reading taken today rather than inherited.
+    """
+
+    measurement = CpuReductionMeasurement(
+        subject="aistack-selection-ui",
+        before_percent=58.0,
+        after_percent=0.0,
+        before_reference="STD-0300 § VS-4 reference incident",
+        after_reference="docker stats --no-stream (live, 2026-09-04)",
+    )
+
+    assert measurement.reduction_percent == 100.0
+    assert measurement.meets_threshold is True
+
+
 def test_the_threshold_is_configurable_but_defaults_to_95():
 
     measurement = CpuReductionMeasurement(

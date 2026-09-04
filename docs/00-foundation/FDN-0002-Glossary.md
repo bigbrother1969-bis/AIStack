@@ -11,7 +11,7 @@ artifact:
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-09-03
+  updated: 2026-09-04
 
 relations:
   references:
@@ -345,8 +345,8 @@ expression of the applicable Policies under a given Profile*. **The word already
 governs.** Deferring to a Draft is stated here rather than hidden, so that a
 reader knows the ground can move.
 
-**Decided 2026-09-03, `GOV-0002/OS-051`: the ground stays where it is.**
-`ARCH-0013` § *Status, 2026-09-03* keeps `status: Draft` on purpose — its
+**Decided 2026-09-04, `GOV-0002/OS-051`: the ground stays where it is.**
+`ARCH-0013` § *Status, 2026-09-04* keeps `status: Draft` on purpose — its
 own *Open Points* are unresolved architecture, not an administrative gap —
 so this paragraph is not removed by a promotion that was considered and
 declined. It stays as the standing statement that this term's SPOT is

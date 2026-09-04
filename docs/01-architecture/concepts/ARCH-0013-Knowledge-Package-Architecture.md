@@ -11,7 +11,7 @@ artifact:
   status: Draft
   owner: Architecture
   created: 2026-07-25
-  updated: 2026-09-03
+  updated: 2026-09-04
 ---
 
 # ARCH-0013 — Knowledge Package Architecture
@@ -308,7 +308,7 @@ Future architecture work must define:
 
 ------------------------------------------------------------------------
 
-# Status, 2026-09-03
+# Status, 2026-09-04
 
 `status: Draft` stays, decided rather than merely carried forward —
 `GOV-0002/OS-051`. `FDN-0002` (the Glossary) cites this document as the

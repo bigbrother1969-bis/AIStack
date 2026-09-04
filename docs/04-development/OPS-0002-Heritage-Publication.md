@@ -11,7 +11,7 @@ artifact:
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-09-03
+  updated: 2026-09-04
 
 relations:
   references:
@@ -570,7 +570,7 @@ state this heritage says is unsound.
 
 **Before building a new version, every image `docker-compose.yml` still
 lists as current is re-verified against its own recorded digest** —
-`GOV-0002/OS-047`, decided 2026-09-03: a rebuilt image would have to be
+`GOV-0002/OS-047`, decided 2026-09-04: a rebuilt image would have to be
 verified before publication and then stay verified, and this is what
 "stay verified" means in practice for a heritage with no registry
 watching on its own. Not a scheduled check — a manual one, run as part of
@@ -652,7 +652,7 @@ network — the same boundary § *The Context Bundle, and handing one over*
 draws for bundles. What the heritage can do is refuse to build from a state
 it calls unsound, and say what it did not check.
 
-**Narrowed 2026-09-03 — `GOV-0002/OS-047`.** "Nothing verifies" was true of
+**Narrowed 2026-09-04 — `GOV-0002/OS-047`.** "Nothing verifies" was true of
 every image published before this date and stays true between
 publications: this section's own claim is not rewritten, because
 continuous, unattended verification is still absent and still not built.

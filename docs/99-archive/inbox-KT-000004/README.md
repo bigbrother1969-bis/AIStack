@@ -1,6 +1,6 @@
 # KT-000004 — archived, not integrated
 
-**Archived 2026-09-03**, `GOV-0002/OS-049`.
+**Archived 2026-09-04**, `GOV-0002/OS-049`.
 
 These two packages sat in `inbox/knowledge/`, untriaged, from 2026-07-18
 (their own file dates) until this entry closed them. A third file in the
@@ -26,6 +26,6 @@ mean inventing document types nothing else in this repository uses.
 `KT-000004-Knowledge-Transaction.zip`) and its near-duplicate in
 `KT-000004-lessons-for-transport-layer.zip` state a real engineering
 principle — implementation before tooling, once a capability is under
-way — verified 2026-09-03 to have no governed home. It is named here as a
+way — verified 2026-09-04 to have no governed home. It is named here as a
 candidate for a future foundation artifact, deliberately, rather than
 acted on as a side effect of closing this residual.

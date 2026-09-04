@@ -11,7 +11,7 @@ artifact:
   confidence: Declared
   created: 2026-07-24
   version: 2.4
-  updated: 2026-09-03
+  updated: 2026-09-04
 ---
 
 # Declared Execution Environment Principle
@@ -82,7 +82,7 @@ runs in, and nothing a screen needs only to serve HTTP.
 **Why not `pyproject.toml [project.optional-dependencies]` instead.**
 That would gain this principle's own reproducibility floor, at a cost
 disproportionate to what it buys: nothing installs from it, verified
-2026-09-03 (each screen's setup script reads its own `requirements.txt`, not
+2026-09-04 (each screen's setup script reads its own `requirements.txt`, not
 `pyproject.toml`), so the gain is available only if those scripts are
 rewritten to install from `pip install .[<screen>]` instead — a change to
 how installation actually works, not to where a list of names lives — and
@@ -91,7 +91,7 @@ dependency blurs the one line this principle exists to keep bright: what
 `pytest` depends on, and what a screen depends on to run, are not the same
 question.
 
-**Recorded 2026-09-03**, `GOV-0002/OS-046`: found repeated identically
+**Recorded 2026-09-04**, `GOV-0002/OS-046`: found repeated identically
 twice (`selection_ui`, then `priority_ui`) rather than reasoned once and
 declared. This section is that declaration — the same shape decision #9
 already used, made a stated pattern rather than a precedent each new
@@ -103,7 +103,7 @@ screen has to rediscover.
 C3 principle, created 2026-07-24, that had stayed `Draft` while every
 other artifact treated it as governing — including `bin/aistack_env.sh`'s
 own designation as SPOT, and the Deployment host section `ADR-0001`
-carries as of the same day. Measured 2026-09-03: `Accepted` is this
+carries as of the same day. Measured 2026-09-04: `Accepted` is this
 repository's status for decisions; `Published` is what a Foundation
 Principle reaches. Nothing about the principle's content changes with
 this entry.

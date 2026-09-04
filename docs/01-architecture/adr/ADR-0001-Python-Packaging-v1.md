@@ -11,7 +11,7 @@ artifact:
   status: Accepted
   owner: Architecture
   created: 2026-07-04
-  updated: 2026-09-03
+  updated: 2026-09-04
 ---
 
 # ADR-0001 --- Python Packaging v1
@@ -161,12 +161,12 @@ that is unfinished: **two places establish the same knowledge**, which is what
 FDN-P-005 forbids, and the artifact that would have to change is this decision
 rather than that script.
 
-## Deployment host, 2026-09-03
+## Deployment host, 2026-09-04
 
 Decision 1 names `bin/aistack_env.sh` the SPOT for the execution
 environment, and every measurement above is taken against a development
 workstation — the machine that edits and tests this repository.
-`GOV-0002/OS-048`, decided 2026-09-03, names the gap that left open: the
+`GOV-0002/OS-048`, decided 2026-09-04, names the gap that left open: the
 reference deployment host (GIGABYTE) is neither a development workstation
 nor a container built from `Dockerfile`, and had no pattern of its own,
 so the four provider CLIs were run there with `PYTHONPATH=src` supplied
@@ -194,7 +194,7 @@ This is additive to decision 1, not a change to it: `bin/aistack_env.sh`
 stays the SPOT for a development workstation; a deployment host now has
 its own named pattern rather than an ad hoc workaround.
 
-**Not yet measured live on GIGABYTE.** Per § *What a closure must carry*,
+**Not measured live on GIGABYTE as of 2026-09-04.** Per § *What a closure must carry*,
 a condition about a host outside this repository is closed only against
 its own measurement — `GOV-0002/OS-048` records the decision and stays
 open until the command above is run there and `PYTHONPATH=src` is

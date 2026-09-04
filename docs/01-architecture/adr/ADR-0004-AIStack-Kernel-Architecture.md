@@ -11,7 +11,7 @@ artifact:
   status: Accepted
   owner: Architecture
   created: 2026-07-07
-  updated: 2026-09-03
+  updated: 2026-09-04
 ---
 
 # ADR-0004 - AIStack Kernel Architecture
@@ -179,7 +179,7 @@ conclusion the first reading reached here. Whether `bootstrap/` moves out of
 `src/aistack/kernel/` is a question about packaging, not about this decision's
 boundary, and it is recorded rather than answered.
 
-**Answered 2026-09-03, `GOV-0002/OS-054`: it stays.** Both readings are
+**Answered 2026-09-04, `GOV-0002/OS-054`: it stays.** Both readings are
 defensible — composition as a facet of the thing composed, or composition
 as a separate concern assembling a `Kernel` from outside — and nothing
 depends on which: the five import sites (`kernel/runtime/core.py`, three

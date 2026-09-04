@@ -11,7 +11,7 @@ artifact:
   status: Published
   owner: Foundation
   created: 2026-07-24
-  updated: 2026-09-03
+  updated: 2026-09-04
 
 relations:
   references:
@@ -30,7 +30,7 @@ registry is C3 — the heritage's own top criticality tier — and had carried
 as governing everywhere it was cited, including by `FDN-0002` (the
 Glossary), which described this artifact as already Published on
 2026-08-29, five days before this frontmatter caught up. Measured
-2026-09-03: `Accepted` is
+2026-09-04: `Accepted` is
 this repository's status for decisions (ADRs and Architecture Documents);
 `Published` is what a Foundation Principle or Registry reaches. Nothing
 about the registry's content changes with this entry.

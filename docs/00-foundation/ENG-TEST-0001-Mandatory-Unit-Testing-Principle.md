@@ -11,7 +11,7 @@ artifact:
   confidence: Declared
   created: 2026-07-24
   version: 1.2
-  updated: 2026-09-03
+  updated: 2026-09-04
 ---
 
 # Mandatory Unit Testing Principle
@@ -19,7 +19,7 @@ artifact:
 ## Status
 
 `status` moves from `Draft` to `Published`, `GOV-0002/OS-050`,
-2026-09-03. This is a C3 principle, created 2026-07-24 and unchanged in
+2026-09-04. This is a C3 principle, created 2026-07-24 and unchanged in
 substance since, already enforced across the governed suite — 936 tests
 passing, `ENG-TEST-0002` § *Engineering Rule* holding every result to it.
 Nothing about the principle's content changes with this entry.

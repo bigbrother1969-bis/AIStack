@@ -136,6 +136,33 @@ def test_metadata_from_the_surface_reaches_the_selection(kernel, catalog):
     assert selection.metadata["source_view"] == "music-selection"
 
 
+def test_the_same_catalog_and_the_same_policy_produce_the_same_selection(
+    kernel, catalog
+):
+    """
+    `STD-0300` VS-3 criterion 3.1, checked 2026-09-04. `ByIdsSelectionStrategy`
+    was already pure and sort-normalised — nothing in it explained a
+    non-deterministic result — but nothing had called the chain twice
+    with the same inputs and compared. This does, through the full
+    chain a real caller uses: catalog → view (built twice, independently)
+    → selection (via the strategy).
+
+    The policy's identifiers are also given in a different order the
+    third time. "The same policy" should not depend on the order a
+    caller happened to list its identifiers in — a policy is what was
+    selected, not the sequence it arrived in.
+    """
+
+    view_a = build_view(kernel, catalog, "music-selection")
+    view_b = build_view(kernel, catalog, "music-selection")
+
+    first = select_from_view(view_a, "music_android", ["a", "b"])
+    second = select_from_view(view_b, "music_android", ["a", "b"])
+    reordered = select_from_view(view_b, "music_android", ["b", "a"])
+
+    assert first == second == reordered
+
+
 def test_no_selection_strategy_is_registered(kernel):
     """
     Decided 2026-08-29 by the owner.

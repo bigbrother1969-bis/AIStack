@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.7
+  version: 1.8
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -204,7 +204,7 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4 and 3.3.
+1.4, 3.1 and 3.3.
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -313,7 +313,7 @@ interaction · Regeneration.
 
 | # | Criterion | State |
 |---|---|---|
-| 3.1 | The same catalog and the same policy produce the same selection | not verified |
+| 3.1 | The same catalog and the same policy produce the same selection | **satisfied** — 2026-09-04 |
 | 3.2 | Every included and excluded item carries the rule that decided it | not verified |
 | 3.3 | After a user modification, regeneration differs only by the modified items | **satisfied** — 2026-09-04 |
 
@@ -334,16 +334,23 @@ regeneration changed exactly what the modification removed, nothing else.
 unmodified selection, regenerated, writes nothing at all. Both tests run in
 the governed suite, per commit.
 
-**3.1 and 3.2 stay `not verified`, and not for the same reason.** For 3.1,
-`ByIdsSelectionStrategy.select()` (`src/aistack/kernel/selection/strategies/by_ids.py`)
-is a pure, sort-normalised function — nothing in it explains a non-deterministic
-result — but no executed test calls it twice with identical inputs and asserts
-identical output; the claim is plausible, not demonstrated. For 3.2, the gap is
-not a missing test: `Selection` (`src/aistack/kernel/selection/core.py`) carries
-`selected_ids` and a flat `metadata` dict, nothing per-item, and excluded items
-are not represented at all — a ticked ID is simply present or absent, with no
-rule, reason or policy attached to that fact anywhere in the selection code.
-The criterion describes a policy-driven selector explaining each of its
+**3.1 was closed the same day, by the missing test rather than a code
+change.** `ByIdsSelectionStrategy.select()` was already pure and
+sort-normalised — nothing in it explained a non-deterministic result — but
+nothing had called the chain twice with the same inputs and compared.
+`tests/unit/selection/test_the_selection_workflow.py::test_the_same_catalog_and_the_same_policy_produce_the_same_selection`
+now does, through the full chain a real caller uses — catalog → view (built
+twice, independently) → selection — and a third time with the policy's
+identifiers given in a different order, since the same policy should not
+depend on the sequence a caller happened to list it in. All three
+`Selection`s compare equal.
+
+**3.2 stays `not verified`, and the gap is not a missing test.**
+`Selection` (`src/aistack/kernel/selection/core.py`) carries `selected_ids`
+and a flat `metadata` dict, nothing per-item, and excluded items are not
+represented at all — a ticked ID is simply present or absent, with no rule,
+reason or policy attached to that fact anywhere in the selection code. The
+criterion describes a policy-driven selector explaining each of its
 decisions; what exists is a manual by-IDs selector with no decisions to
 explain. This moves only when that concept is built, not when it is tested.
 
@@ -434,10 +441,10 @@ measures. This criterion moves when a remediation policy is written, not before.
 
 ---
 
-**Suite state: 22 criteria — 11 satisfied, 0 failing, 11 not verified. VS-1 is
+**Suite state: 22 criteria — 12 satisfied, 0 failing, 10 not verified. VS-1 is
 the only scenario satisfied in full so far: every one of its four criteria
 holds (§ 7 — a scenario is satisfied only when every one of its criteria
-holds). VS-3 holds one of three.**
+holds). VS-3 holds two of three — only 3.2 remains.**
 
 ---
 

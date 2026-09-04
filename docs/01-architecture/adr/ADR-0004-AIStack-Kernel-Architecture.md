@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Accepted
   owner: Architecture
   created: 2026-07-07
-  updated: 2026-08-29
+  updated: 2026-09-03
 ---
 
 # ADR-0004 - AIStack Kernel Architecture
@@ -178,6 +178,19 @@ every future reader will measure it the same way and reach the same wrong
 conclusion the first reading reached here. Whether `bootstrap/` moves out of
 `src/aistack/kernel/` is a question about packaging, not about this decision's
 boundary, and it is recorded rather than answered.
+
+**Answered 2026-09-03, `GOV-0002/OS-054`: it stays.** Both readings are
+defensible — composition as a facet of the thing composed, or composition
+as a separate concern assembling a `Kernel` from outside — and nothing
+depends on which: the five import sites (`kernel/runtime/core.py`, three
+CLIs, `aistack/conformance/registries.py`) all reach `create_kernel`
+through `aistack.kernel.bootstrap` and would import identically either
+way. The owner chose not to move it: a mechanical rename touching five
+imports, for a question this ADR already named as stylistic rather than
+architectural, is exactly the unearned motion `ARC-P-006` exists to
+refuse. Recorded rather than left implicit, so a future reader measures
+the same bytes and does not reopen a question already asked and
+answered.
 
 *The `aistack.transport` imports are a different question and are not what that
 row is about*: nothing under `aistack/transport/` names an infrastructure

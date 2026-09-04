@@ -5,16 +5,24 @@ artifact:
   id: ENG-TEST-0001
   owner: Engineering
   semantic_type: Principle
-  status: Draft
+  status: Published
   title: Mandatory Unit Testing Principle
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 1.1
-  updated: 2026-08-21
+  version: 1.2
+  updated: 2026-09-03
 ---
 
 # Mandatory Unit Testing Principle
+
+## Status
+
+`status` moves from `Draft` to `Published`, `GOV-0002/OS-050`,
+2026-09-03. This is a C3 principle, created 2026-07-24 and unchanged in
+substance since, already enforced across the governed suite — 936 tests
+passing, `ENG-TEST-0002` § *Engineering Rule* holding every result to it.
+Nothing about the principle's content changes with this entry.
 
 ## Principle
 

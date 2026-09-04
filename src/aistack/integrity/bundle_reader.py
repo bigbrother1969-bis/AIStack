@@ -38,12 +38,21 @@ def read_bundle(path: Path) -> ContextBundle:
     bundle whose `contract_inventory` is `None` — the honest
     result, and the one a check must be able to tell apart from
     a heritage with no orphan contracts.
+
+    `repository_url` travels the same way: `JsonBundleExporter`
+    never writes it into `bundle.json` at all, only
+    `ZipBundleExporter`'s `manifest.json` carries it
+    (`GOV-0002/OS-053`). A consumer holding the loose
+    `bundle.json` gets the `ContextBundle` dataclass default,
+    `"unknown"` — honest for the same reason the inventory is:
+    that consumer was never given the file that states it.
     """
 
     path = Path(path)
 
     inventory = None
     registries = None
+    repository_url = "unknown"
 
     if zipfile.is_zipfile(path):
 
@@ -64,6 +73,14 @@ def read_bundle(path: Path) -> ContextBundle:
                     json.loads(
                         archive.read("registry-inventory.json")
                     )
+                )
+
+            if "manifest.json" in archive.namelist():
+                manifest = json.loads(
+                    archive.read("manifest.json")
+                )
+                repository_url = manifest.get(
+                    "repository_url", "unknown"
                 )
 
     else:
@@ -111,4 +128,5 @@ def read_bundle(path: Path) -> ContextBundle:
         artifacts=artifacts,
         contract_inventory=inventory,
         registry_inventory=registries,
+        repository_url=repository_url,
     )

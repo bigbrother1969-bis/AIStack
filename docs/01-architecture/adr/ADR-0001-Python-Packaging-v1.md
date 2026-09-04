@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-07-04
-  updated: 2026-08-27
+  updated: 2026-09-03
 ---
 
 # ADR-0001 --- Python Packaging v1
@@ -160,6 +160,45 @@ Recorded as prose rather than as a row state, because the row is not the thing
 that is unfinished: **two places establish the same knowledge**, which is what
 FDN-P-005 forbids, and the artifact that would have to change is this decision
 rather than that script.
+
+## Deployment host, 2026-09-03
+
+Decision 1 names `bin/aistack_env.sh` the SPOT for the execution
+environment, and every measurement above is taken against a development
+workstation — the machine that edits and tests this repository.
+`GOV-0002/OS-048`, decided 2026-09-03, names the gap that left open: the
+reference deployment host (GIGABYTE) is neither a development workstation
+nor a container built from `Dockerfile`, and had no pattern of its own,
+so the four provider CLIs were run there with `PYTHONPATH=src` supplied
+by hand on every invocation.
+
+**The pattern already exists — it is what `Dockerfile` does.**
+`aistack` is a real installable package (`pyproject.toml`, the
+`setuptools` backend, `where = ["src"]`), and `Dockerfile` already runs
+`pip install .` rather than setting `PYTHONPATH`. A deployment host is
+closer to the image than to a development workstation — it runs the
+package, it does not edit it — so it follows the same pattern: an
+editable install into its own dedicated virtual environment.
+
+```bash
+python3 -m venv .venv-deploy
+.venv-deploy/bin/pip install -e .
+.venv-deploy/bin/python -m aistack.cli.docker_discover
+```
+
+`-e` rather than a plain install, because a deployment host tracks
+`git pull`, not a rebuilt artifact — the same reasoning
+`scripts/dev-env.sh` already applies to a development workstation's own
+venv.
+This is additive to decision 1, not a change to it: `bin/aistack_env.sh`
+stays the SPOT for a development workstation; a deployment host now has
+its own named pattern rather than an ad hoc workaround.
+
+**Not yet measured live on GIGABYTE.** Per § *What a closure must carry*,
+a condition about a host outside this repository is closed only against
+its own measurement — `GOV-0002/OS-048` records the decision and stays
+open until the command above is run there and `PYTHONPATH=src` is
+confirmed no longer necessary.
 
 ## Consequences
 

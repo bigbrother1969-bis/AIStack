@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.83
+  version: 1.90
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -214,42 +214,14 @@ by OS-036, and emptied again by the rule OS-036 produced.*
 
 # Defects
 
-**One open: `OS-053`.** OS-009, OS-010, OS-044 and OS-052 are in *Resolved*.
+None open. OS-009, OS-010, OS-044, OS-052 and OS-053 are in *Resolved*.
 
 *An empty section is kept rather than removed: a register with no defects
 section could not be told from one that never looked for any. That argument was
 hypothetical when it was written and stopped being so on 2026-08-29 — the
 section held an entry for a few hours, between the measurement that found a
-forty-day defect and the host that closed it.*
-
-#### GOV-0002/OS-053 — `read_bundle` cannot recover a bundle's own `repository_url`
-
-**Nature** `defect` · **Opened** 2026-09-03 · **State** open
-**Observed** `ContextBundle.repository_url` defaults to `"unknown"`
-(`aistack/contracts/context_bundle.py`). `ZipBundleExporter.export`
-(`aistack/context_bundle/export/zip_bundle_exporter.py`) writes it into
-`manifest.json`
-(`DefaultBundleManifest._repository_url=bundle.repository_url`,
-serialized by `JsonManifestSerializer`) but
-`JsonBundleExporter.export` — which writes `bundle.json`
-(`aistack/context_bundle/export/bundle_exporter.py`) — never includes it in
-that file's own `data` dict. `read_bundle`
-(`aistack/integrity/bundle_reader.py`) reads `bundle.json` (loose, or the
-archive entry of that name) and, even when given the full archive, reads
-only `contract-inventory.json` and `registry-inventory.json` alongside it —
-never `manifest.json`. `ContextBundle(...)` is constructed there without a
-`repository_url` argument at all, so the dataclass default silently stands
-in. Verified 2026-09-03 by direct read of all four files; the value is not
-lost, it travels in a file this specific reader never opens.
-**Derivable** yes, once a test exports a bundle and reads it back,
-asserting `repository_url` survives the round trip — not written here,
-since a test proving a known defect would leave the governed suite red
-rather than record the condition.
-**Qualification** unknown — a bounded code fix (read `manifest.json` from
-the archive when present, before falling back to the dataclass default for
-a loose `bundle.json`), not an architectural question, offered as a
-register entry per this session's own scoped instruction to open the
-2026-08-29 residuals rather than to fix each on sight.
+forty-day defect and the host that closed it. Emptied again on 2026-09-03,
+by the fix `OS-053` itself proposed.*
 
 ---
 
@@ -266,53 +238,25 @@ thought to look.
 
 # Risks
 
-**One open: `OS-047`.** OS-012 was resolved on 2026-08-27 by retiring
+None open. OS-012 was resolved on 2026-08-27 by retiring
 `aistack-backend` — six days after the exposure was recorded and four after
-its retirement was decided.
+its retirement was decided. OS-047 is in *Resolved*.
 
 The exposure OS-012 closed is discharged: nothing answers and no image
 exists. What that closure asserted without measuring is OS-036, under
 *Non-conforming instances*, and it is filed there rather than here because a
 declaration in an archive is a rule violated and not a door left open.
 
-*This section read "None open" from 2026-08-27 until 2026-09-03 — OS-047 is
-the first entry of this nature since.*
-
-#### GOV-0002/OS-047 — Two published images have never been re-verified after publication
-
-**Nature** `risk` · **Opened** 2026-09-03 · **State** open
-**Observed** `docker-compose.yml` records two current published images,
-pinned by digest: `bigbrother1969/aistack-core:0.4.0`
-(`@sha256:daf46c7…`, *"published 2026-09-03, current"*) and `:0.3.0`
-(`@sha256:55f9cd0…`, *"published 2026-09-03"*), plus the retained history
-of `:0.2.0` and `:0.1.0`. `OPS-0002` § *What is watched, and what is not*
-states the boundary explicitly: *"Nothing verifies a published image, and
-no test can: the suite has no registry, and a check receives a projection
-rather than a network."*
-
-`GOV-0002/OS-011` is the only prior entry of this shape, and closed by
-**unpublishing** rather than rebuilding, reasoning that *"a rebuilt image
-would have to be verified before publication and then stay verified; an
-image nobody pulls cannot diverge from the heritage that describes it."*
-Both `0.3.0` and `0.4.0` were kept published rather than unpublished, so
-OS-011's own argument now applies to them, unaddressed — measured
-2026-09-03 (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4), named in that
-day's boot docs and not opened until now.
-**Derivable** no — the condition is about images on a registry this suite
-has no network path to, the same boundary OPS-0002 itself draws.
-**Qualification** unknown. OS-011's closing reasoning was never revisited
-for the images that came after it: either accept the exposure OS-011
-declined to accept (a published image drifting silently from what the
-heritage says it is), or decide what "stay verified" would concretely mean
-for `0.3.0`/`0.4.0` — a scheduled re-pull-and-hash, a documented manual
-check before each new release, or something else.
+*This section read "None open" from 2026-08-27 until 2026-09-03, held one
+open entry (`OS-047`) for a few hours the same day, and reads "None open"
+again — resolved the same day it was opened.*
 
 ---
 
 # Decisions
 
-**Six open: `OS-046`, `OS-048`, `OS-049`, `OS-050`, `OS-051`, `OS-054`.**
-OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038 and OS-043 are in
+**One open: `OS-048`.** OS-003, OS-013, OS-014, OS-015, OS-022, OS-034,
+OS-038, OS-043, OS-046, OS-049, OS-050, OS-051 and OS-054 are in
 *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
@@ -330,40 +274,12 @@ A register with nothing open means every known condition has been qualified,
 not that none exists. The projection kept counting through it, and the first
 ADR anyone re-measured produced an entry.
 
-**All six below were measured 2026-08-29, named in that day's boot docs as
+**All five were measured 2026-08-29, named in that day's boot docs as
 "proposed for a register entry, not opened", and stayed that way for five
 days** (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4) until opened here —
 the residual this register's own § *Purpose* names: *"observed, and quietly
-forgotten."*
-
-#### GOV-0002/OS-046 — HTTP dependencies live outside the governed venv twice, with no declared pattern for it
-
-**Nature** `decision` · **Opened** 2026-09-03 · **State** open
-**Observed** `pyproject.toml` declares one dependency,
-`PyYAML>=6.0` (`[project] dependencies`). `selection_ui/requirements.txt`
-and `priority_ui/requirements.txt` each separately declare `fastapi`,
-`uvicorn`, `jinja2` and `python-multipart`, installed into their own
-dedicated interpreters by `scripts/setup_selection_ui_env.sh` and
-`scripts/setup_priority_ui_env.sh` — never into `.venv`. Both files give
-near-identical reasoning: *"not knowledge this heritage is verified on...
-pulling them into the governed venv would make every pytest run depend on
-packages the test suite never touches"* (decision #9, 2026-08-29,
-`claude/PLAN-UI-SELECTION-2026-08-29.md`). `ENG-TEST-0002`'s
-reproducibility floor argues for declaring a project's dependencies in
-`pyproject.toml [project.optional-dependencies]`; neither screen's
-dependencies are declared there.
-**Derivable** yes, once a check compares `pyproject.toml`'s
-optional-dependency groups against every `*_ui/requirements.txt` in the
-repository — no such check exists, verified 2026-09-03.
-**Qualification** unknown. Decision #9 was a reasoned, one-time exception;
-it is now a pattern repeated identically twice (`selection_ui`,
-`priority_ui`). Two shapes are available and neither has been put to the
-owner: keep declaring each screen's own `requirements.txt` outside
-`pyproject.toml`, formalised as this heritage's stated pattern for a
-host-touching UI screen — or move each screen's dependencies into their
-own `[project.optional-dependencies]` group, gaining `ENG-TEST-0002`
-coverage at the cost of `pytest` resolving packages the governed suite
-never imports.
+forgotten."* One remains below; `OS-049`, `OS-050`, `OS-051` and `OS-054`
+are in *Resolved*.
 
 ---
 
@@ -385,104 +301,17 @@ development workstation; neither names a deployment host.
 `PYTHONPATH`) against a declared expectation on each named host — no such
 check exists, and none could without a way to reach GIGABYTE from the
 suite.
-**Qualification** unknown. Whether `ADR-0001`'s SPOT should be extended to
-state what a deployment host requires (and something should enforce it
-there), or whether GIGABYTE's manual `PYTHONPATH=src` is accepted as this
-heritage's deployment story and `ADR-0001` scoped explicitly to
-development, has not been put to the owner.
-
----
-
-#### GOV-0002/OS-049 — Three files sit in `inbox/`, untriaged since 2026-08-29
-
-**Nature** `decision` · **Opened** 2026-09-03 · **State** open
-**Observed** `inbox/knowledge/` holds three files, all dated 2026-08-29 and
-unchanged since, verified 2026-09-03: `ADR-000X-Python-Packaging-v1.md` —
-an unnumbered draft; `docs/01-architecture/adr/` already holds a numbered
-`ADR-0001-Python-Packaging-v1.md`, and whether the inbox copy is a
-superseded duplicate or carries something the numbered ADR does not has
-not been checked — `KT-000004-Knowledge-Transaction.zip` and
-`KT-000004-lessons-for-transport-layer.zip`. No governed artifact states
-what `inbox/` is for or what should happen to a file inside it. Same shape
-`claude/PLAN-2026-08-15.md` § 6 named for `docs/incoming/` and
-`docs/99-meta/integration/`: *"Each needs one decision: integrate,
-archive, delete."*
-**Derivable** yes, once a check reports whether `inbox/` is non-empty — no
-such check exists.
-**Qualification** unknown. Per file: integrate into the governed heritage,
-archive, or delete — starting with whether
-`ADR-000X-Python-Packaging-v1.md` still says anything `ADR-0001` does not.
-
----
-
-#### GOV-0002/OS-050 — Three C3 Foundation artifacts have stayed Draft since before the register existed
-
-**Nature** `decision` · **Opened** 2026-09-03 · **State** open
-**Observed** `FDN-0012` (v2.5), `ENG-TEST-0001` (v1.1) and `ENG-TEST-0002`
-(v2.2) all declare `criticality: C3`, `status: Draft` — C3 is this
-heritage's own top tier, *"must be in the minimal context of any agent"*
-(`claude/PLAN-2026-08-15.md` § 2). At least one other C3, Published
-artifact already treats a Draft one's content as governing rather than
-provisional: `FDN-0002` (the Glossary) § *Profile* states outright,
-*"`FDN-0012`, C3 and Published, already uses the term normatively"* — but
-`FDN-0012`'s own frontmatter reads `status: Draft`, not `Published`.
-Verified 2026-09-03: the Glossary's own description of `FDN-0012` is
-stale in exactly the way § *What a closure must carry* exists to catch,
-on the artifact that names the very principle.
-**Derivable** yes, once a check flags an artifact declaring
-`criticality: C3` and `status: Draft` together — no such check exists.
-**Qualification** unknown. Whether these three are ready for the owner to
-qualify — the same shape `ARCH-0013`'s own deferred qualification
-(`OS-051`, below) was already named as, on the same day — has not been
-asked.
-
----
-
-#### GOV-0002/OS-051 — `ARCH-0013` is the declared SPOT of two Glossary terms while itself `status: Draft`
-
-**Nature** `decision` · **Opened** 2026-09-03 · **State** open
-**Observed** `ARCH-0013` (v1.2) declares `status: Draft`. `FDN-0002` (the
-Glossary) names it the SPOT of two entries: *Adapter* (*"Its SPOT is
-`ARCH-0013`... `ARCH-0013` governs it"*) and *Profile*, whose own entry
-says so explicitly: *"`ARCH-0013` is `status: Draft`, and this entry
-defers to it anyway... Deferring to a Draft is stated here rather than
-hidden, so that a reader knows the ground can move; qualifying
-`ARCH-0013` is the act that removes this paragraph."* Named in
-`claude/SESSION-2026-08-29.md` § *What remains* — *"Named and not acted
-on"* — the same day the Glossary paragraph above was written, and not
-opened here until now.
-**Derivable** yes, once a check flags a Draft artifact cited as another
-artifact's declared SPOT — no such check exists.
-**Qualification** unknown, and already partly named: `FDN-0002` itself
-records the alternative it did not take — *"The alternative was to wait,
-and waiting has a measured cost."* Qualifying `ARCH-0013` (Proposed →
-Accepted, or a reasoned decision to stay Draft) is the act that
-discharges this entry and removes the deferral paragraphs from both
-Glossary entries above. Independent of `GOV-0002/OS-052` (resolved): the
-paste-damage fix there does not qualify this.
-
----
-
-#### GOV-0002/OS-054 — `bootstrap/` is packaged inside the Kernel it composes
-
-**Nature** `decision` · **Opened** 2026-09-03 · **State** open
-**Observed** `src/aistack/kernel/bootstrap/` holds `create_kernel()`
-(`default.py`) — the sole Composition Root, per every prior entry that
-touches it (`OS-045` among them) — alongside `providers.py`,
-`catalog_views.py` and `tasks.py`. Verified 2026-09-03: the package that
-composes `Kernel` is nested inside the `kernel/` package it composes,
-rather than sitting beside it. Named in
-`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4 as *"an architectural
-packaging question, not yet a decision"* — the roadmap's own words, kept
-rather than reworded into a verdict this entry does not have.
-**Derivable** no — whether a package's location is architecturally sound
-is not a fact a check states; it can at most report the location itself,
-which is already known.
-**Qualification** unknown. Whether `bootstrap/` belongs inside `kernel/`
-(composition as a facet of the thing composed) or beside it (composition
-as a separate concern that assembles a `Kernel` from outside) has not
-been asked, and nothing depends on either answer — the code runs either
-way.
+**Decided 2026-09-03, not yet closed.** The owner chose to extend rather
+than accept: `ADR-0001` § *Deployment host, 2026-09-03* (v1.2) names the
+pattern — an editable install (`pip install -e .`) into a dedicated venv
+on the deployment host, the same thing `Dockerfile` already does for the
+published image, in place of `PYTHONPATH` set by hand. Per § *What a
+closure must carry*, a condition about GIGABYTE is closed only against
+its own measurement: this entry stays open until the command is run there
+and a provider CLI is confirmed to work without `PYTHONPATH=src`.
+**Qualification** decided 2026-09-03 by the owner: extend `ADR-0001` and
+install the package on the deployment host, rather than document manual
+`PYTHONPATH=src` as accepted.
 
 ---
 
@@ -513,6 +342,261 @@ own `status: Draft` is untouched by this: the paste damage and the
 Draft-status question are two different conditions, and closing this one
 does not qualify the other (`GOV-0002/OS-051`).
 **Qualification** none required; a text correction, not a decision.
+
+---
+
+#### GOV-0002/OS-049 — Three files sit in `inbox/`, untriaged since 2026-08-29
+
+**Nature** `decision` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by disposing of all three
+**Observed** `inbox/knowledge/` held three files, all dated 2026-08-29 and
+unchanged since, verified 2026-09-03: `ADR-000X-Python-Packaging-v1.md` —
+an unnumbered draft; `docs/01-architecture/adr/` already held a numbered
+`ADR-0001-Python-Packaging-v1.md`, and whether the inbox copy was a
+superseded duplicate or carried something the numbered ADR did not had
+not been checked — `KT-000004-Knowledge-Transaction.zip` and
+`KT-000004-lessons-for-transport-layer.zip`. No governed artifact stated
+what `inbox/` was for or what should happen to a file inside it. Same
+shape `claude/PLAN-2026-08-15.md` § 6 named for `docs/incoming/` and
+`docs/99-meta/integration/`: *"Each needs one decision: integrate,
+archive, delete."*
+**Derivable** yes, once a check reports whether `inbox/` is non-empty — no
+such check exists.
+**Resolved 2026-09-03.** `ADR-000X-Python-Packaging-v1.md` was read
+side-by-side with `ADR-0001`: it is a strict subset, carrying no section
+`ADR-0001` does not already carry, plus everything added to that ADR
+since — deleted. The two `KT-000004` zips target document paths that do
+not exist and use an unnumbered, free-form artifact shape that predates
+the `FDN-XXXX`/`ADR-XXXX`/`ARCH-XXXX` convention this heritage settled
+into; the *Knowledge Transport Layer* concept they describe is not
+absent from the governed heritage — `FDN-0002` already names a
+`TransportOperationEngine` filling that role — it simply took a different
+shape. Both zips were moved to `docs/99-archive/inbox-KT-000004/`, with a
+README recording why they were archived rather than integrated, and
+naming *Finish the Capability* — a real principle inside them with no
+governed home — as a candidate for a future foundation artifact,
+deliberately not acted on here. `inbox/knowledge/` is empty; the
+directory itself no longer exists (git does not track empty directories).
+**Qualification** decided 2026-09-03 by the owner: delete the duplicate,
+archive the rest, integrate nothing now.
+
+---
+
+#### GOV-0002/OS-053 — `read_bundle` cannot recover a bundle's own `repository_url`
+
+**Nature** `defect` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by reading `manifest.json` — `bundle_reader.py`
+**Observed** `ContextBundle.repository_url` defaulted to `"unknown"`
+(`aistack/contracts/context_bundle.py`). `ZipBundleExporter.export`
+(`aistack/context_bundle/export/zip_bundle_exporter.py`) wrote it into
+`manifest.json`
+(`DefaultBundleManifest._repository_url=bundle.repository_url`,
+serialized by `JsonManifestSerializer`) but
+`JsonBundleExporter.export` — which writes `bundle.json`
+(`aistack/context_bundle/export/bundle_exporter.py`) — never included it in
+that file's own `data` dict. `read_bundle`
+(`aistack/integrity/bundle_reader.py`) read `bundle.json` (loose, or the
+archive entry of that name) and, even when given the full archive, read
+only `contract-inventory.json` and `registry-inventory.json` alongside it —
+never `manifest.json`. `ContextBundle(...)` was constructed there without a
+`repository_url` argument at all, so the dataclass default silently stood
+in. Verified 2026-09-03 by direct read of all four files; the value was not
+lost, it travelled in a file this specific reader never opened.
+**Derivable** yes, once a test exports a bundle and reads it back,
+asserting `repository_url` survives the round trip — written as part of
+this resolution.
+**Resolved 2026-09-03.** The bounded fix the entry itself proposed:
+`read_bundle` now reads `manifest.json` from the archive, when present,
+and takes `repository_url` from it, falling back to the dataclass default
+for a loose `bundle.json` or an archive with no manifest — the same
+honest-absence shape `contract_inventory` already used. Four tests added:
+two unit (`tests/unit/integrity/test_bundle_reader.py`, reading the
+manifest and the no-manifest fallback), one integration round trip
+(`tests/integration/context_bundle/test_identity_survives_the_projection.py`),
+and one on a second defect found while verifying this one — the eligibility
+rules excluded a path segment named exactly `archive`, not the `99-archive`
+this repository actually uses, so the archive note this same session wrote
+for `GOV-0002/OS-049` was briefly reaching the governed heritage as an
+unclassified artifact; fixed in
+`aistack/context_bundle/eligibility/rules.py` and covered in
+`tests/unit/context_bundle/eligibility/test_knowledge_artifact_eligibility.py`.
+Verified live: a freshly generated bundle round-trips its real
+`repository_url` and the governed heritage reports `clean: True`
+(`940 passed`, up from `936` before this session's work).
+**Qualification** none required; a bounded code fix, not a decision.
+
+---
+
+#### GOV-0002/OS-050 — Three C3 Foundation artifacts have stayed Draft since before the register existed
+
+**Nature** `decision` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by publishing all three — FDN-0012 v2.6, ENG-TEST-0001 v1.2, ENG-TEST-0002 v2.4
+**Observed** `FDN-0012` (v2.5), `ENG-TEST-0001` (v1.1) and `ENG-TEST-0002`
+(v2.3) all declared `criticality: C3`, `status: Draft` — C3 is this
+heritage's own top tier, *"must be in the minimal context of any agent"*
+(`claude/PLAN-2026-08-15.md` § 2). At least one other C3, Published
+artifact already treated a Draft one's content as governing rather than
+provisional: `FDN-0002` (the Glossary) § *Profile* stated outright,
+*"`FDN-0012`, C3 and Published, already uses the term normatively"* — but
+`FDN-0012`'s own frontmatter read `status: Draft`, not `Published`.
+Verified 2026-09-03: the Glossary's own description of `FDN-0012` was
+stale in exactly the way § *What a closure must carry* exists to catch,
+on the artifact that names the very principle.
+**Derivable** yes, once a check flags an artifact declaring
+`criticality: C3` and `status: Draft` together — no such check exists.
+**Resolved 2026-09-03.** Content in all three was read and found mature —
+actively cited, versioned, enforced (936 tests under `ENG-TEST-0001`;
+`ENG-TEST-0002` extended this same session under `OS-046`) rather than
+provisional. Measured before deciding: `status: Accepted` is this
+repository's status for decisions (every artifact carrying it is an ADR
+or Architecture Document); `Published` is what a Foundation Principle or
+Registry reaches. The owner chose to publish all three rather than leave
+them Draft or qualify only the Glossary's claim. The Glossary line
+required no edit: it now agrees with the artifact it describes instead of
+anticipating it.
+**Qualification** decided 2026-09-03 by the owner: publish `FDN-0012`,
+`ENG-TEST-0001` and `ENG-TEST-0002`; content unchanged by the status
+move.
+
+---
+
+#### GOV-0002/OS-051 — `ARCH-0013` is the declared SPOT of two Glossary terms while itself `status: Draft`
+
+**Nature** `decision` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by a reasoned decision to stay Draft — ARCH-0013 v1.3, FDN-0002 v1.8
+**Observed** `ARCH-0013` (v1.2) declared `status: Draft`. `FDN-0002` (the
+Glossary) named it the SPOT of two entries: *Adapter* (*"Its SPOT is
+`ARCH-0013`... `ARCH-0013` governs it"*) and *Profile*, whose own entry
+said so explicitly: *"`ARCH-0013` is `status: Draft`, and this entry
+defers to it anyway... Deferring to a Draft is stated here rather than
+hidden, so that a reader knows the ground can move; qualifying
+`ARCH-0013` is the act that removes this paragraph."* Named in
+`claude/SESSION-2026-08-29.md` § *What remains* — *"Named and not acted
+on"* — the same day the Glossary paragraph above was written, and not
+opened here until now.
+**Derivable** yes, once a check flags a Draft artifact cited as another
+artifact's declared SPOT — no such check exists.
+**Resolved 2026-09-03.** `ARCH-0013` was re-read in full rather than
+promoted on the strength of how often it is cited: its own § *Open
+Points* names four unresolved architectural questions (PackageManager
+interfaces, validation policies, integration conflict resolution,
+package version lifecycle) — genuine open architecture, unlike
+`OS-050`'s three artifacts, which were administratively stale but
+substantively finished. The owner decided to keep `status: Draft`,
+recorded rather than left implicit: `ARCH-0013` § *Status, 2026-09-03*
+states the decision and the reasoning; `FDN-0002`'s *Profile* entry now
+cites that dated decision instead of an open question. Independent of
+`GOV-0002/OS-052` (resolved): the paste-damage fix there did not qualify
+this, and this entry's resolution is a decision about status, not a
+correction to prose.
+**Qualification** decided 2026-09-03 by the owner: `ARCH-0013` stays
+Draft; its own Open Points are the reason, now stated rather than
+re-derived by each reader.
+
+---
+
+#### GOV-0002/OS-054 — `bootstrap/` is packaged inside the Kernel it composes
+
+**Nature** `decision` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by a decision to leave it — ADR-0004 v1.5
+**Observed** `src/aistack/kernel/bootstrap/` holds `create_kernel()`
+(`default.py`) — the sole Composition Root, per every prior entry that
+touches it (`OS-045` among them) — alongside `providers.py`,
+`catalog_views.py` and `tasks.py`. Verified 2026-09-03: the package that
+composes `Kernel` is nested inside the `kernel/` package it composes,
+rather than sitting beside it. Named in `claude/ROADMAP-SYNTHESIS-2026-09-03.md`
+§ 4 as *"an architectural packaging question, not yet a decision."* And,
+before that, in `ADR-0004` § *The Kernel imports Docker* itself: *"Whether
+`bootstrap/` moves out of `src/aistack/kernel/` is a question about
+packaging, not about this decision's boundary, and it is recorded rather
+than answered."*
+**Derivable** no — whether a package's location is architecturally sound
+is not a fact a check states; it can at most report the location itself,
+which is already known.
+**Resolved 2026-09-03.** Five import sites were checked
+(`kernel/runtime/core.py`, three CLIs, `aistack/conformance/registries.py`)
+— all five reach `create_kernel` through `aistack.kernel.bootstrap` and
+would import identically whichever reading held. The owner chose to leave
+`bootstrap/` where it is: both readings ADR-0004 already named — composition
+as a facet of the thing composed, or as a separate concern assembling a
+`Kernel` from outside — are defensible, nothing depends on which, and a
+five-import rename for a question this ADR itself called packaging rather
+than architecture is the unearned motion `ARC-P-006` refuses. `ADR-0004`
+§ *The Kernel imports Docker* now carries the answer, dated, rather than
+leaving the question standing for the next reader to reopen.
+**Qualification** decided 2026-09-03 by the owner: `bootstrap/` stays
+inside `kernel/`; no code moved.
+
+---
+
+#### GOV-0002/OS-046 — HTTP dependencies live outside the governed venv twice, with no declared pattern for it
+
+**Nature** `decision` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by declaring the pattern — ENG-TEST-0002 v2.3
+**Observed** `pyproject.toml` declares one dependency, `PyYAML>=6.0`
+(`[project] dependencies`). `selection_ui/requirements.txt` and
+`priority_ui/requirements.txt` each separately declare `fastapi`,
+`uvicorn`, `jinja2` and `python-multipart`, installed into their own
+dedicated interpreters by `scripts/setup_selection_ui_env.sh` and
+`scripts/setup_priority_ui_env.sh` — never into `.venv`. Both files gave
+near-identical reasoning: *"not knowledge this heritage is verified on...
+pulling them into the governed venv would make every pytest run depend on
+packages the test suite never touches"* (decision #9, 2026-08-29,
+`claude/PLAN-UI-SELECTION-2026-08-29.md`). `ENG-TEST-0002`'s
+reproducibility floor argues for declaring a project's dependencies in
+`pyproject.toml [project.optional-dependencies]`; neither screen's
+dependencies were declared there.
+**Derivable** yes, once a check compares `pyproject.toml`'s
+optional-dependency groups against every `*_ui/requirements.txt` in the
+repository — no such check exists, and none is built here.
+**Resolved 2026-09-03.** Two shapes were put to the owner: keep declaring
+each screen's own `requirements.txt` outside `pyproject.toml`, formalised
+as this heritage's stated pattern for a host-touching UI screen — or move
+each screen's dependencies into their own `[project.optional-dependencies]`
+group. The owner chose the first: `ENG-TEST-0002` § *Host-touching UI
+screens declare their own dependencies, outside this environment* (v2.3)
+now states decision #9 as a reusable rule rather than a precedent each new
+screen would otherwise have to rediscover, and records why the second
+shape was declined — nothing installs from `pyproject.toml` today, so its
+own gain is available only if `setup_selection_ui_env.sh` and
+`setup_priority_ui_env.sh` were rewritten to install from it, and
+declaring host-touching, untested packages beside the governed suite's own
+dependencies blurs the line this principle exists to keep bright.
+**Qualification** decided 2026-09-03 by the owner: decision #9's pattern
+is formalised, not changed. A third UI screen, should one arrive, follows
+`ENG-TEST-0002` § *Host-touching UI screens* directly rather than
+reasoning the same trade-off a third time.
+
+---
+
+#### GOV-0002/OS-047 — Two published images have never been re-verified after publication
+
+**Nature** `risk` · **Opened** 2026-09-03 · **State** resolved 2026-09-03 by adding a manual re-verification step — OPS-0002 v1.11
+**Observed** `docker-compose.yml` records two current published images,
+pinned by digest: `bigbrother1969/aistack-core:0.4.0`
+(`@sha256:daf46c7…`, *"published 2026-09-03, current"*) and `:0.3.0`
+(`@sha256:55f9cd0…`, *"published 2026-09-03"*), plus the retained history
+of `:0.2.0` and `:0.1.0`. `OPS-0002` § *What is watched, and what is not*
+stated the boundary explicitly: *"Nothing verifies a published image, and
+no test can: the suite has no registry, and a check receives a projection
+rather than a network."*
+
+`GOV-0002/OS-011` is the only prior entry of this shape, and closed by
+**unpublishing** rather than rebuilding, reasoning that *"a rebuilt image
+would have to be verified before publication and then stay verified; an
+image nobody pulls cannot diverge from the heritage that describes it."*
+Both `0.3.0` and `0.4.0` were kept published rather than unpublished, so
+OS-011's own argument applied to them, unaddressed until now.
+**Derivable** no — the condition is about images on a registry this suite
+has no network path to, the same boundary OPS-0002 itself draws.
+**Resolved 2026-09-03.** Three shapes were put to the owner: a scheduled
+automated re-pull-and-hash, a documented manual check folded into the next
+publication, or accepting the exposure as-is. The owner chose the manual
+check, reasoning from `ARC-P-006`: standing infrastructure for a risk
+nobody has observed, on a private homelab registry nobody else pushes to,
+would be the unearned abstraction this heritage has already refused three
+times. `OPS-0002` § *The order* (v1.11) now re-pulls and re-hashes every
+image `docker-compose.yml` lists as current, against its recorded digest,
+immediately before a new one is built — so a published image is checked
+at least once more after publication, though the exposure stays open and
+undetected *between* two publications, stated rather than hidden (§ *What
+is watched, and what is not*, narrowed 2026-09-03).
+**Qualification** decided 2026-09-03 by the owner: bounded, accepted risk
+between releases; re-verified at every release from here on.
 
 ---
 

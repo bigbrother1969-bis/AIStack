@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Architecture
   created: 2026-07-25
@@ -305,3 +305,18 @@ Future architecture work must define:
 -   Validation policies.
 -   Integration conflict resolution rules.
 -   Package version lifecycle management.
+
+------------------------------------------------------------------------
+
+# Status, 2026-09-03
+
+`status: Draft` stays, decided rather than merely carried forward —
+`GOV-0002/OS-051`. `FDN-0002` (the Glossary) cites this document as the
+declared SPOT of two terms, *Adapter* and *Profile*, while it is Draft;
+the question of whether that should change was named on 2026-08-29 and
+left unasked until now. The four items in § *Open Points* above are the
+answer: they are unresolved architecture, not an administrative gap, and
+promoting this document to `Accepted` would assert they are settled when
+they are not. Two Glossary entries defer to a Draft SPOT anyway, and
+continue to — the reasoning above is why, dated rather than left as an
+open question each reader has to re-derive.

@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.7
+  version: 1.8
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-29
+  updated: 2026-09-03
 
 relations:
   references:
@@ -343,8 +343,14 @@ alternative was to wait, and waiting has a measured cost: `FDN-0012`, C3 and
 Published, already uses the term normatively — *Contracts are the operational
 expression of the applicable Policies under a given Profile*. **The word already
 governs.** Deferring to a Draft is stated here rather than hidden, so that a
-reader knows the ground can move; qualifying `ARCH-0013` is the act that removes
-this paragraph.
+reader knows the ground can move.
+
+**Decided 2026-09-03, `GOV-0002/OS-051`: the ground stays where it is.**
+`ARCH-0013` § *Status, 2026-09-03* keeps `status: Draft` on purpose — its
+own *Open Points* are unresolved architecture, not an administrative gap —
+so this paragraph is not removed by a promotion that was considered and
+declined. It stays as the standing statement that this term's SPOT is
+Draft and governs anyway.
 
 *Written 2026-08-29, decided by the owner. Measured the same day: 20 of the
 term's 24 occurrences in the repository are inside `ARCH-0013`, and no class

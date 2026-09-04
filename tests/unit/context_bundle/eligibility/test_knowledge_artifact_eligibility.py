@@ -67,6 +67,24 @@ def test_excluded_path_is_rejected():
     assert report.reason == "excluded_path"
 
 
+def test_the_99_archive_directory_is_excluded():
+    """
+    `docs/99-archive` holds material moved out of the governed
+    heritage rather than deleted, the same shape as `docs/99-meta`
+    above. `EXCLUDED_PARTS` rejects a segment named exactly
+    `archive`, which `99-archive` is not — this must be reached
+    through `EXCLUDED_PATHS` instead (GOV-0002/OS-049).
+    """
+
+    report = eligibility().evaluate(
+        root=Path("/repo"),
+        path=Path("/repo/docs/99-archive/inbox-KT-000004/README.md"),
+    )
+
+    assert not report.eligible
+    assert report.reason == "excluded_path"
+
+
 def test_a_path_outside_the_heritage_is_rejected():
     """
     The allow list runs first, and its refusal names a

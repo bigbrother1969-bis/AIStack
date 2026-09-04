@@ -33,6 +33,14 @@ EXCLUDED_PATHS = (
     "context/published",
     "inbox",
     ".pytest_cache",
+    # `docs/99-archive` holds material moved out of the governed
+    # heritage rather than deleted — the same shape as
+    # `docs/99-meta` below, one directory over. `EXCLUDED_PARTS`
+    # above excludes any path segment named exactly `archive`,
+    # and this directory is named `99-archive`, not `archive`, so
+    # that exclusion never reached it — found 2026-09-03,
+    # `GOV-0002/OS-049`, the first time a file landed there.
+    "docs/99-archive",
     # Working notes about the project, not governed knowledge
     # about it. `NEXT-SESSION-TODO.md` is the case that named
     # the category: STD-0300 was extracted from it on

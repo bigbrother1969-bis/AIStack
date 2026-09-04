@@ -56,6 +56,60 @@ def test_reads_a_bundle_archive(tmp_path):
     assert bundle.artifacts[0].owner == "Foundation"
 
 
+def test_reads_repository_url_from_the_manifest(tmp_path):
+    """
+    `bundle.json` never carries `repository_url` — only
+    `manifest.json` does. Reading the archive must recover it
+    from there rather than silently falling back to the dataclass
+    default (GOV-0002/OS-053).
+    """
+
+    archive = tmp_path / "bundle.zip"
+
+    with zipfile.ZipFile(archive, "w") as zf:
+        zf.writestr("bundle.json", json.dumps(PAYLOAD))
+        zf.writestr(
+            "manifest.json",
+            json.dumps(
+                {
+                    "bundle_id": PAYLOAD["id"],
+                    "generated_at": PAYLOAD["generated_at"],
+                    "source_commit": PAYLOAD["source_commit"],
+                    "repository_url": "https://forge.example.org/aistack.git",
+                    "artifact_count": 1,
+                    "content_hash": "x" * 64,
+                    "hash_algorithm": "sha256",
+                    "format_version": "1.0",
+                }
+            ),
+        )
+
+    bundle = read_bundle(archive)
+
+    assert bundle.repository_url == "https://forge.example.org/aistack.git"
+
+
+def test_repository_url_reads_as_unknown_without_a_manifest(tmp_path):
+    """
+    An archive with no `manifest.json` entry, or a loose
+    `bundle.json` with no archive at all, carries no
+    `repository_url` anywhere the reader can reach — `"unknown"`
+    is the honest result, not a fabricated one.
+    """
+
+    archive = tmp_path / "bundle.zip"
+
+    with zipfile.ZipFile(archive, "w") as zf:
+        zf.writestr("bundle.json", json.dumps(PAYLOAD))
+
+    assert read_bundle(archive).repository_url == "unknown"
+
+    loose = tmp_path / "bundle.json"
+    loose.write_text(json.dumps(PAYLOAD), encoding="utf-8")
+
+    assert read_bundle(loose).repository_url == "unknown"
+
+
 def test_absent_fields_read_as_unknown(tmp_path):
     """
     A bundle produced before f88f113 carries no status. It

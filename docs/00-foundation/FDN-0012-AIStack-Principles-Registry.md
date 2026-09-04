@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 2.5
-  status: Draft
+  version: 2.6
+  status: Published
   owner: Foundation
   created: 2026-07-24
-  updated: 2026-08-23
+  updated: 2026-09-03
 
 relations:
   references:
@@ -21,6 +21,19 @@ relations:
 ---
 
 # AIStack Principles Registry
+
+## Provenance of version 2.6
+
+`status` moves from `Draft` to `Published`, `GOV-0002/OS-050`. This
+registry is C3 — the heritage's own top criticality tier — and had carried
+`Draft` since it was created on 2026-07-24, unchanged while being treated
+as governing everywhere it was cited, including by `FDN-0002` (the
+Glossary), which described this artifact as already Published on
+2026-08-29, five days before this frontmatter caught up. Measured
+2026-09-03: `Accepted` is
+this repository's status for decisions (ADRs and Architecture Documents);
+`Published` is what a Foundation Principle or Registry reaches. Nothing
+about the registry's content changes with this entry.
 
 ## Provenance of version 2.5
 

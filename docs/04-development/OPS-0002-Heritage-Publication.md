@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.10
+  version: 1.11
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-08-29
+  updated: 2026-09-03
 
 relations:
   references:
@@ -568,6 +568,30 @@ what the SPOT does not carry; **a `HEAD` ahead of `origin/main` names a commit
 no recipient can fetch**; and a red suite or a blocking finding publishes a
 state this heritage says is unsound.
 
+**Before building a new version, every image `docker-compose.yml` still
+lists as current is re-verified against its own recorded digest** —
+`GOV-0002/OS-047`, decided 2026-09-03: a rebuilt image would have to be
+verified before publication and then stay verified, and this is what
+"stay verified" means in practice for a heritage with no registry
+watching on its own. Not a scheduled check — a manual one, run as part of
+the next publication rather than as standing infrastructure for a risk
+that has not been observed (`ARC-P-006`):
+
+```bash
+for tag in 0.4.0 0.3.0; do
+  docker pull "bigbrother1969/aistack-core:$tag"
+  docker inspect --format '{{index .RepoDigests 0}}' \
+    "bigbrother1969/aistack-core:$tag"
+  # compare the printed digest against the one recorded for that tag
+  # in docker-compose.yml — a mismatch is the divergence OS-047 named
+done
+```
+
+A mismatch is investigated before the new version is pushed, not after.
+Between two publications the exposure OS-047 named stays open and
+undetected — accepted, at this heritage's current scale and audience,
+rather than built against.
+
 Then, from the repository directory:
 
 ```bash
@@ -622,11 +646,20 @@ the build context rather than only at its root, and that `Dockerfile` sets
 `PYTHONDONTWRITEBYTECODE`. Both were true on 2026-08-29 and neither was watched
 by anything until then.
 
-**Nothing verifies a published image**, and no test can: the suite has no
-registry, and a check receives a projection rather than a network — the same
-boundary § *The Context Bundle, and handing one over* draws for bundles. What
-the heritage can do is refuse to build from a state it calls unsound, and say
-what it did not check.
+**Nothing verifies a published image continuously**, and no test can: the
+suite has no registry, and a check receives a projection rather than a
+network — the same boundary § *The Context Bundle, and handing one over*
+draws for bundles. What the heritage can do is refuse to build from a state
+it calls unsound, and say what it did not check.
+
+**Narrowed 2026-09-03 — `GOV-0002/OS-047`.** "Nothing verifies" was true of
+every image published before this date and stays true between
+publications: this section's own claim is not rewritten, because
+continuous, unattended verification is still absent and still not built.
+What changed is § *The order*, above — the previous image is re-verified
+by hand immediately before the next one is built, so a published image is
+checked at least once more after publication, not only at the moment it
+was pushed.
 
 ### Recording the publication
 

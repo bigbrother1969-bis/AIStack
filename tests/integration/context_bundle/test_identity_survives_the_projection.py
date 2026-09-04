@@ -38,6 +38,7 @@ def bundle() -> ContextBundle:
         title="Test",
         generated_at=NOW,
         source_commit="abc1234",
+        repository_url="https://forge.example.org/aistack.git",
         artifacts=[
             artifact("FDN-0003", "a" * 64),
             artifact("STD-0100", "b" * 64),
@@ -71,6 +72,21 @@ def test_the_governed_identifier_survives_the_projection(tmp_path):
     restored = exported(tmp_path)
 
     assert {a.id for a in restored.artifacts} == {"FDN-0003", "STD-0100"}
+
+
+def test_the_repository_url_survives_the_projection(tmp_path):
+    """
+    `JsonBundleExporter` never writes `repository_url` into
+    `bundle.json` — only `ZipBundleExporter`'s `manifest.json`
+    carries it. `read_bundle` used to construct `ContextBundle`
+    without a `repository_url` argument at all, so this always
+    came back as the dataclass default, `"unknown"`, even for a
+    bundle that declared a real one (GOV-0002/OS-053).
+    """
+
+    restored = exported(tmp_path)
+
+    assert restored.repository_url == "https://forge.example.org/aistack.git"
 
 
 def test_the_content_hash_survives_the_projection(tmp_path):

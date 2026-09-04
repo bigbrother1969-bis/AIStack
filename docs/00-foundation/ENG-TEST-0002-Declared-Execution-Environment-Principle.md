@@ -5,13 +5,13 @@ artifact:
   id: ENG-TEST-0002
   owner: Engineering
   semantic_type: Principle
-  status: Draft
+  status: Published
   title: Declared Execution Environment Principle
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 2.2
-  updated: 2026-08-23
+  version: 2.4
+  updated: 2026-09-03
 ---
 
 # Declared Execution Environment Principle
@@ -61,6 +61,52 @@ Explicit configuration ensures:
 -   deterministic execution;
 -   portability across environments;
 -   early detection of packaging issues.
+
+## Host-touching UI screens declare their own dependencies, outside this environment
+
+This principle's environment is the one AIStack's governed test suite runs
+in. `selection_ui` and `priority_ui` are not part of that suite — decision
+#9, 2026-08-29 (`claude/PLAN-UI-SELECTION-2026-08-29.md`): each is a
+host-touching screen (`docker`, a real HTTP server) verified live rather
+than by `pytest`, and nothing under `src/aistack` imports `fastapi`,
+`uvicorn`, `jinja2` or `python-multipart`.
+
+**The pattern, stated once rather than reasoned twice.** A screen of this
+kind declares its own dependencies in its own `<screen>/requirements.txt`,
+installed by its own `scripts/setup_<screen>_env.sh` into a dedicated
+virtual environment, never into `.venv`. This environment —
+`bin/aistack_env.sh` declared, `scripts/dev-env.sh` provided — stays exactly
+what this principle already requires: the environment the governed suite
+runs in, and nothing a screen needs only to serve HTTP.
+
+**Why not `pyproject.toml [project.optional-dependencies]` instead.**
+That would gain this principle's own reproducibility floor, at a cost
+disproportionate to what it buys: nothing installs from it, verified
+2026-09-03 (each screen's setup script reads its own `requirements.txt`, not
+`pyproject.toml`), so the gain is available only if those scripts are
+rewritten to install from `pip install .[<screen>]` instead — a change to
+how installation actually works, not to where a list of names lives — and
+declaring host-touching, untested packages beside the governed suite's own
+dependency blurs the one line this principle exists to keep bright: what
+`pytest` depends on, and what a screen depends on to run, are not the same
+question.
+
+**Recorded 2026-09-03**, `GOV-0002/OS-046`: found repeated identically
+twice (`selection_ui`, then `priority_ui`) rather than reasoned once and
+declared. This section is that declaration — the same shape decision #9
+already used, made a stated pattern rather than a precedent each new
+screen has to rediscover.
+
+## What Changed In v2.4
+
+`status` moves from `Draft` to `Published`, `GOV-0002/OS-050`. This is a
+C3 principle, created 2026-07-24, that had stayed `Draft` while every
+other artifact treated it as governing — including `bin/aistack_env.sh`'s
+own designation as SPOT, and the Deployment host section `ADR-0001`
+carries as of the same day. Measured 2026-09-03: `Accepted` is this
+repository's status for decisions; `Published` is what a Foundation
+Principle reaches. Nothing about the principle's content changes with
+this entry.
 
 ## What Changed In v2.2
 

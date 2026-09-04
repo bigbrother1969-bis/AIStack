@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.5
+  version: 1.6
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -218,7 +218,7 @@ Artifact generation · Infrastructure explanation.
 |---|---|---|
 | 1.1 | Given a host running N containers, the generated catalog contains exactly N entries | **satisfied** — 2026-09-04 |
 | 1.2 | Each entry carries identity, image, state, published ports and mounts | **satisfied** — 2026-09-04 |
-| 1.3 | Regenerating from an unchanged host produces an identical catalog | **failing** — 2026-09-04 |
+| 1.3 | Regenerating from an unchanged host produces an identical catalog | **satisfied** — 2026-09-04 |
 | 1.4 | Every statement in the generated explanation references an observation present in the catalog | **satisfied** — 2026-09-04 |
 
 #### What 2026-09-04 verified, and what it did not
@@ -243,19 +243,22 @@ that container, spot-checked on `jellyfin`, `sonarr` and the containers with no
 mounts (rendered as `'no mounts'`, per `explain_docker_catalog`'s stated-absence
 rule).
 
-**1.3 fails, and the failure is real.** Two runs of `docker_catalog.main()`
-against the unchanged host, diffed with `collected_at` excluded, are not
-identical: container, image, network and volume ordering held stable across the
-two runs, but the `mounts` field's internal ordering did not, for at least
-`bazarr`, `frigate`, `booklore`, `beszel-agent`, `komga` and `filebrowser` —
-each rendered its own mount paths in a different order the second time.
-`DockerRuntimeCatalogBuilder._containers()` reads Docker's `Mounts` field and
-joins it in the order Docker returns it; that order is not guaranteed stable
-across two `docker ps` invocations. This is not a defect this session's patch
-introduced — `mounts` is the field that patch added — but it is the reason 1.3
-cannot move to `satisfied` yet. The fix is to sort the mounts before joining
-them, closing 1.3 the same way 1.2 and 1.4 were closed: a small code change,
-followed by another live run to confirm the ordering no longer varies.
+**1.3 failed twice before it was satisfied, and both failures were real.**
+The first run found the `mounts` field's internal ordering unstable across
+two `docker ps` invocations, for at least `bazarr`, `frigate`, `booklore`,
+`beszel-agent`, `komga` and `filebrowser` — `DockerRuntimeCatalogBuilder`
+joined Docker's `Mounts` field in the order Docker returned it, which
+`docker ps` does not guarantee stable. Sorting that field closed it, but
+the next live run found a second, independent cause: two entries of the
+`images` family carrying the same `docker_id` — one image, two repository
+tags, `rommapp/romm:latest` and `ghcr.io/rommapp/romm:latest` — swapped
+position between two `docker images` observations with no host change.
+Sorting `images` by identity closed that too. **Re-run against GIGABYTE,
+2026-09-04, with `diag_catalog_diff.py` comparing every field of every
+item rather than a single text diff: 0 field-level differences across 178
+shared items, 178 items in both runs.** Neither ordering claim was a
+guess — each was the literal cause a live diff named, fixed, and then
+re-verified live rather than assumed fixed by the code change alone.
 
 ### VS-2 — Context Bundle / Self-Onboarding
 
@@ -401,7 +404,9 @@ measures. This criterion moves when a remediation policy is written, not before.
 
 ---
 
-**Suite state: 22 criteria — 9 satisfied, 1 failing, 12 not verified.**
+**Suite state: 22 criteria — 10 satisfied, 0 failing, 12 not verified. VS-1 is
+the first scenario satisfied in full: every one of its four criteria holds
+(§ 7 — a scenario is satisfied only when every one of its criteria holds).**
 
 ---
 

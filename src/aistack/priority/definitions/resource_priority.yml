@@ -74,3 +74,4 @@ background:
   - name: mularr
   - name: komf
     normal_cpus: 0.5
+  - name: firefly

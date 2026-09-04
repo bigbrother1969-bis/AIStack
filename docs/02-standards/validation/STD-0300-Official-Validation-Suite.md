@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.14
+  version: 1.15
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -205,8 +205,8 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3 and 4.7 (4.1, 4.2, 4.3 and 4.7 advanced,
-not yet satisfied).
+1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.6 and 4.7 (4.1, 4.2, 4.3, 4.6 and 4.7
+advanced, not yet satisfied).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -467,6 +467,20 @@ the same kind of guess `CpuThresholdDetectorDefinition`'s 50 %/15 s was,
 chosen to be sensitive rather than fitted to the one incident measured — not
 yet checked against a live sweep of containers nobody has classified.
 
+**2026-09-04, later the same day — the first live positive.** A full sweep
+on the reference deployment (61 containers examined) flagged exactly one:
+`firefly` at 6.7 %, undeclared in either `priority` or `background`.
+Investigated live — repeated `docker top`, a 60-second `docker stats`
+sample, `docker logs`, `docker inspect` — the reading was not a
+`--reload`-shaped bug: it was PHP-FPM answering a recurring health probe (a
+monitoring tool hitting Firefly III's `/register` endpoint, a full Laravel
+page render, roughly every 70 seconds), which produced the bursty pattern
+the CPU sample showed rather than a flat plateau. The owner classified
+`firefly` in `background` (`resource_priority.yml`, the file's own
+documented "or by hand" path) once the shape was understood — the exact
+ambiguity this paragraph named above, resolved for one real container
+rather than guessed at.
+
 **4.2 remains `not verified`, and it is now scoped rather than merely
 absent.** Literally: "the finding correlates process, container and
 deployment definition, each with an observation reference." Until
@@ -552,6 +566,38 @@ signature was not the thing to change. One finding, for one container, on one
 declared fact, now carries a real citation instead of `unknown`; the criterion
 stays `not verified` until that is true of what it asks for generally, not of
 one case that happens to be provable today.
+
+**4.6 remains `not verified`, and this session names what closing it
+needs.** The criterion, literally: "the root cause is explained, derived
+from the collected evidence" — read against VS-4's own header, "AIStack
+can derive," not a human reading AIStack's output and reasoning about it
+in conversation. The `firefly` investigation above is the first case
+where a root cause was actually derived from evidence rather than
+assumed, and it is worth recording precisely what that took, because none
+of it exists in `aistack` today: 4.2's correlated evidence (container
+command, live process, deployment definition) narrowed the *subject* —
+s6-overlay, PHP-FPM, nginx, nothing custom — but did not, by itself,
+explain *why* CPU rose. Two further evidence types did, neither collected
+by any current provider or detector: a CPU reading taken repeatedly over
+a window, to tell a plateau from a burst (`docker stats --no-stream`,
+called by hand, twelve times); and the container's own access log, read
+for a repeating request pattern tied to one external actor's identity (a
+`User-Agent` naming a monitoring tool). The derivation itself —
+recognising that a ~70-second request cycle and a bursty CPU sample
+describe the same cause — was done by a human reading both together, in
+one conversation, not by any function in this repository.
+
+Building a generic root-cause deriver from one case would repeat the
+mistake `GOV-P-001` and `ARC-P-006` already guard against elsewhere in
+this section: `firefly`'s cause (an external HTTP health-check hitting a
+heavy endpoint) is a plausible shape for a second case, not yet a
+confirmed pattern — the same discipline that kept
+`KNOWN_DEVELOPMENT_FLAGS` to one entry after the reference incident
+applies here. What moved today is the evidence this criterion is scoped
+against: time-series CPU sampling and access-log pattern correlation are
+now named, concretely, as what 4.6 requires and 4.2 does not provide —
+not implemented, not guessed at, until a second real case confirms the
+shape worth automating.
 
 ---
 

@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.8
+  version: 1.9
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -204,7 +204,7 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1 and 3.3.
+1.4, 3.1, 3.2 and 3.3.
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -314,7 +314,7 @@ interaction · Regeneration.
 | # | Criterion | State |
 |---|---|---|
 | 3.1 | The same catalog and the same policy produce the same selection | **satisfied** — 2026-09-04 |
-| 3.2 | Every included and excluded item carries the rule that decided it | not verified |
+| 3.2 | Every included and excluded item carries the rule that decided it | **satisfied** — 2026-09-04 |
 | 3.3 | After a user modification, regeneration differs only by the modified items | **satisfied** — 2026-09-04 |
 
 #### What 2026-09-04 checked, prompted by the owner citing 2026-09-03's Syncthing work
@@ -345,14 +345,29 @@ identifiers given in a different order, since the same policy should not
 depend on the sequence a caller happened to list it in. All three
 `Selection`s compare equal.
 
-**3.2 stays `not verified`, and the gap is not a missing test.**
-`Selection` (`src/aistack/kernel/selection/core.py`) carries `selected_ids`
-and a flat `metadata` dict, nothing per-item, and excluded items are not
-represented at all — a ticked ID is simply present or absent, with no rule,
-reason or policy attached to that fact anywhere in the selection code. The
-criterion describes a policy-driven selector explaining each of its
-decisions; what exists is a manual by-IDs selector with no decisions to
-explain. This moves only when that concept is built, not when it is tested.
+**3.2 is satisfied, closed by a derived explanation rather than a change to
+`Selection`.** The gap was real: `Selection` carries `selected_ids` and a
+flat `metadata` dict, nothing per-item, and an item nobody ticked left no
+trace to explain. Rather than thread a rule field through `Selection`
+itself — which is persisted to YAML and already holds the owner's live
+118 Gio selection on GIGABYTE, so a schema change there is a migration, not
+a patch — `explain_selection(catalog, resolution)`
+(`src/aistack/selection/explanation.py`) walks `catalog.items` directly and
+names, for every one, the `SubtreeResolution` category that decided it:
+`ticked` (a root), `inherited from '<root>'` (a covered descendant),
+`redundant, already covered by '<root>'` (ticked but already covered), or
+`excluded, never ticked and no ticked ancestor`. Nothing here is a new
+judgment — `SubtreeResolution` already computed and already tested each
+category; this only names what each one means, the same relationship
+`explain_docker_catalog` had to the catalog it explained for VS-1's 1.4.
+Seven tests in `tests/unit/selection/test_selection_explanation.py` cover
+all four rules, assert every catalog item receives exactly one decision
+(`test_every_catalog_item_gets_a_decision`), and confirm a ticked identifier
+absent from the catalog is not fabricated into one
+(`test_an_absent_ticked_identifier_is_not_a_catalog_item_to_explain`).
+
+**VS-3 is the second scenario satisfied in full**: 3.1, 3.2 and 3.3 all
+hold.
 
 ### VS-4 — Sustainability & Technical Debt Analysis
 
@@ -441,10 +456,9 @@ measures. This criterion moves when a remediation policy is written, not before.
 
 ---
 
-**Suite state: 22 criteria — 12 satisfied, 0 failing, 10 not verified. VS-1 is
-the only scenario satisfied in full so far: every one of its four criteria
-holds (§ 7 — a scenario is satisfied only when every one of its criteria
-holds). VS-3 holds two of three — only 3.2 remains.**
+**Suite state: 22 criteria — 13 satisfied, 0 failing, 9 not verified. Two
+scenarios satisfied in full: VS-1 (four of four) and VS-3 (three of three) —
+§ 7, a scenario is satisfied only when every one of its criteria holds.**
 
 ---
 

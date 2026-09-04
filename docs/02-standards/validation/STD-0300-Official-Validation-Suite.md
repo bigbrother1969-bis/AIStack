@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.16
+  version: 1.17
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-04
@@ -205,9 +205,9 @@ verification was executed. A single date at the head of this section would have
 to be rewritten at every change and would be wrong the moment one was missed —
 which is how the sentence it replaces came to describe `45710f3` while the
 criteria below had moved on. Last change: 2026-09-04, criteria 1.1, 1.2, 1.3,
-1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.5, 4.6 and 4.7 (4.1, 4.2, 4.3, 4.5, 4.6
-and 4.7 advanced, not yet satisfied; 4.5's own wording was corrected the
-same day).
+1.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.5, 4.6, 4.7 and 4.8 (4.1, 4.2, 4.3, 4.5,
+4.6, 4.7 and 4.8 advanced, not yet satisfied; 4.5's own wording was
+corrected the same day).
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -399,8 +399,10 @@ monitored the mounted repository.
 **Remediation** — remove `--reload` from the permanent container command and rebuild
 the image.
 
-**Measured result** — before: approximately 48–58 % of one CPU core; after:
-approximately 0.2 % while idle.
+**Measured result** — before: 48–58 % of one CPU core; after: 0.32 % of one
+core, measured after two minutes of inactivity
+(`docker-compose.selection-ui.yml`'s own comment) — a reduction of 99.4 %
+from the upper bound.
 
 The incident was diagnosed and remediated by a human. That satisfies no criterion
 below: the point is that AIStack reproduces the reasoning.
@@ -416,7 +418,7 @@ below: the point is that AIStack reproduces the reasoning.
 | 4.5 | Each qualification the evidence supports, among technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly, is cited to a distinct policy; more than one found together is what makes the finding derived knowledge rather than an opinion about severity | not verified |
 | 4.6 | The root cause is explained, derived from the collected evidence | not verified |
 | 4.7 | A safe remediation is recommended, citing the policies it derives from by identifier | not verified |
-| 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 48–58 % → 0.2 %) | not verified |
+| 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 58 % → 0.32 %, 99.4 %) | not verified |
 | 4.9 | No finding is emitted without at least one evidence reference | **satisfied** — 2026-08-22 |
 
 Criterion 4.5 is not a formality. A single label would make the finding an opinion
@@ -629,6 +631,32 @@ reference incident had, for energy inefficiency; a real temperature
 reading correlated to the CPU reading, for sustainability anomaly. One
 case is a policy, not yet a pattern worth automating — `ARC-P-006` holds
 here as it does for 4.1's threshold and 4.3's single flag.
+
+**4.8 remains `not verified`, and the arithmetic it needs now exists,
+separately from a live reading.** The criterion, literally: "before/after
+verification measures a CPU reduction ≥ 95 %."
+`CpuReductionMeasurement` (`src/aistack/contracts/cpu_reduction.py`) refuses
+construction unless both the before- and after-reading carry their own
+observation reference — the same discipline `CorrelatedFinding` already
+holds each of its three readings to — and exposes the reduction as a
+computed percentage against a declared threshold, defaulting to the 95 %
+this criterion names.
+`test_the_reference_incidents_upper_bound_meets_the_threshold` applies it
+to the numbers already in this repository: 58 % (this reference incident's
+own upper bound) to 0.32 % (`docker-compose.selection-ui.yml`'s own
+comment, measured after two minutes of inactivity) is 99.4 %, and the
+class agrees.
+
+**What keeps this `not verified` rather than satisfied.** The 0.32 %
+figure the arithmetic above trusts is a comment in a compose file, written
+once by a human, not a reading `aistack` took itself — the same gap `4.1`
+closed for "undeclared," not yet closed here for "after." A live
+`collect_cpu_readings()` sweep confirming `aistack-selection-ui` still
+reads near 0.32 % today, cited as its own observation reference in place
+of the compose comment, is what turns this from arithmetic proven correct
+into a verification proven current — the same standard `4.7` held itself
+to before citing `OPS-0003` as more than a register nobody had exercised
+end to end.
 
 ---
 

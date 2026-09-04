@@ -149,6 +149,37 @@ def test_a_container_with_no_name_is_kept():
     assert [c.id for c in containers_of(catalog)] == ["abc123"]
 
 
+def test_the_catalogue_carries_mounts():
+    """
+    `STD-0300` VS-1 criterion 1.2 names "published ports and
+    mounts" as what a catalog entry must carry. `docker ps
+    --format '{{json .}}'` already reports `Mounts` in its raw
+    output — the same JSON line `ports` is already read from —
+    so this is the same kind of read as `ports`, not a second
+    Docker call.
+    """
+
+    catalog = DockerRuntimeCatalogBuilder().build(
+        observation(
+            {
+                "ID": "a",
+                "Names": "one",
+                "Mounts": "config,media",
+            }
+        )
+    )
+
+    assert containers_of(catalog)[0].metadata["mounts"] == "config,media"
+
+
+def test_a_container_with_no_mounts_reads_as_empty_not_none():
+    catalog = DockerRuntimeCatalogBuilder().build(
+        observation({"ID": "a", "Names": "one"})
+    )
+
+    assert containers_of(catalog)[0].metadata["mounts"] == ""
+
+
 def test_every_metadata_value_is_a_string():
     """
     `CatalogItem.metadata` is `dict[str, str]` and the

@@ -154,6 +154,23 @@ def test_docker_catalog_writes_a_catalog(stubbed_providers, workspace):
     ]
 
 
+def test_docker_catalog_writes_the_explanation_alongside_it(
+    stubbed_providers, workspace
+):
+    """
+    `STD-0300` VS-1 criterion 1.4: the explanation is generated in
+    the same run as the catalog it explains, from the same
+    observation — added 2026-09-04.
+    """
+
+    docker_catalog.main()
+
+    path = workspace / "reports" / "generated" / "docker-runtime-explanation.txt"
+
+    assert path.exists()
+    assert "aistack-web" in path.read_text(encoding="utf-8")
+
+
 def test_docker_discover_writes_the_observation(stubbed_providers, workspace):
     docker_discover.main()
 

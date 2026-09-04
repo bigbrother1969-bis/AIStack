@@ -72,6 +72,14 @@ class DockerRuntimeCatalogBuilder:
                     # GOV-0002/OS-035.
                     "health": health_of(item.get("Status")).value,
                     "ports": self._text(item.get("Ports")),
+                    # `docker ps --format '{{json .}}'` already
+                    # carries `Mounts` — the provider's own raw
+                    # observation always had it, nothing here
+                    # asked for it before `STD-0300` § *VS-1*
+                    # criterion 1.2 named "published ports and
+                    # mounts" as what a catalog entry must carry,
+                    # 2026-09-04.
+                    "mounts": self._text(item.get("Mounts")),
                 },
             )
             for item in containers

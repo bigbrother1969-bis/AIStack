@@ -95,6 +95,17 @@ class DockerRuntimeCatalogBuilder:
         )
 
     def _images(self, images: list[dict[str, Any]]) -> tuple[CatalogItem, ...]:
+        # Sorted by identity, not passed through in Docker's own
+        # order. A live run against GIGABYTE, 2026-09-04, showed
+        # two entries carrying the same `docker_id` — one image,
+        # two repository tags — swap position between two
+        # `docker images` calls with no host change, which broke
+        # `STD-0300` criterion 1.3 (regeneration determinism) the
+        # same way the unsorted `mounts` field did. Only `images`
+        # showed this; containers, networks and volumes did not,
+        # so only this family is sorted (`ARC-P-006`).
+        images = sorted(images, key=self._image_identity)
+
         return tuple(
             CatalogItem(
                 id=self._image_identity(item),

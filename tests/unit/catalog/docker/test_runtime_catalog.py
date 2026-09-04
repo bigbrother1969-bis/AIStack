@@ -24,6 +24,10 @@ def containers_of(catalog: Catalog) -> list:
     return [item for item in catalog.items if item.kind == "container"]
 
 
+def images_of(catalog: Catalog) -> list:
+    return [item for item in catalog.items if item.kind == "image"]
+
+
 def test_the_builder_returns_a_governed_catalog():
     """
     GOV-0002/OS-042, qualified 2026-08-29: `CatalogView` is the
@@ -202,6 +206,40 @@ def test_mounts_are_sorted_regardless_of_docker_s_own_order():
         == containers_of(second)[0].metadata["mounts"]
         == "backup,config,media"
     )
+
+
+def test_images_sharing_a_docker_id_are_ordered_regardless_of_docker_s_own_order():
+    """
+    `STD-0300` VS-1 criterion 1.3 failed a second way on the same
+    2026-09-04 live run, after the `mounts` fix closed the first:
+    two images carrying the same `docker_id` — one image with two
+    repository tags — swapped position in the catalog's `images`
+    between two `docker images` calls with no host change. Sorting
+    by identity is what makes two observations that differ only in
+    Docker's own list order produce an identical catalog.
+    """
+
+    first = DockerRuntimeCatalogBuilder().build(
+        observation(
+            images=[
+                {"Repository": "ghcr.io/rommapp/romm", "Tag": "latest", "ID": "i1"},
+                {"Repository": "rommapp/romm", "Tag": "latest", "ID": "i1"},
+            ]
+        )
+    )
+    second = DockerRuntimeCatalogBuilder().build(
+        observation(
+            images=[
+                {"Repository": "rommapp/romm", "Tag": "latest", "ID": "i1"},
+                {"Repository": "ghcr.io/rommapp/romm", "Tag": "latest", "ID": "i1"},
+            ]
+        )
+    )
+
+    assert [i.id for i in images_of(first)] == [i.id for i in images_of(second)] == [
+        "ghcr.io/rommapp/romm:latest",
+        "rommapp/romm:latest",
+    ]
 
 
 def test_every_metadata_value_is_a_string():

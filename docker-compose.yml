@@ -29,7 +29,29 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **0.4.0 — published 2026-09-03, current.**
+  # **0.5.0 — published 2026-09-04, current.**
+  #
+  #   bigbrother1969/aistack-core:0.5.0
+  #   @sha256:3def537335f5f9f36d2824f2c6d56e0c4f5c7232017be36b93bf78a307816896
+  #
+  # Built from 57290fa on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 940 tests with `clean: True`.
+  # 66 artifacts, 16 checks. Before the build, 0.4.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`'s own rule, applied
+  # for the first time) — pull matched. Freezes the closure of the
+  # eight `GOV-0002` residuals opened 2026-09-03 (OS-046, 047, 048,
+  # 049, 050, 051, 053, 054), all now Resolved: `docs/99-archive` and
+  # its eligibility exclusion, the Context Bundle's `repository_url`
+  # (read from the archive's `manifest.json` rather than always
+  # defaulting to "unknown"), three documents promoted to `Published`,
+  # two Draft decisions left Draft with the reasoning recorded instead
+  # of the status changed, and — the one requiring its own live
+  # measurement before it could close — a named pattern for running a
+  # provider CLI on a deployment host without `PYTHONPATH` set by
+  # hand, verified on this same host.
+  #
+  # **0.4.0 — published 2026-09-03.**
   #
   #   bigbrother1969/aistack-core:0.4.0
   #   @sha256:daf46c76b309e047c8801a25857b1328c01fc69c84c25d1ac333e05c8bb2f9fb

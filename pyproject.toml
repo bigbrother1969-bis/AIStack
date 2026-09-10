@@ -140,3 +140,27 @@ ignore = ["B011", "B024"]
 # machine happens to have.
 [tool.mypy]
 python_version = "3.13"
+
+# GOV-0002/OS-056, 2026-09-10. `[tool.setuptools.packages.find]`
+# above discovers Python modules; it says nothing about anything
+# else, and until this line nothing did. A real, non-editable
+# `pip install .` — what `Dockerfile` runs, deliberately, so
+# `importlib.metadata` can answer (`test_the_image_declares_what_it_
+# ships.py`) — silently built a wheel with every `.py` file and not
+# one `.yml` or `.js`: `resource_priority.yml`,
+# `service_categorization.yml`, and the mermaid.js this same patch
+# vendors were all absent, and every reader that opens one by a
+# `Path(__file__)`-relative path (`resource_priority_monitor.py`'s
+# `DEFAULT_DEFINITION`, `renderers/architecture/html.py`'s
+# `load_vendored_mermaid_js`) would raise `FileNotFoundError` the
+# first time it ran from an installed image rather than an editable
+# checkout.
+#
+# Found only because vendoring a new data file for J2 step 5 raised
+# the question of whether the existing ones were even packaged —
+# an editable install (`pip install -e .`, what every developer and
+# this session's own verification clones run) can never surface
+# this: it points straight at `src/`, where the files already exist
+# regardless of what setuptools declares.
+[tool.setuptools.package-data]
+aistack = ["**/*.yml", "**/*.js"]

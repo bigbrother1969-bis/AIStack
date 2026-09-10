@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.92
+  version: 1.93
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-04
+  updated: 2026-09-10
 
 relations:
   references:
@@ -214,7 +214,8 @@ by OS-036, and emptied again by the rule OS-036 produced.*
 
 # Defects
 
-None open. OS-009, OS-010, OS-044, OS-052 and OS-053 are in *Resolved*.
+None open. OS-009, OS-010, OS-044, OS-052, OS-053 and OS-056 are in
+*Resolved*.
 
 *An empty section is kept rather than removed: a register with no defects
 section could not be told from one that never looked for any. That argument was
@@ -289,6 +290,45 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-056 — A real `pip install .` carried no `.yml` or `.js` data file
+
+**Nature** `defect` · **Opened** 2026-09-10 · **State** resolved 2026-09-10 by declaring `[tool.setuptools.package-data]` — pyproject.toml
+**Observed** `resource_priority.yml` (`priority/definitions/`) and
+`service_categorization.yml` (`architecture/definitions/`) are both read
+at runtime through a `Path(__file__).resolve()`-relative path, not
+`importlib.resources` — `resource_priority_monitor.py`'s
+`DEFAULT_DEFINITION` is the convention both follow.
+`[tool.setuptools.packages.find]` discovers Python packages only; nothing
+declared which non-`.py` files travel with them into a built
+distribution. Measured directly, 2026-09-10: `pip install . --no-deps
+--target=<dir>` — the install shape `Dockerfile` actually runs, and
+deliberately so (`test_the_image_declares_what_it_ships.py`, *"`pip
+install .` is what makes `importlib.metadata` able to answer"*) — carried
+every `.py` file and neither `.yml` file. An image built this way would
+raise `FileNotFoundError` the first time `resource_priority_monitor`,
+`jellyfin_discover`, or `runtime_diagnose` opened its default definition.
+Undetected until now because nothing in the suite builds a real,
+non-editable install: every developer, and this session's own patch-
+verification clones, run `pip install -e .`, which points straight at
+`src/` and could never have shown the gap regardless of what setuptools
+declared. Found only because vendoring a third data file —
+`renderers/architecture/vendor/mermaid.min.js`, J2 step 5
+(`claude/PLAN-J2-ARCHITECTURE-HTML-2026-09-10.md`) — raised the same
+question before it could go unnoticed a third time.
+**Derivable** yes — `tests/integration/
+test_the_distribution_carries_its_declared_data_files.py` builds a real
+install and asserts the specific files it must contain; a `.yml`/`.js`
+file added under `src/aistack` without a matching `package-data` glob is
+exactly what it now catches.
+**Resolved 2026-09-10.** `[tool.setuptools.package-data]` declares
+`aistack = ["**/*.yml", "**/*.js"]`. Verified against a real, non-editable
+install: all three files present — `resource_priority.yml`,
+`service_categorization.yml`, and the newly vendored `mermaid.min.js`.
+**Qualification** none required — a packaging declaration brought in line
+with what the code already reads from disk, not a behaviour decision.
+
+---
 
 #### GOV-0002/OS-055 — A published version carried no readable account of what changed
 

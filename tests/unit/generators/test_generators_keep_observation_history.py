@@ -26,6 +26,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from aistack.architecture.graph import ArchitectureGraph, CategoryGraph, ServiceNode, ServiceStatus
+from aistack.architecture.views import build_all_views
+from aistack.generators.architecture import ArchitectureHtmlArtifactGenerator
 from aistack.generators.catalog_view import CatalogViewArtifactGenerator
 from aistack.generators.compose.catalog_artifact import ComposeCatalogArtifactGenerator
 from aistack.generators.docker.catalog_artifact import DockerCatalogArtifactGenerator
@@ -160,6 +163,36 @@ def test_syncthing_observation_artifact_generator_keeps_history(tmp_path: Path):
     history_files = _history_files(output_path)
     assert len(history_files) == 1
     assert json.loads(history_files[0].read_text(encoding="utf-8")) == observation
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_architecture_html_artifact_generator_keeps_history(tmp_path: Path):
+    generator = ArchitectureHtmlArtifactGenerator()
+    output_path = tmp_path / "reports" / "generated" / "architecture.html"
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Supervision",
+                services=(
+                    ServiceNode(
+                        name="Beszel",
+                        category="Supervision",
+                        container="beszel",
+                        status=ServiceStatus.OBSERVED,
+                    ),
+                ),
+            ),
+        )
+    )
+    views = build_all_views(graph)
+
+    generator.generate(views=views, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert history_files[0].read_text(encoding="utf-8").startswith("<!doctype html>")
     assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
         encoding="utf-8"
     )

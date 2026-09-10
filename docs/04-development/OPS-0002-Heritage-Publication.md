@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.12
+  version: 1.13
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-09-04
+  updated: 2026-09-10
 
 relations:
   references:
@@ -131,6 +131,8 @@ Workstation                SPOT                 Publisher            Mirrors
   push ────────────────────► │                      │                   │
                              │ ◄──────── pull ───── │                   │
                              │                      │                   │
+                             │                    verify                │
+                             │                      │                   │
                              │                      │ ──── publish ───► │
 ```
 
@@ -204,14 +206,53 @@ second machine then diverges from the SPOT at its next pull.
 git push origin main
 ```
 
-### 3. Publish the mirrors, on the publisher
+### 3. Verify, then publish the mirrors, on the publisher
+
+**Decided 2026-09-10 by the owner: the publisher verifies the commit it
+just pulled, the same way the workstation verifies before it pushes to
+the SPOT.** Until this date, step 3 was `sync_mirrors.sh` alone — nothing
+tested the code between the SPOT and a mirror. That gap was measured the
+same day it was closed: a run tested the publisher's clone, then ran
+`sync_mirrors.sh`, and the test had verified the *previous* commit — the
+script's own pull happens inside it, after the test had already finished,
+so the commit about to reach the mirrors had not been tested there at all.
+
+Run this first, from the publisher's clone:
+
+```bash
+git pull --ff-only origin main \
+  && source scripts/dev-env.sh \
+  && pytest -q \
+  && python3 -m aistack.cli.knowledge_integrity
+```
+
+Only once that reports `clean: True` (or the one narrow exception § 1
+states — a `WARNING` an open register entry names):
 
 ```bash
 ./scripts/sync_mirrors.sh
 ```
 
-The script performs the whole of step 3, and its guarantees are part of this
-procedure rather than incidental to it:
+**Not chained into one line, unlike step 1.** `sync_mirrors.sh` performs
+its own `git pull --ff-only` as its first internal action, so running it
+right after the command above is idempotent — it reports the clone
+"already at" the commit just verified, not a race against it. What two
+separate commands buy here is a place to stop before any mirror is
+touched, without needing to parse the script's own output to decide
+whether to continue.
+
+**Documented, not coded into the script — decided the same day, for a
+reason specific to this role.** `sync_mirrors.sh` also runs unattended,
+twice a day (§ *Publication also runs unattended*, below). A gate coded
+into it would apply to those runs too, and an environment quirk on an
+unattended schedule — not the code, the schedule's own Python, PATH, or
+venv — would then silently withhold every mirror publication rather than
+stopping the one a person is watching. The manual step above carries that
+risk instead: it runs only when someone is at the terminal to read what it
+says.
+
+The script performs the whole of the publish half, and its guarantees are
+part of this procedure rather than incidental to it:
 
 - **it refuses any branch but `main`**, because publishing a working branch
   would merge it into the SPOT;

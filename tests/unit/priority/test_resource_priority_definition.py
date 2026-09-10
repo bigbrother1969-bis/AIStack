@@ -380,7 +380,7 @@ def test_a_background_block_missing_its_own_required_field_is_named(
         """,
     )
 
-    with pytest.raises(ValueError, match="background.*default_throttled_cpus"):
+    with pytest.raises(ValueError, match=r"background.*default_throttled_cpus"):
         load_resource_priority_yaml(path)
 
 

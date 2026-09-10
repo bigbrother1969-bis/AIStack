@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from aistack.kernel.catalog import Catalog
@@ -117,11 +117,22 @@ def resolve_subtrees(
 
 def _has_ticked_ancestor(
     node: str,
-    known: dict[str, object],
+    known: Mapping[str, object],
     ticked: set[str],
 ) -> bool:
     """
     Walk up by the declared parent, not by splitting the path.
+
+    **`known` is a `Mapping`, not a `dict`, in this signature.** The
+    caller holds a `dict[str, CatalogItem]`, and `dict` is invariant
+    in its value type — `mypy` refused passing it where `dict[str,
+    object]` was declared, even though `CatalogItem` is an `object`,
+    because a `dict[str, object]` parameter would let this function
+    write a plain `object` into a caller's `dict[str, CatalogItem]`.
+    `Mapping` makes the real promise: this function only reads
+    `known`, so its value type only needs to be covariant. Found by
+    `mypy`, 2026-09-10; nothing about the call site changed — a
+    `dict` already satisfies `Mapping`.
 
     The identifier is a relative path and splitting it on the
     separator would agree with the parent metadata in every case

@@ -314,6 +314,17 @@ def report(
     commands_note: str = "",
     correlated: tuple[CorrelatedFinding, ...] = (),
 ) -> None:
+    """
+    Print every section this diagnosis has evidence for.
+
+    **Each block's own loop variable is named for what it holds**
+    (`reading`, `flag`, `evidence`) — until 2026-09-10 all three
+    reused `item`, which `mypy` read as one variable whose type
+    changed mid-function and flagged as an assignment error at each
+    reuse. The three loops were always independent — each iterates
+    its own tuple and only reads that tuple's own fields — so nothing
+    here ran differently; only the name was shared.
+    """
 
     print("Runtime Diagnosis Report")
     print(f"- Catalogue: {catalogue.artifact}")
@@ -379,38 +390,38 @@ def report(
 
     if consumption:
         print("Unexplained consumption:")
-        for item in consumption:
+        for reading in consumption:
             print(
-                f"    {item.container}: {item.cpu_percent:.1f}% "
-                f"(threshold {item.threshold_percent:.1f}%) — not in "
+                f"    {reading.container}: {reading.cpu_percent:.1f}% "
+                f"(threshold {reading.threshold_percent:.1f}%) — not in "
                 f"resource_priority.yml"
             )
         print("")
 
     if development_flags:
         print("Development options enabled:")
-        for item in development_flags:
-            print(f"    [{item.container}] {item.pattern}")
-            print(f"        {item.interpretation}")
-            print(f"        command: {item.command}")
+        for flag in development_flags:
+            print(f"    [{flag.container}] {flag.pattern}")
+            print(f"        {flag.interpretation}")
+            print(f"        command: {flag.command}")
         print("")
 
     if correlated:
         print("Correlated evidence:")
-        for item in correlated:
-            print(f"    [{item.container}]")
+        for evidence in correlated:
+            print(f"    [{evidence.container}]")
             print(
-                f"        container    {item.container_command!r}  "
-                f"({item.container_reference})"
+                f"        container    {evidence.container_command!r}  "
+                f"({evidence.container_reference})"
             )
             print(
-                f"        process      {item.process_command!r}  "
-                f"({item.process_reference})"
+                f"        process      {evidence.process_command!r}  "
+                f"({evidence.process_reference})"
             )
-            if item.deployment_command is not None:
+            if evidence.deployment_command is not None:
                 print(
-                    f"        deployment   {item.deployment_command!r}  "
-                    f"({item.deployment_reference})"
+                    f"        deployment   {evidence.deployment_command!r}  "
+                    f"({evidence.deployment_reference})"
                 )
             else:
                 print(

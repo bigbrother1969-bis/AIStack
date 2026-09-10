@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from pathlib import Path
 
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.context_bundle import ContextBundle

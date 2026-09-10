@@ -65,7 +65,13 @@ def _measure_noise() -> frozenset[str]:
     time in one afternoon.
     """
 
-    _T = TypeVar("_T")
+    # covariant=True: `_T` names no method or attribute here — the
+    # class body is `pass` — so variance has no runtime meaning for
+    # this fixture. `mypy` still checks a generic `Protocol`'s type
+    # parameter against how a Protocol is meant to use one (its own
+    # members, if it had any, in output position), and refuses an
+    # invariant `_T` there. Found 2026-09-10.
+    _T = TypeVar("_T", covariant=True)
 
     class _EmptyProtocol(Protocol):
         pass
@@ -217,9 +223,16 @@ def incompatible_members(
             problems[name] = f"{want} vs {have}"
             continue
 
+        # strict=True: safe, not merely permitted — the length check
+        # just above already refused anything but equal-length
+        # parameter lists, so `zip` truncating silently is not a risk
+        # here; `strict=True` documents that invariant rather than
+        # changing what this loop does. Found by `ruff` (B905),
+        # 2026-09-10.
         for a, b in zip(
             want.parameters.values(),
             have.parameters.values(),
+            strict=True,
         ):
             names_matter = (
                 a.kind is not inspect.Parameter.POSITIONAL_ONLY

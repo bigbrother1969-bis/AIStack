@@ -229,7 +229,13 @@ def main(argv: list[str] | None = None) -> None:
     # terminal already looked like. Host-touching (it reconfigures
     # this process's own stdout stream), so verified live rather than
     # in the governed suite, per decision #9.
-    sys.stdout.reconfigure(line_buffering=True)
+    #
+    # `reconfigure` is declared on `io.TextIOWrapper`, not on the
+    # narrower `TextIO` protocol `sys.stdout` is typed as — real at
+    # process start, where `sys.stdout` always is a `TextIOWrapper`,
+    # but not something the type alone states. `mypy` named the gap
+    # 2026-09-10; the ignore is of the call, not a claim it never fails.
+    sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
     definition_path, once, dry_run = parse(
         sys.argv[1:] if argv is None else argv

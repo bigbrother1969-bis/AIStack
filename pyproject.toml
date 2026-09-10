@@ -71,6 +71,9 @@ license = { text = "AGPL-3.0-or-later" }
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "ruff>=0.15",
+    "mypy>=1.20",
+    "types-PyYAML>=6.0",
 ]
 
 [project.urls]
@@ -98,3 +101,42 @@ testpaths = [
     "tests/unit",
     "tests/integration",
 ]
+
+# Adopted 2026-09-10, after evaluating both against this codebase:
+# on the very first run, before any of this configuration existed,
+# mypy found two real defects (an incompatible method override in
+# ContractRegistry, and two builders passing a list where Catalog
+# declares a tuple — both fixed the same day) and ruff found a
+# genuine zip() truncation risk and four regex-escaping ambiguities
+# in test assertions.
+#
+# `select` names only what stayed worth seeing on every future
+# patch, not everything ruff can check. A first pass with a fuller
+# rule set (import sorting, line length, Python-3.11-to-3.13
+# modernization idioms) returned 328 findings, and all but a
+# handful were mechanical, one-time noise rather than ongoing
+# signal — the kind a bulk `--fix` clears once, not the kind a gate
+# should hold a future patch to. Complexity (`C90`) is deliberately
+# not selected yet either: three functions already exceed the
+# default threshold, and deciding whether to refactor them or raise
+# the threshold is its own decision, not a side effect of adopting
+# a linter. Revisit either omission as a separate, named choice —
+# not by widening `select` quietly.
+[tool.ruff.lint]
+select = ["F", "B", "RUF043"]
+# B011 (`assert False` instead of `raise AssertionError()`) and B024
+# (an ABC with no abstract method) are both a deliberate idiom this
+# heritage already uses throughout its own contract tests —
+# `ArtifactBuilder()` must refuse instantiation, and the test states
+# that by asserting the attempt never returns. Ignored here rather
+# than rewritten, since rewriting would touch a dozen files for a
+# style preference this project already settled the other way.
+ignore = ["B011", "B024"]
+
+# python_version pins mypy's own understanding of the language to
+# what `pyproject.toml`'s own `requires-python` already declares —
+# the same reasoning `requires-python` itself carries above: one
+# declared version, checked, rather than whichever interpreter a
+# machine happens to have.
+[tool.mypy]
+python_version = "3.13"

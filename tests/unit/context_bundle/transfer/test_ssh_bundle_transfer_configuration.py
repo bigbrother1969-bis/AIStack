@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from aistack.context_bundle.transfer.configuration import (
     DefaultBundleTransferConfiguration,

@@ -64,13 +64,13 @@ def test_a_finding_without_evidence_cannot_be_constructed():
     constructor, so the criterion cannot be met "in principle".
     """
 
-    with pytest.raises(ValueError, match="4.9"):
+    with pytest.raises(ValueError, match=r"4\.9"):
         finding(evidence=())
 
 
 def test_a_finding_cites_the_signature_that_produced_it():
 
-    with pytest.raises(ValueError, match="4.7"):
+    with pytest.raises(ValueError, match=r"4\.7"):
         finding(signature="  ")
 
 

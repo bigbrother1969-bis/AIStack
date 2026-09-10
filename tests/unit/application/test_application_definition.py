@@ -149,7 +149,7 @@ def test_a_syncthing_block_missing_its_own_required_field_is_named(
         """,
     )
 
-    with pytest.raises(ValueError, match="syncthing.*url"):
+    with pytest.raises(ValueError, match=r"syncthing.*url"):
         load_application_definition_yaml(path)
 
 

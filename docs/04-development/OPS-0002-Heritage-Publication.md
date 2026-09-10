@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.13
+  version: 1.14
   status: Draft
   owner: Operations
   created: 2026-08-27
@@ -145,9 +145,19 @@ test -z "$(git status --porcelain)" \
   && test "$(git rev-parse --abbrev-ref HEAD)" = main \
   && git am --3way <patch>... \
   && source scripts/dev-env.sh \
+  && ruff check src tests \
+  && mypy src \
   && pytest -q \
   && python3 -m aistack.cli.knowledge_integrity
 ```
+
+**`ruff` and `mypy` joined the chain 2026-09-10**, ahead of `pytest`
+rather than after it — both are near-instant against this codebase's
+size, and a static defect they catch is cheaper to learn about before
+waiting on the full suite than after. `pyproject.toml`'s own
+`[tool.ruff.lint]` and `[tool.mypy]` sections name what each checks, and,
+for `ruff`, what it deliberately leaves unselected as of 2026-09-10 — the
+choice is dated and reasoned there, not repeated here.
 
 **The chaining is the procedure, not a shell habit.** Until version 1.5 the
 same six commands were shown as six lines, the first two carrying `# must be
@@ -222,6 +232,8 @@ Run this first, from the publisher's clone:
 ```bash
 git pull --ff-only origin main \
   && source scripts/dev-env.sh \
+  && ruff check src tests \
+  && mypy src \
   && pytest -q \
   && python3 -m aistack.cli.knowledge_integrity
 ```
@@ -600,15 +612,18 @@ test -z "$(git status --porcelain)" \
   && git fetch origin \
   && test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" \
   && source scripts/dev-env.sh \
+  && ruff check src tests \
+  && mypy src \
   && pytest -q \
   && python3 -m aistack.cli.knowledge_integrity
 ```
 
-Four terms, and each refuses a different way of publishing something nobody can
-check: a dirty tree makes the label a lie; a branch other than `main` publishes
-what the SPOT does not carry; **a `HEAD` ahead of `origin/main` names a commit
-no recipient can fetch**; and a red suite or a blocking finding publishes a
-state this heritage says is unsound.
+Four preconditions, and each refuses a different way of publishing something
+nobody can check: a dirty tree makes the label a lie; a branch other than
+`main` publishes what the SPOT does not carry; **a `HEAD` ahead of
+`origin/main` names a commit no recipient can fetch**; and a static or
+dynamic check failing — `ruff`, `mypy`, a red suite, or a blocking finding —
+publishes a state this heritage says is unsound.
 
 **Before building a new version, every image `docker-compose.yml` still
 lists as current is re-verified against its own recorded digest** —

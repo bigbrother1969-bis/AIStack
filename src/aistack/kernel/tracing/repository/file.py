@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from aistack.generators.history import write_artifact_with_history
+from aistack.kernel.time import Provenance, next_version_from_history
 from aistack.kernel.tracing.repository.contract import TraceRepository
 from aistack.kernel.tracing.serialization import serialize_execution_trace
 from aistack.kernel.tracing.trace import ExecutionTrace
@@ -57,6 +58,19 @@ class FileTraceRepository(TraceRepository):
     .serialize_execution_trace`'s own shape) — accurate to what
     happened, not a promise that it round-trips to the original
     object.
+
+    **`version`/`provenance` — J3, Time Foundation, absorbed here as
+    the first proof of life
+    (`claude/PLAN-J3-TIME-FOUNDATION-2026-09-10.md`).** `save()` is
+    where both are computed, not `serialize_execution_trace` — this
+    method is the one place that already knows `output_path` (so
+    `aistack.kernel.time.next_version_from_history` can count how
+    many traces this same subject already has) and the trace's own
+    `resolution`/`request` (so a `Provenance` can name the `Task`
+    that produced it and the `Request` that caused it). Nothing about
+    `write_artifact_with_history`'s own mechanics changes — it still
+    receives a plain content string and a path, exactly as every
+    other historicised artifact does.
     """
 
     output_path: Path = field(default_factory=lambda: DEFAULT_OUTPUT_PATH)
@@ -68,9 +82,19 @@ class FileTraceRepository(TraceRepository):
     ) -> None:
         self.traces.append(trace)
 
+        version = next_version_from_history(
+            self.output_path.parent, self.output_path.stem
+        )
+        provenance = Provenance(
+            origin=trace.resolution.task.task_id,
+            causality=trace.request.request_id,
+        )
+
         content = (
             json.dumps(
-                serialize_execution_trace(trace),
+                serialize_execution_trace(
+                    trace, version=version, provenance=provenance
+                ),
                 indent=2,
                 ensure_ascii=False,
                 default=str,

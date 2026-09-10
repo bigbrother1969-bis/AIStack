@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from aistack.generators.history import write_artifact_with_history
+from aistack.kernel.time import Provenance, VersionId, next_version_from_history
 from aistack.priority.apply import ApplyReport
 
 
@@ -43,6 +43,9 @@ DEFAULT_OUTPUT_PATH = Path("reports/generated/resource-priority-decision.json")
 def serialize_decision(
     boosted: Mapping[str, bool],
     report: ApplyReport,
+    *,
+    version: VersionId,
+    provenance: Provenance,
 ) -> dict[str, Any]:
     """
     The JSON-safe shape one resource-priority decision is
@@ -57,10 +60,32 @@ def serialize_decision(
     unchanged rather than collapsed, so a reader can tell "already
     correct" from "just changed" from "gone" from "Docker refused"
     without re-deriving it.
+
+    **No `observed_at` field any more — J3, Time Foundation
+    (`claude/PLAN-J3-TIME-FOUNDATION-2026-09-10.md`).** This was the
+    one inconsistency that plan's own research found between the
+    two file-backed historisation streams: `ExecutionTrace` never
+    carried a timestamp in its content, deliberately, because the
+    history filename `write_artifact_with_history` writes already
+    states the instant; this module's own `observed_at` duplicated
+    exactly that fact, and could in principle drift from it. Removed
+    here to align with the rule `ExecutionTrace` already followed,
+    not to add a new one. `version`/`provenance` are new instead —
+    the two governed facts J3 asks every historicised stream to
+    carry, supplied by the caller (`record_decision`) rather than
+    computed here, the same separation `serialize_execution_trace`
+    keeps.
     """
 
     return {
-        "observed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "version": {
+            "subject": version.subject,
+            "sequence": version.sequence,
+        },
+        "provenance": {
+            "origin": provenance.origin,
+            "causality": provenance.causality,
+        },
         "boosted": dict(boosted),
         "applied": list(report.applied),
         "unchanged": list(report.unchanged),
@@ -84,14 +109,27 @@ def record_decision(
     and nothing was written — a caller in a tight poll loop can
     call this every cycle without checking first, the same way it
     already calls `log_cycle` every cycle unconditionally.
+
+    **`version`/`provenance` — J3, absorbed here as the second proof
+    of life.** `version` comes from `aistack.kernel.time
+    .next_version_from_history`, counting this subject's own history
+    under `output_path`'s directory — the same durable, no-second-
+    counter approach `FileTraceRepository.save()` uses.
+    `provenance.origin` names the monitor loop that is the only
+    producer this history has ever had; `causality` stays `None` —
+    nothing today models a `Request` that causes a CPU decision, so
+    there is nothing honest to put there yet.
     """
 
     if not report.changed:
         return None
 
+    version = next_version_from_history(output_path.parent, output_path.stem)
+    provenance = Provenance(origin="aistack.priority.resource_priority_monitor")
+
     content = (
         json.dumps(
-            serialize_decision(boosted, report),
+            serialize_decision(boosted, report, version=version, provenance=provenance),
             indent=2,
             ensure_ascii=False,
         )

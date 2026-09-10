@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from aistack.kernel.execution import Observation, ObservationContext, Request
 from aistack.kernel.resolution import ResolutionResult
+from aistack.kernel.time import Provenance, VersionId
 from aistack.kernel.tracing import (
     ExecutionPhase,
     ExecutionTrace,
@@ -15,6 +16,10 @@ from aistack.kernel.tracing import (
     ExecutionTraceEventType,
     serialize_execution_trace,
 )
+
+
+_VERSION = VersionId(subject="execution-trace", sequence=1)
+_PROVENANCE = Provenance(origin="task.fake", causality="request-001")
 
 
 class FakeTask:
@@ -77,7 +82,9 @@ def _trace() -> ExecutionTrace:
 
 
 def test_it_serializes_the_request():
-    serialized = serialize_execution_trace(_trace())
+    serialized = serialize_execution_trace(
+        _trace(), version=_VERSION, provenance=_PROVENANCE
+    )
 
     assert serialized["request"] == {
         "request_id": "request-001",
@@ -93,7 +100,9 @@ def test_it_serializes_the_resolution_without_the_live_task_object():
     written is exactly what identifies and explains the resolution.
     """
 
-    serialized = serialize_execution_trace(_trace())
+    serialized = serialize_execution_trace(
+        _trace(), version=_VERSION, provenance=_PROVENANCE
+    )
 
     assert serialized["resolution"] == {
         "task_id": "task.fake",
@@ -105,7 +114,9 @@ def test_it_serializes_the_resolution_without_the_live_task_object():
 
 
 def test_it_serializes_the_observation_and_its_children_recursively():
-    serialized = serialize_execution_trace(_trace())
+    serialized = serialize_execution_trace(
+        _trace(), version=_VERSION, provenance=_PROVENANCE
+    )
 
     assert serialized["observation"]["context"]["component_id"] == "task.fake"
     assert serialized["observation"]["data"] == {
@@ -116,7 +127,9 @@ def test_it_serializes_the_observation_and_its_children_recursively():
 
 
 def test_it_serializes_events_with_plain_string_enum_values():
-    serialized = serialize_execution_trace(_trace())
+    serialized = serialize_execution_trace(
+        _trace(), version=_VERSION, provenance=_PROVENANCE
+    )
 
     assert serialized["events"] == [
         {
@@ -131,4 +144,24 @@ def test_it_serializes_events_with_plain_string_enum_values():
 def test_the_result_is_actually_json_serializable():
     import json
 
-    json.dumps(serialize_execution_trace(_trace()))
+    json.dumps(
+        serialize_execution_trace(_trace(), version=_VERSION, provenance=_PROVENANCE)
+    )
+
+
+def test_it_serializes_version_and_provenance():
+    """
+    J3, Time Foundation — the two governed facts every historicised
+    stream now carries, supplied by the caller
+    (`FileTraceRepository.save()`) rather than derived here.
+    """
+
+    serialized = serialize_execution_trace(
+        _trace(), version=_VERSION, provenance=_PROVENANCE
+    )
+
+    assert serialized["version"] == {"subject": "execution-trace", "sequence": 1}
+    assert serialized["provenance"] == {
+        "origin": "task.fake",
+        "causality": "request-001",
+    }

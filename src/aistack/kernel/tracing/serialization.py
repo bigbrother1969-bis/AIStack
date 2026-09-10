@@ -3,10 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 from aistack.kernel.execution import Observation
+from aistack.kernel.time import Provenance, VersionId
 from aistack.kernel.tracing.trace import ExecutionTrace
 
 
-def serialize_execution_trace(trace: ExecutionTrace) -> dict[str, Any]:
+def serialize_execution_trace(
+    trace: ExecutionTrace,
+    *,
+    version: VersionId,
+    provenance: Provenance,
+) -> dict[str, Any]:
     """
     An `ExecutionTrace` as a JSON-safe `dict` — the shape
     `FileTraceRepository` persists.
@@ -32,9 +38,29 @@ def serialize_execution_trace(trace: ExecutionTrace) -> dict[str, Any]:
     second, independent timestamp inside the content would be one
     more fact that can drift from the one the filename already
     states.
+
+    **`version` and `provenance` are new, J3 (Time Foundation,
+    `claude/PLAN-J3-TIME-FOUNDATION-2026-09-10.md`).** Both are
+    supplied by the caller rather than computed here —
+    `FileTraceRepository.save()` is what knows where this trace is
+    about to be written (so it can ask `aistack.kernel.time
+    .next_version_from_history` how many came before) and what
+    caused it (`trace.request.request_id`); this function stays a
+    pure, easily-tested mapping from an `ExecutionTrace` plus those
+    two governed facts to a JSON-safe `dict`, the same separation of
+    concerns it already kept between serialization and the I/O
+    `FileTraceRepository` performs.
     """
 
     return {
+        "version": {
+            "subject": version.subject,
+            "sequence": version.sequence,
+        },
+        "provenance": {
+            "origin": provenance.origin,
+            "causality": provenance.causality,
+        },
         "request": {
             "request_id": trace.request.request_id,
             "task_id": trace.request.task_id,

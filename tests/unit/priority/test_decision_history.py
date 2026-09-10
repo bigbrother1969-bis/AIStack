@@ -20,12 +20,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from aistack.kernel.time import Provenance, VersionId
 from aistack.priority.apply import ApplyReport
 from aistack.priority.decision_history import (
     DEFAULT_OUTPUT_PATH,
     record_decision,
     serialize_decision,
 )
+
+
+_VERSION = VersionId(subject="resource-priority-decision", sequence=1)
+_PROVENANCE = Provenance(origin="aistack.priority.resource_priority_monitor")
 
 
 def test_serialize_decision_carries_every_outcome_bucket():
@@ -38,7 +43,10 @@ def test_serialize_decision_carries_every_outcome_bucket():
     )
 
     serialized = serialize_decision(
-        boosted={"jellyfin": True, "radarr": False}, report=report
+        boosted={"jellyfin": True, "radarr": False},
+        report=report,
+        version=_VERSION,
+        provenance=_PROVENANCE,
     )
 
     assert serialized["boosted"] == {"jellyfin": True, "radarr": False}
@@ -49,17 +57,44 @@ def test_serialize_decision_carries_every_outcome_bucket():
     assert serialized["dry_run"] is True
 
 
-def test_serialize_decision_stamps_an_iso_timestamp():
-    serialized = serialize_decision(boosted={}, report=ApplyReport())
+def test_serialize_decision_carries_no_observed_at_field():
+    """
+    J3, Time Foundation: dropped to align with `ExecutionTrace`'s own
+    rule that the history filename is the one source of truth for
+    when — this field used to duplicate it.
+    """
 
-    assert serialized["observed_at"][:4].isdigit()
-    assert "T" in serialized["observed_at"]
+    serialized = serialize_decision(
+        boosted={}, report=ApplyReport(), version=_VERSION, provenance=_PROVENANCE
+    )
+
+    assert "observed_at" not in serialized
+
+
+def test_serialize_decision_carries_version_and_provenance():
+    serialized = serialize_decision(
+        boosted={"jellyfin": True},
+        report=ApplyReport(applied=("jellyfin",)),
+        version=_VERSION,
+        provenance=_PROVENANCE,
+    )
+
+    assert serialized["version"] == {
+        "subject": "resource-priority-decision",
+        "sequence": 1,
+    }
+    assert serialized["provenance"] == {
+        "origin": "aistack.priority.resource_priority_monitor",
+        "causality": None,
+    }
 
 
 def test_the_result_is_actually_json_serializable():
     serialized = serialize_decision(
         boosted={"jellyfin": True},
         report=ApplyReport(applied=("jellyfin",)),
+        version=_VERSION,
+        provenance=_PROVENANCE,
     )
 
     json.dumps(serialized)
@@ -92,6 +127,49 @@ def test_record_decision_writes_the_latest_path_on_a_real_change(tmp_path: Path)
     assert written == output_path
     content = json.loads(output_path.read_text(encoding="utf-8"))
     assert content["boosted"] == {"jellyfin": True}
+
+
+def test_record_decision_stamps_version_and_provenance(tmp_path: Path):
+    output_path = tmp_path / "resource-priority-decision.json"
+
+    record_decision(
+        boosted={"jellyfin": True},
+        report=ApplyReport(applied=("jellyfin",)),
+        output_path=output_path,
+    )
+
+    content = json.loads(output_path.read_text(encoding="utf-8"))
+    assert content["version"] == {
+        "subject": "resource-priority-decision",
+        "sequence": 1,
+    }
+    assert content["provenance"] == {
+        "origin": "aistack.priority.resource_priority_monitor",
+        "causality": None,
+    }
+
+
+def test_record_decision_advances_the_version_sequence_across_calls(
+    tmp_path: Path,
+):
+    output_path = tmp_path / "resource-priority-decision.json"
+
+    record_decision(
+        boosted={"jellyfin": True},
+        report=ApplyReport(applied=("jellyfin",)),
+        output_path=output_path,
+    )
+    record_decision(
+        boosted={"jellyfin": False},
+        report=ApplyReport(applied=("jellyfin",)),
+        output_path=output_path,
+    )
+
+    content = json.loads(output_path.read_text(encoding="utf-8"))
+    assert content["version"] == {
+        "subject": "resource-priority-decision",
+        "sequence": 2,
+    }
 
 
 def test_record_decision_keeps_history_like_every_other_historicised_artifact(

@@ -77,6 +77,44 @@ def test_save_writes_the_latest_path(tmp_path: Path):
     assert written["request"]["request_id"] == "request-001"
 
 
+def test_save_stamps_a_version_and_provenance(tmp_path: Path):
+    """
+    J3, Time Foundation, absorbed here as the first proof of life —
+    `provenance.origin` names the `Task` that produced the trace,
+    `provenance.causality` the `Request` that caused it.
+    """
+
+    output_path = tmp_path / "execution-trace.json"
+    repository = FileTraceRepository(output_path=output_path)
+
+    repository.save(_trace("request-001"))
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["version"] == {"subject": "execution-trace", "sequence": 1}
+    assert written["provenance"] == {
+        "origin": "task.fake",
+        "causality": "request-001",
+    }
+
+
+def test_save_advances_the_version_sequence_across_calls(tmp_path: Path):
+    """
+    Durable across calls without a second counter — the sequence is
+    read back from this subject's own history on disk
+    (`aistack.kernel.time.next_version_from_history`), the same
+    mechanism a fresh process restarting this repository would use.
+    """
+
+    output_path = tmp_path / "execution-trace.json"
+    repository = FileTraceRepository(output_path=output_path)
+
+    repository.save(_trace("request-001"))
+    repository.save(_trace("request-002"))
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["version"] == {"subject": "execution-trace", "sequence": 2}
+
+
 def test_save_keeps_observation_history_like_every_provider_artifact(tmp_path: Path):
     # Two real-clock writes can land in the same wall-clock second,
     # where a filename-string sort does not equal chronological

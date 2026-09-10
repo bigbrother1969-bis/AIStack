@@ -1,5 +1,6 @@
 from aistack.kernel.time.event import TemporalEvent
 from aistack.kernel.time.provenance import Provenance
+from aistack.kernel.time.sequence import next_version_from_history
 from aistack.kernel.time.snapshot import Snapshot
 from aistack.kernel.time.version import VersionId, VersionSequence
 
@@ -9,4 +10,5 @@ __all__ = [
     "Snapshot",
     "VersionId",
     "VersionSequence",
+    "next_version_from_history",
 ]

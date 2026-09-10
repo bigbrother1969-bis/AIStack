@@ -6,7 +6,28 @@ from aistack.kernel.catalog import Catalog, CatalogItem
 
 
 class ComposeRuntimeCatalogBuilder:
-    """Build a governed catalog from Docker Compose observations."""
+    """Build a governed catalog from Docker Compose observations.
+
+    **Keeps the project's own membership, not only its count.**
+    Until 2026-09-10 this builder reduced `project["services"]` —
+    the container names `ComposeProvider.collect()` already
+    resolves, one per service — to `service_count`, a number. The
+    raw observation always carried the edge a knowledge graph of
+    the infrastructure needs (which containers belong to which
+    project); this builder discarded it before it ever reached a
+    governed `Catalog`. Named while scoping `PLAN-TRAJECTOIRE-
+    2026-09-04` jalon J2 — rendering the reconstructed
+    `architecture.html` groups containers by their Compose
+    project, which this gap made impossible to do from the
+    Catalog alone.
+
+    **Sorted, not passed through in insertion order.** A `dict`
+    iterates in the order its keys were first set, which for
+    `project["services"]` is the order `docker ps` listed
+    containers in — the same instability `DockerRuntimeCatalogBuilder`
+    already sorts `mounts` and `images` against (`ARC-P-006`: this
+    family showed it, so only this family is sorted).
+    """
 
     def build(self, observation: dict[str, Any]) -> Catalog:
         projects = observation["compose"]["projects"]
@@ -28,8 +49,19 @@ class ComposeRuntimeCatalogBuilder:
                         "working_dir": project.get("working_dir") or "",
                         "config_files": project.get("config_files") or "",
                         "service_count": str(len(project.get("services", {}))),
+                        "containers": self._sorted_containers(
+                            project.get("services", {})
+                        ),
                     },
                 )
                 for project in projects
             ],
         )
+
+    def _sorted_containers(self, services: dict[str, Any]) -> str:
+        names = {
+            str(service["container_name"])
+            for service in services.values()
+            if service.get("container_name")
+        }
+        return ",".join(sorted(names))

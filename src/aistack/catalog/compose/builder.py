@@ -27,6 +27,13 @@ class ComposeRuntimeCatalogBuilder:
     containers in — the same instability `DockerRuntimeCatalogBuilder`
     already sorts `mounts` and `images` against (`ARC-P-006`: this
     family showed it, so only this family is sorted).
+
+    **`items` is a tuple, matching what `Catalog` declares.** Until
+    2026-09-10 this method built it as a list comprehension —
+    `Catalog.items: tuple[CatalogItem, ...]` accepted it without
+    complaint at runtime, since a dataclass field's declared type is
+    not enforced, but `mypy` named the mismatch on its first run
+    against this codebase.
     """
 
     def build(self, observation: dict[str, Any]) -> Catalog:
@@ -39,7 +46,7 @@ class ComposeRuntimeCatalogBuilder:
                 "source_provider": observation["provider"]["id"],
                 "collected_at": observation["collected_at"],
             },
-            items=[
+            items=tuple(
                 CatalogItem(
                     id=project["name"],
                     label=project["name"],
@@ -55,7 +62,7 @@ class ComposeRuntimeCatalogBuilder:
                     },
                 )
                 for project in projects
-            ],
+            ),
         )
 
     def _sorted_containers(self, services: dict[str, Any]) -> str:

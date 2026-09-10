@@ -17,7 +17,26 @@ def test_contract_registry_registers_contract() -> None:
 
     registry = ContractRegistry()
 
-    registry.register(CatalogViewEngine)
+    registry.register_contract(CatalogViewEngine)
+
+    assert registry.contains("CatalogViewEngine")
+    assert registry.get("CatalogViewEngine") is CatalogViewEngine
+
+
+def test_the_inherited_register_still_takes_an_identifier_and_an_entry() -> None:
+    """
+    `register_contract` is a convenience layered on top of
+    `Registry.register`, not a replacement for it — the base method
+    stays reachable, and any polymorphic caller holding a
+    `Registry[Type]` reference can still call it exactly as documented
+    on `Registry` itself. Found missing 2026-09-10 by `mypy`, which
+    flagged the class's own `register` override as incompatible with
+    its superclass before this rename.
+    """
+
+    registry = ContractRegistry()
+
+    registry.register("CatalogViewEngine", CatalogViewEngine)
 
     assert registry.contains("CatalogViewEngine")
     assert registry.get("CatalogViewEngine") is CatalogViewEngine

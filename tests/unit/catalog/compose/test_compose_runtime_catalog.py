@@ -30,6 +30,22 @@ def test_the_builder_returns_a_governed_catalog():
     assert catalog.metadata["collected_at"] == "2026-09-10T09:00:00+00:00"
 
 
+def test_items_is_a_tuple_matching_what_catalog_declares():
+    """
+    `Catalog.items: tuple[CatalogItem, ...]` — until 2026-09-10 this
+    builder passed a list comprehension instead, which Python's own
+    dataclass machinery accepts without complaint (a declared field
+    type is not enforced at runtime). `mypy` found the mismatch on
+    its first run against this codebase.
+    """
+
+    catalog = ComposeRuntimeCatalogBuilder().build(
+        observation(project("aistack", web={"container_name": "aistack-core"}))
+    )
+
+    assert isinstance(catalog.items, tuple)
+
+
 def test_a_project_carries_its_own_container_membership():
     """
     Until 2026-09-10 a project's `services` collapsed to a count —

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.93
+  version: 1.94
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -214,15 +214,54 @@ by OS-036, and emptied again by the rule OS-036 produced.*
 
 # Defects
 
-None open. OS-009, OS-010, OS-044, OS-052, OS-053 and OS-056 are in
-*Resolved*.
+**OS-058 open.** OS-009, OS-010, OS-044, OS-052, OS-053, OS-056 and OS-057
+are in *Resolved*.
 
 *An empty section is kept rather than removed: a register with no defects
 section could not be told from one that never looked for any. That argument was
 hypothetical when it was written and stopped being so on 2026-08-29 — the
 section held an entry for a few hours, between the measurement that found a
 forty-day defect and the host that closed it. Emptied again on 2026-09-04,
-by the fix `OS-053` itself proposed.*
+by the fix `OS-053` itself proposed. Held open for the first time on
+2026-09-10 by `OS-058` — the first entry in this register's history, in any
+section, deliberately left open rather than resolved or qualified the day it
+was found, because its resolution belongs to a different piece of work than
+the one that found it (see the entry).*
+
+#### GOV-0002/OS-058 — A second, unwired `KnowledgeArtifact`/`KnowledgeProvenance` exists, distinct from the one production uses
+
+**Nature** `defect` · **Opened** 2026-09-10 · **State** open
+**Observed** `aistack.kernel.knowledge.artifact.model.KnowledgeArtifact`
+(carrying `KnowledgeProvenance{source, provider}`, a bare `version: int`,
+`KnowledgeLifecycle`, `KnowledgeScore`) is a second, independent definition
+of `KnowledgeArtifact`, distinct from `aistack.contracts.artifact
+.KnowledgeArtifact` — the one every real provider, the Context Bundle, and
+`transport` actually fill. Introduced by `bfc939d` "introduce governed
+knowledge artifacts" and `f23152d` "align knowledge services with governed
+artifact model", never called from any CLI or generator since. Its only
+persistence is `InMemoryKnowledgeArtifactRepository`
+(`kernel/knowledge/repository/memory.py`) — no
+`FileKnowledgeArtifactRepository` exists, so no instance of it has ever
+survived a process. Found while researching J3 — Time Foundation
+(`claude/PLAN-J3-TIME-FOUNDATION-2026-09-10.md`), whose own `Provenance`/
+`VersionId` contracts (`aistack.kernel.time`, patch delivering this entry)
+supersede `KnowledgeProvenance`/`version: int` for the streams J3 actually
+governs — Observation History and Runtime Operation History. This second
+`KnowledgeArtifact` belongs to a different one of the four orthogonal
+histories, Knowledge Heritage History, and its resolution (merge into the
+production `KnowledgeArtifact`, rewrite, or removal) is a decision about
+that stream, not about Time Foundation — left open rather than folded into
+J3's patches, per the owner's own choice 2026-09-10 ("Ouvrir l'entrée
+maintenant, résoudre plus tard").
+**Derivable** yes — `aistack.contracts.artifact.KnowledgeArtifact` and
+`aistack.kernel.knowledge.artifact.model.KnowledgeArtifact` are two classes
+of the same name with disjoint call graphs; a search for every
+production-reachable construction of each already shows only one of them
+has any.
+**Qualification** which of the two `KnowledgeArtifact` definitions is the
+one to keep, and what becomes of the other's fields (`KnowledgeLifecycle`,
+`KnowledgeScore`) that the kept one may or may not need — the owner's
+decision, not made here.
 
 ---
 
@@ -290,6 +329,40 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-057 — A second, unwired execution-event model sat undocumented since 2026-07-22
+
+**Nature** `defect` · **Opened** 2026-09-10 · **State** resolved 2026-09-10 by removing `aistack.core.execution.*`
+**Observed** `aistack.core.execution.*` (`ExecutionEvent`, `ExecutionContext`,
+`ExecutionPhase` as an open dataclass, `ExecutionEventType`, `observers/*`)
+entered the repository in a single commit, `530c7f2` "refactor(location):
+rename filesystem implementations" (2026-07-22) — a message about an
+unrelated rename, never mentioning the 128 lines it added. Never touched
+again in two months. Zero callers outside its own tests
+(`tests/unit/core/execution/**`, 326 lines, all construction/immutability
+assertions, no integration). Absent from every ADR, every session doc, and
+this register — the same shape of duplication `OS-041`/`OS-042` already
+named once, for `KnowledgePackage`, except this one had never been found;
+neither `unused-registrations` nor any prior review caught it. Found only
+while researching J3 — Time Foundation
+(`claude/PLAN-J3-TIME-FOUNDATION-2026-09-10.md`), which exists to name the
+one governed event model this heritage actually uses
+(`aistack.kernel.tracing`, wired into `KernelRuntime`, built across a
+documented commit sequence and closed by `OS-045`) — a second, silent one
+sitting beside it contradicts what that milestone is for.
+**Derivable** yes — a class hierarchy with no caller outside its own test
+package and no doc reference anywhere under `docs/` is exactly what a
+`grep -rl` review against `docs/` and `src/` for each new top-level package
+would have caught, had one run at the time.
+**Resolved 2026-09-10.** `aistack.core.execution.*` and
+`tests/unit/core/execution/**` removed in full, along with the now-empty
+`aistack.core`/`tests/unit/core` packages themselves. Confirmed by the same
+measurement that found it: nothing else in the repository imported either.
+**Qualification** none required — dead, undocumented code with a real,
+documented replacement already in production use; removing it is not a
+behaviour decision.
+
+---
 
 #### GOV-0002/OS-056 — A real `pip install .` carried no `.yml` or `.js` data file
 

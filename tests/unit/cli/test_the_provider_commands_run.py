@@ -27,6 +27,14 @@ would have gone green through the whole forty days.**
 Docker itself is exercised nowhere: the daemon would make these
 results depend on the machine, and what is under test is the wiring
 between the CLI, the Kernel and the generator.
+
+A fifth command joined the same way, 2026-09-10: `architecture_render`
+(J2 step 6, `claude/PLAN-J2-ARCHITECTURE-HTML-2026-09-10.md`) is the
+first to reach *both* providers itself, composing what
+`docker_catalog` and `compose_catalog` each already prove individually
+reachable. The title still names four — the incident it records
+involved exactly those four, and stays what happened rather than a
+running count of this file's own tests.
 """
 
 from __future__ import annotations
@@ -37,6 +45,7 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import (
+    architecture_render,
     compose_catalog,
     docker_catalog,
     docker_discover,
@@ -217,6 +226,30 @@ def test_docker_selection_catalog_writes_its_artifact(
     assert [item["label"] for item in view["items"]] == ["aistack-web"]
 
 
+def test_architecture_render_writes_the_html_artifact(stubbed_providers, workspace):
+    """
+    J2 step 6: the fifth command, and the first to reach both
+    providers itself rather than just one. Neither fake container
+    matches any container the real, shipped
+    `service_categorization.yml` declares, so nothing in this run
+    is `IN_COMPOSE_PROJECT` or `OBSERVED` — every status combination
+    is already exhaustively covered by `test_graph.py` and
+    `test_mermaid.py` against synthetic fixtures. What this asserts
+    is the wiring: the command reaches both providers, builds both
+    catalogs, loads the real categorization, and writes a page that
+    names a real declared service.
+    """
+
+    architecture_render.main()
+
+    path = workspace / "reports" / "generated" / "architecture.html"
+    assert path.exists()
+
+    document = path.read_text(encoding="utf-8")
+    assert document.startswith("<!doctype html>")
+    assert "Nginx Proxy Manager" in document
+
+
 def test_every_provider_command_reaches_its_provider(
     stubbed_providers, workspace
 ):
@@ -257,5 +290,6 @@ def test_every_provider_command_reaches_its_provider(
         docker_discover.main()
         docker_selection_catalog.main()
         compose_catalog.main()
+        architecture_render.main()
 
-    assert calls == ["docker", "docker", "docker", "compose"]
+    assert calls == ["docker", "docker", "docker", "compose", "docker", "compose"]

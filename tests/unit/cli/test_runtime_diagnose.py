@@ -118,12 +118,23 @@ def run(
     cpu=None,
     commands=None,
     processes=None,
+    hostname=None,
 ) -> int:
     monkeypatch.setattr(
         cli,
         "DockerProvider",
         lambda: FakeProvider(logs, cpu, commands, processes),
     )
+
+    # `None` leaves the real `socket.gethostname()` in place — the
+    # same choice every other test here already makes for
+    # `HostProvider`: this machine's own name will not match any host
+    # `DEFAULT_STORAGE_THRESHOLDS` declares, so storage capacity is
+    # silently not checked, the documented behaviour for a host with
+    # nothing declared for it, not a fake to maintain.
+    if hostname is not None:
+        monkeypatch.setattr(cli.socket, "gethostname", lambda: hostname)
+
     monkeypatch.setattr(
         "sys.argv",
         ["runtime_diagnose", "--catalogue", str(catalogue_file), *argv],
@@ -633,6 +644,157 @@ def test_the_governed_resource_priority_definition_is_the_default():
 
     assert cli.DEFAULT_RESOURCE_PRIORITY.exists()
     assert cli.DEFAULT_RESOURCE_PRIORITY.name == "resource_priority.yml"
+
+
+# --------------------------------------------------------------------
+# Storage capacity, STD-0300 4.5 / OPS-0004 deployment-misconfiguration
+# --------------------------------------------------------------------
+
+
+@pytest.fixture
+def storage_mount(tmp_path: Path) -> Path:
+    """
+    A real directory `StorageProvider.collect_usage` can call
+    `shutil.disk_usage` against — the same choice `HostProvider` is
+    left unfaked for throughout this file: reading this machine's own
+    filesystem is safe and needs no fake, unlike `docker stats`.
+    """
+
+    mount = tmp_path / "volume"
+    mount.mkdir()
+    return mount
+
+
+def storage_thresholds_yaml(mount: Path, free_gb: float) -> str:
+    return f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - mount: {mount}
+        kind: free_bytes
+        free_gb: {free_gb}
+"""
+
+
+@pytest.fixture
+def storage_thresholds_file(tmp_path: Path, storage_mount: Path) -> Path:
+    path = tmp_path / "storage_thresholds.yml"
+    # Free space this large is never actually crossed by any real
+    # filesystem, so every use of this fixture starts from "short" —
+    # the same "declare it already short" shape `resource_priority_file`
+    # gives the CPU-consumption tests above.
+    path.write_text(
+        storage_thresholds_yaml(storage_mount, free_gb=999_999_999),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_a_mount_below_its_threshold_is_reported(
+    monkeypatch, catalogue_file, storage_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", storage_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="test-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "OPS-0004" in out
+    assert "qualifications: OPS-0004/deployment-misconfiguration" in out
+
+
+def test_a_mount_above_its_threshold_is_not_reported(
+    monkeypatch, catalogue_file, tmp_path, storage_mount, capsys
+):
+    path = tmp_path / "storage_thresholds.yml"
+    path.write_text(
+        storage_thresholds_yaml(storage_mount, free_gb=0), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", path)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="test-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "deployment-misconfiguration" not in out
+
+
+def test_a_host_with_nothing_declared_still_diagnoses(
+    monkeypatch, catalogue_file, storage_thresholds_file, capsys
+):
+    """
+    `storage_thresholds_file` only declares `test-host` — running as
+    a host it says nothing about is a true, ungoverned-by-OPS-0005
+    state (FDN-0003 Article 12), not a reason to refuse the rest of
+    the diagnosis, the same convention a missing resource-priority
+    definition already holds.
+    """
+
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", storage_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="a-third-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert (
+        "Storage thresholds: no storage thresholds declared for host "
+        "'a-third-host'" in out
+    )
+
+
+def test_a_missing_storage_threshold_definition_still_diagnoses(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    monkeypatch.setattr(
+        cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml"
+    )
+
+    code = run(monkeypatch, catalogue_file, {"gluetun": ["quiet"]})
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "Storage thresholds: no storage-threshold definition at" in out
+
+
+def test_a_storage_finding_and_a_log_finding_both_raise_the_exit_code(
+    monkeypatch, catalogue_file, storage_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", storage_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["AUTH_FAILED"]},
+        hostname="test-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "findings: 2" in out
+
+
+def test_the_governed_storage_thresholds_definition_is_the_default():
+    """
+    Mirrors `test_the_governed_resource_priority_definition_is_the_default`.
+    """
+
+    assert cli.DEFAULT_STORAGE_THRESHOLDS.exists()
+    assert cli.DEFAULT_STORAGE_THRESHOLDS.name == "storage_thresholds.yml"
 
 
 # --------------------------------------------------------------------

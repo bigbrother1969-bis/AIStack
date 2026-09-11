@@ -55,3 +55,54 @@ class StorageThreshold:
             raise ValueError(
                 f"{self.mount} declares a negative threshold: {self.value}"
             )
+
+
+@dataclass(frozen=True)
+class HostStorageThresholds:
+    """
+    One host's own declared storage thresholds.
+
+    `OPS-0005` scopes every threshold to the host it was declared
+    for — GIGABYTE and the Raspberry mount different volumes at
+    different sizes, and the same `mount` string (`/`) means a
+    different threshold on each. `host` is matched against
+    `socket.gethostname()` by the caller
+    (`aistack.cli.runtime_diagnose`), not by this type — the same
+    "the caller says what to look at" split `find_storage_shortage`
+    already holds for which mounts a `StorageProvider` reads.
+    """
+
+    host: str
+    thresholds: tuple[StorageThreshold, ...]
+
+    def __post_init__(self) -> None:
+        if not self.host.strip():
+            raise ValueError(
+                "a host's storage thresholds name no host"
+            )
+
+
+@dataclass(frozen=True)
+class StorageThresholdRegister:
+    """
+    Every host's declared storage thresholds, as `OPS-0005`'s YAML
+    file loads it
+    (`aistack.providers.filesystem.yaml.load_storage_thresholds_yaml`).
+
+    `for_host` is this type's own query, mirroring `StorageReading
+    .percent_used` — a pure derivation from data the type already
+    holds, not a second copy kept elsewhere by the caller. A host
+    with no entry returns `()`: "not declared for this host", not
+    "declared as nothing to check" — the same `FDN-0003` Article 12
+    absence `find_storage_shortage` already holds for a mount with no
+    threshold at all.
+    """
+
+    hosts: tuple[HostStorageThresholds, ...]
+
+    def for_host(self, hostname: str) -> tuple[StorageThreshold, ...]:
+        for entry in self.hosts:
+            if entry.host == hostname:
+                return entry.thresholds
+
+        return ()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -9,6 +10,8 @@ from aistack.contracts.development_flag import DevelopmentFlagFinding
 from aistack.contracts.lifecycle import LifecycleRegister
 from aistack.contracts.runtime_finding import CitedReading, MatchedLine, RuntimeFinding
 from aistack.contracts.signature import SignatureCatalogue
+from aistack.contracts.storage_shortage import StorageShortage
+from aistack.contracts.storage_threshold import StorageThreshold
 from aistack.contracts.temperature_reading import TemperatureReading
 from aistack.contracts.unexplained_consumption import UnexplainedConsumption
 from aistack.policies.lifecycle_register import (
@@ -22,14 +25,18 @@ from aistack.policies.signature_catalogue import (
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.yaml import load_resource_priority_yaml
 from aistack.providers.docker import DockerProvider
+from aistack.providers.filesystem import StorageProvider
+from aistack.providers.filesystem.yaml import load_storage_thresholds_yaml
 from aistack.providers.host.provider import HostProvider
 from aistack.runtime.correlation import correlate_findings
 from aistack.runtime.deployment_definition import extract_dockerfile_command
 from aistack.runtime.development_flags import find_development_flags
 from aistack.runtime.evaluate import evaluate
+from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.grounding import ground_findings
 from aistack.runtime.idle_consumption import find_unexplained_consumption
 from aistack.runtime.qualification import qualify
+from aistack.runtime.storage_shortage import find_storage_shortage
 
 
 # The governed catalogue, relative to the repository root.
@@ -137,6 +144,67 @@ def resource_priority_definition(
             f"resource-priority definition not readable ({error}); "
             f"consumption is not checked"
         )
+
+
+# `OPS-0005`'s declared storage thresholds, next to `StorageProvider`
+# rather than next to the catalogue — the contracts a fleet-wide
+# threshold file loads into already live under `aistack.contracts`
+# alongside `StorageReading`/`StorageShortage`, so this is the one
+# domain package (`providers/filesystem`) storage's own code already
+# shares, the same way `resource_priority.yml` sits in `priority/`.
+#
+# **Optional, the same way the resource-priority definition is.** A
+# host with no file yet, or none of its own hosts declared in it,
+# still diagnoses — storage capacity is simply not checked, reported
+# rather than assumed clean (`FDN-0003` Article 12).
+DEFAULT_STORAGE_THRESHOLDS = (
+    Path(__file__).resolve().parents[1]
+    / "providers"
+    / "filesystem"
+    / "definitions"
+    / "storage_thresholds.yml"
+)
+
+
+def storage_thresholds(
+    path: Path, hostname: str
+) -> tuple[tuple[StorageThreshold, ...], str]:
+    """
+    Read `path`'s declared storage thresholds for `hostname`, or an
+    empty tuple with a note explaining why — never raises.
+
+    `hostname` narrows a fleet-wide file (GIGABYTE and the Raspberry
+    both declared in the same `storage_thresholds.yml`) to the one
+    host this process is actually running on. `main` passes
+    `socket.gethostname()` — not a command-line flag — the same "this
+    process only ever examines the host it runs on" scope
+    `DockerProvider`/`HostProvider` already hold without being told
+    which host that is.
+    """
+
+    if not path.exists():
+        return (), (
+            f"no storage-threshold definition at {path}; storage "
+            f"capacity is not checked"
+        )
+
+    try:
+        register = load_storage_thresholds_yaml(path)
+    except (ValueError, OSError) as error:
+        return (), (
+            f"storage-threshold definition not readable ({error}); "
+            f"storage capacity is not checked"
+        )
+
+    thresholds = register.for_host(hostname)
+
+    if not thresholds:
+        return (), (
+            f"no storage thresholds declared for host {hostname!r} in "
+            f"{path}; storage capacity is not checked"
+        )
+
+    return thresholds, ""
 
 
 # The two containers this repository actually builds, and the
@@ -316,6 +384,7 @@ def report(
     development_flags: tuple[DevelopmentFlagFinding, ...] = (),
     commands_note: str = "",
     correlated: tuple[CorrelatedFinding, ...] = (),
+    storage_note: str = "",
 ) -> None:
     """
     Print every section this diagnosis has evidence for.
@@ -340,6 +409,9 @@ def report(
 
     if resource_note:
         print(f"- Resource priority: {resource_note}")
+
+    if storage_note:
+        print(f"- Storage thresholds: {storage_note}")
 
     if commands_note:
         print(f"- Commands: {commands_note}")
@@ -532,6 +604,27 @@ def main() -> None:
     # reported as a sixth, separate section.
     findings.extend(evaluate(consumption, temperatures))
 
+    # Storage, `PLAN-J7`'s second domain: a fleet-wide file
+    # (`DEFAULT_STORAGE_THRESHOLDS`) narrowed to this host's own
+    # entry before anything is read, so a threshold declared for the
+    # other host never applies here by accident. Merged into the same
+    # `findings` list `evaluate`'s own output already joined, ahead of
+    # `ground_findings`, for the same reason: every finding this run
+    # produces is grounded against OPS-0003 the same way, rather than
+    # as a differently-treated batch.
+    thresholds, storage_note = storage_thresholds(
+        DEFAULT_STORAGE_THRESHOLDS, socket.gethostname()
+    )
+    shortages: tuple[StorageShortage, ...] = ()
+
+    if thresholds:
+        usage = StorageProvider().collect_usage(
+            tuple(threshold.mount for threshold in thresholds)
+        )
+        shortages = find_storage_shortage(usage, thresholds)
+
+    findings.extend(evaluate_storage(shortages))
+
     register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
     findings = list(ground_findings(findings, register))
 
@@ -576,6 +669,7 @@ def main() -> None:
         development_flags,
         commands_note,
         correlated,
+        storage_note,
     )
 
     # A subject that could not be read makes the sweep partial,

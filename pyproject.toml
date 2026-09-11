@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aistack"
-version = "0.6.0"
+version = "0.5.0"
 description = "AIStack Knowledge Operating System"
 readme = "README.md"
 # The interpreter AIStack is verified on.
@@ -102,6 +102,25 @@ testpaths = [
     "tests/integration",
 ]
 
+# STD-0002 (Test Artifact Isolation) declares `testpaths` below so a
+# bare `pytest` and the governed run are the same command, "so the
+# standard holds without anyone remembering it" — that reasoning had
+# never been extended to `ruff`/`mypy` themselves, and it showed:
+# `ruff check .` and `mypy .`, run from the repository root on
+# 2026-09-11 for the first time in this project's history, both found
+# real findings that every prior "0 issue" report had never actually
+# seen, because every prior run had been typed by hand with whatever
+# scope happened to be on the command line that day.
+#
+# `archive/` is explicitly frozen heritage (`GH-0002B: archive AIStack
+# V0 heritage components`, 2026-07-06) — components the project keeps
+# for record, not code anyone maintains or ships. Linting it the same
+# way as live code would ask someone to fix a historical snapshot,
+# which defeats the point of archiving it; excluding it here is the
+# declared decision, not a scope nobody chose.
+[tool.ruff]
+extend-exclude = ["archive"]
+
 # Adopted 2026-09-10, after evaluating both against this codebase:
 # on the very first run, before any of this configuration existed,
 # mypy found two real defects (an incompatible method override in
@@ -133,13 +152,51 @@ select = ["F", "B", "RUF043"]
 # style preference this project already settled the other way.
 ignore = ["B011", "B024"]
 
+# `selection_ui/app.py`'s own `/save` route takes `Form(default=[])`
+# as an argument default — FastAPI's own idiom: the marker object
+# *is* the declaration that a field is form data, not a mutable
+# default a caller could corrupt (`fastapi.Form` returns a fresh,
+# framework-owned object each call; it does not accumulate state the
+# way `def f(x=[])` genuinely risks). B008 has no way to tell that
+# apart from the real hazard it exists to catch, so `Form` is named
+# here as one of the calls this project has actually decided are
+# safe in that position — not a blanket disabling of B008 itself,
+# which stays selected and catches every other case.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Form"]
+
 # python_version pins mypy's own understanding of the language to
 # what `pyproject.toml`'s own `requires-python` already declares —
 # the same reasoning `requires-python` itself carries above: one
 # declared version, checked, rather than whichever interpreter a
 # machine happens to have.
+#
+# `files` is what STD-0002 already declares for pytest as
+# `[tool.pytest.ini_options] testpaths`, extended to mypy: "a
+# project's [check] covers that project's [code] and nothing else."
+# `mypy .`, run unscoped from the repository root for the first time
+# in this project's history on 2026-09-11 (after `archive/`'s and
+# `build/`'s duplicate-module conflicts — see git history — stopped
+# blocking it from finishing), swept into `tests/`, `examples/`,
+# `tools/qualification_runner.py`, `priority_ui/` and `selection_ui/`
+# and returned 67 findings there, in 29 files, none of them in
+# `src/aistack/` itself (`mypy src/aistack` alone was already clean).
+# The owner's own choice, given that finding: mypy checks the package
+# this project ships, `src/aistack/`, declared here rather than left
+# to whatever scope a command line happens to carry — the rest is a
+# deliberate, named exclusion, not an oversight, exactly as `archive/`
+# already was one line up. `archive/` and `build/` need no exclusion
+# of their own any more: `files` never walks into either.
+#
+# **The governed command is `mypy`, with no path argument.** A path
+# given on the command line overrides `files` here entirely — `mypy
+# .` still walks the whole repository, `archive/`/`build/` conflicts
+# and all, exactly as before this section existed. Confirmed both
+# ways 2026-09-11: bare `mypy` matches `mypy src/aistack` findings
+# exactly; `mypy .` does not.
 [tool.mypy]
 python_version = "3.13"
+files = ["src/aistack"]
 
 # GOV-0002/OS-056, 2026-09-10. `[tool.setuptools.packages.find]`
 # above discovers Python modules; it says nothing about anything

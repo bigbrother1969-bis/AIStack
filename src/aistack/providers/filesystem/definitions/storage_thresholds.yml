@@ -1,0 +1,51 @@
+# Storage capacity thresholds — OPS-0005's own declared values, one
+# host at a time.
+#
+# Loaded by `load_storage_thresholds_yaml`
+# (`src/aistack/providers/filesystem/yaml/store.py`), and read by
+# `aistack.cli.runtime_diagnose`, which narrows this fleet-wide file
+# to the one host it is actually running on via `socket.gethostname()`
+# — `host:` below is that exact string (confirmed live from `hostname`
+# on each machine, 2026-09-11), not a label and not an IP address.
+#
+# Declared 2026-09-11 by the owner against live `df -h` output on both
+# hosts
+# (`docs/04-development/OPS-0005-Storage-Capacity-Thresholds.md` §
+# Declared thresholds) — no value here was chosen by AIStack.
+#
+# This file is edited by hand — no UI writes it back the way
+# `priority_ui` writes `resource_priority.yml`.
+
+hosts:
+  - host: GIGABYTE
+    thresholds:
+      - mount: /
+        kind: free_bytes
+        free_gb: 20
+      - mount: /media/Films
+        kind: percent_used
+        percent_used: 90
+      - mount: /media/TechData
+        kind: percent_used
+        percent_used: 90
+      - mount: /media/Multimedia
+        kind: percent_used
+        percent_used: 90
+      - mount: /media/Documents
+        kind: percent_used
+        percent_used: 90
+      - mount: /media/Comics
+        kind: percent_used
+        percent_used: 90
+      - mount: /media/BD
+        kind: percent_used
+        percent_used: 90
+
+  - host: raspberry
+    thresholds:
+      - mount: /
+        kind: free_bytes
+        free_gb: 2
+      - mount: /media/BACKUP
+        kind: percent_used
+        percent_used: 90

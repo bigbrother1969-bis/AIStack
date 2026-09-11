@@ -7,8 +7,9 @@ from pathlib import Path
 from aistack.contracts.correlated_finding import CorrelatedFinding
 from aistack.contracts.development_flag import DevelopmentFlagFinding
 from aistack.contracts.lifecycle import LifecycleRegister
-from aistack.contracts.runtime_finding import RuntimeFinding
+from aistack.contracts.runtime_finding import CitedReading, MatchedLine, RuntimeFinding
 from aistack.contracts.signature import SignatureCatalogue
+from aistack.contracts.temperature_reading import TemperatureReading
 from aistack.contracts.unexplained_consumption import UnexplainedConsumption
 from aistack.policies.lifecycle_register import (
     RegisterError,
@@ -21,9 +22,11 @@ from aistack.policies.signature_catalogue import (
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.yaml import load_resource_priority_yaml
 from aistack.providers.docker import DockerProvider
+from aistack.providers.host.provider import HostProvider
 from aistack.runtime.correlation import correlate_findings
 from aistack.runtime.deployment_definition import extract_dockerfile_command
 from aistack.runtime.development_flags import find_development_flags
+from aistack.runtime.evaluate import evaluate
 from aistack.runtime.grounding import ground_findings
 from aistack.runtime.idle_consumption import find_unexplained_consumption
 from aistack.runtime.qualification import qualify
@@ -358,26 +361,37 @@ def report(
             f"    confidence: {finding.confidence}   "
             f"grounding: {finding.grounding}"
         )
-        print(f"    evidence: {len(finding.evidence)} line(s)")
 
-        for line in finding.evidence[:3]:
-            entry = line.entry
-            when = (
-                entry.timestamp.isoformat(timespec="seconds")
-                if entry.timestamp
-                else "no timestamp"
-            )
-            print(
-                f"      -{entry.offset}  {when}  "
-                f"{extract(line.entry.text, line.match_at)}"
-            )
+        if finding.qualifications:
+            # STD-0300 § VS-4 criterion 4.5: more than one cited
+            # together is what makes this derived knowledge rather
+            # than an opinion about severity — shown as a set, in
+            # the order the finding cites them.
+            print(f"    qualifications: {', '.join(finding.qualifications)}")
+
+        print(f"    evidence: {len(finding.evidence)} item(s)")
+
+        for item in finding.evidence[:3]:
+            if isinstance(item, MatchedLine):
+                entry = item.entry
+                when = (
+                    entry.timestamp.isoformat(timespec="seconds")
+                    if entry.timestamp
+                    else "no timestamp"
+                )
+                print(
+                    f"      -{entry.offset}  {when}  "
+                    f"{extract(item.entry.text, item.match_at)}"
+                )
+            elif isinstance(item, CitedReading):
+                print(f"      {item.provider}  {item.reading!r}")
 
         if len(finding.evidence) > 3:
             # Named, never silent: a report that trimmed without
             # saying so would read as complete.
             print(
                 f"      … {len(finding.evidence) - 3} further "
-                f"line(s) not shown; the finding carries them all"
+                f"item(s) not shown; the finding carries them all"
             )
 
         print("")
@@ -482,9 +496,11 @@ def main() -> None:
 
         findings.extend(qualify(observation, catalogue))
 
-    register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
-    findings = list(ground_findings(findings, register))
-
+    # Consumption and temperature are collected here, ahead of
+    # `ground_findings`, so that `evaluate`'s own derived findings —
+    # merged into `findings` below — are grounded against `OPS-0003`
+    # the same way every log-signature finding already is, rather
+    # than as a second, differently-treated batch.
     definition, resource_note = resource_priority_definition(
         DEFAULT_RESOURCE_PRIORITY
     )
@@ -500,6 +516,24 @@ def main() -> None:
             )
         else:
             consumption = find_unexplained_consumption(readings, definition)
+
+    # `HostProvider.collect_temperatures` is documented never to
+    # raise — no `sensors` binary, none configured, a host with none
+    # at all all read as nothing to report, the same convention
+    # `DockerProvider.collect_process` already holds — so, unlike
+    # `collect_cpu_readings`/`collect_commands` above, there is no
+    # failure here for a note to name.
+    temperatures: tuple[TemperatureReading, ...] = HostProvider().collect_temperatures()
+
+    # J5, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`: the first place
+    # two separately-collected pieces of evidence are correlated into
+    # a qualified `RuntimeFinding` (STD-0300 § VS-4 criterion 4.5) —
+    # merged into the same list `qualify()` already built, not
+    # reported as a sixth, separate section.
+    findings.extend(evaluate(consumption, temperatures))
+
+    register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
+    findings = list(ground_findings(findings, register))
 
     development_flags: tuple[DevelopmentFlagFinding, ...] = ()
     commands_note = ""

@@ -271,8 +271,8 @@ def test_evidence_beyond_three_lines_is_counted_not_hidden(
     run(monkeypatch, catalogue_file, {"gluetun": ["AUTH_FAILED"] * 7})
     out = capsys.readouterr().out
 
-    assert "evidence: 7 line(s)" in out
-    assert "4 further line(s) not shown" in out
+    assert "evidence: 7 item(s)" in out
+    assert "4 further item(s) not shown" in out
 
 
 def test_a_line_that_fits_is_printed_whole_and_unmarked(
@@ -603,6 +603,14 @@ def test_a_missing_resource_priority_definition_still_diagnoses(
 def test_a_cpu_finding_and_a_log_finding_both_raise_the_exit_code(
     monkeypatch, catalogue_file, resource_priority_file, capsys
 ):
+    """
+    Since J5 (`claude/PLAN-TRAJECTOIRE-2026-09-04.md`), unexplained
+    consumption is not only counted — `evaluate` (`aistack.runtime
+    .evaluate`) turns it into a second, qualified `RuntimeFinding`
+    of its own, merged into the same list the log signature's
+    finding is in. Two findings, from two different origins, both
+    counted the same way.
+    """
     monkeypatch.setattr(
         cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
     )
@@ -616,8 +624,9 @@ def test_a_cpu_finding_and_a_log_finding_both_raise_the_exit_code(
     out = capsys.readouterr().out
 
     assert code == 1
-    assert "findings: 1" in out
+    assert "findings: 2" in out
     assert "unexplained consumption: 1" in out
+    assert "qualifications: OPS-0004/energy-inefficiency" in out
 
 
 def test_the_governed_resource_priority_definition_is_the_default():

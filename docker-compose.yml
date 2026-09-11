@@ -29,9 +29,39 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **0.6.0 — published 2026-09-11, current.**
+  # **0.6.0 — published 2026-09-12, current.**
   #
   #   bigbrother1969/aistack-core:0.6.0
+  #   @sha256:28a3e4e621d83c563725e08fd6e774158f2752b0d4e3a2008f60c1496a986a47
+  #
+  # Built from 4d68ffc on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 1549 tests with `clean: True`.
+  # 73 artifacts, 16 checks. Before the build, 0.5.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # Freezes eight days of shipped work that had never bumped the
+  # version — `architecture.html` rendered as a real page, the Time
+  # Foundation and Evidence/Observation Foundation contracts, the
+  # four-domain Health Cockpit (Storage, Services, Backup/DR, GPU),
+  # and the unified Console with all five links reachable in HTTPS —
+  # on top of `evaluate` (below), which this build also carries.
+  #
+  # This reuses the number the entry below already had, because
+  # `pyproject.toml` had quietly gone back to `0.5.0` by the time this
+  # session started — a single unlabeled commit (`1b02a8a`, folding in
+  # the Storage domain) reverted the version alongside unrelated code,
+  # with no accompanying doc update, so nothing surfaced the drift
+  # until this build's own docs collided with it. The owner's call:
+  # rather than invent a number neither `pyproject.toml` nor Docker Hub
+  # ever actually carried, `0.6.0` stays this build's number and the
+  # entry below is retracted in place — the tag on Docker Hub now
+  # points here; the entry below's image is preserved at its own
+  # digest, retagged `bigbrother1969/aistack-core:0.6.0-retracted` so
+  # it stays reachable by name, not only by digest.
+  #
+  # **0.6.0 — published 2026-09-11, retracted 2026-09-12.**
+  #
+  #   bigbrother1969/aistack-core:0.6.0-retracted
   #   @sha256:203bec639e4bae1240bc1d19bd9485e7eb2c24f185565aa23f7f2925c07e3109
   #
   # Built from a823190 on the reference host, behind the four terms
@@ -43,13 +73,16 @@ services:
   # collected pieces of evidence — unexplained CPU consumption and the
   # host's own temperature — into one governed conclusion, citing
   # `OPS-0004`'s vocabulary. STD-0300 § VS-4 criteria 4.2, 4.4 and 4.5
-  # close with it. Same work as `1.0.0` below, correctly numbered: 1.0
-  # is reserved for the completed homelab dashboard / technical-debt /
-  # architecture integration
-  # (`claude/PLAN-J6-HOMELAB-DASHBOARD-INTEGRATION-2026-09-11.md`), not
-  # for `evaluate` alone. `1.0.0`'s digest was re-verified against its
-  # record before this build — `GOV-0002/OS-047` — and matched; no
-  # divergence, the tag simply named the wrong version.
+  # close with it. This code is not retracted — it ships in 0.6.0,
+  # above, same as everything else since 0.5.0. What's retracted is
+  # only this entry's claim to the tag: `pyproject.toml` reverted to
+  # `0.5.0` the same day (`1b02a8a`, undocumented), so the number this
+  # entry once used was free again by the time the build above needed
+  # one. Originally built as `bigbrother1969/aistack-core:0.6.0`;
+  # retagged `0.6.0-retracted` so it stays reachable by name once the
+  # live `0.6.0` tag pointed elsewhere. Kept here rather than erased —
+  # the same reasoning `0.1.0`'s entry below gives for the same kind
+  # of correction.
   #
   # **1.0.0 — published 2026-09-11, retracted 2026-09-11.**
   #

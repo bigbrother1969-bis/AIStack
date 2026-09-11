@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-09-11
+  updated: 2026-09-12
 
 relations:
   references:
@@ -38,6 +38,76 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 0.6.0 — 2026-09-12
+
+**Everything below shipped in the eight days since 0.5.0 — the version number
+just never moved while it did. This entry catches it up in one go, and also
+carries `evaluate` (below), which had briefly used this same number and lost
+it to an undocumented revert — explained where that entry now stands,
+retracted.**
+
+- **`architecture.html`, rendered for real.** AIStack's own topology graph —
+  built from the same Docker infrastructure discovery `0.5.0` already had —
+  is now a self-contained page instead of only raw catalog JSON.
+- **Health Cockpit.** One scored dashboard across four domains: Storage,
+  Services, Backup/DR, and GPU. Each domain is instrumented against a real
+  incident or a real declared threshold on the reference host, not a
+  generic rule guessed in the abstract.
+- **Console — one entry point for everything above.** A single page linking
+  Selection UI, Priority CPU, Architecture, and Health Cockpit. All four are
+  now reachable over HTTPS from outside the LAN, not just on the local
+  network.
+- **Quiet foundation work, no visible capability yet:** a shared event/
+  version/provenance model that the project's four separate history
+  mechanisms now all speak, and governed contracts for evidence,
+  observation, collection and correlation. This is what the next phase (a
+  full historical "time machine" — replaying what the system knew at any
+  past moment) is built on, not a feature in itself yet.
+- `ruff` and `mypy` adopted project-wide, gated in the same publishing
+  chain as everything else.
+
+`bigbrother1969/aistack-core:0.6.0`, built from `4d68ffc`, digest
+`sha256:28a3e4e621d83c563725e08fd6e774158f2752b0d4e3a2008f60c1496a986a47`.
+1549 tests, 73 knowledge artifacts, `clean: True`.
+
+## 0.6.0 — 2026-09-11, retracted 2026-09-12
+
+**The finding described below is not retracted — it ships in `0.6.0` above,
+same as everything since `0.5.0`. What's retracted is only this entry's
+claim to the tag: `pyproject.toml` reverted to `0.5.0` the same day this
+entry was built (one unlabeled commit, folding in the Storage domain
+alongside the version line, with no doc update to match), so by the time
+the entry above needed a number, `0.6.0` was free again rather than taken.
+Kept here rather than erased — the same reasoning `1.0.0`, right below,
+already gives for the same kind of correction. The image itself is
+preserved, retagged `bigbrother1969/aistack-core:0.6.0-retracted` now that
+the live `0.6.0` tag points elsewhere.**
+
+**The first qualified finding, derived end to end: two separately-collected
+pieces of evidence correlated into one governed conclusion for the first
+time. VS-4 closes three more criteria (4.2, 4.4, 4.5).**
+
+- **New: `evaluate`.** Unexplained CPU consumption — a container using
+  resources nobody declared an expectation for — is now correlated against
+  the host's own temperature, at or above each sensor's own declared
+  threshold, into one `RuntimeFinding`: `energy inefficiency` alone, or
+  `energy inefficiency` and `sustainability anomaly` together when the host
+  also reads hot. Wired end to end into `runtime_diagnose`: a live sweep of
+  the reference deployment reports these the same way it already reports a
+  log-signature finding.
+- **New: a finding can cite a reading, not only a log line.** A
+  `CitedReading` attaches the raw CPU or temperature reading a provider
+  collected to a finding, named by the provider that collected it (`docker
+  stats`, `sensors`) — alongside the existing log-line evidence, unchanged.
+- Host temperature is read in a live sweep for the first time —
+  `HostProvider.collect_temperatures` existed since `0.5.0` but nothing
+  called it.
+
+`bigbrother1969/aistack-core:0.6.0-retracted` (built as `:0.6.0`), built
+from `a823190`, digest
+`sha256:203bec639e4bae1240bc1d19bd9485e7eb2c24f185565aa23f7f2925c07e3109`.
+1191 tests, 69 knowledge artifacts, `clean: True`.
 
 ## 1.0.0 — declared 2026-09-11, retracted 2026-09-11
 
@@ -179,12 +249,21 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 0.6.0 (2026-09-11), taken together.
+Not what changed — what runs, as of 0.6.0 (2026-09-12), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
   state, published ports, mounts — regenerated the same way every time,
   from the host, not from what someone remembers about it.
+- **Architecture, visualized.** `architecture.html` renders that same
+  discovery as a self-contained topology graph — a real page, not raw
+  catalog JSON — kept current every time it's regenerated.
+- **Health Cockpit.** One scored dashboard across four domains — Storage,
+  Services, Backup/DR, GPU — each instrumented against a real incident or
+  a real declared threshold on the reference host.
+- **Console.** One entry point linking Selection UI, Priority CPU,
+  Architecture and Health Cockpit, all four reachable over HTTPS from
+  outside the LAN.
 - **Context Bundle — self-onboarding for an AI assistant.** A single
   portable archive carries the project's whole governed knowledge base,
   with a manifest that proves what commit it was taken from and lets a

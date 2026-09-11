@@ -69,11 +69,19 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 0.5.0
+### Concrete capabilities, as of 0.6.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, regenerated from
   the host itself every time.
+- **Architecture, visualized** — `architecture.html` renders that same
+  discovery as a self-contained topology graph.
+- **Health Cockpit** — a scored dashboard across four domains (Storage,
+  Services, Backup/DR, GPU), each instrumented against a real incident
+  or a real declared threshold.
+- **Console** — one entry point linking Selection UI, Priority CPU,
+  Architecture and Health Cockpit, all reachable over HTTPS from outside
+  the LAN.
 - **Context Bundle self-onboarding** — a portable, integrity-checked
   archive of the whole governed knowledge base, so a new AI session or
   contributor can get up to speed without reading the repository's

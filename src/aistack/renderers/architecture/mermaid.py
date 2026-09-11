@@ -4,6 +4,7 @@ import re
 
 from aistack.architecture.graph import ServiceNode
 from aistack.architecture.views import ArchitectureView
+from aistack.renderers.text import escape_text
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 
@@ -21,27 +22,6 @@ _CLASS_DEFS = (
     "    classDef no_container fill:#f0f0f0,stroke:#666666,color:#666666,"
     "stroke-dasharray: 2 2;",
 )
-
-
-def escape_text(text: str) -> str:
-    """
-    Escape one piece of user-declared text for use inside a Mermaid
-    node/subgraph label, or an HTML attribute — the same four
-    characters are unsafe in both contexts, and this heritage has one
-    escaping function rather than two that could drift apart.
-
-    Applied to the *interpolated* parts of a label only, never to
-    literal markup this module writes itself (`<br/>`, `<small>`) —
-    escaping those too would print them as visible text instead of
-    rendering them.
-    """
-
-    return (
-        text.replace("&", "&amp;")
-        .replace('"', "&quot;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
 
 
 def render_mermaid(view: ArchitectureView) -> str:

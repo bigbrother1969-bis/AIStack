@@ -35,6 +35,8 @@ from aistack.generators.docker.catalog_artifact import DockerCatalogArtifactGene
 from aistack.generators.filesystem.media_library_artifact import (
     MediaLibraryObservationArtifactGenerator,
 )
+from aistack.generators.health import HealthHtmlArtifactGenerator
+from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.generators.jellyfin.observation_artifact import (
     JellyfinObservationArtifactGenerator,
 )
@@ -189,6 +191,26 @@ def test_architecture_html_artifact_generator_keeps_history(tmp_path: Path):
     views = build_all_views(graph)
 
     generator.generate(views=views, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert history_files[0].read_text(encoding="utf-8").startswith("<!doctype html>")
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_health_html_artifact_generator_keeps_history(tmp_path: Path):
+    generator = HealthHtmlArtifactGenerator()
+    output_path = tmp_path / "reports" / "generated" / "health.html"
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(name="Stockage", instrumented=True),
+            HealthDomain(name="GPU", instrumented=False, note="pas encore"),
+        )
+    )
+
+    generator.generate(cockpit=cockpit, output_path=output_path)
 
     history_files = _history_files(output_path)
     assert len(history_files) == 1

@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Operations
   created: 2026-09-04
@@ -106,16 +106,18 @@ storage domain for: on GIGABYTE, a service producing logs with no rotation
 and no size cap filled the host's disk — *"des logs en folie qui ont
 rempli le disque / je n'avais plus de place disponible"*.
 
+Examined against the vocabulary, 2026-09-11, the owner found this case to
+carry:
+
 - **deployment misconfiguration** — yes: this is the case the first
   incident's entry above left the definition open for. No rotation, no
   cap, declared nowhere — the gap is in how the service was set up, not
-  in one bad run.
+  in one bad run;
+- **technical debt** — no;
+- **energy inefficiency** — no;
+- **sustainability anomaly** — no.
 
-**Draft, pending the owner's own examination of the other three
-qualifications against this case** — the same four-way review the first
-incident received above, not yet carried out for this one.
-
-One qualification named for the first time by a real case —
+One qualification, the only one the owner found this case to carry —
 `deployment misconfiguration` is no longer an open slot.
 
 ## What this register does not do

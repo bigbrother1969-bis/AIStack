@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.22
+  version: 1.23
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-11
@@ -839,6 +839,26 @@ way `4.8`'s live reading closed a gap fixture data alone had already
 proven arithmetically correct. `4.1`, `4.3` and `4.7` are untouched by
 J5, for the reasons already given above — they remain scoped as
 written.
+
+**2026-09-11 — the first live correlation.** The next sweep of the
+reference deployment (`python -m aistack.cli.runtime_diagnose`, no
+container named, run on GIGABYTE) found it: `booklore_db` (`mariadbd`)
+at 12.2 % CPU, undeclared in `resource_priority.yml`, alongside the
+same `k10temp-pci-00c3/temp1` reading at 70.5 °C, still at its own
+declared high threshold — both qualifications cited together on one
+live finding, `OPS-0004/energy-inefficiency` and
+`OPS-0004/sustainability-anomaly`, the evidence citing the exact
+`ContainerCpuReading` and `TemperatureReading` `evaluate` correlated.
+The owner classified `booklore_db` in `background`
+(`resource_priority.yml`) directly, `resource_priority.yml`'s own
+documented "or by hand" path — without the live `docker top`/`docker
+stats` investigation `firefly` received first. That is a lighter-touch
+resolution, not a different rule: nothing here claims `booklore_db`'s
+consumption was investigated and found wasteful, only that it is now
+declared and will no longer be flagged unexplained. The gap the
+paragraph above named is closed: `4.4` and `4.5` are proven by
+construction and now exercised by a live reading pair, not fixture
+data alone.
 
 4.2, 4.4 and 4.5 satisfied together closes the group this section's
 2026-09-04 reasoning said would move at or after J5 — three of the

@@ -75,3 +75,4 @@ background:
   - name: komf
     normal_cpus: 0.5
   - name: firefly
+  - name: booklore_db

@@ -491,6 +491,7 @@ def test_the_real_resource_priority_definition_loads():
         "mularr",
         "komf",
         "firefly",
+        "booklore_db",
     ]
 
     by_name = {c.name: c for c in definition.background.containers}
@@ -498,6 +499,7 @@ def test_the_real_resource_priority_definition_loads():
     assert by_name["radarr"].normal_cpus is None
     assert by_name["komf"].normal_cpus == 0.5
     assert by_name["firefly"].normal_cpus is None
+    assert by_name["booklore_db"].normal_cpus is None
 
 
 def test_saving_and_reloading_round_trips_a_jellyfin_priority_app(

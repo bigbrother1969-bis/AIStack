@@ -29,7 +29,26 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **0.5.0 — published 2026-09-04, current.**
+  # **1.0.0 — published 2026-09-11, current.**
+  #
+  #   bigbrother1969/aistack-core:1.0.0
+  #   @sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3
+  #
+  # Built from 6680e61 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 1191 tests with `clean: True`. 69
+  # artifacts, 16 checks. Freezes `evaluate`
+  # (`aistack.runtime.evaluate`, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`
+  # jalon J5): the first `RuntimeFinding` correlating two separately
+  # collected pieces of evidence — unexplained CPU consumption and the
+  # host's own temperature — into one governed conclusion, citing
+  # `OPS-0004`'s vocabulary. STD-0300 § VS-4 criteria 4.2, 4.4 and 4.5
+  # close with it. This is the version the project's own trajectory
+  # names as the 1.0 boundary. **Not re-verified against 0.5.0's
+  # recorded digest before this build** — `GOV-0002/OS-047`'s own rule,
+  # skipped this once; named here rather than silently not done.
+  #
+  # **0.5.0 — published 2026-09-04.**
   #
   #   bigbrother1969/aistack-core:0.5.0
   #   @sha256:3def537335f5f9f36d2824f2c6d56e0c4f5c7232017be36b93bf78a307816896

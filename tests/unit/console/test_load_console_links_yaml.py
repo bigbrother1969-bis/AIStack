@@ -132,7 +132,7 @@ def test_the_real_console_links_definition_loads():
         "Architecture",
         "Cockpit Santé",
     }
-    assert by_name["Selection UI"].url == "https://selection.aistack.persiaut-family.fr"
-    assert by_name["Priorité CPU"].url == "https://priority.aistack.persiaut-family.fr"
+    assert by_name["Selection UI"].url == "https://selection.persiaut-family.fr"
+    assert by_name["Priorité CPU"].url == "https://priority.persiaut-family.fr"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"

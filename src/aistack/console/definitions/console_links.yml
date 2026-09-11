@@ -6,22 +6,30 @@
 # hold. Nothing in this codebase writes this file back.
 #
 # `url` is exactly how the owner reaches each service today
-# (`PLAN-J11` § 4/§ 8), never invented (GOV-P-001):
+# (`PLAN-J11` § 4/§ 8/§ 9), never invented (GOV-P-001):
 #   - Selection UI and Priorité CPU are separate processes on
 #     GIGABYTE (Docker Compose on :8181, systemd/uvicorn on :8182 —
 #     "next free port after Selection UI's 8181"). The console itself
 #     went live behind Nginx Proxy Manager (Raspberry) on
 #     aistack.persiaut-family.fr the same day (`PLAN-J11` § 7) —
-#     the owner then named two more subdomains for these two apps
-#     (`PLAN-J11` § 8): selection.aistack.persiaut-family.fr,
-#     priority.aistack.persiaut-family.fr. Declared here as the
-#     owner's own chosen naming, the same way
-#     aistack.persiaut-family.fr was declared before its own Proxy
-#     Host existed — reachable once the owner has added the matching
-#     Proxy Host in NPM, a manual step this codebase cannot do. The
-#     direct LAN address each still answers on (GIGABYTE:8181/:8182)
-#     travels in the description, not the url, so there is exactly
-#     one link to follow, not two competing ones.
+#     the owner first named two more subdomains for these two apps
+#     under it (selection.aistack.persiaut-family.fr,
+#     priority.aistack.persiaut-family.fr, `PLAN-J11` § 8), then
+#     found those unreachable: Cloudflare's free Universal SSL covers
+#     only a domain and its direct wildcard (persiaut-family.fr,
+#     *.persiaut-family.fr), never a second-level subdomain — the TLS
+#     handshake failed before any certificate was even offered
+#     (`PLAN-J11` § 9). Renamed to first-level subdomains instead,
+#     covered by the same wildcard that already makes
+#     aistack.persiaut-family.fr work: selection.persiaut-family.fr,
+#     priority.persiaut-family.fr. Declared here as the owner's own
+#     chosen naming, the same way aistack.persiaut-family.fr was
+#     declared before its own Proxy Host existed — reachable once the
+#     owner has added the matching Proxy Host in NPM (and the DNS
+#     record in Cloudflare), a manual step this codebase cannot do.
+#     The direct LAN address each still answers on
+#     (GIGABYTE:8181/:8182) travels in the description, not the url,
+#     so there is exactly one link to follow, not two competing ones.
 #   - Page Architecture and Cockpit Santé are static files this
 #     console is served alongside (`reports/generated/public/`,
 #     `aistack.cli.console_render`), so their own URLs are relative —
@@ -36,12 +44,12 @@ links:
     description: >-
       Sélection des candidats — service Docker Compose
       (LAN direct : GIGABYTE:8181)
-    url: https://selection.aistack.persiaut-family.fr
+    url: https://selection.persiaut-family.fr
   - name: Priorité CPU
     description: >-
       Arbitrage de priorité CPU — service systemd/uvicorn
       (LAN direct : GIGABYTE:8182)
-    url: https://priority.aistack.persiaut-family.fr
+    url: https://priority.persiaut-family.fr
   - name: Architecture
     description: Diagramme de topologie du homelab (PLAN-J2)
     url: /architecture.html

@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.correlated_finding import CorrelatedFinding
 from aistack.contracts.development_flag import DevelopmentFlagFinding
 from aistack.contracts.lifecycle import LifecycleRegister
@@ -28,10 +29,12 @@ from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import StorageProvider
 from aistack.providers.filesystem.yaml import load_storage_thresholds_yaml
 from aistack.providers.host.provider import HostProvider
+from aistack.runtime.container_distress import find_container_distress
 from aistack.runtime.correlation import correlate_findings
 from aistack.runtime.deployment_definition import extract_dockerfile_command
 from aistack.runtime.development_flags import find_development_flags
 from aistack.runtime.evaluate import evaluate
+from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.grounding import ground_findings
 from aistack.runtime.idle_consumption import find_unexplained_consumption
@@ -385,6 +388,7 @@ def report(
     commands_note: str = "",
     correlated: tuple[CorrelatedFinding, ...] = (),
     storage_note: str = "",
+    services_note: str = "",
 ) -> None:
     """
     Print every section this diagnosis has evidence for.
@@ -412,6 +416,9 @@ def report(
 
     if storage_note:
         print(f"- Storage thresholds: {storage_note}")
+
+    if services_note:
+        print(f"- Services: {services_note}")
 
     if commands_note:
         print(f"- Commands: {commands_note}")
@@ -625,6 +632,29 @@ def main() -> None:
 
     findings.extend(evaluate_storage(shortages))
 
+    # Services, `PLAN-J7`'s third domain: `OPS-0004`'s third reference
+    # incident (restart loops / unhealthy containers after a power
+    # outage). No declared config file — unlike storage thresholds,
+    # there is no per-host register to be missing; Docker itself is
+    # either observable or it is not, and that is what the note names.
+    # Instantaneous state only (the owner's chosen v1 scope,
+    # 2026-09-11): a container is flagged from one reading, never a
+    # count of restarts over time. Merged into the same `findings`
+    # list for the same reason every other domain is: grounded against
+    # OPS-0003 like any other finding, ahead of `ground_findings`.
+    services_note = ""
+    container_states: tuple[ContainerStateReading, ...] = ()
+
+    try:
+        container_states = provider.collect_container_states()
+    except (subprocess.SubprocessError, OSError) as error:
+        services_note = (
+            f"container states could not be collected ({error}); "
+            f"service health is not checked"
+        )
+
+    findings.extend(evaluate_services(find_container_distress(container_states)))
+
     register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
     findings = list(ground_findings(findings, register))
 
@@ -670,6 +700,7 @@ def main() -> None:
         commands_note,
         correlated,
         storage_note,
+        services_note,
     )
 
     # A subject that could not be read makes the sweep partial,

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import socket
+import subprocess
 from pathlib import Path
 
 from aistack.generators.health import HealthHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
+from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import StorageProvider, storage_thresholds_for_host
+from aistack.runtime.container_distress import find_container_distress
+from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.storage_shortage import find_storage_shortage
 
@@ -29,9 +33,9 @@ DEFAULT_STORAGE_THRESHOLDS = (
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
 # closed domain vocabulary the owner named before any code —
 # "stockage, services, backup/PRA, GPU" — not this module's own
-# invention. Storage is the only one instrumented so far (`PLAN-J7`
-# § 6); the other three carry this exact note, never a false
-# "healthy" (`FDN-0003` Article 12).
+# invention. Storage (`PLAN-J7` § 6) and Services (`PLAN-J7` § 8) are
+# instrumented so far; the remaining two carry this exact note, never
+# a false "healthy" (`FDN-0003` Article 12).
 NOT_YET_INSTRUMENTED = (
     "aucun cas réel n'a encore été cité par le propriétaire pour ce "
     "domaine (GOV-P-001) ; aucun code ne l'observe pour l'instant"
@@ -68,13 +72,49 @@ def storage_domain(hostname: str) -> HealthDomain:
     )
 
 
+def services_domain() -> HealthDomain:
+    """
+    `PLAN-J7` § 8's own domain: `OPS-0004`'s third reference incident
+    (restart loops / unhealthy containers after a power outage),
+    detected the same instantaneous-only way `find_container_distress`
+    documents — no config file to be missing, unlike storage: Docker
+    is either observable from this host or it is not, and that is
+    what the note names when it is not.
+
+    **GIGABYTE only, by construction, not by a declared scope check
+    here.** `DockerProvider` talks to whatever `docker` binary is on
+    the machine this process runs on — there is no Docker provider for
+    the Raspberry (a limitation `PLAN-J2` already documented), so
+    running this on any host without a reachable Docker daemon —
+    the Raspberry included — reads as not instrumented, the same
+    honest absence storage already shows on a host with nothing
+    declared for it.
+    """
+
+    try:
+        readings = DockerProvider().collect_container_states()
+    except (subprocess.SubprocessError, OSError) as error:
+        return HealthDomain(
+            name="Services",
+            instrumented=False,
+            note=(
+                f"container states could not be collected ({error}); "
+                f"service health is not checked"
+            ),
+        )
+
+    distress = find_container_distress(readings)
+
+    return HealthDomain(
+        name="Services", instrumented=True, findings=evaluate_services(distress)
+    )
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     return HealthCockpit(
         domains=(
             storage_domain(hostname),
-            HealthDomain(
-                name="Services", instrumented=False, note=NOT_YET_INSTRUMENTED
-            ),
+            services_domain(),
             HealthDomain(
                 name="Sauvegarde / PRA",
                 instrumented=False,

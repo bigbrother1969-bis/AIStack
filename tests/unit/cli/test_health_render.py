@@ -4,8 +4,10 @@
 
 Storage is exercised the same way `test_runtime_diagnose.py` already
 exercises it: a real directory `StorageProvider.collect_usage` can
-call `shutil.disk_usage` against, no fake. The three not-yet-named
-domains (Services, Sauvegarde/PRA, GPU) are asserted present and
+call `shutil.disk_usage` against, no fake. Services is exercised the
+same way `test_runtime_diagnose.py` exercises Docker: a `FakeDockerProvider`
+standing in for `DockerProvider`, no real daemon. The two remaining
+not-yet-named domains (Sauvegarde/PRA, GPU) are asserted present and
 explicitly not-instrumented on every run — `FDN-0003` Article 12 says
 their absence is what must be shown, not silence.
 
@@ -22,6 +24,33 @@ import pytest
 
 from aistack.cli import health_render as cli
 from aistack.cli import runtime_diagnose
+from aistack.contracts.container_health import health_of
+from aistack.contracts.container_state_reading import ContainerStateReading
+
+
+class FakeDockerProvider:
+    """
+    Mirrors `test_runtime_diagnose.py`'s own `FakeProvider` for the
+    one method this module calls: no Docker daemon in the sandbox
+    that runs this suite, and a real one would make results depend
+    on this machine — exactly the reasoning that file already gives.
+    """
+
+    def __init__(self, states):
+        self._states = states
+
+    def collect_container_states(self):
+        if isinstance(self._states, Exception):
+            raise self._states
+
+        return tuple(
+            ContainerStateReading(
+                container=entry["Names"],
+                state=entry.get("State") or "unknown",
+                health=health_of(entry.get("Status")),
+            )
+            for entry in (self._states or ())
+        )
 
 
 @pytest.fixture
@@ -112,19 +141,77 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
     assert "no storage-threshold definition at" in storage.note
 
 
-def test_the_three_undeclared_domains_are_always_present_and_not_instrumented(
+def test_the_two_undeclared_domains_are_always_present_and_not_instrumented(
     monkeypatch, tmp_path
 ):
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
 
     names = {domain.name: domain for domain in cockpit.domains}
     assert set(names) == {"Stockage", "Services", "Sauvegarde / PRA", "GPU"}
 
-    for name in ("Services", "Sauvegarde / PRA", "GPU"):
+    for name in ("Sauvegarde / PRA", "GPU"):
         assert names[name].instrumented is False
         assert names[name].note == cli.NOT_YET_INSTRUMENTED
+
+
+# --------------------------------------------------------------------
+# services_domain — OPS-0004's third reference incident
+# --------------------------------------------------------------------
+
+
+def test_a_restarting_container_is_an_alert(monkeypatch):
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
+    )
+
+    domain = cli.services_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].qualifications == (
+        "OPS-0004/technical-debt",
+        "OPS-0004/sustainability-anomaly",
+        "OPS-0004/deployment-misconfiguration",
+    )
+
+
+def test_a_clean_docker_host_reads_as_clean(monkeypatch):
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(
+            states=[
+                {
+                    "Names": "gluetun",
+                    "State": "running",
+                    "Status": "Up 2 hours (healthy)",
+                }
+            ]
+        ),
+    )
+
+    domain = cli.services_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_docker_not_reachable_is_not_instrumented(monkeypatch):
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=OSError("docker not found")),
+    )
+
+    domain = cli.services_domain()
+
+    assert domain.instrumented is False
+    assert "container states could not be collected" in domain.note
 
 
 # --------------------------------------------------------------------

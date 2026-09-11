@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Draft
   owner: Operations
   created: 2026-09-04
@@ -120,38 +120,91 @@ carry:
 One qualification, the only one the owner found this case to carry —
 `deployment misconfiguration` is no longer an open slot.
 
+## Third reference incident — power-outage restart loops, 2026-09-11, qualified
+
+A third case, given directly by the owner 2026-09-11 in answer to what J7
+(`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`, the health cockpit) needed a
+Services domain for — the case itself, the owner's own words:
+
+> *"Suite à une coupure électrique subite, des containers redémarraient en
+> boucle ou restaient en unhealthy : problème visible sur la page homepage
+> hébergée par le raspberry."*
+
+(After a sudden power outage, containers were restart-looping or stuck
+unhealthy — visible on the Homepage page hosted by the Raspberry.)
+
+Examined against the vocabulary, 2026-09-11, the owner found this case to
+carry:
+
+- **technical debt** — yes;
+- **sustainability anomaly** — yes;
+- **deployment misconfiguration** — yes;
+- **energy inefficiency** — no.
+
+Three qualifications, one explicitly excluded by the owner rather than left
+unconsidered — the same shape the first reference incident took, mirrored
+here for a different case.
+
+**Scope, declared alongside the qualifications.** Two further questions were
+put to the owner before any code, per `ARC-P-006` (never build a
+correlation from a single case without deciding its scope from the owner
+first):
+
+- **Detection scope** — whether to count restarts over time
+  (`docker inspect`'s `RestartCount`) or read state at one instant only.
+  The owner chose **instantaneous state only** for this first lot: a
+  container flagged because it is *currently* restarting or declared
+  unhealthy, never because it restarted N times over a window. Restart-loop
+  counting stays out of scope, the same way storage's v1 left fill-rate
+  detection out (`PLAN-J7` § 6.4).
+- **Affected host(s)** — the incident was visible on the Raspberry's own
+  Homepage page, and the owner confirmed **both hosts** were affected.
+  AIStack's `DockerProvider` observes only the machine it runs on (`PLAN-J2`,
+  `claude/PLAN-J2-ARCHITECTURE-HTML-2026-09-10.md`, § *Une réduction de
+  périmètre assumée`) — there is no Docker provider reaching the Raspberry
+  remotely. GIGABYTE is instrumented with existing infrastructure; the
+  Raspberry stays explicitly out of scope for this lot, a named absence
+  (`FDN-0003` Article 12), not a silent one — see `PLAN-J7` § 8.3.
+
 ## What this register does not do
 
-**Updated 2026-09-11** — the paragraph below described the state as of
-2026-09-04, when it was still true of all four qualifications. It no
-longer is: `0.6.0` (`claude/PLAN-J5-EVALUATE-QUALIFIED-FINDING-2026-09-11.md`)
-wired two of the four. Kept, corrected in place, so the record shows what
-changed rather than reading as if it had always been current.
+**Updated 2026-09-11 (second time, for the third reference incident)** —
+this section has been corrected in place twice now, each time the state it
+described stopped being current, rather than left to read as if it had
+always been so.
 
-As of `0.6.0`, `energy inefficiency` and `sustainability anomaly` are wired
-into a runtime finding: `aistack.runtime.evaluate` correlates
-`UnexplainedConsumption` against `TemperatureReading` into a
-`RuntimeFinding` citing one or both. `RuntimeFinding` now carries a
-`qualifications` field (`src/aistack/contracts/runtime_finding.py`)
-enforcing this register's closed vocabulary — the gap this section
-originally named for those two is closed.
+As of `0.6.0` (`claude/PLAN-J5-EVALUATE-QUALIFIED-FINDING-2026-09-11.md`),
+`energy inefficiency` and `sustainability anomaly` are wired into a runtime
+finding: `aistack.runtime.evaluate` correlates `UnexplainedConsumption`
+against `TemperatureReading` into a `RuntimeFinding` citing one or both.
 
-`technical debt` and `deployment misconfiguration` are not wired yet —
-one still undefined in practice, the other defined above (2026-09-11) but
-with no provider yet to feed it:
+As of `PLAN-J7` § 6 (storage domain), `deployment misconfiguration` is
+additionally wired by `aistack.runtime.evaluate_storage`, citing a
+`StorageShortage` already confirmed against `OPS-0005`'s declared
+thresholds.
 
-- **technical debt** — needs a backlog register this heritage does not
-  have yet, something a corrected issue can be removed from. Not built:
-  the owner declined to build one ahead of a real pending correction to
-  seed it with, 2026-09-04.
-- **deployment misconfiguration** — needs a storage-capacity provider;
-  none exists yet. `providers/filesystem/` holds only `media_library.py`
-  (the music-sync selection feature) — nothing that reads disk usage.
-  Named by a real case (above, 2026-09-11) before the provider that would
-  detect it is written — the case comes first, per `ARC-P-006`; the code
-  comes after (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`).
+As of `PLAN-J7` § 8 (Services domain), `technical debt`,
+`sustainability anomaly` and `deployment misconfiguration` are additionally
+wired by `aistack.runtime.evaluate_services`, citing a `ContainerDistress`
+already confirmed by `find_container_distress` — a container currently
+restarting, or declared unhealthy, on the one host AIStack can observe
+(GIGABYTE). `RuntimeFinding` carries a `qualifications` field
+(`src/aistack/contracts/runtime_finding.py`) enforcing this register's
+closed vocabulary throughout.
 
-It no longer says it does not define "deployment misconfiguration" — the
-second reference incident above names it, the same way `frigate`'s
-`intermittent` lifecycle got recorded in `OPS-0003`: stated once, by the
-owner, about a real case, not guessed at in general.
+**`technical debt` is cited without a backlog register, and that is a
+narrower claim than the one this section used to make.** The paragraph
+removed here (until 2026-09-11) said the qualification needed "a backlog
+register this heritage does not have yet, something a corrected issue can
+be removed from" before it could be cited at all. That register still does
+not exist, and nothing here builds one: `evaluate_services` cites
+`technical debt` only because the owner examined this one real case
+directly and said it applied (`GOV-P-001`) — the same per-case citation
+`deployment misconfiguration` already received from the second reference
+incident before any provider existed for it. A general "is this container's
+condition tracked as a pending fix" register remains unbuilt; nothing here
+depends on one.
+
+Every one of `OPS-0004`'s four qualifications has now been cited by at
+least one wired `RuntimeFinding` — `energy inefficiency` remains the only
+one this register has never found a real case to carry.

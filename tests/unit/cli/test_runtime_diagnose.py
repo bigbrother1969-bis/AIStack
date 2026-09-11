@@ -4,6 +4,8 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import runtime_diagnose as cli
+from aistack.contracts.container_health import health_of
+from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import (
     LogEntry,
@@ -55,11 +57,35 @@ class FakeProvider:
         cpu: dict[str, float] | Exception | None = None,
         commands: dict[str, str] | Exception | None = None,
         processes: dict[str, str] | None = None,
+        states=None,
     ):
         self._logs = logs
         self._cpu = cpu
         self._commands = commands
         self._processes = processes or {}
+        self._states = states
+
+    def collect_container_states(self):
+        """
+        `states` is given the same raw-`docker ps`-shaped dicts
+        `collect()`'s own `containers` list already is — parsed
+        through `health_of` exactly as `DockerProvider
+        .collect_container_states` parses them for real, so this fake
+        exercises the same `Status` -> `ContainerHealth` conversion
+        rather than a shortcut around it.
+        """
+
+        if isinstance(self._states, Exception):
+            raise self._states
+
+        return tuple(
+            ContainerStateReading(
+                container=entry["Names"],
+                state=entry.get("State") or "unknown",
+                health=health_of(entry.get("Status")),
+            )
+            for entry in (self._states or ())
+        )
 
     def collect_process(self, container: str) -> str:
         return self._processes.get(container, "")
@@ -119,11 +145,12 @@ def run(
     commands=None,
     processes=None,
     hostname=None,
+    states=None,
 ) -> int:
     monkeypatch.setattr(
         cli,
         "DockerProvider",
-        lambda: FakeProvider(logs, cpu, commands, processes),
+        lambda: FakeProvider(logs, cpu, commands, processes, states),
     )
 
     # `None` leaves the real `socket.gethostname()` in place — the
@@ -795,6 +822,97 @@ def test_the_governed_storage_thresholds_definition_is_the_default():
 
     assert cli.DEFAULT_STORAGE_THRESHOLDS.exists()
     assert cli.DEFAULT_STORAGE_THRESHOLDS.name == "storage_thresholds.yml"
+
+
+# --------------------------------------------------------------------
+# Services, OPS-0004's third reference incident (restart loops /
+# unhealthy containers after a power outage)
+# --------------------------------------------------------------------
+
+
+def test_a_restarting_container_is_reported(monkeypatch, catalogue_file, capsys):
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        states=[{"Names": "gluetun", "State": "restarting"}],
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "OPS-0004" in out
+    assert "qualifications: OPS-0004/technical-debt, " in out
+    assert "OPS-0004/sustainability-anomaly" in out
+    assert "OPS-0004/deployment-misconfiguration" in out
+    assert "OPS-0004/energy-inefficiency" not in out
+
+
+def test_an_unhealthy_container_is_reported(monkeypatch, catalogue_file, capsys):
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        states=[
+            {"Names": "gluetun", "State": "running", "Status": "Up 2 hours (unhealthy)"}
+        ],
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "OPS-0004" in out
+
+
+def test_a_running_healthy_container_is_not_reported(
+    monkeypatch, catalogue_file, capsys
+):
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        states=[
+            {"Names": "gluetun", "State": "running", "Status": "Up 2 hours (healthy)"}
+        ],
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "OPS-0004" not in out
+
+
+def test_container_states_that_cannot_be_collected_are_reported_and_do_not_crash(
+    monkeypatch, catalogue_file, capsys
+):
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        states=OSError("docker not found"),
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "Services: container states could not be collected" in out
+
+
+def test_a_services_finding_and_a_log_finding_both_raise_the_exit_code(
+    monkeypatch, catalogue_file, capsys
+):
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["AUTH_FAILED"]},
+        states=[{"Names": "gluetun", "State": "restarting"}],
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "OPS-TEST/S-001" in out
+    assert "OPS-0004" in out
 
 
 # --------------------------------------------------------------------

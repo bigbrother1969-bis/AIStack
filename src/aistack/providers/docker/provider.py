@@ -5,6 +5,8 @@ import subprocess
 from datetime import datetime, timezone
 from typing import Any
 
+from aistack.contracts.container_health import health_of
+from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import RuntimeObservation
 
@@ -186,6 +188,51 @@ class DockerProvider:
 
             readings.append(
                 ContainerCpuReading(container=name, cpu_percent=cpu_percent)
+            )
+
+        return tuple(readings)
+
+    def collect_container_states(self) -> tuple[ContainerStateReading, ...]:
+        """
+        Every container's own state and health, in one call —
+        `PLAN-J7`'s Services domain, `OPS-0004`'s third reference
+        incident (restart loops / unhealthy containers after a power
+        outage).
+
+        **A dedicated call, the same choice `collect_commands` and
+        `collect_cpu_readings` already made**, rather than widening
+        `containers()` in `aistack.cli.runtime_diagnose` — that
+        function returns `container -> state`, a mapping this
+        heritage's log-signature pipeline already relies on; adding
+        health there would either duplicate the field this method
+        already carries or change a return shape another caller
+        depends on. A container missing its `Names` field is dropped,
+        the same convention `collect_commands` already holds — there
+        is nothing to attach a reading to.
+
+        `state` falls back to `'unknown'` rather than an empty string
+        when Docker reports none — `ContainerStateReading` refuses an
+        empty state outright (`FDN-0003` Article 12: the absence is
+        named, never silent). `health` is `health_of(Status)`, already
+        parsed rather than left for a caller to re-derive.
+        """
+
+        entries = self._run_json_lines(
+            ["docker", "ps", "-a", "--format", "{{json .}}"]
+        )
+
+        readings: list[ContainerStateReading] = []
+
+        for entry in entries:
+            if not isinstance(entry, dict) or not entry.get("Names"):
+                continue
+
+            readings.append(
+                ContainerStateReading(
+                    container=entry["Names"],
+                    state=entry.get("State") or "unknown",
+                    health=health_of(entry.get("Status")),
+                )
             )
 
         return tuple(readings)

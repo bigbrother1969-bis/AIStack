@@ -1,0 +1,24 @@
+# Backup freshness thresholds — OPS-0006's own declared values, one
+# host at a time.
+#
+# Loaded by `load_backup_thresholds_yaml`
+# (`src/aistack/providers/filesystem/yaml/backup_store.py`), and read
+# by both `aistack.cli.runtime_diagnose` and `aistack.cli.health_render`,
+# which narrow this fleet-wide file to the one host each is actually
+# running on via `socket.gethostname()` — `host:` below is that exact
+# string, not a label and not an IP address.
+#
+# Declared 2026-09-11 by the owner
+# (`docs/04-development/OPS-0006-Backup-Freshness-Thresholds.md` §
+# Declared thresholds) — v1 scope: the WordPress backup written by
+# `/srv/scripts/backup-wordpress.sh`, on GIGABYTE, existence and
+# freshness only. No value here was chosen by AIStack.
+#
+# This file is edited by hand — no UI writes it back the way
+# `priority_ui` writes `resource_priority.yml`.
+
+hosts:
+  - host: GIGABYTE
+    thresholds:
+      - path: /media/BACKUP/persiaut-consulting/wordpress/
+        max_age_days: 7

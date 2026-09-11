@@ -916,6 +916,149 @@ def test_a_services_finding_and_a_log_finding_both_raise_the_exit_code(
 
 
 # --------------------------------------------------------------------
+# Sauvegarde/PRA, OPS-0004's fourth reference case (the owner's own
+# stated requirement to verify a backup exists and is not too old)
+# --------------------------------------------------------------------
+
+
+@pytest.fixture
+def backup_directory(tmp_path: Path) -> Path:
+    """
+    A real directory `BackupProvider.collect_freshness` can walk with
+    `Path.rglob` — the same choice `storage_mount` already makes for
+    `StorageProvider`: reading this machine's own filesystem is safe
+    and needs no fake.
+    """
+
+    directory = tmp_path / "wordpress"
+    directory.mkdir()
+    return directory
+
+
+def backup_thresholds_yaml(path: Path, max_age_days: float) -> str:
+    return f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - path: {path}
+        max_age_days: {max_age_days}
+"""
+
+
+@pytest.fixture
+def backup_thresholds_file(tmp_path: Path, backup_directory: Path) -> Path:
+    path = tmp_path / "backup_thresholds.yml"
+    # `backup_directory` starts empty — every use of this fixture
+    # starts from "missing", the same "declare it already short" shape
+    # `storage_thresholds_file` gives the storage tests above.
+    path.write_text(
+        backup_thresholds_yaml(backup_directory, max_age_days=7), encoding="utf-8"
+    )
+    return path
+
+
+def test_a_missing_backup_file_is_reported(
+    monkeypatch, catalogue_file, backup_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", backup_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="test-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "OPS-0004" in out
+    assert "qualifications: OPS-0004/technical-debt, " in out
+    assert "OPS-0004/deployment-misconfiguration" in out
+    assert "OPS-0004/sustainability-anomaly" not in out
+    assert "OPS-0004/energy-inefficiency" not in out
+
+
+def test_a_fresh_backup_file_is_not_reported(
+    monkeypatch, catalogue_file, tmp_path, backup_directory, capsys
+):
+    (backup_directory / "backup.tar.gz").write_text("data")
+
+    path = tmp_path / "backup_thresholds.yml"
+    path.write_text(
+        backup_thresholds_yaml(backup_directory, max_age_days=7), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="test-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "deployment-misconfiguration" not in out
+
+
+def test_a_host_with_nothing_declared_for_backups_still_diagnoses(
+    monkeypatch, catalogue_file, backup_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", backup_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="a-third-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert (
+        "Backups: no backup thresholds declared for host 'a-third-host'" in out
+    )
+
+
+def test_a_missing_backup_threshold_definition_still_diagnoses(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
+
+    code = run(monkeypatch, catalogue_file, {"gluetun": ["quiet"]})
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "Backups: no backup-threshold definition at" in out
+
+
+def test_a_backup_finding_and_a_log_finding_both_raise_the_exit_code(
+    monkeypatch, catalogue_file, backup_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", backup_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["AUTH_FAILED"]},
+        hostname="test-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "findings: 2" in out
+
+
+def test_the_governed_backup_thresholds_definition_is_the_default():
+    """
+    Mirrors `test_the_governed_storage_thresholds_definition_is_the_default`.
+    """
+
+    assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()
+    assert cli.DEFAULT_BACKUP_THRESHOLDS.name == "backup_thresholds.yml"
+
+
+# --------------------------------------------------------------------
 # Development options in a container's own launch command, STD-0300 4.3
 # --------------------------------------------------------------------
 

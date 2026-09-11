@@ -6,10 +6,12 @@ Storage is exercised the same way `test_runtime_diagnose.py` already
 exercises it: a real directory `StorageProvider.collect_usage` can
 call `shutil.disk_usage` against, no fake. Services is exercised the
 same way `test_runtime_diagnose.py` exercises Docker: a `FakeDockerProvider`
-standing in for `DockerProvider`, no real daemon. The two remaining
-not-yet-named domains (Sauvegarde/PRA, GPU) are asserted present and
-explicitly not-instrumented on every run — `FDN-0003` Article 12 says
-their absence is what must be shown, not silence.
+standing in for `DockerProvider`, no real daemon. Sauvegarde/PRA is
+exercised the same way storage is: a real directory
+`BackupProvider.collect_freshness` can walk with `Path.rglob`, no
+fake. The one remaining not-yet-named domain (GPU) is asserted present
+and explicitly not-instrumented on every run — `FDN-0003` Article 12
+says its absence is what must be shown, not silence.
 
 Mirrors `test_the_provider_commands_run.py`'s own end-to-end style for
 the "does `main()` write the artifact" test — the same GOV-0002/OS-044
@@ -141,10 +143,11 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
     assert "no storage-threshold definition at" in storage.note
 
 
-def test_the_two_undeclared_domains_are_always_present_and_not_instrumented(
+def test_the_one_undeclared_domain_is_always_present_and_not_instrumented(
     monkeypatch, tmp_path
 ):
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -152,9 +155,8 @@ def test_the_two_undeclared_domains_are_always_present_and_not_instrumented(
     names = {domain.name: domain for domain in cockpit.domains}
     assert set(names) == {"Stockage", "Services", "Sauvegarde / PRA", "GPU"}
 
-    for name in ("Sauvegarde / PRA", "GPU"):
-        assert names[name].instrumented is False
-        assert names[name].note == cli.NOT_YET_INSTRUMENTED
+    assert names["GPU"].instrumented is False
+    assert names["GPU"].note == cli.NOT_YET_INSTRUMENTED
 
 
 # --------------------------------------------------------------------
@@ -215,6 +217,81 @@ def test_docker_not_reachable_is_not_instrumented(monkeypatch):
 
 
 # --------------------------------------------------------------------
+# backup_domain — OPS-0004's fourth reference case
+# --------------------------------------------------------------------
+
+
+def backup_thresholds_yaml(path: Path, max_age_days: float) -> str:
+    return f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - path: {path}
+        max_age_days: {max_age_days}
+"""
+
+
+def test_a_missing_backup_file_is_an_alert(monkeypatch, tmp_path):
+    backup_dir = tmp_path / "wordpress"
+    backup_dir.mkdir()
+
+    path = tmp_path / "backup_thresholds.yml"
+    path.write_text(backup_thresholds_yaml(backup_dir, max_age_days=7), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+
+    domain = cli.backup_domain("test-host")
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].qualifications == (
+        "OPS-0004/technical-debt",
+        "OPS-0004/deployment-misconfiguration",
+    )
+
+
+def test_a_fresh_backup_file_reads_as_clean(monkeypatch, tmp_path):
+    backup_dir = tmp_path / "wordpress"
+    backup_dir.mkdir()
+    (backup_dir / "backup.tar.gz").write_text("data")
+
+    path = tmp_path / "backup_thresholds.yml"
+    path.write_text(backup_thresholds_yaml(backup_dir, max_age_days=7), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+
+    domain = cli.backup_domain("test-host")
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_host_with_nothing_declared_for_backups_is_not_instrumented(
+    monkeypatch, tmp_path
+):
+    backup_dir = tmp_path / "wordpress"
+    backup_dir.mkdir()
+
+    path = tmp_path / "backup_thresholds.yml"
+    path.write_text(backup_thresholds_yaml(backup_dir, max_age_days=7), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+
+    domain = cli.backup_domain("a-third-host")
+
+    assert domain.instrumented is False
+    assert "a-third-host" in domain.note
+
+
+def test_a_missing_backup_threshold_definition_is_not_instrumented(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
+
+    domain = cli.backup_domain("test-host")
+
+    assert domain.instrumented is False
+    assert "no backup-threshold definition at" in domain.note
+
+
+# --------------------------------------------------------------------
 # main() — end to end
 # --------------------------------------------------------------------
 
@@ -249,3 +326,13 @@ def test_the_default_storage_thresholds_path_matches_runtime_diagnoses():
 
     assert cli.DEFAULT_STORAGE_THRESHOLDS == runtime_diagnose.DEFAULT_STORAGE_THRESHOLDS
     assert cli.DEFAULT_STORAGE_THRESHOLDS.exists()
+
+
+def test_the_default_backup_thresholds_path_matches_runtime_diagnoses():
+    """
+    Mirrors `test_the_default_storage_thresholds_path_matches_runtime_diagnoses`
+    for `OPS-0006`'s own file.
+    """
+
+    assert cli.DEFAULT_BACKUP_THRESHOLDS == runtime_diagnose.DEFAULT_BACKUP_THRESHOLDS
+    assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()

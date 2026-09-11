@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from aistack.contracts.backup_gap import BackupGap
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.correlated_finding import CorrelatedFinding
 from aistack.contracts.development_flag import DevelopmentFlagFinding
@@ -26,14 +27,20 @@ from aistack.policies.signature_catalogue import (
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.yaml import load_resource_priority_yaml
 from aistack.providers.docker import DockerProvider
-from aistack.providers.filesystem import StorageProvider
+from aistack.providers.filesystem import (
+    BackupProvider,
+    StorageProvider,
+    backup_thresholds_for_host,
+)
 from aistack.providers.filesystem.yaml import load_storage_thresholds_yaml
 from aistack.providers.host.provider import HostProvider
+from aistack.runtime.backup_gap import find_backup_gaps
 from aistack.runtime.container_distress import find_container_distress
 from aistack.runtime.correlation import correlate_findings
 from aistack.runtime.deployment_definition import extract_dockerfile_command
 from aistack.runtime.development_flags import find_development_flags
 from aistack.runtime.evaluate import evaluate
+from aistack.runtime.evaluate_backup import evaluate_backup
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.grounding import ground_findings
@@ -208,6 +215,34 @@ def storage_thresholds(
         )
 
     return thresholds, ""
+
+
+# `OPS-0006`'s declared backup thresholds, next to `BackupProvider` for
+# the same reason `DEFAULT_STORAGE_THRESHOLDS` sits next to
+# `StorageProvider`.
+#
+# **Read through the shared `backup_thresholds_for_host` helper, not a
+# duplicated function.** `storage_thresholds` above exists as its own
+# copy only because `runtime_diagnose.py` already carried it, tested
+# and published, before `storage_thresholds_for_host`
+# (`aistack.providers.filesystem.thresholds`) was extracted as a
+# second consumer appeared — see that helper's own docstring. There is
+# no such history for backups: this module has never had its own
+# backup-checking code, so there is nothing here worth preserving by
+# duplicating it, and importing the shared helper directly is the
+# narrower, more accurate choice from the start.
+#
+# **Optional, the same way storage thresholds are.** A host with no
+# file yet, or none of its own hosts declared in it, still diagnoses —
+# backup freshness is simply not checked, reported rather than assumed
+# clean (`FDN-0003` Article 12).
+DEFAULT_BACKUP_THRESHOLDS = (
+    Path(__file__).resolve().parents[1]
+    / "providers"
+    / "filesystem"
+    / "definitions"
+    / "backup_thresholds.yml"
+)
 
 
 # The two containers this repository actually builds, and the
@@ -389,6 +424,7 @@ def report(
     correlated: tuple[CorrelatedFinding, ...] = (),
     storage_note: str = "",
     services_note: str = "",
+    backup_note: str = "",
 ) -> None:
     """
     Print every section this diagnosis has evidence for.
@@ -419,6 +455,9 @@ def report(
 
     if services_note:
         print(f"- Services: {services_note}")
+
+    if backup_note:
+        print(f"- Backups: {backup_note}")
 
     if commands_note:
         print(f"- Commands: {commands_note}")
@@ -655,6 +694,27 @@ def main() -> None:
 
     findings.extend(evaluate_services(find_container_distress(container_states)))
 
+    # Sauvegarde/PRA, `PLAN-J7`'s fourth domain: `OPS-0004`'s fourth
+    # reference case — the owner's own stated requirement to verify a
+    # backup actually exists and is not too old. Existence and
+    # freshness only (the owner's chosen v1 scope, 2026-09-11);
+    # periodic restore tests and documentation currency are named out
+    # of scope. Merged into the same `findings` list for the same
+    # reason every other domain is: grounded against OPS-0003 like any
+    # other finding, ahead of `ground_findings`.
+    backup_thresholds, backup_note = backup_thresholds_for_host(
+        DEFAULT_BACKUP_THRESHOLDS, socket.gethostname()
+    )
+    backup_gaps: tuple[BackupGap, ...] = ()
+
+    if backup_thresholds:
+        freshness = BackupProvider().collect_freshness(
+            tuple(threshold.path for threshold in backup_thresholds)
+        )
+        backup_gaps = find_backup_gaps(freshness, backup_thresholds)
+
+    findings.extend(evaluate_backup(backup_gaps))
+
     register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
     findings = list(ground_findings(findings, register))
 
@@ -701,6 +761,7 @@ def main() -> None:
         correlated,
         storage_note,
         services_note,
+        backup_note,
     )
 
     # A subject that could not be read makes the sweep partial,

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from aistack.contracts.backup_reading import BackupReading
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import LogEntry
@@ -96,15 +97,15 @@ class CitedReading:
     carries, so a finding cites exactly what collected the evidence
     — `docker stats`, `sensors` — not a description of what it means.
 
-    `reading` is one of four named types — `ContainerCpuReading`,
+    `reading` is one of five named types — `ContainerCpuReading`,
     `TemperatureReading`, `StorageReading` (`PLAN-J7`'s storage
-    domain), and, since `PLAN-J7`'s Services domain,
-    `ContainerStateReading` — spelled out directly rather than
-    imported from `aistack.kernel.evidence.Evidence`: `aistack
-    .contracts` is the heritage's foundational layer, and importing
-    `aistack.kernel.evidence` from it would read the dependency
-    backwards — `kernel.evidence` is built on these contracts, not
-    the other way round.
+    domain), `ContainerStateReading` (`PLAN-J7`'s Services domain),
+    and, since `PLAN-J7`'s Sauvegarde/PRA domain, `BackupReading` —
+    spelled out directly rather than imported from `aistack.kernel
+    .evidence.Evidence`: `aistack.contracts` is the heritage's
+    foundational layer, and importing `aistack.kernel.evidence` from
+    it would read the dependency backwards — `kernel.evidence` is
+    built on these contracts, not the other way round.
 
     **`Evidence` itself still names only the first two.** Nothing in
     the Kernel Runtime's collection pipeline touches storage yet —
@@ -123,6 +124,7 @@ class CitedReading:
         | TemperatureReading
         | StorageReading
         | ContainerStateReading
+        | BackupReading
     )
 
     def __post_init__(self) -> None:

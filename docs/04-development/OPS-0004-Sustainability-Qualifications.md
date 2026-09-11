@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Draft
   owner: Operations
   created: 2026-09-04
@@ -166,11 +166,81 @@ first):
   Raspberry stays explicitly out of scope for this lot, a named absence
   (`FDN-0003` Article 12), not a silent one — see `PLAN-J7` § 8.3.
 
+## Fourth reference case — Sauvegarde/PRA, 2026-09-11, qualified
+
+A fourth case, given directly by the owner 2026-09-11 in answer to what J7
+(`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`, the health cockpit) needed a
+Sauvegarde/PRA domain for.
+
+**Not an incident — a declared requirement, and that difference is recorded
+here rather than smoothed over.** The first three reference cases each
+describe something that already happened: a container caught permanently
+reloading, a disk that actually filled, containers observed restart-looping
+after a real power outage. This fourth case is different in kind: the owner
+did not describe a past failure, but stated a standing requirement — the
+owner's own words:
+
+> *"Vérifier qu'il existe réellement une sauvegarde, qu'elle est
+> fonctionnelle et que les backup ne sont pas trop vieux."*
+
+(Verify that a backup really exists, that it is functional, and that
+backups are not too old.)
+
+`GOV-P-001` governs a stated requirement exactly as it governs a stated
+incident: the owner states the knowledge, this register records what was
+said, and invents nothing beyond it — a missing or stale backup was never
+observed here the way GIGABYTE's disk exhaustion was; the requirement to
+detect one, should it occur, is what the owner stated and what this case
+qualifies.
+
+Examined against the vocabulary, 2026-09-11, the owner found this case to
+carry:
+
+- **technical debt** — yes;
+- **deployment misconfiguration** — yes;
+- **energy inefficiency** — no;
+- **sustainability anomaly** — no.
+
+Two qualifications, two explicitly excluded by the owner rather than left
+unconsidered — the same shape the first and third reference cases took,
+mirrored here for a declared requirement rather than an incident.
+
+**Scope, declared alongside the qualifications.** Several further questions
+were put to the owner before any code, per `ARC-P-006` (never build a
+correlation from a single case without deciding its scope from the owner
+first):
+
+- **Which backup** — the owner's stated requirement names no specific
+  backup; the owner chose the WordPress backup written by
+  `/srv/scripts/backup-wordpress.sh` to
+  `/media/BACKUP/persiaut-consulting/wordpress/` as the v1 target — the one
+  backup mechanism already running and already observable, not every backup
+  the homelab might eventually have.
+- **What "tests réguliers" and "procédures à jour" mean for v1** — the
+  owner's stated requirement also named periodic restore tests that
+  demonstrate the backup systems work, and documentation of procedures kept
+  current. Both are **out of scope for this first lot**, the owner's own
+  choice, mirroring storage's v1 leaving fill-rate detection out
+  (`PLAN-J7` § 6.4): v1 checks only that a backup file exists and is not too
+  old. Restore testing and documentation currency are named here as an
+  absence this register records (`FDN-0003` Article 12), not a silent
+  omission — revisited later against a real case, per `ARC-P-006`, not
+  built speculatively now.
+- **Host** — the WordPress backup script, and this domain's v1 scope, run
+  on **GIGABYTE**. This needed asking directly: `OPS-0005`'s own
+  `storage_thresholds.yml` already declares `/media/BACKUP` as a storage
+  threshold only for the `raspberry` host, not GIGABYTE, so which host
+  actually runs the backup script was not obvious from existing
+  declarations and was confirmed by the owner rather than assumed.
+- **Staleness threshold** — **7 jours**: the maximum age the newest backup
+  file may reach before it is considered too old. `OPS-0006` (new)
+  declares this value the same way `OPS-0005` declares storage thresholds.
+
 ## What this register does not do
 
-**Updated 2026-09-11 (second time, for the third reference incident)** —
-this section has been corrected in place twice now, each time the state it
-described stopped being current, rather than left to read as if it had
+**Updated 2026-09-11 (third time, for the fourth reference case)** — this
+section has been corrected in place three times now, each time the state
+it described stopped being current, rather than left to read as if it had
 always been so.
 
 As of `0.6.0` (`claude/PLAN-J5-EVALUATE-QUALIFIED-FINDING-2026-09-11.md`),
@@ -204,6 +274,14 @@ directly and said it applied (`GOV-P-001`) — the same per-case citation
 incident before any provider existed for it. A general "is this container's
 condition tracked as a pending fix" register remains unbuilt; nothing here
 depends on one.
+
+As of `PLAN-J7` § 9 (Sauvegarde/PRA domain), `technical debt` and
+`deployment misconfiguration` are additionally wired by
+`aistack.runtime.evaluate_backup`, citing a `BackupGap` already confirmed
+by `find_backup_gaps` — a backup location under `OPS-0006`'s declared
+thresholds found to hold no backup file at all, or one older than the
+declared threshold, on the one host and path the owner confirmed
+(GIGABYTE, the WordPress backup).
 
 Every one of `OPS-0004`'s four qualifications has now been cited by at
 least one wired `RuntimeFinding` — `energy inefficiency` remains the only

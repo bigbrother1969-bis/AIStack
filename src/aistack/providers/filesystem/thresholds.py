@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from aistack.contracts.backup_threshold import BackupThreshold
 from aistack.contracts.storage_threshold import StorageThreshold
-from aistack.providers.filesystem.yaml import load_storage_thresholds_yaml
+from aistack.providers.filesystem.yaml import (
+    load_backup_thresholds_yaml,
+    load_storage_thresholds_yaml,
+)
 
 
 def storage_thresholds_for_host(
@@ -56,6 +60,50 @@ def storage_thresholds_for_host(
         return (), (
             f"no storage thresholds declared for host {hostname!r} in "
             f"{path}; storage capacity is not checked"
+        )
+
+    return thresholds, ""
+
+
+def backup_thresholds_for_host(
+    path: Path, hostname: str
+) -> tuple[tuple[BackupThreshold, ...], str]:
+    """
+    Read `path`'s declared backup thresholds for `hostname`, or an
+    empty tuple with a note explaining why — never raises.
+
+    Mirrors `storage_thresholds_for_host` exactly (same three
+    branches, same message shape), and — unlike that function, which
+    was extracted into this shared module only after `runtime_diagnose
+    .py` had already carried its own duplicate copy — this one is
+    imported by both `aistack.cli.runtime_diagnose` and `aistack.cli
+    .health_render` from the start: `runtime_diagnose.py` had no
+    existing backup-checking code of its own to preserve, so there is
+    no history here to leave untouched, and duplicating this function
+    a second time would only repeat the drift storage's own history
+    already shows was worth avoiding.
+    """
+
+    if not path.exists():
+        return (), (
+            f"no backup-threshold definition at {path}; backup freshness "
+            f"is not checked"
+        )
+
+    try:
+        register = load_backup_thresholds_yaml(path)
+    except (ValueError, OSError) as error:
+        return (), (
+            f"backup-threshold definition not readable ({error}); backup "
+            f"freshness is not checked"
+        )
+
+    thresholds = register.for_host(hostname)
+
+    if not thresholds:
+        return (), (
+            f"no backup thresholds declared for host {hostname!r} in "
+            f"{path}; backup freshness is not checked"
         )
 
     return thresholds, ""

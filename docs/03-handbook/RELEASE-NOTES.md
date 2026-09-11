@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-09-04
+  updated: 2026-09-11
 
 relations:
   references:
@@ -38,6 +38,33 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.0.0 — 2026-09-11
+
+**The first qualified finding, derived end to end: two separately-collected
+pieces of evidence correlated into one governed conclusion for the first
+time. VS-4 closes three more criteria (4.2, 4.4, 4.5) — the boundary the
+project's own trajectory names as 1.0.**
+
+- **New: `evaluate`.** Unexplained CPU consumption — a container using
+  resources nobody declared an expectation for — is now correlated against
+  the host's own temperature, at or above each sensor's own declared
+  threshold, into one `RuntimeFinding`: `energy inefficiency` alone, or
+  `energy inefficiency` and `sustainability anomaly` together when the host
+  also reads hot. Wired end to end into `runtime_diagnose`: a live sweep of
+  the reference deployment reports these the same way it already reports a
+  log-signature finding.
+- **New: a finding can cite a reading, not only a log line.** A
+  `CitedReading` attaches the raw CPU or temperature reading a provider
+  collected to a finding, named by the provider that collected it (`docker
+  stats`, `sensors`) — alongside the existing log-line evidence, unchanged.
+- Host temperature is read in a live sweep for the first time —
+  `HostProvider.collect_temperatures` existed since `0.5.0` but nothing
+  called it.
+
+`bigbrother1969/aistack-core:1.0.0`, built from `6680e61`, digest
+`sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3`.
+1191 tests, 69 knowledge artifacts, `clean: True`.
 
 ## 0.5.0 — 2026-09-04
 
@@ -133,7 +160,7 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 0.5.0 (2026-09-04), taken together.
+Not what changed — what runs, as of 1.0.0 (2026-09-11), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
@@ -150,6 +177,16 @@ Not what changed — what runs, as of 0.5.0 (2026-09-04), taken together.
   publication — missing metadata, broken cross-references, undated
   claims about a moving system, decisions nobody recorded as implemented
   or abandoned, and more. `clean: True` is what gates a release.
+- **Runtime diagnosis.** A sweep of the Docker host, no container named,
+  qualifies log lines against declared signatures, flags CPU consumption
+  and development options (like `--reload`, the bug that started this
+  capability) left enabled in a permanent service — and, as of 1.0.0,
+  correlates unexplained consumption against the host's own temperature
+  into one finding citing `OPS-0004`'s vocabulary: energy inefficiency
+  alone, or energy inefficiency and sustainability anomaly together when
+  the host also reads hot. Every finding grounds against known service
+  context (`OPS-0003`) and cites the evidence it was built from — a log
+  line, or now a raw reading.
 - **CPU resource priority scheduling.** Declared priority applications
   (Jellyfin, as of 0.5.0) get more CPU while active and give it back once idle;
   everything else is throttled down for the duration. Detection is

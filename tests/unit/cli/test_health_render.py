@@ -17,6 +17,12 @@ depend on whichever machine happens to run it.
 Mirrors `test_the_provider_commands_run.py`'s own end-to-end style for
 the "does `main()` write the artifact" test — the same GOV-0002/OS-044
 discipline: a command is only proven wired by actually calling it.
+
+The score (`OPS-0008`) is exercised against the real, unpatched
+`DEFAULT_HEALTH_SCORE_WEIGHTS` file in most `main()` tests here — it is
+not host-scoped the way the four domains are, so there is nothing to
+fake; only the "weights file missing" branch is tested with a
+monkeypatched path.
 """
 
 from __future__ import annotations
@@ -427,6 +433,42 @@ def test_main_writes_the_health_html_artifact(monkeypatch, tmp_path, workspace):
     assert "Cockpit Santé" in document
     assert "GPU" in document
     assert "non instrumenté" in document
+    # `DEFAULT_HEALTH_SCORE_WEIGHTS` is the real, unpatched `OPS-0008`
+    # file here — every host, including this sandbox's own, reads a
+    # score even with zero domains measured (`OPS-0008` § *Formula*).
+    assert "Score de santé" in document
+
+
+# --------------------------------------------------------------------
+# main() — the score (OPS-0008)
+# --------------------------------------------------------------------
+
+
+def test_main_prints_the_score_when_weights_are_available(monkeypatch, tmp_path, workspace, capsys):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+
+    cli.main()
+
+    captured = capsys.readouterr()
+    assert "score:" in captured.out
+    assert "domain(s) measured" in captured.out
+
+
+def test_main_falls_back_to_the_note_when_weights_are_unavailable(
+    monkeypatch, tmp_path, workspace, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_HEALTH_SCORE_WEIGHTS", tmp_path / "absent-weights.yml")
+
+    cli.main()
+
+    path = workspace / "reports" / "generated" / "health.html"
+    document = path.read_text(encoding="utf-8")
+    assert "Score de santé : non calculé" in document
+    assert "no health-score weight definition" in document
+
+    captured = capsys.readouterr()
+    assert "no health-score weight definition" in captured.out
 
 
 # --------------------------------------------------------------------
@@ -464,3 +506,14 @@ def test_the_default_gpu_thresholds_path_matches_runtime_diagnoses():
 
     assert cli.DEFAULT_GPU_THRESHOLDS == runtime_diagnose.DEFAULT_GPU_THRESHOLDS
     assert cli.DEFAULT_GPU_THRESHOLDS.exists()
+
+
+def test_the_default_health_score_weights_definition_exists():
+    """
+    Unlike the three `DEFAULT_*_THRESHOLDS` above, `OPS-0008` has no
+    sibling in `runtime_diagnose.py` to drift against — a health score
+    is only ever computed here, in `health_render.py`. This just
+    confirms the declared path resolves to a real, readable file.
+    """
+
+    assert cli.DEFAULT_HEALTH_SCORE_WEIGHTS.exists()

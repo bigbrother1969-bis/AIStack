@@ -6,6 +6,8 @@ from pathlib import Path
 
 from aistack.generators.health import HealthHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
+from aistack.health.score import compute_health_score
+from aistack.health.score_weights import health_score_weights
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,
@@ -68,6 +70,17 @@ DEFAULT_GPU_THRESHOLDS = (
     / "gpu"
     / "definitions"
     / "gpu_thresholds.yml"
+)
+
+# `OPS-0008`'s own declared health-score weights. Not scoped by host,
+# unlike the three `DEFAULT_*_THRESHOLDS` above: a health score weighs
+# whichever domains this host's own cockpit instruments, but the
+# weight a domain costs is the same wherever this runs.
+DEFAULT_HEALTH_SCORE_WEIGHTS = (
+    Path(__file__).resolve().parents[1]
+    / "health"
+    / "definitions"
+    / "health_score_weights.yml"
 )
 
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
@@ -233,20 +246,34 @@ def build_cockpit(hostname: str) -> HealthCockpit:
 
 def main() -> None:
     """
-    `PLAN-J7` § 6.4/6.5: the cockpit visuel, decided with the owner
-    2026-09-11 to render real findings rather than a score — the
-    scoring model `PLAN-J7` § 1 still leaves undeclared, and a single
-    instrumented domain has nothing to weigh a score against yet.
+    `PLAN-J7` § 6.4/6.5/§ 11: the cockpit visuel, now scored.
+    `render findings first, decide the score model once there is
+    something real to weigh` was the owner's own sequencing
+    (2026-09-11) — four domains were instrumented and confirmed on
+    GIGABYTE before `OPS-0008` declared a single weight, so the score
+    this prints is never earlier than the findings it is built from.
     """
 
     cockpit = build_cockpit(socket.gethostname())
 
+    weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
+    score = compute_health_score(cockpit, weights) if weights is not None else None
+
     output_path = HealthHtmlArtifactGenerator().generate(
         cockpit=cockpit,
         output_path=Path("reports/generated/health.html"),
+        score=score,
+        score_note=score_note,
     )
 
-    print(f"Health cockpit written to {output_path}")
+    if score is not None:
+        print(
+            f"Health cockpit written to {output_path} "
+            f"(score: {score.value}/100, {score.bucket}, "
+            f"{score.measured_domains}/{score.total_domains} domain(s) measured)"
+        )
+    else:
+        print(f"Health cockpit written to {output_path} (score: {score_note})")
 
 
 if __name__ == "__main__":

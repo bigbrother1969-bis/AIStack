@@ -1,0 +1,16 @@
+# OPS-0008 — Declared health-score weights.
+#
+# Written by hand, read-only — every value here is the owner's own
+# declared weight (OPS-0008 § Declared weights), chosen 2026-09-11
+# once all four PLAN-J7 domains were instrumented and confirmed on
+# GIGABYTE. Nothing in this codebase writes this file back.
+
+weights:
+  - domain: Stockage
+    points: 10
+  - domain: Services
+    points: 15
+  - domain: Sauvegarde / PRA
+    points: 25
+  - domain: GPU
+    points: 8

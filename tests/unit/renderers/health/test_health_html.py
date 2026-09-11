@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from aistack.contracts.health_score import ACTION_REQUIRED, EXCELLENT, TO_WATCH, HealthScore
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.storage_reading import StorageReading
 from aistack.health.cockpit import HealthCockpit, HealthDomain
@@ -187,3 +188,67 @@ def test_a_findings_interpretation_is_html_escaped():
 
     assert "<b>free space</b>" not in document
     assert "&lt;b&gt;free space&lt;/b&gt; &amp; more" in document
+
+
+# --------------------------------------------------------------------
+# Score (OPS-0008) — optional, backward compatible
+# --------------------------------------------------------------------
+
+
+def test_no_score_and_no_note_renders_no_score_section():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(cockpit)
+
+    assert "Score de santé" not in document
+
+
+def test_a_computed_score_is_shown_with_its_bucket():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = HealthScore(value=82, measured_domains=3, total_domains=4, bucket=TO_WATCH)
+
+    document = render_html(cockpit, score=score)
+
+    assert "Score de santé" in document
+    assert "82/100" in document
+    assert "à surveiller" in document
+    assert "3/4 domaine(s) mesuré(s)" in document
+    assert "badge-watch" in document
+
+
+def test_an_excellent_score_uses_the_clean_badge():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = HealthScore(value=100, measured_domains=4, total_domains=4, bucket=EXCELLENT)
+
+    document = render_html(cockpit, score=score)
+
+    assert "badge-clean" in document
+
+
+def test_an_action_required_score_uses_the_alert_badge():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = HealthScore(value=40, measured_domains=4, total_domains=4, bucket=ACTION_REQUIRED)
+
+    document = render_html(cockpit, score=score)
+
+    assert "badge-alert" in document
+
+
+def test_a_score_note_is_shown_when_the_score_could_not_be_computed():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(
+        cockpit, score=None, score_note="no health-score weight definition at ..."
+    )
+
+    assert "Score de santé : non calculé" in document
+    assert "no health-score weight definition" in document
+
+
+def test_a_score_note_is_html_escaped():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(cockpit, score=None, score_note="<script>bad()</script>")
+
+    assert "<script>bad()</script>" not in document
+    assert "&lt;script&gt;" in document

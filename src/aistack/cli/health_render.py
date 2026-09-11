@@ -13,11 +13,14 @@ from aistack.providers.filesystem import (
     backup_thresholds_for_host,
     storage_thresholds_for_host,
 )
+from aistack.providers.gpu import NvidiaGpuProvider, gpu_thresholds_for_host
 from aistack.runtime.backup_gap import find_backup_gaps
 from aistack.runtime.container_distress import find_container_distress
 from aistack.runtime.evaluate_backup import evaluate_backup
+from aistack.runtime.evaluate_gpu import evaluate_gpu
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
+from aistack.runtime.gpu_anomaly import find_gpu_anomalies
 from aistack.runtime.storage_shortage import find_storage_shortage
 
 # `OPS-0005`'s own declared thresholds — the same file
@@ -55,16 +58,26 @@ DEFAULT_BACKUP_THRESHOLDS = (
     / "backup_thresholds.yml"
 )
 
+# `OPS-0007`'s own declared thresholds — the same file
+# `aistack.cli.runtime_diagnose.DEFAULT_GPU_THRESHOLDS` reads, declared
+# again here for the same reason `DEFAULT_BACKUP_THRESHOLDS` is: no CLI
+# in this package imports another.
+DEFAULT_GPU_THRESHOLDS = (
+    Path(__file__).resolve().parents[1]
+    / "providers"
+    / "gpu"
+    / "definitions"
+    / "gpu_thresholds.yml"
+)
+
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
 # closed domain vocabulary the owner named before any code —
 # "stockage, services, backup/PRA, GPU" — not this module's own
-# invention. Storage (`PLAN-J7` § 6), Services (`PLAN-J7` § 8) and
-# Sauvegarde/PRA (`PLAN-J7` § 9) are instrumented so far; GPU carries
-# this exact note, never a false "healthy" (`FDN-0003` Article 12).
-NOT_YET_INSTRUMENTED = (
-    "aucun cas réel n'a encore été cité par le propriétaire pour ce "
-    "domaine (GOV-P-001) ; aucun code ne l'observe pour l'instant"
-)
+# invention. All five reference cases have since named a domain
+# (Storage `PLAN-J7` § 6, Services § 8, Sauvegarde/PRA § 9, GPU § 10) —
+# this note stays declared for a host where a domain's own check
+# still reports nothing to observe (no threshold file, no `nvidia-smi`,
+# Docker unreachable), never a false "healthy" (`FDN-0003` Article 12).
 
 
 def storage_domain(hostname: str) -> HealthDomain:
@@ -172,13 +185,48 @@ def backup_domain(hostname: str) -> HealthDomain:
     )
 
 
+def gpu_domain(hostname: str) -> HealthDomain:
+    """
+    `PLAN-J7` § 10's own domain: `OPS-0004`'s fifth reference case —
+    the owner's own stated requirement to verify GPU delegation and
+    monitor the CPU/GPU duo's consumption. Built from the same
+    primitives `aistack.cli.runtime_diagnose` already wires into its
+    own report: `gpu_thresholds_for_host` narrows the fleet-wide file
+    to this host, `NvidiaGpuProvider` reads it, `find_gpu_anomalies`
+    decides which readings crossed `OPS-0007`, `evaluate_gpu` states
+    the finding.
+
+    Consumption monitoring only (the owner's chosen v1 scope,
+    2026-09-11) — per-service delegation verification is named out of
+    scope, `OPS-0007` § *Out of scope*. A host with nothing declared,
+    or a missing/unreadable definition, is `instrumented=False` with
+    the same note `gpu_thresholds_for_host` already names — the same
+    absence, stated the same way, whichever command asks. A host with
+    thresholds declared but no `nvidia-smi` reading anything (no card,
+    no driver) reads as instrumented with nothing to report — the same
+    "declared but currently clean" state every other domain already
+    allows, since `find_gpu_anomalies` on an empty reading tuple
+    produces no anomaly.
+    """
+
+    thresholds, note = gpu_thresholds_for_host(DEFAULT_GPU_THRESHOLDS, hostname)
+
+    if not thresholds:
+        return HealthDomain(name="GPU", instrumented=False, note=note)
+
+    readings = NvidiaGpuProvider().collect_readings()
+    anomalies = find_gpu_anomalies(readings, thresholds)
+
+    return HealthDomain(name="GPU", instrumented=True, findings=evaluate_gpu(anomalies))
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     return HealthCockpit(
         domains=(
             storage_domain(hostname),
             services_domain(),
             backup_domain(hostname),
-            HealthDomain(name="GPU", instrumented=False, note=NOT_YET_INSTRUMENTED),
+            gpu_domain(hostname),
         )
     )
 

@@ -9,9 +9,10 @@ same way `test_runtime_diagnose.py` exercises Docker: a `FakeDockerProvider`
 standing in for `DockerProvider`, no real daemon. Sauvegarde/PRA is
 exercised the same way storage is: a real directory
 `BackupProvider.collect_freshness` can walk with `Path.rglob`, no
-fake. The one remaining not-yet-named domain (GPU) is asserted present
-and explicitly not-instrumented on every run — `FDN-0003` Article 12
-says its absence is what must be shown, not silence.
+fake. GPU is exercised the same way Services is: a `FakeGpuProvider`
+standing in for `NvidiaGpuProvider`, no real `nvidia-smi` — the sandbox
+that runs this suite has no NVIDIA GPU, and a fake makes the result not
+depend on whichever machine happens to run it.
 
 Mirrors `test_the_provider_commands_run.py`'s own end-to-end style for
 the "does `main()` write the artifact" test — the same GOV-0002/OS-044
@@ -20,6 +21,7 @@ discipline: a command is only proven wired by actually calling it.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -28,6 +30,7 @@ from aistack.cli import health_render as cli
 from aistack.cli import runtime_diagnose
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
+from aistack.contracts.gpu_reading import GpuReading
 
 
 class FakeDockerProvider:
@@ -53,6 +56,38 @@ class FakeDockerProvider:
             )
             for entry in (self._states or ())
         )
+
+
+class FakeGpuProvider:
+    """
+    Mirrors `FakeDockerProvider` for `NvidiaGpuProvider.collect_readings`
+    — no NVIDIA GPU in the sandbox that runs this suite, and a real
+    call would make results depend on whichever machine happens to run
+    it. Unlike Docker, there is no exception path to fake:
+    `collect_readings` is documented never to raise.
+    """
+
+    def __init__(self, readings):
+        self._readings = readings
+
+    def collect_readings(self):
+        return tuple(self._readings)
+
+
+def gpu_reading(
+    temperature_celsius: float = 49.0,
+    utilization_percent: float = 1.0,
+    memory_used_mib: float = 142.0,
+    memory_total_mib: float = 2048.0,
+) -> GpuReading:
+    return GpuReading(
+        name="Quadro P400",
+        observed_at=datetime.now(timezone.utc),
+        utilization_percent=utilization_percent,
+        memory_used_mib=memory_used_mib,
+        memory_total_mib=memory_total_mib,
+        temperature_celsius=temperature_celsius,
+    )
 
 
 @pytest.fixture
@@ -143,20 +178,23 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
     assert "no storage-threshold definition at" in storage.note
 
 
-def test_the_one_undeclared_domain_is_always_present_and_not_instrumented(
-    monkeypatch, tmp_path
-):
+def test_all_four_domains_are_always_present(monkeypatch, tmp_path):
+    """
+    `PLAN-J7` § 1's closed domain vocabulary, all four now named by a
+    reference case (Storage, Services, Sauvegarde/PRA, GPU) — every
+    build lists all four, whatever their instrumented state, never
+    silently fewer (`FDN-0003` Article 12).
+    """
+
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
 
-    names = {domain.name: domain for domain in cockpit.domains}
-    assert set(names) == {"Stockage", "Services", "Sauvegarde / PRA", "GPU"}
-
-    assert names["GPU"].instrumented is False
-    assert names["GPU"].note == cli.NOT_YET_INSTRUMENTED
+    names = {domain.name for domain in cockpit.domains}
+    assert names == {"Stockage", "Services", "Sauvegarde / PRA", "GPU"}
 
 
 # --------------------------------------------------------------------
@@ -292,6 +330,86 @@ def test_a_missing_backup_threshold_definition_is_not_instrumented(
 
 
 # --------------------------------------------------------------------
+# gpu_domain — OPS-0004's fifth reference case
+# --------------------------------------------------------------------
+
+
+def gpu_thresholds_yaml(celsius: float = 80, percent: float = 90) -> str:
+    return f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - kind: temperature_celsius
+        celsius: {celsius}
+      - kind: utilization_percent
+        percent: {percent}
+      - kind: memory_percent
+        percent: {percent}
+"""
+
+
+@pytest.fixture
+def gpu_thresholds_file(tmp_path: Path) -> Path:
+    path = tmp_path / "gpu_thresholds.yml"
+    path.write_text(gpu_thresholds_yaml(), encoding="utf-8")
+    return path
+
+
+def test_a_hot_gpu_reading_is_an_alert(monkeypatch, gpu_thresholds_file):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+    monkeypatch.setattr(
+        cli,
+        "NvidiaGpuProvider",
+        lambda: FakeGpuProvider([gpu_reading(temperature_celsius=85.0)]),
+    )
+
+    domain = cli.gpu_domain("test-host")
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].qualifications == (
+        "OPS-0004/technical-debt",
+        "OPS-0004/energy-inefficiency",
+        "OPS-0004/sustainability-anomaly",
+        "OPS-0004/deployment-misconfiguration",
+    )
+
+
+def test_a_clean_gpu_reading_reads_as_clean(monkeypatch, gpu_thresholds_file):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+    monkeypatch.setattr(
+        cli, "NvidiaGpuProvider", lambda: FakeGpuProvider([gpu_reading()])
+    )
+
+    domain = cli.gpu_domain("test-host")
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_host_with_nothing_declared_for_gpu_is_not_instrumented(
+    monkeypatch, gpu_thresholds_file
+):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+
+    domain = cli.gpu_domain("a-third-host")
+
+    assert domain.instrumented is False
+    assert "a-third-host" in domain.note
+
+
+def test_a_missing_gpu_threshold_definition_is_not_instrumented(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+
+    domain = cli.gpu_domain("test-host")
+
+    assert domain.instrumented is False
+    assert "no GPU-threshold definition at" in domain.note
+
+
+# --------------------------------------------------------------------
 # main() — end to end
 # --------------------------------------------------------------------
 
@@ -336,3 +454,13 @@ def test_the_default_backup_thresholds_path_matches_runtime_diagnoses():
 
     assert cli.DEFAULT_BACKUP_THRESHOLDS == runtime_diagnose.DEFAULT_BACKUP_THRESHOLDS
     assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()
+
+
+def test_the_default_gpu_thresholds_path_matches_runtime_diagnoses():
+    """
+    Mirrors `test_the_default_backup_thresholds_path_matches_runtime_diagnoses`
+    for `OPS-0007`'s own file.
+    """
+
+    assert cli.DEFAULT_GPU_THRESHOLDS == runtime_diagnose.DEFAULT_GPU_THRESHOLDS
+    assert cli.DEFAULT_GPU_THRESHOLDS.exists()

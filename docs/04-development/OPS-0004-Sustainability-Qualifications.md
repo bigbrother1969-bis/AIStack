@@ -7,7 +7,7 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Draft
   owner: Operations
   created: 2026-09-04
@@ -236,10 +236,78 @@ first):
   file may reach before it is considered too old. `OPS-0006` (new)
   declares this value the same way `OPS-0005` declares storage thresholds.
 
+## Fifth reference case — GPU, 2026-09-11, qualified
+
+A fifth case, given directly by the owner 2026-09-11 in answer to what J7
+(`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`, the health cockpit) needed a
+GPU domain for.
+
+**Not an incident — a declared requirement, the same distinction the fourth
+reference case recorded rather than smoothed over.** The owner's own words:
+
+> *"Vérifier que tous les services qui peuvent déléguer du calcul au GPU le
+> font bien et surveiller la consommation du duo CPU/GPU."*
+
+(Verify that all services able to delegate compute to the GPU actually do
+so, and monitor the CPU/GPU duo's consumption.)
+
+`GOV-P-001` governs a stated requirement exactly as it governs a stated
+incident: the owner states the knowledge, this register records what was
+said, and invents nothing beyond it — no GPU anomaly was ever observed here
+the way GIGABYTE's disk exhaustion was; the requirement to detect one,
+should it occur, is what the owner stated and what this case qualifies.
+
+Examined against the vocabulary, 2026-09-11, the owner found this case to
+carry:
+
+- **technical debt** — yes;
+- **energy inefficiency** — yes;
+- **sustainability anomaly** — yes;
+- **deployment misconfiguration** — yes.
+
+**All four qualifications, none excluded — the first reference case to
+carry the complete vocabulary.** Every prior case (below and above) found
+the owner excluding at least one qualification as not pertinent; this one
+is examined the same way and simply found to carry all four.
+
+**Scope, declared alongside the qualifications.** Several further questions
+were put to the owner before any code, per `ARC-P-006` (never build a
+correlation from a single case without deciding its scope from the owner
+first):
+
+- **Host and hardware** — the owner confirmed **GIGABYTE**, an **NVIDIA
+  Quadro P400** (2048 MiB VRAM). Confirmed live via `nvidia-smi`,
+  2026-09-11: 1 % utilization, 142 MiB used, 49 °C at the moment of
+  reading — an idle desktop GPU (Xorg, TeamViewer), no AI workload running.
+  `power.draw`/`power.limit` both read `[N/A]` on this card — this GPU does
+  not expose a power sensor via `nvidia-smi`, so power is out of scope by
+  construction, not by choice.
+- **Candidate services for delegation** — Jellyfin (transcoding), Immich
+  (ML: facial recognition, object detection), Frigate (object detection) —
+  the services the owner named as able to delegate compute to the GPU.
+- **v1 scope: consumption monitoring only, not delegation verification** —
+  the owner's own stated requirement names two things: verifying that
+  services delegate correctly, and monitoring CPU/GPU consumption. Put to
+  the owner directly, given the two need different detection mechanisms
+  (Jellyfin's own delegation state is only observable via its live
+  `/Sessions` API, during an active transcode; Immich's and Frigate's are
+  declared in their own configuration, not read live) — the owner chose
+  **consumption monitoring only** for this first lot, mirroring every prior
+  domain's own v1 scope reduction (storage's static threshold over
+  fill-rate detection, `PLAN-J7` § 6.4; backup's existence-and-freshness
+  over restore testing, `OPS-0006` § *Out of scope*). Per-service
+  delegation verification is named here as an absence this register
+  records (`FDN-0003` Article 12), not a silent omission — revisited later
+  against a real case, per `ARC-P-006`, not built speculatively now.
+- **Declared thresholds** — three, declared against the live `nvidia-smi`
+  reading above: temperature **80 °C**, sustained utilization **90 %**,
+  memory occupancy **90 %**. Consigned in **`OPS-0007-GPU-Consumption-
+  Thresholds.md`** (new registry, mirror `OPS-0005`/`OPS-0006`).
+
 ## What this register does not do
 
-**Updated 2026-09-11 (third time, for the fourth reference case)** — this
-section has been corrected in place three times now, each time the state
+**Updated 2026-09-11 (fourth time, for the fifth reference case)** — this
+section has been corrected in place four times now, each time the state
 it described stopped being current, rather than left to read as if it had
 always been so.
 
@@ -283,6 +351,18 @@ thresholds found to hold no backup file at all, or one older than the
 declared threshold, on the one host and path the owner confirmed
 (GIGABYTE, the WordPress backup).
 
-Every one of `OPS-0004`'s four qualifications has now been cited by at
-least one wired `RuntimeFinding` — `energy inefficiency` remains the only
-one this register has never found a real case to carry.
+As of `PLAN-J7` § 10 (GPU domain), all four qualifications —
+`technical debt`, `energy inefficiency`, `sustainability anomaly` and
+`deployment misconfiguration` — are additionally wired together by
+`aistack.runtime.evaluate_gpu`, citing a `GpuAnomaly` already confirmed by
+`find_gpu_anomalies` — a GPU reading under `OPS-0007`'s declared
+thresholds found to cross temperature, utilization or memory occupancy, on
+the one host and card the owner confirmed (GIGABYTE, the Quadro P400).
+This is the first domain-specific evaluator to cite `energy inefficiency`
+— previously cited only by the original `aistack.runtime.evaluate`
+correlation (CPU consumption against temperature), not by a domain
+evaluator built for a `PLAN-J7` reference case.
+
+Every one of `OPS-0004`'s four qualifications is now cited by multiple
+wired `RuntimeFinding` producers, across five reference cases — the
+vocabulary's coverage is no longer a gap this section needs to track.

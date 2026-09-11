@@ -1,0 +1,16 @@
+# OPS-0007 — Declared GPU thresholds.
+#
+# Written by hand, read-only — every value here is the owner's own
+# declared threshold (OPS-0007 § Declared thresholds), declared against
+# real `nvidia-smi` output taken live on GIGABYTE, 2026-09-11. Nothing
+# in this codebase writes this file back.
+
+hosts:
+  - host: GIGABYTE
+    thresholds:
+      - kind: temperature_celsius
+        celsius: 80
+      - kind: utilization_percent
+        percent: 90
+      - kind: memory_percent
+        percent: 90

@@ -9,6 +9,7 @@ from aistack.contracts.backup_gap import BackupGap
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.correlated_finding import CorrelatedFinding
 from aistack.contracts.development_flag import DevelopmentFlagFinding
+from aistack.contracts.gpu_anomaly import GpuAnomaly
 from aistack.contracts.lifecycle import LifecycleRegister
 from aistack.contracts.runtime_finding import CitedReading, MatchedLine, RuntimeFinding
 from aistack.contracts.signature import SignatureCatalogue
@@ -33,6 +34,7 @@ from aistack.providers.filesystem import (
     backup_thresholds_for_host,
 )
 from aistack.providers.filesystem.yaml import load_storage_thresholds_yaml
+from aistack.providers.gpu import NvidiaGpuProvider, gpu_thresholds_for_host
 from aistack.providers.host.provider import HostProvider
 from aistack.runtime.backup_gap import find_backup_gaps
 from aistack.runtime.container_distress import find_container_distress
@@ -41,8 +43,10 @@ from aistack.runtime.deployment_definition import extract_dockerfile_command
 from aistack.runtime.development_flags import find_development_flags
 from aistack.runtime.evaluate import evaluate
 from aistack.runtime.evaluate_backup import evaluate_backup
+from aistack.runtime.evaluate_gpu import evaluate_gpu
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
+from aistack.runtime.gpu_anomaly import find_gpu_anomalies
 from aistack.runtime.grounding import ground_findings
 from aistack.runtime.idle_consumption import find_unexplained_consumption
 from aistack.runtime.qualification import qualify
@@ -245,6 +249,26 @@ DEFAULT_BACKUP_THRESHOLDS = (
 )
 
 
+# `OPS-0007`'s declared GPU thresholds, next to `NvidiaGpuProvider` for
+# the same reason `DEFAULT_BACKUP_THRESHOLDS` sits next to
+# `BackupProvider`. Read through the shared `gpu_thresholds_for_host`
+# helper — no prior duplicate existed here to preserve, the same
+# reasoning `backup_thresholds_for_host` already gives.
+#
+# **Optional, the same way backup thresholds are.** A host with no
+# file yet, or none of its own hosts declared in it (or no
+# `nvidia-smi` at all — a GPU-less host, or one without NVIDIA
+# tooling), still diagnoses — GPU consumption is simply not checked,
+# reported rather than assumed clean (`FDN-0003` Article 12).
+DEFAULT_GPU_THRESHOLDS = (
+    Path(__file__).resolve().parents[1]
+    / "providers"
+    / "gpu"
+    / "definitions"
+    / "gpu_thresholds.yml"
+)
+
+
 # The two containers this repository actually builds, and the
 # Dockerfile each one's `CMD` is read from.
 #
@@ -425,6 +449,7 @@ def report(
     storage_note: str = "",
     services_note: str = "",
     backup_note: str = "",
+    gpu_note: str = "",
 ) -> None:
     """
     Print every section this diagnosis has evidence for.
@@ -458,6 +483,9 @@ def report(
 
     if backup_note:
         print(f"- Backups: {backup_note}")
+
+    if gpu_note:
+        print(f"- GPU: {gpu_note}")
 
     if commands_note:
         print(f"- Commands: {commands_note}")
@@ -715,6 +743,25 @@ def main() -> None:
 
     findings.extend(evaluate_backup(backup_gaps))
 
+    # GPU, `PLAN-J7`'s fifth domain: `OPS-0004`'s fifth reference case —
+    # the owner's own stated requirement to verify GPU delegation and
+    # monitor CPU/GPU consumption. Consumption monitoring only (the
+    # owner's chosen v1 scope, 2026-09-11) — per-service delegation
+    # verification (Jellyfin/Immich/Frigate) is named out of scope.
+    # Merged into the same `findings` list for the same reason every
+    # other domain is: grounded against OPS-0003 like any other
+    # finding, ahead of `ground_findings`.
+    gpu_thresholds, gpu_note = gpu_thresholds_for_host(
+        DEFAULT_GPU_THRESHOLDS, socket.gethostname()
+    )
+    gpu_anomalies: tuple[GpuAnomaly, ...] = ()
+
+    if gpu_thresholds:
+        gpu_readings = NvidiaGpuProvider().collect_readings()
+        gpu_anomalies = find_gpu_anomalies(gpu_readings, gpu_thresholds)
+
+    findings.extend(evaluate_gpu(gpu_anomalies))
+
     register, note = lifecycle_register(DEFAULT_LIFECYCLE_REGISTER)
     findings = list(ground_findings(findings, register))
 
@@ -762,6 +809,7 @@ def main() -> None:
         storage_note,
         services_note,
         backup_note,
+        gpu_note,
     )
 
     # A subject that could not be read makes the sweep partial,

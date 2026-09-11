@@ -6,6 +6,7 @@ import pytest
 from aistack.cli import runtime_diagnose as cli
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
+from aistack.contracts.gpu_reading import GpuReading
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import (
     LogEntry,
@@ -136,6 +137,26 @@ class FakeProvider:
         )
 
 
+class FakeGpuProvider:
+    """
+    A provider that reports GPU readings without calling `nvidia-smi`.
+
+    Unlike `FakeProvider`'s `states`/`cpu`/`commands`, there is no
+    exception path to fake here: `NvidiaGpuProvider.collect_readings`
+    is documented never to raise (mirroring `HostProvider
+    .collect_temperatures`), so the real provider is already safe to
+    leave unfaked when a test does not care about GPU readings — it
+    simply reports nothing on a machine with no `nvidia-smi`, the same
+    way `HostProvider` is left unfaked throughout this file.
+    """
+
+    def __init__(self, readings):
+        self._readings = readings
+
+    def collect_readings(self):
+        return tuple(self._readings)
+
+
 def run(
     monkeypatch,
     catalogue_file,
@@ -146,12 +167,18 @@ def run(
     processes=None,
     hostname=None,
     states=None,
+    gpu_readings=None,
 ) -> int:
     monkeypatch.setattr(
         cli,
         "DockerProvider",
         lambda: FakeProvider(logs, cpu, commands, processes, states),
     )
+
+    if gpu_readings is not None:
+        monkeypatch.setattr(
+            cli, "NvidiaGpuProvider", lambda: FakeGpuProvider(gpu_readings)
+        )
 
     # `None` leaves the real `socket.gethostname()` in place — the
     # same choice every other test here already makes for
@@ -1056,6 +1083,145 @@ def test_the_governed_backup_thresholds_definition_is_the_default():
 
     assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()
     assert cli.DEFAULT_BACKUP_THRESHOLDS.name == "backup_thresholds.yml"
+
+
+# --------------------------------------------------------------------
+# GPU, OPS-0004's fifth reference case (the owner's own stated
+# requirement to verify GPU delegation and monitor CPU/GPU consumption)
+# --------------------------------------------------------------------
+
+
+def gpu_thresholds_yaml(celsius: float = 80, percent: float = 90) -> str:
+    return f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - kind: temperature_celsius
+        celsius: {celsius}
+      - kind: utilization_percent
+        percent: {percent}
+      - kind: memory_percent
+        percent: {percent}
+"""
+
+
+@pytest.fixture
+def gpu_thresholds_file(tmp_path: Path) -> Path:
+    path = tmp_path / "gpu_thresholds.yml"
+    path.write_text(gpu_thresholds_yaml(), encoding="utf-8")
+    return path
+
+
+def gpu_reading(
+    temperature_celsius: float = 49.0,
+    utilization_percent: float = 1.0,
+    memory_used_mib: float = 142.0,
+    memory_total_mib: float = 2048.0,
+) -> GpuReading:
+    return GpuReading(
+        name="Quadro P400",
+        observed_at=NOW,
+        utilization_percent=utilization_percent,
+        memory_used_mib=memory_used_mib,
+        memory_total_mib=memory_total_mib,
+        temperature_celsius=temperature_celsius,
+    )
+
+
+def test_a_hot_gpu_reading_is_reported(
+    monkeypatch, catalogue_file, gpu_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="test-host",
+        gpu_readings=[gpu_reading(temperature_celsius=85.0)],
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "OPS-0004" in out
+    assert "qualifications: OPS-0004/technical-debt, " in out
+    assert "OPS-0004/energy-inefficiency" in out
+    assert "OPS-0004/sustainability-anomaly" in out
+    assert "OPS-0004/deployment-misconfiguration" in out
+
+
+def test_a_clean_gpu_reading_is_not_reported(
+    monkeypatch, catalogue_file, gpu_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="test-host",
+        gpu_readings=[gpu_reading()],
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "energy-inefficiency" not in out
+
+
+def test_a_host_with_nothing_declared_for_gpu_still_diagnoses(
+    monkeypatch, catalogue_file, gpu_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        hostname="a-third-host",
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "GPU: no GPU thresholds declared for host 'a-third-host'" in out
+
+
+def test_a_missing_gpu_threshold_definition_still_diagnoses(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+
+    code = run(monkeypatch, catalogue_file, {"gluetun": ["quiet"]})
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "GPU: no GPU-threshold definition at" in out
+
+
+def test_a_gpu_finding_and_a_log_finding_both_raise_the_exit_code(
+    monkeypatch, catalogue_file, gpu_thresholds_file, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["AUTH_FAILED"]},
+        hostname="test-host",
+        gpu_readings=[gpu_reading(temperature_celsius=85.0)],
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "findings: 2" in out
+
+
+def test_the_governed_gpu_thresholds_definition_is_the_default():
+    """
+    Mirrors `test_the_governed_backup_thresholds_definition_is_the_default`.
+    """
+
+    assert cli.DEFAULT_GPU_THRESHOLDS.exists()
+    assert cli.DEFAULT_GPU_THRESHOLDS.name == "gpu_thresholds.yml"
 
 
 # --------------------------------------------------------------------

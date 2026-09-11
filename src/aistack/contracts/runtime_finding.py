@@ -1,6 +1,29 @@
 from dataclasses import dataclass
 
+from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import LogEntry
+from aistack.contracts.temperature_reading import TemperatureReading
+
+
+# STD-0300 § VS-4 criterion 4.5's own vocabulary, authored by the
+# owner in `OPS-0004` and closed there — "no more may be added
+# without the owner naming a fifth." Declared here, next to the type
+# that cites it, rather than in `aistack.runtime.evaluate`, so every
+# caller validates against the one list rather than trusting each
+# other to spell it the same way.
+#
+# Each entry is a citation, `{register}/{term}` — the same shape
+# `ground_findings` already writes for `grounding`
+# (`OPS-0003/frigate`) — not the bare English term, so a
+# `RuntimeFinding.qualifications` entry is traceable to where it was
+# authored on sight, the same discipline `signature` already holds
+# for the rule that produced the finding.
+QUALIFICATIONS = (
+    "OPS-0004/technical-debt",
+    "OPS-0004/energy-inefficiency",
+    "OPS-0004/sustainability-anomaly",
+    "OPS-0004/deployment-misconfiguration",
+)
 
 
 @dataclass(frozen=True)
@@ -53,6 +76,45 @@ class MatchedLine:
 
 
 @dataclass(frozen=True)
+class CitedReading:
+    """
+    One reading — CPU or temperature — cited as technical evidence
+    for a `RuntimeFinding`, from a source that is not a log line.
+
+    J5 — `evaluate`, the Evidence and Observation Foundation's first
+    real consumer (`claude/PLAN-TRAJECTOIRE-2026-09-04.md`). STD-0300
+    § VS-4 criterion 4.4 asks for technical evidence "collected and
+    attached to the finding, down to system-call level or
+    equivalent." `MatchedLine` already satisfies that for a log line
+    — the line itself, and where in it a pattern was found.
+    `CitedReading` is the same discipline for a reading
+    `DockerProvider.collect_cpu_readings` or `HostProvider
+    .collect_temperatures` produced: `provider` names which one, the
+    same `provider_id` convention `RuntimeObservation` already
+    carries, so a finding cites exactly what collected the evidence
+    — `docker stats`, `sensors` — not a description of what it means.
+
+    `reading` is one of `aistack.kernel.evidence.Evidence`'s two
+    members (`ContainerCpuReading | TemperatureReading`), spelled out
+    directly rather than imported as that alias: `aistack.contracts`
+    is the heritage's foundational layer, and importing
+    `aistack.kernel.evidence` from it would read the dependency
+    backwards — `kernel.evidence` is built on these two contracts,
+    not the other way round.
+    """
+
+    provider: str
+    reading: ContainerCpuReading | TemperatureReading
+
+    def __post_init__(self) -> None:
+        if not self.provider.strip():
+            raise ValueError(
+                "a cited reading names the provider that collected "
+                "it; this one names none"
+            )
+
+
+@dataclass(frozen=True)
 class RuntimeFinding:
     """
     One qualified statement about a running subject.
@@ -91,10 +153,30 @@ class RuntimeFinding:
     later. A finding read six months from now states what the
     rule said when it fired, not what the rule says today.
 
-    Nothing here classifies the finding four ways. Criterion 4.5
-    asks for that and this type does not attempt it: inventing a
-    four-term vocabulary would be authoring governed knowledge,
-    which GOV-P-001 forbids.
+    **`qualifications` classifies the finding, revised from the
+    account above.** Until J5 (`claude/PLAN-TRAJECTOIRE-2026-09-04
+    .md`) nothing here classified the finding four ways, and that
+    paragraph said inventing the vocabulary would be authoring
+    governed knowledge GOV-P-001 forbids. The vocabulary has since
+    been authored — by the owner, in `OPS-0004`, closed at four
+    terms — so citing it here is no longer inventing it; `evaluate`
+    (`aistack.runtime.evaluate`) is its first producer.
+    `QUALIFICATIONS` (module level, this file) is the closed list
+    `__post_init__` validates against, each entry a citation —
+    `OPS-0004/energy-inefficiency`, not the bare term — the same
+    shape `grounding` already writes. Defaults to `()`: a
+    log-signature finding from `qualify()` carries none, and that
+    is a true, ungoverned-by-this-field state, not an omission.
+    STD-0300 § VS-4 criterion 4.5: more than one qualification found
+    together is what makes a finding derived knowledge rather than
+    an opinion about severity — this field is where that is stated.
+
+    `evidence` widened the same day, from `tuple[MatchedLine, ...]`
+    alone to `tuple[MatchedLine | CitedReading, ...]` — a
+    `CitedReading` (this module) is a reading, not a log line, cited
+    the same way STD-0300 § VS-4 criterion 4.4 asks for. Existing
+    `MatchedLine` evidence is untouched; this adds a second kind
+    rather than replacing the first.
     """
 
     subject: str
@@ -103,7 +185,8 @@ class RuntimeFinding:
     remediation: str
     confidence: str
     grounding: str
-    evidence: tuple[MatchedLine, ...]
+    evidence: tuple[MatchedLine | CitedReading, ...]
+    qualifications: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.subject.strip():
@@ -133,13 +216,34 @@ class RuntimeFinding:
         wrong = [
             type(item).__name__
             for item in self.evidence
-            if not isinstance(item, MatchedLine)
+            if not isinstance(item, (MatchedLine, CitedReading))
         ]
 
         if wrong:
             raise ValueError(
                 f"{self.signature} cites evidence of type "
-                f"{sorted(set(wrong))}; a finding cites MatchedLine, "
-                f"which carries the line and where the pattern was "
-                f"found in it"
+                f"{sorted(set(wrong))}; a finding cites MatchedLine "
+                f"or CitedReading, which carry what was seen and "
+                f"where it came from"
+            )
+
+        if len(set(self.qualifications)) != len(self.qualifications):
+            raise ValueError(
+                f"{self.signature} cites the same qualification more "
+                f"than once in {self.qualifications}; a repeated "
+                f"citation does not make the finding more qualified"
+            )
+
+        unknown = [
+            qualification
+            for qualification in self.qualifications
+            if qualification not in QUALIFICATIONS
+        ]
+
+        if unknown:
+            raise ValueError(
+                f"{self.signature} cites {unknown} as a "
+                f"qualification; OPS-0004 closes the vocabulary at "
+                f"{QUALIFICATIONS} and forbids more without the "
+                f"owner naming a fifth"
             )

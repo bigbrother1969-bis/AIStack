@@ -27,8 +27,8 @@ def sample() -> ContractInventory:
                 satisfied_by=("aistack.integrity.checks.x.XCheck",),
             ),
             DeclaredContract(
-                name="EvidenceCollector",
-                module="aistack.evidence.collectors",
+                name="ExampleOrphanContract",
+                module="tests.fixtures.example_orphan",
                 kind=PROTOCOL,
                 members=("acquire",),
             ),

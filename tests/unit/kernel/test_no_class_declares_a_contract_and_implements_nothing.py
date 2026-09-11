@@ -170,6 +170,12 @@ def test_the_rule_is_measured_over_a_heritage_that_can_break_it():
     methods. A refactor that stopped importing them, or that
     replaced ABCs with Protocols throughout, would leave the rule
     true and verifying nothing.
+
+    **Lowered to nineteen on 2026-09-11**, when J4 removed
+    `aistack.evidence.collectors.EvidenceCollector` (`GOV-0002/OS-001`,
+    superseded by `aistack.kernel.evidence`'s `Collector`/
+    `Normalizer` — Protocols, not ABCs) — one fewer abstract base
+    declared, not a floor quietly re-measured to hide it.
     """
 
     bases = [
@@ -178,4 +184,4 @@ def test_the_rule_is_measured_over_a_heritage_that_can_break_it():
         if getattr(cls, "__abstractmethods__", frozenset())
     ]
 
-    assert len(bases) >= 20
+    assert len(bases) >= 19

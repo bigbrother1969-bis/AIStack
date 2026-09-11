@@ -29,12 +29,12 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **1.0.0 — published 2026-09-11, current.**
+  # **0.6.0 — published 2026-09-11, current.**
   #
-  #   bigbrother1969/aistack-core:1.0.0
-  #   @sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3
+  #   bigbrother1969/aistack-core:0.6.0
+  #   @sha256:203bec639e4bae1240bc1d19bd9485e7eb2c24f185565aa23f7f2925c07e3109
   #
-  # Built from 6680e61 on the reference host, behind the four terms
+  # Built from a823190 on the reference host, behind the four terms
   # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
   # HEAD equal to origin/main, and 1191 tests with `clean: True`. 69
   # artifacts, 16 checks. Freezes `evaluate`
@@ -43,10 +43,28 @@ services:
   # collected pieces of evidence — unexplained CPU consumption and the
   # host's own temperature — into one governed conclusion, citing
   # `OPS-0004`'s vocabulary. STD-0300 § VS-4 criteria 4.2, 4.4 and 4.5
-  # close with it. This is the version the project's own trajectory
-  # names as the 1.0 boundary. **Not re-verified against 0.5.0's
-  # recorded digest before this build** — `GOV-0002/OS-047`'s own rule,
-  # skipped this once; named here rather than silently not done.
+  # close with it. Same work as `1.0.0` below, correctly numbered: 1.0
+  # is reserved for the completed homelab dashboard / technical-debt /
+  # architecture integration
+  # (`claude/PLAN-J6-HOMELAB-DASHBOARD-INTEGRATION-2026-09-11.md`), not
+  # for `evaluate` alone. `1.0.0`'s digest was re-verified against its
+  # record before this build — `GOV-0002/OS-047` — and matched; no
+  # divergence, the tag simply named the wrong version.
+  #
+  # **1.0.0 — published 2026-09-11, retracted 2026-09-11.**
+  #
+  #   bigbrother1969/aistack-core:1.0.0
+  #   @sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3
+  #
+  # Built from 6680e61 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 1191 tests with `clean: True`. 69
+  # artifacts, 16 checks. **Not re-verified against 0.5.0's recorded
+  # digest before this build** — `GOV-0002/OS-047`'s own rule, skipped
+  # this once; named here rather than silently not done. Declared
+  # prematurely as the 1.0 boundary; corrected to `0.6.0`, above, same
+  # day. Kept here rather than erased — the same reasoning `0.1.0`'s
+  # entry below gives for the same kind of correction.
   #
   # **0.5.0 — published 2026-09-04.**
   #

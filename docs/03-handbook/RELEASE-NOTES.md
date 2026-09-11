@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -39,12 +39,31 @@ it says what the build was *for*.
 
 ---
 
-## 1.0.0 — 2026-09-11
+## 1.0.0 — declared 2026-09-11, retracted 2026-09-11
+
+Declared prematurely, on the mistaken assumption that the first qualified
+finding (`evaluate`, below) was the 1.0 boundary. It is not: the same day
+this version was declared, a separate, richer predecessor project was
+recovered — a homelab health dashboard, a technical-debt score, and an
+interactive architecture cartography, none of it living in AIStack yet —
+and the project's own trajectory reserves 1.0 for the point where that
+integration is complete
+(`claude/PLAN-J6-HOMELAB-DASHBOARD-INTEGRATION-2026-09-11.md`), not for
+`evaluate` alone. Corrected to **0.6.0**, below — same work, same day.
+Kept here rather than erased, so the record shows what was renumbered and
+why — the same reasoning `0.1.0`'s entry gives for the same kind of
+correction.
+
+`bigbrother1969/aistack-core:1.0.0`'s digest was pulled and re-verified
+against its record before the corrected build (`GOV-0002/OS-047`) — it
+matched: `sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3`.
+No divergence; the tag simply named the wrong version.
+
+## 0.6.0 — 2026-09-11
 
 **The first qualified finding, derived end to end: two separately-collected
 pieces of evidence correlated into one governed conclusion for the first
-time. VS-4 closes three more criteria (4.2, 4.4, 4.5) — the boundary the
-project's own trajectory names as 1.0.**
+time. VS-4 closes three more criteria (4.2, 4.4, 4.5).**
 
 - **New: `evaluate`.** Unexplained CPU consumption — a container using
   resources nobody declared an expectation for — is now correlated against
@@ -62,8 +81,8 @@ project's own trajectory names as 1.0.**
   `HostProvider.collect_temperatures` existed since `0.5.0` but nothing
   called it.
 
-`bigbrother1969/aistack-core:1.0.0`, built from `6680e61`, digest
-`sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3`.
+`bigbrother1969/aistack-core:0.6.0`, built from `a823190`, digest
+`sha256:203bec639e4bae1240bc1d19bd9485e7eb2c24f185565aa23f7f2925c07e3109`.
 1191 tests, 69 knowledge artifacts, `clean: True`.
 
 ## 0.5.0 — 2026-09-04
@@ -160,7 +179,7 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 1.0.0 (2026-09-11), taken together.
+Not what changed — what runs, as of 0.6.0 (2026-09-11), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
@@ -180,7 +199,7 @@ Not what changed — what runs, as of 1.0.0 (2026-09-11), taken together.
 - **Runtime diagnosis.** A sweep of the Docker host, no container named,
   qualifies log lines against declared signatures, flags CPU consumption
   and development options (like `--reload`, the bug that started this
-  capability) left enabled in a permanent service — and, as of 1.0.0,
+  capability) left enabled in a permanent service — and, as of 0.6.0,
   correlates unexplained consumption against the host's own temperature
   into one finding citing `OPS-0004`'s vocabulary: energy inefficiency
   alone, or energy inefficiency and sustainability anomaly together when

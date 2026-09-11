@@ -33,11 +33,14 @@ its own declared threshold, alongside that same consumption.
 *Technical debt* needs a corrections backlog no register in this
 heritage tracks yet — `OPS-0004` itself declines to build one "until
 a real pending correction exists to seed it with." *Deployment
-misconfiguration* "keeps no definition at all" in `OPS-0004`, on
-purpose, rather than one invented to fill a fourth slot. Citing
-either here would be exactly the invention `GOV-P-001` forbids;
-`evaluate` cites only what `OPS-0004` has actually defined and this
-correlation actually evidences.
+misconfiguration* was undefined when this was written, 2026-09-11;
+`OPS-0004`'s second reference incident has since named it (GIGABYTE
+disk exhaustion), and `aistack.runtime.evaluate_storage` — not this
+function — is what cites it, from a `StorageShortage`, not from
+`ContainerCpuReading`/`TemperatureReading`. This function still cites
+only what it actually correlates: adding a citation here without a
+storage reading to back it would be exactly the invention `GOV-P-001`
+forbids.
 
 **Not a root-cause deriver.** STD-0300 § VS-4 criterion 4.6 needs a
 second real, confirmed case before generalising one (`ARC-P-006`) —

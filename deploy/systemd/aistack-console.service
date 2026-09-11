@@ -1,0 +1,54 @@
+# AIStack — Console
+#
+# The unified entry point `PLAN-J6` § 5 named and `PLAN-J11`
+# (claude/PLAN-J11-CONSOLE-2026-09-11.md) delivered: one page linking
+# Selection UI, Priorité CPU, the Architecture diagram and the Health
+# Cockpit — and, until this unit existed, this heritage's first HTTP
+# server for `reports/generated/`, which had until 2026-09-11 only
+# ever been read by SSHing into GIGABYTE and opening a file directly.
+#
+# Runs on the host, not in a container: serves a directory of static
+# files (`reports/generated/public/`) that already live on this
+# filesystem — nothing here needs a Docker socket or a container
+# runtime, the same "no container needed" reasoning
+# `aistack-selection-ui.service` already documents for itself.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-console.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-console
+#
+# Before enabling it as a service, confirm nothing else already
+# holds port 8183 — the same check every other unit in this
+# directory documents for its own port:
+#
+#   ss -ltnp | grep :8183
+#
+# Watch it with:
+#
+#   journalctl -u aistack-console -f
+#
+# **This unit alone does not put the console on
+# `aistack.persiaut-family.fr`.** The reverse proxy in front of this
+# homelab (Nginx Proxy Manager, on the Raspberry) is GUI-configured
+# only — this codebase has no way to reach it (`GOV-P-001`). Once
+# this unit is running, the owner adds a Proxy Host by hand pointing
+# `aistack.persiaut-family.fr` at `GIGABYTE:8183`.
+
+[Unit]
+Description=AIStack Console (unified entry point)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_console.sh
+Restart=on-failure
+RestartSec=5
+
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

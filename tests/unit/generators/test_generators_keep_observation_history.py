@@ -28,6 +28,7 @@ from pathlib import Path
 
 from aistack.architecture.graph import ArchitectureGraph, CategoryGraph, ServiceNode, ServiceStatus
 from aistack.architecture.views import build_all_views
+from aistack.contracts.console_link import ConsoleLink
 from aistack.generators.architecture import ArchitectureHtmlArtifactGenerator
 from aistack.generators.catalog_view import CatalogViewArtifactGenerator
 from aistack.generators.compose.catalog_artifact import ComposeCatalogArtifactGenerator
@@ -35,6 +36,7 @@ from aistack.generators.docker.catalog_artifact import DockerCatalogArtifactGene
 from aistack.generators.filesystem.media_library_artifact import (
     MediaLibraryObservationArtifactGenerator,
 )
+from aistack.generators.console import ConsoleHtmlArtifactGenerator
 from aistack.generators.health import HealthHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.generators.jellyfin.observation_artifact import (
@@ -211,6 +213,27 @@ def test_health_html_artifact_generator_keeps_history(tmp_path: Path):
     )
 
     generator.generate(cockpit=cockpit, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert history_files[0].read_text(encoding="utf-8").startswith("<!doctype html>")
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_console_html_artifact_generator_keeps_history(tmp_path: Path):
+    generator = ConsoleHtmlArtifactGenerator()
+    output_path = tmp_path / "reports" / "generated" / "console.html"
+    links = (
+        ConsoleLink(
+            name="Selection UI",
+            description="Sélection des candidats",
+            url="http://GIGABYTE:8181",
+        ),
+    )
+
+    generator.generate(links=links, output_path=output_path)
 
     history_files = _history_files(output_path)
     assert len(history_files) == 1

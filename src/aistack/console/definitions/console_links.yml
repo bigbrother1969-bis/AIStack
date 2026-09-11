@@ -1,0 +1,34 @@
+# PLAN-J11 — Console AIStack: v1 scope, declared by the owner
+# 2026-09-11 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` § 2).
+#
+# Written by hand, read-only — same discipline
+# `service_categorization.yml` and `health_score_weights.yml` already
+# hold. Nothing in this codebase writes this file back.
+#
+# `url` is exactly how the owner reaches each service today
+# (`PLAN-J11` § 4), never invented (GOV-P-001):
+#   - Selection UI and Priorité CPU are separate processes on
+#     GIGABYTE (Docker Compose on :8181, systemd/uvicorn on :8182 —
+#     "next free port after Selection UI's 8181"), reached today as a
+#     direct LAN hostname:port — no reverse-proxy entry exists for
+#     either yet.
+#   - Page Architecture and Cockpit Santé are static files this
+#     console is served alongside (`reports/generated/public/`,
+#     `aistack.cli.console_render`), so their own URLs are relative —
+#     one HTTP origin serves all three once the reverse proxy points
+#     at it (`PLAN-J11` § 4, owner's own manual Nginx Proxy Manager
+#     step, not something this codebase configures).
+
+links:
+  - name: Selection UI
+    description: Sélection des candidats — service Docker Compose (port 8181)
+    url: http://GIGABYTE:8181
+  - name: Priorité CPU
+    description: Arbitrage de priorité CPU — service systemd/uvicorn (port 8182)
+    url: http://GIGABYTE:8182
+  - name: Architecture
+    description: Diagramme de topologie du homelab (PLAN-J2)
+    url: /architecture.html
+  - name: Cockpit Santé
+    description: Score de santé et findings par domaine (PLAN-J7)
+    url: /health.html

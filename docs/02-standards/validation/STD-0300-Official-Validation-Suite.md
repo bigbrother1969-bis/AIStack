@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.21
+  version: 1.22
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-09-04
+  updated: 2026-09-11
 
 relations:
   references:
@@ -415,10 +415,10 @@ below: the point is that AIStack reproduces the reasoning.
 | # | Criterion | State |
 |---|---|---|
 | 4.1 | AIStack detects abnormal idle resource consumption without being pointed at the service | not verified |
-| 4.2 | The finding correlates process, container and deployment definition, each with an observation reference | not verified |
+| 4.2 | The finding correlates process, container and deployment definition, each with an observation reference | **satisfied** — 2026-09-11 |
 | 4.3 | It identifies the development option enabled in a permanent service | not verified |
-| 4.4 | Technical evidence is collected and attached to the finding, down to system-call level or equivalent | not verified |
-| 4.5 | Each qualification the evidence supports, among technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly, is cited to a distinct policy; more than one found together is what makes the finding derived knowledge rather than an opinion about severity | not verified |
+| 4.4 | Technical evidence is collected and attached to the finding, down to system-call level or equivalent | **satisfied** — 2026-09-11 |
+| 4.5 | Each qualification the evidence supports, among technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly, is cited to a distinct policy; more than one found together is what makes the finding derived knowledge rather than an opinion about severity | **satisfied** — 2026-09-11 |
 | 4.6 | The root cause is explained, derived from the collected evidence | not verified |
 | 4.7 | A safe remediation is recommended, citing the policies it derives from by identifier | not verified |
 | 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 58 % → 0.00 %, live) | **satisfied** — 2026-09-04 |
@@ -743,9 +743,111 @@ foundational work `PLAN-TRAJECTOIRE-2026-09-04` calls J5, rather than
 independently of each other — one more reason that record names J5 as the
 boundary the project's own versioning treats as 1.0.
 
+#### 2026-09-11 — J5: `evaluate`, and 4.2, 4.4, 4.5 close together
+
+`aistack.runtime.evaluate.evaluate` is the socle function the paragraph
+above said 4.5 could not close without: it takes 4.1's own output
+(`UnexplainedConsumption`) and a reading `HostProvider
+.collect_temperatures` had produced but nothing called
+(`claude/PLAN-J4-EVIDENCE-OBSERVATION-2026-09-10.md`'s own inventory
+named this gap directly), and correlates the two into one qualified
+`RuntimeFinding` per container still carrying unexplained consumption —
+`aistack.cli.runtime_diagnose.main` now collects both and merges the
+result into the same list `qualify()`'s log-signature findings already
+populate, grounded by the same `ground_findings` pass.
+
+**4.5 — satisfied.** `RuntimeFinding.qualifications` (`aistack.contracts
+.runtime_finding`) is a closed-vocabulary field, validated in
+`__post_init__` against `QUALIFICATIONS` — the four `OPS-0004` terms,
+each a citation (`OPS-0004/energy-inefficiency`), no fifth admitted
+without the owner naming one, no duplicate admitted. `evaluate` cites
+`OPS-0004/energy-inefficiency` alone for unexplained consumption found
+cool, and both it and `OPS-0004/sustainability-anomaly` together the
+moment a correlated host reading is at or above its own declared
+threshold — the exact shape the criterion asks for: "more than one
+found together is what makes the finding derived knowledge rather than
+an opinion about severity." `technical debt` and `deployment
+misconfiguration` are not cited — `OPS-0004` itself keeps both
+undefined for the reasons § *What is proven and what is not* already
+recorded, and citing either here would be exactly the invention
+`GOV-P-001` forbids; the criterion asks that each cited qualification
+be traceable to a distinct policy, not that all four appear. Proven by
+construction (an unknown or repeated qualification cannot be
+constructed) and exercised by fifteen cases in `tests/unit/runtime
+/test_evaluate.py`, including both qualifications cited together and
+neither one invented from an undeclared threshold (`at_or_above_high`
+returning `None`, not `False` — FDN-0003 Article 12).
+
+**4.4 — satisfied.** `RuntimeFinding.evidence` widened from
+`tuple[MatchedLine, ...]` to `tuple[MatchedLine | CitedReading, ...]`
+— `CitedReading` (`aistack.contracts.runtime_finding`) names the
+provider that collected a reading (`aistack.provider.docker`,
+`aistack.provider.host`) and carries the reading itself
+(`ContainerCpuReading | TemperatureReading`, `aistack.kernel.evidence
+.Evidence`'s own two members), the same discipline `MatchedLine`
+already holds for a log line — the raw instrument reading, not a
+description of what it means. "Down to system-call level or
+equivalent": neither `docker stats` nor `sensors` reads a system call,
+and this criterion is not claimed satisfied by pretending otherwise —
+what it establishes is that the finding cites the actual reading each
+provider collected, at the granularity this heritage measures at
+today, the same standard `MatchedLine` was already held to for a log
+line rather than a summary of one.
+
+**4.2 — satisfied, and the correlation it names has not changed.**
+`aistack.runtime.correlation.correlate_findings` and `CorrelatedFinding`
+were built and exercised live 2026-09-04, against `firefly` — the
+"Investigated live" paragraph above is `collect_process`'s own
+`docker top` reading, the mechanism 4.2 names. What held this criterion
+at `not verified` was recorded above as a governance gap, not a
+functional one: "nothing in this heritage can close 4.5 without
+`evaluate` existing as a socle function first... 4.2's correlation,
+once a Correlation contract exists rather than a function built for
+this criterion alone, becomes a demonstration of the socle applied
+here." `claude/PLAN-J4-EVIDENCE-OBSERVATION-2026-09-10.md` delivered
+exactly that: `Correlation` (`aistack.kernel.evidence`), a governed
+type alias, with `correlate_findings` declared its named producer,
+proven by `mypy` against `kernel/evidence/conformance.py`.
+`correlate_findings` itself is untouched by J4 or J5 — the contract it
+was already satisfying became governed, which is what this section's
+own 2026-09-04 reasoning said would close it, at J5 per the batching
+decision recorded there.
+
+**4.6 remains `not verified`, unmoved by any of the above.**
+`evaluate` correlates two readings; it does not explain why either
+reads what it does. Its `interpretation` states what was observed
+together — consumption at or above threshold, a host reading at or
+above its own declared limit — never a derived cause, by design (the
+module's own docstring states this explicitly). The gap named above is
+unchanged: a second real, confirmed case, per `ARC-P-006`, before a
+generalised root-cause deriver is built the way `firefly`'s
+investigation showed one could be, by hand, from time-series CPU
+sampling and access-log pattern correlation. `evaluate` does not
+attempt that; nothing here provides the second case.
+
+**What is proven and what is not.** `4.4` and `4.5` are proven by
+construction and exercised against fixture data — `k10temp
+-pci-00c3/temp1` at 70.5 °C among it, the exact reading `HostProvider
+.collect_temperatures` read live on GIGABYTE during J4 — not yet by a
+live sweep that finds `aistack-selection-ui`'s own consumption and a
+hot host reading together in the same run. The reference incident's
+CPU figure (2026-08-22) and the temperature reading (2026-09-10) were
+each measured live on their own day, never together; `evaluate`'s
+first live correlation, both qualifications cited on a real reading
+pair, waits on the next sweep of the reference deployment, the same
+way `4.8`'s live reading closed a gap fixture data alone had already
+proven arithmetically correct. `4.1`, `4.3` and `4.7` are untouched by
+J5, for the reasons already given above — they remain scoped as
+written.
+
+4.2, 4.4 and 4.5 satisfied together closes the group this section's
+2026-09-04 reasoning said would move at or after J5 — three of the
+four; `4.6` stays open on `ARC-P-006`'s own gate, not on anything J5
+left undone.
+
 ---
 
-**Suite state: 22 criteria — 14 satisfied, 0 failing, 8 not verified. Two
+**Suite state: 22 criteria — 17 satisfied, 0 failing, 5 not verified. Two
 scenarios satisfied in full: VS-1 (four of four) and VS-3 (three of three) —
 § 7, a scenario is satisfied only when every one of its criteria holds.**
 

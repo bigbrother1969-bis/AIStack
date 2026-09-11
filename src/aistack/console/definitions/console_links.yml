@@ -6,26 +6,42 @@
 # hold. Nothing in this codebase writes this file back.
 #
 # `url` is exactly how the owner reaches each service today
-# (`PLAN-J11` § 4), never invented (GOV-P-001):
+# (`PLAN-J11` § 4/§ 8), never invented (GOV-P-001):
 #   - Selection UI and Priorité CPU are separate processes on
 #     GIGABYTE (Docker Compose on :8181, systemd/uvicorn on :8182 —
-#     "next free port after Selection UI's 8181"), reached today as a
-#     direct LAN hostname:port — no reverse-proxy entry exists for
-#     either yet.
+#     "next free port after Selection UI's 8181"). The console itself
+#     went live behind Nginx Proxy Manager (Raspberry) on
+#     aistack.persiaut-family.fr the same day (`PLAN-J11` § 7) —
+#     the owner then named two more subdomains for these two apps
+#     (`PLAN-J11` § 8): selection.aistack.persiaut-family.fr,
+#     priority.aistack.persiaut-family.fr. Declared here as the
+#     owner's own chosen naming, the same way
+#     aistack.persiaut-family.fr was declared before its own Proxy
+#     Host existed — reachable once the owner has added the matching
+#     Proxy Host in NPM, a manual step this codebase cannot do. The
+#     direct LAN address each still answers on (GIGABYTE:8181/:8182)
+#     travels in the description, not the url, so there is exactly
+#     one link to follow, not two competing ones.
 #   - Page Architecture and Cockpit Santé are static files this
 #     console is served alongside (`reports/generated/public/`,
 #     `aistack.cli.console_render`), so their own URLs are relative —
-#     one HTTP origin serves all three once the reverse proxy points
-#     at it (`PLAN-J11` § 4, owner's own manual Nginx Proxy Manager
-#     step, not something this codebase configures).
+#     they were already reachable through
+#     aistack.persiaut-family.fr/architecture.html and /health.html
+#     the moment NPM pointed at the console (same origin, same
+#     process, `PLAN-J11` § 7) — no separate Proxy Host needed for
+#     either.
 
 links:
   - name: Selection UI
-    description: Sélection des candidats — service Docker Compose (port 8181)
-    url: http://GIGABYTE:8181
+    description: >-
+      Sélection des candidats — service Docker Compose
+      (LAN direct : GIGABYTE:8181)
+    url: https://selection.aistack.persiaut-family.fr
   - name: Priorité CPU
-    description: Arbitrage de priorité CPU — service systemd/uvicorn (port 8182)
-    url: http://GIGABYTE:8182
+    description: >-
+      Arbitrage de priorité CPU — service systemd/uvicorn
+      (LAN direct : GIGABYTE:8182)
+    url: https://priority.aistack.persiaut-family.fr
   - name: Architecture
     description: Diagramme de topologie du homelab (PLAN-J2)
     url: /architecture.html

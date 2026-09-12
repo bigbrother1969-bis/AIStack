@@ -319,3 +319,29 @@ def test_the_declared_ssh_key_path_is_passed_to_ssh():
     ssh_calls = [call for call in runner.calls if call[0] == "ssh"]
     assert ssh_calls
     assert "/home/big-brother/.ssh/id_ed25519" in ssh_calls[0]
+
+
+def test_the_remote_docker_ps_format_is_shell_quoted():
+    """
+    Real-world defect found 2026-09-12, on the owner's real Raspberry
+    Pi: `--format {{json .}}` sent unquoted is still one Python
+    string, but ssh hands it to the *remote* shell as free text — the
+    space inside `{{json .}}` splits it into two words there, `docker
+    ps` receives an unexpected extra argument and fails ("docker ps
+    accepts no arguments", exit code 1), and this provider's own
+    tolerant design silently reads that failure as "no Docker on this
+    host". None of this file's `FakeRunner`-based tests caught it,
+    because `FakeRunner` routes on `(ip, username)` and never
+    inspects the remote command string itself — this test does.
+    """
+
+    runner = FakeRunner(
+        nmap_stdout="Host: 192.168.1.40 ()\tStatus: Up\n",
+        ssh_table={("192.168.1.40", "pi"): (0, "")},
+    )
+
+    provider(runner).collect()
+
+    ssh_calls = [call for call in runner.calls if call[0] == "ssh"]
+    assert ssh_calls
+    assert ssh_calls[0][-1] == "docker ps -a --format '{{json .}}'"

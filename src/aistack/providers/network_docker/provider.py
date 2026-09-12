@@ -183,7 +183,7 @@ class NetworkDockerDiscoveryProvider:
             "-o",
             f"ConnectTimeout={self._timeout_seconds}",
             f"{username}@{ip}",
-            "docker ps -a --format {{json .}}",
+            "docker ps -a --format '{{json .}}'",
         ]
 
         try:

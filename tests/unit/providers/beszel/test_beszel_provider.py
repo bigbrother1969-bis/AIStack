@@ -32,6 +32,7 @@ class Hub:
         self.systems_status = 200
         self.systems_answer: object = {"items": [], "page": 1}
         self.seen: list[tuple[str, str, str]] = []
+        self.user_agents_seen: list[str] = []
         self.delay = 0.0
 
 
@@ -52,6 +53,7 @@ def url(hub):
             body = self.rfile.read(length).decode("utf-8")
 
             state.seen.append((parsed.path, "POST", body))
+            state.user_agents_seen.append(self.headers.get("User-Agent", ""))
 
             if state.delay:
                 import time
@@ -71,6 +73,7 @@ def url(hub):
             state.seen.append(
                 (parsed.path, "GET", self.headers.get("Authorization", ""))
             )
+            state.user_agents_seen.append(self.headers.get("User-Agent", ""))
 
             payload = json.dumps(state.systems_answer).encode()
             self.send_response(state.systems_status)
@@ -154,6 +157,25 @@ def test_the_credentials_travel_in_the_auth_body_and_the_token_in_the_header(
     assert json.loads(auth_body) == {"identity": EMAIL, "password": PASSWORD}
     assert auth_header == TOKEN
     assert not auth_header.startswith("Bearer ")
+
+
+def test_both_requests_carry_an_explicit_user_agent(hub, url):
+    """
+    Found 2026-09-12 against the real hub: `urllib.request`'s own
+    default (`Python-urllib/3.x`) is refused by Cloudflare — which
+    fronts this hub — with a bare `403` and body `error code: 1010`,
+    while the exact same request with any explicit, non-default
+    User-Agent succeeds. Not a fake-server-only assumption: the fix
+    was verified against the real hub before this test was written,
+    the same order `provider.py`'s own docstring records.
+    """
+
+    BeszelProvider(url, EMAIL, PASSWORD).collect()
+
+    assert len(hub.user_agents_seen) == 2
+    for user_agent in hub.user_agents_seen:
+        assert user_agent
+        assert not user_agent.lower().startswith("python-urllib")
 
 
 def test_the_observation_names_what_it_looked_at(hub, url):

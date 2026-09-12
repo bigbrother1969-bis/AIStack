@@ -7,6 +7,9 @@ from datetime import datetime, timezone
 from typing import Any
 
 
+_USER_AGENT = "AIStack-BeszelProvider/1.0"
+
+
 class BeszelProvider:
     """
     Observe what Beszel's own hub knows about the systems it
@@ -54,6 +57,19 @@ class BeszelProvider:
     (role `readonly`, 2026-09-12) is what keeps this provider from
     being able to write anything, whatever it were asked to do —
     this class only ever calls the two `GET`/auth endpoints above.
+
+    **Both requests carry an explicit `User-Agent`.** Found the hard
+    way, 2026-09-12: `urllib.request`'s default (`Python-urllib/3.x`)
+    was refused by Cloudflare — which fronts this hub, the same way
+    it fronts every other `*.persiaut-family.fr` name — with a bare
+    `403` and body `error code: 1010` (Cloudflare's own "banned based
+    on your browser's signature"). The exact same request with
+    `curl`'s own default User-Agent, and separately with this class's
+    own `_USER_AGENT`, both succeeded against the real hub — so this
+    is Cloudflare fingerprinting the default urllib string
+    specifically, not a credentials or code defect. Confirmed on the
+    real credentials, which authenticated successfully once this
+    header was added.
     """
 
     provider_id = "aistack.provider.beszel"
@@ -127,7 +143,10 @@ class BeszelProvider:
         request = urllib.request.Request(
             f"{self.url}/api/collections/users/auth-with-password",
             data=body,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": _USER_AGENT,
+            },
             method="POST",
         )
 
@@ -175,7 +194,7 @@ class BeszelProvider:
 
         request = urllib.request.Request(
             f"{self.url}{path}",
-            headers={"Authorization": token},
+            headers={"Authorization": token, "User-Agent": _USER_AGENT},
         )
 
         try:

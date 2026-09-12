@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -38,6 +38,42 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 0.7.0 — 2026-09-12
+
+**Everything below is what `PLAN-J11-CONSOLE-2026-09-11.md` §10 and §11
+added on top of `0.6.0`, the same day: `architecture.html` grows three new
+sections, and AIStack can now see Docker containers on machines other than
+the one it runs on.**
+
+- **Docker dependency graph.** `architecture.html` gained a new view: the
+  real `depends_on:` relationships between containers, read straight from
+  each Compose project's own `docker-compose.yml` files — a project's
+  containers shown as a connected graph, not a flat list, an arrow drawn
+  only where a real dependency was actually read, never guessed.
+- **External network topology and hardware inventory.** A new section
+  names what sits outside the Docker layer entirely: the external services
+  the homelab depends on (registrar, DNS/CDN, router, mail) and the two
+  physical machines that run everything — model, CPU, RAM, disks, GPU —
+  as a declared fact sheet instead of something to remember.
+- **Live health metrics from Beszel.** Another new section reads real-time
+  status, CPU, memory, disk, temperature, load and uptime for every system
+  Beszel already monitors, shown alongside the rest of the architecture
+  page instead of in a separate tool.
+- **Network-wide Docker discovery.** A new, explicitly-triggered command
+  (`aistack.cli.network_docker_discover`) scans the declared LAN, tries
+  each declared SSH username against every host it finds alive, and
+  reports back every Docker container running anywhere on the network —
+  not only on the one machine AIStack itself runs on. Its first real run
+  found containers on two machines this project had never observed
+  before.
+- **A LAN-only screen to manage that scan's candidate SSH usernames**, a
+  new fifth card on the console, so adding a machine to the scan no longer
+  means hand-editing a YAML file over SSH.
+
+As of 2026-09-12, this build had not been published to Docker Hub. The
+commit and digest will be added here, and in `docker-compose.yml`, once
+the owner completes `OPS-0002` § *Publishing an image*.
 
 ## 0.6.0 — 2026-09-12
 
@@ -249,21 +285,29 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 0.6.0 (2026-09-12), taken together.
+Not what changed — what runs, as of 0.7.0 (2026-09-12), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
-  state, published ports, mounts — regenerated the same way every time,
-  from the host, not from what someone remembers about it.
+  state, published ports, mounts, and — as of 0.7.0 — the real
+  `depends_on:` relationships between containers, read from each Compose
+  project's own files — regenerated the same way every time, from the
+  host, not from what someone remembers about it.
 - **Architecture, visualized.** `architecture.html` renders that same
-  discovery as a self-contained topology graph — a real page, not raw
-  catalog JSON — kept current every time it's regenerated.
+  discovery as a self-contained topology graph, plus — as of 0.7.0 — a
+  Docker dependency view, a section naming the external network topology
+  and the hardware each machine runs, and a live Beszel health-metrics
+  section — a real page, not raw catalog JSON, kept current every time
+  it's regenerated.
+- **Network-wide Docker discovery.** A separately-triggered scan of the
+  declared LAN, over SSH, reports Docker containers running on machines
+  other than the one AIStack itself runs on — new as of 0.7.0.
 - **Health Cockpit.** One scored dashboard across four domains — Storage,
   Services, Backup/DR, GPU — each instrumented against a real incident or
   a real declared threshold on the reference host.
 - **Console.** One entry point linking Selection UI, Priority CPU,
-  Architecture and Health Cockpit, all four reachable over HTTPS from
-  outside the LAN.
+  Architecture, Health Cockpit and — as of 0.7.0 — the LAN-only network
+  discovery screen, all reachable from the same page.
 - **Context Bundle — self-onboarding for an AI assistant.** A single
   portable archive carries the project's whole governed knowledge base,
   with a manifest that proves what commit it was taken from and lets a

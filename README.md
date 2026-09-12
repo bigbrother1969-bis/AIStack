@@ -69,19 +69,26 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 0.6.0
+### Concrete capabilities, as of 0.7.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
-  Docker host: identity, image, state, ports, mounts, regenerated from
-  the host itself every time.
+  Docker host: identity, image, state, ports, mounts, and the real
+  `depends_on:` relationships between containers, regenerated from the
+  host itself every time.
 - **Architecture, visualized** — `architecture.html` renders that same
-  discovery as a self-contained topology graph.
+  discovery as a self-contained topology graph, plus a Docker dependency
+  view, a section naming the external network topology and each
+  machine's hardware, and a live Beszel health-metrics section.
+- **Network-wide Docker discovery** — an explicitly-triggered LAN scan,
+  over SSH, that reports Docker containers running on machines other
+  than the one AIStack itself runs on, with a LAN-only screen to manage
+  the candidate SSH usernames it tries.
 - **Health Cockpit** — a scored dashboard across four domains (Storage,
   Services, Backup/DR, GPU), each instrumented against a real incident
   or a real declared threshold.
 - **Console** — one entry point linking Selection UI, Priority CPU,
-  Architecture and Health Cockpit, all reachable over HTTPS from outside
-  the LAN.
+  Architecture, Health Cockpit and the network discovery screen, all
+  reachable from the same page.
 - **Context Bundle self-onboarding** — a portable, integrity-checked
   archive of the whole governed knowledge base, so a new AI session or
   contributor can get up to speed without reading the repository's
@@ -135,6 +142,11 @@ got past its absence.
   helps write this heritage never builds or pushes an image itself — by
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
+
+**As of 0.7.0**: `pytest -q` — **1751 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **447 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **73 knowledge artifacts**,
+`blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test
 counts, artifact counts, `clean: True` — are recorded by hand at each

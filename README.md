@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 4
+  version: 5
   created: 2026-07-04
-  updated: 2026-09-04
+  updated: 2026-09-12
 ---
 
 # AIStack
@@ -97,6 +97,51 @@ AIStack transforms observations into sustainable knowledge assets.
   part of a media library syncs to a device.
 
 **Full history of what changed release by release: `docs/03-handbook/RELEASE-NOTES.md`.**
+
+---
+
+## Quality Approach
+
+Nothing ships on the strength of one look. Three governed gates run before
+any change is published, and each exists because something specific once
+got past its absence.
+
+- **Tests, "cave au grenier."** Every generator has its own test, asserted
+  through its own `generate()` — not only through the shared utility it
+  calls or the CLI command that drives it at the front door. The project's
+  own phrase for this, from the test suite itself: *"cave au grenier" per
+  generator, not just at the shared utility and at the CLI's front door* —
+  written after four provider CLIs raised on their second line for forty
+  days, unnoticed, because nothing had ever imported them end to end.
+- **Static checks — ruff and mypy.** `ruff check src tests` and `mypy src`
+  run on every patch, alongside the test suite. Adopted 2026-09-10, after
+  evaluating both against this codebase: on their very first run, before
+  either had a configuration file to tune them, mypy found two real defects
+  (an incompatible method override, two builders passing the wrong
+  container type) and ruff found a genuine `zip()` truncation risk and
+  four regex-escaping ambiguities in test assertions — not hypothetical
+  findings, real ones, still in the commit history.
+- **Publication — governed, and never automated.** `docs/04-development/
+  OPS-0002-Heritage-Publication.md` states the procedure command by
+  command. Before an image is built: a clean tree, on `main`, `HEAD` equal
+  to `origin/main`, and `ruff`, `mypy`, `pytest` and the knowledge-integrity
+  validator all clean — four preconditions, each refusing a different way
+  of publishing something nobody could check. Every previous "current"
+  image is re-pulled and its digest re-verified before a new one is built,
+  so a published tag cannot quietly drift from what it once meant
+  (`GOV-0002/OS-047`). Published images are pinned by digest in
+  `docker-compose.yml`, one comment block per version, and a retracted or
+  superseded entry is kept and explained, never deleted. The agent that
+  helps write this heritage never builds or pushes an image itself — by
+  design, not caution: the owner authenticates to the registry personally,
+  for this step as for every other.
+
+The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test
+counts, artifact counts, `clean: True` — are recorded by hand at each
+publication, read off that publication's own `pytest`/knowledge-integrity
+run. There is no CI pipeline in this repository yet to record them
+automatically on every push; today's discipline is manual, applied
+consistently rather than enforced by a hook.
 
 ---
 

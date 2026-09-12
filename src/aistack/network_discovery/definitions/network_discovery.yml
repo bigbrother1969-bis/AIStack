@@ -9,29 +9,24 @@
 # hand-edited, the same discipline `infrastructure_topology.yml`
 # already holds for facts nothing in this repository writes back.
 #
-# cidr — the owner's own LAN, confirmed 2026-09-12 from
-# `ip -4 addr show`/`ip route` run on GIGABYTE: interface `enp2s0`,
-# `192.168.1.10/24`, default route via `192.168.1.254`. Deliberately
-# excludes GIGABYTE's own Docker bridge networks (172.x, br-*) and
-# its Tailscale overlay (100.100.221.30) — neither is the LAN a
-# remote homelab host sits on.
+# `cidr` is the owner's own LAN (confirmed 2026-09-12 from `ip -4
+# addr show`/`ip route` on GIGABYTE), never a wider range. Widening
+# it is a decision for the owner to make explicitly, not a default
+# this file should ever silently carry.
 #
-# ssh_key_path_env — the environment variable that carries the real
-# path to an existing SSH private key, never the key or its path
-# itself (GOV-P-001). GIGABYTE already has one at
-# ~/.ssh/id_ed25519, confirmed 2026-09-12 to authenticate
-# passwordlessly to both real remote hosts below once each one's
-# public key was authorized.
+# `ssh_key_path_env` names the environment variable that carries the
+# real path to an existing SSH private key — never the key or its
+# path itself (GOV-P-001).
 #
-# ssh_usernames — tried, in order, against every host the network
-# scan finds live; the first that authenticates is used. Confirmed
-# 2026-09-12 by actually connecting: `pi` authenticates on the
-# Raspberry Pi (192.168.1.40), `pi-hole` authenticates on the
-# Pi-hole VM (192.168.1.99) — two different real accounts, which is
-# why this is a list rather than a single name.
+# `ssh_usernames` is tried, in order, against every host the scan
+# finds live; the first that authenticates is used. Confirmed
+# 2026-09-12: the owner's own real hosts use different SSH usernames
+# from one another (`pi` on the Raspberry Pi, `pi-hole` on the
+# Pi-hole VM) — this is why a single username is not enough.
+
 cidr: 192.168.1.0/24
 ssh_key_path_env: AISTACK_NETWORK_SSH_KEY_PATH
-ssh_timeout_seconds: 3
+ssh_timeout_seconds: 3.0
 ssh_usernames:
-  - pi
-  - pi-hole
+- pi
+- pi-hole

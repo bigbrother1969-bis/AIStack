@@ -119,3 +119,122 @@ def test_duplicate_container_names_across_services_are_not_repeated():
     )
 
     assert catalog.items[0].metadata["containers"] == "aistack-core"
+
+
+# --------------------------------------------------------------------
+# `dependency_edges` — added 2026-09-12
+# (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, third gap)
+# --------------------------------------------------------------------
+
+
+def test_a_depends_on_resolves_to_a_container_to_container_edge():
+    catalog = ComposeRuntimeCatalogBuilder().build(
+        observation(
+            project(
+                "bookstack",
+                bookstack={
+                    "container_name": "bookstack",
+                    "depends_on": ["bookstack_db"],
+                },
+                bookstack_db={"container_name": "bookstack_db"},
+            )
+        )
+    )
+
+    assert (
+        catalog.items[0].metadata["dependency_edges"]
+        == "bookstack->bookstack_db"
+    )
+
+
+def test_a_project_with_no_depends_on_anywhere_has_no_edges():
+    catalog = ComposeRuntimeCatalogBuilder().build(
+        observation(project("aistack", web={"container_name": "aistack-core"}))
+    )
+
+    assert catalog.items[0].metadata["dependency_edges"] == ""
+
+
+def test_a_depends_on_naming_a_service_not_observed_as_a_container_is_dropped():
+    """
+    `depends_on` can name a service Compose declares but that is not
+    (or no longer) running — `ComposeProvider` itself already only
+    records a `depends_on` for a service it *did* observe (the
+    depending side); this is the other side of the same discipline:
+    an edge to a container nothing here has ever seen is not
+    asserted (`ARC-P-012`), the target service is simply absent from
+    `services` in the first place in this fixture, matching what a
+    stopped/removed sidecar would look like.
+    """
+
+    catalog = ComposeRuntimeCatalogBuilder().build(
+        observation(
+            project(
+                "aistack",
+                web={
+                    "container_name": "aistack-core",
+                    "depends_on": ["a-service-that-does-not-exist"],
+                },
+            )
+        )
+    )
+
+    assert catalog.items[0].metadata["dependency_edges"] == ""
+
+
+def test_several_edges_are_sorted_and_comma_joined():
+    catalog = ComposeRuntimeCatalogBuilder().build(
+        observation(
+            project(
+                "immich",
+                server={
+                    "container_name": "immich_server",
+                    "depends_on": ["redis", "database"],
+                },
+                redis={"container_name": "immich_redis"},
+                database={"container_name": "immich_postgres"},
+            )
+        )
+    )
+
+    assert catalog.items[0].metadata["dependency_edges"] == (
+        "immich_server->immich_postgres,immich_server->immich_redis"
+    )
+
+
+def test_a_service_with_no_depends_on_key_contributes_no_edge():
+    catalog = ComposeRuntimeCatalogBuilder().build(
+        observation(
+            project(
+                "aistack",
+                web={"container_name": "aistack-core"},
+                db={"container_name": "aistack-db"},
+            )
+        )
+    )
+
+    assert catalog.items[0].metadata["dependency_edges"] == ""
+
+
+def test_a_service_depending_on_itself_is_still_recorded_as_an_edge():
+    """
+    Not observed on GIGABYTE, but nothing in `ComposeProvider` or
+    this builder rules it out, and a real Compose file could still
+    declare it (a typo, most likely) — recorded rather than silently
+    dropped, since dropping it would hide the very mistake this graph
+    would otherwise surface.
+    """
+
+    catalog = ComposeRuntimeCatalogBuilder().build(
+        observation(
+            project(
+                "odd",
+                web={
+                    "container_name": "odd-web",
+                    "depends_on": ["web"],
+                },
+            )
+        )
+    )
+
+    assert catalog.items[0].metadata["dependency_edges"] == "odd-web->odd-web"

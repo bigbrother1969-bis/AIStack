@@ -6,6 +6,11 @@ import re
 import pytest
 
 from aistack.architecture.beszel_reading import BeszelSystemReading
+from aistack.architecture.dependency_graph import (
+    ComposeProjectDependencies,
+    ContainerDependencyEdge,
+    DependencyGraph,
+)
 from aistack.architecture.graph import ArchitectureGraph, CategoryGraph, ServiceNode, ServiceStatus
 from aistack.architecture.topology_definition import (
     ExternalNodeDefinition,
@@ -14,6 +19,7 @@ from aistack.architecture.topology_definition import (
 )
 from aistack.architecture.views import ArchitectureView, build_all_views
 from aistack.renderers.architecture import html as html_module
+from aistack.renderers.architecture.dependency_mermaid import render_dependency_mermaid
 from aistack.renderers.architecture.html import load_vendored_mermaid_js, render_html
 from aistack.renderers.architecture.mermaid import render_mermaid
 
@@ -664,6 +670,92 @@ def test_the_beszel_section_comes_after_the_topology_section():
     assert document.index('<section class="topology-index">') < document.index(
         '<section class="beszel-index">'
     )
+
+
+# --------------------------------------------------------------------
+# `dependency_graph` — the extra "Dépendances (Docker)" view
+# --------------------------------------------------------------------
+
+
+def _dependency_graph_with_one_edge() -> DependencyGraph:
+    return DependencyGraph(
+        projects=(
+            ComposeProjectDependencies(
+                project="bookstack",
+                containers=("bookstack", "bookstack_db"),
+                edges=(ContainerDependencyEdge("bookstack", "bookstack_db"),),
+            ),
+        )
+    )
+
+
+def test_no_dependency_graph_argument_adds_no_extra_option():
+    views = build_all_views(graph_with_categories("Supervision"))
+
+    document = render_html(views)
+
+    assert 'value="dependencies"' not in document
+    assert "dependencies" not in _views_data(document)
+
+
+def test_a_dependency_graph_with_no_projects_adds_no_extra_option():
+    views = build_all_views(graph_with_categories("Supervision"))
+
+    document = render_html(views, None, (), DependencyGraph())
+
+    assert 'value="dependencies"' not in document
+    assert "dependencies" not in _views_data(document)
+
+
+def test_a_real_dependency_graph_adds_the_dependencies_option():
+    views = build_all_views(graph_with_categories("Supervision"))
+    dependency_graph = _dependency_graph_with_one_edge()
+
+    document = render_html(views, None, (), dependency_graph)
+
+    assert (
+        '<option value="dependencies">Dépendances (Docker)</option>' in document
+    )
+
+
+def test_the_dependencies_option_comes_after_every_view_option():
+    views = build_all_views(graph_with_categories("Supervision", "Développement"))
+    dependency_graph = _dependency_graph_with_one_edge()
+
+    document = render_html(views, None, (), dependency_graph)
+
+    last_view_option = document.rindex('<option value="Développement">')
+    dependencies_option = document.index('value="dependencies"')
+
+    assert dependencies_option > last_view_option
+
+
+def test_the_embedded_dependencies_definition_matches_render_dependency_mermaid():
+    views = build_all_views(graph_with_categories("Supervision"))
+    dependency_graph = _dependency_graph_with_one_edge()
+
+    document = render_html(views, None, (), dependency_graph)
+    data = _views_data(document)
+
+    assert data["dependencies"] == render_dependency_mermaid(dependency_graph)
+
+
+def test_a_dependency_view_name_never_collides_with_a_real_category_named_the_same():
+    """
+    Contrived — no real category is ever named "dependencies" — but
+    `render_html` itself only adds the extra option when the name is
+    not already a key, so this documents that guard rather than
+    assuming it.
+    """
+
+    views = build_all_views(graph_with_categories("dependencies"))
+    dependency_graph = _dependency_graph_with_one_edge()
+
+    document = render_html(views, None, (), dependency_graph)
+    data = _views_data(document)
+
+    assert document.count('value="dependencies"') == 1
+    assert data["dependencies"] == render_mermaid(views[1])
 
 
 # --------------------------------------------------------------------

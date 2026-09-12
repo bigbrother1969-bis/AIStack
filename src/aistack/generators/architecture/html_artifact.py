@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from aistack.architecture.beszel_reading import BeszelSystemReading
+from aistack.architecture.dependency_graph import DependencyGraph
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import ArchitectureView
 from aistack.generators.history import write_artifact_with_history
@@ -33,7 +34,10 @@ class ArchitectureHtmlArtifactGenerator:
     reads happen. `beszel_readings` (same day, §10 last bullet) is the
     same story one layer further: this class never calls
     `BeszelProvider` itself, it only carries the already-built
-    readings through.
+    readings through. `dependency_graph` (same day, §10 third gap) is
+    the same story again: this class never calls
+    `build_dependency_graph` itself, it only carries the already-built
+    graph through.
     """
 
     def generate(
@@ -42,8 +46,9 @@ class ArchitectureHtmlArtifactGenerator:
         output_path: Path,
         topology: InfrastructureTopologyDefinition | None = None,
         beszel_readings: tuple[BeszelSystemReading, ...] = (),
+        dependency_graph: DependencyGraph | None = None,
     ) -> Path:
-        content = render_html(views, topology, beszel_readings)
+        content = render_html(views, topology, beszel_readings, dependency_graph)
         write_artifact_with_history(content, output_path)
 
         return output_path

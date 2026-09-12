@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from aistack.architecture.beszel_reading import build_beszel_readings
+from aistack.architecture.dependency_graph import build_dependency_graph
 from aistack.architecture.graph import build_architecture_graph
 from aistack.architecture.views import build_all_views
 from aistack.architecture.yaml import (
@@ -63,6 +64,14 @@ def main(environ: Mapping[str, str] | None = None) -> None:
     `systems` list is simply `()`, and `render_html` renders no
     "État en direct" section at all — the same "nothing to show"
     degradation the topology sub-blocks already have.
+
+    **A dependency graph, same day** (§10, third gap): `ComposeProvider`
+    itself now reads each project's real `depends_on:`, so no
+    additional provider call is needed here — `build_dependency_graph`
+    reads it straight off the already-built `compose_catalog`. A
+    project with no `depends_on:` anywhere is simply absent from the
+    graph; `render_html` adds no "Dépendances" view at all when the
+    graph carries no project — the same "nothing to show" degradation.
     """
 
     environ = os.environ if environ is None else environ
@@ -80,6 +89,7 @@ def main(environ: Mapping[str, str] | None = None) -> None:
 
     graph = build_architecture_graph(categorization, docker_catalog, compose_catalog)
     views = build_all_views(graph)
+    dependency_graph = build_dependency_graph(compose_catalog)
 
     beszel_readings: tuple = ()
 
@@ -105,6 +115,7 @@ def main(environ: Mapping[str, str] | None = None) -> None:
         output_path=Path("reports/generated/architecture.html"),
         topology=topology,
         beszel_readings=beszel_readings,
+        dependency_graph=dependency_graph,
     )
 
     print(f"Architecture diagram written to {output_path}")

@@ -4,10 +4,21 @@ import json
 from pathlib import Path
 
 from aistack.architecture.beszel_reading import BeszelSystemReading
+from aistack.architecture.dependency_graph import DependencyGraph
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import FULL_VIEW, ArchitectureView
+from aistack.renderers.architecture.dependency_mermaid import render_dependency_mermaid
 from aistack.renderers.architecture.icons import load_icon_data_uri
 from aistack.renderers.architecture.mermaid import escape_text, render_mermaid
+
+# The extra `<select>` entry `render_html` adds when a `DependencyGraph`
+# carries at least one project — a plain constant rather than a name
+# derived from anything, since nothing about a dependency view is a
+# category or `FULL_VIEW` (`views.py` never produces this name, so
+# there is no real collision to guard beyond the defensive check
+# `render_html` itself makes before adding it).
+_DEPENDENCY_VIEW_NAME = "dependencies"
+_DEPENDENCY_VIEW_LABEL = "Dépendances (Docker)"
 
 _VENDOR_PATH = Path(__file__).resolve().parent / "vendor" / "mermaid.min.js"
 
@@ -57,6 +68,7 @@ def render_html(
     views: tuple[ArchitectureView, ...],
     topology: InfrastructureTopologyDefinition | None = None,
     beszel_readings: tuple[BeszelSystemReading, ...] = (),
+    dependency_graph: DependencyGraph | None = None,
 ) -> str:
     """
     Wrap every view of an `ArchitectureGraph` into one self-contained
@@ -101,6 +113,18 @@ def render_html(
     empty tuple (the default) renders no "État en direct" section at
     all, the same "nothing to show, so show nothing" rule the topology
     sub-blocks already follow.
+
+    **`dependency_graph` is optional too, added the same week** — a
+    `DependencyGraph` built by
+    `aistack.architecture.dependency_graph.build_dependency_graph`
+    from the Compose catalog's own `depends_on:` readings. Unlike
+    `topology`/`beszel_readings`, this does not add a static section:
+    it adds one more entry to the existing view `<select>` (only when
+    at least one project carries a real edge), rendered by
+    `render_dependency_mermaid` rather than `render_mermaid` — a
+    genuinely different diagram, not a filtered slice of the same
+    `ArchitectureGraph` every other view draws from. `None` (the
+    default) renders the page exactly as before this addition.
     """
 
     if not views or views[0].name != FULL_VIEW:
@@ -123,6 +147,26 @@ def render_html(
     service_count = sum(len(category.services) for category in full.graph.categories)
 
     definitions = {view.name: render_mermaid(view) for view in views}
+
+    options_list = [
+        f'    <option value="{escape_text(view.name)}">'
+        f"{escape_text(_view_label(view.name))}</option>"
+        for view in views
+    ]
+
+    if (
+        dependency_graph is not None
+        and dependency_graph.projects
+        and _DEPENDENCY_VIEW_NAME not in definitions
+    ):
+        definitions[_DEPENDENCY_VIEW_NAME] = render_dependency_mermaid(
+            dependency_graph
+        )
+        options_list.append(
+            f'    <option value="{_DEPENDENCY_VIEW_NAME}">'
+            f"{escape_text(_DEPENDENCY_VIEW_LABEL)}</option>"
+        )
+
     # `</` inside a JSON string, re-serialized as `<\/`, is a valid
     # JSON escape (parses back to `/`) and can never terminate the
     # `<script type="application/json">` tag it sits in — the same
@@ -131,11 +175,7 @@ def render_html(
     # name.
     data_json = json.dumps(definitions, ensure_ascii=False).replace("</", "<\\/")
 
-    options = "\n".join(
-        f'    <option value="{escape_text(view.name)}">'
-        f"{escape_text(_view_label(view.name))}</option>"
-        for view in views
-    )
+    options = "\n".join(options_list)
 
     service_index_html = _render_service_index(full)
     topology_html = _render_topology_section(topology)

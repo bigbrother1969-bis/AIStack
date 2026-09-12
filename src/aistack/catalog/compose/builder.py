@@ -34,6 +34,17 @@ class ComposeRuntimeCatalogBuilder:
     complaint at runtime, since a dataclass field's declared type is
     not enforced, but `mypy` named the mismatch on its first run
     against this codebase.
+
+    **`dependency_edges`, added 2026-09-12** (`claude/PLAN-J11-
+    CONSOLE-2026-09-11.md` §10, third gap) — `ComposeProvider` now
+    reads each service's own `depends_on:` from the real compose
+    file, naming *service* names; this builder is where those become
+    *container*-to-container edges, the same boundary it already
+    keeps for `containers` (service → container_name). An edge
+    survives only when both ends resolve to a container this same
+    project actually observed — a `depends_on` naming a service that
+    is not (or no longer) running is not asserted as an edge to a
+    node nothing here has ever seen (`ARC-P-012`).
     """
 
     def build(self, observation: dict[str, Any]) -> Catalog:
@@ -59,6 +70,9 @@ class ComposeRuntimeCatalogBuilder:
                         "containers": self._sorted_containers(
                             project.get("services", {})
                         ),
+                        "dependency_edges": self._sorted_dependency_edges(
+                            project.get("services", {})
+                        ),
                     },
                 )
                 for project in projects
@@ -72,3 +86,24 @@ class ComposeRuntimeCatalogBuilder:
             if service.get("container_name")
         }
         return ",".join(sorted(names))
+
+    def _sorted_dependency_edges(self, services: dict[str, Any]) -> str:
+        container_by_service = {
+            service_name: str(service["container_name"])
+            for service_name, service in services.items()
+            if service.get("container_name")
+        }
+
+        edges: set[tuple[str, str]] = set()
+
+        for service_name, service in services.items():
+            from_container = container_by_service.get(service_name)
+            if not from_container:
+                continue
+
+            for target_service in service.get("depends_on") or ():
+                to_container = container_by_service.get(target_service)
+                if to_container:
+                    edges.add((from_container, to_container))
+
+        return ",".join(f"{source}->{target}" for source, target in sorted(edges))

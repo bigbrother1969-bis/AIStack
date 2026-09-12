@@ -44,9 +44,24 @@
     .add-form button { padding: .5rem 1rem; }
     button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
     .empty { color: #666; font-style: italic; margin: 0 0 1.5rem; }
+    .back-link {
+      display: inline-block; margin-bottom: 1.2rem; font-size: .88rem;
+      color: #1f6feb; text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
+  <!--
+    Lien direct LAN (GIGABYTE:8183), jamais l'adresse publique
+    https://aistack.persiaut-family.fr — décidé avec le owner
+    2026-09-12 : cet écran reste volontairement LAN-only (voir
+    l'avertissement ci-dessous), un lien de retour vers le domaine
+    public romprait cette frontière sans raison, puisque la console
+    répond aussi en direct sur ce même hôte, au port juste en dessous.
+  -->
+  <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
+
   <header>
     <h1>Découverte réseau — utilisateurs SSH</h1>
     <p class="meta">

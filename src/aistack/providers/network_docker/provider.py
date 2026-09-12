@@ -181,7 +181,16 @@ class NetworkDockerDiscoveryProvider:
             "-o",
             "BatchMode=yes",
             "-o",
-            f"ConnectTimeout={self._timeout_seconds}",
+            # ssh's own ConnectTimeout only accepts a whole number of
+            # seconds — a real-world defect found 2026-09-12: this
+            # class stores the declared timeout as a float
+            # (`NetworkDiscoveryDefinition.ssh_timeout_seconds`), and
+            # f"{3.0}" renders "3.0", which ssh rejects outright
+            # ("invalid time value") before it ever attempts a
+            # connection. round(), not int(), so a declared 2.5s
+            # rounds to the nearer whole second rather than always
+            # truncating down.
+            f"ConnectTimeout={round(self._timeout_seconds)}",
             f"{username}@{ip}",
             "docker ps -a --format '{{json .}}'",
         ]

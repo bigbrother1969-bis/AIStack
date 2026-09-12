@@ -345,3 +345,42 @@ def test_the_remote_docker_ps_format_is_shell_quoted():
     ssh_calls = [call for call in runner.calls if call[0] == "ssh"]
     assert ssh_calls
     assert ssh_calls[0][-1] == "docker ps -a --format '{{json .}}'"
+
+
+def test_connect_timeout_is_a_whole_number_ssh_will_accept():
+    """
+    Real-world defect found 2026-09-12, right after the {{json .}}
+    quoting fix above: `ConnectTimeout` is stored as a float
+    (`timeout_seconds: float`, matching
+    `NetworkDiscoveryDefinition.ssh_timeout_seconds`'s own declared
+    type), and the real `ssh` binary refuses a fractional value
+    outright — "invalid time value", exit code 255, before any
+    connection is attempted. Confirmed on the owner's real GIGABYTE
+    by calling `subprocess.run` on the exact constructed command.
+    `FakeRunner` never caught it either, for the same reason as the
+    {{json .}} defect: it answers by `(ip, username)`, never by
+    handing the command to a real `ssh` to reject.
+    """
+
+    runner = FakeRunner(
+        nmap_stdout="Host: 192.168.1.40 ()\tStatus: Up\n",
+        ssh_table={("192.168.1.40", "pi"): (0, "")},
+    )
+
+    NetworkDockerDiscoveryProvider(
+        cidr="192.168.1.0/24",
+        ssh_key_path="/home/big-brother/.ssh/id_ed25519",
+        ssh_usernames=("pi",),
+        timeout_seconds=3.0,
+        run_command=runner,
+        local_ips=frozenset(),
+    ).collect()
+
+    ssh_calls = [call for call in runner.calls if call[0] == "ssh"]
+    assert ssh_calls
+    connect_timeout_options = [
+        value
+        for value in ssh_calls[0]
+        if isinstance(value, str) and value.startswith("ConnectTimeout=")
+    ]
+    assert connect_timeout_options == ["ConnectTimeout=3"]

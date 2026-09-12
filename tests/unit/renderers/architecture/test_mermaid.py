@@ -12,6 +12,9 @@ def node(
     container: str | None = None,
     status: ServiceStatus = ServiceStatus.NO_CONTAINER,
     compose_project: str | None = None,
+    icon: str | None = None,
+    href: str | None = None,
+    description: str | None = None,
 ) -> ServiceNode:
     return ServiceNode(
         name=name,
@@ -19,6 +22,9 @@ def node(
         container=container,
         status=status,
         compose_project=compose_project,
+        icon=icon,
+        href=href,
+        description=description,
     )
 
 
@@ -219,6 +225,85 @@ def test_special_characters_in_names_are_escaped():
     assert "&gt;" in text
     assert "<name>" not in text
     assert "<B>" not in text
+
+
+def test_a_service_with_an_href_gets_a_click_directive():
+    text = render_mermaid(
+        view(
+            category(
+                "Cat",
+                node(
+                    "Pi-hole",
+                    href="https://pihole.persiaut-family.fr/admin",
+                    description="Gestionnaire de DNS + Blocage de publicités",
+                ),
+            )
+        )
+    )
+
+    assert (
+        'click svc_0_pi_hole href "https://pihole.persiaut-family.fr/admin" '
+        '"Gestionnaire de DNS + Blocage de publicités" _blank' in text
+    )
+
+
+def test_a_service_with_no_href_gets_no_click_directive():
+    text = render_mermaid(view(category("Cat", node("Pi-hole"))))
+
+    assert "click " not in text
+
+
+def test_a_click_directives_tooltip_falls_back_to_the_service_name():
+    text = render_mermaid(
+        view(
+            category(
+                "Cat",
+                node("Pi-hole", href="https://pihole.persiaut-family.fr/admin"),
+            )
+        )
+    )
+
+    assert (
+        'click svc_0_pi_hole href "https://pihole.persiaut-family.fr/admin" '
+        '"Pi-hole" _blank' in text
+    )
+
+
+def test_click_directives_are_escaped_the_same_way_as_labels():
+    text = render_mermaid(
+        view(
+            category(
+                "Cat",
+                node(
+                    "Weird",
+                    href='https://example.test/?a=1&b="2"',
+                    description='a "quoted" description',
+                ),
+            )
+        )
+    )
+
+    assert "&amp;" in text
+    assert "&quot;" in text
+
+
+def test_click_directives_come_after_every_subgraph_closes():
+    """
+    Mermaid accepts `click` directives anywhere in the document, but
+    placing them after every `end` keeps the diagram body itself free
+    of anything but structure — a click line interleaved into a
+    subgraph would read as if it were part of that subgraph's own
+    declaration.
+    """
+
+    text = render_mermaid(
+        view(category("Cat", node("Pi-hole", href="https://pihole.example/")))
+    )
+
+    last_end = text.rindex("\n    end")
+    click_index = text.index("click svc_0_pi_hole")
+
+    assert click_index > last_end
 
 
 def test_escape_text_handles_all_four_characters_independently():

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from aistack.architecture.views import FULL_VIEW, ArchitectureView
+from aistack.renderers.architecture.icons import load_icon_data_uri
 from aistack.renderers.architecture.mermaid import escape_text, render_mermaid
 
 _VENDOR_PATH = Path(__file__).resolve().parent / "vendor" / "mermaid.min.js"
@@ -114,6 +115,8 @@ def render_html(views: tuple[ArchitectureView, ...]) -> str:
         for view in views
     )
 
+    service_index_html = _render_service_index(full)
+
     return f"""<!doctype html>
 <html lang="fr">
 <head>
@@ -144,6 +147,8 @@ def render_html(views: tuple[ArchitectureView, ...]) -> str:
 
 <div id="diagram">Chargement…</div>
 
+{service_index_html}
+
 <script id="views-data" type="application/json">{data_json}</script>
 <script>
 {vendored_js}
@@ -158,6 +163,82 @@ def render_html(views: tuple[ArchitectureView, ...]) -> str:
 
 def _view_label(name: str) -> str:
     return "Toutes les catégories" if name == FULL_VIEW else name
+
+
+def _render_service_index(full: ArchitectureView) -> str:
+    """
+    Icône + nom + lien + description, une fois par service, groupé par
+    catégorie — ajouté 2026-09-12 (`claude/PLAN-J11-CONSOLE-2026-09-11.md`
+    §10).
+
+    **Toujours la vue complète, indépendamment du `<select>`.** Le
+    graphe Mermaid change de vue au clic ; cette liste ne le suit pas
+    — elle énumère `full.graph.categories` une seule fois, pas
+    `views[current]`, pour la même raison que `render_html` exige déjà
+    `views[0]` comme la vue complète : toutes les catégories n'existent
+    ensemble que là.
+
+    **Pas dans le graphe Mermaid lui-même.** Un nœud Mermaid ne peut
+    pas porter une image raster arbitraire sans convertir chaque icône
+    en pack Iconify — un chantier à part, jugé disproportionné pour ce
+    gain (décidé avec le owner). Le clic + info-bulle sur chaque nœud
+    (`click <id> href ... _blank`, `mermaid.py`) reste la façon dont
+    `href`/`description` s'expriment dans le graphe ; cette liste est
+    la façon dont l'icône s'exprime, à côté.
+    """
+
+    sections: list[str] = []
+
+    for category in full.graph.categories:
+        items: list[str] = []
+
+        for service in category.services:
+            icon_data_uri = load_icon_data_uri(service.icon)
+            icon_html = (
+                f'<img class="service-icon" src="{icon_data_uri}" alt="" />'
+                if icon_data_uri
+                else '<span class="service-icon service-icon-none"></span>'
+            )
+
+            name = escape_text(service.name)
+            name_html = (
+                f'<a href="{escape_text(service.href)}" target="_blank" '
+                f'rel="noopener">{name}</a>'
+                if service.href
+                else f"<span>{name}</span>"
+            )
+
+            description_html = (
+                f'<p class="service-description">{escape_text(service.description)}</p>'
+                if service.description
+                else ""
+            )
+
+            items.append(
+                "      <li>"
+                f"{icon_html}"
+                '<span class="service-entry">'
+                f"{name_html}"
+                f"{description_html}"
+                "</span>"
+                "</li>"
+            )
+
+        sections.append(
+            '  <div class="service-category">\n'
+            f"    <h3>{escape_text(category.name)}</h3>\n"
+            '    <ul class="service-list">\n'
+            + "\n".join(items)
+            + "\n    </ul>\n"
+            "  </div>"
+        )
+
+    return (
+        '<section class="service-index">\n'
+        "  <h2>Services déclarés</h2>\n"
+        + "\n".join(sections)
+        + "\n</section>"
+    )
 
 
 _STYLE = """\
@@ -185,7 +266,36 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 }
 .swatch-confirmed { background: #dff6dd; border-color: #116329; }
 .swatch-declared { background: #fff1cc; border-color: #7d4e00; }
-.swatch-none { background: #f0f0f0; border-color: #666; }\
+.swatch-none { background: #f0f0f0; border-color: #666; }
+.service-index { margin-top: 1.6rem; }
+.service-index h2 { font-size: 1.1rem; margin-bottom: .6rem; }
+.service-category { margin-bottom: 1.2rem; }
+.service-category h3 {
+  font-size: .95rem; color: #444; margin: 0 0 .4rem;
+  border-bottom: 1px solid #e5e5e5; padding-bottom: .2rem;
+}
+.service-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: .6rem;
+}
+.service-list li {
+  display: flex; align-items: flex-start; gap: .5rem;
+  border: 1px solid #e5e5e5; border-radius: 6px; padding: .5rem .7rem;
+  background: #fff; min-width: 12rem; max-width: 18rem;
+}
+.service-icon {
+  width: 24px; height: 24px; flex: none; object-fit: contain;
+  margin-top: .1rem;
+}
+.service-icon-none {
+  width: 24px; height: 24px; flex: none; border-radius: 4px;
+  background: #f0f0f0;
+}
+.service-entry { display: flex; flex-direction: column; gap: .15rem; }
+.service-entry a { color: #0b5fff; text-decoration: none; font-weight: 600; }
+.service-entry a:hover { text-decoration: underline; }
+.service-entry span { font-weight: 600; }
+.service-description { margin: 0; color: #666; font-size: .8rem; }\
 """
 
 _BOOTSTRAP_JS = """\

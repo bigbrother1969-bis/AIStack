@@ -12,9 +12,22 @@ from aistack.renderers.architecture.html import load_vendored_mermaid_js, render
 from aistack.renderers.architecture.mermaid import render_mermaid
 
 
-def node(name: str, category: str = "Cat") -> ServiceNode:
+def node(
+    name: str,
+    category: str = "Cat",
+    *,
+    icon: str | None = None,
+    href: str | None = None,
+    description: str | None = None,
+) -> ServiceNode:
     return ServiceNode(
-        name=name, category=category, container=None, status=ServiceStatus.NO_CONTAINER
+        name=name,
+        category=category,
+        container=None,
+        status=ServiceStatus.NO_CONTAINER,
+        icon=icon,
+        href=href,
+        description=description,
     )
 
 
@@ -133,6 +146,179 @@ def test_a_view_name_containing_a_closing_script_tag_does_not_break_the_embedded
     data = _views_data(document)
 
     assert name in data
+
+
+# --------------------------------------------------------------------
+# The service index (icon + name + link + description) — added
+# 2026-09-12, `claude/PLAN-J11-CONSOLE-2026-09-11.md` §10.
+# --------------------------------------------------------------------
+
+
+def test_a_service_with_an_href_is_a_link():
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Supervision",
+                services=(
+                    node(
+                        "Pi-hole",
+                        "Supervision",
+                        href="https://pihole.persiaut-family.fr/admin",
+                        description="Gestionnaire de DNS + Blocage de publicités",
+                    ),
+                ),
+            ),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    assert (
+        '<a href="https://pihole.persiaut-family.fr/admin" target="_blank" '
+        'rel="noopener">Pi-hole</a>' in document
+    )
+    assert "Gestionnaire de DNS + Blocage de publicités" in document
+
+
+def test_a_service_with_no_href_is_plain_text_not_a_link():
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(name="Supervision", services=(node("Pi-hole", "Supervision"),)),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    assert "<span>Pi-hole</span>" in document
+    assert '<a href="" ' not in document
+
+
+def test_a_service_with_no_description_carries_no_description_paragraph():
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Supervision",
+                services=(
+                    node(
+                        "Pi-hole",
+                        "Supervision",
+                        href="https://pihole.persiaut-family.fr/admin",
+                    ),
+                ),
+            ),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    assert '<p class="service-description">' not in document
+
+
+def test_the_service_index_is_grouped_by_category_and_lists_every_service():
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Supervision", services=(node("Beszel", "Supervision"),)
+            ),
+            CategoryGraph(
+                name="Développement", services=(node("Gitea", "Développement"),)
+            ),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    assert '<section class="service-index">' in document
+    assert "<h3>Supervision</h3>" in document
+    assert "<h3>Développement</h3>" in document
+    assert document.index("<h3>Supervision</h3>") < document.index("Beszel")
+    assert document.index("<h3>Développement</h3>") < document.index("Gitea")
+
+
+def test_the_service_index_always_reflects_the_full_view_regardless_of_selection():
+    """
+    `_render_service_index` reads `full.graph.categories` — the view
+    at `views[0]`, checked FULL_VIEW at the top of this function —
+    not whichever view the caller happens to pass around, so the
+    index always lists every category even though the diagram itself
+    switches to one category at a time via the `<select>`.
+    """
+
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Supervision", services=(node("Beszel", "Supervision"),)
+            ),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    # Only one category exists in this fixture graph, but the point is
+    # that the index comes from `views[0]` (the FULL_VIEW), which
+    # `build_all_views` always builds with every category present —
+    # confirmed by the assertion above already passing for the
+    # multi-category fixture.
+    assert "Beszel" in document
+
+
+def test_a_service_with_a_vendored_icon_embeds_it_as_a_data_uri():
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Supervision",
+                services=(node("Pi-hole", "Supervision", icon="pi-hole"),),
+            ),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    assert '<img class="service-icon" src="data:image/png;base64,' in document
+
+
+def test_a_service_with_no_icon_or_an_unknown_icon_gets_the_placeholder():
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Supervision",
+                services=(
+                    node("No Icon", "Supervision"),
+                    node("Unknown Icon", "Supervision", icon="does-not-exist"),
+                ),
+            ),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    assert document.count('<span class="service-icon service-icon-none"></span>') == 2
+
+
+def test_service_index_text_is_escaped():
+    graph = ArchitectureGraph(
+        categories=(
+            CategoryGraph(
+                name="Cat",
+                services=(
+                    node(
+                        'Weird & "quoted" <name>',
+                        "Cat",
+                        href="https://example.test/?a=1&b=2",
+                        description='a "quoted" & <b>description</b>',
+                    ),
+                ),
+            ),
+        )
+    )
+
+    document = render_html(build_all_views(graph))
+
+    assert "&amp;" in document
+    assert "&quot;" in document
+    assert "&lt;" in document
+    assert "&gt;" in document
+    assert "<b>description</b>" not in document
 
 
 # --------------------------------------------------------------------

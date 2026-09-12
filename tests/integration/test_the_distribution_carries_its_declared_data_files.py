@@ -36,6 +36,13 @@ _EXPECTED_DATA_FILES = (
     "aistack/priority/definitions/resource_priority.yml",
     "aistack/architecture/definitions/service_categorization.yml",
     "aistack/renderers/architecture/vendor/mermaid.min.js",
+    # Added 2026-09-12 alongside `**/*.png`/`**/*.svg` in
+    # `[tool.setuptools.package-data]` (`claude/PLAN-J11-CONSOLE-
+    # 2026-09-11.md` §10) — one of each extension, so a real install
+    # dropping either pattern is caught the same way it was for `.yml`
+    # and `.js` above.
+    "aistack/renderers/architecture/vendor/icons/pi-hole.png",
+    "aistack/renderers/architecture/vendor/icons/router-wireless.svg",
 )
 
 

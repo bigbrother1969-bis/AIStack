@@ -219,5 +219,11 @@ files = ["src/aistack"]
 # this session's own verification clones run) can never surface
 # this: it points straight at `src/`, where the files already exist
 # regardless of what setuptools declares.
+#
+# `**/*.png`/`**/*.svg` added 2026-09-12 alongside
+# `renderers/architecture/vendor/icons/` (`claude/PLAN-J11-CONSOLE-
+# 2026-09-11.md` §10) — the exact defect this table exists to prevent
+# would otherwise repeat itself for every vendored icon the same way
+# it once did for `resource_priority.yml` and `mermaid.min.js`.
 [tool.setuptools.package-data]
-aistack = ["**/*.yml", "**/*.js"]
+aistack = ["**/*.yml", "**/*.js", "**/*.png", "**/*.svg"]

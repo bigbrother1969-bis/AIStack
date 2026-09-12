@@ -237,6 +237,66 @@ def test_multiple_categories_each_carry_their_own_services():
     assert graph.categories[1].services[0].name == "Gitea"
 
 
+def test_icon_href_and_description_travel_straight_through_regardless_of_status():
+    """
+    `icon`/`href`/`description` are a plain pass-through (`graph.py`'s
+    own docstring: "nothing here joins them against a catalog") —
+    unlike `status`, they must not vary with what the catalogs
+    observed. Checked across two services deliberately landing on
+    different statuses (`NO_CONTAINER` and `DECLARED_NOT_OBSERVED`),
+    so a future change coupling them to `container`/`status` by
+    accident is caught here.
+    """
+
+    graph = build_architecture_graph(
+        categorization(
+            category(
+                "Supervision",
+                ServiceDefinition(
+                    name="Pi-hole",
+                    icon="pi-hole",
+                    href="https://pihole.persiaut-family.fr/admin",
+                    description="Gestionnaire de DNS + Blocage de publicités",
+                ),
+                ServiceDefinition(
+                    name="Nginx Proxy Manager",
+                    container="npm",
+                    icon="nginx-proxy-manager",
+                    href="https://npm.persiaut-family.fr",
+                    description="Gestionnaire des Proxy Hosts",
+                ),
+            )
+        ),
+        docker_catalog(),
+        compose_catalog(),
+    )
+
+    pihole, npm = graph.categories[0].services
+
+    assert pihole.status == ServiceStatus.NO_CONTAINER
+    assert pihole.icon == "pi-hole"
+    assert pihole.href == "https://pihole.persiaut-family.fr/admin"
+    assert pihole.description == "Gestionnaire de DNS + Blocage de publicités"
+
+    assert npm.status == ServiceStatus.DECLARED_NOT_OBSERVED
+    assert npm.icon == "nginx-proxy-manager"
+    assert npm.href == "https://npm.persiaut-family.fr"
+    assert npm.description == "Gestionnaire des Proxy Hosts"
+
+
+def test_icon_href_and_description_default_to_none():
+    graph = build_architecture_graph(
+        categorization(category("Supervision", ServiceDefinition(name="Pi-hole"))),
+        docker_catalog(),
+        compose_catalog(),
+    )
+
+    node = graph.categories[0].services[0]
+    assert node.icon is None
+    assert node.href is None
+    assert node.description is None
+
+
 def test_an_empty_categorization_produces_an_empty_graph():
     graph = build_architecture_graph(
         categorization(), docker_catalog(), compose_catalog()

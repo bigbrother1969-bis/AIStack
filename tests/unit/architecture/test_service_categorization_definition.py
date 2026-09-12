@@ -45,6 +45,68 @@ def test_a_complete_categorization_is_loaded(tmp_path: Path):
     assert pihole.container is None
 
 
+def test_icon_href_and_description_are_loaded(tmp_path: Path):
+    path = write(
+        tmp_path / "rich_service.yml",
+        """
+        categories:
+          - name: Supervision
+            services:
+              - name: Pi-hole
+                icon: pi-hole
+                href: https://pihole.persiaut-family.fr/admin
+                description: Gestionnaire de DNS + Blocage de publicités
+        """,
+    )
+
+    service = load_service_categorization_yaml(path).categories[0].services[0]
+    assert service.icon == "pi-hole"
+    assert service.href == "https://pihole.persiaut-family.fr/admin"
+    assert service.description == "Gestionnaire de DNS + Blocage de publicités"
+
+
+def test_icon_href_and_description_default_to_none_when_absent(tmp_path: Path):
+    path = write(
+        tmp_path / "bare_service.yml",
+        """
+        categories:
+          - name: Supervision
+            services:
+              - name: LibreSpeed
+        """,
+    )
+
+    service = load_service_categorization_yaml(path).categories[0].services[0]
+    assert service.icon is None
+    assert service.href is None
+    assert service.description is None
+
+
+def test_an_empty_icon_href_or_description_value_reads_as_none(tmp_path: Path):
+    """
+    Same discipline as `container:` present-but-blank — a hand-edit
+    slip never travels downstream as an empty string.
+    """
+
+    path = write(
+        tmp_path / "blank_fields.yml",
+        """
+        categories:
+          - name: Supervision
+            services:
+              - name: LibreSpeed
+                icon:
+                href:
+                description:
+        """,
+    )
+
+    service = load_service_categorization_yaml(path).categories[0].services[0]
+    assert service.icon is None
+    assert service.href is None
+    assert service.description is None
+
+
 def test_multiple_categories_are_loaded_in_source_order(tmp_path: Path):
     """
     Category and service order is the owner's own dashboard order —
@@ -320,6 +382,29 @@ def test_the_real_service_categorization_loads():
         c for c in definition.categories if c.name == "AIStack"
     )
     assert [s.name for s in aistack_category.services] == ["Music Sync"]
+
+    # `icon`/`href`/`description` joined 2026-09-12 (§10) — every one
+    # of the 47 services carries all three, unlike `container` (which
+    # several legitimately lack). A missing one here is the real file
+    # regressing, not a case this loader should tolerate silently.
+    for service in all_services:
+        assert service.icon, f"{service.name} has no icon"
+        assert service.href, f"{service.name} has no href"
+        assert service.description, f"{service.name} has no description"
+
+    assert by_name["Nginx Proxy Manager"].icon == "nginx-proxy-manager"
+    assert by_name["Nginx Proxy Manager"].href == "https://npm.persiaut-family.fr"
+    assert (
+        by_name["Nginx Proxy Manager"].description
+        == "Gestionnaire des Proxy Hosts"
+    )
+    # `FreeboxOS` and `Freebox Dashboard` share one vendored icon — the
+    # source declared `mdi-router-wireless` for both.
+    assert by_name["FreeboxOS"].icon == "router-wireless"
+    assert by_name["Freebox Dashboard"].icon == "router-wireless"
+    # The one dead source reference (`icon: books`, 404 against
+    # dashboard-icons) the owner replaced rather than carried forward.
+    assert by_name["Legal to Read"].icon == "book-open-page-variant"
 
 
 def test_dataclasses_default_to_empty_when_built_directly():

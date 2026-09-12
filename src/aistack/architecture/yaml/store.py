@@ -94,6 +94,9 @@ def _load_service(
     return ServiceDefinition(
         name=data["name"],
         container=data.get("container") or None,
+        icon=data.get("icon") or None,
+        href=data.get("href") or None,
+        description=data.get("description") or None,
     )
 
 

@@ -57,6 +57,7 @@ def render_mermaid(view: ArchitectureView) -> str:
 
     service_index = 0
     project_index = 0
+    click_lines: list[str] = []
 
     for category_index, category in enumerate(view.graph.categories):
         category_id = f"cat_{category_index}_{_slug(category.name)}"
@@ -85,27 +86,73 @@ def render_mermaid(view: ArchitectureView) -> str:
 
             for service in project_members[project]:
                 lines.append(f"            {_service_line(service, service_index)}")
+                click_line = _click_line(service, service_index)
+                if click_line is not None:
+                    click_lines.append(click_line)
                 service_index += 1
 
             lines.append("        end")
 
         for service in standalone:
             lines.append(f"        {_service_line(service, service_index)}")
+            click_line = _click_line(service, service_index)
+            if click_line is not None:
+                click_lines.append(click_line)
             service_index += 1
 
         lines.append("    end")
 
+    if click_lines:
+        lines.append("")
+        lines.extend(click_lines)
+
     return "\n".join(lines) + "\n"
 
 
+def _node_id(service: ServiceNode, index: int) -> str:
+    return f"svc_{index}_{_slug(service.name)}"
+
+
 def _service_line(service: ServiceNode, index: int) -> str:
-    node_id = f"svc_{index}_{_slug(service.name)}"
+    node_id = _node_id(service, index)
     label = escape_text(service.name)
 
     if service.container:
         label += f"<br/><small>{escape_text(service.container)}</small>"
 
     return f'{node_id}["{label}"]:::{service.status.value}'
+
+
+def _click_line(service: ServiceNode, index: int) -> str | None:
+    """
+    One `click <id> href "<url>" "<tooltip>" _blank` directive per
+    service that declares an `href` — added 2026-09-12
+    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10). `None` when the
+    service has no `href`, the same "nothing to add" convention
+    `ServiceNode.compose_project` already uses for a status that has
+    nothing to name.
+
+    **`_blank`, always.** Every `href` this heritage declares points
+    at another homelab service, never at a page a link inside this
+    Mermaid diagram would otherwise navigate away from and lose;
+    opening a new tab keeps `architecture.html` itself in place.
+
+    **Tooltip falls back to the service's own name** when
+    `description` is absent, rather than to an empty string — a click
+    target with no tooltip at all reads as a Mermaid rendering defect
+    before it reads as "this service has no description."
+    """
+
+    if not service.href:
+        return None
+
+    node_id = _node_id(service, index)
+    tooltip = service.description or service.name
+
+    return (
+        f'    click {node_id} href "{escape_text(service.href)}" '
+        f'"{escape_text(tooltip)}" _blank'
+    )
 
 
 def _slug(text: str) -> str:

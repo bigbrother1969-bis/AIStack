@@ -1,5 +1,6 @@
 # Service categorization — which category each service belongs to,
-# and the container it maps to when it runs as one.
+# the container it maps to when it runs as one, and how the owner
+# wants it presented (icon, link, description).
 #
 # Loaded by `load_service_categorization_yaml`
 # (`src/aistack/architecture/yaml/store.py`), and read by the J2
@@ -12,20 +13,30 @@
 # category a service belongs to is the owner's own decision, not
 # something Docker or Compose can say.
 #
-# Only `name`/`container` travel here. The source file also carries
-# `icon`, `href`, `server` and `description` — Homepage-dashboard
-# concerns this repository's own architecture diagram (J2) does not
-# use. `server` in particular does not travel on purpose: the source
-# distinguishes Raspberry Pi from Gigabyte by which `docker-compose.yml`,
-# on which host, declares a service — an observation AIStack has no
-# provider for. The reconstructed diagram instead marks a service
-# "observed" when its container is live in GIGABYTE's own Docker
-# Catalog, "declared" otherwise (same plan, "Une réduction de périmètre
-# assumée"). A service with no `container:` at all here is one the
-# source itself named with no container — hardware AIStack has no
-# provider for (the Freebox itself, Pi-hole, LibreSpeed), or something
-# reached through Docker without being a container of its own
-# (Architecture Homelab, Indy, Music Sync).
+# **`icon`/`href`/`description` joined `name`/`container` here
+# 2026-09-12** (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10) — the
+# owner confirmed, service field by field, that reopening the
+# 2026-09-10 decision to drop them was wanted. `icon` is not the
+# source file's own value (`nginx-proxy-manager.png`,
+# `mdi-router-wireless`, `fa-user-tie`, and one dead reference —
+# `books`, replaced with the owner's own choice,
+# `book-open-page-variant`) — it is a bare key into
+# `renderers/architecture/vendor/icons/`
+# (`vendor/icons/PROVENANCE.md` names exactly which source each
+# vendored file came from). `href`/`description` travel unchanged
+# from the source.
+#
+# `server` still does not travel, and still does not on purpose: the
+# source distinguishes Raspberry Pi from Gigabyte by which
+# `docker-compose.yml`, on which host, declares a service — an
+# observation AIStack has no provider for. The reconstructed diagram
+# instead marks a service "observed" when its container is live in
+# GIGABYTE's own Docker Catalog, "declared" otherwise (same plan, "Une
+# réduction de périmètre assumée"). A service with no `container:` at
+# all here is one the source itself named with no container —
+# hardware AIStack has no provider for (the Freebox itself, Pi-hole,
+# LibreSpeed), or something reached through Docker without being a
+# container of its own (Architecture Homelab, Indy, Music Sync).
 #
 # This file is edited by hand — no UI writes it back the way
 # `priority_ui` writes `resource_priority.yml`.
@@ -35,103 +46,244 @@ categories:
     services:
       - name: Nginx Proxy Manager
         container: npm
+        icon: nginx-proxy-manager
+        href: https://npm.persiaut-family.fr
+        description: Gestionnaire des Proxy Hosts
       - name: Portainer
         container: portainer
+        icon: portainer
+        href: https://portainer.persiaut-family.fr
+        description: Administration de Docker
       - name: Pi-hole
+        icon: pi-hole
+        href: https://pihole.persiaut-family.fr/admin
+        description: Gestionnaire de DNS + Blocage de publicités
       - name: FreeboxOS
+        icon: router-wireless
+        href: https://persiaut-family.fr:15277/
+        description: Administration de la Freebox Ultra
       - name: Nextcloud
         container: nc_app
+        icon: nextcloud
+        href: https://cloud.persiaut-family.fr
+        description: Cloud familial et sauvegarde des photos des smartphones
       - name: Vaultwarden
         container: vaultwarden
+        icon: vaultwarden
+        href: https://vault.persiaut-family.fr
+        description: Gestionnaire de mots de passe familial
       - name: Vikunja
         container: vikunja-app
+        icon: vikunja
+        href: https://tasks.persiaut-family.fr
+        description: Gestionnaire de tâches et listes collaboratif
       - name: Stirling-PDF
         container: stirling-pdf
+        icon: stirling-pdf
+        href: https://pdf.persiaut-family.fr
+        description: Manipulation de fichiers PDF
       - name: FileBrowser
         container: filebrowser
+        icon: filebrowser
+        href: https://files.persiaut-family.fr
+        description: Téléchargement de fichiers
       - name: SyncThing
         container: syncthing
+        icon: syncthing
+        href: https://syncthing.persiaut-family.fr
+        description: Synchronisation d'appareils
 
   - name: Supervision
     services:
       - name: Uptime Kuma
         container: uptime-kuma
+        icon: uptime-kuma
+        href: https://uptime.persiaut-family.fr
+        description: Suivi des containers Docker en temps réel
       - name: Beszel
         container: beszel
+        icon: monitor-dashboard
+        href: https://beszel.persiaut-family.fr
+        description: Supervision légère du Gigabyte et du Raspberry Pi
       - name: Scrutiny
         container: scrutiny
+        icon: scrutiny
+        href: https://scrutiny.persiaut-family.fr
+        description: Monitoring S.M.A.R.T. des disques durs
       - name: Gotify
         container: gotify
+        icon: gotify
+        href: https://gotify.persiaut-family.fr
+        description: Serveur de notifications push
       - name: LibreSpeed
+        icon: librespeed
+        href: https://speed.persiaut-family.fr
+        description: Test de vitesse réseau
       - name: Freebox Dashboard
         container: freebox-dashboard
+        icon: router-wireless
+        href: https://freebox.persiaut-family.fr
+        description: Dashboard de suivi de la Freebox Ultra
       - name: Frigate
         container: frigate
+        icon: frigate
+        href: https://frigate.persiaut-family.fr
+        description: Videosurveillance
       - name: Architecture Homelab
+        icon: sitemap
+        href: https://archi.persiaut-family.fr
+        description: Schéma d'architecture complet du homelab
       - name: Home Assistant
         container: homeassistant
+        icon: home-assistant
+        href: https://ha.persiaut-family.fr
+        description: Maison connectée
 
   - name: Divertissement & Bureau
     services:
       - name: Immich
         container: immich_server
+        icon: immich
+        href: https://immich.persiaut-family.fr
+        description: Gestionnaire photos simple et facile
       - name: Jellyfin
         container: jellyfin
+        icon: jellyfin
+        href: https://jellyfin.persiaut-family.fr
+        description: Streaming video et audio
       - name: Booklore
         container: booklore
+        icon: booklore
+        href: https://booklore.persiaut-family.fr
+        description: Gestionnaire de livres + eBook reader
       - name: Legal to Read
+        icon: book-open-page-variant
+        href: https://books.persiaut-family.fr/
+        description: Livres légaux à lire, mais bannis aux USA
       - name: Komga
         container: komga
+        icon: komga
+        href: https://komga.persiaut-family.fr
+        description: Gestionnaire et lecteur de BD, comics et mangas
       - name: Paperless
         container: paperless
+        icon: paperless-ngx
+        href: https://paperless.persiaut-family.fr
+        description: Digitalisation des documents de la famille
       - name: Boostack
         container: bookstack
+        icon: bookstack
+        href: https://bookstack.persiaut-family.fr
+        description: Wiki familial
       - name: Wordpress
         container: wp_app
+        icon: wordpress
+        href: https://wp.persiaut-family.fr/
+        description: WordPress de la famille
       - name: Actual Budget
         container: actual-budget
+        icon: actual-budget
+        href: https://budget.persiaut-family.fr
+        description: Gestionnaire de budget familial
       - name: Firefly III
         container: firefly
+        icon: firefly
+        href: https://firefly.persiaut-family.fr
+        description: Gestionnaire de finances personnelles
       - name: Indy
+        icon: user-tie
+        href: https://app.indy.fr/
+        description: Gestionnaire de facturation
       - name: EmulatorJS / ROMM
         container: romm
+        icon: romm
+        href: https://games.persiaut-family.fr
+        description: Jeux ROM
 
   - name: Téléchargements
     services:
       - name: Seerr
         container: seerr
+        icon: overseerr
+        href: https://seerr.persiaut-family.fr
+        description: Demandes de films et séries
       - name: Prowlarr
         container: prowlarr
+        icon: prowlarr
+        href: https://prowlarr.persiaut-family.fr
+        description: Gestionnaire d'indexeurs
       - name: Radarr
         container: radarr
+        icon: radarr
+        href: https://radarr.persiaut-family.fr
+        description: Gestionnaire de films
       - name: Sonarr
         container: sonarr
+        icon: sonarr
+        href: https://sonarr.persiaut-family.fr
+        description: Gestionnaire de séries
       - name: Lidarr
         container: lidarr
+        icon: lidarr
+        href: https://lidarr.persiaut-family.fr
+        description: Gestionnaire de musique
       - name: Readarr
         container: readarr
+        icon: readarr
+        href: https://readarr.persiaut-family.fr
+        description: Gestionnaire de livres
       - name: Mylar3
         container: mylar3
+        icon: mylar
+        href: https://mylar3.persiaut-family.fr
+        description: Gestionnaire de comics et BD
       - name: Bazarr
         container: bazarr
+        icon: bazarr
+        href: https://bazarr.persiaut-family.fr
+        description: Gestionnaire de sous-titres
       - name: qBittorrent
         container: qbittorrent
+        icon: qbittorrent
+        href: https://qbittorrent.persiaut-family.fr
+        description: Client de téléchargement Torrent
       - name: Autobrr
         container: autobrr
+        icon: autobrr
+        href: https://autobrr.persiaut-family.fr
+        description: Automatisation des téléchargements
       - name: Mularr
         container: mularr
+        icon: download-network
+        href: https://mularr.persiaut-family.fr
+        description: Client eMule
 
   - name: AIStack
     services:
       - name: Music Sync
+        icon: music
+        href: https://music-sync.persiaut-family.fr
+        description: Synchronisation musique Android
 
   - name: Développement
     services:
       - name: VSCode
         container: vscode
+        icon: vscode
+        href: https://vscode.persiaut-family.fr
+        description: Éditeur de code en ligne
       - name: Gitea
         container: gitea
+        icon: gitea
+        href: https://gitea.persiaut-family.fr
+        description: Gestionnaire de dépôts Git
       - name: CyberChef
         container: cyberchef
+        icon: cyberchef
+        href: https://cyberchef.persiaut-family.fr
+        description: Couteau suisse du développeur
       - name: IT-Tools
         container: it-tools
+        icon: it-tools
+        href: https://it-tools.persiaut-family.fr
+        description: Quelques outils IT divers

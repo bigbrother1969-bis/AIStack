@@ -58,6 +58,13 @@ class ServiceNode:
     rather than being pressed into meaning something else (an empty
     string would still need a caller to know which status makes it
     meaningful).
+
+    **`icon`/`href`/`description` carry straight from `ServiceDefinition`,
+    unexamined** (added 2026-09-12, `claude/PLAN-J11-CONSOLE-2026-09-11.md`
+    §10) — unlike `container`, nothing here joins them against a catalog:
+    there is no "observed href", only a declared one, so this is a plain
+    pass-through rather than a status computation like the rest of this
+    function.
     """
 
     name: str
@@ -65,6 +72,9 @@ class ServiceNode:
     container: str | None
     status: ServiceStatus
     compose_project: str | None = None
+    icon: str | None = None
+    href: str | None = None
+    description: str | None = None
 
 
 @dataclass(frozen=True)
@@ -143,6 +153,9 @@ def build_architecture_graph(
                         service.container,
                         observed_containers,
                         container_to_project,
+                        service.icon,
+                        service.href,
+                        service.description,
                     )
                     for service in category.services
                 ),
@@ -158,6 +171,9 @@ def _service_node(
     container: str | None,
     observed_containers: set[str],
     container_to_project: dict[str, str],
+    icon: str | None = None,
+    href: str | None = None,
+    description: str | None = None,
 ) -> ServiceNode:
     if container is None:
         return ServiceNode(
@@ -165,6 +181,9 @@ def _service_node(
             category=category,
             container=None,
             status=ServiceStatus.NO_CONTAINER,
+            icon=icon,
+            href=href,
+            description=description,
         )
 
     if container in container_to_project:
@@ -174,6 +193,9 @@ def _service_node(
             container=container,
             status=ServiceStatus.IN_COMPOSE_PROJECT,
             compose_project=container_to_project[container],
+            icon=icon,
+            href=href,
+            description=description,
         )
 
     if container in observed_containers:
@@ -182,6 +204,9 @@ def _service_node(
             category=category,
             container=container,
             status=ServiceStatus.OBSERVED,
+            icon=icon,
+            href=href,
+            description=description,
         )
 
     return ServiceNode(
@@ -189,4 +214,7 @@ def _service_node(
         category=category,
         container=container,
         status=ServiceStatus.DECLARED_NOT_OBSERVED,
+        icon=icon,
+        href=href,
+        description=description,
     )

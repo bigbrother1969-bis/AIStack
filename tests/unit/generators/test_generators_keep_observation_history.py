@@ -45,6 +45,9 @@ from aistack.generators.jellyfin.observation_artifact import (
 from aistack.generators.syncthing.observation_artifact import (
     SyncthingObservationArtifactGenerator,
 )
+from aistack.generators.network_docker.observation_artifact import (
+    NetworkDockerObservationArtifactGenerator,
+)
 from aistack.generators.docker.observation_artifact import (
     DockerObservationArtifactGenerator,
 )
@@ -144,6 +147,24 @@ def test_jellyfin_observation_artifact_generator_keeps_history(tmp_path: Path):
     generator = JellyfinObservationArtifactGenerator()
     output_path = tmp_path / "reports" / "generated" / "jellyfin-observation.json"
     observation = {"provider": {"id": "aistack.provider.jellyfin"}, "jellyfin": {}}
+
+    generator.generate(observation=observation, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert json.loads(history_files[0].read_text(encoding="utf-8")) == observation
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_network_docker_observation_artifact_generator_keeps_history(tmp_path: Path):
+    generator = NetworkDockerObservationArtifactGenerator()
+    output_path = tmp_path / "reports" / "generated" / "network-docker-observation.json"
+    observation = {
+        "provider": {"id": "aistack.provider.network_docker"},
+        "network_docker": {"cidr": "192.168.1.0/24", "hosts": []},
+    }
 
     generator.generate(observation=observation, output_path=output_path)
 

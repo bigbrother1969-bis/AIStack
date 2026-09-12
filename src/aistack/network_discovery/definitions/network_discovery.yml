@@ -1,0 +1,37 @@
+# AIStack — network Docker discovery (claude/PLAN-J11-CONSOLE-2026-09-11.md §11)
+#
+# Where AIStack looks for Docker containers on hosts other than the
+# one it runs on itself, and how it authenticates to them. Read by
+# `aistack.cli.network_docker_discover`; `ssh_usernames` is also
+# written back by the network-discovery-ui screen (LAN-only,
+# `network_discovery_ui/app.py`) when the owner adds or removes a
+# candidate username there — everything else in this file stays
+# hand-edited, the same discipline `infrastructure_topology.yml`
+# already holds for facts nothing in this repository writes back.
+#
+# cidr — the owner's own LAN, confirmed 2026-09-12 from
+# `ip -4 addr show`/`ip route` run on GIGABYTE: interface `enp2s0`,
+# `192.168.1.10/24`, default route via `192.168.1.254`. Deliberately
+# excludes GIGABYTE's own Docker bridge networks (172.x, br-*) and
+# its Tailscale overlay (100.100.221.30) — neither is the LAN a
+# remote homelab host sits on.
+#
+# ssh_key_path_env — the environment variable that carries the real
+# path to an existing SSH private key, never the key or its path
+# itself (GOV-P-001). GIGABYTE already has one at
+# ~/.ssh/id_ed25519, confirmed 2026-09-12 to authenticate
+# passwordlessly to both real remote hosts below once each one's
+# public key was authorized.
+#
+# ssh_usernames — tried, in order, against every host the network
+# scan finds live; the first that authenticates is used. Confirmed
+# 2026-09-12 by actually connecting: `pi` authenticates on the
+# Raspberry Pi (192.168.1.40), `pi-hole` authenticates on the
+# Pi-hole VM (192.168.1.99) — two different real accounts, which is
+# why this is a list rather than a single name.
+cidr: 192.168.1.0/24
+ssh_key_path_env: AISTACK_NETWORK_SSH_KEY_PATH
+ssh_timeout_seconds: 3
+ssh_usernames:
+  - pi
+  - pi-hole

@@ -131,8 +131,13 @@ def test_the_real_console_links_definition_loads():
         "Priorité CPU",
         "Architecture",
         "Cockpit Santé",
+        "Découverte réseau",
     }
     assert by_name["Selection UI"].url == "https://selection.persiaut-family.fr"
     assert by_name["Priorité CPU"].url == "https://priority.persiaut-family.fr"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"
+    # LAN-only, deliberately: never a `https://...persiaut-family.fr`
+    # subdomain — this screen writes which SSH usernames get tried
+    # against the owner's own LAN (`PLAN-J11` § 11).
+    assert by_name["Découverte réseau"].url == "http://GIGABYTE:8184"

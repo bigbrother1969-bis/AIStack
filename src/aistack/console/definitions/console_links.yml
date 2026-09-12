@@ -38,6 +38,16 @@
 #     the moment NPM pointed at the console (same origin, same
 #     process, `PLAN-J11` § 7) — no separate Proxy Host needed for
 #     either.
+#   - Découverte réseau (utilisateurs SSH) — added 2026-09-12
+#     (`PLAN-J11` § 11), a separate systemd/uvicorn process on
+#     GIGABYTE:8184 ("next free port after the console's 8183"),
+#     `network_discovery_ui`. Deliberately LAN-only, `http://`, never
+#     a `https://...persiaut-family.fr` subdomain and never a Proxy
+#     Host in NPM: this screen writes which SSH usernames get tried,
+#     unattended, against every host a network scan finds on the
+#     owner's own LAN — decided with the owner 2026-09-12 that this
+#     stays unreachable from the public internet, unlike every other
+#     card on this page.
 
 links:
   - name: Selection UI
@@ -56,3 +66,8 @@ links:
   - name: Cockpit Santé
     description: Score de santé et findings par domaine (PLAN-J7)
     url: /health.html
+  - name: Découverte réseau
+    description: >-
+      Utilisateurs SSH candidats pour le scan réseau — service
+      systemd/uvicorn, LAN uniquement (GIGABYTE:8184)
+    url: http://GIGABYTE:8184

@@ -48,7 +48,7 @@ def test_main_prints_a_confirmation_line(workspace, capsys):
 
     captured = capsys.readouterr()
     assert "Console written to" in captured.out
-    assert "4 link(s)" in captured.out
+    assert "5 link(s)" in captured.out
     assert "served from" in captured.out
 
 

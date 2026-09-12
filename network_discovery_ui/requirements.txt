@@ -1,0 +1,29 @@
+# network_discovery_ui's own dependencies, deliberately not in
+# pyproject.toml — same reasoning as priority_ui/requirements.txt
+# and selection_ui/requirements.txt (decision #9, 2026-08-29):
+# fastapi, uvicorn and jinja2 are not knowledge this heritage is
+# verified on, and pulling them into the governed venv would make
+# every pytest run depend on packages the test suite never touches.
+#
+# Installed into a dedicated environment by
+# scripts/setup_network_discovery_ui_env.sh, never into .venv. See
+# run_network_discovery_ui.sh, which calls that environment by path
+# rather than relying on PATH order — the gap
+# run_selection_ui.sh/run_priority_ui.sh both document hitting first.
+#
+# python-multipart is required from the start here, not added after
+# a live gap the way priority_ui/requirements.txt records: this
+# screen's own `/add` and `/remove` routes read `await request.form()`
+# from their first patch, and priority_ui's own incident already
+# named exactly why Starlette needs it for any form body at all.
+
+fastapi
+uvicorn
+jinja2
+python-multipart
+
+# Not ungoverned: pyproject.toml already declares PyYAML as the
+# heritage's one dependency — this line exists because this file
+# installs into a second, separate interpreter (see above), and
+# PYTHONPATH alone does not install what `aistack` itself depends on.
+PyYAML>=6.0

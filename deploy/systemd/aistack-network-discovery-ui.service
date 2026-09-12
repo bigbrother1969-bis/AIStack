@@ -1,0 +1,55 @@
+# AIStack — Network Discovery UI
+#
+# Lets the owner add or remove candidate SSH usernames tried by
+# `aistack.cli.network_docker_discover` against hosts a network scan
+# finds live on the LAN, without hand-editing
+# `src/aistack/network_discovery/definitions/network_discovery.yml`
+# (claude/PLAN-J11-CONSOLE-2026-09-11.md § 11). Requested mid-session
+# 2026-09-12 as "add usernames in the console" — built as its own
+# small app rather than giving the existing static console a
+# backend, the same pattern aistack-priority-ui.service and
+# aistack-selection-ui.service already are.
+#
+# **LAN-only, on purpose.** Unlike the Priority UI and Selection UI,
+# this screen is deliberately NOT bound to 0.0.0.0 and has NO Proxy
+# Host entry anywhere — see run_network_discovery_ui.sh's own
+# comment for why. Do not add a reverse-proxy entry for this unit.
+#
+# Runs on the host, not in a container: reads and rewrites governed
+# YAML directly — nothing here touches Docker or a socket at all.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-network-discovery-ui.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-network-discovery-ui
+#
+# Before enabling it as a service, confirm nothing else already
+# holds port 8184 — the Priority UI's own unit documents hitting
+# exactly this once:
+#
+#   ss -ltnp | grep :8184
+#
+# Watch it with:
+#
+#   journalctl -u aistack-network-discovery-ui -f
+
+[Unit]
+Description=AIStack Network Discovery UI (candidate SSH usernames, LAN-only)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_network_discovery_ui.sh
+Restart=on-failure
+RestartSec=5
+
+# uvicorn already shuts down cleanly on SIGTERM (drains in-flight
+# requests, then exits) — same as the Priority UI's own unit; this
+# screen holds nothing open across a stop that needs releasing.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

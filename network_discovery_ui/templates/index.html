@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>AIStack — Découverte réseau (utilisateurs SSH)</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .warning {
+      padding: .8rem 1rem; border-radius: 6px; background: #fff1cc;
+      border: 1px solid #e0b34d; margin: 1rem 0; font-size: .88rem;
+    }
+    .status {
+      padding: .8rem 1rem; border-radius: 6px; background: #e8f5e9;
+      border: 1px solid #a5d6a7; margin: 1rem 0;
+    }
+    dl.config {
+      display: grid; grid-template-columns: auto 1fr; gap: .3rem 1rem;
+      font-size: .88rem; margin: 1rem 0 1.5rem;
+    }
+    dl.config dt { color: #666; font-weight: 600; }
+    dl.config dd { margin: 0; }
+    ul.usernames { list-style: none; margin: 0 0 1.5rem; padding: 0; }
+    ul.usernames li {
+      display: flex; align-items: center; justify-content: space-between;
+      border: 1px solid #ddd; border-radius: 6px; padding: .6rem .9rem;
+      margin-bottom: .5rem; background: #fafafa;
+    }
+    ul.usernames li span { font-weight: 600; }
+    form.inline { display: inline; }
+    button {
+      padding: .4rem .8rem; font-size: .85rem; cursor: pointer;
+      border: 1px solid #bbb; border-radius: 6px; background: white;
+    }
+    button.remove { color: #b00020; border-color: #e0a0a8; }
+    .add-form {
+      display: flex; gap: .6rem; align-items: center; margin-top: 1rem;
+    }
+    .add-form input[type="text"] {
+      flex: 1; padding: .5rem .6rem; font-size: .95rem;
+      border: 1px solid #bbb; border-radius: 6px;
+    }
+    .add-form button { padding: .5rem 1rem; }
+    button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+    .empty { color: #666; font-style: italic; margin: 0 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Découverte réseau — utilisateurs SSH</h1>
+    <p class="meta">
+      Sous-réseau scanné : {{ cidr }} — variable d'environnement pour la clé SSH :
+      {{ ssh_key_path_env }} — délai de connexion : {{ ssh_timeout_seconds }}s
+    </p>
+  </header>
+
+  <div class="warning">
+    Cette page tourne uniquement sur le LAN, jamais via
+    aistack.persiaut-family.fr. Chaque nom d'utilisateur ajouté ici sera
+    essayé, sans surveillance, contre chaque hôte trouvé par le scan
+    réseau — n'ajoute que des utilisateurs réels que tu contrôles.
+  </div>
+
+  {% if status %}
+    <div class="status">{{ status }}</div>
+  {% endif %}
+
+  <h2 style="font-size:1rem;">Utilisateurs candidats, essayés dans l'ordre</h2>
+
+  {% if ssh_usernames %}
+    <ul class="usernames">
+      {% for username in ssh_usernames %}
+        <li>
+          <span>{{ username }}</span>
+          <form class="inline" method="post" action="/remove">
+            <input type="hidden" name="username" value="{{ username }}">
+            <button class="remove" type="submit">Retirer</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">Aucun utilisateur déclaré — le scan n'authentifiera contre aucun hôte tant qu'un nom n'est pas ajouté.</p>
+  {% endif %}
+
+  <form class="add-form" method="post" action="/add">
+    <input type="text" name="username" placeholder="nom d'utilisateur SSH (ex. pi)" autocomplete="off">
+    <button class="primary" type="submit">Ajouter</button>
+  </form>
+</body>
+</html>

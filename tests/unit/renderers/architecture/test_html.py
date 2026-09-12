@@ -5,6 +5,7 @@ import re
 
 import pytest
 
+from aistack.architecture.beszel_reading import BeszelSystemReading
 from aistack.architecture.graph import ArchitectureGraph, CategoryGraph, ServiceNode, ServiceStatus
 from aistack.architecture.topology_definition import (
     ExternalNodeDefinition,
@@ -501,6 +502,167 @@ def test_both_blocks_render_when_both_are_present():
 
     assert document.index("<h3>Topologie réseau externe</h3>") < document.index(
         "<h3>Fiches matérielles</h3>"
+    )
+
+
+# --------------------------------------------------------------------
+# The Beszel "État en direct" section — added 2026-09-12,
+# `claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, last bullet.
+# --------------------------------------------------------------------
+
+
+def test_no_beszel_readings_renders_no_beszel_section():
+    views = build_all_views(graph_with_categories("Supervision"))
+
+    document = render_html(views)
+
+    assert '<section class="beszel-index">' not in document
+
+
+def test_an_empty_tuple_of_readings_renders_no_section_either():
+    views = build_all_views(graph_with_categories("Supervision"))
+
+    document = render_html(views, None, ())
+
+    assert '<section class="beszel-index">' not in document
+
+
+def test_a_full_reading_renders_every_field():
+    views = build_all_views(graph_with_categories("Supervision"))
+    reading = BeszelSystemReading(
+        name="Gigabyte",
+        host="192.168.1.10",
+        status="up",
+        cpu_pct=17.42,
+        mem_pct=67.74,
+        disk_pct=72.22,
+        temp_c=68.25,
+        load_avg=(0.4, 0.69, 0.87),
+        uptime_seconds=241495,
+    )
+
+    document = render_html(views, None, (reading,))
+
+    assert '<section class="beszel-index">' in document
+    assert "<h4>Gigabyte</h4>" in document
+    assert '<p class="beszel-host">192.168.1.10</p>' in document
+    assert (
+        '<span class="beszel-status beszel-status-up">up</span>' in document
+    )
+    assert "<dt>CPU</dt><dd>17.4 %</dd>" in document
+    assert "<dt>Mémoire</dt><dd>67.7 %</dd>" in document
+    assert "<dt>Disque</dt><dd>72.2 %</dd>" in document
+    assert "<dt>Température</dt><dd>68.2 °C</dd>" in document
+    assert "<dt>Charge</dt><dd>0.40 / 0.69 / 0.87</dd>" in document
+    assert "<dt>Disponibilité</dt><dd>2 j 19 h</dd>" in document
+
+
+def test_a_status_other_than_up_gets_the_other_status_class():
+    views = build_all_views(graph_with_categories("Supervision"))
+    reading = BeszelSystemReading(name="Pi-hole", host="", status="down")
+
+    document = render_html(views, None, (reading,))
+
+    assert '<span class="beszel-status beszel-status-other">down</span>' in document
+
+
+def test_an_empty_status_falls_back_to_a_question_mark():
+    views = build_all_views(graph_with_categories("Supervision"))
+    reading = BeszelSystemReading(name="Pi-hole", host="", status="")
+
+    document = render_html(views, None, (reading,))
+
+    assert '<span class="beszel-status beszel-status-other">?</span>' in document
+
+
+def test_a_reading_with_no_host_has_no_host_paragraph():
+    views = build_all_views(graph_with_categories("Supervision"))
+    reading = BeszelSystemReading(name="Pi-hole", host="", status="up")
+
+    document = render_html(views, None, (reading,))
+
+    assert '<p class="beszel-host">' not in document
+
+
+def test_a_reading_with_every_metric_none_renders_only_the_status_row():
+    views = build_all_views(graph_with_categories("Supervision"))
+    reading = BeszelSystemReading(name="Pi-hole", host="", status="up")
+
+    document = render_html(views, None, (reading,))
+
+    assert "<dt>CPU</dt>" not in document
+    assert "<dt>Mémoire</dt>" not in document
+    assert "<dt>Disque</dt>" not in document
+    assert "<dt>Température</dt>" not in document
+    assert "<dt>Charge</dt>" not in document
+    assert "<dt>Disponibilité</dt>" not in document
+    assert "<dt>Statut</dt>" in document
+
+
+@pytest.mark.parametrize(
+    ("seconds", "expected"),
+    [
+        (0, "0 min"),
+        (59, "0 min"),
+        (60, "1 min"),
+        (3599, "59 min"),
+        (3600, "1 h 0 min"),
+        (86399, "23 h 59 min"),
+        (86400, "1 j 0 h"),
+        (90000, "1 j 1 h"),
+    ],
+)
+def test_uptime_formatting_boundaries(seconds: int, expected: str):
+    views = build_all_views(graph_with_categories("Supervision"))
+    reading = BeszelSystemReading(
+        name="Pi-hole", host="", status="up", uptime_seconds=seconds
+    )
+
+    document = render_html(views, None, (reading,))
+
+    assert f"<dt>Disponibilité</dt><dd>{expected}</dd>" in document
+
+
+def test_several_readings_render_in_order():
+    views = build_all_views(graph_with_categories("Supervision"))
+    readings = (
+        BeszelSystemReading(name="Raspberry pi", host="", status="up"),
+        BeszelSystemReading(name="Gigabyte", host="", status="up"),
+    )
+
+    document = render_html(views, None, readings)
+
+    assert document.index("Raspberry pi") < document.index("Gigabyte")
+
+
+def test_beszel_text_is_escaped():
+    views = build_all_views(graph_with_categories("Supervision"))
+    reading = BeszelSystemReading(
+        name='Weird & "quoted" <name>',
+        host='a <b>host</b>',
+        status="up",
+    )
+
+    document = render_html(views, None, (reading,))
+
+    assert "&amp;" in document
+    assert "&quot;" in document
+    assert "&lt;" in document
+    assert "&gt;" in document
+    assert "<b>host</b>" not in document
+
+
+def test_the_beszel_section_comes_after_the_topology_section():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        external_nodes=(ExternalNodeDefinition(name="Gmail", role="Messagerie"),),
+    )
+    reading = BeszelSystemReading(name="Gigabyte", host="", status="up")
+
+    document = render_html(views, topology, (reading,))
+
+    assert document.index('<section class="topology-index">') < document.index(
+        '<section class="beszel-index">'
     )
 
 

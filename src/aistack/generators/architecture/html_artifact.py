@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from aistack.architecture.beszel_reading import BeszelSystemReading
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import ArchitectureView
 from aistack.generators.history import write_artifact_with_history
@@ -29,7 +30,10 @@ class ArchitectureHtmlArtifactGenerator:
     through to `render_html` — this class does not load
     `infrastructure_topology.yml` itself, the same way it does not
     load `service_categorization.yml` itself; the CLI is where both
-    reads happen.
+    reads happen. `beszel_readings` (same day, §10 last bullet) is the
+    same story one layer further: this class never calls
+    `BeszelProvider` itself, it only carries the already-built
+    readings through.
     """
 
     def generate(
@@ -37,8 +41,9 @@ class ArchitectureHtmlArtifactGenerator:
         views: tuple[ArchitectureView, ...],
         output_path: Path,
         topology: InfrastructureTopologyDefinition | None = None,
+        beszel_readings: tuple[BeszelSystemReading, ...] = (),
     ) -> Path:
-        content = render_html(views, topology)
+        content = render_html(views, topology, beszel_readings)
         write_artifact_with_history(content, output_path)
 
         return output_path

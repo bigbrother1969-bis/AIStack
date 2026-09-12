@@ -6,6 +6,7 @@ from typing import Any
 import yaml
 
 from aistack.architecture.topology_definition import (
+    BeszelConnectionDefinition,
     ExternalNodeDefinition,
     HardwareProfileDefinition,
     InfrastructureTopologyDefinition,
@@ -13,6 +14,7 @@ from aistack.architecture.topology_definition import (
 
 _REQUIRED_EXTERNAL_NODE_FIELDS = ("name", "role")
 _REQUIRED_HARDWARE_FIELDS = ("name", "model", "role", "cpu", "ram", "storage", "os")
+_REQUIRED_BESZEL_FIELDS = ("url", "email_env", "password_env")
 
 
 def load_infrastructure_topology_yaml(path: Path) -> InfrastructureTopologyDefinition:
@@ -37,6 +39,7 @@ def load_infrastructure_topology_yaml(path: Path) -> InfrastructureTopologyDefin
 
     external_nodes_data = data.get("external_nodes") or []
     hardware_data = data.get("hardware") or []
+    beszel_data = data.get("beszel")
 
     if not isinstance(external_nodes_data, list):
         raise ValueError(f"Infrastructure topology {path}: external_nodes must be a list")
@@ -53,6 +56,7 @@ def load_infrastructure_topology_yaml(path: Path) -> InfrastructureTopologyDefin
             _load_hardware(item, path, index)
             for index, item in enumerate(hardware_data)
         ),
+        beszel=_load_beszel(beszel_data, path) if beszel_data is not None else None,
     )
 
 
@@ -90,6 +94,21 @@ def _load_hardware(data: Any, path: Path, index: int) -> HardwareProfileDefiniti
         storage=data["storage"],
         os_name=data["os"],
         gpu=data.get("gpu") or None,
+    )
+
+
+def _load_beszel(data: Any, path: Path) -> BeszelConnectionDefinition:
+    label = f"Infrastructure topology {path}: beszel"
+
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must be a mapping")
+
+    _require(data, _REQUIRED_BESZEL_FIELDS, label)
+
+    return BeszelConnectionDefinition(
+        url=data["url"],
+        email_env=data["email_env"],
+        password_env=data["password_env"],
     )
 
 

@@ -59,19 +59,43 @@ class HardwareProfileDefinition:
 
 
 @dataclass(frozen=True)
+class BeszelConnectionDefinition:
+    """
+    Where the governed Beszel connection lives — never the
+    credentials themselves.
+
+    **The env var names, not the secret** (`GOV-P-001`, same handling
+    as `JellyfinDetectorDefinition.api_key_env`). `url` is not a
+    secret (it is already public — `service_categorization.yml`'s own
+    `Beszel` entry links to it) and travels here directly;
+    `email_env`/`password_env` name where `aistack.cli.
+    architecture_render` reads the dedicated read-only account's
+    email and password from `os.environ` before constructing
+    `BeszelProvider` — this dataclass, and the YAML it is loaded from,
+    never carry the values themselves.
+    """
+
+    url: str
+    email_env: str
+    password_env: str
+
+
+@dataclass(frozen=True)
 class InfrastructureTopologyDefinition:
     """
     The whole governed shape of "what exists outside the services
-    graph" — external nodes and hardware fiches, together, because
-    both answer the same gap identified against the pre-AIStack
-    `architecture.html` (§10's first bullet: "Topologie réseau externe
-    ... et fiches matérielles").
+    graph" — external nodes, hardware fiches, and where to reach
+    Beszel for live per-system readings, together, because all three
+    answer gaps identified against the pre-AIStack `architecture.html`
+    (§10's first and last bullets: "Topologie réseau externe ... et
+    fiches matérielles" and "Métriques Beszel temps réel").
 
-    Either sequence may be empty — a topology with hardware but no
-    external nodes declared yet (or vice versa) is not an error, it is
-    simply incomplete; `render_html` renders only the sub-sections
-    that have content.
+    Every field may be empty/`None` — a topology with hardware but no
+    external nodes declared yet, or no Beszel connection configured at
+    all, is not an error, it is simply incomplete; `render_html`
+    renders only the sub-sections that have content.
     """
 
     external_nodes: tuple[ExternalNodeDefinition, ...] = ()
     hardware: tuple[HardwareProfileDefinition, ...] = ()
+    beszel: BeszelConnectionDefinition | None = None

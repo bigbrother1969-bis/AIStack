@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from aistack.architecture.topology_definition import (
+    BeszelConnectionDefinition,
     ExternalNodeDefinition,
     HardwareProfileDefinition,
     InfrastructureTopologyDefinition,
@@ -200,6 +201,60 @@ def test_a_hardware_entry_that_is_not_a_mapping_is_refused(tmp_path: Path):
 
 
 # --------------------------------------------------------------------
+# Beszel
+# --------------------------------------------------------------------
+
+
+def test_a_beszel_block_is_loaded(tmp_path: Path):
+    path = write(
+        tmp_path / "topology.yml",
+        """
+        beszel:
+          url: https://beszel.persiaut-family.fr
+          email_env: BESZEL_EMAIL
+          password_env: BESZEL_PASSWORD
+        """,
+    )
+
+    beszel = load_infrastructure_topology_yaml(path).beszel
+    assert beszel is not None
+    assert beszel.url == "https://beszel.persiaut-family.fr"
+    assert beszel.email_env == "BESZEL_EMAIL"
+    assert beszel.password_env == "BESZEL_PASSWORD"
+
+
+def test_a_topology_with_no_beszel_key_defaults_to_none(tmp_path: Path):
+    path = write(tmp_path / "topology.yml", "external_nodes: []\n")
+
+    assert load_infrastructure_topology_yaml(path).beszel is None
+
+
+@pytest.mark.parametrize("missing_field", ["url", "email_env", "password_env"])
+def test_a_beszel_block_missing_a_required_field_is_named(
+    tmp_path: Path, missing_field: str
+):
+    fields = {
+        "url": "https://beszel.persiaut-family.fr",
+        "email_env": "BESZEL_EMAIL",
+        "password_env": "BESZEL_PASSWORD",
+    }
+    del fields[missing_field]
+
+    lines = "\n".join(f"          {key}: {value}" for key, value in fields.items())
+    path = write(tmp_path / "topology.yml", f"beszel:\n{lines}\n")
+
+    with pytest.raises(ValueError, match=rf"beszel.*{missing_field}"):
+        load_infrastructure_topology_yaml(path)
+
+
+def test_a_beszel_block_that_is_not_a_mapping_is_refused(tmp_path: Path):
+    path = write(tmp_path / "topology.yml", "beszel: https://beszel.persiaut-family.fr\n")
+
+    with pytest.raises(ValueError, match=r"beszel must be a mapping"):
+        load_infrastructure_topology_yaml(path)
+
+
+# --------------------------------------------------------------------
 # Whole-file shape
 # --------------------------------------------------------------------
 
@@ -210,6 +265,7 @@ def test_both_top_level_keys_are_optional_and_default_to_empty(tmp_path: Path):
     definition = load_infrastructure_topology_yaml(path)
     assert definition.external_nodes == ()
     assert definition.hardware == ()
+    assert definition.beszel is None
 
 
 def test_a_completely_empty_file_is_valid(tmp_path: Path):
@@ -218,6 +274,7 @@ def test_a_completely_empty_file_is_valid(tmp_path: Path):
     definition = load_infrastructure_topology_yaml(path)
     assert definition.external_nodes == ()
     assert definition.hardware == ()
+    assert definition.beszel is None
 
 
 def test_external_nodes_that_is_not_a_list_is_refused(tmp_path: Path):
@@ -260,6 +317,7 @@ def test_order_is_preserved_from_the_source_file(tmp_path: Path):
 def test_dataclasses_default_to_empty_when_built_directly():
     assert InfrastructureTopologyDefinition().external_nodes == ()
     assert InfrastructureTopologyDefinition().hardware == ()
+    assert InfrastructureTopologyDefinition().beszel is None
     assert ExternalNodeDefinition(name="Gmail", role="Messagerie").description == ""
     assert (
         HardwareProfileDefinition(
@@ -272,6 +330,14 @@ def test_dataclasses_default_to_empty_when_built_directly():
             os_name="Debian (aarch64)",
         ).gpu
         is None
+    )
+    assert (
+        BeszelConnectionDefinition(
+            url="https://beszel.persiaut-family.fr",
+            email_env="BESZEL_EMAIL",
+            password_env="BESZEL_PASSWORD",
+        ).url
+        == "https://beszel.persiaut-family.fr"
     )
 
 
@@ -327,3 +393,9 @@ def test_the_real_infrastructure_topology_loads():
         assert profile.ram
         assert profile.storage
         assert profile.os_name
+
+    beszel = definition.beszel
+    assert beszel is not None
+    assert beszel.url == "https://beszel.persiaut-family.fr"
+    assert beszel.email_env == "BESZEL_EMAIL"
+    assert beszel.password_env == "BESZEL_PASSWORD"

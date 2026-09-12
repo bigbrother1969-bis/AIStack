@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from aistack.architecture.beszel_reading import BeszelSystemReading
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import FULL_VIEW, ArchitectureView
 from aistack.renderers.architecture.icons import load_icon_data_uri
@@ -55,6 +56,7 @@ def load_vendored_mermaid_js() -> str:
 def render_html(
     views: tuple[ArchitectureView, ...],
     topology: InfrastructureTopologyDefinition | None = None,
+    beszel_readings: tuple[BeszelSystemReading, ...] = (),
 ) -> str:
     """
     Wrap every view of an `ArchitectureGraph` into one self-contained
@@ -92,6 +94,13 @@ def render_html(
     (the default) renders the page exactly as before this addition —
     every caller that has not been updated to load and pass a topology
     keeps working unchanged.
+
+    **`beszel_readings` is optional too, same day** — typed snapshots
+    from `aistack.architecture.beszel_reading.build_beszel_readings`,
+    itself built from `BeszelProvider.collect()`'s raw observation. An
+    empty tuple (the default) renders no "État en direct" section at
+    all, the same "nothing to show, so show nothing" rule the topology
+    sub-blocks already follow.
     """
 
     if not views or views[0].name != FULL_VIEW:
@@ -130,6 +139,7 @@ def render_html(
 
     service_index_html = _render_service_index(full)
     topology_html = _render_topology_section(topology)
+    beszel_html = _render_beszel_section(beszel_readings)
 
     return f"""<!doctype html>
 <html lang="fr">
@@ -164,6 +174,8 @@ def render_html(
 {service_index_html}
 
 {topology_html}
+
+{beszel_html}
 
 <script id="views-data" type="application/json">{data_json}</script>
 <script>
@@ -357,6 +369,110 @@ def _render_hardware_block(profiles: tuple) -> str:
     )
 
 
+def _render_beszel_section(
+    readings: tuple[BeszelSystemReading, ...],
+) -> str:
+    """
+    « État en direct » — un instantané par système Beszel, pris au
+    moment de la génération, ajouté 2026-09-12
+    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, dernier tiret).
+
+    An empty `readings` renders nothing at all — the same "nothing to
+    show" rule `_render_topology_section` already follows, so a page
+    generated without Beszel configured (or while its provider is
+    unreachable) looks exactly as it did before this section existed.
+    """
+
+    if not readings:
+        return ""
+
+    cards = "\n".join(_render_beszel_card(reading) for reading in readings)
+
+    return (
+        '<section class="beszel-index">\n'
+        "  <h2>État en direct (Beszel)</h2>\n"
+        '  <ul class="beszel-list">\n'
+        f"{cards}\n"
+        "  </ul>\n"
+        "</section>"
+    )
+
+
+def _render_beszel_card(reading: BeszelSystemReading) -> str:
+    status_class = "beszel-status-up" if reading.status == "up" else "beszel-status-other"
+
+    rows = [
+        (
+            '        <dt>Statut</dt>'
+            f'<dd><span class="beszel-status {status_class}">'
+            f"{escape_text(reading.status or '?')}</span></dd>"
+        )
+    ]
+
+    if reading.cpu_pct is not None:
+        rows.append(f"        <dt>CPU</dt><dd>{reading.cpu_pct:.1f} %</dd>")
+
+    if reading.mem_pct is not None:
+        rows.append(f"        <dt>Mémoire</dt><dd>{reading.mem_pct:.1f} %</dd>")
+
+    if reading.disk_pct is not None:
+        rows.append(f"        <dt>Disque</dt><dd>{reading.disk_pct:.1f} %</dd>")
+
+    if reading.temp_c is not None:
+        rows.append(f"        <dt>Température</dt><dd>{reading.temp_c:.1f} °C</dd>")
+
+    if reading.load_avg is not None:
+        one, five, fifteen = reading.load_avg
+        rows.append(
+            "        <dt>Charge</dt>"
+            f"<dd>{one:.2f} / {five:.2f} / {fifteen:.2f}</dd>"
+        )
+
+    if reading.uptime_seconds is not None:
+        rows.append(
+            f"        <dt>Disponibilité</dt><dd>{_format_uptime(reading.uptime_seconds)}</dd>"
+        )
+
+    return (
+        '      <li class="beszel-card">\n'
+        f"        <h4>{escape_text(reading.name)}</h4>\n"
+        + (
+            f'        <p class="beszel-host">{escape_text(reading.host)}</p>\n'
+            if reading.host
+            else ""
+        )
+        + '        <dl class="beszel-specs">\n'
+        + "\n".join(rows)
+        + "\n        </dl>\n"
+        "      </li>"
+    )
+
+
+def _format_uptime(seconds: int) -> str:
+    """
+    Whole days and whole hours, French-labelled (`j`/`h`) — the same
+    register as every other label on this page. Under a day: hours
+    and minutes instead, so a system rebooted an hour ago does not
+    read as "0 j".
+    """
+
+    if seconds < 0:
+        return "0 h"
+
+    days, remainder = divmod(seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, _ = divmod(remainder, 60)
+
+    if days > 0:
+        return f"{days} j {hours} h"
+
+    if hours > 0:
+        return f"{hours} h {minutes} min"
+
+    return f"{minutes} min"
+
+
+
 _STYLE = """\
 :root { color-scheme: light; }
 body {
@@ -467,7 +583,35 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
   gap: .25rem .6rem; font-size: .82rem;
 }
 .hardware-specs dt { color: #666; font-weight: 600; }
-.hardware-specs dd { margin: 0; }\
+.hardware-specs dd { margin: 0; }
+.beszel-index {
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+}
+.beszel-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
+.beszel-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: .8rem;
+}
+.beszel-card {
+  border: 1px solid #e5e5e5; border-radius: 8px; padding: .8rem 1rem;
+  background: #fff;
+}
+.beszel-card h4 { margin: 0 0 .2rem; font-size: 1rem; }
+.beszel-host { margin: 0 0 .6rem; color: #666; font-size: .82rem; }
+.beszel-specs {
+  margin: 0; display: grid; grid-template-columns: auto 1fr;
+  gap: .25rem .6rem; font-size: .82rem;
+}
+.beszel-specs dt { color: #666; font-weight: 600; }
+.beszel-specs dd { margin: 0; }
+.beszel-status {
+  display: inline-block; padding: .05rem .5rem; border-radius: 999px;
+  font-size: .78rem; font-weight: 600; border: 1px solid;
+}
+.beszel-status-up { background: #dff6dd; border-color: #116329; color: #116329; }
+.beszel-status-other { background: #fff1cc; border-color: #7d4e00; color: #7d4e00; }\
 """
 
 _BOOTSTRAP_JS = """\

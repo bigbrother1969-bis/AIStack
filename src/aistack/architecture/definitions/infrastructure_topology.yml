@@ -23,6 +23,14 @@
 # anomalies) — le owner a confirmé que ça ne duplique pas cette
 # décision (`PLAN-J11-CONSOLE-2026-09-11.md` §10, "Stockage/
 # Sauvegarde-PRA/GPU").
+#
+# `beszel:` (ajouté 2026-09-12) ne porte que l'URL (déjà publique,
+# `service_categorization.yml`) et les NOMS des variables
+# d'environnement qui portent le compte lecture seule dédié
+# (`aistack-readonly@persiaut-family.fr`, rôle `readonly`, créé le
+# 2026-09-12) — jamais l'email ni le mot de passe eux-mêmes. Ces deux
+# variables doivent être positionnées dans l'environnement où
+# `architecture_render` s'exécute (jamais commitées dans ce dépôt).
 
 external_nodes:
   - name: OVH
@@ -66,3 +74,8 @@ hardware:
     cpu: Broadcom BCM2837 — quad-core 1,2 GHz 64 bits
     ram: 1 Go
     storage: Carte micro SD système (14,8 Go) + disque USB 9,1 To (BACKUP)
+
+beszel:
+  url: https://beszel.persiaut-family.fr
+  email_env: BESZEL_EMAIL
+  password_env: BESZEL_PASSWORD

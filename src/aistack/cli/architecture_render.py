@@ -4,7 +4,10 @@ from pathlib import Path
 
 from aistack.architecture.graph import build_architecture_graph
 from aistack.architecture.views import build_all_views
-from aistack.architecture.yaml import load_service_categorization_yaml
+from aistack.architecture.yaml import (
+    load_infrastructure_topology_yaml,
+    load_service_categorization_yaml,
+)
 from aistack.catalog.compose import ComposeRuntimeCatalogBuilder
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.generators.architecture import ArchitectureHtmlArtifactGenerator
@@ -20,6 +23,15 @@ DEFAULT_CATEGORIZATION = (
     / "architecture"
     / "definitions"
     / "service_categorization.yml"
+)
+
+# Added 2026-09-12 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10) — same
+# convention, alongside `service_categorization.yml`.
+DEFAULT_TOPOLOGY = (
+    Path(__file__).resolve().parents[1]
+    / "architecture"
+    / "definitions"
+    / "infrastructure_topology.yml"
 )
 
 
@@ -45,6 +57,7 @@ def main() -> None:
     compose_catalog = ComposeRuntimeCatalogBuilder().build(compose_observation)
 
     categorization = load_service_categorization_yaml(DEFAULT_CATEGORIZATION)
+    topology = load_infrastructure_topology_yaml(DEFAULT_TOPOLOGY)
 
     graph = build_architecture_graph(categorization, docker_catalog, compose_catalog)
     views = build_all_views(graph)
@@ -52,6 +65,7 @@ def main() -> None:
     output_path = ArchitectureHtmlArtifactGenerator().generate(
         views=views,
         output_path=Path("reports/generated/architecture.html"),
+        topology=topology,
     )
 
     print(f"Architecture diagram written to {output_path}")

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import FULL_VIEW, ArchitectureView
 from aistack.renderers.architecture.icons import load_icon_data_uri
 from aistack.renderers.architecture.mermaid import escape_text, render_mermaid
@@ -51,7 +52,10 @@ def load_vendored_mermaid_js() -> str:
     return _VENDOR_PATH.read_text(encoding="utf-8")
 
 
-def render_html(views: tuple[ArchitectureView, ...]) -> str:
+def render_html(
+    views: tuple[ArchitectureView, ...],
+    topology: InfrastructureTopologyDefinition | None = None,
+) -> str:
     """
     Wrap every view of an `ArchitectureGraph` into one self-contained
     HTML page — a `<select>` switches which view's Mermaid diagram is
@@ -79,6 +83,15 @@ def render_html(views: tuple[ArchitectureView, ...]) -> str:
     category — and this relies on it rather than re-deriving it, but
     checks rather than assumes silently: an empty or differently
     ordered sequence raises, naming what was expected.
+
+    **`topology` is optional, added 2026-09-12**
+    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10) — external network
+    nodes (OVH, Cloudflare, the Freebox...) and hardware fiches
+    (GIGABYTE, Raspberry Pi), declared in
+    `infrastructure_topology.yml`, no provider observes either. `None`
+    (the default) renders the page exactly as before this addition —
+    every caller that has not been updated to load and pass a topology
+    keeps working unchanged.
     """
 
     if not views or views[0].name != FULL_VIEW:
@@ -116,6 +129,7 @@ def render_html(views: tuple[ArchitectureView, ...]) -> str:
     )
 
     service_index_html = _render_service_index(full)
+    topology_html = _render_topology_section(topology)
 
     return f"""<!doctype html>
 <html lang="fr">
@@ -148,6 +162,8 @@ def render_html(views: tuple[ArchitectureView, ...]) -> str:
 <div id="diagram">Chargement…</div>
 
 {service_index_html}
+
+{topology_html}
 
 <script id="views-data" type="application/json">{data_json}</script>
 <script>
@@ -241,6 +257,106 @@ def _render_service_index(full: ArchitectureView) -> str:
     )
 
 
+def _render_topology_section(
+    topology: InfrastructureTopologyDefinition | None,
+) -> str:
+    """
+    Topologie réseau externe + fiches matérielles — ajouté 2026-09-12
+    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, deuxième moitié du
+    même gap que `_render_service_index`).
+
+    **`None` or an entirely empty topology renders nothing at all** —
+    an empty string, not an empty `<section>` — so a page built
+    without a topology file (every caller before this one was updated)
+    looks exactly as it did before. Each of the two blocks
+    (`external_nodes`, `hardware`) is independently optional within a
+    non-empty topology too: a topology declaring only one of the two
+    still renders just that block.
+    """
+
+    if topology is None:
+        return ""
+
+    blocks: list[str] = []
+
+    if topology.external_nodes:
+        blocks.append(_render_external_nodes_block(topology.external_nodes))
+
+    if topology.hardware:
+        blocks.append(_render_hardware_block(topology.hardware))
+
+    if not blocks:
+        return ""
+
+    return (
+        '<section class="topology-index">\n'
+        "  <h2>Topologie &amp; matériel</h2>\n"
+        + "\n".join(blocks)
+        + "\n</section>"
+    )
+
+
+def _render_external_nodes_block(nodes: tuple) -> str:
+    items = []
+
+    for node in nodes:
+        description_html = (
+            f'<p class="topology-description">{escape_text(node.description)}</p>'
+            if node.description
+            else ""
+        )
+        items.append(
+            "      <li>"
+            f'<span class="topology-name">{escape_text(node.name)}</span>'
+            f'<span class="topology-role">{escape_text(node.role)}</span>'
+            f"{description_html}"
+            "</li>"
+        )
+
+    return (
+        '  <div class="topology-block">\n'
+        "    <h3>Topologie réseau externe</h3>\n"
+        '    <ul class="topology-list">\n'
+        + "\n".join(items)
+        + "\n    </ul>\n"
+        "  </div>"
+    )
+
+
+def _render_hardware_block(profiles: tuple) -> str:
+    cards = []
+
+    for profile in profiles:
+        gpu_row = (
+            f"<dt>GPU</dt><dd>{escape_text(profile.gpu)}</dd>"
+            if profile.gpu
+            else ""
+        )
+        cards.append(
+            '      <li class="hardware-card">\n'
+            f"        <h4>{escape_text(profile.name)}</h4>\n"
+            f'        <p class="hardware-model">{escape_text(profile.model)}</p>\n'
+            '        <dl class="hardware-specs">\n'
+            f"          <dt>CPU</dt><dd>{escape_text(profile.cpu)}</dd>\n"
+            f"          <dt>RAM</dt><dd>{escape_text(profile.ram)}</dd>\n"
+            f"          {gpu_row}\n"
+            f"          <dt>Stockage</dt><dd>{escape_text(profile.storage)}</dd>\n"
+            f"          <dt>OS</dt><dd>{escape_text(profile.os_name)}</dd>\n"
+            f"          <dt>Rôle</dt><dd>{escape_text(profile.role)}</dd>\n"
+            "        </dl>\n"
+            "      </li>"
+        )
+
+    return (
+        '  <div class="topology-block">\n'
+        "    <h3>Fiches matérielles</h3>\n"
+        '    <ul class="hardware-list">\n'
+        + "\n".join(cards)
+        + "\n    </ul>\n"
+        "  </div>"
+    )
+
+
 _STYLE = """\
 :root { color-scheme: light; }
 body {
@@ -306,7 +422,52 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 .service-entry a:hover { text-decoration: underline; }
 .service-description {
   margin: .1rem 0 0; color: #666; font-size: .8rem; line-height: 1.35;
-}\
+}
+.topology-index {
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+}
+.topology-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
+.topology-block { margin-bottom: 1.6rem; }
+.topology-block:last-child { margin-bottom: 0; }
+.topology-block h3 {
+  font-size: .8rem; font-weight: 700; letter-spacing: .02em;
+  text-transform: uppercase; color: #666; margin: 0 0 .6rem;
+  border-bottom: 1px solid #e5e5e5; padding-bottom: .35rem;
+}
+.topology-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: .7rem;
+}
+.topology-list li {
+  display: flex; flex-direction: column; gap: .2rem;
+  border: 1px solid #e5e5e5; border-radius: 8px; padding: .6rem .8rem;
+  background: #fff;
+}
+.topology-name { font-weight: 700; }
+.topology-role { color: #444; font-size: .85rem; }
+.topology-description {
+  margin: .2rem 0 0; color: #666; font-size: .8rem; line-height: 1.35;
+}
+.hardware-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: .8rem;
+}
+.hardware-card {
+  border: 1px solid #e5e5e5; border-radius: 8px; padding: .8rem 1rem;
+  background: #fff;
+}
+.hardware-card h4 { margin: 0 0 .2rem; font-size: 1rem; }
+.hardware-model { margin: 0 0 .6rem; color: #666; font-size: .82rem; }
+.hardware-specs {
+  margin: 0; display: grid; grid-template-columns: auto 1fr;
+  gap: .25rem .6rem; font-size: .82rem;
+}
+.hardware-specs dt { color: #666; font-weight: 600; }
+.hardware-specs dd { margin: 0; }\
 """
 
 _BOOTSTRAP_JS = """\

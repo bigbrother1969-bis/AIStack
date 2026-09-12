@@ -236,8 +236,10 @@ def test_architecture_render_writes_the_html_artifact(stubbed_providers, workspa
     is already exhaustively covered by `test_graph.py` and
     `test_mermaid.py` against synthetic fixtures. What this asserts
     is the wiring: the command reaches both providers, builds both
-    catalogs, loads the real categorization, and writes a page that
-    names a real declared service.
+    catalogs, loads the real categorization, loads the real
+    infrastructure topology (`DEFAULT_TOPOLOGY`, added 2026-09-12,
+    §10), and writes a page that names a real declared service and a
+    real hardware fiche.
     """
 
     architecture_render.main()
@@ -248,6 +250,8 @@ def test_architecture_render_writes_the_html_artifact(stubbed_providers, workspa
     document = path.read_text(encoding="utf-8")
     assert document.startswith("<!doctype html>")
     assert "Nginx Proxy Manager" in document
+    assert '<section class="topology-index">' in document
+    assert "GIGABYTE" in document
 
 
 def test_every_provider_command_reaches_its_provider(

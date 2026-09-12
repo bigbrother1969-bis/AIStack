@@ -1,0 +1,68 @@
+# Topologie d'infrastructure — nœuds réseau externes et fiches
+# matérielles des deux hôtes physiques.
+#
+# Chargé par `load_infrastructure_topology_yaml`
+# (`src/aistack/architecture/yaml/topology_store.py`), rendu en
+# section de `architecture.html`
+# (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10).
+#
+# Écrit à la main, comme `service_categorization.yml` — aucun
+# provider de ce patrimoine n'observe OVH, Cloudflare, une Freebox, ou
+# le BIOS/dmidecode d'une machine. Chaque fait ci-dessous a été
+# confirmé directement avec le owner (`GOV-P-001`), 2026-09-12 :
+# périmètre registrar/CDN par sa propre correction, caractéristiques
+# matérielles à partir de `lscpu`/`free -h`/`dmidecode`/`lsblk`
+# exécutés sur chaque hôte ; CPU/RAM du Raspberry Pi 3 Model B
+# confirmés par sa fiche technique officielle (raspberrypi.com) — son
+# propre `model` (`/proc/device-tree/model`) a d'abord identifié de
+# quel produit il s'agit, les deux chiffres n'ont pas été redérivés
+# d'ailleurs.
+#
+# Le GPU est listé ici comme un fait d'inventaire statique (quel GPU
+# existe), distinct des métriques GPU du Cockpit Santé (usage,
+# anomalies) — le owner a confirmé que ça ne duplique pas cette
+# décision (`PLAN-J11-CONSOLE-2026-09-11.md` §10, "Stockage/
+# Sauvegarde-PRA/GPU").
+
+external_nodes:
+  - name: OVH
+    role: Registrar de noms de domaine
+    description: >-
+      persiaut-family.fr et persiaut-consulting.eu y sont enregistrés ;
+      rien n'est hébergé chez OVH.
+  - name: Cloudflare
+    role: DNS, CDN, SSL, email routing
+    description: >-
+      Gère le DNS, le CDN, le SSL et l'email routing de
+      persiaut-family.fr et persiaut-consulting.eu (email forward vers
+      Gmail pour persiaut-family.fr). Pas de Zero Trust — le tunnel
+      utilise Cloudflared, installé sur le Raspberry Pi.
+  - name: Freebox Ultra
+    role: Box internet
+    description: >-
+      Héberge la VM Pi-hole (192.168.1.99), qui fait elle-même tourner
+      WireGuard (10.223.207.0/24).
+  - name: Gmail
+    role: Messagerie
+    description: Destination du forwarding Cloudflare Email Routing.
+
+hardware:
+  - name: GIGABYTE
+    model: Gigabyte GA-MA770T-UD3
+    role: Hôte principal, 50+ conteneurs Docker
+    os: LMDE 7
+    cpu: AMD Phenom(tm) II X4 945 Processor — 4 cœurs, 1 thread/cœur
+    ram: 16 Go (4 x 4 Go)
+    gpu: NVIDIA Quadro P400 (GP107GL)
+    storage: >-
+      SSD système 240 Go + ~8,4 To de stockage réparti sur 5 disques
+      (3 x 2 To, 2 x 1 To)
+  - name: Raspberry Pi
+    model: Raspberry Pi 3 Model B Rev 1.2
+    role: >-
+      Reverse proxy (Nginx Proxy Manager) + tunnel Cloudflare
+      ("homelab") ; héberge le disque de sauvegarde BACKUP
+    os: Debian (aarch64)
+    cpu: Broadcom BCM2837 — quad-core 1,2 GHz 64 bits
+    ram: 1 Go
+    storage: Carte micro SD système (14,8 Go) + disque USB 9,1 To (BACKUP)

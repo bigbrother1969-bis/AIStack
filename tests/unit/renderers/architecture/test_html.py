@@ -6,6 +6,11 @@ import re
 import pytest
 
 from aistack.architecture.graph import ArchitectureGraph, CategoryGraph, ServiceNode, ServiceStatus
+from aistack.architecture.topology_definition import (
+    ExternalNodeDefinition,
+    HardwareProfileDefinition,
+    InfrastructureTopologyDefinition,
+)
 from aistack.architecture.views import ArchitectureView, build_all_views
 from aistack.renderers.architecture import html as html_module
 from aistack.renderers.architecture.html import load_vendored_mermaid_js, render_html
@@ -319,6 +324,184 @@ def test_service_index_text_is_escaped():
     assert "&lt;" in document
     assert "&gt;" in document
     assert "<b>description</b>" not in document
+
+
+# --------------------------------------------------------------------
+# The topology section (external nodes + hardware fiches) — added
+# 2026-09-12, `claude/PLAN-J11-CONSOLE-2026-09-11.md` §10.
+# --------------------------------------------------------------------
+
+
+def test_no_topology_argument_renders_no_topology_section():
+    views = build_all_views(graph_with_categories("Supervision"))
+
+    document = render_html(views)
+
+    assert '<section class="topology-index">' not in document
+
+
+def test_an_entirely_empty_topology_renders_no_section_either():
+    views = build_all_views(graph_with_categories("Supervision"))
+
+    document = render_html(views, InfrastructureTopologyDefinition())
+
+    assert '<section class="topology-index">' not in document
+
+
+def test_external_nodes_are_rendered_with_name_role_and_description():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        external_nodes=(
+            ExternalNodeDefinition(
+                name="OVH",
+                role="Registrar de noms de domaine",
+                description="Rien n'est hébergé chez OVH.",
+            ),
+        )
+    )
+
+    document = render_html(views, topology)
+
+    assert '<section class="topology-index">' in document
+    assert '<span class="topology-name">OVH</span>' in document
+    assert (
+        '<span class="topology-role">Registrar de noms de domaine</span>'
+        in document
+    )
+    assert "Rien n'est hébergé chez OVH." in document
+
+
+def test_an_external_node_with_no_description_has_no_description_paragraph():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        external_nodes=(ExternalNodeDefinition(name="Gmail", role="Messagerie"),)
+    )
+
+    document = render_html(views, topology)
+
+    assert '<p class="topology-description">' not in document
+
+
+def test_a_topology_with_only_hardware_renders_only_the_hardware_block():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        hardware=(
+            HardwareProfileDefinition(
+                name="GIGABYTE",
+                model="Gigabyte GA-MA770T-UD3",
+                role="Hôte principal",
+                cpu="AMD Phenom(tm) II X4 945 Processor",
+                ram="16 Go",
+                storage="5 disques",
+                os_name="LMDE 7",
+                gpu="NVIDIA Quadro P400",
+            ),
+        )
+    )
+
+    document = render_html(views, topology)
+
+    assert '<section class="topology-index">' in document
+    assert "<h3>Topologie réseau externe</h3>" not in document
+    assert "<h3>Fiches matérielles</h3>" in document
+
+
+def test_a_hardware_profile_renders_all_its_fields():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        hardware=(
+            HardwareProfileDefinition(
+                name="GIGABYTE",
+                model="Gigabyte GA-MA770T-UD3",
+                role="Hôte principal, 50+ conteneurs Docker",
+                cpu="AMD Phenom(tm) II X4 945 Processor",
+                ram="16 Go",
+                storage="5 disques",
+                os_name="LMDE 7",
+                gpu="NVIDIA Quadro P400",
+            ),
+        )
+    )
+
+    document = render_html(views, topology)
+
+    assert "<h4>GIGABYTE</h4>" in document
+    assert (
+        '<p class="hardware-model">Gigabyte GA-MA770T-UD3</p>' in document
+    )
+    assert "<dt>CPU</dt><dd>AMD Phenom(tm) II X4 945 Processor</dd>" in document
+    assert "<dt>RAM</dt><dd>16 Go</dd>" in document
+    assert "<dt>GPU</dt><dd>NVIDIA Quadro P400</dd>" in document
+    assert "<dt>Stockage</dt><dd>5 disques</dd>" in document
+    assert "<dt>OS</dt><dd>LMDE 7</dd>" in document
+    assert "<dt>Rôle</dt><dd>Hôte principal, 50+ conteneurs Docker</dd>" in document
+
+
+def test_a_hardware_profile_with_no_gpu_has_no_gpu_row():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        hardware=(
+            HardwareProfileDefinition(
+                name="Raspberry Pi",
+                model="Raspberry Pi 3 Model B Rev 1.2",
+                role="Reverse proxy",
+                cpu="Broadcom BCM2837",
+                ram="1 Go",
+                storage="Carte micro SD",
+                os_name="Debian (aarch64)",
+            ),
+        )
+    )
+
+    document = render_html(views, topology)
+
+    assert "<dt>GPU</dt>" not in document
+
+
+def test_topology_text_is_escaped():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        external_nodes=(
+            ExternalNodeDefinition(
+                name='Weird & "quoted" <name>',
+                role="a <b>role</b>",
+                description='a "quoted" & <b>description</b>',
+            ),
+        )
+    )
+
+    document = render_html(views, topology)
+
+    assert "&amp;" in document
+    assert "&quot;" in document
+    assert "&lt;" in document
+    assert "&gt;" in document
+    assert "<b>description</b>" not in document
+    assert "<b>role</b>" not in document
+
+
+def test_both_blocks_render_when_both_are_present():
+    views = build_all_views(graph_with_categories("Supervision"))
+    topology = InfrastructureTopologyDefinition(
+        external_nodes=(ExternalNodeDefinition(name="Gmail", role="Messagerie"),),
+        hardware=(
+            HardwareProfileDefinition(
+                name="Raspberry Pi",
+                model="Raspberry Pi 3 Model B Rev 1.2",
+                role="Reverse proxy",
+                cpu="Broadcom BCM2837",
+                ram="1 Go",
+                storage="Carte micro SD",
+                os_name="Debian (aarch64)",
+            ),
+        ),
+    )
+
+    document = render_html(views, topology)
+
+    assert document.index("<h3>Topologie réseau externe</h3>") < document.index(
+        "<h3>Fiches matérielles</h3>"
+    )
 
 
 # --------------------------------------------------------------------

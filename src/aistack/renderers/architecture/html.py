@@ -267,35 +267,46 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 .swatch-confirmed { background: #dff6dd; border-color: #116329; }
 .swatch-declared { background: #fff1cc; border-color: #7d4e00; }
 .swatch-none { background: #f0f0f0; border-color: #666; }
-.service-index { margin-top: 1.6rem; }
-.service-index h2 { font-size: 1.1rem; margin-bottom: .6rem; }
-.service-category { margin-bottom: 1.2rem; }
+.service-index {
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+}
+.service-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
+.service-category { margin-bottom: 1.6rem; }
+.service-category:last-child { margin-bottom: 0; }
 .service-category h3 {
-  font-size: .95rem; color: #444; margin: 0 0 .4rem;
-  border-bottom: 1px solid #e5e5e5; padding-bottom: .2rem;
+  font-size: .8rem; font-weight: 700; letter-spacing: .02em;
+  text-transform: uppercase; color: #666; margin: 0 0 .6rem;
+  border-bottom: 1px solid #e5e5e5; padding-bottom: .35rem;
 }
 .service-list {
   list-style: none; margin: 0; padding: 0;
-  display: flex; flex-wrap: wrap; gap: .6rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: .7rem;
 }
 .service-list li {
-  display: flex; align-items: flex-start; gap: .5rem;
-  border: 1px solid #e5e5e5; border-radius: 6px; padding: .5rem .7rem;
-  background: #fff; min-width: 12rem; max-width: 18rem;
+  display: grid; grid-template-columns: 28px 1fr; align-items: center;
+  gap: .6rem;
+  border: 1px solid #e5e5e5; border-radius: 8px; padding: .6rem .8rem;
+  background: #fff;
 }
 .service-icon {
-  width: 24px; height: 24px; flex: none; object-fit: contain;
-  margin-top: .1rem;
+  width: 28px; height: 28px; object-fit: contain; justify-self: center;
 }
 .service-icon-none {
-  width: 24px; height: 24px; flex: none; border-radius: 4px;
-  background: #f0f0f0;
+  width: 28px; height: 28px; border-radius: 6px; background: #f0f0f0;
 }
-.service-entry { display: flex; flex-direction: column; gap: .15rem; }
-.service-entry a { color: #0b5fff; text-decoration: none; font-weight: 600; }
+.service-entry {
+  display: flex; flex-direction: column; gap: .15rem; min-width: 0;
+}
+.service-entry a, .service-entry span {
+  font-weight: 600; line-height: 1.25;
+}
+.service-entry a { color: #0b5fff; text-decoration: none; }
 .service-entry a:hover { text-decoration: underline; }
-.service-entry span { font-weight: 600; }
-.service-description { margin: 0; color: #666; font-size: .8rem; }\
+.service-description {
+  margin: .1rem 0 0; color: #666; font-size: .8rem; line-height: 1.35;
+}\
 """
 
 _BOOTSTRAP_JS = """\

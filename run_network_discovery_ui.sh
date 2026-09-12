@@ -30,14 +30,17 @@ if [ ! -x "$WEB_VENV/bin/python3" ]; then
 fi
 
 # Port 8184 — the next free one after the console's 8183
-# (claude/PLAN-J11-CONSOLE-2026-09-11.md § 11). Bound to 127.0.0.1
-# only, not 0.0.0.0 — deliberately narrower than
-# priority_ui/selection_ui's own 0.0.0.0 binding: this screen writes
-# which SSH usernames later get tried, unattended, against every host
-# a network scan finds on the LAN, decided with the owner 2026-09-12
-# to stay unreachable from anywhere but this machine itself. Confirm
-# nothing else already holds port 8184 before installing this as a
-# service:
+# (claude/PLAN-J11-CONSOLE-2026-09-11.md § 11). Bound to 0.0.0.0,
+# same as priority_ui/selection_ui — reachable from anywhere on the
+# owner's LAN (his own laptop included, which is exactly how the
+# console's "Découverte réseau" card is meant to be used). "LAN-only"
+# here comes from never adding an NPM Proxy Host for this port, not
+# from the bind address — an earlier version of this file bound
+# 127.0.0.1, which quietly made the console's own link to
+# http://GIGABYTE:8184 unreachable from any other machine; found and
+# corrected 2026-09-12 the same day, once the owner tried the link
+# from his laptop and got a real connection-refused. Confirm nothing
+# else already holds port 8184 before installing this as a service:
 #
 #   ss -ltnp | grep :8184
-"$WEB_VENV/bin/python3" -m uvicorn network_discovery_ui.app:app --host 127.0.0.1 --port 8184
+"$WEB_VENV/bin/python3" -m uvicorn network_discovery_ui.app:app --host 0.0.0.0 --port 8184

@@ -10,10 +10,13 @@
 # backend, the same pattern aistack-priority-ui.service and
 # aistack-selection-ui.service already are.
 #
-# **LAN-only, on purpose.** Unlike the Priority UI and Selection UI,
-# this screen is deliberately NOT bound to 0.0.0.0 and has NO Proxy
-# Host entry anywhere — see run_network_discovery_ui.sh's own
-# comment for why. Do not add a reverse-proxy entry for this unit.
+# **LAN-only, on purpose — but the bind address is the same as the
+# Priority UI and Selection UI (0.0.0.0), reachable from anywhere on
+# the owner's LAN.** What keeps this LAN-only is that it has NO Proxy
+# Host entry anywhere — see run_network_discovery_ui.sh's own comment
+# for why (and for the 127.0.0.1 mistake this corrects, found
+# 2026-09-12 the same day). Do not add a reverse-proxy entry for this
+# unit.
 #
 # Runs on the host, not in a container: reads and rewrites governed
 # YAML directly — nothing here touches Docker or a socket at all.

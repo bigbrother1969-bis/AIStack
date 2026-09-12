@@ -71,9 +71,12 @@ the one it runs on.**
   new fifth card on the console, so adding a machine to the scan no longer
   means hand-editing a YAML file over SSH.
 
-As of 2026-09-12, this build had not been published to Docker Hub. The
-commit and digest will be added here, and in `docker-compose.yml`, once
-the owner completes `OPS-0002` § *Publishing an image*.
+Before this build, `0.6.0` was re-verified against its recorded digest
+(`GOV-0002/OS-047`) — pull matched.
+
+`bigbrother1969/aistack-core:0.7.0`, built from `0f511b6`, digest
+`sha256:61a18a664a2e41d22c2e682b1cc0d1e0d09e57806c2b92f3cde44f091013c5ba`.
+1751 tests, 73 knowledge artifacts, `clean: True`.
 
 ## 0.6.0 — 2026-09-12
 

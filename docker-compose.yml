@@ -29,7 +29,25 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **0.6.0 — published 2026-09-12, current.**
+  # **0.7.0 — published 2026-09-12, current.**
+  #
+  #   bigbrother1969/aistack-core:0.7.0
+  #   @sha256:61a18a664a2e41d22c2e682b1cc0d1e0d09e57806c2b92f3cde44f091013c5ba
+  #
+  # Built from 0f511b6 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 1751 tests with `clean: True`.
+  # 73 artifacts, 16 checks. Before the build, 0.6.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # Freezes `claude/PLAN-J11-CONSOLE-2026-09-11.md` §10 and §11, all
+  # shipped the same day as 0.6.0 without the version ever moving:
+  # the Docker dependency graph, external network topology and
+  # hardware inventory, live Beszel metrics — all three new sections
+  # of `architecture.html` — plus network-wide Docker discovery over
+  # SSH and the LAN-only screen managing its candidate usernames,
+  # linked from the console.
+  #
+  # **0.6.0 — published 2026-09-12.**
   #
   #   bigbrother1969/aistack-core:0.6.0
   #   @sha256:28a3e4e621d83c563725e08fd6e774158f2752b0d4e3a2008f60c1496a986a47

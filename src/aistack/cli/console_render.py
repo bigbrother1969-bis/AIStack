@@ -1,9 +1,30 @@
 from __future__ import annotations
 
+import socket
+import subprocess
 from pathlib import Path
 
 from aistack.console.yaml import load_console_links_yaml
 from aistack.generators.console import ConsoleHtmlArtifactGenerator
+from aistack.health.cockpit import HealthCockpit, HealthDomain
+from aistack.health.score import compute_health_score
+from aistack.health.score_weights import health_score_weights
+from aistack.providers.docker import DockerProvider
+from aistack.providers.filesystem import (
+    BackupProvider,
+    StorageProvider,
+    backup_thresholds_for_host,
+    storage_thresholds_for_host,
+)
+from aistack.providers.gpu import NvidiaGpuProvider, gpu_thresholds_for_host
+from aistack.runtime.backup_gap import find_backup_gaps
+from aistack.runtime.container_distress import find_container_distress
+from aistack.runtime.evaluate_backup import evaluate_backup
+from aistack.runtime.evaluate_gpu import evaluate_gpu
+from aistack.runtime.evaluate_services import evaluate_services
+from aistack.runtime.evaluate_storage import evaluate_storage
+from aistack.runtime.gpu_anomaly import find_gpu_anomalies
+from aistack.runtime.storage_shortage import find_storage_shortage
 
 # Same convention as `architecture_render.py`'s own
 # `DEFAULT_CATEGORIZATION` — a `Path(__file__).resolve()`-relative
@@ -14,6 +35,143 @@ DEFAULT_CONSOLE_LINKS = (
     / "definitions"
     / "console_links.yml"
 )
+
+# **Duplicated from `aistack.cli.health_render`, not imported —
+# deliberately, added 2026-09-13** (`claude/PLAN-J11-CONSOLE
+# -2026-09-11.md` § 11.9, the health cartouche closing the owner's own
+# gap analysis against the historical `architecture.html` reference
+# page). This is the exact same choice `health_render.py` itself
+# already made and documents for `DEFAULT_STORAGE_THRESHOLDS`/
+# `DEFAULT_BACKUP_THRESHOLDS`/`DEFAULT_GPU_THRESHOLDS` against
+# `runtime_diagnose.py`: "no CLI in this package imports another" — a
+# `HealthCockpit` snapshot is cheap enough to build twice (this
+# console generates once, on demand, not on a hot path) and the
+# alternative is a third CLI importing a second CLI's `main()`-adjacent
+# helpers, which this heritage has never done. `test_console_render.py`
+# carries the same drift-guard tests `test_health_render.py` already
+# has against `runtime_diagnose.py`, extended to check this module's
+# four threshold paths and its weights path against
+# `aistack.cli.health_render`'s own.
+DEFAULT_STORAGE_THRESHOLDS = (
+    Path(__file__).resolve().parents[1]
+    / "providers"
+    / "filesystem"
+    / "definitions"
+    / "storage_thresholds.yml"
+)
+
+DEFAULT_BACKUP_THRESHOLDS = (
+    Path(__file__).resolve().parents[1]
+    / "providers"
+    / "filesystem"
+    / "definitions"
+    / "backup_thresholds.yml"
+)
+
+DEFAULT_GPU_THRESHOLDS = (
+    Path(__file__).resolve().parents[1]
+    / "providers"
+    / "gpu"
+    / "definitions"
+    / "gpu_thresholds.yml"
+)
+
+DEFAULT_HEALTH_SCORE_WEIGHTS = (
+    Path(__file__).resolve().parents[1]
+    / "health"
+    / "definitions"
+    / "health_score_weights.yml"
+)
+
+
+def storage_domain(hostname: str) -> HealthDomain:
+    """Mirrors `aistack.cli.health_render.storage_domain` exactly."""
+
+    thresholds, note = storage_thresholds_for_host(
+        DEFAULT_STORAGE_THRESHOLDS, hostname
+    )
+
+    if not thresholds:
+        return HealthDomain(name="Stockage", instrumented=False, note=note)
+
+    usage = StorageProvider().collect_usage(
+        tuple(threshold.mount for threshold in thresholds)
+    )
+    shortages = find_storage_shortage(usage, thresholds)
+
+    return HealthDomain(
+        name="Stockage", instrumented=True, findings=evaluate_storage(shortages)
+    )
+
+
+def services_domain() -> HealthDomain:
+    """Mirrors `aistack.cli.health_render.services_domain` exactly."""
+
+    try:
+        readings = DockerProvider().collect_container_states()
+    except (subprocess.SubprocessError, OSError) as error:
+        return HealthDomain(
+            name="Services",
+            instrumented=False,
+            note=(
+                f"container states could not be collected ({error}); "
+                f"service health is not checked"
+            ),
+        )
+
+    distress = find_container_distress(readings)
+
+    return HealthDomain(
+        name="Services", instrumented=True, findings=evaluate_services(distress)
+    )
+
+
+def backup_domain(hostname: str) -> HealthDomain:
+    """Mirrors `aistack.cli.health_render.backup_domain` exactly."""
+
+    thresholds, note = backup_thresholds_for_host(
+        DEFAULT_BACKUP_THRESHOLDS, hostname
+    )
+
+    if not thresholds:
+        return HealthDomain(name="Sauvegarde / PRA", instrumented=False, note=note)
+
+    freshness = BackupProvider().collect_freshness(
+        tuple(threshold.path for threshold in thresholds)
+    )
+    gaps = find_backup_gaps(freshness, thresholds)
+
+    return HealthDomain(
+        name="Sauvegarde / PRA", instrumented=True, findings=evaluate_backup(gaps)
+    )
+
+
+def gpu_domain(hostname: str) -> HealthDomain:
+    """Mirrors `aistack.cli.health_render.gpu_domain` exactly."""
+
+    thresholds, note = gpu_thresholds_for_host(DEFAULT_GPU_THRESHOLDS, hostname)
+
+    if not thresholds:
+        return HealthDomain(name="GPU", instrumented=False, note=note)
+
+    readings = NvidiaGpuProvider().collect_readings()
+    anomalies = find_gpu_anomalies(readings, thresholds)
+
+    return HealthDomain(name="GPU", instrumented=True, findings=evaluate_gpu(anomalies))
+
+
+def build_cockpit(hostname: str) -> HealthCockpit:
+    """Mirrors `aistack.cli.health_render.build_cockpit` exactly."""
+
+    return HealthCockpit(
+        domains=(
+            storage_domain(hostname),
+            services_domain(),
+            backup_domain(hostname),
+            gpu_domain(hostname),
+        )
+    )
+
 
 # `console.html` is generated the same way every other artifact in
 # `reports/generated/` already is (`write_artifact_with_history`) —
@@ -74,13 +232,29 @@ def main() -> None:
     pointing a reverse-proxy Host at that server is a manual Nginx
     Proxy Manager step this codebase has no way to reach
     (`GOV-P-001`: NPM here is GUI-configured only).
+
+    **Builds and passes a `HealthCockpit`/`HealthScore`, added
+    2026-09-13** (`PLAN-J11` § 11.9) — the same score `health_render
+    .main()` computes, from the same declared `OPS-0008` weights,
+    handed to `ConsoleHtmlArtifactGenerator.generate` so the console
+    shows a summary cartouche above its link grid instead of naming
+    the score model twice. `weights is None` (no declared weights
+    file) renders the score as an honest note, not a silent omission —
+    the same branch `health_render.main` already takes.
     """
 
     links = load_console_links_yaml(DEFAULT_CONSOLE_LINKS)
 
+    cockpit = build_cockpit(socket.gethostname())
+    weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
+    score = compute_health_score(cockpit, weights) if weights is not None else None
+
     ConsoleHtmlArtifactGenerator().generate(
         links=links,
         output_path=GENERATED_DIR / "console.html",
+        cockpit=cockpit,
+        score=score,
+        score_note=score_note,
     )
 
     PUBLIC_DIR.mkdir(parents=True, exist_ok=True)

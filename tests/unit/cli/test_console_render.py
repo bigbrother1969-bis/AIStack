@@ -13,11 +13,43 @@ command has: `PUBLIC_DIR`'s relative symlinks, the fix for the gap
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
 from aistack.cli import console_render as cli
+from aistack.cli import health_render
+from aistack.contracts.container_health import health_of
+from aistack.contracts.container_state_reading import ContainerStateReading
+from aistack.contracts.gpu_reading import GpuReading
+
+
+class FakeDockerProvider:
+    """Mirrors `test_health_render.py`'s own fake for the same reason."""
+
+    def __init__(self, states):
+        self._states = states
+
+    def collect_container_states(self):
+        return tuple(
+            ContainerStateReading(
+                container=entry["Names"],
+                state=entry.get("State") or "unknown",
+                health=health_of(entry.get("Status")),
+            )
+            for entry in (self._states or ())
+        )
+
+
+class FakeGpuProvider:
+    """Mirrors `test_health_render.py`'s own fake for the same reason."""
+
+    def __init__(self, readings):
+        self._readings = readings
+
+    def collect_readings(self):
+        return tuple(self._readings)
 
 
 @pytest.fixture
@@ -41,6 +73,10 @@ def test_main_writes_the_console_html_artifact(workspace):
     assert document.startswith("<!doctype html>")
     assert "Selection UI" in document
     assert "Cockpit Santé" in document
+    # PLAN-J11 § 11.9 — the health cartouche, built from a real
+    # HealthCockpit against this sandbox's own hostname: whichever
+    # host runs this suite, `main()` still writes all four domains.
+    assert "État de santé du homelab" in document
 
 
 def test_main_prints_a_confirmation_line(workspace, capsys):
@@ -163,3 +199,153 @@ def test_ensure_public_symlink_refuses_to_clobber_a_real_file(tmp_path: Path):
 
 def test_the_default_console_links_definition_exists():
     assert cli.DEFAULT_CONSOLE_LINKS.exists()
+
+
+# --------------------------------------------------------------------
+# The health cartouche (PLAN-J11 § 11.9) — build_cockpit and the four
+# domain functions, duplicated from aistack.cli.health_render.
+#
+# These do not repeat test_health_render.py's full domain coverage —
+# every branch (instrumented/not, clean/alert) is already proven
+# there. What is proven here is narrower and specific to the
+# duplication: that this module's own copy of each function is
+# genuinely wired to a HealthDomain an alert can come from, not a
+# copy-paste that silently drifted.
+# --------------------------------------------------------------------
+
+
+def test_build_cockpit_always_names_all_four_domains(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+
+    cockpit = cli.build_cockpit("test-host")
+
+    names = {domain.name for domain in cockpit.domains}
+    assert names == {"Stockage", "Services", "Sauvegarde / PRA", "GPU"}
+
+
+def test_storage_domain_reports_an_alert(monkeypatch, tmp_path):
+    mount = tmp_path / "volume"
+    mount.mkdir()
+
+    path = tmp_path / "storage_thresholds.yml"
+    path.write_text(
+        f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - mount: {mount}
+        kind: free_bytes
+        free_gb: 999999999
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", path)
+
+    domain = cli.storage_domain("test-host")
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+def test_services_domain_reports_an_alert(monkeypatch):
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
+    )
+
+    domain = cli.services_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+def test_backup_domain_reports_an_alert(monkeypatch, tmp_path):
+    backup_dir = tmp_path / "wordpress"
+    backup_dir.mkdir()
+
+    path = tmp_path / "backup_thresholds.yml"
+    path.write_text(
+        f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - path: {backup_dir}
+        max_age_days: 7
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+
+    domain = cli.backup_domain("test-host")
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+def test_gpu_domain_reports_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "gpu_thresholds.yml"
+    path.write_text(
+        """
+hosts:
+  - host: test-host
+    thresholds:
+      - kind: temperature_celsius
+        celsius: 80
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", path)
+    monkeypatch.setattr(
+        cli,
+        "NvidiaGpuProvider",
+        lambda: FakeGpuProvider(
+            [
+                GpuReading(
+                    name="Quadro P400",
+                    observed_at=datetime.now(timezone.utc),
+                    utilization_percent=1.0,
+                    memory_used_mib=142.0,
+                    memory_total_mib=2048.0,
+                    temperature_celsius=85.0,
+                )
+            ]
+        ),
+    )
+
+    domain = cli.gpu_domain("test-host")
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+# --------------------------------------------------------------------
+# Drift guard — this module's duplicated constants must match
+# aistack.cli.health_render's own, the same way health_render.py's own
+# threshold paths are already checked against runtime_diagnose.py's.
+# --------------------------------------------------------------------
+
+
+def test_the_default_storage_thresholds_path_matches_health_renders():
+    assert cli.DEFAULT_STORAGE_THRESHOLDS == health_render.DEFAULT_STORAGE_THRESHOLDS
+    assert cli.DEFAULT_STORAGE_THRESHOLDS.exists()
+
+
+def test_the_default_backup_thresholds_path_matches_health_renders():
+    assert cli.DEFAULT_BACKUP_THRESHOLDS == health_render.DEFAULT_BACKUP_THRESHOLDS
+    assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()
+
+
+def test_the_default_gpu_thresholds_path_matches_health_renders():
+    assert cli.DEFAULT_GPU_THRESHOLDS == health_render.DEFAULT_GPU_THRESHOLDS
+    assert cli.DEFAULT_GPU_THRESHOLDS.exists()
+
+
+def test_the_default_health_score_weights_path_matches_health_renders():
+    assert (
+        cli.DEFAULT_HEALTH_SCORE_WEIGHTS == health_render.DEFAULT_HEALTH_SCORE_WEIGHTS
+    )
+    assert cli.DEFAULT_HEALTH_SCORE_WEIGHTS.exists()

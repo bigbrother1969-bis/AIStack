@@ -1,0 +1,14 @@
+# AI Runtime definition — J6, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`.
+#
+# `host`/`port` are the owner's own real facts (2026-09-13): an
+# Ollama instance already runs on GIGABYTE, port 11434.
+#
+# `model` is deliberately not filled in yet — the owner did not have
+# the exact installed model name in hand when this was declared.
+# Run `ollama list` on GIGABYTE and put the exact name here (for
+# example `llama3.1:8b`) before `python -m aistack.cli.ai_reason` can
+# do anything but report that no model is configured.
+
+host: GIGABYTE
+port: 11434
+model: null

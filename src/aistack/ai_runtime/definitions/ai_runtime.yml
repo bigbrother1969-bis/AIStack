@@ -1,14 +1,25 @@
 # AI Runtime definition — J6, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`.
 #
-# `host`/`port` are the owner's own real facts (2026-09-13): an
-# Ollama instance already runs on GIGABYTE, port 11434.
+# `host`/`port` are the owner's own real facts (2026-09-13, reconfirmed
+# 2026-09-18 after a native reinstall): an Ollama instance runs on
+# GIGABYTE, port 11434, five models loaded (`ollama list` on
+# 2026-09-18: qwen2.5-coder:3b, deepseek-r1:1.5b, qwen2.5:3b,
+# nomic-embed-text:latest, qwen2.5:0.5b).
 #
-# `model` is deliberately not filled in yet — the owner did not have
-# the exact installed model name in hand when this was declared.
-# Run `ollama list` on GIGABYTE and put the exact name here (for
-# example `llama3.1:8b`) before `python -m aistack.cli.ai_reason` can
-# do anything but report that no model is configured.
+# `model` is `qwen2.5:0.5b` — the owner's explicit choice
+# (2026-09-18), made with the real speed/reliability tradeoff in
+# hand: it averages ~15.7s per call in the QUAL-0001 campaign
+# (`claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md`), well
+# under `OllamaEngine`'s 120s default timeout, unlike
+# `deepseek-r1:1.5b` (~500s average, a "thinking" model — would
+# almost always exceed the current timeout). The known risk, named
+# rather than hidden: QUAL-0001 §13 recorded `qwen2.5:0.5b` answering
+# a closed YES/NO factual question incorrectly, a test
+# `deepseek-r1:1.5b` passed. `reason`/`explain`/`recommend` produce
+# open explanatory text, not closed factual answers — a different
+# task shape than that one failing prompt — but the gap is real and
+# worth keeping in mind when reading its output.
 
 host: GIGABYTE
 port: 11434
-model: null
+model: qwen2.5:0.5b

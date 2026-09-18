@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -167,6 +168,31 @@ def test_main_reports_the_engine_unreachable_when_a_model_is_configured(
     captured = capsys.readouterr()
     assert "booklore_db" in captured.out
     assert "not answered" in captured.out
+
+    # J7, AI Reasoning History — traced even though every answer was
+    # unreachable (`aistack.ai_runtime.reasoning_history`'s own
+    # scoping decision, 2026-09-18).
+    history_path = workspace / "reports" / "generated" / "ai-reasoning" / "booklore_db.json"
+    assert history_path.exists()
+    content = json.loads(history_path.read_text(encoding="utf-8"))
+    assert content["finding"]["subject"] == "booklore_db"
+    assert all(not a["reachable"] for a in content["answers"])
+
+
+def test_main_does_not_record_reasoning_history_when_nothing_was_asked(
+    workspace, monkeypatch, capsys
+):
+    ai_runtime_path = workspace / "ai_runtime.yml"
+    ai_runtime_path.write_text(
+        "host: GIGABYTE\nport: 11434\nmodel: null\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", workspace / "absent.yml")
+
+    cli.main()
+
+    # No qualified finding at all this run — nothing to have traced.
+    assert not (workspace / "reports" / "generated" / "ai-reasoning").exists()
 
 
 # --------------------------------------------------------------------

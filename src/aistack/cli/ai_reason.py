@@ -5,6 +5,7 @@ from pathlib import Path
 
 from aistack.ai_runtime.ollama_engine import OllamaEngine
 from aistack.ai_runtime.operations import explain, reason, recommend
+from aistack.ai_runtime.reasoning_history import record_ai_reasoning
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
@@ -145,6 +146,13 @@ def main() -> None:
             explain(finding, engine, ai_runtime_definition.model),
             recommend(finding, engine, ai_runtime_definition.model),
         )
+
+        # J7, AI Reasoning History — traced unconditionally, even
+        # when every answer above is `reachable=False`: an engine
+        # that could not be reached is itself a real outcome worth
+        # keeping (`aistack.ai_runtime.reasoning_history`'s own
+        # docstring), not a case to skip persisting.
+        record_ai_reasoning(finding, answers)
 
         report(finding, answers)
 

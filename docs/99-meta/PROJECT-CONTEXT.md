@@ -8,6 +8,18 @@ It summarizes the current state of the governed heritage and explains how develo
 
 This document is intended to be regenerated automatically during Context Bundle generation.
 
+> **Note ajoutée le 2026-09-18.** Working note non gouverné (`docs/99-meta`
+> est exclu de la projection), dernier contenu réel du 2026-07-08 — la
+> "Current Development Status" et les "Current Priorities" ci-dessous ne
+> reflètent plus l'état réel : les huit jalons de
+> `claude/PLAN-TRAJECTOIRE-2026-09-04.md` (J1-J8) sont désormais tous
+> livrés (Runtime operations complètes, AI Runtime, Knowledge Time Machine
+> phases 1-3). Pour reprendre le développement, le point d'entrée réel est
+> `docs/03-governance/GOV-0002-Open-State-Register.md` (état gouverné) et
+> les plans `claude/PLAN-J*.md` / `claude/PLAN-TRAJECTOIRE-2026-09-04.md`
+> du Projet AIStack — pas ce document. Contenu conservé tel quel
+> ci-dessous, pour l'historique.
+
 ## Vision
 
 - AIStack is a Knowledge Operating System.

@@ -10,6 +10,18 @@ The Runtime README describes the architecture.
 
 This roadmap describes the implementation workstreams.
 
+> **Note ajoutée le 2026-09-18.** Working note non gouverné (`docs/99-meta`
+> est exclu de la projection), dernier contenu réel du 2026-08-21 —
+> dépassé depuis : les dix opérations listées ci-dessous comme ordre
+> d'implémentation (`boot` à `run`) sont désormais toutes couvertes, et
+> les quatre historiques décrits en "Future Work" correspondent aux trois
+> premières phases livrées de la Knowledge Time Machine
+> (`claude/PLAN-TRAJECTOIRE-2026-09-04.md`, J3/J4 ; Phase 3 confirmée sans
+> code additionnel le 2026-09-18). Source de vérité actuelle :
+> `docs/03-governance/GOV-0002-Open-State-Register.md` et les plans
+> `claude/PLAN-J*.md` du Projet AIStack. Contenu conservé tel quel
+> ci-dessous, pour l'historique.
+
 ---
 
 # Current Development Phase

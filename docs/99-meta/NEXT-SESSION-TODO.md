@@ -1,4 +1,15 @@
 
+> **Note ajoutée le 2026-09-18.** Working note non gouverné (`docs/99-meta`
+> est exclu de la projection), dernier contenu réel du 2026-08-14 — dépassé
+> depuis : les huit jalons de `claude/PLAN-TRAJECTOIRE-2026-09-04.md`
+> (J1-J8) sont désormais tous livrés, y compris les opérations Kernel
+> Runtime encore listées ci-dessous comme travail futur (`evaluate`,
+> `render`, `generate`...) et les trois premières phases de la Knowledge
+> Time Machine décrite juste en dessous. Source de vérité actuelle :
+> `docs/03-governance/GOV-0002-Open-State-Register.md` et les plans
+> `claude/PLAN-J*.md` / `claude/PLAN-TRAJECTOIRE-2026-09-04.md` du Projet
+> AIStack. Contenu conservé tel quel ci-dessous, pour l'historique.
+
 # P2 — Knowledge Time Machine
 
 Concevoir l’historisation multi-orthogonale d’AIStack.

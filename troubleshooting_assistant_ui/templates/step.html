@@ -39,10 +39,14 @@
       text-decoration: none; color: #1f2933; background: white;
     }
     nav.steps a.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+    .top-links { display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
-  <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
+  <div class="top-links">
+    <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
+    <a class="back-link" href="/aide">Besoin d'aide pour ouvrir un terminal ?</a>
+  </div>
 
   <header>
     <h1>{{ subject }}</h1>

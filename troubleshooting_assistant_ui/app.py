@@ -126,6 +126,21 @@ def qualified_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
     return evaluate(consumption, temperatures), ""
 
 
+@app.get("/aide", response_class=HTMLResponse)
+def aide(request: Request):
+    """
+    A hand-written help page — how to open a terminal, find
+    GIGABYTE on the LAN, connect over SSH, and paste a command.
+    Owner's request (2026-09-18): non-technical readers following a
+    finding's declared remediation need this, and it is fixed,
+    verified content, never AI-generated per finding — the owner's
+    own explicit choice, to avoid a model inventing a command that
+    does not match the real remediation (GOV-P-001).
+    """
+
+    return templates.TemplateResponse(request=request, name="aide.html", context={})
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     findings, note = qualified_findings()

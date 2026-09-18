@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>AIStack — Aide : terminal et SSH</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .back-link {
+      display: inline-block; margin-bottom: 1.2rem; font-size: .88rem;
+      color: #1f6feb; text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+    section { margin-bottom: 1.8rem; }
+    h2 { font-size: 1.05rem; margin-bottom: .4rem; }
+    p { line-height: 1.5; }
+    pre {
+      background: #1f2933; color: #e8f0fe; padding: .8rem 1rem; border-radius: 6px;
+      overflow-x: auto; font-size: .9rem;
+    }
+    code { background: #eee; padding: .1rem .3rem; border-radius: 4px; }
+    pre code { background: none; padding: 0; }
+    .note {
+      padding: .7rem .9rem; border-radius: 6px; background: #fff1cc;
+      border: 1px solid #e0b34d; font-size: .85rem; margin-top: .5rem;
+    }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="/">&larr; Retour à l'assistant de pannes</a>
+
+  <header>
+    <h1>Ouvrir un terminal et se connecter en SSH</h1>
+    <p>Un petit aide-mémoire, écrit à la main — pas généré par l'IA, pour ne
+    rien risquer d'inventer (les commandes exactes viennent d'un vrai usage
+    observé pendant les sessions AIStack précédentes).</p>
+  </header>
+
+  <section>
+    <h2>1. Ouvrir un terminal sur ton ordinateur</h2>
+    <p>
+      Sous Linux, le raccourci <code>Ctrl+Alt+T</code> ouvre un terminal sur
+      la plupart des environnements de bureau (dont Cinnamon, utilisé par
+      Linux Mint). S'il ne fait rien sur ta machine, cherche
+      « Terminal » dans le menu des applications.
+    </p>
+  </section>
+
+  <section>
+    <h2>2. Trouver GIGABYTE sur ton réseau local</h2>
+    <p>
+      Adresse observée pendant cette session : <code>192.168.1.10</code>.
+    </p>
+    <div class="note">
+      Cette adresse peut changer si ta box réattribue les adresses
+      (DHCP) — ce n'est pas garanti à vie. Si elle ne répond plus,
+      essaie d'abord le nom <code>GIGABYTE</code> à la place de
+      l'adresse ; sinon, consulte la liste des appareils connectés
+      dans l'interface de ta box/routeur.
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Se connecter en SSH</h2>
+    <p>Depuis le terminal ouvert à l'étape 1 :</p>
+    <pre><code>ssh big-brother@192.168.1.10</code></pre>
+    <p>
+      (remplace l'adresse par celle que tu as retrouvée à l'étape 2 si
+      elle a changé, ou essaie <code>ssh big-brother@GIGABYTE</code>).
+      Le mot de passe du compte <code>big-brother</code> sur GIGABYTE
+      est ensuite demandé — rien ne s'affiche à l'écran pendant que tu
+      tapes, c'est normal en SSH, pas un bug.
+    </p>
+  </section>
+
+  <section>
+    <h2>4. Copier-coller une commande</h2>
+    <p>
+      Pour coller dans la plupart des terminaux Linux :
+      <code>Ctrl+Maj+V</code> (le <code>Ctrl+V</code> seul ne colle
+      généralement pas dans un terminal — il tape parfois un caractère
+      à la place). Sinon, un clic droit propose souvent « Coller »
+      directement.
+    </p>
+    <p>
+      Pour copier : sélectionne le texte à la souris, puis
+      <code>Ctrl+Maj+C</code>, ou clic droit → « Copier ».
+    </p>
+  </section>
+
+  <a class="back-link" href="/">&larr; Retour à l'assistant de pannes</a>
+</body>
+</html>

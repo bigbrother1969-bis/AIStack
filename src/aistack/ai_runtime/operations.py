@@ -21,6 +21,22 @@ from aistack.contracts.runtime_finding import RuntimeFinding
 # is not up for the model's own opinion; what the model adds is
 # reasoning *about* it, in language, not a second verdict on whether
 # it is true.
+#
+# **Every prompt asks for a French answer** — owner's explicit choice
+# (2026-09-18, `claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18
+# .md`), made for the whole patrimoine rather than only the new
+# guided UI: the CLI (`aistack.cli.ai_reason`) and J7's stored
+# history (`aistack.ai_runtime.reasoning_history`) inherit it too,
+# since both call these same three functions. Deliberately not
+# extended to the finding's own `interpretation`/`remediation` text —
+# that is the governed `OPS-0004` rule's own declared wording
+# (`aistack.runtime.evaluate`), not something this module produces,
+# and the owner chose to leave it as the rule states it (English),
+# everywhere it already appears (CLI, Cockpit Santé). The directive
+# lives at the end of each template, after the finding's own fields —
+# asking last, once the model has already read what it is reasoning
+# about, is the same ordering QUAL-0001 found more reliable for
+# small models than a leading instruction.
 
 _MODEL_NOT_CONFIGURED = (
     "no model is configured (aistack.ai_runtime.definitions."
@@ -145,6 +161,9 @@ declared remediation: {remediation}
 In two or three sentences, reason about what this finding means for \
 the system it describes. Do not repeat the interpretation verbatim; \
 add context a reader would not already have from it alone.
+
+Réponds uniquement en français, même si tout ce qui précède est en \
+anglais.
 """
 
 _EXPLAIN_PROMPT = """\
@@ -166,6 +185,9 @@ declared remediation: {remediation}
 
 In plain, non-technical language, explain what this finding is \
 telling the owner and why it was flagged. Keep it short.
+
+Réponds uniquement en français, même si tout ce qui précède est en \
+anglais.
 """
 
 _RECOMMEND_PROMPT = """\
@@ -190,4 +212,7 @@ Suggest one concrete next step the owner could take, building on \
 the declared remediation above rather than replacing it. State \
 clearly that this is a suggestion for the owner to judge, not an \
 instruction.
+
+Réponds uniquement en français, même si tout ce qui précède est en \
+anglais.
 """

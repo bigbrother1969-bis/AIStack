@@ -473,9 +473,21 @@ def test_the_real_resource_priority_definition_loads():
 
     assert definition.background.default_throttled_cpus == 0.1
 
-    names = [c.name for c in definition.background.containers]
+    names = {c.name for c in definition.background.containers}
 
-    assert names == [
+    # A set, not the list literal this assertion carried until
+    # 2026-09-18 — found broken the day it was first actually
+    # exercised: `save_resource_priority_yaml` (`priority_ui`'s own
+    # `/save`, and `troubleshooting_assistant_ui`'s `/apply`) always
+    # writes `background.containers` sorted alphabetically
+    # (`_dump_section`'s own ordering), so any real save through
+    # either screen re-sorts this file — this real file had simply
+    # never been machine-saved before that date, only hand-edited,
+    # which is what let a literal order survive here unnoticed.
+    # Membership is the fact worth asserting about a hand-editable,
+    # machine-resavable file; order among background containers
+    # carries no declared meaning anywhere this project reads it.
+    assert names == {
         "radarr",
         "sonarr",
         "lidarr",
@@ -492,7 +504,7 @@ def test_the_real_resource_priority_definition_loads():
         "komf",
         "firefly",
         "booklore_db",
-    ]
+    }
 
     by_name = {c.name: c for c in definition.background.containers}
 

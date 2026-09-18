@@ -29,7 +29,35 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **0.7.0 — published 2026-09-12, current.**
+  # **1.0.0 — published 2026-09-18, current.**
+  #
+  #   bigbrother1969/aistack-core:1.0.0
+  #   @sha256:d65c768584def01e8905630dd25da75bc45f8b2948b7eefb4ee7af89872c1776
+  #
+  # Built from 2d1bf58 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 1815 tests with `clean: True`.
+  # 73 artifacts, 16 checks. Before the build, 0.7.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.0.0 entry gives the
+  # full account; in short, this is the point where the two halves
+  # `PLAN-TRAJECTOIRE` (J1 through J8) was building toward are both
+  # real and connected — the governed infrastructure knowledge base
+  # and the AI Runtime that can reason about it, explain a finding,
+  # and, for the one case safe enough to automate without guessing at
+  # a judgement call, apply and verify a fix (the Assistant de
+  # pannes's propose→apply→verify mechanism) — plus Selection UI and
+  # Priorité CPU closed to LAN-only, the last two console cards still
+  # reachable from the public internet.
+  #
+  # **A second, unrelated `1.0.0` tag already existed on Docker Hub**
+  # before this build — see the retracted entry below, dated
+  # 2026-09-11. Retagged `1.0.0-retracted-2026-09-11` today, before
+  # this build, so it stays reachable by name once the live `1.0.0`
+  # tag pointed here instead — the same discipline `0.6.0`'s own
+  # retraction below already used for the same situation.
+  #
+  # **0.7.0 — published 2026-09-12.**
   #
   #   bigbrother1969/aistack-core:0.7.0
   #   @sha256:61a18a664a2e41d22c2e682b1cc0d1e0d09e57806c2b92f3cde44f091013c5ba
@@ -104,7 +132,7 @@ services:
   #
   # **1.0.0 — published 2026-09-11, retracted 2026-09-11.**
   #
-  #   bigbrother1969/aistack-core:1.0.0
+  #   bigbrother1969/aistack-core:1.0.0-retracted-2026-09-11
   #   @sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3
   #
   # Built from 6680e61 on the reference host, behind the four terms
@@ -116,6 +144,11 @@ services:
   # prematurely as the 1.0 boundary; corrected to `0.6.0`, above, same
   # day. Kept here rather than erased — the same reasoning `0.1.0`'s
   # entry below gives for the same kind of correction.
+  #
+  # Originally built as `bigbrother1969/aistack-core:1.0.0`; retagged
+  # `1.0.0-retracted-2026-09-11` on 2026-09-18, once the real 1.0
+  # boundary was ready to build for real, freeing the tag the same
+  # way `0.6.0-retracted`, above, was freed for its own live build.
   #
   # **0.5.0 — published 2026-09-04.**
   #

@@ -112,9 +112,8 @@ not just this version's delta.
   Assistant de pannes already used. The console itself, Architecture and
   Cockpit Santé stay reachable from outside the LAN, unchanged.
 
-`bigbrother1969/aistack-core:1.0.0`, built from `<commit to be filled in
-at publication — the owner's own build, per `OPS-0002`>`, digest `<filled
-in at publication>`.
+`bigbrother1969/aistack-core:1.0.0`, built from `2d1bf58`, digest
+`sha256:d65c768584def01e8905630dd25da75bc45f8b2948b7eefb4ee7af89872c1776`.
 1815 tests, 73 knowledge artifacts, `clean: True`.
 
 ## 0.7.0 — 2026-09-12

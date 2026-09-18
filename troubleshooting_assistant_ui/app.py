@@ -15,8 +15,15 @@ from aistack.ai_runtime.reasoning_history import record_ai_reasoning
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
-from aistack.priority.definition import ResourcePriorityDefinition
-from aistack.priority.yaml import load_resource_priority_yaml
+from aistack.priority.definition import (
+    BackgroundPriorityDefinition,
+    ContainerPriorityDefinition,
+    ResourcePriorityDefinition,
+)
+from aistack.priority.yaml import (
+    load_resource_priority_yaml,
+    save_resource_priority_yaml,
+)
 from aistack.providers.docker import DockerProvider
 from aistack.providers.host.provider import HostProvider
 from aistack.providers.repository import RepositoryProvider
@@ -50,6 +57,20 @@ from aistack.runtime.idle_consumption import find_unexplained_consumption
 # `priority_ui`/`selection_ui`/`network_discovery_ui` carry no test
 # file for their own `app.py`. Verified only by real execution
 # against GIGABYTE, the same way those three already are.
+#
+# **`/finding/{subject}/apply` (2026-09-18)** — the owner's own
+# follow-up once the guided read-only flow above worked end to end:
+# "fait un diagnostic, mais ne propose pas de mécanisme de
+# correction." Scoped through a second governance interview to
+# exactly one fixed, code-known, hand-written action — classing a
+# subject as a `background` container via the already-in-production
+# `save_resource_priority_yaml` (`priority_ui/app.py`'s own `/save`
+# writes the same field) — never anything derived from the AI's own
+# `recommend` text, and never the broader `priority` classification,
+# which needs real judgement (a detector type, CPU thresholds) a
+# single click cannot safely default. See `apply()`'s own docstring
+# below for the full scoping and why the verification after saving
+# is a second real diagnosis, not an assumption.
 REPO_ROOT = Path(__file__).resolve().parents[1]
 repository = RepositoryProvider(REPO_ROOT)
 
@@ -229,4 +250,137 @@ def step(request: Request, subject: str, step: int):
             "finding": session["finding"],
             "answer": answer,
         },
+    )
+
+
+@app.post("/finding/{subject}/apply")
+def apply(subject: str):
+    """
+    Applies the one, single-click-safe fix this assistant knows how
+    to make: declaring `subject` a background container in the
+    governed resource-priority definition — exactly the write
+    `priority_ui/app.py`'s own `/save` route already performs in
+    production (`save_resource_priority_yaml`), scoped here to one
+    container instead of a full-form rewrite.
+
+    Owner's request (2026-09-18): "déclenche une panne facile à
+    corriger... on vérifie que la correction est proposée, qu'on peut
+    l'appliquer et qu'elle corrige effectivement le problème."
+    Answered through a 3-question governance interview, all three
+    "recommandé":
+
+    - **Scope: "background" only, v1.** Never "priority" — that
+      needs a detector type and CPU thresholds, a real judgement call
+      a single click cannot safely default (unlike `priority_ui`'s
+      own `/save`, which asks the owner for those values explicitly
+      in the form before writing them).
+    - **Never the AI's own `recommend` text turned into an action.**
+      This route performs exactly one fixed, code-known,
+      hand-written write — never anything parsed or derived from
+      `answer.response`. The `recommend` step's own suggestion stays
+      a suggestion (GOV-P-001, ARC-P-012); this button is a
+      *separate*, explicitly-confirmed action the owner triggers with
+      its own click, not the recommendation being carried out on its
+      own.
+    - **Verified, not assumed.** `find_unexplained_consumption`
+      (`aistack.runtime.idle_consumption`) flags a container purely
+      because it is absent from both `priority` and `background` —
+      the moment this write declares it, the next `evaluate()` no
+      longer reports the finding at all, with no dependency on the
+      resource-priority monitor's own throttling loop having run
+      yet. This route re-runs `qualified_findings()` immediately
+      after saving and reports plainly whether the subject's finding
+      is actually gone — never claims success without checking.
+    """
+
+    definition, note = resource_priority_definition(RESOURCE_PRIORITY_PATH)
+
+    if definition is None:
+        _SESSIONS.setdefault(subject, {})["applied"] = {
+            "outcome": "error",
+            "message": note,
+        }
+        return RedirectResponse(
+            f"/finding/{quote(subject)}/applied", status_code=303
+        )
+
+    already_priority = any(
+        app_def.container == subject for app_def in definition.priority
+    )
+    already_background = any(
+        container.name == subject
+        for container in definition.background.containers
+    )
+
+    if already_priority:
+        _SESSIONS.setdefault(subject, {})["applied"] = {
+            "outcome": "refused",
+            "message": (
+                f"{subject} est déjà classé « priority » dans "
+                f"resource_priority.yml — cet assistant ne sait "
+                f"appliquer que le classement « background » (utilise "
+                f"priority_ui, http://GIGABYTE:8182, pour changer un "
+                f"classement priority)."
+            ),
+        }
+        return RedirectResponse(
+            f"/finding/{quote(subject)}/applied", status_code=303
+        )
+
+    if already_background:
+        action_message = (
+            f"{subject} était déjà classé « background » dans "
+            f"resource_priority.yml — rien à écrire."
+        )
+    else:
+        updated = ResourcePriorityDefinition(
+            priority=definition.priority,
+            background=BackgroundPriorityDefinition(
+                default_throttled_cpus=definition.background.default_throttled_cpus,
+                containers=tuple(
+                    sorted(
+                        (
+                            *definition.background.containers,
+                            ContainerPriorityDefinition(name=subject),
+                        ),
+                        key=lambda container: container.name,
+                    )
+                ),
+            ),
+            unlimited_cpus=definition.unlimited_cpus,
+            grace_seconds=definition.grace_seconds,
+        )
+        save_resource_priority_yaml(updated, RESOURCE_PRIORITY_PATH)
+        action_message = (
+            f"{subject} ajouté à background.containers dans "
+            f"resource_priority.yml (ralenti partagé : "
+            f"{updated.background.default_throttled_cpus} CPU dès que le "
+            f"moniteur resource-priority tourne)."
+        )
+
+    findings_after, _ = qualified_findings()
+    still_present = any(f.subject == subject for f in findings_after)
+
+    _SESSIONS.setdefault(subject, {})["applied"] = {
+        "outcome": "unresolved" if still_present else "resolved",
+        "message": action_message,
+        "still_present": still_present,
+    }
+
+    return RedirectResponse(f"/finding/{quote(subject)}/applied", status_code=303)
+
+
+@app.get("/finding/{subject}/applied", response_class=HTMLResponse)
+def applied(request: Request, subject: str):
+    session = _SESSIONS.get(subject) or {}
+    result = session.get("applied")
+
+    if result is None:
+        status = f"Aucune application en cours pour {subject} — relance depuis la liste."
+        return RedirectResponse(f"/?status={quote(status)}", status_code=303)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="applied.html",
+        context={"subject": subject, "result": result},
     )

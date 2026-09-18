@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>AIStack — Assistant de pannes — {{ subject }} — correction</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.2rem; }
+    .back-link {
+      display: inline-block; margin-bottom: 1.2rem; font-size: .88rem;
+      color: #1f6feb; text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .top-links { display: flex; justify-content: space-between; align-items: center; }
+    .outcome {
+      padding: .9rem 1.1rem; border-radius: 8px; margin: 1rem 0; font-size: .95rem;
+      border: 1px solid;
+    }
+    .outcome.resolved { background: #e8f5e9; border-color: #a5d6a7; color: #1b5e20; }
+    .outcome.unresolved { background: #fff1cc; border-color: #e0b34d; color: #7a5b00; }
+    .outcome.refused, .outcome.error { background: #fdecea; border-color: #e08e8e; color: #7a1f1f; }
+    .action { margin: 1rem 0; line-height: 1.5; }
+    code { background: #eee; padding: .1rem .3rem; border-radius: 4px; }
+    .verify { font-size: .88rem; color: #666; margin-top: .6rem; }
+  </style>
+</head>
+<body>
+  <div class="top-links">
+    <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
+    <a class="back-link" href="/">Liste des pannes</a>
+  </div>
+
+  <header>
+    <h1>{{ subject }}</h1>
+    <p>Résultat de l'application de la correction.</p>
+  </header>
+
+  {% if result.outcome == "resolved" %}
+    <div class="outcome resolved">
+      ✓ Corrigé — {{ subject }} n'apparaît plus comme panne qualifiée après
+      relance du diagnostic.
+    </div>
+  {% elif result.outcome == "unresolved" %}
+    <div class="outcome unresolved">
+      ⚠ Appliqué, mais {{ subject }} apparaît toujours comme panne qualifiée
+      après relance du diagnostic — la classification a été écrite, une
+      vérification manuelle reste utile.
+    </div>
+  {% elif result.outcome == "refused" %}
+    <div class="outcome refused">✗ Rien n'a été appliqué.</div>
+  {% else %}
+    <div class="outcome error">✗ Rien n'a été appliqué — erreur.</div>
+  {% endif %}
+
+  <p class="action">{{ result.message }}</p>
+
+  {% if result.outcome in ("resolved", "unresolved") %}
+    <p class="verify">
+      Vérification : le fichier <code>resource_priority.yml</code> a été
+      relu et <code>evaluate()</code> relancé juste après l'écriture — ce
+      n'est pas une supposition, c'est un second diagnostic réel.
+    </p>
+  {% endif %}
+
+  <a class="back-link" href="/">&larr; Retour à la liste des pannes</a>
+</body>
+</html>

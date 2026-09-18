@@ -40,6 +40,12 @@
     }
     nav.steps a.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
     .top-links { display: flex; justify-content: space-between; align-items: center; }
+    button.apply {
+      padding: .6rem 1.1rem; font-size: .95rem; cursor: pointer; font-weight: bold;
+      border: 1px solid #2e7d32; border-radius: 6px; background: #2e7d32; color: white;
+      margin-top: 1rem;
+    }
+    .apply-note { color: #666; font-size: .82rem; margin: .5rem 0 0; }
   </style>
 </head>
 <body>
@@ -77,7 +83,7 @@
       <h2>Explication en clair (explain)</h2>
     {% else %}
       <h2>Recommandation (recommend)</h2>
-      <div class="warning">Suggestion pour toi — jamais exécutée automatiquement.</div>
+      <div class="warning">Suggestion pour toi — rien ne s'applique sans ton clic explicite sur « Appliquer » ci-dessous.</div>
     {% endif %}
 
     {% if answer.reachable %}
@@ -85,6 +91,17 @@
       <p class="response">{{ answer.response }}</p>
     {% else %}
       <p class="unreachable">Le moteur IA n'a pas pu être contacté : {{ answer.unreachable_reason }}</p>
+    {% endif %}
+
+    {% if step == total_steps %}
+      <form method="post" action="/finding/{{ subject | urlencode }}/apply">
+        <button class="apply" type="submit">Appliquer la correction (classer « background »)</button>
+      </form>
+      <p class="apply-note">
+        Seule action que ce bouton sait faire : classer <strong>{{ subject }}</strong>
+        comme conteneur « background » dans <code>resource_priority.yml</code> —
+        jamais la réponse ci-dessus, toujours cette action fixe et connue à l'avance.
+      </p>
     {% endif %}
   {% endif %}
 

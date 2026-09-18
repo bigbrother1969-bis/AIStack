@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import socket
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -52,7 +53,7 @@ def _multistatus(*responses: str) -> bytes:
 
 class Daemon:
     """
-    A Nextcloud that answers `PROPFIND` on a real socket.
+    A Nextcloud that answers `PROPFIND` and `GET` on a real socket.
 
     Same reasoning as `test_syncthing_provider.py`'s own `Daemon`: a
     stub passed in as a callable would test the code around the
@@ -65,6 +66,9 @@ class Daemon:
         self.bodies: dict[str, bytes] = {}
         self.status: dict[str, int] = {}
         self.seen: list[tuple[str, str, str, bytes]] = []
+        self.get_seen: list[tuple[str, str]] = []
+        self.get_bodies: dict[str, bytes] = {}
+        self.get_status: dict[str, int] = {}
         self.delay = 0.0
 
 
@@ -103,6 +107,24 @@ def url(daemon: Daemon):
 
             self.send_response(code)
             self.send_header("Content-Type", "application/xml; charset=utf-8")
+            self.send_header("Content-Length", str(len(reply)))
+            self.end_headers()
+
+            if code < 300:
+                self.wfile.write(reply)
+
+        def do_GET(self) -> None:
+            parsed = urlparse(self.path)
+
+            state.get_seen.append(
+                (unquote(parsed.path), self.headers.get("Authorization", ""))
+            )
+
+            code = state.get_status.get(unquote(parsed.path), 200)
+            reply = state.get_bodies.get(unquote(parsed.path), b"")
+
+            self.send_response(code)
+            self.send_header("Content-Type", "application/octet-stream")
             self.send_header("Content-Length", str(len(reply)))
             self.end_headers()
 
@@ -332,3 +354,72 @@ def test_depth_one_is_asked_so_subfolders_are_not_recursed(daemon, url):
     _path_seen, _authorization, depth, _body = daemon.seen[0]
 
     assert depth == "1"
+
+
+def _file_path(name: str) -> str:
+    return f"{_path()}/{name}"
+
+
+def test_a_downloaded_file_is_hashed_and_sized(daemon, url):
+    content = b"a fairly ordinary JPEG, or close enough for a test"
+    daemon.get_bodies[_file_path("IMG_0001.HEIC")] = content
+
+    outcome = NextcloudProvider(
+        url, USERNAME, APP_PASSWORD, FOLDER
+    ).download("IMG_0001.HEIC")
+
+    assert outcome["downloaded"] is True
+    assert outcome["downloaded_size"] == len(content)
+    assert outcome["sha256"] == hashlib.sha256(content).hexdigest()
+    assert outcome["reason"] == ""
+
+
+def test_the_download_also_carries_the_password_only_in_the_header(
+    daemon, url
+):
+    NextcloudProvider(url, USERNAME, APP_PASSWORD, FOLDER).download(
+        "IMG_0001.HEIC"
+    )
+
+    path, authorization = daemon.get_seen[0]
+
+    expected = "Basic " + base64.b64encode(
+        f"{USERNAME}:{APP_PASSWORD}".encode()
+    ).decode()
+
+    assert authorization == expected
+    assert APP_PASSWORD not in path
+
+
+def test_a_missing_file_on_download_says_so(daemon, url):
+    daemon.get_status[_file_path("IMG_0002.HEIC")] = 404
+
+    outcome = NextcloudProvider(
+        url, USERNAME, APP_PASSWORD, FOLDER
+    ).download("IMG_0002.HEIC")
+
+    assert outcome["downloaded"] is False
+    assert "status 404" in outcome["reason"]
+    assert outcome["downloaded_size"] is None
+    assert outcome["sha256"] is None
+
+
+def test_an_unreachable_server_fails_the_download_as_a_state(url):
+    outcome = NextcloudProvider(
+        f"http://127.0.0.1:{closed_port()}", USERNAME, APP_PASSWORD, FOLDER
+    ).download("IMG_0001.HEIC")
+
+    assert outcome["downloaded"] is False
+    assert "could not be reached" in outcome["reason"]
+
+
+def test_a_missing_app_password_fails_the_download_without_asking(
+    daemon, url
+):
+    outcome = NextcloudProvider(url, USERNAME, "", FOLDER).download(
+        "IMG_0001.HEIC"
+    )
+
+    assert outcome["downloaded"] is False
+    assert "no app password" in outcome["reason"]
+    assert daemon.get_seen == []

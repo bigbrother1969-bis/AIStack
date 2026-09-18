@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -117,6 +118,118 @@ class NextcloudProvider:
 
         return observation
 
+    def download(self, name: str) -> dict[str, Any]:
+        """
+        Fetch one file's actual bytes and hash them — a second,
+        independent observation of the same file `collect()` already
+        described from `PROPFIND`'s metadata.
+
+        This is still collection, not qualification (`ARC-P-012`):
+        it reports what a `GET` returned and what was computed from
+        it, never whether that makes the upload "safe". P2
+        (`aistack.providers.nextcloud.verify.verify_uploads`) is what
+        compares this against the `PROPFIND` observation and decides.
+
+        The `sha256` is reported for the audit trail even though
+        nothing yet exists to compare it against — there is no
+        independent copy of the original file this provider can
+        reach (the phone's own copy is outside AIStack entirely) — so
+        today's recoupment is the size agreement between two separate
+        requests, `PROPFIND` and `GET`, not a content-hash match.
+        """
+
+        if not self.app_password:
+            return self._download_failure(
+                name,
+                "no app password was provided, so Nextcloud was not asked",
+            )
+
+        path = self._file_path(name)
+
+        request = urllib.request.Request(
+            f"{self.url}{path}",
+            method="GET",
+            headers={"Authorization": self._authorization_header()},
+        )
+
+        try:
+            with urllib.request.urlopen(
+                request, timeout=self.timeout
+            ) as response:
+                hasher = hashlib.sha256()
+                downloaded_size = 0
+
+                while True:
+                    chunk = response.read(65536)
+
+                    if not chunk:
+                        break
+
+                    hasher.update(chunk)
+                    downloaded_size += len(chunk)
+
+        except TimeoutError:
+            return self._download_failure(name, self._timed_out())
+
+        except urllib.error.HTTPError as error:
+            return self._download_failure(
+                name,
+                f"Nextcloud refused GET {path} with status "
+                f"{error.code} ({error.reason})",
+            )
+
+        except urllib.error.URLError as error:
+
+            if isinstance(error.reason, TimeoutError):
+                return self._download_failure(name, self._timed_out())
+
+            return self._download_failure(
+                name,
+                f"Nextcloud at {self.url} could not be reached: "
+                f"{error.reason}",
+            )
+
+        except OSError as error:
+            return self._download_failure(
+                name,
+                f"Nextcloud answered GET with something unreadable: "
+                f"{error}",
+            )
+
+        return {
+            "name": name,
+            "downloaded": True,
+            "reason": "",
+            "downloaded_size": downloaded_size,
+            "sha256": hasher.hexdigest(),
+        }
+
+    @staticmethod
+    def _download_failure(name: str, reason: str) -> dict[str, Any]:
+        return {
+            "name": name,
+            "downloaded": False,
+            "reason": reason,
+            "downloaded_size": None,
+            "sha256": None,
+        }
+
+    def _file_path(self, name: str) -> str:
+        return (
+            "/remote.php/dav/files/"
+            + urllib.parse.quote(self.username)
+            + "/"
+            + urllib.parse.quote(self.folder)
+            + "/"
+            + urllib.parse.quote(name)
+        )
+
+    def _authorization_header(self) -> str:
+        credentials = base64.b64encode(
+            f"{self.username}:{self.app_password}".encode()
+        ).decode()
+        return f"Basic {credentials}"
+
     def _propfind(self) -> tuple[list[dict[str, Any]], bool, str]:
         path = (
             "/remote.php/dav/files/"
@@ -125,16 +238,12 @@ class NextcloudProvider:
             + urllib.parse.quote(self.folder)
         )
 
-        credentials = base64.b64encode(
-            f"{self.username}:{self.app_password}".encode()
-        ).decode()
-
         request = urllib.request.Request(
             f"{self.url}{path}",
             data=_PROPFIND_BODY,
             method="PROPFIND",
             headers={
-                "Authorization": f"Basic {credentials}",
+                "Authorization": self._authorization_header(),
                 "Content-Type": "application/xml; charset=utf-8",
                 "Depth": "1",
             },

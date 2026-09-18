@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>AIStack — Assistant de pannes</title>
+  <style>
+    body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .warning {
+      padding: .8rem 1rem; border-radius: 6px; background: #fff1cc;
+      border: 1px solid #e0b34d; margin: 1rem 0; font-size: .88rem;
+    }
+    .status {
+      padding: .8rem 1rem; border-radius: 6px; background: #e8f5e9;
+      border: 1px solid #a5d6a7; margin: 1rem 0;
+    }
+    ul.findings { list-style: none; margin: 0 0 1.5rem; padding: 0; }
+    ul.findings li {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: .9rem 1.1rem;
+      margin-bottom: .7rem; background: #fafafa;
+    }
+    .subject { font-weight: 700; margin-right: .5rem; }
+    .signature { color: #666; font-size: .8rem; font-family: monospace; }
+    .interpretation { margin: .4rem 0 0; font-size: .9rem; }
+    button {
+      padding: .5rem 1rem; font-size: .9rem; cursor: pointer;
+      border: 1px solid #bbb; border-radius: 6px; background: white; white-space: nowrap;
+    }
+    button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+    .empty { color: #666; font-style: italic; margin: 0 0 1.5rem; }
+    .back-link {
+      display: inline-block; margin-bottom: 1.2rem; font-size: .88rem;
+      color: #1f6feb; text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+    code { background: #eee; padding: .1rem .3rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <!--
+    Lien direct LAN (GIGABYTE:8183), jamais l'adresse publique
+    aistack.persiaut-family.fr — même discipline que
+    network_discovery_ui/templates/index.html : cet écran reste
+    volontairement LAN-only (voir troubleshooting_assistant_ui/app.py).
+  -->
+  <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
+
+  <header>
+    <h1>Assistant de pannes</h1>
+    <p class="meta">
+      Pannes réelles détectées maintenant par <code>evaluate</code> — un
+      accompagnement pas à pas, jamais un cas inventé.
+    </p>
+  </header>
+
+  {% if status %}
+    <div class="status">{{ status }}</div>
+  {% endif %}
+
+  {% if note %}
+    <div class="warning">{{ note }}</div>
+  {% endif %}
+
+  {% if findings %}
+    <ul class="findings">
+      {% for finding in findings %}
+        <li>
+          <div>
+            <span class="subject">{{ finding.subject }}</span>
+            <span class="signature">{{ finding.signature }}</span>
+            <p class="interpretation">{{ finding.interpretation }}</p>
+          </div>
+          <form method="post" action="/finding/{{ finding.subject | urlencode }}/start">
+            <button class="primary" type="submit">Commencer →</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">
+      Aucune panne réelle qualifiée en ce moment — rien à guider. Cette
+      page ne propose jamais de cas inventé ; repasse plus tard, ou
+      relance <code>ai_reason</code> en ligne de commande pour vérifier.
+    </p>
+  {% endif %}
+</body>
+</html>

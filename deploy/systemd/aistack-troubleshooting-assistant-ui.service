@@ -1,0 +1,61 @@
+# AIStack — Troubleshooting Assistant UI
+#
+# A guided, step-by-step GUI over evaluate → reason/explain →
+# recommend, one real qualified finding at a time
+# (claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md) — the new
+# milestone the owner asked for on closing J8
+# (claude/PLAN-J8-AI-TROUBLESHOOTING-ASSISTANT-2026-09-18.md):
+# "une sorte de chatbot interactif... pour le guider en mode pas à
+# pas." Built as its own small app rather than giving the existing
+# static console a backend — the same pattern
+# aistack-priority-ui.service, aistack-selection-ui.service and
+# aistack-network-discovery-ui.service already are.
+#
+# **LAN-only, on purpose — but the bind address is the same as the
+# other three UIs (0.0.0.0), reachable from anywhere on the owner's
+# LAN.** What keeps this LAN-only is that it has NO Proxy Host entry
+# anywhere — see run_troubleshooting_assistant_ui.sh's own comment.
+# Do not add a reverse-proxy entry for this unit.
+#
+# Runs on the host, not in a container: it calls Ollama over the LAN
+# loopback (ai_runtime.yml, host 127.0.0.1) and shells out to
+# `docker stats`/`sensors` the same way `aistack.cli.ai_reason`
+# already does on GIGABYTE directly.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-troubleshooting-assistant-ui.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-troubleshooting-assistant-ui
+#
+# Before enabling it as a service, confirm nothing else already
+# holds port 8185:
+#
+#   ss -ltnp | grep :8185
+#
+# Watch it with:
+#
+#   journalctl -u aistack-troubleshooting-assistant-ui -f
+
+[Unit]
+Description=AIStack Troubleshooting Assistant UI (guided pas-à-pas over real findings, LAN-only)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_troubleshooting_assistant_ui.sh
+Restart=on-failure
+RestartSec=5
+
+# uvicorn already shuts down cleanly on SIGTERM (drains in-flight
+# requests, then exits) — same as the other three UIs' own units.
+# An in-flight `/start` request mid-Ollama-call is simply cut short
+# on a stop; nothing here holds a lock or a partial write that needs
+# releasing (record_ai_reasoning only runs after all three answers
+# are already in hand).
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

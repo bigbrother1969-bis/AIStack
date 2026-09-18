@@ -48,6 +48,16 @@
 #     owner's own LAN — decided with the owner 2026-09-12 that this
 #     stays unreachable from the public internet, unlike every other
 #     card on this page.
+#   - Assistant de pannes — added 2026-09-18
+#     (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`), a
+#     separate systemd/uvicorn process on GIGABYTE:8185 ("next free
+#     port after network_discovery_ui's 8184"),
+#     `troubleshooting_assistant_ui`. LAN-only for the same reason as
+#     Découverte réseau: not a security concern here (this screen
+#     only reads real findings and calls Ollama, never SSH), but a
+#     deliberate v1 choice confirmed with the owner — reduce the
+#     exposed surface while real usage is still being discovered,
+#     widen later only if asked.
 
 links:
   - name: Selection UI
@@ -71,3 +81,9 @@ links:
       Utilisateurs SSH candidats pour le scan réseau — service
       systemd/uvicorn, LAN uniquement (GIGABYTE:8184)
     url: http://GIGABYTE:8184
+  - name: Assistant de pannes
+    description: >-
+      Guide pas à pas evaluate → reason/explain/recommend sur une
+      panne réelle — service systemd/uvicorn, LAN uniquement
+      (GIGABYTE:8185)
+    url: http://GIGABYTE:8185

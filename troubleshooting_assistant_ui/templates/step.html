@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>AIStack — Assistant de pannes — {{ subject }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .back-link {
+      display: inline-block; margin-bottom: 1.2rem; font-size: .88rem;
+      color: #1f6feb; text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .progress { display: flex; gap: .4rem; margin: 0 0 1.5rem; }
+    .progress span {
+      width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 1px solid #bbb;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; color: #666; background: white;
+    }
+    .progress span.done { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+    .progress span.current { background: #1f6feb; border-color: #1f6feb; color: white; font-weight: bold; }
+    dl.config {
+      display: grid; grid-template-columns: auto 1fr; gap: .3rem 1rem;
+      font-size: .9rem; margin: 1rem 0 1.5rem;
+    }
+    dl.config dt { color: #666; font-weight: 600; }
+    dl.config dd { margin: 0; }
+    .warning {
+      padding: .8rem 1rem; border-radius: 6px; background: #fff1cc;
+      border: 1px solid #e0b34d; margin: 1rem 0; font-size: .88rem;
+    }
+    .model { color: #666; font-size: .82rem; margin-bottom: .3rem; }
+    .response, .unreachable { white-space: pre-wrap; line-height: 1.5; }
+    .unreachable { color: #b00020; }
+    nav.steps { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; gap: 1rem; }
+    nav.steps a {
+      padding: .5rem 1rem; font-size: .9rem; border: 1px solid #bbb; border-radius: 6px;
+      text-decoration: none; color: #1f2933; background: white;
+    }
+    nav.steps a.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
+
+  <header>
+    <h1>{{ subject }}</h1>
+    <p class="meta">Étape {{ step }}/{{ total_steps }} — {{ finding.signature }}</p>
+  </header>
+
+  <div class="progress">
+    {% for n in range(1, total_steps + 1) %}
+      <span class="{{ 'done' if n < step else ('current' if n == step else '') }}">{{ n }}</span>
+    {% endfor %}
+  </div>
+
+  {% if step == 1 %}
+    <h2>La panne détectée</h2>
+    <p>{{ finding.interpretation }}</p>
+    <dl class="config">
+      <dt>Confiance</dt>
+      <dd>{{ finding.confidence }}</dd>
+      <dt>Qualifications</dt>
+      <dd>{{ finding.qualifications | join(', ') if finding.qualifications else '—' }}</dd>
+      <dt>Remédiation déclarée</dt>
+      <dd>{{ finding.remediation }}</dd>
+    </dl>
+  {% else %}
+    {% if step == 2 %}
+      <h2>Raisonnement (reason)</h2>
+    {% elif step == 3 %}
+      <h2>Explication en clair (explain)</h2>
+    {% else %}
+      <h2>Recommandation (recommend)</h2>
+      <div class="warning">Suggestion pour toi — jamais exécutée automatiquement.</div>
+    {% endif %}
+
+    {% if answer.reachable %}
+      <p class="model">Modèle : {{ answer.model }}</p>
+      <p class="response">{{ answer.response }}</p>
+    {% else %}
+      <p class="unreachable">Le moteur IA n'a pas pu être contacté : {{ answer.unreachable_reason }}</p>
+    {% endif %}
+  {% endif %}
+
+  <nav class="steps">
+    <div>
+      {% if step > 1 %}
+        <a href="/finding/{{ subject | urlencode }}/step/{{ step - 1 }}">← Précédent</a>
+      {% endif %}
+    </div>
+    <div>
+      {% if step < total_steps %}
+        <a class="primary" href="/finding/{{ subject | urlencode }}/step/{{ step + 1 }}">Suivant →</a>
+      {% else %}
+        <a href="/">← Retour à la liste des pannes</a>
+      {% endif %}
+    </div>
+  </nav>
+</body>
+</html>

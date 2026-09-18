@@ -1,0 +1,28 @@
+# troubleshooting_assistant_ui's own dependencies, deliberately not
+# in pyproject.toml — same reasoning as priority_ui/requirements.txt,
+# selection_ui/requirements.txt and
+# network_discovery_ui/requirements.txt (decision #9, 2026-08-29):
+# fastapi, uvicorn and jinja2 are not knowledge this heritage is
+# verified on, and pulling them into the governed venv would make
+# every pytest run depend on packages the test suite never touches.
+#
+# Installed into a dedicated environment by
+# scripts/setup_troubleshooting_assistant_ui_env.sh, never into
+# .venv. See run_troubleshooting_assistant_ui.sh, which calls that
+# environment by path rather than relying on PATH order — the gap
+# run_selection_ui.sh/run_priority_ui.sh both document hitting first.
+#
+# No python-multipart here: unlike network_discovery_ui's `/add` and
+# `/remove`, this screen's one side-effecting route
+# (`POST /finding/{subject}/start`) reads nothing from a form body —
+# the subject travels in the URL path, not a posted field.
+
+fastapi
+uvicorn
+jinja2
+
+# Not ungoverned: pyproject.toml already declares PyYAML as the
+# heritage's one dependency — this line exists because this file
+# installs into a second, separate interpreter (see above), and
+# PYTHONPATH alone does not install what `aistack` itself depends on.
+PyYAML>=6.0

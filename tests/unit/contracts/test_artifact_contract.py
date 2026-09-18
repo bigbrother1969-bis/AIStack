@@ -2,6 +2,8 @@ from dataclasses import MISSING, fields
 from datetime import datetime
 
 from aistack.contracts.artifact import KnowledgeArtifact
+from aistack.contracts.knowledge_lifecycle import KnowledgeLifecycle
+from aistack.contracts.knowledge_score import KnowledgeScore
 
 
 def test_knowledge_artifact_creation():
@@ -80,6 +82,56 @@ def test_no_default_invents_a_qualification():
             f"{name} is a qualification: a producer must state "
             "it, even to state that it is unknown"
         )
+
+
+def test_lifecycle_and_score_default_to_none():
+    """
+    Merged from the second, unwired `KnowledgeArtifact` definition
+    (`aistack.kernel.knowledge.artifact.model`, `GOV-0002/OS-058`,
+    resolved 2026-09-18) at the owner's choice. Neither field has
+    ever been populated by a real producer, so a producer that has
+    not scored or staged an artifact says nothing about it — `None`,
+    not a synthetic `KnowledgeLifecycle` member or a fabricated
+    `KnowledgeScore(confidence=0.0)`, the same Article 12 discipline
+    `confidence`/`status` above already follow.
+    """
+
+    artifact = KnowledgeArtifact(
+        id="TEST-004",
+        title="Lifecycle Default Test Artifact",
+        declared_type="Test Artifact",
+        domain="Foundation",
+        semantic_type="Principle",
+        criticality="C1",
+        owner="AIStack",
+        source="tests/sample.md",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    assert artifact.lifecycle is None
+    assert artifact.score is None
+
+
+def test_lifecycle_and_score_can_be_declared():
+
+    artifact = KnowledgeArtifact(
+        id="TEST-005",
+        title="Lifecycle Declared Test Artifact",
+        declared_type="Test Artifact",
+        domain="Foundation",
+        semantic_type="Principle",
+        criticality="C1",
+        owner="AIStack",
+        source="tests/sample.md",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        lifecycle=KnowledgeLifecycle.VALIDATED,
+        score=KnowledgeScore(confidence=0.82),
+    )
+
+    assert artifact.lifecycle is KnowledgeLifecycle.VALIDATED
+    assert artifact.score.confidence == 0.82
 
 
 def test_knowledge_artifact_is_immutable():

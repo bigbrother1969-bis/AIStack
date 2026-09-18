@@ -176,6 +176,13 @@ def test_the_rule_is_measured_over_a_heritage_that_can_break_it():
     superseded by `aistack.kernel.evidence`'s `Collector`/
     `Normalizer` — Protocols, not ABCs) — one fewer abstract base
     declared, not a floor quietly re-measured to hide it.
+
+    **Lowered to eighteen on 2026-09-18**, when `GOV-0002/OS-058`
+    removed `aistack.kernel.knowledge.repository.contract
+    .KnowledgeArtifactRepository` — an ABC declaring `save`/`get`/
+    `list`, whose only implementation was an in-memory dict never
+    called from any CLI or generator. Same reason, same discipline:
+    one fewer real abstract base, not a re-measured floor.
     """
 
     bases = [
@@ -184,4 +191,4 @@ def test_the_rule_is_measured_over_a_heritage_that_can_break_it():
         if getattr(cls, "__abstractmethods__", frozenset())
     ]
 
-    assert len(bases) >= 19
+    assert len(bases) >= 18

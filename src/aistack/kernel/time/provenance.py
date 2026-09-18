@@ -39,6 +39,15 @@ class Provenance:
     disposition (merge, rewrite, or removal) is Knowledge Heritage
     History's concern, not Time Foundation's, and is tracked as its
     own open `GOV-0002` entry rather than folded into J3's scope.
+
+    **Note added 2026-09-18 — the paragraph above no longer holds.**
+    `GOV-0002/OS-058` resolved: the second `KnowledgeArtifact` and
+    its `KnowledgeProvenance` were removed. `KnowledgeLifecycle` and
+    `KnowledgeScore`, the two fields of that pair the owner chose to
+    keep, were merged into the production `KnowledgeArtifact`
+    (`aistack.contracts.artifact`) — `KnowledgeProvenance` itself was
+    not: this contract, `Provenance`, already supersedes it, exactly
+    as the paragraph above always said.
     """
 
     origin: str

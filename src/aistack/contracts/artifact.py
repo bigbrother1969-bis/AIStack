@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+from aistack.contracts.knowledge_lifecycle import KnowledgeLifecycle
+from aistack.contracts.knowledge_score import KnowledgeScore
 from aistack.contracts.undeclared import UNDECLARED
 
 
@@ -86,3 +88,21 @@ class KnowledgeArtifact:
 
     # Extensible metadata
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    # Merged from the second, unwired `KnowledgeArtifact` definition
+    # (`aistack.kernel.knowledge.artifact.model`, `GOV-0002/OS-058`,
+    # resolved 2026-09-18) at the owner's choice, rather than
+    # discarded along with the rest of it — that class also carried
+    # a `provenance`/`version: int` pair, already superseded for the
+    # streams that need one by `aistack.kernel.time`'s `Provenance`/
+    # `VersionId` (J3), so nothing of those two travelled here.
+    #
+    # `None` by default, not a synthetic member of `KnowledgeLifecycle`
+    # or a fabricated `KnowledgeScore(confidence=0.0)`: neither field
+    # has ever been populated by a real producer, so a producer that
+    # has not scored or staged an artifact says nothing about it,
+    # per the same Article 12 discipline the four qualification
+    # fields above already follow — an invented "discovered" or a
+    # confidence of zero would assert a measurement nobody made.
+    lifecycle: KnowledgeLifecycle | None = None
+    score: KnowledgeScore | None = None

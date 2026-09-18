@@ -31,6 +31,15 @@ class VersionId:
     like every other contract in this heritage) but is exactly the
     "assigned by hand" failure mode this contract exists to move
     away from; real callers go through `VersionSequence.next()`.
+
+    **Note added 2026-09-18** — `aistack.kernel.knowledge.artifact
+    .model.KnowledgeArtifact`, named above only to place this
+    contract against the one thing in the heritage it replaced, no
+    longer exists: `GOV-0002/OS-058` resolved by removing it, per
+    the owner's choice, merging only its `lifecycle`/`score` fields
+    into the production `KnowledgeArtifact`
+    (`aistack.contracts.artifact`) — never its bare `version: int`,
+    which is what this contract already superseded.
     """
 
     subject: str

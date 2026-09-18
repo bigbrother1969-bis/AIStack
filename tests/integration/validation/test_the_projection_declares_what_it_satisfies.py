@@ -54,13 +54,21 @@ def test_the_rule_is_measured_over_a_heritage_that_can_break_it(
     refactor made `declared_by` stop reaching the bundle, every
     declaration would vanish, the test above would go on passing,
     and it would be verifying nothing.
+
+    **Lowered to thirty-nine on 2026-09-18**, when `GOV-0002/OS-058`
+    removed `aistack.kernel.knowledge.repository.contract
+    .KnowledgeArtifactRepository` — one fewer real declaration, not
+    a floor quietly re-measured to hide it. `implementations` stays
+    at its 2026-08-28 floor: the heritage has grown well past 154
+    since, so removing one class along with that ABC does not
+    threaten it.
     """
 
     inventory = projection.contract_inventory
 
     assert inventory is not None
     assert inventory.declarations_measured
-    assert inventory.declaring >= 40
+    assert inventory.declaring >= 39
     assert inventory.implementations >= 154
 
 

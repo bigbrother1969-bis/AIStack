@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Accepted
   owner: Architecture
   created: 2026-07-07
-  updated: 2026-09-04
+  updated: 2026-09-18
 ---
 
 # ADR-0004 - AIStack Kernel Architecture
@@ -302,11 +302,14 @@ terminal state. It is left out of the table for the reason ADR-0008 records for
 its own fifth key decision: a row that can never be closed is reported as
 unfinished at every projection for ever.
 
-*`KnowledgeArtifact` is declared four times* — `kernel/knowledge/artifact/model.py`
-and three classes outside the Kernel, in `contracts/`, `knowledge/contracts/`
-and `transport/contracts/`. The concept is in the Kernel, which is what this
-decision requires; that it is also in three other places is FDN-P-005's subject
-and not a row here.
+*`KnowledgeArtifact` was declared four times, until 2026-09-18* —
+`kernel/knowledge/artifact/model.py` and three classes outside the Kernel, in
+`contracts/`, `knowledge/contracts/` and `transport/contracts/`. `GOV-0002/OS-058`
+resolved the Kernel's own duplicate: it was never wired to a real persistence
+path, and is removed rather than kept as a second declaration of the concept
+this decision places in the Kernel. `KnowledgeArtifact` is declared three
+times now, still outside the Kernel — `contracts/`, `knowledge/contracts/` and
+`transport/contracts/` — which remains FDN-P-005's subject and not a row here.
 
 ---
 

@@ -113,6 +113,35 @@ IGNORED_BASES = {"Protocol", "Generic", "object", "ABC"}
 _UNSET = object()
 
 
+def _own_member(implementation: type, name: str) -> object:
+    """
+    The value `implementation` itself declares for `name`, read
+    across its own `__mro__` — never the metaclass fallback a live
+    `getattr`/`hasattr` exposes for a dunder no class in that chain
+    defines.
+
+    `getattr(implementation, "__call__")` does not fail when a class
+    defines no `__call__` of its own: attribute lookup on a class
+    object falls through to its metaclass, and `type.__call__` — what
+    constructs every instance — answers instead, exposed by
+    `inspect.signature` as the fully generic `(*args, **kwargs)`.
+    `implementation.__mro__` never contains `type` for an ordinary
+    class, so walking it and reading each base's own `vars()` —
+    exactly what `protocol_members` already does on the *protocol*
+    side — reports `__call__` absent unless some real base in that
+    chain actually defines one. GOV-0002/OS-059: measured on
+    `Normalizer[TIn, TOut]`, this leak reported it satisfied by 192
+    classes across the package, every concrete class the inventory
+    could import, none of which had ever declared a `__call__`.
+    """
+
+    for base in implementation.__mro__:
+        if name in vars(base):
+            return vars(base)[name]
+
+    return _UNSET
+
+
 def protocol_members(protocol: type) -> set[str]:
     """
     The names a contract requires, including the ones it inherits.
@@ -168,7 +197,7 @@ def missing_members(
     return {
         name
         for name in protocol_members(protocol)
-        if not hasattr(implementation, name)
+        if _own_member(implementation, name) is _UNSET
     }
 
 
@@ -192,7 +221,7 @@ def incompatible_members(
     ):
 
         expected = getattr(protocol, name, _UNSET)
-        actual = getattr(implementation, name)
+        actual = _own_member(implementation, name)
 
         if expected is _UNSET:
             # An annotated attribute: the contract states that the

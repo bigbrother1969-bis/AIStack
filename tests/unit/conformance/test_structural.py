@@ -388,3 +388,88 @@ def test_satisfying_a_base_contract_does_not_satisfy_its_extension():
     assert satisfies(Store, OnlyStore)
     assert not satisfies(WritableStore, OnlyStore)
     assert missing_members(WritableStore, OnlyStore) == {"put"}
+
+
+# --------------------------------------------------------------------
+# A callable Protocol is not satisfied by every class in the package
+#
+# GOV-0002/OS-059. `getattr(implementation, "__call__")` never fails:
+# attribute lookup on a class object that defines no `__call__` of
+# its own falls through to the metaclass, and `type.__call__` — what
+# constructs every instance — answers instead, exposed by
+# `inspect.signature` as the fully generic `(*args, **kwargs)`. Two
+# declared parameters against that generic pair used to pass both the
+# presence check and the arity check, for any class at all.
+# --------------------------------------------------------------------
+
+
+class CallableContract(Protocol):
+    def __call__(self, raw: str, /) -> object: ...
+
+
+def test_a_class_declaring_no_dunder_call_does_not_satisfy_one():
+    """
+    `Plain` defines no `__call__`. Before this fix, `missing_members`
+    read `hasattr(Plain, "__call__")` as `True` (the metaclass
+    fallback), and `incompatible_members` then compared
+    `type.__call__`'s `(*args, **kwargs)` — two parameters — against
+    this contract's own two (`self`, `raw`), an arity match by
+    coincidence. `Plain` was reported as satisfying a contract about a
+    method it does not have.
+    """
+
+    class Plain:
+        pass
+
+    assert not satisfies(CallableContract, Plain)
+    assert missing_members(CallableContract, Plain) == {"__call__"}
+
+
+def test_every_class_in_the_package_is_not_reported_as_a_callable():
+    """
+    The measured shape of the real defect: 192 classes across the
+    package, none defining `__call__`, were reported as satisfying a
+    Protocol about one. A handful of unrelated, real shapes stand in
+    for that population here rather than importing the package's own
+    192 classes into a unit test (`STD-0002`).
+    """
+
+    class Unrelated:
+        def something_else(self) -> None:
+            pass
+
+    for implementation in (Unrelated, Store, Check, object):
+        assert not satisfies(CallableContract, implementation)
+
+
+def test_a_class_that_really_defines_dunder_call_still_satisfies():
+    """
+    The fix reads `__call__` from the implementation's own `__mro__`
+    rather than refusing it outright — a real, faithful `__call__`
+    must still be found and compared, exactly as before.
+    """
+
+    class Faithful:
+        def __call__(self, raw: str, /) -> object:
+            return raw
+
+    assert satisfies(CallableContract, Faithful)
+    assert missing_members(CallableContract, Faithful) == set()
+    assert incompatible_members(CallableContract, Faithful) == {}
+
+
+def test_an_inherited_dunder_call_from_a_real_base_is_found():
+    """
+    A subclass of a real base that defines `__call__` satisfies the
+    contract through inheritance — the walk over `__mro__` must reach
+    that base's own namespace, not stop at the subclass's empty one.
+    """
+
+    class Base:
+        def __call__(self, raw: str, /) -> object:
+            return raw
+
+    class Derived(Base):
+        pass
+
+    assert satisfies(CallableContract, Derived)

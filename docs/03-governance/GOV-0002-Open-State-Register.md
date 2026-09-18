@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.95
+  version: 1.96
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-11
+  updated: 2026-09-18
 
 relations:
   references:
@@ -214,8 +214,8 @@ by OS-036, and emptied again by the rule OS-036 produced.*
 
 # Defects
 
-**OS-058 and OS-059 open.** OS-009, OS-010, OS-044, OS-052, OS-053, OS-056
-and OS-057 are in *Resolved*.
+**OS-058 open.** OS-009, OS-010, OS-044, OS-052, OS-053, OS-056, OS-057
+and OS-059 are in *Resolved*.
 
 *An empty section is kept rather than removed: a register with no defects
 section could not be told from one that never looked for any. That argument was
@@ -226,10 +226,12 @@ by the fix `OS-053` itself proposed. Held open for the first time on
 2026-09-10 by `OS-058` — the first entry in this register's history, in any
 section, deliberately left open rather than resolved or qualified the day it
 was found, because its resolution belongs to a different piece of work than
-the one that found it (see the entry). `OS-059`, opened 2026-09-11, is the
-same shape: found while building on top of the register's own instruments,
-left open because fixing one of those instruments is a distinct piece of
-work from the milestone that found it needed fixing.*
+the one that found it (see the entry). `OS-059`, opened 2026-09-11, was the
+same shape — found while building on top of the register's own instruments,
+left open because fixing one of those instruments was a distinct piece of
+work from the milestone that found it needed fixing — and closed 2026-09-18,
+the owner choosing to fix the instrument rather than defer it further. See
+*Resolved* for what discharged it.*
 
 #### GOV-0002/OS-058 — A second, unwired `KnowledgeArtifact`/`KnowledgeProvenance` exists, distinct from the one production uses
 
@@ -265,70 +267,6 @@ has any.
 one to keep, and what becomes of the other's fields (`KnowledgeLifecycle`,
 `KnowledgeScore`) that the kept one may or may not need — the owner's
 decision, not made here.
-
-#### GOV-0002/OS-059 — `aistack.conformance.structural.satisfies` reports a one-argument callable Protocol as satisfied by nearly every class in the package
-
-**Nature** `defect` · **Opened** 2026-09-11 · **State** open
-**Observed** while proving J4's `Normalizer[TIn, TOut]`
-(`aistack.kernel.evidence.normalizer`,
-`claude/PLAN-J4-EVIDENCE-OBSERVATION-2026-09-10.md`) conformant:
-`take_inventory()` reported it satisfied by 192 classes across the package
-— every concrete class the inventory can import — rather than by the one
-real function (`parse_sensors_output`) this contract was written around.
-
-The cause is `getattr(implementation, "__call__")` in
-`incompatible_members`. For a class that defines no `__call__` of its own,
-that lookup does not fail — Python attribute access on a class object falls
-through to the metaclass, and `type.__call__` (what constructs every
-instance) answers instead, exposed by `inspect.signature` as the fully
-generic `(*args, **kwargs)`. `Normalizer.__call__` takes two parameters
-(`self`, `raw`, both positional-only — `OS-058`'s sibling patch made `raw`
-positional-only to stop parameter *names* being compared, per this same
-module's own rule); `(*args, **kwargs)` also reports as two parameters, the
-length check passes, and positional-only means neither name is compared
-either — so every class in the package, having defined no `__call__` at
-all, is reported as satisfying a Protocol about a method it does not have.
-
-**`Collector[T]` (`kernel/evidence/collector.py`), a sibling contract
-declared the same day, escapes this by coincidence, not by design** — its
-`__call__` takes one parameter (`self`) against `type.__call__`'s two, so
-the length check alone rejects every class, and `take_inventory()` reports
-it as the honest, unimplemented-by-any-class orphan it actually is. Whether
-a callable Protocol trips this defect depends on how many parameters its
-`__call__` declares matching `(*args, **kwargs)`'s effective arity of two —
-a coincidence of shape, not a rule anyone stated, which is exactly the kind
-of instrument behavior `GOV-0002`'s own history keeps finding
-(`OS-019`'s `__non_callable_proto_members__`, the `IntegrityCheck`-as-
-orphan measurement) and keeps having to name rather than assume away.
-
-**This is the direction that matters more than an orphan wrongly counted.**
-Earlier instrument defects in this register inflated the debt (an
-implemented contract read as orphan); this one *hides* it — a Protocol
-reported "satisfied" by 144 classes that never declared a `__call__`
-communicates a guarantee the heritage does not have. `J4`'s own contracts
-are unaffected in substance: `Normalizer`'s real conformance is proven by
-`mypy src` over the assignments in `kernel/evidence/conformance.py`, a
-different, correct instrument that reads call shapes rather than a dunder
-name — `Collector`'s and `Normalizer`'s own docstrings say so and do not
-rely on `aistack.conformance.structural` for either. What is wrong is only
-what `contract-debt` publishes about `Normalizer[TIn, TOut]`: `satisfied`,
-when nothing that exists was written to satisfy it.
-
-**Derivable** yes — `missing_members`/`incompatible_members` read a live
-`getattr(implementation, name)`, while `protocol_members` reads the
-protocol's own `vars()` across its `__mro__` specifically to avoid this
-class of leak on the *protocol* side (its own docstring names the CPython
-3.12 case this pattern was written for). The same fix — reading
-`implementation`'s own namespaces across its `__mro__` rather than a live
-`getattr` — would close it on the *implementation* side too; not attempted
-here, because `aistack.conformance.structural` is a shared instrument this
-heritage's whole debt figure depends on, and changing it is a distinct
-piece of work from declaring two new contracts, not a line item inside it.
-**Qualification** whether and how to fix `aistack.conformance.structural`,
-and whether any of the 192 falsely-reported satisfactions found above
-belong to other Protocols already declared elsewhere in the heritage
-(`Normalizer` is the one this entry measured; nothing here claims it is
-the only one) — the owner's decision, not made here.
 
 ---
 
@@ -396,6 +334,102 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-059 — `aistack.conformance.structural.satisfies` reports a one-argument callable Protocol as satisfied by nearly every class in the package
+
+**Nature** `defect` · **Opened** 2026-09-11 · **State** resolved 2026-09-18 by reading `__mro__` on the implementation side too — `aistack.conformance.structural`
+**Observed** while proving J4's `Normalizer[TIn, TOut]`
+(`aistack.kernel.evidence.normalizer`,
+`claude/PLAN-J4-EVIDENCE-OBSERVATION-2026-09-10.md`) conformant:
+`take_inventory()` reported it satisfied by 192 classes across the package
+— every concrete class the inventory can import — rather than by the one
+real function (`parse_sensors_output`) this contract was written around.
+
+The cause is `getattr(implementation, "__call__")` in
+`incompatible_members`. For a class that defines no `__call__` of its own,
+that lookup does not fail — Python attribute access on a class object falls
+through to the metaclass, and `type.__call__` (what constructs every
+instance) answers instead, exposed by `inspect.signature` as the fully
+generic `(*args, **kwargs)`. `Normalizer.__call__` takes two parameters
+(`self`, `raw`, both positional-only — `OS-058`'s sibling patch made `raw`
+positional-only to stop parameter *names* being compared, per this same
+module's own rule); `(*args, **kwargs)` also reports as two parameters, the
+length check passes, and positional-only means neither name is compared
+either — so every class in the package, having defined no `__call__` at
+all, is reported as satisfying a Protocol about a method it does not have.
+
+**`Collector[T]` (`kernel/evidence/collector.py`), a sibling contract
+declared the same day, escapes this by coincidence, not by design** — its
+`__call__` takes one parameter (`self`) against `type.__call__`'s two, so
+the length check alone rejects every class, and `take_inventory()` reports
+it as the honest, unimplemented-by-any-class orphan it actually is. Whether
+a callable Protocol trips this defect depends on how many parameters its
+`__call__` declares matching `(*args, **kwargs)`'s effective arity of two —
+a coincidence of shape, not a rule anyone stated, which is exactly the kind
+of instrument behavior `GOV-0002`'s own history keeps finding
+(`OS-019`'s `__non_callable_proto_members__`, the `IntegrityCheck`-as-
+orphan measurement) and keeps having to name rather than assume away.
+
+**This is the direction that matters more than an orphan wrongly counted.**
+Earlier instrument defects in this register inflated the debt (an
+implemented contract read as orphan); this one *hides* it — a Protocol
+reported "satisfied" by 144 classes that never declared a `__call__`
+communicates a guarantee the heritage does not have. `J4`'s own contracts
+are unaffected in substance: `Normalizer`'s real conformance is proven by
+`mypy src` over the assignments in `kernel/evidence/conformance.py`, a
+different, correct instrument that reads call shapes rather than a dunder
+name — `Collector`'s and `Normalizer`'s own docstrings say so and do not
+rely on `aistack.conformance.structural` for either. What is wrong is only
+what `contract-debt` publishes about `Normalizer[TIn, TOut]`: `satisfied`,
+when nothing that exists was written to satisfy it.
+
+**Derivable** yes — `missing_members`/`incompatible_members` read a live
+`getattr(implementation, name)`, while `protocol_members` reads the
+protocol's own `vars()` across its `__mro__` specifically to avoid this
+class of leak on the *protocol* side (its own docstring names the CPython
+3.12 case this pattern was written for). The same fix — reading
+`implementation`'s own namespaces across its `__mro__` rather than a live
+`getattr` — would close it on the *implementation* side too; not attempted
+here, because `aistack.conformance.structural` is a shared instrument this
+heritage's whole debt figure depends on, and changing it is a distinct
+piece of work from declaring two new contracts, not a line item inside it.
+**Qualification** whether and how to fix `aistack.conformance.structural`,
+and whether any of the 192 falsely-reported satisfactions found above
+belong to other Protocols already declared elsewhere in the heritage
+(`Normalizer` is the one this entry measured; nothing here claims it is
+the only one) — the owner's decision, not made here.
+
+**Resolved 2026-09-18.** The owner's choice: fix the instrument now,
+reading a name from the implementation's own `__mro__` the same way
+`protocol_members` already read one from the protocol's. A new
+`_own_member(implementation, name)` walks `implementation.__mro__` and
+returns the first `vars(base)[name]` it finds, or a sentinel; `missing
+_members` and `incompatible_members` both call it in place of
+`hasattr`/`getattr`. `implementation.__mro__` never contains `type` for
+an ordinary class, so a name only the metaclass supplies — `__call__`
+foremost among them — is now correctly read as absent unless some real
+base in that chain actually defines one; a genuinely inherited
+`__call__` is still found, walking the same chain, and a real,
+faithful one on the class itself still compares exactly as before.
+Measured live: `Normalizer[TIn, TOut]` now reads as the honest,
+unimplemented-by-any-class orphan `Collector` already was —
+`contract-debt` moved from 2 of 41 declared contracts to 3 of 40
+(`OS-058`, resolved the same day, moved the denominator by removing
+one declared contract of its own).
+`tests/unit/kernel/evidence/test_conformance.py` — written to pin the
+wrong reading down until it was fixed — now pins the corrected one.
+`tests/unit/conformance/test_structural.py` gained four tests naming
+the exact shape of the leak: a class declaring no `__call__` of its
+own, a population of unrelated real shapes standing in for the 192
+found in the package, a class that genuinely defines `__call__`, and
+one that inherits it from a real base — so a regression of the same
+shape fails here again rather than surfacing in a future contract's
+own measurement. Verified together with `OS-058`: full suite green
+(1821 passed), `ruff check src tests` clean, `mypy` — "Success: no
+issues found in 448 source files", `knowledge_integrity` —
+`clean: True`.
+
+---
 
 #### GOV-0002/OS-057 — A second, unwired execution-event model sat undocumented since 2026-07-22
 

@@ -1,10 +1,21 @@
 # AI Runtime definition — J6, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`.
 #
-# `host`/`port` are the owner's own real facts (2026-09-13, reconfirmed
-# 2026-09-18 after a native reinstall): an Ollama instance runs on
-# GIGABYTE, port 11434, five models loaded (`ollama list` on
-# 2026-09-18: qwen2.5-coder:3b, deepseek-r1:1.5b, qwen2.5:3b,
-# nomic-embed-text:latest, qwen2.5:0.5b).
+# `host` is `127.0.0.1`, not the hostname `GIGABYTE` this file
+# declared until 2026-09-18 — corrected against a real defect found
+# while scoping J8 (`claude/PLAN-J8-AI-TROUBLESHOOTING-ASSISTANT
+# -2026-09-18.md`): `getent hosts GIGABYTE` resolves only to IPv6
+# addresses (Tailscale/MagicDNS plus a `fe80::` link-local per Docker
+# `veth`, no IPv4 at all), while `ss -tlnp` showed Ollama's own
+# systemd service bound only to `127.0.0.1:11434`, IPv4 loopback —
+# nothing ever listened at any address `GIGABYTE` could resolve to.
+# `ai_reason` always runs directly on GIGABYTE (`OPS-0002` — never
+# invoked remotely), so loopback is what the real, observed bind
+# address already asks for; the owner chose this over widening
+# Ollama's own exposure to the LAN (`OLLAMA_HOST=0.0.0.0`), which
+# nothing today needs. `port` is unchanged, `11434`, five models
+# loaded (`ollama list` on 2026-09-18: qwen2.5-coder:3b,
+# deepseek-r1:1.5b, qwen2.5:3b, nomic-embed-text:latest,
+# qwen2.5:0.5b).
 #
 # `model` is `qwen2.5:0.5b` — the owner's explicit choice
 # (2026-09-18), made with the real speed/reliability tradeoff in
@@ -20,6 +31,6 @@
 # task shape than that one failing prompt — but the gap is real and
 # worth keeping in mind when reading its output.
 
-host: GIGABYTE
+host: 127.0.0.1
 port: 11434
 model: qwen2.5:0.5b

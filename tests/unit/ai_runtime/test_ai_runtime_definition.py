@@ -65,5 +65,9 @@ def test_not_a_mapping_is_rejected(tmp_path: Path):
 def test_the_real_ai_runtime_definition_loads():
     definition = load_ai_runtime_yaml(DEFAULT_AI_RUNTIME)
 
-    assert definition.host == "GIGABYTE"
+    # 127.0.0.1, not the hostname "GIGABYTE" — corrected 2026-09-18
+    # against a real defect found scoping J8: `GIGABYTE` resolves
+    # only to IPv6 addresses Ollama's own systemd service never
+    # binds to (`ss -tlnp` showed `127.0.0.1:11434` only).
+    assert definition.host == "127.0.0.1"
     assert definition.port == 11434

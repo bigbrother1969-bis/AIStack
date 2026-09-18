@@ -30,6 +30,23 @@
 #     The direct LAN address each still answers on
 #     (GIGABYTE:8181/:8182) travels in the description, not the url,
 #     so there is exactly one link to follow, not two competing ones.
+#
+#     **Reversed 2026-09-18.** The owner asked to close every page
+#     reachable from this console down to LAN-only, "y compris pour
+#     selection et priority" — these two were the only remaining
+#     public exceptions (Découverte réseau and Assistant de pannes
+#     were already LAN-only from their own first day). `url` now
+#     points at the direct LAN address for both
+#     (`http://GIGABYTE:8181`, `http://GIGABYTE:8182`), the same
+#     shape Découverte réseau and Assistant de pannes already use.
+#     The console itself, Architecture and Cockpit Santé stay public
+#     — the owner's explicit choice, not touched here. Closing the
+#     public route for real is a manual step outside this repository
+#     (removing the `selection.persiaut-family.fr` and
+#     `priority.persiaut-family.fr` Proxy Host entries in Nginx
+#     Proxy Manager on the Raspberry) — this file only decides what
+#     the console *links to*, kept, not erased, as the record of what
+#     was reversed and why (the paragraph above).
 #   - Page Architecture and Cockpit Santé are static files this
 #     console is served alongside (`reports/generated/public/`,
 #     `aistack.cli.console_render`), so their own URLs are relative —
@@ -62,14 +79,14 @@
 links:
   - name: Selection UI
     description: >-
-      Sélection des candidats — service Docker Compose
-      (LAN direct : GIGABYTE:8181)
-    url: https://selection.persiaut-family.fr
+      Sélection des candidats — service Docker Compose,
+      LAN uniquement (GIGABYTE:8181)
+    url: http://GIGABYTE:8181
   - name: Priorité CPU
     description: >-
-      Arbitrage de priorité CPU — service systemd/uvicorn
-      (LAN direct : GIGABYTE:8182)
-    url: https://priority.persiaut-family.fr
+      Arbitrage de priorité CPU — service systemd/uvicorn,
+      LAN uniquement (GIGABYTE:8182)
+    url: http://GIGABYTE:8182
   - name: Architecture
     description: Diagramme de topologie du homelab (PLAN-J2)
     url: /architecture.html

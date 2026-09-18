@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 5
+  version: 6
   created: 2026-07-04
-  updated: 2026-09-12
+  updated: 2026-09-18
 ---
 
 # AIStack
@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 0.7.0
+### Concrete capabilities, as of 1.0.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -86,9 +86,23 @@ AIStack transforms observations into sustainable knowledge assets.
 - **Health Cockpit** — a scored dashboard across four domains (Storage,
   Services, Backup/DR, GPU), each instrumented against a real incident
   or a real declared threshold.
+- **AI Runtime and a guided troubleshooting assistant** — a real
+  qualified finding can be reasoned about, explained in plain language
+  (in French), and given a suggested next step by a local Ollama model —
+  never a source of truth, never an executor on its own, by design of
+  the prompts themselves, not only the surrounding code. A step-by-step
+  guided screen walks a real finding through that chain and can apply
+  the one safe, single-click fix this project trusts a button to make
+  (declaring a container "background" in the resource-priority
+  definition), always re-verified against a fresh diagnostic afterward
+  rather than assumed to have worked. Every reasoning call is kept in a
+  durable, per-subject history.
 - **Console** — one entry point linking Selection UI, Priority CPU,
-  Architecture, Health Cockpit and the network discovery screen, all
-  reachable from the same page.
+  Architecture, Health Cockpit, the network discovery screen and the
+  troubleshooting assistant, all reachable from the same page. Only the
+  console itself, Architecture and Cockpit Santé are reachable from
+  outside the LAN — every other screen (Selection UI, Priority CPU,
+  network discovery, the troubleshooting assistant) is LAN-only.
 - **Context Bundle self-onboarding** — a portable, integrity-checked
   archive of the whole governed knowledge base, so a new AI session or
   contributor can get up to speed without reading the repository's
@@ -143,8 +157,8 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 0.7.0**: `pytest -q` — **1751 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **447 source files**;
+**As of 1.0.0**: `pytest -q` — **1815 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **457 source files**;
 `python3 -m aistack.cli.knowledge_integrity` — **73 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 

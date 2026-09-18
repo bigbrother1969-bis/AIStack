@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-09-12
+  updated: 2026-09-18
 
 relations:
   references:
@@ -38,6 +38,84 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.0.0 — 2026-09-18
+
+**The first version this project calls 1.0.** Not because one feature
+crosses a line, but because the two halves the whole `PLAN-TRAJECTOIRE`
+arc (J1 through J8) was building toward are now both real and connected:
+a governed, explainable knowledge base of the infrastructure (Foundation
+through the Health Cockpit and Architecture views, 0.1.0 through 0.7.0),
+and — new since 0.7.0 — a reasoning layer that can look at a real
+qualified finding, explain it in plain language, suggest what to do about
+it, and now, for the one case safe enough to automate without guessing at
+a judgement call, actually apply the fix and verify it worked. Everything
+below is what was added on top of `0.7.0`; the section further down,
+*Everything AIStack does, as of this release*, is the complete picture,
+not just this version's delta.
+
+- **AI Runtime (J6).** Three governed operations —
+  `reason`/`explain`/`recommend` — run a real `RuntimeFinding` through a
+  local Ollama model (`qwen2.5:0.5b`, declared in `ai_runtime.yml`) and
+  return grounded, explainable text. `recommend` never executes anything
+  by itself: every prompt states this explicitly, not only the
+  documentation around it. Wired end to end into
+  `aistack.cli.ai_reason`.
+- **AI Reasoning History (J7).** Every `reason`/`explain`/`recommend` run
+  is persisted per subject (`reports/generated/ai-reasoning/<subject>
+  .json`), version-stacked so a second run over the same finding adds to
+  the record rather than replacing it — full prompt and response kept,
+  never only a summary.
+- **J8 — the chain proven live, and closed.** A real sweep of the
+  reference deployment produced three genuine qualified findings, each
+  carried all the way through `evaluate → reason/explain/recommend` with
+  `reachable: true` answers and a full, traceable history entry. Closed
+  without new code beyond a configuration fix (`ai_runtime.yml`'s host
+  corrected from an unreachable hostname to the real bound address,
+  `127.0.0.1`) — J6 and J7 already did everything J8 asked for.
+- **Assistant de pannes — a guided, step-by-step interface over that
+  chain.** A new LAN-only mini-app (`troubleshooting_assistant_ui`,
+  GIGABYTE:8185, a sixth console card) walks the owner through a real,
+  currently-qualified finding one step at a time: the finding itself,
+  then `reason`, `explain`, `recommend` — modeled on how the owner and
+  this project's own AI assistant already work together. Traceability is
+  recorded the moment the walkthrough starts, never conditional on
+  finishing it.
+  - AI-generated answers now respond in French, everywhere this runtime
+    is called from (the CLI included, since both share
+    `aistack.ai_runtime.operations`) — the finding's own governed
+    `interpretation`/`remediation` text stays in English, since that
+    text is declared by `OPS-0004`, not generated.
+  - A loading indicator during the guided flow's ~45s AI round-trip, and
+    a hand-written (never AI-generated per finding) `/aide` page
+    explaining how to open a terminal, find the host on the LAN, and
+    connect over SSH — for a possibly non-technical reader following a
+    remediation step.
+  - **Propose → apply → verify.** The `recommend` step now carries an
+    "Appliquer" button alongside its suggestion, scoped to exactly one
+    safe, single-click action: classifying the finding's subject as a
+    `background` container in the governed resource-priority definition
+    — the same write `priority_ui` already makes in production, never
+    anything derived from the AI's own free-text suggestion, and never
+    the broader "priority" classification, which needs a real judgement
+    call (a detector, CPU thresholds) no click can safely default.
+    After applying, the diagnostic is re-run immediately and the result
+    — corrected, or not — is shown plainly, never assumed. Verified
+    end to end against a freshly provoked test case: proposed, applied,
+    and confirmed gone from the next diagnostic sweep.
+- **Selection UI and Priorité CPU closed to LAN-only.** Until this
+  version these were the only two console cards reachable from the
+  public internet (`https://selection.persiaut-family.fr`,
+  `https://priority.persiaut-family.fr`, behind Nginx Proxy Manager).
+  Closed at the owner's request — `console_links.yml` now points both
+  at their direct LAN address, the same shape Découverte réseau and
+  Assistant de pannes already used. The console itself, Architecture and
+  Cockpit Santé stay reachable from outside the LAN, unchanged.
+
+`bigbrother1969/aistack-core:1.0.0`, built from `<commit to be filled in
+at publication — the owner's own build, per `OPS-0002`>`, digest `<filled
+in at publication>`.
+1815 tests, 73 knowledge artifacts, `clean: True`.
 
 ## 0.7.0 — 2026-09-12
 
@@ -288,29 +366,43 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 0.7.0 (2026-09-12), taken together.
+Not what changed — what runs, as of 1.0.0 (2026-09-18), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
-  state, published ports, mounts, and — as of 0.7.0 — the real
-  `depends_on:` relationships between containers, read from each Compose
-  project's own files — regenerated the same way every time, from the
-  host, not from what someone remembers about it.
+  state, published ports, mounts, and the real `depends_on:` relationships
+  between containers, read from each Compose project's own files —
+  regenerated the same way every time, from the host, not from what
+  someone remembers about it.
 - **Architecture, visualized.** `architecture.html` renders that same
-  discovery as a self-contained topology graph, plus — as of 0.7.0 — a
-  Docker dependency view, a section naming the external network topology
-  and the hardware each machine runs, and a live Beszel health-metrics
-  section — a real page, not raw catalog JSON, kept current every time
-  it's regenerated.
+  discovery as a self-contained topology graph, plus a Docker dependency
+  view, a section naming the external network topology and the hardware
+  each machine runs, and a live Beszel health-metrics section — a real
+  page, not raw catalog JSON, kept current every time it's regenerated.
 - **Network-wide Docker discovery.** A separately-triggered scan of the
   declared LAN, over SSH, reports Docker containers running on machines
-  other than the one AIStack itself runs on — new as of 0.7.0.
+  other than the one AIStack itself runs on.
 - **Health Cockpit.** One scored dashboard across four domains — Storage,
   Services, Backup/DR, GPU — each instrumented against a real incident or
   a real declared threshold on the reference host.
+- **AI Runtime and Assistant de pannes — new as of 1.0.0.** A real
+  qualified finding can be reasoned about, explained in plain language,
+  and given a suggested next step by a local Ollama model, in French —
+  never a source of truth, never an executor, every prompt says so
+  itself. A guided, step-by-step interface (`Assistant de pannes`)
+  walks a real finding through this chain one step at a time, and can
+  apply the one safe, single-click fix this project trusts a button to
+  make on its own (declaring a container `background` in the resource
+  priority definition) — always re-verified against a fresh diagnostic
+  afterward, never assumed to have worked. Every reasoning call is kept
+  in a durable, per-subject, version-stacked history.
 - **Console.** One entry point linking Selection UI, Priority CPU,
-  Architecture, Health Cockpit and — as of 0.7.0 — the LAN-only network
-  discovery screen, all reachable from the same page.
+  Architecture, Health Cockpit, the network discovery screen and the
+  troubleshooting assistant, all reachable from the same page. Only the
+  console itself, Architecture and Cockpit Santé are reachable from
+  outside the LAN — Selection UI and Priorité CPU joined the rest
+  (network discovery, the troubleshooting assistant) as LAN-only as of
+  1.0.0.
 - **Context Bundle — self-onboarding for an AI assistant.** A single
   portable archive carries the project's whole governed knowledge base,
   with a manifest that proves what commit it was taken from and lets a

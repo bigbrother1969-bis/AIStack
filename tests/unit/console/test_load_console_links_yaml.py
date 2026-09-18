@@ -134,8 +134,13 @@ def test_the_real_console_links_definition_loads():
         "Découverte réseau",
         "Assistant de pannes",
     }
-    assert by_name["Selection UI"].url == "https://selection.persiaut-family.fr"
-    assert by_name["Priorité CPU"].url == "https://priority.persiaut-family.fr"
+    # LAN-only since 2026-09-18: the owner closed every remaining
+    # public exception reachable from the console — these two were
+    # public over HTTPS (Cloudflare + NPM subdomains) until then.
+    # `console_links.yml`'s own header comment keeps the record of
+    # the reversal.
+    assert by_name["Selection UI"].url == "http://GIGABYTE:8181"
+    assert by_name["Priorité CPU"].url == "http://GIGABYTE:8182"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"
     # LAN-only, deliberately: never a `https://...persiaut-family.fr`

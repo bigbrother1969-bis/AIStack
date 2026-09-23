@@ -20,6 +20,12 @@ the embedded Mermaid definition, "nothing observed, nothing
 rendered") is already exhaustively covered at `render_html`'s own
 level (`test_html.py`); this file is only about the CLI reaching that
 point correctly.
+
+`HttpProbeProvider` is stubbed too, added 2026-09-23 alongside
+Docker/Compose — `architecture_render.main()` builds it
+unconditionally against the owner's real `cmdb_probe_targets.yml`
+(46 endpoints), which every `main()` call here was reaching for
+real before this stub existed.
 """
 
 from __future__ import annotations
@@ -89,6 +95,35 @@ def jellyfin_project_with_no_depends_on() -> dict:
     }
 
 
+class FakeHttpProbeProvider:
+    """
+    A stand-in for `HttpProbeProvider`, added 2026-09-23: every
+    `main()` call in this file was making real HTTP requests against
+    the owner's real `cmdb_probe_targets.yml` endpoints (46 of them)
+    since `architecture_render.main()` builds it unconditionally —
+    several timing out at the provider's own 5.0s default. This
+    mirrors `FakeDockerProvider`/`FakeComposeProvider` above; no test
+    in this file exercises HTTP-probe wiring itself
+    (`test_architecture_render_beszel.py` does, via its own stub of
+    the same name).
+    """
+
+    def __init__(
+        self, targets: tuple[tuple[str, str], ...], timeout: float = 5.0
+    ) -> None:
+        self._targets = targets
+
+    def collect(self) -> dict:
+        return {
+            "provider": {
+                "id": "aistack.provider.http_probe",
+                "name": "HTTP Probe Provider",
+            },
+            "collected_at": OBSERVED_AT,
+            "http_probe": {"targets": []},
+        }
+
+
 @pytest.fixture
 def workspace(monkeypatch, tmp_path: Path) -> Path:
     monkeypatch.chdir(tmp_path)
@@ -102,6 +137,9 @@ def stub_providers(monkeypatch, compose_projects: list[dict]) -> None:
     monkeypatch.setattr(
         "aistack.kernel.bootstrap.providers.ComposeProvider",
         lambda: FakeComposeProvider(compose_projects),
+    )
+    monkeypatch.setattr(
+        architecture_render, "HttpProbeProvider", FakeHttpProbeProvider
     )
 
 

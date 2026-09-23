@@ -11,6 +11,15 @@ this file ever makes a real network call to
 the same way `test_the_provider_commands_run.py` already stubs them,
 since `architecture_render.main()` reaches both first.
 
+`HttpProbeProvider` is stubbed the same way, added 2026-09-23:
+`architecture_render.main()` also builds it (unconditionally, since
+`cmdb_probe_targets.yml` names the owner's real 46 endpoints) and
+`.collect()`s it before this file's tests were ever written, so
+every `main()` call here was making up to 46 real HTTP requests
+against those endpoints — several timing out at the provider's own
+5.0s default. `FakeHttpProbeProvider` closes that the same way
+`FakeBeszelProvider` already does for Beszel.
+
 What is under test here is the wiring `architecture_render.py` itself
 adds: the real topology's `beszel:` block names two env var names,
 this command resolves them through the `environ` it was given (real
@@ -79,6 +88,28 @@ class FakeBeszelProvider:
         return FakeBeszelProvider.next_observation
 
 
+class FakeHttpProbeProvider:
+    """
+    Records what it was constructed with and returns a canned
+    observation — the same shape `HttpProbeProvider.collect()` itself
+    produces, so `build_http_probe_readings` downstream sees a
+    realistic payload. Mirrors `FakeBeszelProvider` above exactly.
+    """
+
+    instances: list["FakeHttpProbeProvider"] = []
+    next_observation: dict[str, Any]
+
+    def __init__(
+        self, targets: tuple[tuple[str, str], ...], timeout: float = 5.0
+    ) -> None:
+        self.targets = targets
+        self.timeout = timeout
+        FakeHttpProbeProvider.instances.append(self)
+
+    def collect(self) -> dict:
+        return FakeHttpProbeProvider.next_observation
+
+
 _DEFAULT_OBSERVATION: dict[str, Any] = {
     "provider": {"id": "aistack.provider.beszel", "name": "Beszel Provider"},
     "collected_at": OBSERVED_AT,
@@ -91,13 +122,24 @@ _DEFAULT_OBSERVATION: dict[str, Any] = {
 }
 
 
+_DEFAULT_HTTP_PROBE_OBSERVATION: dict[str, Any] = {
+    "provider": {"id": "aistack.provider.http_probe", "name": "HTTP Probe Provider"},
+    "collected_at": OBSERVED_AT,
+    "http_probe": {"targets": []},
+}
+
+
 @pytest.fixture(autouse=True)
 def reset_fake_beszel():
     FakeBeszelProvider.instances = []
     FakeBeszelProvider.next_observation = dict(_DEFAULT_OBSERVATION)
+    FakeHttpProbeProvider.instances = []
+    FakeHttpProbeProvider.next_observation = dict(_DEFAULT_HTTP_PROBE_OBSERVATION)
     yield
     FakeBeszelProvider.instances = []
     FakeBeszelProvider.next_observation = dict(_DEFAULT_OBSERVATION)
+    FakeHttpProbeProvider.instances = []
+    FakeHttpProbeProvider.next_observation = dict(_DEFAULT_HTTP_PROBE_OBSERVATION)
 
 
 @pytest.fixture
@@ -109,6 +151,9 @@ def stubbed_providers(monkeypatch) -> None:
         "aistack.kernel.bootstrap.providers.ComposeProvider", FakeComposeProvider
     )
     monkeypatch.setattr(architecture_render, "BeszelProvider", FakeBeszelProvider)
+    monkeypatch.setattr(
+        architecture_render, "HttpProbeProvider", FakeHttpProbeProvider
+    )
 
 
 @pytest.fixture

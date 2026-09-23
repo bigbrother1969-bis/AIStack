@@ -112,6 +112,36 @@ class FakeComposeProvider:
         }
 
 
+class FakeHttpProbeProvider:
+    """
+    A stand-in for `HttpProbeProvider`, added 2026-09-23.
+
+    `architecture_render.main()` — driven twice in this file, both
+    with the real, unmocked `DEFAULT_TOPOLOGY` and
+    `DEFAULT_CMDB_TARGETS` — builds `HttpProbeProvider` unconditionally
+    against the owner's real `cmdb_probe_targets.yml` (46 real
+    endpoints) and probes them for real, several timing out at the
+    provider's own 5.0s default. Docker itself is deliberately not
+    exercised here (see the module docstring); the same reasoning
+    applies to a real fleet of HTTP endpoints.
+    """
+
+    def __init__(
+        self, targets: tuple[tuple[str, str], ...], timeout: float = 5.0
+    ) -> None:
+        self._targets = targets
+
+    def collect(self) -> dict:
+        return {
+            "provider": {
+                "id": "aistack.provider.http_probe",
+                "name": "HTTP Probe Provider",
+            },
+            "collected_at": OBSERVED_AT,
+            "http_probe": {"targets": []},
+        }
+
+
 @pytest.fixture
 def stubbed_providers(monkeypatch) -> None:
     """
@@ -130,6 +160,9 @@ def stubbed_providers(monkeypatch) -> None:
     monkeypatch.setattr(
         "aistack.kernel.bootstrap.providers.ComposeProvider",
         FakeComposeProvider,
+    )
+    monkeypatch.setattr(
+        architecture_render, "HttpProbeProvider", FakeHttpProbeProvider
     )
 
 

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.99
+  version: 1.100
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -211,16 +211,17 @@ belongs here the day it is written, not the day someone re-reads it.
 
 # Non-conforming instances
 
-None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060 and
-OS-063 are in *Resolved*.
+None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
+OS-063, OS-064 and OS-065 are in *Resolved*.
 
-Three of those nine closed by **retiring or narrowing the rule** rather than
+Three of those eleven closed by **retiring or narrowing the rule** rather than
 by conforming to it. A heritage that only ever fixed instances would end with
 rules nothing could satisfy.
 
 *Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
 by OS-036, and emptied again by the rule OS-036 produced. Held OS-063 for a few
-hours on 2026-09-23, opened and resolved the same evening.*
+hours on 2026-09-23, opened and resolved the same evening; OS-064 and OS-065
+were opened and resolved together later that evening.*
 
 ---
 
@@ -347,6 +348,59 @@ levels as `OS-003` did: the owner's to decide.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-065 — The README describes the `content_hash` as derived from artifact identities, the reading `OS-021` refused
+
+**Nature** `non-conforming` · **Opened** 2026-09-23 · **State** resolved 2026-09-23 by README v7
+**Observed** README § *AI Bootstrap Guide*, *Acquisition SPOT*: the
+`content_hash` is *"derived from artifact identities only"*. Since `OS-021`
+(2026-08-23) an artifact's identity is its governed identifier, and `OS-021`
+records why fingerprinting identifiers was refused: two bundles carrying the
+same identifiers over different text would have proven equivalent.
+`compute_content_hash` reads each artifact's `metadata["content_hash"]` — a
+fingerprint of its content — sorted, one per line, under SHA-256. The word
+*identity* changed meaning on 2026-08-23 and the sentence did not follow;
+`OS-021`'s closure did not name it, § *What a closure must carry* being
+written four days later.
+
+The assembly rule itself was stated nowhere in the heritage. Recomputed on
+2026-09-23 from the Context Bundle alone, it reproduces the published
+fingerprint exactly. Found during STD-0300 § 2.4: ChatGPT's Boot Report
+declared the rule unknown, and the re-reading that followed found the
+sentence wrong (`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`, U4 and N4).
+**Derivable** no — a sentence whose word changed meaning is not detectable.
+What was missing, the rule, is now stated where an agent reads it first.
+**Qualification** decided 2026-09-23 by the owner: rewrite the line and state
+the rule in it.
+
+**Resolved 2026-09-23.** README v7: the line states the rule and names the
+function that computes it, with a dated note. `OPS-0002` § *Handing a bundle
+to someone* says what the fingerprint settles, not how it is computed, and
+needs no change.
+
+---
+
+#### GOV-0002/OS-064 — `ADR-0005`'s list of official domains omits `Operations`
+
+**Nature** `non-conforming` · **Opened** 2026-09-23 · **State** resolved 2026-09-23 by ADR-0005 v1.4
+**Observed** `ADR-0005` § *Classification Is Semantic* — `Accepted`, last
+updated 2026-08-27 — reads *"The official domains are:"* and lists six,
+without `Operations`. `STD-0100` § *Classification* lists seven and records
+that `Operations` *"was added to both on 2026-08-22"* — its table and
+`src/aistack/contracts/classification.py`, two projections of one decision
+that *"shall not drift apart"*. `ADR-0005` is a third projection of the same
+vocabulary, and it drifted. Found by ChatGPT's Boot Report of 2026-09-23
+during STD-0300 § 2.4, and confirmed against the bundle.
+**Derivable** yes, once a check compares every enumeration of the domain
+vocabulary in the heritage with `classification.py` — no such check exists.
+**Qualification** decided 2026-09-23 by the owner: add `Operations`, and
+state which two projections govern.
+
+**Resolved 2026-09-23.** `ADR-0005` v1.4: `Operations` added in
+`STD-0100`'s order, one sentence naming `STD-0100` § *Classification* and
+`classification.py` as the vocabulary's reference, and a dated note.
+
+---
 
 #### GOV-0002/OS-063 — `ARCH-0002` lists Knowledge Pipelines among the Kernel's components, which `ARCH-0005` says they are not
 

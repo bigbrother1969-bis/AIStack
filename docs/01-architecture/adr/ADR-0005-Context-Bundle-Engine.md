@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-07-24
-  updated: 2026-08-27
+  updated: 2026-09-23
 ---
 
 # ADR-0005 --- Context Bundle Engine Architecture
@@ -161,7 +161,15 @@ The official domains are:
 -   Governance;
 -   Standards;
 -   Engineering;
+-   Operations;
 -   Knowledge Assets.
+
+This list restates the vocabulary `STD-0100` § *Classification* governs,
+together with `src/aistack/contracts/classification.py`; where they differ,
+those two prevail.
+
+*Corrected 2026-09-23, `GOV-0002/OS-064`: `Operations`, added to both on
+2026-08-22, was missing here.*
 
 ### Criticality Defines AI Behavior
 

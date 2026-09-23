@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 6
+  version: 7
   created: 2026-07-04
-  updated: 2026-09-18
+  updated: 2026-09-23
 ---
 
 # AIStack
@@ -291,13 +291,19 @@ A bundle carries its own integrity information in `manifest.json`:
 
 - `source_commit` — the commit the projection was taken from;
 - `repository_url` — the canonical location of the SPOT;
-- `content_hash` — a fingerprint of the governed knowledge carried, derived from
-  artifact identities only, and therefore independent of generation time, machine
-  and path.
+- `content_hash` — a fingerprint of the governed knowledge carried: the SHA-256
+  of every artifact's own content hash, sorted and written one per line
+  (`aistack.context_bundle.manifest.content_hash`). It is derived from contents,
+  not from identifiers, and is therefore independent of generation time, machine,
+  path and artifact order.
 
 Two bundles sharing a `content_hash` carry exactly the same knowledge. An agent
 shall read these fields before reasoning, and shall state which bundle it is
 operating from.
+
+*Corrected 2026-09-23, `GOV-0002/OS-065`. The line read "derived from artifact
+identities only" — the reading `GOV-0002/OS-021` refused on 2026-08-23, when an
+artifact's identity became its governed identifier.*
 
 ---
 

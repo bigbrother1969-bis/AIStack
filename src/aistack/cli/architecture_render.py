@@ -7,8 +7,10 @@ from pathlib import Path
 from aistack.architecture.beszel_reading import build_beszel_readings
 from aistack.architecture.dependency_graph import build_dependency_graph
 from aistack.architecture.graph import build_architecture_graph
+from aistack.architecture.http_probe_reading import build_http_probe_readings
 from aistack.architecture.views import build_all_views
 from aistack.architecture.yaml import (
+    load_cmdb_probe_targets_yaml,
     load_infrastructure_topology_yaml,
     load_service_categorization_yaml,
 )
@@ -16,8 +18,10 @@ from aistack.catalog.compose import ComposeRuntimeCatalogBuilder
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.generators.architecture import ArchitectureHtmlArtifactGenerator
 from aistack.generators.beszel import BeszelObservationArtifactGenerator
+from aistack.generators.http_probe import HttpProbeObservationArtifactGenerator
 from aistack.kernel.bootstrap import create_kernel
 from aistack.providers.beszel import BeszelProvider
+from aistack.providers.http_probe import HttpProbeProvider
 
 # Same convention as `resource_priority_monitor.py`'s own
 # `DEFAULT_DEFINITION` — a `Path(__file__).resolve()`-relative default,
@@ -38,6 +42,15 @@ DEFAULT_TOPOLOGY = (
     / "architecture"
     / "definitions"
     / "infrastructure_topology.yml"
+)
+
+# Added 2026-09-23 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1,
+# first of the three gaps named 2026-09-13) — same convention again.
+DEFAULT_CMDB_TARGETS = (
+    Path(__file__).resolve().parents[1]
+    / "architecture"
+    / "definitions"
+    / "cmdb_probe_targets.yml"
 )
 
 
@@ -72,6 +85,19 @@ def main(environ: Mapping[str, str] | None = None) -> None:
     project with no `depends_on:` anywhere is simply absent from the
     graph; `render_html` adds no "Dépendances" view at all when the
     graph carries no project — the same "nothing to show" degradation.
+
+    **A fourth provider, added 2026-09-23** (§11.9.1, first of the
+    three gaps named 2026-09-13 — "CMDB temps réel"): `cmdb_probe_
+    targets.yml` names the public HTTP endpoints the owner confirmed,
+    2026-09-23, from the live Homepage configuration on the Raspberry
+    Pi. Unlike Beszel, there are no credentials to resolve from
+    `environ` — `HttpProbeProvider` is built directly from the loaded
+    target list and probed synchronously, once per render, the same
+    "temps réel means as of the last render" snapshot discipline
+    every other live section on this page already has. An empty
+    target list means the provider is never even constructed, the
+    same "nothing to show" degradation `topology.beszel is None`
+    already gets.
     """
 
     environ = os.environ if environ is None else environ
@@ -86,6 +112,7 @@ def main(environ: Mapping[str, str] | None = None) -> None:
 
     categorization = load_service_categorization_yaml(DEFAULT_CATEGORIZATION)
     topology = load_infrastructure_topology_yaml(DEFAULT_TOPOLOGY)
+    cmdb_targets = load_cmdb_probe_targets_yaml(DEFAULT_CMDB_TARGETS)
 
     graph = build_architecture_graph(categorization, docker_catalog, compose_catalog)
     views = build_all_views(graph)
@@ -110,12 +137,29 @@ def main(environ: Mapping[str, str] | None = None) -> None:
             beszel_observation["beszel"]["systems"]
         )
 
+    cmdb_readings: tuple = ()
+
+    if cmdb_targets:
+        http_probe_observation = HttpProbeProvider(
+            tuple((target.name, target.url) for target in cmdb_targets)
+        ).collect()
+
+        HttpProbeObservationArtifactGenerator().generate(
+            observation=http_probe_observation,
+            output_path=Path("reports/generated/http-probe-observation.json"),
+        )
+
+        cmdb_readings = build_http_probe_readings(
+            http_probe_observation["http_probe"]["targets"]
+        )
+
     output_path = ArchitectureHtmlArtifactGenerator().generate(
         views=views,
         output_path=Path("reports/generated/architecture.html"),
         topology=topology,
         beszel_readings=beszel_readings,
         dependency_graph=dependency_graph,
+        cmdb_readings=cmdb_readings,
     )
 
     print(f"Architecture diagram written to {output_path}")

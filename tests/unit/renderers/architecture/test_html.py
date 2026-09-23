@@ -11,6 +11,7 @@ from aistack.architecture.dependency_graph import (
     ContainerDependencyEdge,
     DependencyGraph,
 )
+from aistack.architecture.http_probe_reading import HttpProbeReading
 from aistack.architecture.graph import ArchitectureGraph, CategoryGraph, ServiceNode, ServiceStatus
 from aistack.architecture.topology_definition import (
     ExternalNodeDefinition,
@@ -669,6 +670,140 @@ def test_the_beszel_section_comes_after_the_topology_section():
 
     assert document.index('<section class="topology-index">') < document.index(
         '<section class="beszel-index">'
+    )
+
+
+# --------------------------------------------------------------------
+# The CMDB "CMDB temps réel" section — added 2026-09-23,
+# `claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1, first of the three
+# gaps named 2026-09-13.
+# --------------------------------------------------------------------
+
+
+def test_no_cmdb_readings_renders_no_cmdb_section():
+    views = build_all_views(graph_with_categories("Développement"))
+
+    document = render_html(views)
+
+    assert '<section class="cmdb-index">' not in document
+
+
+def test_an_empty_tuple_of_cmdb_readings_renders_no_section_either():
+    views = build_all_views(graph_with_categories("Développement"))
+
+    document = render_html(views, None, (), None, ())
+
+    assert '<section class="cmdb-index">' not in document
+
+
+def test_a_reachable_target_renders_its_status_code():
+    views = build_all_views(graph_with_categories("Développement"))
+    reading = HttpProbeReading(
+        name="Gitea",
+        url="https://gitea.persiaut-family.fr",
+        reachable=True,
+        status_code=200,
+    )
+
+    document = render_html(views, None, (), None, (reading,))
+
+    assert '<section class="cmdb-index">' in document
+    assert "<h4>Gitea</h4>" in document
+    assert '<p class="cmdb-url">https://gitea.persiaut-family.fr</p>' in document
+    assert '<span class="cmdb-status cmdb-status-ok">200</span>' in document
+
+
+@pytest.mark.parametrize("status_code", [200, 301, 399])
+def test_status_codes_under_400_get_the_ok_class(status_code: int):
+    views = build_all_views(graph_with_categories("Développement"))
+    reading = HttpProbeReading(
+        name="Svc", url="https://svc.persiaut-family.fr", reachable=True,
+        status_code=status_code,
+    )
+
+    document = render_html(views, None, (), None, (reading,))
+
+    assert (
+        f'<span class="cmdb-status cmdb-status-ok">{status_code}</span>' in document
+    )
+
+
+@pytest.mark.parametrize("status_code", [400, 404, 500, 503])
+def test_status_codes_400_and_above_get_the_error_class(status_code: int):
+    views = build_all_views(graph_with_categories("Développement"))
+    reading = HttpProbeReading(
+        name="Svc", url="https://svc.persiaut-family.fr", reachable=True,
+        status_code=status_code,
+    )
+
+    document = render_html(views, None, (), None, (reading,))
+
+    assert (
+        f'<span class="cmdb-status cmdb-status-error">{status_code}</span>'
+        in document
+    )
+
+
+def test_an_unreachable_target_renders_injoignable():
+    views = build_all_views(graph_with_categories("Développement"))
+    reading = HttpProbeReading(
+        name="Svc",
+        url="https://svc.persiaut-family.fr",
+        reachable=False,
+        status_code=None,
+        unreachable_reason="https://svc.persiaut-family.fr could not be reached: timed out",
+    )
+
+    document = render_html(views, None, (), None, (reading,))
+
+    assert (
+        '<span class="cmdb-status cmdb-status-unreachable">Injoignable</span>'
+        in document
+    )
+
+
+def test_several_cmdb_readings_render_in_order():
+    views = build_all_views(graph_with_categories("Développement"))
+    readings = (
+        HttpProbeReading(name="Gitea", url="https://gitea.persiaut-family.fr", reachable=True, status_code=200),
+        HttpProbeReading(name="Vaultwarden", url="https://vault.persiaut-family.fr", reachable=True, status_code=200),
+    )
+
+    document = render_html(views, None, (), None, readings)
+
+    assert document.index("Gitea") < document.index("Vaultwarden")
+
+
+def test_cmdb_text_is_escaped():
+    views = build_all_views(graph_with_categories("Développement"))
+    reading = HttpProbeReading(
+        name='Weird & "quoted" <name>',
+        url='https://svc.persiaut-family.fr/<script>',
+        reachable=True,
+        status_code=200,
+    )
+
+    document = render_html(views, None, (), None, (reading,))
+
+    assert "&amp;" in document
+    assert "&quot;" in document
+    assert "&lt;" in document
+    assert "&gt;" in document
+    assert "<script>" not in document.split('<script id="views-data"')[0]
+
+
+def test_the_cmdb_section_comes_after_the_beszel_section():
+    views = build_all_views(graph_with_categories("Supervision"))
+    beszel_reading = BeszelSystemReading(name="Gigabyte", host="", status="up")
+    cmdb_reading = HttpProbeReading(
+        name="Gitea", url="https://gitea.persiaut-family.fr", reachable=True,
+        status_code=200,
+    )
+
+    document = render_html(views, None, (beszel_reading,), None, (cmdb_reading,))
+
+    assert document.index('<section class="beszel-index">') < document.index(
+        '<section class="cmdb-index">'
     )
 
 

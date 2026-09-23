@@ -5,6 +5,7 @@ from pathlib import Path
 
 from aistack.architecture.beszel_reading import BeszelSystemReading
 from aistack.architecture.dependency_graph import DependencyGraph
+from aistack.architecture.http_probe_reading import HttpProbeReading
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import FULL_VIEW, ArchitectureView
 from aistack.renderers.architecture.dependency_mermaid import render_dependency_mermaid
@@ -69,6 +70,7 @@ def render_html(
     topology: InfrastructureTopologyDefinition | None = None,
     beszel_readings: tuple[BeszelSystemReading, ...] = (),
     dependency_graph: DependencyGraph | None = None,
+    cmdb_readings: tuple[HttpProbeReading, ...] = (),
 ) -> str:
     """
     Wrap every view of an `ArchitectureGraph` into one self-contained
@@ -125,6 +127,15 @@ def render_html(
     genuinely different diagram, not a filtered slice of the same
     `ArchitectureGraph` every other view draws from. `None` (the
     default) renders the page exactly as before this addition.
+
+    **`cmdb_readings` is optional too, added 2026-09-23**
+    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1, first of the
+    three gaps named 2026-09-13) — typed snapshots from
+    `aistack.architecture.http_probe_reading.build_http_probe_readings`,
+    itself built from `HttpProbeProvider.collect()`'s raw observation.
+    An empty tuple (the default) renders no "CMDB temps réel" section
+    at all, the same "nothing to show, so show nothing" rule
+    `beszel_readings` already follows.
     """
 
     if not views or views[0].name != FULL_VIEW:
@@ -180,6 +191,7 @@ def render_html(
     service_index_html = _render_service_index(full)
     topology_html = _render_topology_section(topology)
     beszel_html = _render_beszel_section(beszel_readings)
+    cmdb_html = _render_cmdb_section(cmdb_readings)
 
     return f"""<!doctype html>
 <html lang="fr">
@@ -216,6 +228,8 @@ def render_html(
 {topology_html}
 
 {beszel_html}
+
+{cmdb_html}
 
 <script id="views-data" type="application/json">{data_json}</script>
 <script>
@@ -512,6 +526,71 @@ def _format_uptime(seconds: int) -> str:
     return f"{minutes} min"
 
 
+def _render_cmdb_section(
+    readings: tuple[HttpProbeReading, ...],
+) -> str:
+    """
+    « CMDB temps réel » — un instantané par cible HTTP, pris au moment
+    de la génération, ajouté 2026-09-23
+    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1, premier des trois
+    écarts nommés le 2026-09-13).
+
+    An empty `readings` renders nothing at all — the same "nothing to
+    show" rule `_render_beszel_section` already follows, so a page
+    generated without any target configured looks exactly as it did
+    before this section existed.
+    """
+
+    if not readings:
+        return ""
+
+    cards = "\n".join(_render_cmdb_card(reading) for reading in readings)
+
+    return (
+        '<section class="cmdb-index">\n'
+        "  <h2>CMDB temps réel</h2>\n"
+        '  <ul class="cmdb-list">\n'
+        f"{cards}\n"
+        "  </ul>\n"
+        "</section>"
+    )
+
+
+def _render_cmdb_card(reading: HttpProbeReading) -> str:
+    status_class, status_label = _cmdb_status(reading)
+
+    return (
+        '      <li class="cmdb-card">\n'
+        f"        <h4>{escape_text(reading.name)}</h4>\n"
+        f'        <p class="cmdb-url">{escape_text(reading.url)}</p>\n'
+        f'        <span class="cmdb-status {status_class}">'
+        f"{escape_text(status_label)}</span>\n"
+        "      </li>"
+    )
+
+
+def _cmdb_status(reading: HttpProbeReading) -> tuple[str, str]:
+    """
+    Three states, not two — unlike Beszel's own up/other split. A
+    successful response (2xx/3xx) is `ok`; an HTTP error status the
+    server still answered with (4xx/5xx) is `error`, distinct from
+    `unreachable` (no answer came back at all) — the same distinction
+    `HttpProbeProvider._probe` already makes between an
+    `urllib.error.HTTPError` (reachable, real status) and every other
+    failure (not reachable, no status).
+    """
+
+    if not reading.reachable:
+        return "cmdb-status-unreachable", "Injoignable"
+
+    if reading.status_code is None:
+        return "cmdb-status-error", "?"
+
+    if 200 <= reading.status_code < 400:
+        return "cmdb-status-ok", str(reading.status_code)
+
+    return "cmdb-status-error", str(reading.status_code)
+
 
 _STYLE = """\
 :root { color-scheme: light; }
@@ -651,7 +730,31 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
   font-size: .78rem; font-weight: 600; border: 1px solid;
 }
 .beszel-status-up { background: #dff6dd; border-color: #116329; color: #116329; }
-.beszel-status-other { background: #fff1cc; border-color: #7d4e00; color: #7d4e00; }\
+.beszel-status-other { background: #fff1cc; border-color: #7d4e00; color: #7d4e00; }
+.cmdb-index {
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+}
+.cmdb-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
+.cmdb-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: .7rem;
+}
+.cmdb-card {
+  display: flex; flex-direction: column; gap: .3rem;
+  border: 1px solid #e5e5e5; border-radius: 8px; padding: .6rem .8rem;
+  background: #fff;
+}
+.cmdb-card h4 { margin: 0; font-size: .95rem; }
+.cmdb-url { margin: 0; color: #666; font-size: .78rem; word-break: break-all; }
+.cmdb-status {
+  display: inline-block; align-self: flex-start; padding: .05rem .5rem;
+  border-radius: 999px; font-size: .78rem; font-weight: 600; border: 1px solid;
+}
+.cmdb-status-ok { background: #dff6dd; border-color: #116329; color: #116329; }
+.cmdb-status-error { background: #fff1cc; border-color: #7d4e00; color: #7d4e00; }
+.cmdb-status-unreachable { background: #fde2e1; border-color: #b00020; color: #b00020; }\
 """
 
 _BOOTSTRAP_JS = """\

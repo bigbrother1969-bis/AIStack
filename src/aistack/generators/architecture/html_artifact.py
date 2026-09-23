@@ -4,6 +4,7 @@ from pathlib import Path
 
 from aistack.architecture.beszel_reading import BeszelSystemReading
 from aistack.architecture.dependency_graph import DependencyGraph
+from aistack.architecture.http_probe_reading import HttpProbeReading
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import ArchitectureView
 from aistack.generators.history import write_artifact_with_history
@@ -37,7 +38,9 @@ class ArchitectureHtmlArtifactGenerator:
     readings through. `dependency_graph` (same day, §10 third gap) is
     the same story again: this class never calls
     `build_dependency_graph` itself, it only carries the already-built
-    graph through.
+    graph through. `cmdb_readings` (added 2026-09-23, §11.9.1) is the
+    same story a third time: this class never calls `HttpProbeProvider`
+    itself, it only carries the already-built readings through.
     """
 
     def generate(
@@ -47,8 +50,11 @@ class ArchitectureHtmlArtifactGenerator:
         topology: InfrastructureTopologyDefinition | None = None,
         beszel_readings: tuple[BeszelSystemReading, ...] = (),
         dependency_graph: DependencyGraph | None = None,
+        cmdb_readings: tuple[HttpProbeReading, ...] = (),
     ) -> Path:
-        content = render_html(views, topology, beszel_readings, dependency_graph)
+        content = render_html(
+            views, topology, beszel_readings, dependency_graph, cmdb_readings
+        )
         write_artifact_with_history(content, output_path)
 
         return output_path

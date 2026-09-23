@@ -297,6 +297,27 @@ The integrated knowledge becomes part of the governed heritage.
 
 ------------------------------------------------------------------------
 
+# Relationship To The Library Architecture Analogy
+
+`ARCH-0009` gives AIStack's shared mental model: a governed digital
+library, where a Context Bundle is "the library packed for a move."
+
+A KnowledgePackage is not a Context Bundle under another name.
+
+A Context Bundle is one example of a KnowledgePackage: a package whose
+content happens to be a complete projection of the governed heritage,
+built and shipped by the Context Bundle Engine (`ADR-0005` to
+`ADR-0007`). Other KnowledgePackages carry smaller, partial content.
+
+The PackageManager plays the role `ARCH-0009` names but does not yet
+build: the Logistics department (`TransportService`), extended on
+arrival by what an Acquisition department (`KnowledgeService`) does in
+a real library — check a delivery against the existing catalogue before
+it is shelved. The Context Bundle Engine already builds and ships one
+kind of package; it does not receive one.
+
+------------------------------------------------------------------------
+
 # Open Points
 
 Future architecture work must define:

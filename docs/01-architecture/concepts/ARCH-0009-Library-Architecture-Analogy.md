@@ -107,6 +107,21 @@ where it was the only statement of this idea in the heritage.
 
 ---
 
+## PackageManager Is a Complementary Role, Not a Synonym
+
+`ARCH-0013` names a PackageManager: it receives a package, inspects it,
+and orchestrates validation and integration before anything reaches the
+governed heritage.
+
+That role is this analogy's Logistics department (`TransportService`),
+extended on arrival by what an Acquisition department
+(`KnowledgeService`) does in a real library: check a delivery against
+the existing catalogue before it is shelved. Neither is built yet.
+
+A Context Bundle — "the library packed for a move," above — is a
+KnowledgePackage, not a PackageManager. It is what a PackageManager
+would receive, not what receives it.
+
 ## Future evolution
 
 This concept may later produce:

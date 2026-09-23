@@ -10,8 +10,8 @@ artifact:
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 2.4
-  updated: 2026-09-04
+  version: 2.5
+  updated: 2026-09-23
 ---
 
 # Declared Execution Environment Principle
@@ -96,6 +96,19 @@ twice (`selection_ui`, then `priority_ui`) rather than reasoned once and
 declared. This section is that declaration — the same shape decision #9
 already used, made a stated pattern rather than a precedent each new
 screen has to rediscover.
+
+**Two more screens follow it**: `network_discovery_ui` and
+`troubleshooting_assistant_ui`, each with its own `requirements.txt` and
+`scripts/setup_<screen>_env.sh`, verified 2026-09-23. **Decision #9 is
+stated in the heritage** since the same day, by `ENG-TEST-0001` § *Scope*
+(`GOV-0002/OS-069`). The note under `claude/` cited above remains its
+provenance, no longer its only statement.
+
+## What Changed In v2.5
+
+§ *Host-touching UI screens* names the two screens added since 2026-09-04
+and points to `ENG-TEST-0001` § *Scope*, where decision #9 is stated,
+`GOV-0002/OS-069`. Nothing about the principle's content changes.
 
 ## What Changed In v2.4
 

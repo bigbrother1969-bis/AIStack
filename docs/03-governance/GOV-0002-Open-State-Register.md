@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.102
+  version: 1.103
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -279,8 +279,8 @@ again — resolved the day after it was opened.*
 # Decisions
 
 Three open: OS-061, OS-062 and OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
-OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055
-and OS-066 are in *Resolved*.
+OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
+OS-066 and OS-069 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -372,6 +372,38 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-069 — `ENG-TEST-0001` requires unit tests of every component, while four screens are verified live under a decision stated outside the heritage
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** resolved 2026-09-23 by the owner's decision — ENG-TEST-0001 v1.3, ENG-TEST-0002 v2.5
+**Observed** `ENG-TEST-0001` (C3): *"Every AIStack software component,
+contract, engine, service, and architectural layer shall include unit
+tests"*, and *"AIStack must never consider untested software as a
+completed engineering artifact."* `ENG-TEST-0002` § *Host-touching UI
+screens*: `selection_ui` and `priority_ui` are *"verified live rather than
+by `pytest`"* — decision #9, 2026-08-29, cited from
+`claude/PLAN-UI-SELECTION-2026-08-29.md`, outside the projection.
+`ENG-TEST-0001` never mentioned the exception, so its universal wording
+and the practice contradicted each other for anyone reading the heritage
+alone. Two more screens followed the same pattern later
+(`network_discovery_ui`, `troubleshooting_assistant_ui`), and
+`ENG-TEST-0002` named neither. Found by ChatGPT's Boot Report of
+2026-09-23 during STD-0300 § 2.4 (W4), and confirmed against the bundle.
+**Derivable** no — the scope of a principle is a reading.
+**Qualification** decided 2026-09-23 by the owner: **state the scope.**
+The obligation binds what the governed suite covers; host-touching screens
+are verified live. Decided against keeping the principle universal, which
+would have made the four screens non-conforming and called for automated
+tests of their `app.py`, reversing decision #9.
+
+**Resolved 2026-09-23.** `ENG-TEST-0001` v1.3: § *Scope* states the
+boundary, the four screens, and decision #9 in the heritage for the first
+time; what a screen imports from `aistack` stays covered, and logic
+written in the screen does not. `ENG-TEST-0002` v2.5 names the two later
+screens and points to it. `claude/PLAN-UI-SELECTION-2026-08-29.md` remains
+the provenance of decision #9, no longer its only statement.
+
+---
 
 #### GOV-0002/OS-067 — `ARCH-0006` § Current Providers lists two of thirteen providers
 

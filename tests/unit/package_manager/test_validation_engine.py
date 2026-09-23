@@ -1,17 +1,17 @@
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
-from aistack.package_manager.contracts.package_item import PackageItem
+from aistack.package_manager.contracts.proposal_item import ProposalItem
 from aistack.package_manager.validation_engine import (
     DefaultValidationEngine,
 )
 
 
-def _package(items: tuple[PackageItem, ...]) -> KnowledgePackage:
+def _proposal(items: tuple[ProposalItem, ...]) -> GovernanceProposal:
 
-    return KnowledgePackage(
-        package_id="pkg-test",
-        title="Test package",
+    return GovernanceProposal(
+        proposal_id="proposal-test",
+        title="Test proposal",
         source="unit test",
         items=items,
     )
@@ -19,9 +19,9 @@ def _package(items: tuple[PackageItem, ...]) -> KnowledgePackage:
 
 def test_missing_target_file_is_rejected(tmp_path):
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="missing.md",
                 content="New paragraph.",
                 rationale="test",
@@ -29,7 +29,7 @@ def test_missing_target_file_is_rejected(tmp_path):
         )
     )
 
-    result = DefaultValidationEngine().validate(package, tmp_path)
+    result = DefaultValidationEngine().validate(proposal, tmp_path)
 
     assert result.accepted is False
     assert result.findings[0].passed is False
@@ -41,9 +41,9 @@ def test_missing_anchor_is_rejected(tmp_path):
     target = tmp_path / "doc.md"
     target.write_text("# Title\n\nBody.\n", encoding="utf-8")
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -52,7 +52,7 @@ def test_missing_anchor_is_rejected(tmp_path):
         )
     )
 
-    result = DefaultValidationEngine().validate(package, tmp_path)
+    result = DefaultValidationEngine().validate(proposal, tmp_path)
 
     assert result.accepted is False
     assert "not found" in result.findings[0].message
@@ -66,9 +66,9 @@ def test_ambiguous_anchor_is_rejected(tmp_path):
         encoding="utf-8",
     )
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -77,7 +77,7 @@ def test_ambiguous_anchor_is_rejected(tmp_path):
         )
     )
 
-    result = DefaultValidationEngine().validate(package, tmp_path)
+    result = DefaultValidationEngine().validate(proposal, tmp_path)
 
     assert result.accepted is False
     assert "ambiguous" in result.findings[0].message
@@ -91,9 +91,9 @@ def test_duplicate_content_is_rejected(tmp_path):
         encoding="utf-8",
     )
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="Already there.",
                 rationale="test",
@@ -102,7 +102,7 @@ def test_duplicate_content_is_rejected(tmp_path):
         )
     )
 
-    result = DefaultValidationEngine().validate(package, tmp_path)
+    result = DefaultValidationEngine().validate(proposal, tmp_path)
 
     assert result.accepted is False
     assert "duplicate" in result.findings[0].message
@@ -116,9 +116,9 @@ def test_well_formed_item_is_accepted(tmp_path):
         encoding="utf-8",
     )
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -127,13 +127,13 @@ def test_well_formed_item_is_accepted(tmp_path):
         )
     )
 
-    result = DefaultValidationEngine().validate(package, tmp_path)
+    result = DefaultValidationEngine().validate(proposal, tmp_path)
 
     assert result.accepted is True
     assert result.findings[0].passed is True
 
 
-def test_a_single_failing_item_rejects_the_whole_package(tmp_path):
+def test_a_single_failing_item_rejects_the_whole_proposal(tmp_path):
 
     target = tmp_path / "doc.md"
     target.write_text(
@@ -141,15 +141,15 @@ def test_a_single_failing_item_rejects_the_whole_package(tmp_path):
         encoding="utf-8",
     )
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
                 anchor="## Section",
             ),
-            PackageItem(
+            ProposalItem(
                 target_path="missing.md",
                 content="Other paragraph.",
                 rationale="test",
@@ -157,7 +157,7 @@ def test_a_single_failing_item_rejects_the_whole_package(tmp_path):
         )
     )
 
-    result = DefaultValidationEngine().validate(package, tmp_path)
+    result = DefaultValidationEngine().validate(proposal, tmp_path)
 
     assert result.accepted is False
     assert result.findings[0].passed is True

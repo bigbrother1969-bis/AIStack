@@ -1,5 +1,5 @@
 """
-Package Manager — PackageItem contract.
+Package Manager — ProposalItem contract.
 """
 
 from __future__ import annotations
@@ -9,9 +9,9 @@ from typing import Literal
 
 
 @dataclass(frozen=True, slots=True)
-class PackageItem:
+class ProposalItem:
     """
-    One proposed change carried by a KnowledgePackage.
+    One proposed change carried by a GovernanceProposal.
 
     `ARCH-0013`'s Open Points leave "exact PackageManager interfaces"
     and "integration conflict resolution rules" undecided. This first

@@ -10,8 +10,8 @@ from pathlib import Path
 from aistack.package_manager.contracts.integration_result import (
     IntegrationResult,
 )
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
 from aistack.package_manager.contracts.validation_result import (
     ValidationResult,
@@ -20,7 +20,7 @@ from aistack.package_manager.contracts.validation_result import (
 
 class IntegrationEngine(ABC):
     """
-    Contract for applying a validated KnowledgePackage to the working
+    Contract for applying a validated GovernanceProposal to the working
     tree.
 
     `ARCH-0013`, verbatim: "An IntegrationEngine is a governance
@@ -30,21 +30,21 @@ class IntegrationEngine(ABC):
     `integrate` takes the `ValidationResult` explicitly rather than
     re-validating — an `IntegrationEngine` given a rejected
     `ValidationResult` must refuse (`ValueError`), never re-derive its
-    own opinion of whether the package was acceptable.
+    own opinion of whether the proposal was acceptable.
     """
 
     @abstractmethod
     def integrate(
         self,
-        package: KnowledgePackage,
+        proposal: GovernanceProposal,
         validation_result: ValidationResult,
         repository_root: Path,
     ) -> IntegrationResult:
         """
-        Apply every item of an accepted package to its target file.
+        Apply every item of an accepted proposal to its target file.
 
         Raises `ValueError` when `validation_result.accepted` is
-        `False`, or when it does not carry the same `package_id`.
+        `False`, or when it does not carry the same `proposal_id`.
         """
 
         raise NotImplementedError

@@ -14,7 +14,7 @@ from aistack.package_manager.contracts.validation_finding import (
 @dataclass(frozen=True, slots=True)
 class ValidationResult:
     """
-    The outcome of validating a whole KnowledgePackage.
+    The outcome of validating a whole GovernanceProposal.
 
     `accepted` is `True` only when every `ValidationFinding` passed.
     An `IntegrationEngine` that receives a `ValidationResult` with
@@ -23,7 +23,7 @@ class ValidationResult:
     IntegrationEngine "applies validated changes", not proposed ones.
     """
 
-    package_id: str
+    proposal_id: str
 
     accepted: bool
 

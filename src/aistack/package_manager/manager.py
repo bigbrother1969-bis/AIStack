@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
 from aistack.package_manager.interfaces.package_manager import (
     PackageManager,
@@ -16,51 +16,51 @@ from aistack.package_manager.interfaces.package_manager import (
 
 class DefaultPackageManager(PackageManager):
     """
-    Receive and inspect a KnowledgePackage. Holds no policy of its
+    Receive and inspect a GovernanceProposal. Holds no policy of its
     own — `ARCH-0013`: "The PackageManager does not replace governance
     decisions."
     """
 
     def receive(
         self,
-        package: KnowledgePackage,
-    ) -> KnowledgePackage:
+        proposal: GovernanceProposal,
+    ) -> GovernanceProposal:
 
-        if not package.package_id:
+        if not proposal.proposal_id:
             raise ValueError(
-                "a KnowledgePackage must declare a package_id"
+                "a GovernanceProposal must declare a proposal_id"
             )
 
-        if not package.items:
+        if not proposal.items:
             raise ValueError(
-                f"package {package.package_id!r} carries no items"
+                f"proposal {proposal.proposal_id!r} carries no items"
             )
 
-        for item in package.items:
+        for item in proposal.items:
 
             if not item.target_path:
                 raise ValueError(
-                    f"package {package.package_id!r} has an item "
+                    f"proposal {proposal.proposal_id!r} has an item "
                     "with an empty target_path"
                 )
 
             if not item.content:
                 raise ValueError(
-                    f"package {package.package_id!r}, item "
+                    f"proposal {proposal.proposal_id!r}, item "
                     f"{item.target_path!r}: empty content"
                 )
 
-        return package
+        return proposal
 
     def inspect(
         self,
-        package: KnowledgePackage,
+        proposal: GovernanceProposal,
         repository_root: Path,
     ) -> tuple[str, ...]:
 
         notes: list[str] = []
 
-        for item in package.items:
+        for item in proposal.items:
 
             target = repository_root / item.target_path
 

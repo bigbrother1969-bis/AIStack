@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
 from aistack.package_manager.contracts.validation_finding import (
     ValidationFinding,
@@ -32,20 +32,20 @@ class DefaultValidationEngine(ValidationEngine):
     3. the proposed content is not already present verbatim in the
        target file — a duplicate is a conflict, not a no-op.
 
-    A package is `accepted` only when every item passes every check —
+    A proposal is `accepted` only when every item passes every check —
     `ARCH-0013`: "the validation phase must precede integration," and
-    a partially-valid package is not a validated one.
+    a partially-valid proposal is not a validated one.
     """
 
     def validate(
         self,
-        package: KnowledgePackage,
+        proposal: GovernanceProposal,
         repository_root: Path,
     ) -> ValidationResult:
 
         findings: list[ValidationFinding] = []
 
-        for item in package.items:
+        for item in proposal.items:
 
             target = repository_root / item.target_path
 
@@ -119,7 +119,7 @@ class DefaultValidationEngine(ValidationEngine):
         accepted = all(finding.passed for finding in findings)
 
         return ValidationResult(
-            package_id=package.package_id,
+            proposal_id=proposal.proposal_id,
             accepted=accepted,
             findings=tuple(findings),
         )

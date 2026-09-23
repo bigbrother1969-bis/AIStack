@@ -10,7 +10,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True, slots=True)
 class IntegrationResult:
     """
-    The outcome of integrating a validated KnowledgePackage.
+    The outcome of integrating a validated GovernanceProposal.
 
     Integration updates the working tree only — it never commits,
     pushes, or archives on its own behalf. Making the resulting change
@@ -21,7 +21,7 @@ class IntegrationResult:
     review before the commit rather than as a gate inside the code.
     """
 
-    package_id: str
+    proposal_id: str
 
     applied: bool
 

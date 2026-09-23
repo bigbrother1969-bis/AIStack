@@ -1,64 +1,64 @@
 import pytest
 
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
-from aistack.package_manager.contracts.package_item import PackageItem
+from aistack.package_manager.contracts.proposal_item import ProposalItem
 from aistack.package_manager.manager import DefaultPackageManager
 
 
-def _package(
-    package_id: str = "pkg-test",
-    items: tuple[PackageItem, ...] | None = None,
-) -> KnowledgePackage:
+def _proposal(
+    proposal_id: str = "proposal-test",
+    items: tuple[ProposalItem, ...] | None = None,
+) -> GovernanceProposal:
 
     if items is None:
         items = (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
             ),
         )
 
-    return KnowledgePackage(
-        package_id=package_id,
-        title="Test package",
+    return GovernanceProposal(
+        proposal_id=proposal_id,
+        title="Test proposal",
         source="unit test",
         items=items,
     )
 
 
-def test_receive_returns_a_well_formed_package():
+def test_receive_returns_a_well_formed_proposal():
 
-    package = _package()
+    proposal = _proposal()
 
-    received = DefaultPackageManager().receive(package)
+    received = DefaultPackageManager().receive(proposal)
 
-    assert received is package
+    assert received is proposal
 
 
-def test_receive_rejects_missing_package_id():
+def test_receive_rejects_missing_proposal_id():
 
-    package = _package(package_id="")
+    proposal = _proposal(proposal_id="")
 
     with pytest.raises(ValueError):
-        DefaultPackageManager().receive(package)
+        DefaultPackageManager().receive(proposal)
 
 
 def test_receive_rejects_empty_items():
 
-    package = _package(items=())
+    proposal = _proposal(items=())
 
     with pytest.raises(ValueError):
-        DefaultPackageManager().receive(package)
+        DefaultPackageManager().receive(proposal)
 
 
 def test_receive_rejects_item_with_empty_target_path():
 
-    package = _package(
+    proposal = _proposal(
         items=(
-            PackageItem(
+            ProposalItem(
                 target_path="",
                 content="New paragraph.",
                 rationale="test",
@@ -67,14 +67,14 @@ def test_receive_rejects_item_with_empty_target_path():
     )
 
     with pytest.raises(ValueError):
-        DefaultPackageManager().receive(package)
+        DefaultPackageManager().receive(proposal)
 
 
 def test_inspect_reports_missing_target_file(tmp_path):
 
-    package = _package(
+    proposal = _proposal(
         items=(
-            PackageItem(
+            ProposalItem(
                 target_path="missing.md",
                 content="New paragraph.",
                 rationale="test",
@@ -82,7 +82,7 @@ def test_inspect_reports_missing_target_file(tmp_path):
         )
     )
 
-    notes = DefaultPackageManager().inspect(package, tmp_path)
+    notes = DefaultPackageManager().inspect(proposal, tmp_path)
 
     assert len(notes) == 1
     assert "missing.md" in notes[0]
@@ -97,9 +97,9 @@ def test_inspect_counts_anchor_occurrences(tmp_path):
         encoding="utf-8",
     )
 
-    package = _package(
+    proposal = _proposal(
         items=(
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -108,6 +108,6 @@ def test_inspect_counts_anchor_occurrences(tmp_path):
         )
     )
 
-    notes = DefaultPackageManager().inspect(package, tmp_path)
+    notes = DefaultPackageManager().inspect(proposal, tmp_path)
 
     assert "found 1 time(s)" in notes[0]

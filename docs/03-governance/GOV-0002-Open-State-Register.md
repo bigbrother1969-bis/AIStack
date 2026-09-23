@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.96
+  version: 1.97
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-18
+  updated: 2026-09-23
 
 relations:
   references:
@@ -200,10 +200,10 @@ all three found that day, none of them by the register.
 
 # Non-conforming instances
 
-None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028 and OS-036 are in
-*Resolved*.
+None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036 and OS-060
+are in *Resolved*.
 
-Three of those seven closed by **retiring or narrowing the rule** rather than
+Three of those eight closed by **retiring or narrowing the rule** rather than
 by conforming to it. A heritage that only ever fixed instances would end with
 rules nothing could satisfy.
 
@@ -299,6 +299,80 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-060 — A second meaning of *KnowledgePackage* entered the heritage through the first proposal the PackageManager integrated
+
+**Nature** `non-conforming` · **Opened** 2026-09-23 · **State** resolved 2026-09-23 by renaming the PackageManager's input `GovernanceProposal` and correcting `ARCH-0013`, `ARCH-0009` and `FDN-0002`
+**Observed** `FDN-0002` § *KnowledgePackage* — C3, the SPOT of this
+heritage's terminology (`FDN-0003` Article 9) — reads, since the owner's
+decision of 2026-08-29: *"The Context Bundle is the Knowledge Package of
+AIStack. […] It is the only thing in this heritage that does what this
+definition describes."* Commit `87febe3` (2026-09-23) said the opposite in
+two places:
+
+- `ARCH-0013` § *Relationship To The Library Architecture Analogy*: *"A
+  KnowledgePackage is not a Context Bundle under another name. A Context
+  Bundle is one example of a KnowledgePackage […] Other KnowledgePackages
+  carry smaller, partial content"*;
+- `aistack.package_manager.contracts.KnowledgePackage`, a dataclass of
+  `PackageItem`s whose docstring repeated that a Context Bundle is *"one
+  example"*.
+
+That is a fourth declaration of a concept § *KnowledgePackage* had already
+found declared three times on 2026-08-29. It arrived through the first real
+proposal the new PackageManager integrated —
+`scripts/apply_arch0009_arch0013_cross_reference.py`, which inserted the
+`ARCH-0013` section quoted above — and it was written by an AI assistant
+from an owner correction recorded wrongly in
+`claude/PLAN-PHASE4-PACKAGE-MANAGER-2026-09-23.md`: *"KnowledgePackage et
+ContextBundle sont deux concepts complémentaires"*, where the owner's
+distinction was between the Context Bundle and the PackageManager. **The
+dock's own validation could not see it**: its three checks — the file
+exists, the anchor is unique, the content is not a duplicate — verify
+where a proposal lands, not what it says.
+
+Found 2026-09-23 by a line-by-line re-reading of the Context Bundle
+`aistack-context-2026-09-23` during STD-0300 § 2.4
+(`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`, N1). Three neighbours
+from the same commit: `ARCH-0009`'s new section said the receiving role was
+*"Neither […] built yet"* and `ARCH-0013`'s that the PackageManager
+*"does not yet build"*, in the commit that built one; no governed artifact named
+`aistack.package_manager`; and neither document's `version` nor `updated`
+moved.
+**Derivable** partly — that a class bears a Glossary term with another
+meaning is not derivable; that an artifact's content changed while its
+`updated` did not is, once a check compares the two against git history —
+no such check exists.
+**Qualification** decided 2026-09-23 by the owner: *KnowledgePackage = the
+Context Bundle*, and the PackageManager is a distinct concept. What it
+receives is a Governance Proposal (`FDN-0002`), not a Knowledge Package.
+Decided against the alternative of a PackageManager that receives only
+Context Bundles, which would have left the first proposal it integrated
+without a name and the dock without the input it was built for.
+
+**Resolved 2026-09-23.**
+
+- `aistack.package_manager`: `KnowledgePackage` → `GovernanceProposal`,
+  `PackageItem` → `ProposalItem`, `package_id` → `proposal_id`, and their
+  modules with them. A test pins that the contracts export no
+  `KnowledgePackage`.
+- `ARCH-0013` v1.4: § *Relationship* rewritten to agree with `FDN-0002`;
+  § *Implementation, 2026-09-23* states what is built, what is not, and
+  that none of § *Open Points* is settled by it.
+- `ARCH-0009` v1.3: *"Neither is built yet"* replaced by a dated statement.
+- `FDN-0002` v1.9: § *Governance Proposal* names what receives one;
+  § *KnowledgePackage* records that a PackageManager exists again and is
+  not a Knowledge Package.
+- `scripts/apply_arch0009_arch0013_cross_reference.py` removed: a one-off
+  already run, whose text was the error, and which would no longer be
+  rejected as a duplicate once that text changed — a second run would have
+  inserted the error again.
+
+*What still asserts the condition, per § What a closure must carry:*
+`claude/PLAN-PHASE4-PACKAGE-MANAGER-2026-09-23.md`, outside the projection,
+corrected by a dated note the same day.
+
+---
 
 #### GOV-0002/OS-059 — `aistack.conformance.structural.satisfies` reports a one-argument callable Protocol as satisfied by nearly every class in the package
 

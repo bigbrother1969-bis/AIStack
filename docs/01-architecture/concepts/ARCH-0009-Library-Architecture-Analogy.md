@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-07-24
-  updated: 2026-08-21
+  updated: 2026-09-23
 ---
 
 # ARCH-0009 — Library Architecture Analogy
@@ -116,11 +116,19 @@ governed heritage.
 That role is this analogy's Logistics department (`TransportService`),
 extended on arrival by what an Acquisition department
 (`KnowledgeService`) does in a real library: check a delivery against
-the existing catalogue before it is shelved. Neither is built yet.
+the existing catalogue before it is shelved. Neither department exists
+under those names. A first receiving dock was built on 2026-09-23 —
+`aistack.package_manager`, `ARCH-0013` § *Implementation, 2026-09-23* —
+and what it receives is a Governance Proposal (`FDN-0002`), not a
+Knowledge Package.
 
-A Context Bundle — "the library packed for a move," above — is a
-KnowledgePackage, not a PackageManager. It is what a PackageManager
-would receive, not what receives it.
+A Context Bundle — "the library packed for a move," above — is the
+Knowledge Package of AIStack (`FDN-0002`), not a PackageManager. It is
+what a PackageManager would receive, not what receives it.
+
+*Corrected 2026-09-23, `GOV-0002/OS-060`: this section, written the same
+day by `87febe3`, read "Neither is built yet" in the commit that built
+the receiving dock.*
 
 ## Future evolution
 

@@ -9,8 +9,8 @@ from pathlib import Path
 from aistack.package_manager.contracts.integration_result import (
     IntegrationResult,
 )
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
 from aistack.package_manager.contracts.validation_result import (
     ValidationResult,
@@ -22,37 +22,37 @@ from aistack.package_manager.interfaces.integration_engine import (
 
 class DefaultIntegrationEngine(IntegrationEngine):
     """
-    Applies every item of an accepted package to its target file.
+    Applies every item of an accepted proposal to its target file.
 
     Refuses outright — no partial application, no file touched — when
     the `ValidationResult` was not accepted, or was computed for a
-    different package. Integration never re-validates on its own.
+    different proposal. Integration never re-validates on its own.
     """
 
     def integrate(
         self,
-        package: KnowledgePackage,
+        proposal: GovernanceProposal,
         validation_result: ValidationResult,
         repository_root: Path,
     ) -> IntegrationResult:
 
-        if validation_result.package_id != package.package_id:
+        if validation_result.proposal_id != proposal.proposal_id:
             raise ValueError(
                 "validation_result was computed for a different "
-                f"package ({validation_result.package_id!r} != "
-                f"{package.package_id!r})"
+                f"proposal ({validation_result.proposal_id!r} != "
+                f"{proposal.proposal_id!r})"
             )
 
         if not validation_result.accepted:
             raise ValueError(
-                f"package {package.package_id!r} was not accepted "
+                f"proposal {proposal.proposal_id!r} was not accepted "
                 "by validation; refusing to integrate"
             )
 
         changed_paths: list[str] = []
         notes: list[str] = []
 
-        for item in package.items:
+        for item in proposal.items:
 
             target = repository_root / item.target_path
 
@@ -93,7 +93,7 @@ class DefaultIntegrationEngine(IntegrationEngine):
             )
 
         return IntegrationResult(
-            package_id=package.package_id,
+            proposal_id=proposal.proposal_id,
             applied=True,
             changed_paths=tuple(changed_paths),
             notes=tuple(notes),

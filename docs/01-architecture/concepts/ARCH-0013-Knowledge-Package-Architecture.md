@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Draft
   owner: Architecture
   created: 2026-07-25
-  updated: 2026-09-04
+  updated: 2026-09-23
 ---
 
 # ARCH-0013 — Knowledge Package Architecture
@@ -302,19 +302,27 @@ The integrated knowledge becomes part of the governed heritage.
 `ARCH-0009` gives AIStack's shared mental model: a governed digital
 library, where a Context Bundle is "the library packed for a move."
 
-A KnowledgePackage is not a Context Bundle under another name.
+The Context Bundle is the Knowledge Package of AIStack (`FDN-0002`,
+decided 2026-08-29 by the owner): a complete projection of the governed
+heritage, built and shipped by the Context Bundle Engine (`ADR-0005` to
+`ADR-0007`). The KnowledgePackage this document describes and the
+Context Bundle are one concept, not two.
 
-A Context Bundle is one example of a KnowledgePackage: a package whose
-content happens to be a complete projection of the governed heritage,
-built and shipped by the Context Bundle Engine (`ADR-0005` to
-`ADR-0007`). Other KnowledgePackages carry smaller, partial content.
+The PackageManager is a different concept: the role that receives, not
+the thing received. `ARCH-0009` names it — the Logistics department
+(`TransportService`), extended on arrival by what an Acquisition
+department (`KnowledgeService`) does in a real library: check a
+delivery against the existing catalogue before it is shelved. The
+Context Bundle Engine builds and ships a Knowledge Package; it does not
+receive one.
 
-The PackageManager plays the role `ARCH-0009` names but does not yet
-build: the Logistics department (`TransportService`), extended on
-arrival by what an Acquisition department (`KnowledgeService`) does in
-a real library — check a delivery against the existing catalogue before
-it is shelved. The Context Bundle Engine already builds and ships one
-kind of package; it does not receive one.
+*Corrected 2026-09-23, `GOV-0002/OS-060`. This section was added the
+same day by `87febe3` and read: "A KnowledgePackage is not a Context
+Bundle under another name. A Context Bundle is one example of a
+KnowledgePackage […] Other KnowledgePackages carry smaller, partial
+content" — the opposite of `FDN-0002`, written by an AI assistant from
+an owner correction it had recorded wrongly. That commit moved neither
+`version` nor `updated`; v1.4 does.*
 
 ------------------------------------------------------------------------
 
@@ -341,3 +349,33 @@ promoting this document to `Accepted` would assert they are settled when
 they are not. Two Glossary entries defer to a Draft SPOT anyway, and
 continue to — the reasoning above is why, dated rather than left as an
 open question each reader has to re-derive.
+
+------------------------------------------------------------------------
+
+# Implementation, 2026-09-23
+
+`aistack.package_manager` (`87febe3`, corrected by `GOV-0002/OS-060`)
+is the first PackageManager built. What it receives is a **Governance
+Proposal** (`FDN-0002`) — proposed edits to governed documents, one
+`ProposalItem` per edit — and not a Knowledge Package. Receiving a
+Context Bundle is not built.
+
+| Responsibility, § *PackageManager Is a Capability-Orchestrating Facade* | State on 2026-09-23 |
+|---|---|
+| Receive | built — `DefaultPackageManager.receive`, structural checks only |
+| Inspect | built — `DefaultPackageManager.inspect`, facts without judgment |
+| Resolve available capabilities | not built — no capability is resolved |
+| Orchestrate validation and integration | left to the caller — no orchestrator ahead of a second real case (`ARC-P-006`) |
+
+`DefaultValidationEngine` checks three things per item: the target file
+exists, the anchor matches exactly one line, the content is not already
+present. `DefaultIntegrationEngine` writes the working tree only; the
+`git diff` review before commit is the human validation step this
+document's flow places between the two engines.
+
+**None of the four items in § *Open Points* is settled by this code.**
+The interfaces are a first cut shaped by one real case, three checks are
+not a validation policy, and conflict resolution and version lifecycle
+are not addressed. The checks also have a limit OS-060 measured: they
+verify where a proposal lands, not what it says — the first proposal
+integrated carried the error that entry records, and passed all three.

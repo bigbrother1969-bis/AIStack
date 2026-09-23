@@ -3,10 +3,10 @@ import pytest
 from aistack.package_manager.contracts.integration_result import (
     IntegrationResult,
 )
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
-from aistack.package_manager.contracts.package_item import PackageItem
+from aistack.package_manager.contracts.proposal_item import ProposalItem
 from aistack.package_manager.contracts.validation_finding import (
     ValidationFinding,
 )
@@ -18,20 +18,20 @@ from aistack.package_manager.integration_engine import (
 )
 
 
-def _package(items: tuple[PackageItem, ...]) -> KnowledgePackage:
+def _proposal(items: tuple[ProposalItem, ...]) -> GovernanceProposal:
 
-    return KnowledgePackage(
-        package_id="pkg-test",
-        title="Test package",
+    return GovernanceProposal(
+        proposal_id="proposal-test",
+        title="Test proposal",
         source="unit test",
         items=items,
     )
 
 
-def _accepted(package_id: str) -> ValidationResult:
+def _accepted(proposal_id: str) -> ValidationResult:
 
     return ValidationResult(
-        package_id=package_id,
+        proposal_id=proposal_id,
         accepted=True,
         findings=(
             ValidationFinding(
@@ -43,10 +43,10 @@ def _accepted(package_id: str) -> ValidationResult:
     )
 
 
-def _rejected(package_id: str) -> ValidationResult:
+def _rejected(proposal_id: str) -> ValidationResult:
 
     return ValidationResult(
-        package_id=package_id,
+        proposal_id=proposal_id,
         accepted=False,
         findings=(
             ValidationFinding(
@@ -60,9 +60,9 @@ def _rejected(package_id: str) -> ValidationResult:
 
 def test_refuses_a_rejected_validation_result(tmp_path):
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -72,17 +72,17 @@ def test_refuses_a_rejected_validation_result(tmp_path):
 
     with pytest.raises(ValueError):
         DefaultIntegrationEngine().integrate(
-            package,
-            _rejected("pkg-test"),
+            proposal,
+            _rejected("proposal-test"),
             tmp_path,
         )
 
 
-def test_refuses_a_validation_result_for_another_package(tmp_path):
+def test_refuses_a_validation_result_for_another_proposal(tmp_path):
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -92,7 +92,7 @@ def test_refuses_a_validation_result_for_another_package(tmp_path):
 
     with pytest.raises(ValueError):
         DefaultIntegrationEngine().integrate(
-            package,
+            proposal,
             _accepted("some-other-package"),
             tmp_path,
         )
@@ -106,9 +106,9 @@ def test_inserts_content_after_anchor(tmp_path):
         encoding="utf-8",
     )
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -119,8 +119,8 @@ def test_inserts_content_after_anchor(tmp_path):
     )
 
     result = DefaultIntegrationEngine().integrate(
-        package,
-        _accepted("pkg-test"),
+        proposal,
+        _accepted("proposal-test"),
         tmp_path,
     )
 
@@ -144,9 +144,9 @@ def test_inserts_content_before_anchor(tmp_path):
         encoding="utf-8",
     )
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -157,8 +157,8 @@ def test_inserts_content_before_anchor(tmp_path):
     )
 
     DefaultIntegrationEngine().integrate(
-        package,
-        _accepted("pkg-test"),
+        proposal,
+        _accepted("proposal-test"),
         tmp_path,
     )
 
@@ -174,9 +174,9 @@ def test_appends_content_when_anchor_is_none(tmp_path):
     target = tmp_path / "doc.md"
     target.write_text("# Title\n\nBody.\n", encoding="utf-8")
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -185,8 +185,8 @@ def test_appends_content_when_anchor_is_none(tmp_path):
     )
 
     DefaultIntegrationEngine().integrate(
-        package,
-        _accepted("pkg-test"),
+        proposal,
+        _accepted("proposal-test"),
         tmp_path,
     )
 
@@ -202,9 +202,9 @@ def test_rejected_result_leaves_the_file_untouched(tmp_path):
     original = "# Title\n\n## Section\n\nBody.\n"
     target.write_text(original, encoding="utf-8")
 
-    package = _package(
+    proposal = _proposal(
         (
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -215,8 +215,8 @@ def test_rejected_result_leaves_the_file_untouched(tmp_path):
 
     with pytest.raises(ValueError):
         DefaultIntegrationEngine().integrate(
-            package,
-            _rejected("pkg-test"),
+            proposal,
+            _rejected("proposal-test"),
             tmp_path,
         )
 

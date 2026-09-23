@@ -1,9 +1,9 @@
 import pytest
 
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
-from aistack.package_manager.contracts.package_item import PackageItem
+from aistack.package_manager.contracts.proposal_item import ProposalItem
 from aistack.package_manager.integration_engine import (
     DefaultIntegrationEngine,
 )
@@ -27,12 +27,12 @@ def test_receive_validate_integrate_happy_path(tmp_path):
         encoding="utf-8",
     )
 
-    package = KnowledgePackage(
-        package_id="pkg-happy",
-        title="Test package",
+    proposal = GovernanceProposal(
+        proposal_id="proposal-happy",
+        title="Test proposal",
         source="unit test",
         items=(
-            PackageItem(
+            ProposalItem(
                 target_path="doc.md",
                 content="New paragraph.",
                 rationale="test",
@@ -46,7 +46,7 @@ def test_receive_validate_integrate_happy_path(tmp_path):
     validator = DefaultValidationEngine()
     integrator = DefaultIntegrationEngine()
 
-    received = manager.receive(package)
+    received = manager.receive(proposal)
 
     notes = manager.inspect(received, tmp_path)
     assert "found 1 time(s)" in notes[0]
@@ -60,14 +60,14 @@ def test_receive_validate_integrate_happy_path(tmp_path):
     assert "New paragraph." in target.read_text(encoding="utf-8")
 
 
-def test_rejected_package_never_reaches_integration(tmp_path):
+def test_rejected_proposal_never_reaches_integration(tmp_path):
 
-    package = KnowledgePackage(
-        package_id="pkg-rejected",
-        title="Test package",
+    proposal = GovernanceProposal(
+        proposal_id="proposal-rejected",
+        title="Test proposal",
         source="unit test",
         items=(
-            PackageItem(
+            ProposalItem(
                 target_path="missing.md",
                 content="New paragraph.",
                 rationale="test",
@@ -79,7 +79,7 @@ def test_rejected_package_never_reaches_integration(tmp_path):
     validator = DefaultValidationEngine()
     integrator = DefaultIntegrationEngine()
 
-    received = manager.receive(package)
+    received = manager.receive(proposal)
 
     validation = validator.validate(received, tmp_path)
     assert validation.accepted is False

@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.8
+  version: 1.9
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-09-04
+  updated: 2026-09-23
 
 relations:
   references:
@@ -445,6 +445,13 @@ concept and is `status: Draft`. This entry does not wait for it: measured
 `ARCH-0013`, `ADR-0008` and the register — and the thing it names ships in
 every projection while the classes that bore the name did not run at all.*
 
+*A `PackageManager` exists again since 2026-09-23 (`aistack.package_manager`).
+It is not the one removed on 2026-08-29, and it is not a Knowledge Package:
+it receives Governance Proposals (§ *Governance Proposal*). Its input was
+first written as a class named `KnowledgePackage` — a fourth declaration of
+this concept after the three recorded above — and renamed the same day,
+`GOV-0002/OS-060`.*
+
 ------------------------------------------------------------------------
 
 # Package Manifest
@@ -505,6 +512,14 @@ validation workflows.
 
 A Governance Proposal requires appropriate validation before becoming
 governed knowledge.
+
+**What receives one is the PackageManager.** `aistack.package_manager`
+(`ARCH-0013` § *Implementation, 2026-09-23*) takes a `GovernanceProposal`,
+carrying one `ProposalItem` per proposed edit, and validates it before
+anything is integrated. A Governance Proposal is not a Knowledge Package:
+the Context Bundle is (§ *KnowledgePackage*).
+
+*Decided 2026-09-23 by the owner, `GOV-0002/OS-060`.*
 
 ---
 

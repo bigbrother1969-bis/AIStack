@@ -7,8 +7,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from aistack.package_manager.contracts.knowledge_package import (
-    KnowledgePackage,
+from aistack.package_manager.contracts.governance_proposal import (
+    GovernanceProposal,
 )
 from aistack.package_manager.contracts.validation_result import (
     ValidationResult,
@@ -17,7 +17,7 @@ from aistack.package_manager.contracts.validation_result import (
 
 class ValidationEngine(ABC):
     """
-    Contract for validating a KnowledgePackage against the governed
+    Contract for validating a GovernanceProposal against the governed
     heritage.
 
     `ARCH-0013`, verbatim: "A ValidationEngine is a governance
@@ -37,11 +37,11 @@ class ValidationEngine(ABC):
     @abstractmethod
     def validate(
         self,
-        package: KnowledgePackage,
+        proposal: GovernanceProposal,
         repository_root: Path,
     ) -> ValidationResult:
         """
-        Evaluate every item of a package and report one finding each.
+        Evaluate every item of a proposal and report one finding each.
         """
 
         raise NotImplementedError

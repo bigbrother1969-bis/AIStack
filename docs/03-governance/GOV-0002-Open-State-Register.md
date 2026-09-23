@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.101
+  version: 1.102
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -212,9 +212,9 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064 and OS-065 are in *Resolved*.
+OS-063, OS-064, OS-065 and OS-067 are in *Resolved*.
 
-Three of those eleven closed by **retiring or narrowing the rule** rather than
+Three of those twelve closed by **retiring or narrowing the rule** rather than
 by conforming to it. A heritage that only ever fixed instances would end with
 rules nothing could satisfy.
 
@@ -278,9 +278,9 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
-Two open: OS-061 and OS-062. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034,
-OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055 and
-OS-066 are in *Resolved*.
+Three open: OS-061, OS-062 and OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
+OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055
+and OS-066 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -339,6 +339,30 @@ exists.
 **Qualification** `unknown` — merge, map rule to principle, or keep both
 levels as `OS-003` did: the owner's to decide.
 
+#### GOV-0002/OS-068 — Eleven providers are instantiated directly, outside the `ProviderRegistry` that `ARCH-0007` § Discovery Model describes
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** open
+**Observed** `ARCH-0007` § *Discovery Model*: *"Capabilities are registered
+into the Kernel Context during bootstrap. Application code requests
+capabilities from the Kernel Context instead of instantiating
+implementations directly."* Measured 2026-09-23: of thirteen classes
+satisfying `Provider`, two are registered — `docker` and `compose`, by
+`kernel/bootstrap/providers.py`. The other eleven (`Beszel`, `Backup`,
+`MediaLibrary`, `Storage`, `NvidiaGpu`, `Host`, `HttpProbe`, `Jellyfin`,
+`NetworkDockerDiscovery`, `Nextcloud`, `Syncthing`) are instantiated
+directly by the commands that use them — `architecture_render`,
+`console_render`, `health_render`, `runtime_diagnose`, `ai_reason` and the
+`*_discover` commands, per a reading of `src/` on 2026-09-23. `ARCH-0006`
+§ *Current Providers* lists all thirteen since `OS-067`.
+**Derivable** yes — `registry-inventory.json` and `contract-inventory.json`
+already carry both sets; no check compares them.
+**Qualification** `unknown` — the owner's to decide, provider by provider
+or as a rule: register them and have the commands retrieve them from the
+Kernel Context; or state in `ARCH-0007` which capabilities the Discovery
+Model binds, and why a provider used by the command that builds it is not
+among them. `ARC-P-006` weighs on the first: a registration nothing
+retrieves is what `unused-registrations` reports.
+
 ---
 
 ---
@@ -348,6 +372,30 @@ levels as `OS-003` did: the owner's to decide.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-067 — `ARCH-0006` § Current Providers lists two of thirteen providers
+
+**Nature** `non-conforming` · **Opened** 2026-09-23 · **State** resolved 2026-09-23 by ARCH-0006 v1.1
+**Observed** `ARCH-0006` § *Current Providers*, unchanged since 2026-08-21,
+listed `DockerProvider` and `ComposeProvider`, and § *Future Providers*
+listed `FilesystemProvider`. The Context Bundle's `contract-inventory.json`
+measures thirteen classes satisfying `Provider`, three of them under
+`aistack.providers.filesystem`. A section titled *Current* is read as an
+inventory — the reason `ARCH-0005` gave on 2026-08-28 for correcting
+`ARCH-0007` § *Current Registries*. Found by the re-reading of the Context
+Bundle during STD-0300 § 2.4 (`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`,
+N3).
+**Derivable** yes — both inventories are in every projection; no check
+compares a document's list with them.
+**Qualification** decided 2026-09-23 by the owner: correct the inventory
+now, and hold the registration question apart as `OS-068`.
+
+**Resolved 2026-09-23.** `ARCH-0006` v1.1: § *Current Providers* lists the
+thirteen, with their package and whether the Kernel registers them;
+`FilesystemProvider` leaves § *Future Providers*; a dated note records the
+correction.
+
+---
 
 #### GOV-0002/OS-066 — `ARCH-0012` composes a Capability of Actions, which `ADR-0008` qualifies `abandoned`
 

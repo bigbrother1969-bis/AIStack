@@ -19,14 +19,17 @@ from aistack.providers.filesystem import (
     backup_thresholds_for_host,
     storage_thresholds_for_host,
 )
+from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.providers.gpu import NvidiaGpuProvider, gpu_thresholds_for_host
 from aistack.runtime.backup_gap import find_backup_gaps
 from aistack.runtime.container_distress import find_container_distress
 from aistack.runtime.evaluate_backup import evaluate_backup
 from aistack.runtime.evaluate_gpu import evaluate_gpu
+from aistack.runtime.evaluate_pra_tests import evaluate_pra_tests
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
+from aistack.runtime.pra_test_gap import find_pra_test_gaps
 from aistack.runtime.storage_shortage import find_storage_shortage
 
 # Same convention as `architecture_render.py`'s own
@@ -84,6 +87,15 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
     / "health"
     / "definitions"
     / "health_score_weights.yml"
+)
+
+# `OPS-0009`'s own declared PRA test records — not scoped by host, the
+# same reason `DEFAULT_HEALTH_SCORE_WEIGHTS` is not. Mirrors
+# `aistack.cli.health_render.DEFAULT_PRA_TESTS` exactly — this module
+# never imports the other, per this file's own "no CLI in this
+# package imports another" convention (see the comment above).
+DEFAULT_PRA_TESTS = (
+    Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml"
 )
 
 
@@ -163,6 +175,38 @@ def gpu_domain(hostname: str) -> HealthDomain:
     return HealthDomain(name="GPU", instrumented=True, findings=evaluate_gpu(anomalies))
 
 
+def pra_tests_domain() -> HealthDomain:
+    """Mirrors `aistack.cli.health_render.pra_tests_domain` exactly."""
+
+    if not DEFAULT_PRA_TESTS.exists():
+        return HealthDomain(
+            name="Tests PRA",
+            instrumented=False,
+            note=(
+                f"no PRA test definition at {DEFAULT_PRA_TESTS}; restore "
+                f"tests are not checked"
+            ),
+        )
+
+    try:
+        readings, thresholds = load_pra_tests_yaml(DEFAULT_PRA_TESTS)
+    except (ValueError, OSError) as error:
+        return HealthDomain(
+            name="Tests PRA",
+            instrumented=False,
+            note=(
+                f"PRA test definition not readable ({error}); restore "
+                f"tests are not checked"
+            ),
+        )
+
+    gaps = find_pra_test_gaps(readings, thresholds.thresholds)
+
+    return HealthDomain(
+        name="Tests PRA", instrumented=True, findings=evaluate_pra_tests(gaps)
+    )
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     """Mirrors `aistack.cli.health_render.build_cockpit` exactly."""
 
@@ -172,6 +216,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             services_domain(),
             backup_domain(hostname),
             gpu_domain(hostname),
+            pra_tests_domain(),
         )
     )
 

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from aistack.contracts.backup_reading import BackupReading
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
+from aistack.contracts.pra_test_reading import PraTestReading
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_observation import LogEntry
 from aistack.contracts.storage_reading import StorageReading
@@ -98,12 +99,14 @@ class CitedReading:
     carries, so a finding cites exactly what collected the evidence
     — `docker stats`, `sensors` — not a description of what it means.
 
-    `reading` is one of six named types — `ContainerCpuReading`,
+    `reading` is one of seven named types — `ContainerCpuReading`,
     `TemperatureReading`, `StorageReading` (`PLAN-J7`'s storage
     domain), `ContainerStateReading` (`PLAN-J7`'s Services domain),
-    `BackupReading` (`PLAN-J7`'s Sauvegarde/PRA domain), and, since
-    `PLAN-J7`'s GPU domain, `GpuReading` — spelled out directly rather
-    than imported from `aistack.kernel.evidence.Evidence`:
+    `BackupReading` (`PLAN-J7`'s Sauvegarde/PRA domain), `GpuReading`
+    (`PLAN-J7`'s GPU domain), and, since `PLAN-J11` § 11.9.1's Tests
+    PRA domain (`OPS-0009`, 2026-09-23), `PraTestReading` — spelled
+    out directly rather than imported from
+    `aistack.kernel.evidence.Evidence`:
     `aistack.contracts` is the heritage's foundational layer, and
     importing `aistack.kernel.evidence` from it would read the
     dependency backwards — `kernel.evidence` is built on these
@@ -128,6 +131,7 @@ class CitedReading:
         | ContainerStateReading
         | BackupReading
         | GpuReading
+        | PraTestReading
     )
 
     def __post_init__(self) -> None:

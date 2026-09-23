@@ -11,6 +11,7 @@ from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
 from aistack.health.technical_debt import compute_technical_debt_score
+from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,
@@ -23,9 +24,11 @@ from aistack.runtime.backup_gap import find_backup_gaps
 from aistack.runtime.container_distress import find_container_distress
 from aistack.runtime.evaluate_backup import evaluate_backup
 from aistack.runtime.evaluate_gpu import evaluate_gpu
+from aistack.runtime.evaluate_pra_tests import evaluate_pra_tests
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
+from aistack.runtime.pra_test_gap import find_pra_test_gaps
 from aistack.runtime.storage_shortage import find_storage_shortage
 
 # `OPS-0005`'s own declared thresholds — the same file
@@ -86,14 +89,26 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
     / "health_score_weights.yml"
 )
 
+# `OPS-0009`'s own declared PRA test records — not scoped by host, the
+# same reason `DEFAULT_HEALTH_SCORE_WEIGHTS` is not: a restore test is
+# a fleet-wide fact the owner records by hand, not a threshold that
+# varies by which host renders the page.
+DEFAULT_PRA_TESTS = (
+    Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml"
+)
+
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
-# closed domain vocabulary the owner named before any code —
-# "stockage, services, backup/PRA, GPU" — not this module's own
-# invention. All five reference cases have since named a domain
-# (Storage `PLAN-J7` § 6, Services § 8, Sauvegarde/PRA § 9, GPU § 10) —
-# this note stays declared for a host where a domain's own check
-# still reports nothing to observe (no threshold file, no `nvidia-smi`,
-# Docker unreachable), never a false "healthy" (`FDN-0003` Article 12).
+# domain vocabulary the owner named before any code — "stockage,
+# services, backup/PRA, GPU" — not this module's own invention, closed
+# at four from 2026-09-11 until `PLAN-J11` § 11.9.1's third and last
+# named gap ("tests PRA") reopened it to five, on the owner's own
+# explicit decision, 2026-09-23. All five reference cases have since
+# named a domain (Storage `PLAN-J7` § 6, Services § 8, Sauvegarde/PRA
+# § 9, GPU § 10, Tests PRA — `OPS-0009`, 2026-09-23) — this note stays
+# declared for a host where a domain's own check still reports nothing
+# to observe (no threshold file, no `nvidia-smi`, Docker unreachable,
+# no PRA test definition), never a false "healthy" (`FDN-0003` Article
+# 12).
 
 
 def storage_domain(hostname: str) -> HealthDomain:
@@ -236,6 +251,61 @@ def gpu_domain(hostname: str) -> HealthDomain:
     return HealthDomain(name="GPU", instrumented=True, findings=evaluate_gpu(anomalies))
 
 
+def pra_tests_domain() -> HealthDomain:
+    """
+    `PLAN-J11` § 11.9.1's third and last named gap ("tests PRA"),
+    reopened and closed 2026-09-23: `OPS-0004`'s reopened requirement
+    to demonstrate, on a real cadence, that a restore actually works —
+    not only that a backup file exists (`Sauvegarde / PRA`'s own v1
+    scope, unchanged). `load_pra_tests_yaml` reads `OPS-0009`'s
+    declared record of every service the owner tests and each one's
+    own last-known outcome, `find_pra_test_gaps` decides which
+    services are untested, stale, or already recorded as failed
+    against `OPS-0009`'s declared threshold, `evaluate_pra_tests`
+    states the finding.
+
+    **Not host-scoped, unlike every other domain function here.** A
+    restore test is a fleet-wide fact the owner records by hand, not
+    a per-host observation `StorageProvider`/`DockerProvider`/
+    `NvidiaGpuProvider` each collect from the machine this process
+    happens to run on — so this domain reads the same result
+    wherever `main()` runs, the same way `DEFAULT_PRA_TESTS` is not
+    scoped by host either.
+
+    A missing or unreadable definition is `instrumented=False` with a
+    note naming why — the same absence, stated the same way, every
+    other domain already holds for its own declared file.
+    """
+
+    if not DEFAULT_PRA_TESTS.exists():
+        return HealthDomain(
+            name="Tests PRA",
+            instrumented=False,
+            note=(
+                f"no PRA test definition at {DEFAULT_PRA_TESTS}; restore "
+                f"tests are not checked"
+            ),
+        )
+
+    try:
+        readings, thresholds = load_pra_tests_yaml(DEFAULT_PRA_TESTS)
+    except (ValueError, OSError) as error:
+        return HealthDomain(
+            name="Tests PRA",
+            instrumented=False,
+            note=(
+                f"PRA test definition not readable ({error}); restore "
+                f"tests are not checked"
+            ),
+        )
+
+    gaps = find_pra_test_gaps(readings, thresholds.thresholds)
+
+    return HealthDomain(
+        name="Tests PRA", instrumented=True, findings=evaluate_pra_tests(gaps)
+    )
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     return HealthCockpit(
         domains=(
@@ -243,6 +313,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             services_domain(),
             backup_domain(hostname),
             gpu_domain(hostname),
+            pra_tests_domain(),
         )
     )
 

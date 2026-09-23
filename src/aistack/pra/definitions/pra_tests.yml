@@ -1,0 +1,47 @@
+# PRA (restore) test records — OPS-0009's own declared values.
+#
+# Loaded by `load_pra_tests_yaml` (`src/aistack/pra/yaml/store.py`),
+# read by `aistack.cli.health_render` and `aistack.cli.console_render`.
+#
+# Declared 2026-09-23 by the owner (`PLAN-J11` § 11.9.1, third and
+# last named gap, reopened the same day
+# `claude/PLAN-CMDB-HTTP-PROBE-2026-09-23.md` and
+# `claude/PLAN-TECHNICAL-DEBT-CARD-2026-09-23.md` closed the first
+# two): the five services already named in the legacy
+# `homelab_documentation` engine's own restore procedures
+# (`procedures/restore_*.md` — gigabyte, raspberry, nextcloud, immich,
+# arrstack), and a 90-day freshness threshold applied to all five
+# alike (a quarterly rhythm, the owner's own choice over a looser
+# 180-day alternative examined with her).
+#
+# `nextcloud` and `immich`'s `last_test` entries are the owner's own
+# real restore-test history, found 2026-09-23 in the legacy engine's
+# `runtime/pra_tests.json` (a real, hand-maintained record — not
+# invented for this file) and carried over here rather than reset to
+# untested. `gigabyte`, `raspberry` and `arrstack` have never been
+# tested in that history either, and are declared here the same
+# honest way: `last_test: null`, not a fabricated one.
+#
+# This file is edited by hand after each real restore test — no UI
+# and no provider writes it back, the same convention
+# `backup_thresholds.yml` already holds.
+
+max_age_days: 90
+
+services:
+  - name: gigabyte
+    last_test: null
+  - name: raspberry
+    last_test: null
+  - name: nextcloud
+    last_test:
+      status: success
+      date: "2026-06-24"
+      rto_minutes: 2
+  - name: immich
+    last_test:
+      status: success
+      date: "2026-06-24"
+      rto_minutes: 5
+  - name: arrstack
+    last_test: null

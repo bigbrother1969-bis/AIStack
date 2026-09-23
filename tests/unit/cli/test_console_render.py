@@ -76,8 +76,12 @@ def test_main_writes_the_console_html_artifact(workspace):
     assert "Cockpit Santé" in document
     # PLAN-J11 § 11.9 — the health cartouche, built from a real
     # HealthCockpit against this sandbox's own hostname: whichever
-    # host runs this suite, `main()` still writes all four domains.
+    # host runs this suite, `main()` still writes all five domains.
     assert "État de santé du homelab" in document
+    # PLAN-J11 § 11.9.1's third and last named gap ("tests PRA"),
+    # reopened and closed 2026-09-23 — `DEFAULT_PRA_TESTS` is the
+    # real, unpatched `OPS-0009` file here too.
+    assert "Tests PRA" in document
     # PLAN-J11 § 11.9.1 — the "Dette technique" card, added 2026-09-23.
     assert "Dette technique" in document
 
@@ -205,7 +209,7 @@ def test_the_default_console_links_definition_exists():
 
 
 # --------------------------------------------------------------------
-# The health cartouche (PLAN-J11 § 11.9) — build_cockpit and the four
+# The health cartouche (PLAN-J11 § 11.9) — build_cockpit and the five
 # domain functions, duplicated from aistack.cli.health_render.
 #
 # These do not repeat test_health_render.py's full domain coverage —
@@ -217,16 +221,23 @@ def test_the_default_console_links_definition_exists():
 # --------------------------------------------------------------------
 
 
-def test_build_cockpit_always_names_all_four_domains(monkeypatch, tmp_path):
+def test_build_cockpit_always_names_all_five_domains(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
 
     names = {domain.name for domain in cockpit.domains}
-    assert names == {"Stockage", "Services", "Sauvegarde / PRA", "GPU"}
+    assert names == {
+        "Stockage",
+        "Services",
+        "Sauvegarde / PRA",
+        "GPU",
+        "Tests PRA",
+    }
 
 
 def test_storage_domain_reports_an_alert(monkeypatch, tmp_path):
@@ -289,7 +300,7 @@ hosts:
     assert len(domain.findings) == 1
 
 
-def test_technical_debt_score_reports_findings_across_domains(monkeypatch):
+def test_technical_debt_score_reports_findings_across_domains(monkeypatch, tmp_path):
     """
     Mirrors `test_health_render.py`'s own
     `test_technical_debt_score_counts_findings_across_every_domain`,
@@ -298,6 +309,7 @@ def test_technical_debt_score_reports_findings_across_domains(monkeypatch):
     there.
     """
 
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",
@@ -349,6 +361,25 @@ hosts:
     assert len(domain.findings) == 1
 
 
+def test_pra_tests_domain_reports_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "pra_tests.yml"
+    path.write_text(
+        """
+max_age_days: 90
+services:
+  - name: nextcloud
+    last_test: null
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
 # --------------------------------------------------------------------
 # Drift guard — this module's duplicated constants must match
 # aistack.cli.health_render's own, the same way health_render.py's own
@@ -376,6 +407,11 @@ def test_the_default_health_score_weights_path_matches_health_renders():
         cli.DEFAULT_HEALTH_SCORE_WEIGHTS == health_render.DEFAULT_HEALTH_SCORE_WEIGHTS
     )
     assert cli.DEFAULT_HEALTH_SCORE_WEIGHTS.exists()
+
+
+def test_the_default_pra_tests_path_matches_health_renders():
+    assert cli.DEFAULT_PRA_TESTS == health_render.DEFAULT_PRA_TESTS
+    assert cli.DEFAULT_PRA_TESTS.exists()
 
 
 def test_technical_debt_score_matches_health_renders_own_behavior(monkeypatch):

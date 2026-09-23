@@ -12,7 +12,12 @@ exercised the same way storage is: a real directory
 fake. GPU is exercised the same way Services is: a `FakeGpuProvider`
 standing in for `NvidiaGpuProvider`, no real `nvidia-smi` — the sandbox
 that runs this suite has no NVIDIA GPU, and a fake makes the result not
-depend on whichever machine happens to run it.
+depend on whichever machine happens to run it. Tests PRA is exercised
+the same way `console`'s own links are: `DEFAULT_PRA_TESTS`
+monkeypatched to a real YAML file `load_pra_tests_yaml` reads directly
+— there is no live system for a fake Provider to stand in for
+(`PraTestReading`'s own docstring: "not a live observation — a
+declared record, read as one").
 
 Mirrors `test_the_provider_commands_run.py`'s own end-to-end style for
 the "does `main()` write the artifact" test — the same GOV-0002/OS-044
@@ -27,7 +32,7 @@ monkeypatched path.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -38,6 +43,8 @@ from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
 from aistack.contracts.health_score import DomainWeight, HealthScoreWeights
+
+_DOMAIN_NAMES = {"Stockage", "Services", "Sauvegarde / PRA", "GPU", "Tests PRA"}
 
 
 class FakeDockerProvider:
@@ -185,23 +192,26 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
     assert "no storage-threshold definition at" in storage.note
 
 
-def test_all_four_domains_are_always_present(monkeypatch, tmp_path):
+def test_all_five_domains_are_always_present(monkeypatch, tmp_path):
     """
-    `PLAN-J7` § 1's closed domain vocabulary, all four now named by a
-    reference case (Storage, Services, Sauvegarde/PRA, GPU) — every
-    build lists all four, whatever their instrumented state, never
-    silently fewer (`FDN-0003` Article 12).
+    `PLAN-J7` § 1's domain vocabulary, reopened from four to five on
+    the owner's own explicit decision, 2026-09-23 (Storage, Services,
+    Sauvegarde/PRA, GPU, and now Tests PRA — `PLAN-J11` § 11.9.1's
+    third and last named gap, reopened and closed the same day) —
+    every build lists all five, whatever their instrumented state,
+    never silently fewer (`FDN-0003` Article 12).
     """
 
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
 
     names = {domain.name for domain in cockpit.domains}
-    assert names == {"Stockage", "Services", "Sauvegarde / PRA", "GPU"}
+    assert names == _DOMAIN_NAMES
 
 
 # --------------------------------------------------------------------
@@ -417,6 +427,102 @@ def test_a_missing_gpu_threshold_definition_is_not_instrumented(
 
 
 # --------------------------------------------------------------------
+# pra_tests_domain — PLAN-J11 § 11.9.1's third and last named gap,
+# reopened and closed 2026-09-23. Not host-scoped, unlike every
+# domain above — `pra_tests_domain()` takes no hostname.
+# --------------------------------------------------------------------
+
+
+def pra_tests_yaml(
+    *,
+    max_age_days: float = 90,
+    status: str | None = None,
+    date: str = "2026-01-01",
+    rto_minutes: int | None = None,
+) -> str:
+    if status is None:
+        last_test = "null"
+    else:
+        rto_line = f"\n      rto_minutes: {rto_minutes}" if rto_minutes is not None else ""
+        last_test = f"\n      status: {status}\n      date: \"{date}\"{rto_line}"
+
+    return f"""
+max_age_days: {max_age_days}
+services:
+  - name: nextcloud
+    last_test: {last_test}
+"""
+
+
+def test_a_never_tested_service_is_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "pra_tests.yml"
+    path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].qualifications == (
+        "OPS-0004/technical-debt",
+        "OPS-0004/sustainability-anomaly",
+        "OPS-0004/deployment-misconfiguration",
+    )
+
+
+def test_a_failed_test_is_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "pra_tests.yml"
+    path.write_text(
+        pra_tests_yaml(status="failed", date="2026-01-01"), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+def test_a_stale_successful_test_is_an_alert(monkeypatch, tmp_path):
+    stale_date = (datetime.now(timezone.utc) - timedelta(days=200)).strftime(
+        "%Y-%m-%d"
+    )
+    path = tmp_path / "pra_tests.yml"
+    path.write_text(
+        pra_tests_yaml(status="success", date=stale_date), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+def test_a_fresh_successful_test_reads_as_clean(monkeypatch, tmp_path):
+    fresh_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    path = tmp_path / "pra_tests.yml"
+    path.write_text(
+        pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_missing_pra_tests_definition_is_not_instrumented(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is False
+    assert "no PRA test definition at" in domain.note
+
+
+# --------------------------------------------------------------------
 # main() — end to end
 # --------------------------------------------------------------------
 
@@ -433,6 +539,9 @@ def test_main_writes_the_health_html_artifact(monkeypatch, tmp_path, workspace):
     assert document.startswith("<!doctype html>")
     assert "Cockpit Santé" in document
     assert "GPU" in document
+    # `DEFAULT_PRA_TESTS` is the real, unpatched `OPS-0009` file here —
+    # every render, whichever machine runs it, lists Tests PRA too.
+    assert "Tests PRA" in document
     assert "non instrumenté" in document
     # `DEFAULT_HEALTH_SCORE_WEIGHTS` is the real, unpatched `OPS-0008`
     # file here — every host, including this sandbox's own, reads a
@@ -510,6 +619,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", backup_path)
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",
@@ -523,6 +633,8 @@ hosts:
     assert score is not None
     # One from Services (the restarting container), one from
     # Sauvegarde/PRA (the missing backup) — both cite technical-debt.
+    # Tests PRA is deliberately not instrumented here (`DEFAULT_PRA_TESTS`
+    # points at nothing) so it contributes none of its own.
     assert len(score.findings) == 2
     assert score.value == 70  # 100 - 2*15
 
@@ -549,6 +661,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", storage_path)
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -560,7 +673,8 @@ hosts:
     assert score.value == 100
 
 
-def test_technical_debt_score_reuses_the_services_weight(monkeypatch):
+def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",
@@ -680,3 +794,14 @@ def test_the_default_health_score_weights_definition_exists():
     """
 
     assert cli.DEFAULT_HEALTH_SCORE_WEIGHTS.exists()
+
+
+def test_the_default_pra_tests_definition_exists():
+    """
+    Mirrors `test_the_default_health_score_weights_definition_exists`:
+    `OPS-0009` has no sibling in `runtime_diagnose.py` either — a
+    restore test is hand-maintained, never collected by a live
+    Provider that runtime diagnose could also reach.
+    """
+
+    assert cli.DEFAULT_PRA_TESTS.exists()

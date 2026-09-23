@@ -4,6 +4,16 @@
 # declared weight (OPS-0008 § Declared weights), chosen 2026-09-11
 # once all four PLAN-J7 domains were instrumented and confirmed on
 # GIGABYTE. Nothing in this codebase writes this file back.
+#
+# `Tests PRA` added 2026-09-23: PLAN-J7 § 1's domain vocabulary,
+# declared closed at four since 2026-09-11, was explicitly reopened to
+# five by the owner the same day `PLAN-J11` § 11.9.1's third and last
+# named gap ("tests PRA") was closed — a deliberate decision, not a
+# silent widening (the "Dette technique" card, closed the same day,
+# was deliberately kept out of this list for the opposite reason: it
+# is not a fifth domain). Weighted 25, the same as `Sauvegarde / PRA`
+# — the owner's own choice, 2026-09-23 ("même ordre de grandeur que le
+# domaine le plus proche en signification").
 
 weights:
   - domain: Stockage
@@ -14,3 +24,5 @@ weights:
     points: 25
   - domain: GPU
     points: 8
+  - domain: Tests PRA
+    points: 25

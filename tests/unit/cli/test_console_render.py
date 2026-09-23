@@ -23,6 +23,7 @@ from aistack.cli import health_render
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
+from aistack.contracts.health_score import DomainWeight, HealthScoreWeights
 
 
 class FakeDockerProvider:
@@ -77,6 +78,8 @@ def test_main_writes_the_console_html_artifact(workspace):
     # HealthCockpit against this sandbox's own hostname: whichever
     # host runs this suite, `main()` still writes all four domains.
     assert "État de santé du homelab" in document
+    # PLAN-J11 § 11.9.1 — the "Dette technique" card, added 2026-09-23.
+    assert "Dette technique" in document
 
 
 def test_main_prints_a_confirmation_line(workspace, capsys):
@@ -286,6 +289,30 @@ hosts:
     assert len(domain.findings) == 1
 
 
+def test_technical_debt_score_reports_findings_across_domains(monkeypatch):
+    """
+    Mirrors `test_health_render.py`'s own
+    `test_technical_debt_score_counts_findings_across_every_domain`,
+    narrower: only proves this module's own copy of the function is
+    genuinely wired, not a repeat of every branch already covered
+    there.
+    """
+
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
+    )
+
+    cockpit = cli.build_cockpit("test-host")
+    weights = HealthScoreWeights(weights=(DomainWeight(domain="Services", points=15),))
+    score, note = cli.technical_debt_score(cockpit, weights)
+
+    assert note == ""
+    assert len(score.findings) == 1
+    assert score.value == 85
+
+
 def test_gpu_domain_reports_an_alert(monkeypatch, tmp_path):
     path = tmp_path / "gpu_thresholds.yml"
     path.write_text(
@@ -349,3 +376,39 @@ def test_the_default_health_score_weights_path_matches_health_renders():
         cli.DEFAULT_HEALTH_SCORE_WEIGHTS == health_render.DEFAULT_HEALTH_SCORE_WEIGHTS
     )
     assert cli.DEFAULT_HEALTH_SCORE_WEIGHTS.exists()
+
+
+def test_technical_debt_score_matches_health_renders_own_behavior(monkeypatch):
+    """
+    `technical_debt_score` has no path constant to compare (it reuses
+    `DEFAULT_HEALTH_SCORE_WEIGHTS`, already checked above) — this
+    checks the two duplicated functions still agree on the one thing
+    a path comparison cannot: given the same cockpit and weights, the
+    same score.
+    """
+
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
+    )
+    monkeypatch.setattr(
+        health_render,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
+    )
+
+    weights = HealthScoreWeights(weights=(DomainWeight(domain="Services", points=15),))
+
+    console_cockpit = cli.build_cockpit("test-host")
+    health_cockpit = health_render.build_cockpit("test-host")
+
+    console_score, console_note = cli.technical_debt_score(console_cockpit, weights)
+    health_score, health_note = health_render.technical_debt_score(
+        health_cockpit, weights
+    )
+
+    assert console_note == health_note == ""
+    assert console_score.value == health_score.value
+    assert console_score.bucket == health_score.bucket
+    assert len(console_score.findings) == len(health_score.findings)

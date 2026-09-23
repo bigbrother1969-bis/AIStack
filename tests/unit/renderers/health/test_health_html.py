@@ -3,6 +3,10 @@ from __future__ import annotations
 from aistack.contracts.health_score import ACTION_REQUIRED, EXCELLENT, TO_WATCH, HealthScore
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.storage_reading import StorageReading
+from aistack.contracts.technical_debt_score import (
+    TECHNICAL_DEBT_QUALIFICATION,
+    TechnicalDebtScore,
+)
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.renderers.health.html import render_html
 
@@ -252,3 +256,128 @@ def test_a_score_note_is_html_escaped():
 
     assert "<script>bad()</script>" not in document
     assert "&lt;script&gt;" in document
+
+
+# --------------------------------------------------------------------
+# Dette technique (PLAN-J11 § 11.9.1) — optional, backward compatible
+# --------------------------------------------------------------------
+
+
+def debt_finding() -> RuntimeFinding:
+    return RuntimeFinding(
+        subject="gluetun",
+        signature="OPS-0004",
+        interpretation="restarting",
+        remediation="investigate boot order",
+        confidence="Measured",
+        grounding="unknown",
+        evidence=(
+            CitedReading(
+                provider="aistack.provider.storage",
+                reading=StorageReading(
+                    mount="/", total_bytes=100, used_bytes=99, free_bytes=1
+                ),
+            ),
+        ),
+        qualifications=(TECHNICAL_DEBT_QUALIFICATION,),
+    )
+
+
+def test_no_technical_debt_score_and_no_note_renders_no_card():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(cockpit)
+
+    assert "Dette technique" not in document
+
+
+def test_a_computed_technical_debt_score_is_shown_with_its_bucket():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = TechnicalDebtScore(value=85, findings=(debt_finding(),), bucket=TO_WATCH)
+
+    document = render_html(cockpit, technical_debt_score=score)
+
+    assert "Dette technique" in document
+    assert "85/100" in document
+    assert "à surveiller" in document
+    assert "1 finding(s)" in document
+    assert "badge-watch" in document
+
+
+def test_an_excellent_technical_debt_score_uses_the_clean_badge():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = TechnicalDebtScore(value=100, findings=(), bucket=EXCELLENT)
+
+    document = render_html(cockpit, technical_debt_score=score)
+
+    assert "badge-clean" in document
+
+
+def test_an_action_required_technical_debt_score_uses_the_alert_badge():
+    findings = tuple(
+        RuntimeFinding(
+            subject=str(i),
+            signature="OPS-0004",
+            interpretation="x",
+            remediation="y",
+            confidence="Measured",
+            grounding="unknown",
+            evidence=(
+                CitedReading(
+                    provider="aistack.provider.storage",
+                    reading=StorageReading(
+                        mount="/", total_bytes=100, used_bytes=99, free_bytes=1
+                    ),
+                ),
+            ),
+            qualifications=(TECHNICAL_DEBT_QUALIFICATION,),
+        )
+        for i in range(10)
+    )
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = TechnicalDebtScore(value=0, findings=findings, bucket=ACTION_REQUIRED)
+
+    document = render_html(cockpit, technical_debt_score=score)
+
+    assert "badge-alert" in document
+
+
+def test_a_technical_debt_note_is_shown_when_the_score_could_not_be_computed():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(
+        cockpit,
+        technical_debt_score=None,
+        technical_debt_note="no health-score weight definition available; "
+        "technical-debt score is not computed",
+    )
+
+    assert "Dette technique : non calculée" in document
+    assert "no health-score weight definition" in document
+
+
+def test_a_technical_debt_note_is_html_escaped():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(
+        cockpit, technical_debt_score=None, technical_debt_note="<script>bad()</script>"
+    )
+
+    assert "<script>bad()</script>" not in document
+    assert "&lt;script&gt;" in document
+
+
+def test_the_technical_debt_card_appears_right_after_the_global_score():
+    """
+    The owner's own declared placement, 2026-09-23: "juste après le
+    score santé global" — this checks it, not just that both render
+    somewhere on the page.
+    """
+
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = HealthScore(value=82, measured_domains=3, total_domains=4, bucket=TO_WATCH)
+    debt_score = TechnicalDebtScore(value=100, findings=(), bucket=EXCELLENT)
+
+    document = render_html(cockpit, score=score, technical_debt_score=debt_score)
+
+    assert document.index("Score de santé") < document.index("Dette technique")

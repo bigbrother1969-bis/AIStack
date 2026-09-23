@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from aistack.contracts.health_score import HealthScore
+from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.history import write_artifact_with_history
 from aistack.health.cockpit import HealthCockpit
 from aistack.renderers.health.html import render_html
@@ -27,7 +28,9 @@ class HealthHtmlArtifactGenerator:
     the I/O step" split every other generator in this package already
     holds. `score`/`score_note` default to the pre-`OPS-0008` shape
     (no score, no note) so a caller with nothing to weigh yet renders
-    exactly as it always has.
+    exactly as it always has. `technical_debt_score`/
+    `technical_debt_note` default the same way for the "Dette
+    technique" card added 2026-09-23 (`PLAN-J11` § 11.9.1).
     """
 
     def generate(
@@ -36,8 +39,16 @@ class HealthHtmlArtifactGenerator:
         output_path: Path,
         score: HealthScore | None = None,
         score_note: str = "",
+        technical_debt_score: TechnicalDebtScore | None = None,
+        technical_debt_note: str = "",
     ) -> Path:
-        content = render_html(cockpit, score=score, score_note=score_note)
+        content = render_html(
+            cockpit,
+            score=score,
+            score_note=score_note,
+            technical_debt_score=technical_debt_score,
+            technical_debt_note=technical_debt_note,
+        )
         write_artifact_with_history(content, output_path)
 
         return output_path

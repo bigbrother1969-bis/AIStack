@@ -7,6 +7,7 @@ from aistack.contracts.health_score import (
     TO_WATCH,
     HealthScore,
 )
+from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.renderers.console.assets import LOCKUP_DATA_URI, MARK_DATA_URI
 from aistack.renderers.text import escape_text
@@ -28,6 +29,8 @@ def render_html(
     cockpit: HealthCockpit | None = None,
     score: HealthScore | None = None,
     score_note: str = "",
+    technical_debt_score: TechnicalDebtScore | None = None,
+    technical_debt_note: str = "",
 ) -> str:
     """
     Wrap the owner's declared `ConsoleLink`s into one self-contained
@@ -63,6 +66,14 @@ def render_html(
     summary a viewer glances at, the full detail stays one click away
     at `/health.html`.
 
+    **`technical_debt_score`/`technical_debt_note`, added 2026-09-23**
+    (`PLAN-J11` § 11.9.1) — the same "Dette technique" card
+    `aistack.renderers.health.html.render_html` shows, summarized here
+    right after the global score line, the placement the owner named
+    when this card was scoped ("juste après le score santé global").
+    Same `None`-renders-nothing-before-this-card idiom `score`/
+    `score_note` already holds.
+
     **The lockup and the mark carry the branding, not this
     function.** The embedded lockup
     (`aistack.renderers.console.assets.LOCKUP_DATA_URI`) is the header
@@ -82,7 +93,9 @@ def render_html(
 
     cards = "\n".join(_render_link(link) for link in links)
     cartouche_html = (
-        _render_health_cartouche(cockpit, score, score_note)
+        _render_health_cartouche(
+            cockpit, score, score_note, technical_debt_score, technical_debt_note
+        )
         if cockpit is not None
         else ""
     )
@@ -113,12 +126,19 @@ def render_html(
 
 
 def _render_health_cartouche(
-    cockpit: HealthCockpit, score: HealthScore | None, score_note: str
+    cockpit: HealthCockpit,
+    score: HealthScore | None,
+    score_note: str,
+    technical_debt_score: TechnicalDebtScore | None,
+    technical_debt_note: str,
 ) -> str:
     if not cockpit.domains:
         return ""
 
     score_html = _render_cartouche_score(score, score_note)
+    technical_debt_html = _render_cartouche_technical_debt(
+        technical_debt_score, technical_debt_note
+    )
     badges = "\n".join(_render_domain_badge(domain) for domain in cockpit.domains)
 
     return f"""<section class="health-cartouche">
@@ -126,6 +146,7 @@ def _render_health_cartouche(
     <h2>État de santé du homelab</h2>
     {score_html}
   </div>
+  {technical_debt_html}
   <div class="cartouche-badges">
 {badges}
   </div>
@@ -147,6 +168,28 @@ def _render_cartouche_score(score: HealthScore | None, score_note: str) -> str:
         return (
             f'<span class="cartouche-score cartouche-score-unavailable">'
             f"Score de santé : non calculé — {escape_text(score_note)}</span>"
+        )
+
+    return ""
+
+
+def _render_cartouche_technical_debt(
+    score: TechnicalDebtScore | None, note: str
+) -> str:
+    if score is not None:
+        badge_class = _BUCKET_BADGE_CLASS[score.bucket]
+
+        return (
+            f'<div class="cartouche-technical-debt">Dette technique : '
+            f'<strong>{score.value}/100</strong> '
+            f'<span class="badge {badge_class}">{escape_text(score.bucket)}</span></div>'
+        )
+
+    if note:
+        return (
+            f'<div class="cartouche-technical-debt '
+            f'cartouche-technical-debt-unavailable">'
+            f"Dette technique : non calculée — {escape_text(note)}</div>"
         )
 
     return ""
@@ -211,6 +254,8 @@ header { text-align: center; margin-bottom: 2rem; }
 .cartouche-header h2 { margin: 0; font-size: 1.05rem; color: #0b3d91; }
 .cartouche-score { font-size: .92rem; }
 .cartouche-score-unavailable { color: #666; }
+.cartouche-technical-debt { font-size: .92rem; margin: .4rem 0 0; }
+.cartouche-technical-debt-unavailable { color: #666; }
 .cartouche-badges {
   display: flex; flex-wrap: wrap; gap: .5rem; margin: .8rem 0 .6rem;
 }

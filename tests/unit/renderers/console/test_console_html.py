@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from aistack.contracts.console_link import ConsoleLink
 from aistack.contracts.health_score import ACTION_REQUIRED, EXCELLENT, TO_WATCH, HealthScore
+from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.renderers.console.html import render_html
 
@@ -223,6 +224,78 @@ def test_a_score_note_is_shown_when_the_score_could_not_be_computed():
 
     assert "Score de santé : non calculé" in document
     assert "no health-score weight definition" in document
+
+
+def test_no_technical_debt_score_and_no_note_renders_no_line():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html((selection_ui_link(),), cockpit=cockpit)
+
+    assert "Dette technique" not in document
+
+
+def test_a_computed_technical_debt_score_is_shown_with_its_bucket():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = TechnicalDebtScore(value=85, findings=(), bucket=TO_WATCH)
+
+    document = render_html(
+        (selection_ui_link(),), cockpit=cockpit, technical_debt_score=score
+    )
+
+    assert "Dette technique : <strong>85/100</strong>" in document
+    assert "badge-watch" in document
+
+
+def test_an_excellent_technical_debt_score_uses_the_clean_badge():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = TechnicalDebtScore(value=100, findings=(), bucket=EXCELLENT)
+
+    document = render_html(
+        (selection_ui_link(),), cockpit=cockpit, technical_debt_score=score
+    )
+
+    assert "badge-clean" in document
+
+
+def test_an_action_required_technical_debt_score_uses_the_alert_badge():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = TechnicalDebtScore(value=0, findings=(), bucket=ACTION_REQUIRED)
+
+    document = render_html(
+        (selection_ui_link(),), cockpit=cockpit, technical_debt_score=score
+    )
+
+    assert "badge-alert" in document
+
+
+def test_a_technical_debt_note_is_shown_when_the_score_could_not_be_computed():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(
+        (selection_ui_link(),),
+        cockpit=cockpit,
+        technical_debt_score=None,
+        technical_debt_note="no health-score weight definition available; "
+        "technical-debt score is not computed",
+    )
+
+    assert "Dette technique : non calculée" in document
+    assert "no health-score weight definition" in document
+
+
+def test_the_technical_debt_line_appears_right_after_the_global_score():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+    score = HealthScore(value=82, measured_domains=3, total_domains=4, bucket=TO_WATCH)
+    debt_score = TechnicalDebtScore(value=100, findings=(), bucket=EXCELLENT)
+
+    document = render_html(
+        (selection_ui_link(),),
+        cockpit=cockpit,
+        score=score,
+        technical_debt_score=debt_score,
+    )
+
+    assert document.index("Score de santé") < document.index("Dette technique")
 
 
 def test_a_domains_name_in_the_cartouche_is_html_escaped():

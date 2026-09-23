@@ -5,10 +5,13 @@ import subprocess
 from pathlib import Path
 
 from aistack.console.yaml import load_console_links_yaml
+from aistack.contracts.health_score import HealthScoreWeights
+from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.console import ConsoleHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
+from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,
@@ -173,6 +176,33 @@ def build_cockpit(hostname: str) -> HealthCockpit:
     )
 
 
+def technical_debt_score(
+    cockpit: HealthCockpit, weights: HealthScoreWeights | None
+) -> tuple[TechnicalDebtScore | None, str]:
+    """Mirrors `aistack.cli.health_render.technical_debt_score` exactly."""
+
+    if weights is None:
+        return None, (
+            "no health-score weight definition available; technical-debt "
+            "score is not computed"
+        )
+
+    points = weights.for_domain("Services")
+
+    if points is None:
+        raise ValueError(
+            "OPS-0008 declares no weight for domain 'Services'; the "
+            "technical-debt score reuses it and cannot be computed "
+            "without it"
+        )
+
+    findings = tuple(
+        finding for domain in cockpit.domains for finding in domain.findings
+    )
+
+    return compute_technical_debt_score(findings, points), ""
+
+
 # `console.html` is generated the same way every other artifact in
 # `reports/generated/` already is (`write_artifact_with_history`) —
 # a plain sibling of `architecture.html`/`health.html`, not inside
@@ -241,6 +271,11 @@ def main() -> None:
     the score model twice. `weights is None` (no declared weights
     file) renders the score as an honest note, not a silent omission —
     the same branch `health_render.main` already takes.
+
+    **Also builds and passes a `TechnicalDebtScore`, added 2026-09-23**
+    (`PLAN-J11` § 11.9.1) — the same "Dette technique" card
+    `health_render.main()` writes, from the same cockpit and weights,
+    never a second load of either.
     """
 
     links = load_console_links_yaml(DEFAULT_CONSOLE_LINKS)
@@ -248,6 +283,7 @@ def main() -> None:
     cockpit = build_cockpit(socket.gethostname())
     weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
     score = compute_health_score(cockpit, weights) if weights is not None else None
+    debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
     ConsoleHtmlArtifactGenerator().generate(
         links=links,
@@ -255,6 +291,8 @@ def main() -> None:
         cockpit=cockpit,
         score=score,
         score_note=score_note,
+        technical_debt_score=debt_score,
+        technical_debt_note=debt_score_note,
     )
 
     PUBLIC_DIR.mkdir(parents=True, exist_ok=True)

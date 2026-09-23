@@ -4,10 +4,13 @@ import socket
 import subprocess
 from pathlib import Path
 
+from aistack.contracts.health_score import HealthScoreWeights
+from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.health import HealthHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
+from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,
@@ -244,6 +247,61 @@ def build_cockpit(hostname: str) -> HealthCockpit:
     )
 
 
+def technical_debt_score(
+    cockpit: HealthCockpit, weights: HealthScoreWeights | None
+) -> tuple[TechnicalDebtScore | None, str]:
+    """
+    `PLAN-J11` § 11.9.1's "dette technique scorée" gap, closed
+    2026-09-23: a dedicated card, not a fifth `HealthDomain` —
+    `OPS-0004/technical-debt` is a qualification any of the four
+    domains' own `evaluate_*` may already cite (so far Services,
+    Sauvegarde/PRA and GPU each do, on their own reference incidents),
+    not a fifth thing to instrument. Findings are gathered from every
+    domain in `cockpit`, not only Services — the owner's real case
+    (containers stuck after a power outage) is Services', but
+    restricting this card to that one domain would silently miss a
+    stale backup or a hot GPU already carrying the same qualification,
+    the same `FDN-0003` Article 12 discipline every other honest count
+    in this package already holds.
+
+    `weights.for_domain("Services")` is `OPS-0008`'s own declared
+    weight for the Services domain, reused rather than a new weight
+    declared for this card — the owner's own choice, 2026-09-23 ("même
+    poids que le domaine Services actuel"). `weights is None` (no
+    declared weights file at all) is the same honest absence
+    `compute_health_score` is never even reached for; a declared file
+    missing a "Services" entry is instead the same configuration
+    defect `compute_health_score` itself raises on, since `OPS-0008`
+    is expected to cover the domain this card reuses.
+
+    Two-branch return, mirroring `health_score_weights`'s own shape:
+    `(None, note)` when nothing can be computed, `(score, "")` when it
+    can — the same idiom `_render_score`/`_render_technical_debt`
+    already read to decide between a real score and a stated absence.
+    """
+
+    if weights is None:
+        return None, (
+            "no health-score weight definition available; technical-debt "
+            "score is not computed"
+        )
+
+    points = weights.for_domain("Services")
+
+    if points is None:
+        raise ValueError(
+            "OPS-0008 declares no weight for domain 'Services'; the "
+            "technical-debt score reuses it and cannot be computed "
+            "without it"
+        )
+
+    findings = tuple(
+        finding for domain in cockpit.domains for finding in domain.findings
+    )
+
+    return compute_technical_debt_score(findings, points), ""
+
+
 def main() -> None:
     """
     `PLAN-J7` § 6.4/6.5/§ 11: the cockpit visuel, now scored.
@@ -252,18 +310,26 @@ def main() -> None:
     (2026-09-11) — four domains were instrumented and confirmed on
     GIGABYTE before `OPS-0008` declared a single weight, so the score
     this prints is never earlier than the findings it is built from.
+
+    **Also writes the "Dette technique" card, added 2026-09-23**
+    (`PLAN-J11` § 11.9.1) — computed from the same cockpit and the
+    same `OPS-0008` weights the health score already reads, never a
+    second load of either.
     """
 
     cockpit = build_cockpit(socket.gethostname())
 
     weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
     score = compute_health_score(cockpit, weights) if weights is not None else None
+    debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
     output_path = HealthHtmlArtifactGenerator().generate(
         cockpit=cockpit,
         output_path=Path("reports/generated/health.html"),
         score=score,
         score_note=score_note,
+        technical_debt_score=debt_score,
+        technical_debt_note=debt_score_note,
     )
 
     if score is not None:
@@ -274,6 +340,14 @@ def main() -> None:
         )
     else:
         print(f"Health cockpit written to {output_path} (score: {score_note})")
+
+    if debt_score is not None:
+        print(
+            f"Technical-debt score: {debt_score.value}/100, {debt_score.bucket}, "
+            f"{len(debt_score.findings)} finding(s)"
+        )
+    else:
+        print(f"Technical-debt score: {debt_score_note}")
 
 
 if __name__ == "__main__":

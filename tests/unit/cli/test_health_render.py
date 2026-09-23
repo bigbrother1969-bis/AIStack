@@ -37,6 +37,7 @@ from aistack.cli import runtime_diagnose
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
+from aistack.contracts.health_score import DomainWeight, HealthScoreWeights
 
 
 class FakeDockerProvider:
@@ -469,6 +470,168 @@ def test_main_falls_back_to_the_note_when_weights_are_unavailable(
 
     captured = capsys.readouterr()
     assert "no health-score weight definition" in captured.out
+
+
+# --------------------------------------------------------------------
+# technical_debt_score — PLAN-J11 § 11.9.1's "dette technique scorée"
+# --------------------------------------------------------------------
+
+_ONE_DOMAIN_WEIGHTS = HealthScoreWeights(
+    weights=(DomainWeight(domain="Services", points=15),)
+)
+
+_NO_SERVICES_WEIGHTS = HealthScoreWeights(
+    weights=(DomainWeight(domain="Stockage", points=10),)
+)
+
+
+def test_technical_debt_score_counts_findings_across_every_domain(
+    monkeypatch, tmp_path
+):
+    """
+    `OPS-0004/technical-debt` is a qualification any domain's own
+    `evaluate_*` may cite (Services, Sauvegarde/PRA and GPU each do) —
+    this proves the card is not silently scoped to Services alone.
+    """
+
+    backup_dir = tmp_path / "wordpress"
+    backup_dir.mkdir()
+    backup_path = tmp_path / "backup_thresholds.yml"
+    backup_path.write_text(
+        f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - path: {backup_dir}
+        max_age_days: 7
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", backup_path)
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
+    )
+
+    cockpit = cli.build_cockpit("test-host")
+    score, note = cli.technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
+
+    assert note == ""
+    assert score is not None
+    # One from Services (the restarting container), one from
+    # Sauvegarde/PRA (the missing backup) — both cite technical-debt.
+    assert len(score.findings) == 2
+    assert score.value == 70  # 100 - 2*15
+
+
+def test_technical_debt_score_ignores_findings_without_the_qualification(
+    monkeypatch, tmp_path
+):
+    """Storage's own findings never cite technical-debt (OPS-0004 § *Second reference incident*)."""
+
+    mount = tmp_path / "volume"
+    mount.mkdir()
+    storage_path = tmp_path / "storage_thresholds.yml"
+    storage_path.write_text(
+        f"""
+hosts:
+  - host: test-host
+    thresholds:
+      - mount: {mount}
+        kind: free_bytes
+        free_gb: 999999999
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", storage_path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+
+    cockpit = cli.build_cockpit("test-host")
+    score, note = cli.technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
+
+    assert note == ""
+    assert score is not None
+    assert score.findings == ()
+    assert score.value == 100
+
+
+def test_technical_debt_score_reuses_the_services_weight(monkeypatch):
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
+    )
+
+    cockpit = cli.build_cockpit("test-host")
+    weights = HealthScoreWeights(
+        weights=(DomainWeight(domain="Services", points=25),)
+    )
+    score, note = cli.technical_debt_score(cockpit, weights)
+
+    assert note == ""
+    assert score.value == 75  # 100 - 1*25
+
+
+def test_technical_debt_score_is_none_with_a_note_when_weights_are_unavailable():
+    cockpit = cli.build_cockpit("test-host")
+
+    score, note = cli.technical_debt_score(cockpit, None)
+
+    assert score is None
+    assert "not computed" in note
+
+
+def test_technical_debt_score_raises_when_no_services_weight_is_declared():
+    cockpit = cli.build_cockpit("test-host")
+
+    with pytest.raises(ValueError, match="no weight for domain 'Services'"):
+        cli.technical_debt_score(cockpit, _NO_SERVICES_WEIGHTS)
+
+
+# --------------------------------------------------------------------
+# main() — the technical-debt card (PLAN-J11 § 11.9.1)
+# --------------------------------------------------------------------
+
+
+def test_main_writes_the_technical_debt_card(monkeypatch, tmp_path, workspace):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+
+    cli.main()
+
+    path = workspace / "reports" / "generated" / "health.html"
+    document = path.read_text(encoding="utf-8")
+
+    assert "Dette technique" in document
+
+
+def test_main_prints_the_technical_debt_score(monkeypatch, tmp_path, workspace, capsys):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+
+    cli.main()
+
+    captured = capsys.readouterr()
+    assert "Technical-debt score:" in captured.out
+
+
+def test_main_falls_back_to_the_note_for_technical_debt_when_weights_are_unavailable(
+    monkeypatch, tmp_path, workspace, capsys
+):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_HEALTH_SCORE_WEIGHTS", tmp_path / "absent-weights.yml")
+
+    cli.main()
+
+    path = workspace / "reports" / "generated" / "health.html"
+    document = path.read_text(encoding="utf-8")
+    assert "Dette technique : non calculée" in document
+
+    captured = capsys.readouterr()
+    assert "Technical-debt score: no health-score weight definition" in captured.out
 
 
 # --------------------------------------------------------------------

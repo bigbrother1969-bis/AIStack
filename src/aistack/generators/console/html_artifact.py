@@ -4,6 +4,7 @@ from pathlib import Path
 
 from aistack.contracts.console_link import ConsoleLink
 from aistack.contracts.health_score import HealthScore
+from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.history import write_artifact_with_history
 from aistack.health.cockpit import HealthCockpit
 from aistack.renderers.console.html import render_html
@@ -31,6 +32,9 @@ class ConsoleHtmlArtifactGenerator:
     `""`) so a caller with nothing to summarize renders exactly as it
     always has — the same optional-parameter idiom `HealthHtml
     ArtifactGenerator.generate` already holds for `score`/`score_note`.
+    `technical_debt_score`/`technical_debt_note` default the same way
+    for the "Dette technique" card added 2026-09-23 (`PLAN-J11`
+    § 11.9.1).
     """
 
     def generate(
@@ -40,8 +44,17 @@ class ConsoleHtmlArtifactGenerator:
         cockpit: HealthCockpit | None = None,
         score: HealthScore | None = None,
         score_note: str = "",
+        technical_debt_score: TechnicalDebtScore | None = None,
+        technical_debt_note: str = "",
     ) -> Path:
-        content = render_html(links, cockpit=cockpit, score=score, score_note=score_note)
+        content = render_html(
+            links,
+            cockpit=cockpit,
+            score=score,
+            score_note=score_note,
+            technical_debt_score=technical_debt_score,
+            technical_debt_note=technical_debt_note,
+        )
         write_artifact_with_history(content, output_path)
 
         return output_path

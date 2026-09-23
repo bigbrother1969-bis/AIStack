@@ -7,6 +7,7 @@ from aistack.contracts.health_score import (
     HealthScore,
 )
 from aistack.contracts.runtime_finding import CitedReading, MatchedLine, RuntimeFinding
+from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.renderers.text import escape_text
 
@@ -21,6 +22,8 @@ def render_html(
     cockpit: HealthCockpit,
     score: HealthScore | None = None,
     score_note: str = "",
+    technical_debt_score: TechnicalDebtScore | None = None,
+    technical_debt_note: str = "",
 ) -> str:
     """
     Wrap a `HealthCockpit` snapshot into one self-contained HTML
@@ -41,6 +44,18 @@ def render_html(
     silently dropped); `score=None` with an empty note (every existing
     call this function had before `OPS-0008` existed) renders no score
     section at all, keeping every prior domain-only test unaffected.
+
+    **A dedicated "Dette technique" card, added 2026-09-23**
+    (`PLAN-J11` § 11.9.1) — `technical_debt_score` is
+    `aistack.health.technical_debt.compute_technical_debt_score`'s own
+    result, rendered right after the score paragraph above, the
+    placement the owner named ("juste après le score santé global")
+    when this card was scoped, never folded into a per-domain section:
+    `OPS-0004/technical-debt` cuts across domains, this card does too.
+    Same optional-parameter, same two-branch idiom `score`/
+    `score_note` already holds: `None` with a note is an honest
+    absence, `None` with no note renders nothing, keeping every call
+    from before this card existed unaffected.
 
     **No client-side script, unlike `architecture.html`.** That page
     renders a Mermaid diagram, which needs a browser to draw; a
@@ -79,6 +94,7 @@ def render_html(
   {_render_score(score, score_note)}
 </header>
 
+{_render_technical_debt(technical_debt_score, technical_debt_note)}
 {sections}
 </body>
 </html>
@@ -103,6 +119,29 @@ def _render_score(score: HealthScore | None, score_note: str) -> str:
             f"Score de santé : non calculé — {escape_text(score_note)}"
             f"</p>"
         )
+
+    return ""
+
+
+def _render_technical_debt(
+    score: TechnicalDebtScore | None, note: str
+) -> str:
+    if score is not None:
+        badge_class = _BUCKET_BADGE_CLASS[score.bucket]
+
+        return f"""<section class="technical-debt">
+  <h2>Dette technique <span class="badge {badge_class}">{escape_text(score.bucket)}</span></h2>
+  <p class="score">
+    <strong>{score.value}/100</strong> — {len(score.findings)} finding(s)
+    qualifié(s) {escape_text("OPS-0004/technical-debt")}
+  </p>
+</section>"""
+
+    if note:
+        return f"""<section class="technical-debt technical-debt-unavailable">
+  <h2>Dette technique</h2>
+  <p class="note score-unavailable">Dette technique : non calculée — {escape_text(note)}</p>
+</section>"""
 
     return ""
 
@@ -191,6 +230,12 @@ header { margin-bottom: 1.4rem; }
 .note { color: #555; font-size: .9rem; }
 .score { font-size: .95rem; margin: .4rem 0 0; }
 .score-unavailable { color: #666; }
+.technical-debt {
+  border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.2rem;
+  margin-bottom: 1rem; background: #fafcff;
+}
+.technical-debt h2 { margin: 0 0 .4rem; font-size: 1.1rem; display: flex; align-items: center; gap: .6rem; }
+.technical-debt-unavailable { background: #fafafa; }
 .finding {
   border-top: 1px solid #eee; padding-top: .6rem; margin-top: .6rem;
   font-size: .92rem;

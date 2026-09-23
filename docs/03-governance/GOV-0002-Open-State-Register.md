@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.97
+  version: 1.98
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -196,12 +196,23 @@ through an empty register while four provider commands could not run, nine
 classes could not be instantiated and one concept was declared three times —
 all three found that day, none of them by the register.
 
+**On 2026-09-23 the sentence failed the other way.** The register read
+*None open* in all six sections while three conditions **known** to this
+heritage — each stated, in its own artifact, as a decision or a correction
+left for later — had never been entered: the definition of *Gravé*
+(`FDN-0009`), the overlap between `FDN-0010` and `FDN-0012`, and the
+taxonomy of `ARCH-0002` (`ARCH-0005`, `ARCH-0007`). Found by a line-by-line
+re-reading of the Context Bundle during STD-0300 § 2.4, not by the register.
+They are `OS-061`, `OS-062` and `OS-063`. The sentence above holds only for
+what has been written here, which is why a condition an artifact leaves open
+belongs here the day it is written, not the day someone re-reads it.
+
 ---
 
 # Non-conforming instances
 
-None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036 and OS-060
-are in *Resolved*.
+One open: OS-063. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036 and
+OS-060 are in *Resolved*.
 
 Three of those eight closed by **retiring or narrowing the rule** rather than
 by conforming to it. A heritage that only ever fixed instances would end with
@@ -209,6 +220,31 @@ rules nothing could satisfy.
 
 *Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
 by OS-036, and emptied again by the rule OS-036 produced.*
+
+#### GOV-0002/OS-063 — `ARCH-0002` lists Knowledge Pipelines among the Kernel's components, which `ARCH-0005` says they are not
+
+**Nature** `non-conforming` · **Opened** 2026-09-23 · **State** open
+**Observed** `ARCH-0002` § *Core Components* reads *"Knowledge Pipelines:
+execute deterministic knowledge flows"*, and § *Extension Points* lists
+*Pipelines*. `ARCH-0005` § *Contract*, corrected 2026-08-28 on the owner's
+decision, defines a Knowledge Pipeline as *"a named sequence, not an
+object"*: no type, no registry, no `run()` — `KnowledgePipeline` and
+`PipelineRegistry` were removed on 2026-08-27 under `OS-001` and qualified
+`abandoned`.
+
+Both `ARCH-0005` and `ARCH-0007` name the discrepancy themselves, the same
+day, per § *What a closure must carry*: *"ARCH-0002 § Core Components lists
+it among components, which under this definition it is not […] That one is
+not corrected here"* (`ARCH-0005`); *"left to ARCH-0002 rather than corrected
+from here"* (`ARCH-0007`). `ARCH-0002` has not changed since 2026-08-21.
+**The closure rule worked and the register did not**: two artifacts named
+what still asserted the condition, and nothing entered it here, so for
+twenty-six days it was known and unowned.
+**Derivable** yes, once a check lists the sentences that leave a condition
+for another artifact (*left to*, *not corrected here*) and compares them with
+this register — no such check exists.
+**Qualification** `unknown` — the correction of `ARCH-0002` § *Core
+Components* and § *Extension Points* is the owner's to decide.
 
 ---
 
@@ -265,8 +301,9 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
-None open. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034, OS-038, OS-043,
-OS-046, OS-048, OS-049, OS-050, OS-051, OS-054 and OS-055 are in *Resolved*.
+Two open: OS-061 and OS-062. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034,
+OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054 and OS-055 are
+in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -289,6 +326,41 @@ days** (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4) until opened here —
 the residual this register's own § *Purpose* names: *"observed, and quietly
 forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 `OS-051` and `OS-054`.
+
+#### GOV-0002/OS-061 — *Gravé* is defined in `FDN-0005`, not in the Glossary that is the SPOT of terminology
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** open
+**Observed** `FDN-0009` § *Open Point*: *"FDN-0002 declares itself the
+Single Point Of Truth for AIStack terminology, yet Gravé — the central term
+of principle GOV-P-004 — is defined in FDN-0005 and not in the Glossary.
+This document deliberately does not add a fourth definition. Consolidating
+the term into FDN-0002 is left as a governed decision."* `FDN-0003` Article
+9 makes the Glossary the SPOT of terminology. The sentence has stood in
+`FDN-0009` since its restoration, engraved 2026-08-21, and was never
+entered here.
+**Derivable** yes, once a check lists the sentences that leave a decision
+open (*left as a governed decision*) and compares them with this register —
+no such check exists.
+**Qualification** `unknown` — whether *Gravé* moves into `FDN-0002`, and
+what `FDN-0005` keeps of it, is the owner's to decide.
+
+#### GOV-0002/OS-062 — `FDN-0010`'s working invariants restate principles registered in `FDN-0012`, and the overlap is left undecided
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** open
+**Observed** `FDN-0010` § *Provenance*: *"Several of these rules restate
+principles already registered in FDN-0012 — understand before implementing
+is close to ENG-P-001, architecture first to FDN-P-009, migrate
+incrementally to ARC-P-008. This artifact deliberately does not merge
+them"*, and, at its engraving on 2026-08-21: *"The open reconciliation
+stated above is **not** closed by this engraving."* `FDN-P-005` asks for one
+SPOT per knowledge item. `OS-003` is the precedent for the same shape: two
+statements of one rule, decided on 2026-08-23 to be kept at two altitudes.
+Stated since 2026-08-21, never entered here.
+**Derivable** yes, once a check lists the sentences that leave a decision
+open (*not closed by*) and compares them with this register — no such check
+exists.
+**Qualification** `unknown` — merge, map rule to principle, or keep both
+levels as `OS-003` did: the owner's to decide.
 
 ---
 

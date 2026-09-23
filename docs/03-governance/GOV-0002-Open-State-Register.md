@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.100
+  version: 1.101
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -279,8 +279,8 @@ again — resolved the day after it was opened.*
 # Decisions
 
 Two open: OS-061 and OS-062. OS-003, OS-013, OS-014, OS-015, OS-022, OS-034,
-OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054 and OS-055 are
-in *Resolved*.
+OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055 and
+OS-066 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -348,6 +348,35 @@ levels as `OS-003` did: the owner's to decide.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-066 — `ARCH-0012` composes a Capability of Actions, which `ADR-0008` qualifies `abandoned`
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** resolved 2026-09-23 by the owner's decision — ARCH-0012 v1.1, ADR-0008 v1.8
+**Observed** `ARCH-0012` § *Capability Composition Principle*: *"A
+Capability is composed of Actions. […] An Action is the smallest atomic
+execution unit"*, and `FDN-0002` § *Action* defines it the same way.
+`ADR-0008` § *Implementation state* reads *Execution — Action |
+abandoned — 2026-08-28*, with *Observation Service* likewise, and its
+text: *"`Observation Service` and `Action` exist nowhere."* `ARCH-0012` had
+not changed since 2026-08-21, so an agent reading both could not tell
+whether the principle had been retired with the stage. Found by ChatGPT's
+Boot Report of 2026-09-23 during STD-0300 § 2.4, and confirmed against the
+bundle (`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`, W2).
+**Derivable** no — whether an abandoned implementation step retires the
+concept it implemented is a reading, not a measurement.
+**Qualification** decided 2026-09-23 by the owner: **the principle stays.**
+A Capability is composed of Actions; `ADR-0008` abandoned Action as a stage
+of its execution chain, not as a principle. Decided against aligning the
+model on what was built, which would have removed *Action* from
+`ARCH-0012` and from the Glossary.
+
+**Resolved 2026-09-23.** `ARCH-0012` v1.1: § *Status, 2026-09-23* states
+the decision, the scope of `ADR-0008`'s abandonment, and the open question
+of whether `TransportCapability`'s `Receiver` and `Writer` are its Actions.
+`ADR-0008` v1.8: a dated note bounds the abandonment to the chain. The
+Glossary's *Action* entry agrees with the decision and needs no change.
+
+---
 
 #### GOV-0002/OS-065 — The README describes the `content_hash` as derived from artifact identities, the reading `OS-021` refused
 

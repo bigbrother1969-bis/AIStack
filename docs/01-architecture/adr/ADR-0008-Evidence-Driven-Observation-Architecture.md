@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Accepted
   owner: Architecture
   created: 2026-07-31
-  updated: 2026-09-03
+  updated: 2026-09-23
 
 relations:
   references:
@@ -169,6 +169,11 @@ them `abandoned` on 2026-08-28**: the chain that was built has no such stages,
 and nothing in it waits for one. What this decision anticipated stays written in
 § *Decision*, which is what an abandoned row is for — the intention is preserved
 and the table stops reporting it as work in progress.
+
+*Scope of that abandonment, stated 2026-09-23 by the owner, `GOV-0002/OS-066`:
+it concerns Observation Service and Action as stages of the chain this
+decision committed to. The principle that a Capability is composed of Actions
+stands, and is governed by `ARCH-0012` § Capability Composition Principle.*
 
 ### The nine capabilities could not be instantiated
 

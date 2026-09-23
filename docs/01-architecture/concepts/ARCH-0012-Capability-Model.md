@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Architecture
   created: 2026-07-25
-  updated: 2026-08-21
+  updated: 2026-09-23
 ---
 
 # ARCH-0012 — Capability Model
@@ -185,3 +185,25 @@ The following subjects require future clarification:
 -   Exact lifecycle of Actions inside Capabilities.
 -   Exact mapping between Task execution and Capability resolution.
 -   Detailed orchestration rules inside KernelRuntime.
+
+------------------------------------------------------------------------
+
+# Status, 2026-09-23
+
+**The Capability Composition Principle stands: a Capability is composed of
+Actions.** Decided 2026-09-23 by the owner, `GOV-0002/OS-066`. It is a
+base principle of this model, alongside `ARC-P-011` (*Capabilities define
+what AIStack can do; services provide them*), not an implementation plan.
+
+`ADR-0008` qualified *Action* and *Observation Service* `abandoned` on
+2026-08-28 as **stages of the execution chain that decision committed
+to**. The chain that was built — Request → Task → Kernel Runtime, with its
+`ExecutionTrace` — has no such stages, and nothing in it waits for one.
+That qualification is about `ADR-0008`'s implementation. It does not retire
+the principle stated here.
+
+On 2026-09-23 no class named `Action` exists. The one capability built,
+`TransportCapability` (`aistack.transport`), groups two technology-specific
+primitives, `Receiver` and `Writer`. Whether they are its Actions is stated
+nowhere. That question belongs to the first item of § *Open Points*, which
+stays open.

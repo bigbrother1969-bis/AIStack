@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Draft
   owner: Architecture
   created: 2026-07-08
-  updated: 2026-08-28
+  updated: 2026-09-23
 ---
 
 # ARCH-0005 — Knowledge Pipelines
@@ -79,10 +79,12 @@ absent pair, and neither knew of the other.*
 
 *What still names a Knowledge Pipeline elsewhere, per GOV-0002 § What a closure
 must carry, rule 2:* ARCH-0001 § *Architecture Map* lists the concept, which
-this document keeps and defines. ARCH-0002 § *Core Components* lists it **among
+this document keeps and defines. ARCH-0002 § *Core Components* listed it **among
 components**, which under this definition it is not — a named sequence is not a
-component. That one is not corrected here: one commit, one concept, and it is a
+component. That one was not corrected here: one commit, one concept, and it is a
 question about ARCH-0002's own taxonomy rather than about this document.
+*Corrected in ARCH-0002 v1.1 on 2026-09-23, `GOV-0002/OS-063`: the pipeline is
+now stated there as a sequence of its components, and no longer as one of them.*
 
 ## Principle
 

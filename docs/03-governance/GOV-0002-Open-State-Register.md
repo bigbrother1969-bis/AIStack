@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.98
+  version: 1.99
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -211,40 +211,16 @@ belongs here the day it is written, not the day someone re-reads it.
 
 # Non-conforming instances
 
-One open: OS-063. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036 and
-OS-060 are in *Resolved*.
+None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060 and
+OS-063 are in *Resolved*.
 
-Three of those eight closed by **retiring or narrowing the rule** rather than
+Three of those nine closed by **retiring or narrowing the rule** rather than
 by conforming to it. A heritage that only ever fixed instances would end with
 rules nothing could satisfy.
 
 *Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
-by OS-036, and emptied again by the rule OS-036 produced.*
-
-#### GOV-0002/OS-063 — `ARCH-0002` lists Knowledge Pipelines among the Kernel's components, which `ARCH-0005` says they are not
-
-**Nature** `non-conforming` · **Opened** 2026-09-23 · **State** open
-**Observed** `ARCH-0002` § *Core Components* reads *"Knowledge Pipelines:
-execute deterministic knowledge flows"*, and § *Extension Points* lists
-*Pipelines*. `ARCH-0005` § *Contract*, corrected 2026-08-28 on the owner's
-decision, defines a Knowledge Pipeline as *"a named sequence, not an
-object"*: no type, no registry, no `run()` — `KnowledgePipeline` and
-`PipelineRegistry` were removed on 2026-08-27 under `OS-001` and qualified
-`abandoned`.
-
-Both `ARCH-0005` and `ARCH-0007` name the discrepancy themselves, the same
-day, per § *What a closure must carry*: *"ARCH-0002 § Core Components lists
-it among components, which under this definition it is not […] That one is
-not corrected here"* (`ARCH-0005`); *"left to ARCH-0002 rather than corrected
-from here"* (`ARCH-0007`). `ARCH-0002` has not changed since 2026-08-21.
-**The closure rule worked and the register did not**: two artifacts named
-what still asserted the condition, and nothing entered it here, so for
-twenty-six days it was known and unowned.
-**Derivable** yes, once a check lists the sentences that leave a condition
-for another artifact (*left to*, *not corrected here*) and compares them with
-this register — no such check exists.
-**Qualification** `unknown` — the correction of `ARCH-0002` § *Core
-Components* and § *Extension Points* is the owner's to decide.
+by OS-036, and emptied again by the rule OS-036 produced. Held OS-063 for a few
+hours on 2026-09-23, opened and resolved the same evening.*
 
 ---
 
@@ -371,6 +347,45 @@ levels as `OS-003` did: the owner's to decide.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-063 — `ARCH-0002` lists Knowledge Pipelines among the Kernel's components, which `ARCH-0005` says they are not
+
+**Nature** `non-conforming` · **Opened** 2026-09-23 · **State** resolved 2026-09-23 by ARCH-0002 v1.1
+**Observed** `ARCH-0002` § *Core Components* reads *"Knowledge Pipelines:
+execute deterministic knowledge flows"*, and § *Extension Points* lists
+*Pipelines*. `ARCH-0005` § *Contract*, corrected 2026-08-28 on the owner's
+decision, defines a Knowledge Pipeline as *"a named sequence, not an
+object"*: no type, no registry, no `run()` — `KnowledgePipeline` and
+`PipelineRegistry` were removed on 2026-08-27 under `OS-001` and qualified
+`abandoned`.
+
+Both `ARCH-0005` and `ARCH-0007` name the discrepancy themselves, the same
+day, per § *What a closure must carry*: *"ARCH-0002 § Core Components lists
+it among components, which under this definition it is not […] That one is
+not corrected here"* (`ARCH-0005`); *"left to ARCH-0002 rather than corrected
+from here"* (`ARCH-0007`). `ARCH-0002` has not changed since 2026-08-21.
+**The closure rule worked and the register did not**: two artifacts named
+what still asserted the condition, and nothing entered it here, so for
+twenty-six days it was known and unowned.
+**Derivable** yes, once a check lists the sentences that leave a condition
+for another artifact (*left to*, *not corrected here*) and compares them with
+this register — no such check exists.
+**Qualification** decided 2026-09-23 by the owner: correct `ARCH-0002` by
+reformulating rather than deleting. The concept stays, stated as a named
+sequence of the components beside which it used to be listed.
+
+**Resolved 2026-09-23.** `ARCH-0002` v1.1: *Knowledge Pipelines* leaves
+§ *Core Components* and *Pipelines* leaves § *Extension Points*; one
+paragraph under each states what a pipeline is (`ARCH-0005` § *Contract*)
+and how a new one appears (`ARCH-0005` § *Current Pipelines*). *What still
+asserted the condition, per § What a closure must carry:* `ARCH-0005`
+§ *Contract* and `ARCH-0007` § *Current Registries*, which said
+`ARCH-0002` "lists"/"still lists" it; both now carry a dated note
+(`ARCH-0005` v1.2, `ARCH-0007` v1.3). `ARCH-0001` § *Architecture Map*
+names the concept and needs no change, since `ARCH-0005` keeps and
+defines it.
+
+---
 
 #### GOV-0002/OS-060 — A second meaning of *KnowledgePackage* entered the heritage through the first proposal the PackageManager integrated
 

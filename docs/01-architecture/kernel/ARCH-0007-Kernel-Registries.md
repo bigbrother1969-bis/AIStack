@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Architecture
   created: 2026-07-08
-  updated: 2026-08-28
+  updated: 2026-09-23
 ---
 
 # ARCH-0007 — Kernel Registries
@@ -63,8 +63,9 @@ ARCH-0005 § *Contract* declared that pair's contract and was corrected on
 and not an object, and its § *Current Pipelines* now measures the four commands
 that collect from a provider rather than naming two. ARCH-0001 § *Architecture
 Map* lists the concept, which ARCH-0005 keeps and defines. **ARCH-0002 § *Core
-Components* still lists it among components**, which under that definition it is
-not; left to ARCH-0002 rather than corrected from here.
+Components* listed it among components**, which under that definition it is
+not; left to ARCH-0002 rather than corrected from here. *Corrected in ARCH-0002
+v1.1 on 2026-09-23, `GOV-0002/OS-063`.*
 
 ## Discovery Model
 

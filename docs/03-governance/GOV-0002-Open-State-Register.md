@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.110
+  version: 1.111
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -212,7 +212,7 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064, OS-065, OS-067, OS-071 and OS-073 are in *Resolved*.
+OS-063, OS-064, OS-065, OS-067, OS-071, OS-073 and OS-074 are in *Resolved*.
 
 Three of those thirteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -313,32 +313,6 @@ the residual this register's own § *Purpose* names: *"observed, and quietly
 forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 `OS-051` and `OS-054`.
 
-#### GOV-0002/OS-068 — Eleven providers are instantiated directly, outside the `ProviderRegistry` that `ARCH-0007` § Discovery Model describes
-
-**Nature** `decision` · **Opened** 2026-09-23 · **State** open
-**Observed** `ARCH-0007` § *Discovery Model*: *"Capabilities are registered
-into the Kernel Context during bootstrap. Application code requests
-capabilities from the Kernel Context instead of instantiating
-implementations directly."* Measured 2026-09-23: of thirteen classes
-satisfying `Provider`, two are registered — `docker` and `compose`, by
-`kernel/bootstrap/providers.py`. The other eleven (`Beszel`, `Backup`,
-`MediaLibrary`, `Storage`, `NvidiaGpu`, `Host`, `HttpProbe`, `Jellyfin`,
-`NetworkDockerDiscovery`, `Nextcloud`, `Syncthing`) are instantiated
-directly by the commands that use them — `architecture_render`,
-`console_render`, `health_render`, `runtime_diagnose`, `ai_reason` and the
-`*_discover` commands, per a reading of `src/` on 2026-09-23. `ARCH-0006`
-§ *Current Providers* lists all thirteen since `OS-067`.
-**Derivable** yes — `registry-inventory.json` and `contract-inventory.json`
-already carry both sets; no check compares them.
-**Qualification** `unknown` — the owner's to decide, provider by provider
-or as a rule: register them and have the commands retrieve them from the
-Kernel Context; or state in `ARCH-0007` which capabilities the Discovery
-Model binds, and why a provider used by the command that builds it is not
-among them. `ARC-P-006` weighs on the first: a registration nothing
-retrieves is what `unused-registrations` reports.
-
----
-
 ---
 
 # Resolved
@@ -346,6 +320,40 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-074 — closing `OS-068` left its own full "open" entry standing in `# Decisions`, alongside the resolved copy in `# Resolved`
+
+**Nature** `non-conforming` · **Opened** 2026-09-25 · **State** resolved 2026-09-25, same patch
+**Observed** Found by a cross-model run of `STD-0300` 2.4's reworded
+protocol (`claude/PLAN-VS2-2.4-PROTOCOL-2026-09-25.md`): one of the two
+independent agents, reading this register in full per `FDN-0009`'s own
+practice 3, reported *"`GOV-0002` contains `OS-068` twice ... a full
+`OS-068` entry marked `State open`"* directly below the § *Decisions*
+paragraph that says "None open" and lists `OS-068` as resolved. Verified
+directly against the real repository: `grep -n "GOV-0002/OS-068"` found
+the heading at both a line inside `# Decisions` (full text, `**State**
+open`, ending in `Qualification unknown`) and a line inside `# Resolved`
+(`**State** resolved 2026-09-25`). `grep -oE "^#### GOV-0002/OS-[0-9]+" |
+sort | uniq -c` confirmed `OS-068` is the only entry in the register's
+history duplicated this way — patch `0017` appended the resolved copy to
+§ *Resolved* but never removed the original full entry from § *Decisions*,
+even though that section's own summary line already correctly read "None
+open." The other agent in the same run, given the identical text, read
+the literal `**State** open` marker as the register's one genuinely open
+item and did not notice the contradiction — the two reports' disagreement
+about `OS-068`'s status is itself evidence of the defect, not of a
+difference in the agents' judgement.
+**Derivable** no — a duplicate heading is a one-off slip in applying
+§ *Resolution is recorded, never removed*, not a pattern a check would
+generalize from; a check that flagged every repeated heading would also
+flag legitimate repeated citations elsewhere in the register.
+**Qualification** no owner decision needed: the section's own summary line
+("None open ... `OS-068` ... in *Resolved*") already states what the
+register meant; the stale full entry contradicted it by mistake, not by
+choice.
+**Resolved 2026-09-25.** The full "open" `OS-068` entry deleted from
+§ *Decisions*; the resolved copy in § *Resolved* is unchanged and remains
+the only copy.
 
 #### GOV-0002/OS-073 — `STD-0300` § 9 described criterion 2.4's extraction check as missing after that check had already shipped
 

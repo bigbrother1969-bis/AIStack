@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.23
+  version: 1.24
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-09-11
+  updated: 2026-09-25
 
 relations:
   references:
@@ -212,6 +212,13 @@ each gained one piece; 4.2, 4.4, 4.5 and 4.6 recognised, later the same day,
 as coupled to foundational functions not yet built rather than to work
 specific to this scenario; 4.8 satisfied by a live reading).
 
+**Last change: 2026-09-25, criterion 2.4** — reworded per
+`GOV-0002/OS-071`: the same-uncertainties test was an interactive
+comparison of two prose lists, which § 8 excludes from what a criterion
+may require. The criterion now asks for coverage of a canonical set of
+declared unknowns instead, still `not verified` pending the extraction
+check.
+
 ### VS-1 — Docker Runtime Discovery
 
 *Demonstrate that AIStack can automatically discover, model and document a Docker
@@ -279,7 +286,7 @@ NEXT-SESSION-TODO · Knowledge transfer · Self-Onboarding.
 | 2.1 | An agent given only the bundle produces a Boot Report carrying all eight declared sections | **satisfied** — 2026-08-14 |
 | 2.2 | The agent states the bundle's `source_commit` and `content_hash` without external input | **satisfied** — 2026-08-14 |
 | 2.3 | The agent identifies Gitea as the Acquisition SPOT and the mirrors as non-authoritative | **satisfied** — 2026-08-14 |
-| 2.4 | Two agents of different models declare the same uncertainties and the same READY verdict | not verified |
+| 2.4 | Two agents of different models each cover the canonical set of declared unknowns (`FDN-0003` Article 12), add nothing `GOV-0002` already qualifies, and reach the same READY verdict | not verified |
 | 2.5 | `aistack.cli.knowledge_integrity` exits 0 on the bundle used | **satisfied** — 2026-08-22 |
 | 2.6 | The same report declares `clean: True` | **satisfied** — 2026-08-22 |
 
@@ -308,6 +315,33 @@ it transmits had degraded. The `clean` field already carried that fact and
 nothing read it. It is a separate criterion rather than a stricter 2.5 so that
 *degraded* and *broken* keep different weights: a missing metadata field does not
 carry the gravity of a heritage with no minimal governed context.
+
+**2.4 was reworded 2026-09-25, `GOV-0002/OS-071`.** As written since
+2026-08-14 it asked two agents to *declare the same uncertainties*,
+verified by comparing two free-text lists — an interactive judgement,
+which § 8 excludes from what a criterion may require. Measured against it
+anyway on 2026-09-23: a Boot Report from this session's own model and one
+from a different model, both given the same fresh bundle, converged on the
+same READY verdict but not on the same uncertainties — 2 of 8/12 declared
+items in common on the first pass, corrected to 4 of 8/12 once two
+restitution defects in the first report were fixed. A same-session
+counter-reading of that comparison then found three of its own verdicts
+wrong, every one of them against the model that had not judged the
+comparison, and the comparing model was itself not a fresh read of the
+repository. Three method defects, none of them evidence for or against the
+criterion as written. Both runs are consigned rather than repeated —
+`claude/VS2-2.4-CROSS-MODEL-COMPARISON-2026-09-23.md` and
+`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md` — and the criterion is
+corrected instead of the run being tried a third time, the same shape `4.5`
+was corrected 2026-09-04 rather than forced. The new text asks something a
+check can decide without judgement: that each agent's declared
+uncertainties cover the canonical set `FDN-0003` Article 12 makes
+derivable from the bundle's own markers (*Open Point*, `grounding:
+unknown`, *not verified*, *recorded as lost*, *pending*, *left to
+ARCH-0002*, and the like), add nothing `GOV-0002` already qualifies, and
+that two agents of different models, measured this way, reach the same
+verdict. No check extracts that canonical set yet, so 2.4 stays `not
+verified` — honestly, on a text a check can now actually satisfy.
 
 ### VS-3 — Music Sync Selection Pipeline
 

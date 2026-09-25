@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.106
+  version: 1.107
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -212,11 +212,11 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064, OS-065 and OS-067 are in *Resolved*.
+OS-063, OS-064, OS-065, OS-067 and OS-071 are in *Resolved*.
 
-Three of those twelve closed by **retiring or narrowing the rule** rather than
-by conforming to it. A heritage that only ever fixed instances would end with
-rules nothing could satisfy.
+Three of those thirteen closed by **retiring or narrowing the rule** rather
+than by conforming to it. A heritage that only ever fixed instances would end
+with rules nothing could satisfy.
 
 *Emptied twice on 2026-08-27: once in the morning, refilled the same afternoon
 by OS-036, and emptied again by the rule OS-036 produced. Held OS-063 for a few
@@ -337,6 +337,33 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-071 — `STD-0300` criterion 2.4 required an interactive judgement, which § 8 of the same suite excludes
+
+**Nature** `non-conforming` · **Opened** 2026-09-25 · **State** resolved 2026-09-25 by the owner's decision — `STD-0300` v1.24
+**Observed** `STD-0300` § 8: *"Verification shall be automatable; a
+scenario requiring interactive judgement is not yet a criterion."*
+Criterion 2.4, unchanged since 2026-08-14: *"Two agents of different
+models declare the same uncertainties and the same READY verdict."*
+Measured 2026-09-23 by comparing two free-text lists in prose — itself an
+interactive judgement — the first comparison produced three wrong
+verdicts, all against the same model (`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`
+§ *Révision*). The criterion could not be satisfied as written without the
+judgement § 8 excludes.
+**Derivable** yes, once a check compares a criterion's own verification
+method against § 8 — no such check exists.
+**Qualification** decided 2026-09-25 by the owner: reformulate, the same
+precedent `4.5` set 2026-09-04 (`STD-0300` § 9: *"4.5's own wording was
+corrected the same day"*) — a criterion its own reference case cannot
+satisfy is corrected rather than forced. New text: each agent's declared
+uncertainties cover the canonical set of unknowns the heritage declares
+(`FDN-0003` Article 12 markers), add nothing `GOV-0002` already qualifies,
+and two agents of different models reach the same verdict. The extraction
+of that canonical set is not yet built; the criterion stays `not verified`
+on a text a check can now actually satisfy.
+**Resolved 2026-09-25.** `STD-0300` v1.24: § 9 criterion 2.4 reworded, and
+a dated note after the VS-2 table records the two 2026-09-23 runs as
+consigned, non-conclusive evidence rather than results to repeat.
 
 #### GOV-0002/OS-062 — `FDN-0010`'s working invariants restate principles registered in `FDN-0012`, and the overlap is left undecided
 

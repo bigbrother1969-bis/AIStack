@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.107
+  version: 1.108
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -280,7 +280,7 @@ again — resolved the day after it was opened.*
 
 One open: OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
 OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
-OS-061, OS-062, OS-066, OS-069 and OS-070 are in *Resolved*.
+OS-061, OS-062, OS-066, OS-069, OS-070 and OS-072 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -337,6 +337,33 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-072 — three AI-collaboration failures observed 2026-09-23 were never entered as `FDN-0009` § *Protocol Improvement* asks
+
+**Nature** `decision` · **Opened** 2026-09-25 · **State** resolved 2026-09-25 by the owner's decision — `FDN-0009` v1.2
+**Observed** During the `STD-0300` § 2.4 cross-model comparison
+(2026-09-23, `claude/VS2-2.4-SYNTHESE-POINTS-2026-09-23.md` point 14),
+three collaboration failures occurred, but `FDN-0009` § *Protocol
+Improvement* — *"When a collaboration failure is observed and a better
+practice is validated, this protocol shall be updated"* — was never
+applied to them: freshness asserted from a claim made outside the bundle
+rather than from the bundle's own `generated_at`/`source_commit`
+(`OPS-0002`); a self-generated (`Proposed`) uncertainty worded as though
+the heritage itself had declared it (`Unknown`), the two states §
+*Uncertainty in Collaboration* keeps distinct; and a discrepancy flagged
+as a new finding before `GOV-0002` or an artifact's own *Implementation
+state* table was checked for whether it was already qualified.
+**Derivable** no — whether a stated freshness claim, or a stated
+uncertainty, traces to the bundle or to something outside it is a reading
+of the conversation that produced it, not a property a check can read off
+the heritage alone.
+**Qualification** decided 2026-09-25 by the owner: record all three,
+worded as practice rather than as a rebuke of any one session, per
+`FDN-0009`'s own rule that improvement follows the governed cycle like
+any other artifact.
+**Resolved 2026-09-25.** `FDN-0009` v1.2: § *Protocol Improvement* gains
+the three entries, each naming the failure observed and the practice
+validated against it.
 
 #### GOV-0002/OS-071 — `STD-0300` criterion 2.4 required an interactive judgement, which § 8 of the same suite excludes
 

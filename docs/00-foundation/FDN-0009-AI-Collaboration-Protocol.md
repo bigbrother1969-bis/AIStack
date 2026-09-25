@@ -6,7 +6,7 @@ artifact:
   semantic_type: Policy
   domain: Foundation
   criticality: C3
-  version: 1.1
+  version: 1.2
   status: Published
   confidence: Reviewed
   owner: Foundation
@@ -136,6 +136,39 @@ later session.
 
 Improvements follow the same governed cycle as any other artifact. The protocol
 is subject to the rules it describes.
+
+**Recorded 2026-09-25, `GOV-0002/OS-072`.** Three failures observed during
+the `STD-0300` § 2.4 cross-model comparison (2026-09-23), each with the
+practice the owner validated against it:
+
+1. **Freshness asserted from outside the bundle.** A Boot Report stated the
+   bundle was current on the strength of a claim made in conversation, not
+   of the bundle's own `generated_at`/`source_commit`. `OPS-0002` already
+   states that a recipient who cannot reach the repository cannot decide
+   freshness and should say so rather than assume — this protocol had
+   never stated the same rule for the AI's own output. **Practice**: an AI
+   stating a bundle's freshness or currency states it from the bundle's
+   own generation timestamp and source commit alone; a freshness claim
+   made by the human, a prior session, or any source outside the bundle
+   is not evidence of it, and is named as an unverified claim if repeated
+   at all.
+2. **A self-generated uncertainty presented as heritage-declared.** The
+   four states in § *Uncertainty in Collaboration* were not kept distinct
+   in practice: an uncertainty the AI itself had produced (`Proposed`)
+   was worded as though the heritage had declared it absent (`Unknown`).
+   **Practice**: an AI reporting an uncertainty names which of the four
+   states it occupies, in those words, rather than in a form of words
+   that reads as `Unknown` for what is in fact `Proposed`.
+3. **Flagged before reading the register.** A discrepancy was reported as
+   a new finding before `GOV-0002`'s *Decisions* and *Resolved* sections,
+   or an artifact's own *Implementation state* table, were checked for
+   whether the condition was already qualified there. **Practice**:
+   before reporting a gap or discrepancy as a finding, an AI reads
+   `GOV-0002` and any *Implementation state* table the artifact under
+   review carries. From 2026-09-25 the `declared-unknowns` check
+   (`GOV-0002/OS-071`) assists this for the markers this heritage already
+   uses to declare an unknown, but does not replace reading the register
+   for what a marker does not cover.
 
 ---
 

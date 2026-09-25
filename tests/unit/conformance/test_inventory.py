@@ -217,9 +217,12 @@ def test_the_integrity_checks_satisfy_their_contract():
     is measuring nominal inheritance or has lost the ABC branch.
 
     **16 became 17 on 2026-09-25**, `GOV-0002/OS-070`:
-    `ClaudeNoteReferenceCheck` is a new implementer, and the count
-    is raised rather than the assertion loosened to stop tracking
-    it — the exact number is the fact this test exists to pin.
+    `ClaudeNoteReferenceCheck` is a new implementer. **17 became 18
+    the same day**, `GOV-0002/OS-071`: `DeclaredUnknownCheck` is the
+    extraction criterion 2.4's reformulation left to build. Each
+    time the count is raised rather than the assertion loosened to
+    stop tracking it — the exact number is the fact this test
+    exists to pin.
     """
 
     inventory = take_inventory()
@@ -229,7 +232,7 @@ def test_the_integrity_checks_satisfy_their_contract():
     )
 
     assert not check.is_orphan
-    assert len(check.satisfied_by) == 17
+    assert len(check.satisfied_by) == 18
     assert all(
         "integrity.checks" in name for name in check.satisfied_by
     )

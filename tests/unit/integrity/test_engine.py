@@ -96,4 +96,5 @@ def test_default_composition_is_stable():
         "undated-assertions",
         "claude-note-references",
         "unfinished-decisions",
+        "declared-unknowns",
     ]

@@ -55,6 +55,9 @@ from aistack.integrity.checks.undated_assertions import (
 from aistack.integrity.checks.unfinished_decisions import (
     UnfinishedDecisionCheck,
 )
+from aistack.integrity.checks.declared_unknowns import (
+    DeclaredUnknownCheck,
+)
 
 
 def default_checks() -> list[IntegrityCheck]:
@@ -77,6 +80,7 @@ def default_checks() -> list[IntegrityCheck]:
         UndatedAssertionCheck(),
         ClaudeNoteReferenceCheck(),
         UnfinishedDecisionCheck(),
+        DeclaredUnknownCheck(),
     ]
 
 

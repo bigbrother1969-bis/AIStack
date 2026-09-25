@@ -70,7 +70,7 @@ class ClaudeNoteReferenceCheck(IntegrityCheck):
     the surrounding prose, which is the ordinary case. What is
     derivable is where to look.
 
-    **Audited by hand on 2026-09-25, `GOV-0002/OS-070`: 44 citations
+    **Audited by hand on 2026-09-25, `GOV-0002/OS-070`: 42 citations
     across 9 artifacts, none the sole statement.** `GOV-0002` alone
     carries 24, each inside an *Observed* paragraph that states the
     fact the note is cited for; `OPS-0004` through `OPS-0008` each

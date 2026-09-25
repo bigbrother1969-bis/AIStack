@@ -179,6 +179,46 @@ def test_main_reports_the_engine_unreachable_when_a_model_is_configured(
     assert all(not a["reachable"] for a in content["answers"])
 
 
+def test_main_builds_the_engine_with_the_declared_timeout(
+    workspace, monkeypatch, capsys
+):
+    ai_runtime_path = workspace / "ai_runtime.yml"
+    ai_runtime_path.write_text(
+        "host: 127.0.0.1\nport: 1\nmodel: deepseek-r1:1.5b\ntimeout: 900\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+
+    resource_priority_path = workspace / "resource_priority.yml"
+    resource_priority_path.write_text(RESOURCE_PRIORITY_YAML, encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
+
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(
+            [ContainerCpuReading(container="booklore_db", cpu_percent=12.2)]
+        ),
+    )
+    monkeypatch.setattr(cli, "HostProvider", lambda: FakeHostProvider())
+
+    captured_kwargs = {}
+
+    class RecordingOllamaEngine:
+        def __init__(self, **kwargs):
+            captured_kwargs.update(kwargs)
+
+        def complete(self, prompt):
+            return "", "not actually called in this test"
+
+    monkeypatch.setattr(cli, "OllamaEngine", RecordingOllamaEngine)
+
+    cli.main()
+
+    assert captured_kwargs["timeout"] == 900.0
+    assert captured_kwargs["model"] == "deepseek-r1:1.5b"
+
+
 def test_main_does_not_record_reasoning_history_when_nothing_was_asked(
     workspace, monkeypatch, capsys
 ):

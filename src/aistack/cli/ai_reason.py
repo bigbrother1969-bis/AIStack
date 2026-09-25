@@ -134,10 +134,17 @@ def main() -> None:
     # .operations._ask` returns before ever calling `engine.complete`
     # in that case (`AIRuntimeDefinition.model`'s own docstring), so
     # this engine is constructed but never actually asked anything.
+    #
+    # `timeout` is passed through from the declaration rather than
+    # left at `OllamaEngine`'s own default — a slower, more reliable
+    # model (`deepseek-r1:1.5b`, `AIRuntimeDefinition.timeout`'s own
+    # docstring) needs its declared, longer timeout honored here, not
+    # silently reset to 120s on every real call.
     engine = OllamaEngine(
         host=ai_runtime_definition.host,
         port=ai_runtime_definition.port,
         model=ai_runtime_definition.model or "",
+        timeout=ai_runtime_definition.timeout,
     )
 
     for finding in findings:

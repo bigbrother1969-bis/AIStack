@@ -17,20 +17,33 @@
 # deepseek-r1:1.5b, qwen2.5:3b, nomic-embed-text:latest,
 # qwen2.5:0.5b).
 #
-# `model` is `qwen2.5:0.5b` — the owner's explicit choice
-# (2026-09-18), made with the real speed/reliability tradeoff in
-# hand: it averages ~15.7s per call in the QUAL-0001 campaign
-# (`claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md`), well
-# under `OllamaEngine`'s 120s default timeout, unlike
-# `deepseek-r1:1.5b` (~500s average, a "thinking" model — would
-# almost always exceed the current timeout). The known risk, named
-# rather than hidden: QUAL-0001 §13 recorded `qwen2.5:0.5b` answering
-# a closed YES/NO factual question incorrectly, a test
-# `deepseek-r1:1.5b` passed. `reason`/`explain`/`recommend` produce
-# open explanatory text, not closed factual answers — a different
-# task shape than that one failing prompt — but the gap is real and
-# worth keeping in mind when reading its output.
+# `model` is `deepseek-r1:1.5b` — the owner's explicit choice
+# (2026-09-25), reopening the same speed/reliability tradeoff decided
+# the other way on 2026-09-18 (`qwen2.5:0.5b`, still the fast
+# default's own history below). QUAL-0001 §13 recorded `qwen2.5:0.5b`
+# answering a closed YES/NO factual question incorrectly, a test
+# `deepseek-r1:1.5b` passed — the owner chose to test the slower but
+# correct model for real, against the live AI Runtime rather than
+# only QUAL-0001's older, separate experiment harness.
+#
+# `timeout` is raised to `900` (15 minutes) to match this choice:
+# `deepseek-r1:1.5b` averaged ~500s per call in QUAL-0001, with the
+# single slowest observed call (the richest context, G1, oldest
+# result in that campaign) at ~623.5s
+# (`claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md` § 10-11) —
+# comfortably under 900s, but with real margin left rather than cut
+# close, the same "generous first number, revise once timed for real"
+# discipline `OllamaEngine.DEFAULT_TIMEOUT_SECONDS` states for its own
+# 120s. `qwen2.5:0.5b` never needed this: ~15.7s average, well under
+# even the old 120s default.
+#
+# Previous declaration (2026-09-18 to 2026-09-25): `model:
+# qwen2.5:0.5b`, `timeout` unset (120s default) — chosen for speed,
+# with the same known YES/NO reliability gap named rather than hidden
+# at the time. Kept here as history, not repeated as the current
+# value: revert both lines to return to that choice.
 
 host: 127.0.0.1
 port: 11434
-model: qwen2.5:0.5b
+model: deepseek-r1:1.5b
+timeout: 900

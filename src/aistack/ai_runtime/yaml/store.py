@@ -24,6 +24,13 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
     configured" — `aistack.ai_runtime.definition.AIRuntimeDefinition`'s
     own docstring explains why that is a real state, not a gap this
     loader papers over.
+
+    **`timeout` is optional and defaults to
+    `AIRuntimeDefinition.timeout`'s own default** (`OllamaEngine`'s
+    120s) when absent — a file written before 2026-09-25 has no
+    `timeout:` line at all, and that means "use the ordinary default,"
+    the same backward-compatible reading `model`'s own absence already
+    gets, not an error.
     """
 
     with path.open("r", encoding="utf-8") as stream:
@@ -43,9 +50,18 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
         )
 
     model = data.get("model")
+    timeout = data.get("timeout")
+
+    if timeout is None:
+        return AIRuntimeDefinition(
+            host=str(data["host"]),
+            port=int(data["port"]),
+            model=str(model) if model else None,
+        )
 
     return AIRuntimeDefinition(
         host=str(data["host"]),
         port=int(data["port"]),
         model=str(model) if model else None,
+        timeout=float(timeout),
     )

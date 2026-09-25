@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from aistack.ai_runtime.ollama_engine import DEFAULT_TIMEOUT_SECONDS
+
 
 @dataclass(frozen=True)
 class AIRuntimeDefinition:
@@ -30,6 +32,24 @@ class AIRuntimeDefinition:
     this absence plainly and exits rather than sending Ollama a model
     name nobody confirmed is installed.
 
+    **`timeout` defaults to `OllamaEngine`'s own default
+    (`DEFAULT_TIMEOUT_SECONDS`, imported rather than repeated as a
+    second `120.0` literal — one number, one place).** Added
+    2026-09-25 because the model choice itself became a real
+    speed/reliability tradeoff the owner needed to declare, not just
+    the model name: `qwen2.5:0.5b` (chosen 2026-09-18, ~15.7s average
+    in QUAL-0001) comfortably fits the 120s default, but
+    `deepseek-r1:1.5b` (~500s average, up to ~623.5s observed on the
+    richest context in that same campaign,
+    `claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md` § 10)
+    would almost always exceed it. A declared, generous `timeout`
+    lets the owner choose the slower, more reliable model (QUAL-0001
+    §13: `deepseek-r1:1.5b` passed the closed YES/NO reliability test
+    `qwen2.5:0.5b` failed) without the call being cut off before it
+    finishes — the same "chosen as a first, generous number to revise
+    once timed for real" discipline `OllamaEngine`'s own default
+    states for itself.
+
     This declares only what this first AI Engine implementation
     needs. `ARC-P-006` — no `engine:` discriminator field is added
     for a second, hypothetical engine type; `OllamaEngine` is the only
@@ -41,3 +61,4 @@ class AIRuntimeDefinition:
     host: str
     port: int
     model: str | None = None
+    timeout: float = DEFAULT_TIMEOUT_SECONDS

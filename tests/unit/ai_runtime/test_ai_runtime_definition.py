@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from aistack.ai_runtime.definition import AIRuntimeDefinition
+from aistack.ai_runtime.ollama_engine import DEFAULT_TIMEOUT_SECONDS
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.cli.ai_reason import DEFAULT_AI_RUNTIME
 
@@ -23,6 +24,7 @@ def test_loads_host_and_port(tmp_path: Path):
     assert definition == AIRuntimeDefinition(
         host="GIGABYTE", port=11434, model=None
     )
+    assert definition.timeout == DEFAULT_TIMEOUT_SECONDS
 
 
 def test_a_declared_model_loads(tmp_path: Path):
@@ -39,6 +41,25 @@ def test_model_null_loads_as_none(tmp_path: Path):
     definition = load_ai_runtime_yaml(path)
 
     assert definition.model is None
+
+
+def test_a_declared_timeout_loads(tmp_path: Path):
+    path = write(
+        tmp_path,
+        "host: GIGABYTE\nport: 11434\nmodel: deepseek-r1:1.5b\ntimeout: 900\n",
+    )
+
+    definition = load_ai_runtime_yaml(path)
+
+    assert definition.timeout == 900.0
+
+
+def test_timeout_absent_defaults_to_the_engines_own_default(tmp_path: Path):
+    path = write(tmp_path, "host: GIGABYTE\nport: 11434\nmodel: llama3.1:8b\n")
+
+    definition = load_ai_runtime_yaml(path)
+
+    assert definition.timeout == DEFAULT_TIMEOUT_SECONDS
 
 
 def test_a_missing_field_names_it(tmp_path: Path):

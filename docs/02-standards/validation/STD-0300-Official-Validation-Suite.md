@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.24
+  version: 1.25
   owner: Foundation
   created: 2026-07-31
   updated: 2026-09-25
@@ -216,8 +216,11 @@ specific to this scenario; 4.8 satisfied by a live reading).
 `GOV-0002/OS-071`: the same-uncertainties test was an interactive
 comparison of two prose lists, which § 8 excludes from what a criterion
 may require. The criterion now asks for coverage of a canonical set of
-declared unknowns instead, still `not verified` pending the extraction
-check.
+declared unknowns instead. **Same day, corrected in place (`GOV-0002/OS-073`):
+the extraction check named below as missing was built and published later
+the same day — `declared-unknowns`, patch `0014`, `1bcca01` — so the
+criterion stays `not verified` because the protocol has not yet been run
+with it, not because the check does not exist.**
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -340,8 +343,10 @@ derivable from the bundle's own markers (*Open Point*, `grounding:
 unknown`, *not verified*, *recorded as lost*, *pending*, *left to
 ARCH-0002*, and the like), add nothing `GOV-0002` already qualifies, and
 that two agents of different models, measured this way, reach the same
-verdict. No check extracts that canonical set yet, so 2.4 stays `not
-verified` — honestly, on a text a check can now actually satisfy.
+verdict. **The extraction check (`declared-unknowns`) was built the same
+day, after this paragraph was first written** — 2.4 stays `not verified`
+because no run of the protocol against it has happened yet, not for lack
+of the tool. Corrected 2026-09-25, `GOV-0002/OS-073`.
 
 ### VS-3 — Music Sync Selection Pipeline
 

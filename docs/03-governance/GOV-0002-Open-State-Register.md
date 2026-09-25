@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.109
+  version: 1.110
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -212,7 +212,7 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064, OS-065, OS-067 and OS-071 are in *Resolved*.
+OS-063, OS-064, OS-065, OS-067, OS-071 and OS-073 are in *Resolved*.
 
 Three of those thirteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -346,6 +346,25 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-073 — `STD-0300` § 9 described criterion 2.4's extraction check as missing after that check had already shipped
+
+**Nature** `non-conforming` · **Opened** 2026-09-25 · **State** resolved 2026-09-25, same patch
+**Observed** `STD-0300` stated, in two places about criterion 2.4, *"No
+check extracts that canonical set yet"* — true when that text was written
+(patch `0013`, earlier the same day) but false again the same day once the
+`declared-unknowns` check it describes was built and published (patch
+`0014`, `1bcca01`). Nobody returned to the sentence once the check shipped.
+Found while checking pending work after `VS2-2.4-SYNTHESE-POINTS-2026-09-23.md`
+closed.
+**Derivable** no — a reading of one artifact's prose against a decision
+already recorded elsewhere (the check's own existence), not a pattern a
+check would generalize from.
+**Qualification** no owner decision needed: applies what was already
+decided (that `declared-unknowns` exists). Not a new choice, a cleanup.
+**Resolved 2026-09-25.** `STD-0300` v1.25 corrects both passages to state
+that the check exists and that 2.4 stays `not verified` for lack of an
+executed run, not for lack of a check.
 
 #### GOV-0002/OS-068 — Eleven providers are instantiated directly, outside the `ProviderRegistry` that `ARCH-0007` § Discovery Model describes
 

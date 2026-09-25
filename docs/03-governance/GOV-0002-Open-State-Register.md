@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.108
+  version: 1.109
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -278,9 +278,18 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
-One open: OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
+None open. OS-003, OS-013, OS-014, OS-015, OS-022,
 OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
-OS-061, OS-062, OS-066, OS-069, OS-070 and OS-072 are in *Resolved*.
+OS-061, OS-062, OS-066, OS-068, OS-069, OS-070 and OS-072 are in *Resolved*.
+
+**Every section of this register reads "None open" on 2026-09-25** — the
+first time since the register was written on 2026-08-22 that every
+section, this one included, is empty at once. `OS-068`, the last decision
+left open, closed the same day as `OS-072`, in the same sitting that
+closed the fourteen points of `claude/VS2-2.4-SYNTHESE-POINTS-2026-09-23.md`.
+What this register's own § *Purpose* says about an empty register still
+holds: it states that every **known** condition has been qualified, not
+that none exists.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -337,6 +346,49 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-068 — Eleven providers are instantiated directly, outside the `ProviderRegistry` that `ARCH-0007` § Discovery Model describes
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** resolved 2026-09-25 by the owner's decision — `ARCH-0007` v1.4
+**Observed** `ARCH-0007` § *Discovery Model*: *"Capabilities are
+registered into the Kernel Context during bootstrap. Application code
+requests capabilities from the Kernel Context instead of instantiating
+implementations directly."* Measured 2026-09-23: of thirteen classes
+satisfying `Provider`, two are registered — `docker` and `compose`, by
+`kernel/bootstrap/providers.py`. The other eleven (`Beszel`, `Backup`,
+`MediaLibrary`, `Storage`, `NvidiaGpu`, `Host`, `HttpProbe`, `Jellyfin`,
+`NetworkDockerDiscovery`, `Nextcloud`, `Syncthing`) are instantiated
+directly by the commands that use them.
+**Derivable** yes — `registry-inventory.json` and `contract-inventory.json`
+already carry both sets; no check compares them.
+**Qualification** decided 2026-09-25 by the owner, after a reading of the
+call sites in `src/`: **narrow the rule rather than register.** Two
+findings drove it. First, seven of the eleven (`BeszelProvider`,
+`HttpProbeProvider`, `JellyfinProvider`, `NetworkDockerDiscoveryProvider`,
+`NextcloudProvider`, `SyncthingProvider`, `MediaLibraryProvider`) take a
+constructor argument supplied per call — a URL, credentials, a filesystem
+root, a CIDR — that `register_default_providers`'s no-argument bootstrap
+registration, the pattern `docker` and `compose` use, cannot supply; they
+are not the same shape as the two already registered. Second, even
+`DockerProvider` — registered since `ARCH-0007`'s first version — is
+instantiated directly in `console_render.py`, `health_render.py`,
+`runtime_diagnose.py` and `ai_reason.py` (four sites), none of which read
+from the Kernel Context for any Provider: they are built as small,
+independently callable functions (`storage_domain(hostname)`,
+`gpu_domain(hostname)`, and similar) that take no Kernel Context at all,
+unlike `architecture_render`, `docker_catalog`, `docker_selection_catalog`,
+`compose_catalog` and the Kernel's own `DockerDiscoverTask`, which do.
+Registering the four remaining no-argument Providers (`NvidiaGpuProvider`,
+`HostProvider`, `StorageProvider`, `BackupProvider`) would not change how
+any of them are obtained, because the commands that use them do not
+consult the registry for any Provider, registered or not.
+**Resolved 2026-09-25.** `ARCH-0007` v1.4: § *Discovery Model* keeps its
+original two sentences and gains a dated note — the rule governs commands
+that read a capability through `ctx.registries`, not every command that
+uses a Provider; the seven parameterized Providers are named out of scope
+for bootstrap registration under the current design, and the four
+no-argument ones are named as already out of the rule's actual reach, for
+a different reason than registration.
 
 #### GOV-0002/OS-072 — three AI-collaboration failures observed 2026-09-23 were never entered as `FDN-0009` § *Protocol Improvement* asks
 

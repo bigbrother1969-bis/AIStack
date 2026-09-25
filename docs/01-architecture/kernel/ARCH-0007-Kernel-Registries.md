@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Draft
   owner: Architecture
   created: 2026-07-08
-  updated: 2026-09-23
+  updated: 2026-09-25
 ---
 
 # ARCH-0007 — Kernel Registries
@@ -72,6 +72,30 @@ v1.1 on 2026-09-23, `GOV-0002/OS-063`.*
 Capabilities are registered into the Kernel Context during bootstrap.
 
 Application code requests capabilities from the Kernel Context instead of instantiating implementations directly.
+
+**Narrowed 2026-09-25 by the owner, `GOV-0002/OS-068`.** This rule governs
+commands that call `create_kernel()` and read a capability through
+`ctx.registries` — `architecture_render`, `docker_catalog`,
+`docker_selection_catalog`, `compose_catalog`, and the Kernel's own
+`DockerDiscoverTask`. It does not govern every command that uses a
+Provider. `console_render`, `health_render`, `runtime_diagnose` and
+`ai_reason` are built as small, independently callable functions
+(`storage_domain(hostname)`, `gpu_domain(hostname)`, and similar) that
+take no Kernel Context and instantiate the Provider they need directly —
+true of `DockerProvider` at four call sites in those same files, despite
+`DockerProvider` being registered since this document's first version.
+Seven of the eleven Providers `ARCH-0006` lists as unregistered
+(`BeszelProvider`, `HttpProbeProvider`, `JellyfinProvider`,
+`NetworkDockerDiscoveryProvider`, `NextcloudProvider`,
+`SyncthingProvider`, `MediaLibraryProvider`) take a constructor argument
+supplied per call — a URL, credentials, a filesystem root, a CIDR — that
+a no-argument bootstrap registration (`register_default_providers`, the
+pattern `docker` and `compose` use) cannot supply, and are not candidates
+for it under the current registry design. The remaining four
+(`NvidiaGpuProvider`, `HostProvider`, `StorageProvider`, `BackupProvider`)
+are no-argument like `docker`/`compose`, but the commands that use them do
+not read the Kernel Context for any Provider, registered or not —
+registering these four alone would not change how they are obtained.
 
 ## Principle
 

@@ -6,12 +6,12 @@ artifact:
   semantic_type: Policy
   domain: Foundation
   criticality: C3
-  version: 1.0
+  version: 1.1
   status: Published
   confidence: Reviewed
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-21
+  updated: 2026-09-25
 
 relations:
   references:
@@ -64,9 +64,10 @@ the original by a third party.
 
 ## The Gravé Transaction
 
-**Gravé** is defined in FDN-0005 (*Project Operating Model*): the idea shall
-become part of the official Governed Heritage. Its lifecycle position is
-Validated → **Gravé** → Published → Distributed.
+**Gravé** is defined in `FDN-0002` (*Glossary*, § *Gravé*), the term's
+Single Point Of Truth since 2026-09-25. Its lifecycle position is
+Validated → **Gravé** → Published → Distributed (`FDN-0005` §
+*Knowledge Lifecycle*).
 
 When the human writes *Gravé*, the AI shall:
 
@@ -144,3 +145,10 @@ FDN-0002 declares itself the Single Point Of Truth for AIStack terminology, yet
 **Gravé** — the central term of principle GOV-P-004 — is defined in FDN-0005 and
 not in the Glossary. This document deliberately does not add a fourth definition.
 Consolidating the term into FDN-0002 is left as a governed decision.
+
+**Resolved 2026-09-25 by the owner, `GOV-0002/OS-061`.** `FDN-0002` §
+*Gravé* is now the term's SPOT. `FDN-0005` § *Vocabulary* points to it
+rather than restating it, and § *The Gravé Transaction* above cites
+`FDN-0002` instead. This paragraph is kept rather than deleted, per
+`GOV-0002` § *What a closure must carry*: it is what first named the
+gap, dated 2026-08-21, 35 days before it closed.

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.104
+  version: 1.105
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -278,9 +278,9 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
-Three open: OS-061, OS-062 and OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
+Two open: OS-062 and OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
 OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
-OS-066, OS-069 and OS-070 are in *Resolved*.
+OS-061, OS-066, OS-069 and OS-070 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -303,23 +303,6 @@ days** (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4) until opened here —
 the residual this register's own § *Purpose* names: *"observed, and quietly
 forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 `OS-051` and `OS-054`.
-
-#### GOV-0002/OS-061 — *Gravé* is defined in `FDN-0005`, not in the Glossary that is the SPOT of terminology
-
-**Nature** `decision` · **Opened** 2026-09-23 · **State** open
-**Observed** `FDN-0009` § *Open Point*: *"FDN-0002 declares itself the
-Single Point Of Truth for AIStack terminology, yet Gravé — the central term
-of principle GOV-P-004 — is defined in FDN-0005 and not in the Glossary.
-This document deliberately does not add a fourth definition. Consolidating
-the term into FDN-0002 is left as a governed decision."* `FDN-0003` Article
-9 makes the Glossary the SPOT of terminology. The sentence has stood in
-`FDN-0009` since its restoration, engraved 2026-08-21, and was never
-entered here.
-**Derivable** yes, once a check lists the sentences that leave a decision
-open (*left as a governed decision*) and compares them with this register —
-no such check exists.
-**Qualification** `unknown` — whether *Gravé* moves into `FDN-0002`, and
-what `FDN-0005` keeps of it, is the owner's to decide.
 
 #### GOV-0002/OS-062 — `FDN-0010`'s working invariants restate principles registered in `FDN-0012`, and the overlap is left undecided
 
@@ -372,6 +355,40 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-061 — *Gravé* is defined in `FDN-0005`, not in the Glossary that is the SPOT of terminology
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** resolved 2026-09-25 by the owner's decision — `FDN-0002` v1.10, `FDN-0005` v1.3, `FDN-0009` v1.1
+**Observed** `FDN-0009` § *Open Point*: *"FDN-0002 declares itself the
+Single Point Of Truth for AIStack terminology, yet Gravé — the central term
+of principle GOV-P-004 — is defined in FDN-0005 and not in the Glossary.
+This document deliberately does not add a fourth definition. Consolidating
+the term into FDN-0002 is left as a governed decision."* `FDN-0003` Article
+9 makes the Glossary the SPOT of terminology. The sentence has stood in
+`FDN-0009` since its restoration, engraved 2026-08-21, and was never
+entered here.
+**Derivable** yes, once a check lists the sentences that leave a decision
+open (*left as a governed decision*) and compares them with this register —
+no such check exists.
+**Qualification** decided 2026-09-25 by the owner: **Option B, two
+altitudes**, the shape `OS-003` already decided for one rule stated twice.
+The Glossary carries the term's meaning, as its own Purpose requires; what
+`FDN-0005` had was not a second meaning worth keeping — one sentence,
+identical in substance to the Glossary's — so it is replaced by a pointer
+rather than kept beside it. `FDN-0009` § *The Gravé Transaction* is the
+genuine second altitude: six procedural steps a definition does not state
+and does not compete with, the same distinction `Adapter` (§ *Adapter*,
+`ARCH-0013`) already draws between a concept and its mechanism. Decided
+against Option A, moving the definition into the Glossary with nothing
+else revised: it would have left `FDN-0009` citing `FDN-0005` for a
+definition no longer there.
+**Resolved 2026-09-25.** `FDN-0002` v1.10: § *Gravé* — the term's SPOT,
+citing `FDN-0005` for the lifecycle position and `FDN-0009` for the
+transaction. `FDN-0005` v1.3: § *Vocabulary* points to the Glossary
+instead of restating the sentence. `FDN-0009` v1.1: § *The Gravé
+Transaction* cites `FDN-0002` instead of `FDN-0005`; § *Open Point* keeps
+its original text and gains a dated resolution note, per § *What a
+closure must carry*.
 
 #### GOV-0002/OS-070 — `claude/` notes are cited 42 times across the heritage, and nothing states whether a citation may be a note's only statement
 

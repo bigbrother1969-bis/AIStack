@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.9
+  version: 1.10
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-09-23
+  updated: 2026-09-25
 
 relations:
   references:
@@ -361,6 +361,27 @@ carries the name.*
 ## Engineering Method
 
 The governed methodology used to evolve AIStack while preserving the integrity of the Governed Heritage.
+
+---
+
+## Gravé
+
+The governed transaction by which a validated idea becomes permanent
+Governed Heritage. Its position in the Knowledge Lifecycle is Validated
+→ **Gravé** → Published → Distributed (`FDN-0005` § *Knowledge
+Lifecycle*), and `GOV-P-004` (`FDN-0012`) states the consequence: *Gravé
+creates permanent governed knowledge*.
+
+**This entry is the term's Single Point Of Truth**, per this Glossary's
+own Purpose (`FDN-0003` Article 9). `FDN-0005` § *Vocabulary* stated the
+same sentence a second time, from 2026-07-06 until this entry existed;
+it now points here instead. `FDN-0009` § *The Gravé Transaction* keeps
+the six steps an AI follows when the human writes it — mechanics a
+definition does not compete with, the distinction `Adapter` and
+`ARCH-0013` already draw above.
+
+**Decided 2026-09-25 by the owner, `GOV-0002/OS-061`.** `FDN-0009` had
+recorded the gap as an Open Point since its restoration on 2026-08-21.
 
 ---
 

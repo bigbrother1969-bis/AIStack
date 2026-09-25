@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.2
+  version: 1.3
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-27
+  updated: 2026-09-25
 
 relations:
   references:
@@ -412,7 +412,11 @@ The idea has been accepted.
 
 Gravé
 
-The idea shall become part of the official Governed Heritage.
+**`FDN-0002` § *Gravé* is this term's Single Point Of Truth.** Until
+2026-09-25 this section restated its sense a second time; the sentence
+is gone rather than kept in agreement, so there is one place to keep
+current instead of two (`GOV-0002/OS-061`). Its position in the
+sequence above is unchanged.
 
 Published
 

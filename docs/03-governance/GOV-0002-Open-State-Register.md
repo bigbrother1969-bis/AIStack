@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.105
+  version: 1.106
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -278,9 +278,9 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
-Two open: OS-062 and OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
+One open: OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
 OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
-OS-061, OS-066, OS-069 and OS-070 are in *Resolved*.
+OS-061, OS-062, OS-066, OS-069 and OS-070 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -303,24 +303,6 @@ days** (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4) until opened here —
 the residual this register's own § *Purpose* names: *"observed, and quietly
 forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 `OS-051` and `OS-054`.
-
-#### GOV-0002/OS-062 — `FDN-0010`'s working invariants restate principles registered in `FDN-0012`, and the overlap is left undecided
-
-**Nature** `decision` · **Opened** 2026-09-23 · **State** open
-**Observed** `FDN-0010` § *Provenance*: *"Several of these rules restate
-principles already registered in FDN-0012 — understand before implementing
-is close to ENG-P-001, architecture first to FDN-P-009, migrate
-incrementally to ARC-P-008. This artifact deliberately does not merge
-them"*, and, at its engraving on 2026-08-21: *"The open reconciliation
-stated above is **not** closed by this engraving."* `FDN-P-005` asks for one
-SPOT per knowledge item. `OS-003` is the precedent for the same shape: two
-statements of one rule, decided on 2026-08-23 to be kept at two altitudes.
-Stated since 2026-08-21, never entered here.
-**Derivable** yes, once a check lists the sentences that leave a decision
-open (*not closed by*) and compares them with this register — no such check
-exists.
-**Qualification** `unknown` — merge, map rule to principle, or keep both
-levels as `OS-003` did: the owner's to decide.
 
 #### GOV-0002/OS-068 — Eleven providers are instantiated directly, outside the `ProviderRegistry` that `ARCH-0007` § Discovery Model describes
 
@@ -355,6 +337,38 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-062 — `FDN-0010`'s working invariants restate principles registered in `FDN-0012`, and the overlap is left undecided
+
+**Nature** `decision` · **Opened** 2026-09-23 · **State** resolved 2026-09-25 by the owner's decision — `FDN-0010` v1.1
+**Observed** `FDN-0010` § *Provenance*: *"Several of these rules restate
+principles already registered in FDN-0012 — understand before implementing
+is close to ENG-P-001, architecture first to FDN-P-009, migrate
+incrementally to ARC-P-008. This artifact deliberately does not merge
+them"*, and, at its engraving on 2026-08-21: *"The open reconciliation
+stated above is **not** closed by this engraving."* `FDN-P-005` asks for one
+SPOT per knowledge item. `OS-003` is the precedent for the same shape: two
+statements of one rule, decided on 2026-08-23 to be kept at two altitudes.
+Stated since 2026-08-21, never entered here.
+**Derivable** yes, once a check lists the sentences that leave a decision
+open (*not closed by*) and compares them with this register — no such check
+exists.
+**Qualification** decided 2026-09-25 by the owner: **Option B, keep both
+levels**, the shape `OS-003` and `OS-061` already decided for one rule
+stated twice. `FDN-0012` carries each principle as governed, citable,
+criticality-classified content — the table `principle-identifiers` counts.
+`FDN-0010` states a subset of them as a working rule for daily practice —
+*understand before implementing*, *architecture first*, *migrate
+incrementally* read as instructions, not as identity statements — alongside
+content `FDN-0012` does not carry at all: the anti-goals, the Decision Rule
+chain, the Sprint Success Criterion. Neither collapses into the other: no
+line in `FDN-0010` is a verbatim restatement of a `FDN-0012` row, the same
+test `OS-003` applied to `ARC-P-005`/`FDN-P-015`. Unlike `OS-003` and
+`OS-061`, nothing here is unregistered — every principle `FDN-0010` echoes
+was already in `FDN-0012`'s tables before this decision — so no principle
+changes identifier or gains a row.
+**Resolved 2026-09-25.** `FDN-0010` v1.1: § *Provenance* keeps its original
+text and gains a dated resolution note, per § *What a closure must carry*.
 
 #### GOV-0002/OS-061 — *Gravé* is defined in `FDN-0005`, not in the Glossary that is the SPOT of terminology
 

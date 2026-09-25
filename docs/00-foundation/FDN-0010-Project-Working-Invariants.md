@@ -8,10 +8,10 @@ artifact:
   criticality: C3
   status: Published
   confidence: Reviewed
-  version: 1.0
+  version: 1.1
   owner: Foundation
   created: 2026-08-14
-  updated: 2026-08-21
+  updated: 2026-09-25
 
 relations:
   references:
@@ -48,6 +48,21 @@ invariant and what did not — is now invariant itself. The owner has accepted i
 The open reconciliation stated above is **not** closed by this engraving. Several of
 these rules still restate principles registered in FDN-0012. Engraving fixes
 the wording as heritage; it does not decide the overlap.
+
+**Resolved 2026-09-25 by the owner, `GOV-0002/OS-062`.** Both levels are kept,
+deliberately, the same shape `OS-003` decided for `ARC-P-005` and `FDN-P-015`.
+`FDN-0012` states each principle as governed, citable, C-tier content: the
+table a check counts. This artifact states a subset of them as a working rule
+for daily practice — *understand before implementing*, *architecture first*,
+*migrate incrementally* read as instructions, not as identity statements —
+alongside content `FDN-0012` does not carry at all: the anti-goals, the
+Decision Rule chain, the Sprint Success Criterion. Neither is a copy of the
+other, and no line below was reworded by this closure. No principle changes
+identifier or table entry, unlike `OS-003`: every one of them was already
+registered before this decision, so nothing here is newly countable. This
+paragraph is kept rather than deleted, per `GOV-0002` § *What a closure must
+carry*: it is what first named the gap, dated 2026-08-21, 35 days before it
+closed.
 
 ---
 

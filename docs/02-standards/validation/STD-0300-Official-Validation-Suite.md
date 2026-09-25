@@ -348,6 +348,50 @@ day, after this paragraph was first written** — 2.4 stays `not verified`
 because no run of the protocol against it has happened yet, not for lack
 of the tool. Corrected 2026-09-25, `GOV-0002/OS-073`.
 
+**Run four times, 2026-09-25 — 2.4 stays `not verified`, and the owner
+ends further re-runs against the same two model families.** Two
+executions the same day: `claude/SESSION-2026-09-25-vs2-2.4.md` (against
+the heritage as it stood before `OS-073`/`OS-074`, using this session's
+own working sandbox to build the bundle) and
+`claude/SESSION-2026-09-25-vs2-2.4-rerun.md` (against the same heritage
+once `OS-073`/`OS-074` were applied and published, with the bundle built
+from a freshly cloned git repository rather than a reused sandbox, and a
+harder isolation between the two agents). Leg 3 (same verdict) held both
+times — both agents converged on READY, qualified, on every run. Leg 2
+(nothing manufactured) failed on the first run, but not because either
+agent invented anything: one agent reported `GOV-0002/OS-068` as open,
+which was literally true of one paragraph of the register and literally
+false of another — a real duplication defect in the heritage itself
+(`GOV-0002/OS-074`), not a defect of either report. Corrected the same
+day, the rerun's leg 2 is clean. Leg 1 (coverage) failed both times, and
+in the same shape it failed on 2026-09-23: one model family (Opus)
+consistently covers a larger share of the canonical declared-unknowns
+set than the other (Sonnet) — 9 of 14 substantial lines against 4 of 14
+on the rerun, on a heritage confirmed clean beforehand. Four executions
+now, two per day across two days, on both a dirty-then-cleaned heritage
+and a freshly cloned one, show the same asymmetry: not a measurement
+accident, but, as far as two model families from one provider can show
+it, a structural difference in what each covers when given the same
+text in full. **Decided 2026-09-25 by the owner, `GOV-0002/OS-076`:
+2.4 stays `not verified` as written, and no further run is spent against
+the same two model families** — the criterion is not relaxed to make a
+partial, asymmetric coverage pass, and revisiting it waits on genuine
+cross-provider model diversity becoming available, not on a fifth run
+of what four have already shown.
+
+**Both 2026-09-23 notes exist in this repository as of 2026-09-25,
+`GOV-0002/OS-075`.** They did not before: `STD-0100` requires a `claude/`
+citation to name where a fact was first written down, and a path nothing
+had ever committed could not do that for the twenty-five days this
+section cited it. Found while committing this day's own two new notes,
+not by `claude-note-references` — that check reads the projected bundle,
+which deliberately excludes `claude/`, and so cannot see whether a cited
+path exists on disk. Closed by committing
+`claude/VS2-2.4-CROSS-MODEL-COMPARISON-2026-09-23.md` and
+`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md` alongside this day's
+two session notes; whether the check itself should be extended to verify
+a cited path exists is left open, undecided.
+
 ### VS-3 — Music Sync Selection Pipeline
 
 *Demonstrate that the same Runtime architecture can orchestrate a business process

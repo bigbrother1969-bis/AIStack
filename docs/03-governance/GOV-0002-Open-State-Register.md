@@ -212,7 +212,8 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064, OS-065, OS-067, OS-071, OS-073 and OS-074 are in *Resolved*.
+OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074 and OS-075 are in
+*Resolved*.
 
 Three of those thirteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -280,7 +281,8 @@ again — resolved the day after it was opened.*
 
 None open. OS-003, OS-013, OS-014, OS-015, OS-022,
 OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
-OS-061, OS-062, OS-066, OS-068, OS-069, OS-070 and OS-072 are in *Resolved*.
+OS-061, OS-062, OS-066, OS-068, OS-069, OS-070, OS-072 and OS-076 are in
+*Resolved*.
 
 **Every section of this register reads "None open" on 2026-09-25** — the
 first time since the register was written on 2026-08-22 that every
@@ -320,6 +322,73 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-076 — `STD-0300` criterion 2.4 stays `not verified`; the owner ends further re-runs against the same two model families
+
+**Nature** `decision` · **Opened** 2026-09-25 · **State** resolved 2026-09-25 by the owner's decision
+**Observed** Four executions of the reworded protocol to date — two on
+2026-09-23 (`claude/VS2-2.4-CROSS-MODEL-COMPARISON-2026-09-23.md`,
+`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`) and two on 2026-09-25
+(`claude/SESSION-2026-09-25-vs2-2.4.md`,
+`claude/SESSION-2026-09-25-vs2-2.4-rerun.md`, the second run against a
+freshly cloned, verified-clean heritage) — all four show the same
+coverage asymmetry between the two available model families, Sonnet and
+Opus: one consistently covers a larger share of the canonical
+declared-unknowns set than the other. Leg 3 (same verdict) is satisfied
+on all four runs; leg 2 (nothing manufactured) is satisfied on the
+cleaned-heritage rerun, having been confounded by a real defect (`OS-074`)
+the first time; leg 1 (coverage) has failed on all four.
+**Derivable** no — whether four measurements are enough to call a pattern
+structural, and whether to weaken the criterion in response, is a
+reading the owner makes, not a check.
+**Qualification** decided 2026-09-25 by the owner: criterion 2.4 stays
+`not verified`, worded as written, without further re-execution against
+the same two model families — nothing today distinguishes a fifth run
+from the four already recorded. Decided against relaxing the criterion,
+which would weaken a real quality gate to make it pass rather than
+reflect a genuine limit honestly measured, and against declaring it
+satisfied on partial, asymmetric coverage. Revisiting stays open,
+conditioned on genuine cross-provider model diversity becoming available
+in a future session — not pursued actively.
+
+**Resolved 2026-09-25.** `STD-0300-Official-Validation-Suite.md` § 9
+carries the same note, dated, beside criterion 2.4's own history.
+
+#### GOV-0002/OS-075 — `STD-0300` cited two `claude/` notes for criterion 2.4 that were never committed to the repository
+
+**Nature** `non-conforming` · **Opened** 2026-09-25 · **State** resolved 2026-09-25, same session
+**Observed** `STD-0300-Official-Validation-Suite.md` § 9 cites
+`claude/VS2-2.4-CROSS-MODEL-COMPARISON-2026-09-23.md` and
+`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md` by path as the evidence
+for criterion 2.4's 2026-09-23 measurements. Neither file existed
+anywhere in the repository — confirmed by `git log --all
+--diff-filter=A --name-only` finding no commit that ever added either
+path, and by a direct search of a fresh clone at `9399843`. `STD-0100`
+§ *A `claude/` note is provenance... it shall never be the only place
+that states it* requires a citation to name where a fact was first
+written down; a citation to a path nothing ever committed does not do
+that — the fact lived only in the Claude Project workspace, unreachable
+by a reader handed the Context Bundle or the repository alone. Found
+while committing this session's own two new notes for the second 2.4
+execution (`OS-076`), not by `claude-note-references`: that check
+(`OS-070`) lists citations and asks whether one is a sole statement; it
+does not read the filesystem to ask whether the cited path exists, a
+question outside what a `ContextBundle`-scoped check can see, since
+`claude/` is deliberately excluded from the projection.
+**Derivable** no — the existing check cannot see the repository tree,
+only the projected bundle; a check that could would need a different
+design, not decided here.
+**Qualification** none required to close this instance — the two
+missing files are committed alongside this entry. Whether to extend
+`claude-note-references`, or build a separate repository-level check, to
+verify a cited path actually exists is left to the owner as a further,
+undecided question — not built here.
+
+**Resolved 2026-09-25** by committing
+`claude/VS2-2.4-CROSS-MODEL-COMPARISON-2026-09-23.md` and
+`claude/VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`, alongside this
+session's own `claude/SESSION-2026-09-25-vs2-2.4.md` and
+`claude/SESSION-2026-09-25-vs2-2.4-rerun.md`.
 
 #### GOV-0002/OS-074 — closing `OS-068` left its own full "open" entry standing in `# Decisions`, alongside the resolved copy in `# Resolved`
 

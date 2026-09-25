@@ -94,5 +94,6 @@ def test_default_composition_is_stable():
         "unused-registrations",
         "reference-integrity",
         "undated-assertions",
+        "claude-note-references",
         "unfinished-decisions",
     ]

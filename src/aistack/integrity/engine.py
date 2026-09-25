@@ -10,6 +10,9 @@ from aistack.integrity.checks.classification_coherence import (
 from aistack.integrity.checks.classification_declaration import (
     ClassificationDeclarationCheck,
 )
+from aistack.integrity.checks.claude_note_references import (
+    ClaudeNoteReferenceCheck,
+)
 from aistack.integrity.checks.contract_debt import (
     ContractDebtCheck,
 )
@@ -72,6 +75,7 @@ def default_checks() -> list[IntegrityCheck]:
         UnusedRegistrationCheck(),
         ReferenceIntegrityCheck(),
         UndatedAssertionCheck(),
+        ClaudeNoteReferenceCheck(),
         UnfinishedDecisionCheck(),
     ]
 

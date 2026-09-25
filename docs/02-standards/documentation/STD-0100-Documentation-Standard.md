@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.10
+  version: 2.11
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-28
+  updated: 2026-09-25
 
 relations:
   references:
@@ -298,6 +298,45 @@ undated.
 
 *So the instrument's yield is not the ratio but the shape: what it finds is
 almost never a lie, and often a tense.*
+
+## A `claude/` note is provenance, not the only place that states it
+
+A note under `claude/` is a working note — an AI session record or a plan,
+kept outside the projection, with no owner and no version (`GOV-0002` §
+*Purpose*). Citing one by its path names where a fact or a decision was
+first written down. It shall never be the only place that states it: a
+reader handed the Context Bundle alone cannot open a note outside the
+projection, and a fact that lives only there is not derivable from the
+heritage it is part of (`FDN-0003` Article 12).
+
+> ✗ `selection_ui` and `priority_ui` are verified live rather than by
+>   `pytest` — decision #9, cited from `claude/PLAN-UI-SELECTION-2026-08-29.md`
+> ✓ `ENG-TEST-0001` § *Scope* states decision #9 itself; the note above
+>   remains its provenance, no longer its only statement
+
+The left column is not hypothetical: it is what `ENG-TEST-0002` cited
+alone until 2026-09-23. Closing it — `GOV-0002/OS-069`, `ENG-TEST-0001`
+v1.3 — is what the right column quotes.
+
+**Since 2026-09-25 the rule is observed rather than enforced,** the same
+design `undated-assertions` and `reference-integrity` already use. The
+`claude-note-references` check lists every line citing a `claude/` note by
+its backtick-quoted path, at every projection, as an `OBSERVATION`. It
+does not decide which citation is a sole statement — that is a reading of
+the rest of the artifact, and `STD-0300` § 8 holds that a scenario
+requiring that judgement is not yet a criterion. What is derivable is
+where to look.
+
+**Audited by hand on 2026-09-25, `GOV-0002/OS-070`: 42 citations across 9
+artifacts, none the sole statement.** `GOV-0002` alone carries 23, each
+inside an *Observed* paragraph that states the fact the note is cited
+for; `OPS-0004` through `OPS-0008` carry 14, each naming a note for the
+incident or the exchange it records rather than for a value stated
+nowhere else. One citation — `GOV-0002/OS-060`'s own closure — points to
+a note that itself states a wrong correction, left findable rather than
+hidden: the entry that closes on it says so. The check exists so that
+this audit does not have to be repeated by hand; it lists the next
+citation to read, not a verdict on any of the forty-two.
 
 ## An accepted decision declares its implementation state
 

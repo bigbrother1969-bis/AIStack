@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.103
+  version: 1.104
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-23
+  updated: 2026-09-25
 
 relations:
   references:
@@ -280,7 +280,7 @@ again — resolved the day after it was opened.*
 
 Three open: OS-061, OS-062 and OS-068. OS-003, OS-013, OS-014, OS-015, OS-022,
 OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
-OS-066 and OS-069 are in *Resolved*.
+OS-066, OS-069 and OS-070 are in *Resolved*.
 
 **Every section of this register was empty on 2026-08-27**, for the first time
 since it was written on 2026-08-22 — *and it lasted about forty minutes.*
@@ -372,6 +372,51 @@ retrieves is what `unused-registrations` reports.
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-070 — `claude/` notes are cited 42 times across the heritage, and nothing states whether a citation may be a note's only statement
+
+**Nature** `decision` · **Opened** 2026-09-25 · **State** resolved 2026-09-25 by the owner's decision — STD-0100 v2.11, the `claude-note-references` check
+**Observed** § *VS2-2.4-SYNTHESE-POINTS-2026-09-23* point 6: 35 lines cited
+11 notes under `claude/`, from a bundle built 2026-09-23 before this
+session's own patches. Re-measured 2026-09-25 against the projection built
+from `0c918e7`: 42 citations across 9 artifacts — grown, not shrunk, since
+this session's own resolved entries cite the same notes the ones they
+resolve already did. No standard said what a citation may and may not be
+the sole statement of, and nothing measured where the heritage carried
+one; decision #9 (`OS-069`) was the one case found, by reading rather than
+by a check.
+**Derivable** yes — a check reading every backtick-quoted `claude/` path
+ending in `.md` and listing it, the same design `undated-assertions`
+already uses. No such check existed until this entry.
+**Qualification** decided 2026-09-25 by the owner: state the rule, and
+publish a check that observes it rather than enforces it. A `claude/`
+citation is provenance, permitted; it shall never be the only place that
+states what it names. Decided against silence, which is what let decision
+#9 go 25 days (2026-08-29 to 2026-09-23) stated nowhere but a note, and
+against a `WARNING`, which would make `clean: False` on the ordinary
+case — a citation whose fact is already restated in the artifact around
+it.
+
+**Resolved 2026-09-25.** Read one by one, every one of the 42 citations
+already matches the rule: `GOV-0002` carries 23, each inside an *Observed*
+paragraph stating the fact the note is cited for; `OPS-0004` through
+`OPS-0008` carry 14, each naming a note for the incident or the exchange
+it records — *"records the exchange that produced each value"*, *"the
+health cockpit this register supports"* — rather than for a value stated
+nowhere else; `ENG-TEST-0002`'s one is the case `OS-069` already closed,
+stating outright that the note *"remains its provenance, no longer its
+only statement"* — its own back-reference to that note, one line below,
+is a bare `claude/` and not a second citation. The remaining four
+(`STD-0300` 3, `RELEASE-NOTES` 1) restate their fact in the same
+paragraph as the citation. No citation was found to violate the rule —
+this entry states it going forward, not against a defect behind it.
+
+- `STD-0100` v2.11: § *A `claude/` note is provenance, not the only place
+  that states it* — the rule, an example built from `OS-069`, and this
+  audit's own count.
+- `aistack.integrity.checks.claude_note_references.ClaudeNoteReferenceCheck`
+  — an `OBSERVATION`-severity check, registered in `default_checks()`
+  beside `undated-assertions`, the check this rule's design comes from.
 
 #### GOV-0002/OS-069 — `ENG-TEST-0001` requires unit tests of every component, while four screens are verified live under a decision stated outside the heritage
 

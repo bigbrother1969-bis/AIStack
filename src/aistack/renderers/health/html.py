@@ -203,16 +203,27 @@ def _evidence_summary(evidence: tuple[MatchedLine | CitedReading, ...]) -> str:
     return " — ".join(parts) if parts else f"{len(evidence)} élément(s) de preuve"
 
 
+# Same charte graphique retouch as `aistack.renderers.console.html`
+# (2026-09-26, see that module's own comment for the full rationale
+# and where each value comes from) — identical across the three
+# static pages by design, not by shared code. The `.domain-*`/
+# `.badge-*` state tints keep their meaning, only lightly retinted.
 _STYLE = """\
 :root { color-scheme: light; }
 body {
-  font-family: sans-serif; max-width: 900px; margin: 2rem auto;
-  color: #1f2933; padding: 0 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  max-width: 900px; margin: 2rem auto;
+  color: #1f2933; background: #f7f9fc; padding: 0 1rem;
+}
+h1, h2, h3 {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  color: #16335c;
 }
 header { margin-bottom: 1.4rem; }
-.meta { color: #666; font-size: .85rem; }
+.meta { color: #5b6b7d; font-size: .85rem; }
 .domain {
-  border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.2rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem 1.2rem;
   margin-bottom: 1rem;
 }
 .domain h2 { margin: 0 0 .4rem; font-size: 1.1rem; display: flex; align-items: center; gap: .6rem; }
@@ -220,28 +231,28 @@ header { margin-bottom: 1.4rem; }
   font-size: .72rem; font-weight: normal; padding: .15rem .5rem;
   border-radius: 999px; border: 1px solid;
 }
-.badge-not-instrumented { background: #f0f0f0; border-color: #666; color: #444; }
-.badge-clean { background: #dff6dd; border-color: #116329; color: #116329; }
-.badge-watch { background: #fff4d6; border-color: #8a6100; color: #8a6100; }
-.badge-alert { background: #fde2e1; border-color: #b00020; color: #b00020; }
+.badge-not-instrumented { background: #eef0f3; border-color: #5b6b7d; color: #5b6b7d; }
+.badge-clean { background: #e4f3ea; border-color: #1f6d43; color: #1f6d43; }
+.badge-watch { background: #faf1d8; border-color: #8a6100; color: #8a6100; }
+.badge-alert { background: #f9e3e1; border-color: #9c2b2b; color: #9c2b2b; }
 .domain-not-instrumented { background: #fafafa; }
 .domain-clean { background: #f7fdf6; }
 .domain-alert { background: #fff8f8; }
-.note { color: #555; font-size: .9rem; }
+.note { color: #5b6b7d; font-size: .9rem; }
 .score { font-size: .95rem; margin: .4rem 0 0; }
-.score-unavailable { color: #666; }
+.score-unavailable { color: #5b6b7d; }
 .technical-debt {
-  border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.2rem;
-  margin-bottom: 1rem; background: #fafcff;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem 1.2rem;
+  margin-bottom: 1rem; background: #ffffff;
 }
 .technical-debt h2 { margin: 0 0 .4rem; font-size: 1.1rem; display: flex; align-items: center; gap: .6rem; }
 .technical-debt-unavailable { background: #fafafa; }
 .finding {
-  border-top: 1px solid #eee; padding-top: .6rem; margin-top: .6rem;
+  border-top: 1px solid #dde4ed; padding-top: .6rem; margin-top: .6rem;
   font-size: .92rem;
 }
 .finding h3 { margin: 0 0 .3rem; font-size: .98rem; }
 .finding p { margin: .25rem 0; }
-.remediation { color: #116329; }
-.qualifications, .confidence, .evidence { color: #555; font-size: .85rem; }\
+.remediation { color: #1f6d43; }
+.qualifications, .confidence, .evidence { color: #5b6b7d; font-size: .85rem; }\
 """

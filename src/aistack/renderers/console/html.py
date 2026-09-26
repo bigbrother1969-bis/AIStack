@@ -222,11 +222,28 @@ def _render_link(link: ConsoleLink) -> str:
   </a>"""
 
 
+# Palette and type sourced 2026-09-26 from persiaut-consulting.eu (the
+# owner's own consulting site) rather than invented: navy #16335c and
+# the muted slate #5b6b7d are the exact `color: rgb(...)` values Chrome
+# DevTools reports computed on that site's `<h1 class="hero-title">`
+# and `<p class="hero-subtitle">`; the border/background tones are
+# pixel-sampled from its hero section. The heading typeface (Georgia)
+# and body stack (the system-ui family) are that same page's own
+# computed `font-family`, copied as-is — both are system fonts, so
+# this page keeps rendering with no network access at all, the same
+# constraint the vendored mark/lockup above already meets. Decided
+# with the owner (three static pages — this one, `architecture.html`,
+# `health.html` — share the same retouch; the AIStack mark itself is
+# kept unchanged; the health-status badges below keep their
+# green/amber/red meaning, only lightly retinted to sit next to navy
+# rather than pure primary blue).
 _STYLE = """\
 :root { color-scheme: light; }
 body {
-  font-family: sans-serif; max-width: 900px; margin: 2rem auto;
-  color: #1f2933; padding: 0 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  max-width: 900px; margin: 2rem auto;
+  color: #1f2933; background: #f7f9fc; padding: 0 1rem;
 }
 header { text-align: center; margin-bottom: 2rem; }
 .lockup { max-width: 340px; width: 100%; height: auto; }
@@ -235,27 +252,33 @@ header { text-align: center; margin-bottom: 2rem; }
   gap: 1rem;
 }
 .card {
-  display: block; border: 1px solid #ddd; border-radius: 8px;
+  display: block; border: 1px solid #dde4ed; border-radius: 8px;
   padding: 1rem 1.2rem; text-decoration: none; color: inherit;
-  background: #fafcff; transition: border-color .15s ease;
+  background: #ffffff; transition: border-color .15s ease;
 }
-.card:hover { border-color: #1f6feb; }
-.card h2 { margin: 0 0 .4rem; font-size: 1.05rem; color: #0b3d91; }
-.card p { margin: 0 0 .6rem; font-size: .9rem; color: #444; }
-.card .url { font-size: .78rem; color: #888; font-family: monospace; }
+.card:hover { border-color: #16335c; }
+.card h2 {
+  margin: 0 0 .4rem; font-size: 1.05rem; color: #16335c;
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+.card p { margin: 0 0 .6rem; font-size: .9rem; color: #5b6b7d; }
+.card .url { font-size: .78rem; color: #8a97a8; font-family: monospace; }
 .health-cartouche {
-  border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.2rem;
-  margin-bottom: 1.4rem; background: #fafcff;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem 1.2rem;
+  margin-bottom: 1.4rem; background: #ffffff;
 }
 .cartouche-header {
   display: flex; align-items: baseline; justify-content: space-between;
   flex-wrap: wrap; gap: .6rem;
 }
-.cartouche-header h2 { margin: 0; font-size: 1.05rem; color: #0b3d91; }
+.cartouche-header h2 {
+  margin: 0; font-size: 1.05rem; color: #16335c;
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
 .cartouche-score { font-size: .92rem; }
-.cartouche-score-unavailable { color: #666; }
+.cartouche-score-unavailable { color: #5b6b7d; }
 .cartouche-technical-debt { font-size: .92rem; margin: .4rem 0 0; }
-.cartouche-technical-debt-unavailable { color: #666; }
+.cartouche-technical-debt-unavailable { color: #5b6b7d; }
 .cartouche-badges {
   display: flex; flex-wrap: wrap; gap: .5rem; margin: .8rem 0 .6rem;
 }
@@ -268,17 +291,17 @@ header { text-align: center; margin-bottom: 2rem; }
   border-radius: 999px; border: 1px solid;
 }
 .badge-not-instrumented, .domain-badge.badge-not-instrumented {
-  background: #f0f0f0; border-color: #666; color: #444;
+  background: #eef0f3; border-color: #5b6b7d; color: #5b6b7d;
 }
 .badge-clean, .domain-badge.badge-clean {
-  background: #dff6dd; border-color: #116329; color: #116329;
+  background: #e4f3ea; border-color: #1f6d43; color: #1f6d43;
 }
 .badge-watch, .domain-badge.badge-watch {
-  background: #fff4d6; border-color: #8a6100; color: #8a6100;
+  background: #faf1d8; border-color: #8a6100; color: #8a6100;
 }
 .badge-alert, .domain-badge.badge-alert {
-  background: #fde2e1; border-color: #b00020; color: #b00020;
+  background: #f9e3e1; border-color: #9c2b2b; color: #9c2b2b;
 }
-.cartouche-link { font-size: .85rem; text-decoration: none; color: #1f6feb; }
+.cartouche-link { font-size: .85rem; text-decoration: none; color: #16335c; }
 .cartouche-link:hover { text-decoration: underline; }\
 """

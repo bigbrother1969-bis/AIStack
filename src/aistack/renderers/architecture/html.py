@@ -592,42 +592,55 @@ def _cmdb_status(reading: HttpProbeReading) -> tuple[str, str]:
     return "cmdb-status-error", str(reading.status_code)
 
 
+# Same charte graphique retouch as `aistack.renderers.console.html`
+# (2026-09-26, see that module's own comment for the full rationale
+# and where each value comes from) — the palette, and which classes
+# stay untouched (the `swatch`/`*-status-*` families keep their
+# green/amber/red meaning, only lightly retinted), are identical
+# across all three static pages by design, not by shared code — each
+# renderer keeps its own literal `_STYLE`.
 _STYLE = """\
 :root { color-scheme: light; }
 body {
-  font-family: sans-serif; max-width: 1100px; margin: 2rem auto;
-  color: #1f2933; padding: 0 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  max-width: 1100px; margin: 2rem auto;
+  color: #1f2933; background: #f7f9fc; padding: 0 1rem;
+}
+h1, h2, h3, h4 {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  color: #16335c;
 }
 header { margin-bottom: 1.2rem; }
-.meta { color: #666; font-size: .85rem; }
+.meta { color: #5b6b7d; font-size: .85rem; }
 select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 #diagram {
-  border: 1px solid #ddd; border-radius: 8px; padding: 1rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem;
   background: #fafafa; overflow: auto;
 }
-.render-error { color: #b00020; white-space: pre-wrap; font-family: monospace; }
+.render-error { color: #9c2b2b; white-space: pre-wrap; font-family: monospace; }
 .legend {
   display: flex; gap: 1.2rem; flex-wrap: wrap; margin: .6rem 0 1.2rem;
-  font-size: .82rem; color: #444;
+  font-size: .82rem; color: #5b6b7d;
 }
 .legend span { display: inline-flex; align-items: center; gap: .4rem; }
 .swatch {
   width: .9rem; height: .9rem; border-radius: 3px; display: inline-block;
   border: 1px solid;
 }
-.swatch-confirmed { background: #dff6dd; border-color: #116329; }
-.swatch-declared { background: #fff1cc; border-color: #7d4e00; }
-.swatch-none { background: #f0f0f0; border-color: #666; }
+.swatch-confirmed { background: #e4f3ea; border-color: #1f6d43; }
+.swatch-declared { background: #faf1d8; border-color: #8a6100; }
+.swatch-none { background: #eef0f3; border-color: #5b6b7d; }
 .service-index {
-  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #dde4ed;
 }
 .service-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
 .service-category { margin-bottom: 1.6rem; }
 .service-category:last-child { margin-bottom: 0; }
 .service-category h3 {
   font-size: .8rem; font-weight: 700; letter-spacing: .02em;
-  text-transform: uppercase; color: #666; margin: 0 0 .6rem;
-  border-bottom: 1px solid #e5e5e5; padding-bottom: .35rem;
+  text-transform: uppercase; color: #5b6b7d; margin: 0 0 .6rem;
+  border-bottom: 1px solid #dde4ed; padding-bottom: .35rem;
 }
 .service-list {
   list-style: none; margin: 0; padding: 0;
@@ -638,14 +651,14 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 .service-list li {
   display: grid; grid-template-columns: 28px 1fr; align-items: center;
   gap: .6rem;
-  border: 1px solid #e5e5e5; border-radius: 8px; padding: .6rem .8rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: .6rem .8rem;
   background: #fff;
 }
 .service-icon {
   width: 28px; height: 28px; object-fit: contain; justify-self: center;
 }
 .service-icon-none {
-  width: 28px; height: 28px; border-radius: 6px; background: #f0f0f0;
+  width: 28px; height: 28px; border-radius: 6px; background: #eef0f3;
 }
 .service-entry {
   display: flex; flex-direction: column; gap: .15rem; min-width: 0;
@@ -653,21 +666,21 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 .service-entry a, .service-entry span {
   font-weight: 600; line-height: 1.25;
 }
-.service-entry a { color: #0b5fff; text-decoration: none; }
+.service-entry a { color: #16335c; text-decoration: none; }
 .service-entry a:hover { text-decoration: underline; }
 .service-description {
-  margin: .1rem 0 0; color: #666; font-size: .8rem; line-height: 1.35;
+  margin: .1rem 0 0; color: #5b6b7d; font-size: .8rem; line-height: 1.35;
 }
 .topology-index {
-  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #dde4ed;
 }
 .topology-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
 .topology-block { margin-bottom: 1.6rem; }
 .topology-block:last-child { margin-bottom: 0; }
 .topology-block h3 {
   font-size: .8rem; font-weight: 700; letter-spacing: .02em;
-  text-transform: uppercase; color: #666; margin: 0 0 .6rem;
-  border-bottom: 1px solid #e5e5e5; padding-bottom: .35rem;
+  text-transform: uppercase; color: #5b6b7d; margin: 0 0 .6rem;
+  border-bottom: 1px solid #dde4ed; padding-bottom: .35rem;
 }
 .topology-list {
   list-style: none; margin: 0; padding: 0;
@@ -677,13 +690,13 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 }
 .topology-list li {
   display: flex; flex-direction: column; gap: .2rem;
-  border: 1px solid #e5e5e5; border-radius: 8px; padding: .6rem .8rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: .6rem .8rem;
   background: #fff;
 }
 .topology-name { font-weight: 700; }
-.topology-role { color: #444; font-size: .85rem; }
+.topology-role { color: #5b6b7d; font-size: .85rem; }
 .topology-description {
-  margin: .2rem 0 0; color: #666; font-size: .8rem; line-height: 1.35;
+  margin: .2rem 0 0; color: #5b6b7d; font-size: .8rem; line-height: 1.35;
 }
 .hardware-list {
   list-style: none; margin: 0; padding: 0;
@@ -692,19 +705,19 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
   gap: .8rem;
 }
 .hardware-card {
-  border: 1px solid #e5e5e5; border-radius: 8px; padding: .8rem 1rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: .8rem 1rem;
   background: #fff;
 }
 .hardware-card h4 { margin: 0 0 .2rem; font-size: 1rem; }
-.hardware-model { margin: 0 0 .6rem; color: #666; font-size: .82rem; }
+.hardware-model { margin: 0 0 .6rem; color: #5b6b7d; font-size: .82rem; }
 .hardware-specs {
   margin: 0; display: grid; grid-template-columns: auto 1fr;
   gap: .25rem .6rem; font-size: .82rem;
 }
-.hardware-specs dt { color: #666; font-weight: 600; }
+.hardware-specs dt { color: #5b6b7d; font-weight: 600; }
 .hardware-specs dd { margin: 0; }
 .beszel-index {
-  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #dde4ed;
 }
 .beszel-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
 .beszel-list {
@@ -714,25 +727,25 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
   gap: .8rem;
 }
 .beszel-card {
-  border: 1px solid #e5e5e5; border-radius: 8px; padding: .8rem 1rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: .8rem 1rem;
   background: #fff;
 }
 .beszel-card h4 { margin: 0 0 .2rem; font-size: 1rem; }
-.beszel-host { margin: 0 0 .6rem; color: #666; font-size: .82rem; }
+.beszel-host { margin: 0 0 .6rem; color: #5b6b7d; font-size: .82rem; }
 .beszel-specs {
   margin: 0; display: grid; grid-template-columns: auto 1fr;
   gap: .25rem .6rem; font-size: .82rem;
 }
-.beszel-specs dt { color: #666; font-weight: 600; }
+.beszel-specs dt { color: #5b6b7d; font-weight: 600; }
 .beszel-specs dd { margin: 0; }
 .beszel-status {
   display: inline-block; padding: .05rem .5rem; border-radius: 999px;
   font-size: .78rem; font-weight: 600; border: 1px solid;
 }
-.beszel-status-up { background: #dff6dd; border-color: #116329; color: #116329; }
-.beszel-status-other { background: #fff1cc; border-color: #7d4e00; color: #7d4e00; }
+.beszel-status-up { background: #e4f3ea; border-color: #1f6d43; color: #1f6d43; }
+.beszel-status-other { background: #faf1d8; border-color: #8a6100; color: #8a6100; }
 .cmdb-index {
-  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #e5e5e5;
+  margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid #dde4ed;
 }
 .cmdb-index h2 { font-size: 1.1rem; margin: 0 0 1rem; }
 .cmdb-list {
@@ -743,18 +756,18 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
 }
 .cmdb-card {
   display: flex; flex-direction: column; gap: .3rem;
-  border: 1px solid #e5e5e5; border-radius: 8px; padding: .6rem .8rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: .6rem .8rem;
   background: #fff;
 }
 .cmdb-card h4 { margin: 0; font-size: .95rem; }
-.cmdb-url { margin: 0; color: #666; font-size: .78rem; word-break: break-all; }
+.cmdb-url { margin: 0; color: #5b6b7d; font-size: .78rem; word-break: break-all; }
 .cmdb-status {
   display: inline-block; align-self: flex-start; padding: .05rem .5rem;
   border-radius: 999px; font-size: .78rem; font-weight: 600; border: 1px solid;
 }
-.cmdb-status-ok { background: #dff6dd; border-color: #116329; color: #116329; }
-.cmdb-status-error { background: #fff1cc; border-color: #7d4e00; color: #7d4e00; }
-.cmdb-status-unreachable { background: #fde2e1; border-color: #b00020; color: #b00020; }\
+.cmdb-status-ok { background: #e4f3ea; border-color: #1f6d43; color: #1f6d43; }
+.cmdb-status-error { background: #faf1d8; border-color: #8a6100; color: #8a6100; }
+.cmdb-status-unreachable { background: #f9e3e1; border-color: #9c2b2b; color: #9c2b2b; }\
 """
 
 _BOOTSTRAP_JS = """\

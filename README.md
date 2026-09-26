@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.0.0
+### Concrete capabilities, as of 1.1.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -78,14 +78,24 @@ AIStack transforms observations into sustainable knowledge assets.
 - **Architecture, visualized** — `architecture.html` renders that same
   discovery as a self-contained topology graph, plus a Docker dependency
   view, a section naming the external network topology and each
-  machine's hardware, and a live Beszel health-metrics section.
+  machine's hardware, a live Beszel health-metrics section, and a
+  real-time section asking every declared HTTP endpoint on the homelab
+  for its status right now.
 - **Network-wide Docker discovery** — an explicitly-triggered LAN scan,
   over SSH, that reports Docker containers running on machines other
   than the one AIStack itself runs on, with a LAN-only screen to manage
   the candidate SSH usernames it tries.
-- **Health Cockpit** — a scored dashboard across four domains (Storage,
-  Services, Backup/DR, GPU), each instrumented against a real incident
-  or a real declared threshold.
+- **Health Cockpit** — a scored dashboard across five domains (Storage,
+  Services, Backup/DR, GPU, Dette technique), each instrumented against
+  a real incident or a real declared threshold.
+- **Runtime diagnosis** — a sweep of the Docker host, no container
+  named, qualifies log lines against declared signatures, correlates
+  unexplained CPU consumption against host temperature and against the
+  container's own logs (to tell a container plausibly at rest apart
+  from one merely unclassified but busy), and flags development options
+  (like `--reload`, the bug that started this capability) left enabled
+  in a service — grounded, where declared, against the same lifecycle
+  context every finding type now reads.
 - **AI Runtime and a guided troubleshooting assistant** — a real
   qualified finding can be reasoned about, explained in plain language
   (in French), and given a suggested next step by a local Ollama model —
@@ -157,8 +167,8 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.0.0**: `pytest -q` — **1815 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **457 source files**;
+**As of 1.1.0**: `pytest -q` — **2078 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **484 source files**;
 `python3 -m aistack.cli.knowledge_integrity` — **73 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 

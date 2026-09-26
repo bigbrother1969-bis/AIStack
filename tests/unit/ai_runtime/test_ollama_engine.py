@@ -50,11 +50,30 @@ def url(ollama):
                 time.sleep(state.delay)
 
             payload = json.dumps(state.answer).encode()
-            self.send_response(state.status)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(payload)))
-            self.end_headers()
-            self.wfile.write(payload)
+
+            try:
+                self.send_response(state.status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+            except (BrokenPipeError, ConnectionResetError):
+                # The one test using `state.delay`
+                # (`test_a_slow_answer_beyond_timeout_is_reported_not_
+                # raised`) times its own client out, by design, before
+                # this thread wakes from `time.sleep` — the client's
+                # socket is already closed by the time a response is
+                # attempted here. A real Ollama instance would meet the
+                # identical thing from a real client that gave up first;
+                # this is that same, ordinary case, not a defect in
+                # `OllamaEngine` (which is exactly what that test's own
+                # name says it proves: the timeout is reported, never
+                # raised). Left unhandled, `socketserver`'s own request
+                # thread printed the traceback to stderr on every run —
+                # noise about this fixture's own late write, not a
+                # failing assertion; `pytest` never saw it as a failure
+                # either way.
+                pass
 
         def log_message(self, *_args):
             pass

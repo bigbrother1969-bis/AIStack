@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-09-18
+  updated: 2026-09-26
 
 relations:
   references:
@@ -38,6 +38,97 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.1.0 — 2026-09-26
+
+**Everything below is what accumulated on top of `1.0.0` over eight days of
+work that never bumped the version — this entry catches it up in one pass,
+the same shape `0.6.0`'s own entry used for the same situation.**
+
+- **AI Runtime: a slower but correct model.** `QUAL-0001`'s own governed
+  experiment campaign found `qwen2.5:0.5b` — the fast default since
+  `1.0.0` — answering a closed factual question incorrectly. The owner's
+  own choice, 2026-09-25: switch the live AI Runtime to `deepseek-r1
+  :1.5b`, which passed the same test, and raise the now-configurable
+  timeout to 900 seconds to match it (deepseek-r1:1.5b averaged ~500s per
+  call in that campaign, against qwen2.5:0.5b's ~15.7s) — comfortably
+  above the slowest call observed, with real margin left rather than cut
+  close. Reversible in one place, `ai_runtime.yml`, with the previous
+  choice kept there as history, not erased.
+- **Runtime diagnosis distinguishes idle from merely unclassified
+  (STD-0300 § VS-4 criterion 4.1, advanced).** A container flagged for
+  CPU nobody declared an expectation for now has its own logs, already
+  read in the same sweep, checked for incoming HTTP traffic — the same
+  evidence `OPS-0004`'s own reference incident used to call
+  `aistack-selection-ui`'s consumption idle rather than legitimate. A
+  quiet container reads as more likely at rest; one whose logs show real
+  requests in the same window is told apart from it, in plain language,
+  rather than flagged the same way either way. Not yet a closed
+  criterion — this has run against fixture data and a first live sweep of
+  the reference deployment, not yet the sustained evidence that would
+  satisfy it outright, and an active session (the other half of the
+  reference incident's own evidence) is still unchecked.
+- **Runtime diagnosis reads a container's declared lifecycle for
+  development-flag findings too (STD-0300 § VS-4 criterion 4.3,
+  advanced).** A container `OPS-0003` declares — `frigate`, so far, the
+  only one — now carries that context on a development-flag finding
+  (`--reload` left enabled, the bug that started this whole capability)
+  the same way it already does on every other finding this run produces.
+  Stays `not verified`: `OPS-0003` still names one container, and no
+  development flag has ever actually been observed on it.
+- **A stale governance claim corrected.** `OPS-0001` had stated, since
+  2026-09-04, that STD-0300 § VS-4 criterion 4.5 remained unverified —
+  true when written, false since `evaluate` satisfied it on 2026-09-11.
+  Corrected; nothing about what the register actually declares changed.
+- **CMDB HTTP probe.** `architecture.html` gained a real-time section:
+  every declared HTTP endpoint on the homelab (~46 of them) is asked for
+  its status right now, and shown reachable-with-a-code or unreachable —
+  a fact refreshed on every regeneration, not remembered from the last
+  time someone checked.
+- **Health Cockpit: a fifth scored domain, "Dette technique."** Alongside
+  Storage, Services, Backup/DR and GPU, findings `OPS-0004` qualifies
+  `technical-debt` are now scored into their own card, weighted the same
+  as the existing Services domain — the owner's own choice, since the
+  reference incident this card was seeded on (containers stuck after a
+  power outage) is the same one Services already scores.
+- **Foundation work toward a verified iPhone photo offload, not yet a
+  finished pipeline.** Two pieces of a larger plan
+  (`claude/PLAN-PHOTOS-IPHONE-NEXTCLOUD-IMMICH-2026-09-18.md`) landed:
+  `NextcloudProvider` observes what one Nextcloud folder actually holds,
+  and `verify_uploads` confirms a file it reported is really, fully
+  present — checking the size Nextcloud's own WebDAV answer claims
+  against a second, independent download's real byte count — before
+  anything later in the plan would treat a photo as safe to erase from
+  the phone. Nothing yet triggers that later step; this is the checking
+  machinery it will need, built and tested on its own first.
+- **Fixed:** a callable, one-argument `Protocol` was reported satisfied
+  by 192 classes across the package — nearly every concrete class the
+  inventory can import — instead of the one real function it was written
+  around, because conformance was checked only on the contract side.
+  Reading `__mro__` on the implementation side too closed it
+  (`GOV-0002/OS-059`).
+- **Fixed:** a second, independent `KnowledgeArtifact`/`KnowledgeProvenance`
+  definition had existed since 2026-07-22, unwired, alongside the one
+  every real provider, the Context Bundle and `transport` actually fill —
+  merged into the one production model and removed
+  (`GOV-0002/OS-058`).
+- **Fixed:** the AI Runtime's own test suite printed a `BrokenPipeError`
+  traceback on every run, from its mock Ollama server writing a response
+  after the one test using a slow answer had already let its client time
+  out. Cosmetic and test-only — `OllamaEngine` was never the thing at
+  fault, the test proving the timeout is reported rather than raised
+  passed before and after — but noisy enough on a frozen release to fix
+  rather than carry forward.
+- **Quiet foundation work, no visible capability yet:** contracts and
+  interfaces for a `PackageManager` (`ValidationEngine`,
+  `IntegrationEngine`) — a receiving dock for a future knowledge-package
+  mechanism `ARCH-0009`/`ARCH-0013` already describe, not yet wired to
+  anything a user reaches.
+
+`bigbrother1969/aistack-core:1.1.0`, built from `<commit to be filled in
+at publication — the owner's own build, per OPS-0002>`, digest `<filled
+in at publication>`.
+2078 tests, 73 knowledge artifacts, `clean: True`.
 
 ## 1.0.0 — 2026-09-18
 
@@ -365,7 +456,7 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 1.0.0 (2026-09-18), taken together.
+Not what changed — what runs, as of 1.1.0 (2026-09-26), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
@@ -376,19 +467,25 @@ Not what changed — what runs, as of 1.0.0 (2026-09-18), taken together.
 - **Architecture, visualized.** `architecture.html` renders that same
   discovery as a self-contained topology graph, plus a Docker dependency
   view, a section naming the external network topology and the hardware
-  each machine runs, and a live Beszel health-metrics section — a real
-  page, not raw catalog JSON, kept current every time it's regenerated.
+  each machine runs, a live Beszel health-metrics section, and — as of
+  1.1.0 — a real-time CMDB section asking every declared HTTP endpoint on
+  the homelab for its status right now — a real page, not raw catalog
+  JSON, kept current every time it's regenerated.
 - **Network-wide Docker discovery.** A separately-triggered scan of the
   declared LAN, over SSH, reports Docker containers running on machines
   other than the one AIStack itself runs on.
-- **Health Cockpit.** One scored dashboard across four domains — Storage,
-  Services, Backup/DR, GPU — each instrumented against a real incident or
-  a real declared threshold on the reference host.
+- **Health Cockpit.** One scored dashboard across five domains — Storage,
+  Services, Backup/DR, GPU, and — as of 1.1.0 — Dette technique — each
+  instrumented against a real incident or a real declared threshold on
+  the reference host.
 - **AI Runtime and Assistant de pannes — new as of 1.0.0.** A real
   qualified finding can be reasoned about, explained in plain language,
-  and given a suggested next step by a local Ollama model, in French —
-  never a source of truth, never an executor, every prompt says so
-  itself. A guided, step-by-step interface (`Assistant de pannes`)
+  and given a suggested next step by a local Ollama model
+  (`deepseek-r1:1.5b` as of 1.1.0, chosen over the faster `qwen2.5:0.5b`
+  after a governed test found the faster model wrong on a factual
+  question), in French — never a source of truth, never an executor,
+  every prompt says so itself. A guided, step-by-step interface
+  (`Assistant de pannes`)
   walks a real finding through this chain one step at a time, and can
   apply the one safe, single-click fix this project trusts a button to
   make on its own (declaring a container `background` in the resource
@@ -420,9 +517,13 @@ Not what changed — what runs, as of 1.0.0 (2026-09-18), taken together.
   correlates unexplained consumption against the host's own temperature
   into one finding citing `OPS-0004`'s vocabulary: energy inefficiency
   alone, or energy inefficiency and sustainability anomaly together when
-  the host also reads hot. Every finding grounds against known service
-  context (`OPS-0003`) and cites the evidence it was built from — a log
-  line, or now a raw reading.
+  the host also reads hot. As of 1.1.0, a consumption finding also states
+  whether the same container's own logs, read in the same sweep, show
+  incoming HTTP traffic — telling apart a container plausibly at rest
+  from one that is merely unclassified but busy — and a development-flag
+  finding is grounded against the same declared lifecycle context
+  (`OPS-0003`) every other finding already is. Every finding cites the
+  evidence it was built from — a log line, or a raw reading.
 - **CPU resource priority scheduling.** Declared priority applications
   (Jellyfin, as of 0.5.0) get more CPU while active and give it back once idle;
   everything else is throttled down for the duration. Detection is

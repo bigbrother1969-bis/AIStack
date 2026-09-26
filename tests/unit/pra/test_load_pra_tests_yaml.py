@@ -218,12 +218,12 @@ def test_the_real_pra_tests_definition_loads():
     assert by_service["gigabyte"].status is None
     assert by_service["raspberry"].status is None
 
-    # A real restore attempt, 2026-09-23/26: `/srv/arrstack/configs`
-    # is not in any backup the owner could find (confirmed against
-    # the GIGABYTE Duplicity/Deja-Dup archive) — recorded as a real
-    # failure, not left untested and not given a fabricated RTO.
-    assert by_service["arrstack"].status == "failed"
-    assert by_service["arrstack"].rto_minutes is None
+    # Corrected the same day: a dedicated backup was built
+    # (`backup-arrstack.sh`) and a real restore test against it
+    # succeeded — `rto_minutes` is the real measured restore time
+    # (3m10.7s), rounded down to a whole minute, not a fabricated one.
+    assert by_service["arrstack"].status == "success"
+    assert by_service["arrstack"].rto_minutes == 3
 
     for service in by_service:
         assert thresholds.for_service(service).max_age_days == 90.0

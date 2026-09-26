@@ -41,6 +41,29 @@
 # working backup anywhere this owner could find. No `rto_minutes` —
 # nothing was actually restored, so there is no recovery time to
 # report.
+#
+# **`arrstack` corrected to `success`, same day (2026-09-26).** The
+# owner closed the gap above the same day it was found:
+# `/srv/scripts/backup-arrstack.sh` (a dedicated backup, kept separate
+# from Deja Dup rather than added into it — the same pattern
+# `backup-wordpress.sh` and the Nextcloud/Immich SQL dumps already
+# use) stops every arrstack container, `tar czf`s
+# `/srv/arrstack/configs` to `/media/BACKUP/CONFIG_BACKUPS/arrstack/`,
+# restarts them, and keeps the last 8 archives — scheduled weekly
+# (`15 3 * * 0`, root's crontab). A real restore test followed:
+# extracting the freshly produced archive to a scratch directory and
+# diffing it against the live tree. That diff is not empty — but
+# every difference is exactly what a stack that was stopped for the
+# backup and then restarted and left running produces on its own
+# (WAL/SHM journal sidecars, `.pid` files from the new process,
+# growing logs, in-flight crash-report files) — nothing pointing at a
+# failed or truncated extraction. `tar -xzf` itself completed cleanly
+# in 3m10.7s real time with no warnings, unlike the first attempt at
+# building this backup (`lidarr.db: file changed as we read it`,
+# fixed by stopping the containers first). `rto_minutes: 3`, rounded
+# down from that measured 3m10.7s — the field is declared as an
+# integer, this file states the real number it was rounded from
+# rather than a false extra digit of precision.
 
 max_age_days: 90
 
@@ -61,5 +84,6 @@ services:
       rto_minutes: 5
   - name: arrstack
     last_test:
-      status: failed
+      status: success
       date: "2026-09-26"
+      rto_minutes: 3

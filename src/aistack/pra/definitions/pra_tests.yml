@@ -98,6 +98,28 @@
 # `backup_raspberry.sh` and currently has no backup at all: a known,
 # separate, still-open gap, not resolved by this record and not
 # implied by it.
+#
+# **Vikunja gap closed, same day (2026-09-26).** Vikunja stores its
+# data in two places — plain files (`/srv/vikunja/files`, safe to
+# back up as-is) and a live MariaDB data directory
+# (`/srv/vikunja/db`). The latter is never backed up by raw file
+# copy: the same reasoning already applied to Nextcloud/Immich in
+# this file (a running InnoDB data directory copied file-by-file can
+# be internally inconsistent, unlike the SQLite files the other six
+# stacks hold) — so `backup_raspberry.sh` was extended to run
+# `mariadb-dump --single-transaction` against the `vikunja-db`
+# container first, writing to `/srv/vikunja/db_dump`, which is what
+# actually gets backed up; `/srv/vikunja/db` itself is still never
+# included. Verified, not assumed: a real run of the updated script
+# produced a snapshot naming both new paths, a restore of that
+# snapshot's `/srv/vikunja/files` diffed empty against the live tree,
+# and the restored `vikunja.sql` dump loaded cleanly into a scratch
+# MariaDB container with no errors, producing all 34 real Vikunja
+# tables. Raspberry now covers 7 of its stacks. `raspberry.last_test`
+# is left as recorded above (`success`, `rto_minutes: 1`) rather than
+# re-dated: that entry is the timed restore of the other six stacks,
+# unaffected by this addition, and this paragraph is what records the
+# scope actually changing.
 
 max_age_days: 90
 

@@ -29,7 +29,26 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
-  # **1.1.0 — published 2026-09-26, current.**
+  # **1.1.1 — published 2026-09-26, current.**
+  #
+  #   bigbrother1969/aistack-core:1.1.1
+  #   @sha256:63a4727b8af21303a82d6217b45dd2769726288cb761f062344034ed0c1a3d8f
+  #
+  # Built from fa2b73d on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 2081 tests with `clean: True`.
+  # 73 artifacts, 17 checks. Before the build, 1.1.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.1 entry gives the
+  # full account; in short, no new capability — `OPS-0009`'s own PRA
+  # restore-test records catching up with real tests the owner ran the
+  # same day: a real Arrstack backup gap found and closed, Raspberry's
+  # real restic backup found and proven with a genuine restore (after a
+  # first attempt failed on disk space, honestly recorded as a
+  # failure), and the Vikunja MariaDB backup gap closed and verified
+  # with a schema-level restore into a scratch database.
+  #
+  # **1.1.0 — published 2026-09-26.**
   #
   #   bigbrother1969/aistack-core:1.1.0
   #   @sha256:1e1433da6056d940ab2ddf02537f8df264e80eada524d5868b125cde19185e10

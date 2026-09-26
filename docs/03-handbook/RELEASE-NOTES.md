@@ -85,9 +85,8 @@ hand-maintained history, not about code.**
   existing entry, since it changes what is covered, not the timed
   restore already recorded for the other six stacks.
 
-`bigbrother1969/aistack-core:1.1.1`, built from `<commit to be filled in
-at publication — the owner's own build, per OPS-0002>`, digest `<filled
-in at publication>`.
+`bigbrother1969/aistack-core:1.1.1`, built from `fa2b73d`, digest
+`sha256:63a4727b8af21303a82d6217b45dd2769726288cb761f062344034ed0c1a3d8f`.
 2081 tests, 73 knowledge artifacts, `clean: True`.
 
 ## 1.1.0 — 2026-09-26

@@ -127,6 +127,83 @@ def test_a_domain_the_weights_do_not_declare_raises():
         compute_health_score(cockpit, WEIGHTS)
 
 
+# Real weights as OPS-0008 declares them 2026-09-26, once "Tests PRA" (the
+# domain that exposed the old formula's flaw) is included alongside the
+# four longer-standing domains.
+_FIVE_DOMAIN_WEIGHTS = HealthScoreWeights(
+    weights=(
+        DomainWeight(domain="Stockage", points=10),
+        DomainWeight(domain="Services", points=15),
+        DomainWeight(domain="Sauvegarde / PRA", points=25),
+        DomainWeight(domain="GPU", points=8),
+        DomainWeight(domain="Tests PRA", points=25),
+    )
+)
+
+
+def test_one_fully_unhealthy_domain_no_longer_floors_the_whole_score():
+    # The exact 2026-09-26 real-world case that prompted this fix: four
+    # domains entirely clean, "Tests PRA" saturated (5 findings against a
+    # weight of 25, so its own domain score floors at 0 well before 5
+    # findings — any count from 4 up floors it). The prior global-subtraction
+    # formula summed a 125-point penalty across domains and floored the
+    # *entire* score at 0; the weighted-average formula instead lets Tests
+    # PRA's own zero pull down only its declared 25/83 share of the total.
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(name="Stockage", instrumented=True),
+            HealthDomain(name="Services", instrumented=True),
+            HealthDomain(name="Sauvegarde / PRA", instrumented=True),
+            HealthDomain(name="GPU", instrumented=True),
+            HealthDomain(
+                name="Tests PRA",
+                instrumented=True,
+                findings=tuple(a_finding(str(i)) for i in range(5)),
+            ),
+        )
+    )
+
+    score = compute_health_score(cockpit, _FIVE_DOMAIN_WEIGHTS)
+
+    # (10*100 + 15*100 + 25*100 + 8*100 + 25*0) / 83 = 5800/83 ≈ 69.88 → 70
+    assert score.value == 70
+    assert score.bucket == ACTION_REQUIRED
+    assert score.measured_domains == 5
+    assert score.total_domains == 5
+
+
+def test_a_domain_saturating_its_own_penalty_still_floors_at_zero():
+    # A single instrumented domain is the degenerate case of a weighted
+    # average (its own weight is the whole denominator), so it must still
+    # floor at 0 exactly like before, not go negative.
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(
+                name="Tests PRA",
+                instrumented=True,
+                findings=tuple(a_finding(str(i)) for i in range(9)),
+            ),
+        )
+    )
+
+    score = compute_health_score(cockpit, _FIVE_DOMAIN_WEIGHTS)
+
+    assert score.value == 0
+    assert score.bucket == ACTION_REQUIRED
+
+
+def test_no_instrumented_domain_scores_100_rather_than_dividing_by_zero():
+    cockpit = HealthCockpit(
+        domains=(HealthDomain(name="GPU", instrumented=False, note="pas encore"),)
+    )
+
+    score = compute_health_score(cockpit, WEIGHTS)
+
+    assert score.value == 100
+    assert score.measured_domains == 0
+    assert score.total_domains == 1
+
+
 _ONE_POINT_WEIGHTS = HealthScoreWeights(
     weights=(DomainWeight(domain="Stockage", points=1),)
 )

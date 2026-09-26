@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -38,6 +38,57 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.1.1 — 2026-09-26
+
+**A same-day follow-up to `1.1.0`. No new capability — `OPS-0009`'s own
+PRA (restore-test) records catching up with real restore tests the owner
+ran the same afternoon, and one real gap they found and closed. This
+entry is about `src/aistack/pra/definitions/pra_tests.yml`'s own
+hand-maintained history, not about code.**
+
+- **Arrstack: a real backup gap found, then closed.** A real restore
+  attempt against `/srv/arrstack/configs`, from the GIGABYTE Duplicity
+  archive `OPS-0009` had assumed covered it, came back "not found in
+  archive" — confirmed with a read-only listing: nothing under
+  `arrstack` was ever in that archive. It turned out to be the owner's
+  own Deja Dup backup of his personal document/media folders, never
+  configured to reach `/srv`. Recorded `failed` first, not smoothed
+  over. Closed the same day: a dedicated `backup-arrstack.sh` (stop the
+  stack, `tar czf` its config tree to
+  `/media/BACKUP/CONFIG_BACKUPS/arrstack/`, restart, keep the last 8,
+  weekly cron), then a real restore test — extraction clean in 3m10.7s,
+  every diff against the live tree explained by the stack having been
+  stopped and restarted for the backup, nothing pointing at a bad
+  extraction. Recorded `success`, `rto_minutes: 3`.
+- **Raspberry: a real backup existed — this time actually proven, not
+  assumed.** A pre-existing restic backup (16 real snapshots since
+  2026-03-08) was found while investigating the Arrstack gap. A first
+  restore attempt, targeted at `/tmp` — Raspberry's own 16 GB system
+  disk, not the 9 TB drive the repository itself lives on — ran out of
+  space and left several restored files genuinely corrupted: a real
+  failure, recorded as one, and traced to the restore target rather
+  than to the backup. Redone against `/media/BACKUP`: 1742 files, 1.164
+  GiB, zero errors, every remaining diff explained by services that
+  keep running while the snapshot was taken. Recorded `success`,
+  `rto_minutes: 1`, covering six of Raspberry's seven stacks.
+- **Vikunja: the seventh stack, closed the same day.** Vikunja's live
+  MariaDB data directory is never safe to copy file-by-file while the
+  database is running — the same reasoning this file already applies to
+  Nextcloud and Immich. `backup_raspberry.sh` was extended to run
+  `mariadb-dump --single-transaction` against `vikunja-db` before every
+  restic backup. Verified, not assumed: a real run of the updated
+  script produced a snapshot naming the new dump, its files restored
+  and diffed empty against the live tree, and the restored dump loaded
+  cleanly into a scratch, disposable MariaDB container — producing all
+  34 real Vikunja tables. Recorded as a dated addendum to Raspberry's
+  existing entry, since it changes what is covered, not the timed
+  restore already recorded for the other six stacks.
+
+`bigbrother1969/aistack-core:1.1.1`, built from `<commit to be filled in
+at publication — the owner's own build, per OPS-0002>`, digest `<filled
+in at publication>`.
+2081 tests, 73 knowledge artifacts, `clean: True`.
 
 ## 1.1.0 — 2026-09-26
 
@@ -455,7 +506,7 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 1.1.0 (2026-09-26), taken together.
+Not what changed — what runs, as of 1.1.1 (2026-09-26), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,

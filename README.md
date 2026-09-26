@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.1.0
+### Concrete capabilities, as of 1.1.1
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -167,7 +167,7 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.1.0**: `pytest -q` — **2078 passed**; `ruff check src tests` —
+**As of 1.1.1**: `pytest -q` — **2081 passed**; `ruff check src tests` —
 all checks passed; `mypy src` — no issues found in **484 source files**;
 `python3 -m aistack.cli.knowledge_integrity` — **73 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.

@@ -20,7 +20,9 @@
 # invented for this file) and carried over here rather than reset to
 # untested. `gigabyte`, `raspberry` and `arrstack` have never been
 # tested in that history either, and are declared here the same
-# honest way: `last_test: null`, not a fabricated one.
+# honest way: `last_test: null`, not a fabricated one. (`raspberry`
+# was corrected the same way `arrstack` was, on 2026-09-26 — see
+# below.)
 #
 # This file is edited by hand after each real restore test — no UI
 # and no provider writes it back, the same convention
@@ -64,6 +66,38 @@
 # down from that measured 3m10.7s — the field is declared as an
 # integer, this file states the real number it was rounded from
 # rather than a false extra digit of precision.
+#
+# **`raspberry` corrected to `success`, same day (2026-09-26).** The
+# owner found, while investigating this gap, that a real restic
+# backup already existed for Raspberry
+# (`/usr/local/bin/backup_raspberry.sh`, root's crontab `0 3 * * *`,
+# repo on the 9 TB `/media/BACKUP` drive physically attached to
+# Raspberry itself): 16 real snapshots spanning 2026-03-08 through
+# this same morning, `--keep-daily 7 --keep-weekly 4 --keep-monthly
+# 12` retention visibly pruning. That existence alone was not treated
+# as proof: a first `restic restore latest` attempt, targeted at
+# `/tmp` on Raspberry's own 16 GB system disk, hit "no space left on
+# device" 1119 times and left several restored files genuinely
+# corrupted (`vaultwarden/data/db.sqlite3`,
+# `pocketid/data/pocket-id.db`, `uptime-kuma/data/kuma.db`, and ~40
+# `npm/data/nginx/proxy_host/*.conf` files all failed their writes):
+# a real restore failure, not recorded as success, and not the
+# backup's fault, since `/tmp` sits on the small system disk, not on
+# the 9 TB drive the repository itself lives on. Redone with the
+# target moved to `/media/BACKUP` (ample free space there), the
+# restore completed cleanly: 1742 files/dirs, 1.164 GiB, zero errors,
+# and this time every diff against the live tree was exactly what
+# running services produce on their own (`.log`/`.gz` files,
+# `db`/`db-shm`/`db-wal` journals for uptime-kuma and pocketid);
+# `vaultwarden/data` came back byte-for-byte identical. `rto_minutes:
+# 1`, rounded down from that measured 1m55.344s. Scope note, not
+# swept under this success: this backup and restore test cover 6 of
+# Raspberry's stacks (`changedetection`, `homepage`, `npm`,
+# `pocketid`, `uptime-kuma`, `vaultwarden`). Vikunja, a real stateful
+# task-manager app also running on Raspberry, is not included in
+# `backup_raspberry.sh` and currently has no backup at all: a known,
+# separate, still-open gap, not resolved by this record and not
+# implied by it.
 
 max_age_days: 90
 
@@ -71,7 +105,10 @@ services:
   - name: gigabyte
     last_test: null
   - name: raspberry
-    last_test: null
+    last_test:
+      status: success
+      date: "2026-09-26"
+      rto_minutes: 1
   - name: nextcloud
     last_test:
       status: success

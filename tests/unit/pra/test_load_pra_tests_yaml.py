@@ -216,7 +216,16 @@ def test_the_real_pra_tests_definition_loads():
     # Never tested in that history either — declared the same honest
     # way, not a fabricated success.
     assert by_service["gigabyte"].status is None
-    assert by_service["raspberry"].status is None
+
+    # Corrected the same day: a pre-existing restic backup was found,
+    # a first restore attempt genuinely failed (target disk full —
+    # not the backup's fault), and a redone restore against a target
+    # with enough space succeeded cleanly — `rto_minutes` is the real
+    # measured restore time (1m55.3s), rounded down. Six of eleven
+    # Raspberry stacks are covered; Vikunja is a separate, still-open
+    # gap, not implied closed by this record.
+    assert by_service["raspberry"].status == "success"
+    assert by_service["raspberry"].rto_minutes == 1
 
     # Corrected the same day: a dedicated backup was built
     # (`backup-arrstack.sh`) and a real restore test against it

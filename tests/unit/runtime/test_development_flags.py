@@ -44,6 +44,24 @@ def test_a_finding_requires_its_pattern_present_in_its_own_command():
         )
 
 
+def test_a_finding_starts_ungrounded_like_any_other():
+    """
+    Grounding against `OPS-0003` is `ground_development_flags`'s job
+    (`aistack.runtime.grounding`), applied after `find_development_
+    flags` has already produced the finding — mirroring `RuntimeFinding
+    .grounding`'s own default.
+    """
+
+    finding = DevelopmentFlagFinding(
+        container="x",
+        pattern="--reload",
+        interpretation="y",
+        command="x --reload",
+    )
+
+    assert finding.grounding == "unknown"
+
+
 # --------------------------------------------------------------------
 # `find_development_flags`
 # --------------------------------------------------------------------

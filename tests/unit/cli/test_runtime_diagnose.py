@@ -701,6 +701,86 @@ def test_the_governed_resource_priority_definition_is_the_default():
 
 
 # --------------------------------------------------------------------
+# Consumption confirmed against its own logs, STD-0300 4.1,
+# advanced 2026-09-26
+# --------------------------------------------------------------------
+
+
+def test_a_consumption_finding_is_confirmed_idle_from_its_own_quiet_logs(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    """
+    The same sweep that flags `aistack-selection-ui` as unexplained
+    consumption already read its logs to qualify against OPS-0001 —
+    this is that same observation, read a second way, not a second
+    collection.
+    """
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"aistack-selection-ui": ["[INFO] tick"]},
+        cpu={"aistack-selection-ui": 52.0},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "no incoming HTTP requests" in out
+
+
+def test_a_consumption_finding_with_real_requests_is_not_called_idle(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    line = (
+        '82.65.77.38 - - [04/Sep/2026:13:07:08 +0200] "GET /register '
+        'HTTP/1.1" 200 2824 "-" "curl/8.0" "-"'
+    )
+
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"aistack-selection-ui": [line]},
+        cpu={"aistack-selection-ui": 52.0},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "do show incoming HTTP requests" in out
+    assert "no incoming HTTP requests" not in out
+
+
+def test_a_consumption_finding_with_no_log_observation_says_nothing_about_idleness(
+    monkeypatch, catalogue_file, resource_priority_file, capsys
+):
+    """
+    `aistack-selection-ui` here carries no entry in `logs` at all, so
+    it is never in `declared`/`subjects` and no observation is
+    collected for it — the honest "neither" case, not a guess.
+    """
+    monkeypatch.setattr(
+        cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_file
+    )
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        cpu={"aistack-selection-ui": 52.0},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "incoming HTTP request" not in out
+
+
+# --------------------------------------------------------------------
 # Storage capacity, STD-0300 4.5 / OPS-0004 deployment-misconfiguration
 # --------------------------------------------------------------------
 
@@ -1276,6 +1356,52 @@ def test_commands_that_cannot_be_collected_are_reported_and_do_not_crash(
 
     assert code == 0
     assert "container commands could not be collected" in out
+
+
+def test_a_flag_about_a_declared_intermittent_container_is_grounded(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    """
+    STD-0300 § VS-4 criterion 4.3, advanced 2026-09-26: the same
+    `OPS-0003` register every other finding this run produces is
+    grounded against reaches a development-flag finding too.
+    """
+    register = tmp_path / "OPS-TEST-LC.md"
+    register.write_text(LIFECYCLE, encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_LIFECYCLE_REGISTER", register)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={"frigate": "python3 -m uvicorn app:app --reload"},
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "grounding: OPS-TEST-LC/frigate" in out
+    assert "declared intermittent" in out
+
+
+def test_a_flag_about_an_undeclared_container_stays_ungrounded(
+    monkeypatch, catalogue_file, tmp_path, capsys
+):
+    register = tmp_path / "OPS-TEST-LC.md"
+    register.write_text(LIFECYCLE, encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_LIFECYCLE_REGISTER", register)
+
+    code = run(
+        monkeypatch,
+        catalogue_file,
+        {"gluetun": ["quiet"]},
+        commands={
+            "aistack-selection-ui": "python3 -m uvicorn app:app --reload"
+        },
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "grounding: unknown" in out
 
 
 def test_a_development_flag_alone_raises_the_exit_code(

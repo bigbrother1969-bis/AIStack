@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from aistack.contracts.undeclared import UNDECLARED
+
 
 @dataclass(frozen=True)
 class DevelopmentFlagPattern:
@@ -46,12 +48,25 @@ class DevelopmentFlagFinding:
     `MatchedLine` carries a log line rather than only a position:
     a reader deciding whether this matters needs to see the command
     that fired the rule, not only the rule's name.
+
+    **`grounding` mirrors `RuntimeFinding.grounding` on purpose.**
+    `STD-0300` § VS-4 criterion 4.3 asks whether the option is enabled
+    "in a permanent service" — a question this finding does not answer
+    by itself, the same way `OPS-0001`'s own signatures do not answer
+    whether their subject is stopped on purpose. `aistack.runtime
+    .grounding.ground_development_flags` is `ground_findings`'s
+    counterpart for this finding type: it reads `OPS-0003` and cites
+    it here where the owner has declared this container one way or
+    the other. `UNDECLARED` — not `False`, not "permanent" assumed —
+    is what a container carries until then: absence is a state, the
+    same reading `LifecycleRegister.for_container` already gives.
     """
 
     container: str
     pattern: str
     interpretation: str
     command: str
+    grounding: str = UNDECLARED
 
     def __post_init__(self) -> None:
         if not self.container.strip():

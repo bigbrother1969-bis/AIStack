@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.25
+  version: 1.26
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-09-25
+  updated: 2026-09-26
 
 relations:
   references:
@@ -947,6 +947,62 @@ data alone.
 2026-09-04 reasoning said would move at or after J5 — three of the
 four; `4.6` stays open on `ARC-P-006`'s own gate, not on anything J5
 left undone.
+
+#### 2026-09-26 — `evaluate` reads a container's own logs for 4.1;
+`OPS-0003` reaches a development-flag finding for 4.3
+
+Owner-scoped, per four separate choices given the same day: advance 4.1 and
+4.3 with what already exists, real and unwired rather than invented; leave
+4.6 and 4.7 exactly as this section already records them, on `ARC-P-006`'s
+own gate and on the owner's own missing operational facts respectively —
+neither reasoning below applies to those two, and neither criterion's own
+state changes here.
+
+**4.1 — advanced, not satisfied.** `aistack.runtime.activity_evidence
+.no_incoming_requests` (built 2026-09-10, for `OPS-0004`'s own reference
+incident, never called from anywhere) is now read by `evaluate`, an optional
+third argument, `container -> RuntimeObservation`, from the same log
+collection `aistack.cli.runtime_diagnose.main` already makes to qualify
+against `OPS-0001` — never a second collection for the same container. Where
+that reading exists, a consumption finding's own `interpretation` states
+whether the same window shows an incoming HTTP request, not only that the
+consumption is undeclared. `OPS-0004`'s own qualification vocabulary is
+untouched: this is stated, not turned into a fifth term or a filter on
+`energy-inefficiency`, the same discipline `ground_findings` already holds —
+additive, never suppressive.
+
+What this still does not prove: `no_incoming_requests`'s own docstring is
+explicit that a quiet window is not proof nothing arrived, and it says
+nothing about an active browser session — the reference incident's own
+second half, which nothing checks yet. **Criterion 4.1 stays `not verified`**
+for the same reason `4.4`/`4.5` waited on a live pair above: this correlation
+has run against fixture data (`tests/unit/runtime/test_evaluate.py`), not yet
+against a real sweep of the reference deployment finding its own consumption
+and its own quiet logs together. The next sweep of GIGABYTE
+(`python -m aistack.cli.runtime_diagnose`, no container named) is what would
+give that — the same path `4.4`/`4.5` closed by, at J5.
+
+**4.3 — advanced, not satisfied.** `aistack.runtime.grounding
+.ground_development_flags`, `ground_findings`'s counterpart for a
+`DevelopmentFlagFinding`, reads the same `OPS-0003` register every other
+finding this run is already grounded against and cites it on a development
+-flag finding too — `DevelopmentFlagFinding` gained a `grounding` field for
+exactly this, defaulting `unknown` the same way `RuntimeFinding.grounding`
+does. Unlike `ground_findings`, both declared values are cited here, not
+only `intermittent`: `find_development_flags`'s own docstring already says
+it does not judge "permanent," and a container `OPS-0003` declares
+`continuous` is the owner's own confirmation that it is, exactly the reading
+this criterion asks for — staying silent on that value would tell half of
+what the register states.
+
+This closes nothing by itself: `OPS-0003` still declares exactly one
+container (`frigate`, `intermittent`), and a development flag has never yet
+been observed on it — the wiring is real and exercised
+(`tests/unit/runtime/test_grounding.py`,
+`tests/unit/cli/test_runtime_diagnose.py`), the fact it would apply to is
+not. **Criterion 4.3 stays `not verified`**: "permanent" becomes answerable
+for a subject the moment the owner declares it either way, and remains
+exactly as unanswered as before this session for every subject that is not.
 
 ---
 

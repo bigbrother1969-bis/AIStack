@@ -6,8 +6,11 @@ evidence into a qualified `RuntimeFinding`.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_finding import CitedReading
+from aistack.contracts.runtime_observation import LogEntry, RuntimeObservation
 from aistack.contracts.temperature_reading import TemperatureReading
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.contracts.unexplained_consumption import UnexplainedConsumption
@@ -16,6 +19,23 @@ from aistack.runtime.evaluate import (
     SUSTAINABILITY_ANOMALY,
     evaluate,
 )
+
+
+NOW = datetime(2026, 9, 26, 12, 0, 0, tzinfo=timezone.utc)
+
+
+def observation(*lines: str, container: str = "aistack-selection-ui"):
+    last = len(lines) - 1
+    return RuntimeObservation(
+        subject=container,
+        provider="aistack.provider.docker",
+        state="running",
+        collected_at=NOW,
+        depth=100,
+        entries=tuple(
+            LogEntry(offset=last - i, text=t) for i, t in enumerate(lines)
+        ),
+    )
 
 
 def consumption(container: str = "aistack-selection-ui", cpu_percent: float = 52.0):
@@ -197,3 +217,73 @@ def test_one_finding_per_container_with_unexplained_consumption():
 
     assert {f.subject for f in findings} == {"a", "b"}
     assert all(f.qualifications == (ENERGY_INEFFICIENCY, SUSTAINABILITY_ANOMALY) for f in findings)
+
+
+# --------------------------------------------------------------------
+# `observations`: STD-0300 § VS-4 criterion 4.1's "idle" reading,
+# added 2026-09-26
+# --------------------------------------------------------------------
+
+
+def test_no_observations_argument_leaves_the_interpretation_unchanged():
+    """
+    `observations` is optional and `None` by default — every call
+    site and test written before 2026-09-26 is unaffected.
+    """
+
+    findings = evaluate([consumption()], [])
+
+    assert "incoming HTTP request" not in findings[0].interpretation
+
+
+def test_a_container_with_no_entry_in_observations_says_nothing_about_idleness():
+
+    findings = evaluate(
+        [consumption()], [], {"some-other-container": observation("quiet")}
+    )
+
+    assert "incoming HTTP request" not in findings[0].interpretation
+
+
+def test_quiet_logs_confirm_the_consumption_as_idle():
+
+    findings = evaluate(
+        [consumption()],
+        [],
+        {"aistack-selection-ui": observation("[INFO] tick")},
+    )
+
+    assert "no incoming HTTP requests" in findings[0].interpretation
+    assert "criterion 4.1" in findings[0].interpretation
+
+
+def test_a_real_request_line_says_the_consumption_may_be_real_work():
+
+    line = (
+        '82.65.77.38 - - [04/Sep/2026:13:07:08 +0200] "GET /register '
+        'HTTP/1.1" 200 2824 "-" "curl/8.0" "-"'
+    )
+
+    findings = evaluate(
+        [consumption()], [], {"aistack-selection-ui": observation(line)}
+    )
+
+    assert "do show incoming HTTP requests" in findings[0].interpretation
+    assert "no incoming HTTP requests" not in findings[0].interpretation
+
+
+def test_observations_does_not_change_which_qualifications_are_cited():
+    """
+    `OPS-0004`'s vocabulary is closed and this correlation does not
+    widen or narrow it — the log reading is stated, not turned into
+    a third qualification alongside energy inefficiency and
+    sustainability anomaly.
+    """
+
+    findings = evaluate(
+        [consumption()],
+        [hot_reading()],
+        {"aistack-selection-ui": observation("quiet")},
+    )
+
+    assert findings[0].qualifications == (ENERGY_INEFFICIENCY, SUSTAINABILITY_ANOMALY)

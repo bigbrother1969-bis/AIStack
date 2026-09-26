@@ -47,17 +47,45 @@ second real, confirmed case before generalising one (`ARC-P-006`) —
 this correlates two readings, it does not explain why either reads
 what it does. A finding's `interpretation` states what was observed
 correlated, not a derived cause.
+
+**A third, optional correlation, added 2026-09-26: `observations`.**
+STD-0300 § VS-4 criterion 4.1 asks for *idle* consumption, and
+`find_unexplained_consumption` only ever established "elevated and
+undeclared" — nothing distinguished that from a container nobody has
+classified but which is, in fact, doing real work. `aistack.runtime
+.activity_evidence.no_incoming_requests` is real, tested evidence
+built for this exact reading (`OPS-0004`'s own reference incident
+lists "no incoming HTTP requests" among what made `aistack
+-selection-ui`'s consumption idle rather than legitimate), collected
+in the same run `qualify()` already reads a container's logs in —
+this only stops leaving it uncalled. It is folded into
+`interpretation`, never into `qualifications`: what counts as
+*energy inefficiency* is `OPS-0004`'s own vocabulary, and narrowing
+or widening it based on one more signal would be exactly the
+invention `GOV-P-001` forbids — this states what the logs also
+showed, and lets a reader judge it alongside the rest.
+
+**What this still does not prove.** `no_incoming_requests`'s own
+docstring is explicit: a quiet window is not proof nothing arrived,
+and it says nothing about an active browser session — the other half
+of the reference incident's own evidence, which nothing here checks.
+A container with no request seen is stated as exactly that, not as
+"confirmed idle"; a container `observations` carries no entry for is
+stated as neither — the same "absent is not a negative answer"
+`TemperatureReading`'s own threshold reading already holds.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
+from aistack.contracts.runtime_observation import RuntimeObservation
 from aistack.contracts.temperature_reading import TemperatureReading
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.contracts.unexplained_consumption import UnexplainedConsumption
+from aistack.runtime.activity_evidence import no_incoming_requests
 
 # `OPS-0004`'s own vocabulary — see `RuntimeFinding.QUALIFICATIONS`
 # (`aistack.contracts.runtime_finding`) for the full closed list this
@@ -82,11 +110,18 @@ SIGNATURE = "OPS-0004"
 def evaluate(
     consumption: Sequence[UnexplainedConsumption],
     temperatures: Sequence[TemperatureReading],
+    observations: Mapping[str, RuntimeObservation] | None = None,
 ) -> tuple[RuntimeFinding, ...]:
     """
     Correlate unexplained CPU consumption against host temperature,
     into one qualified `RuntimeFinding` per container still carrying
     unexplained consumption.
+
+    `observations` is `container -> RuntimeObservation`, optional and
+    `None` by default so every existing caller and test built before
+    2026-09-26 is unaffected — a container absent from it, or the
+    argument left out entirely, is read exactly like a sensor with no
+    declared threshold: not shown either way, never assumed quiet.
 
     **One finding per `UnexplainedConsumption`, never per
     `TemperatureReading`.** A hot sensor with no unexplained
@@ -120,6 +155,8 @@ def evaluate(
         if reading.at_or_above_high or reading.at_or_above_critical
     )
 
+    observed = observations or {}
+
     findings = []
 
     for item in consumption:
@@ -141,11 +178,14 @@ def evaluate(
                 for reading in hot
             )
 
+        observation = observed.get(item.container)
+        quiet = no_incoming_requests(observation) if observation else None
+
         findings.append(
             RuntimeFinding(
                 subject=item.container,
                 signature=SIGNATURE,
-                interpretation=_interpretation(item, hot),
+                interpretation=_interpretation(item, hot, quiet),
                 remediation=_remediation(item, hot),
                 confidence="Measured",
                 grounding=UNDECLARED,
@@ -158,7 +198,9 @@ def evaluate(
 
 
 def _interpretation(
-    item: UnexplainedConsumption, hot: tuple[TemperatureReading, ...]
+    item: UnexplainedConsumption,
+    hot: tuple[TemperatureReading, ...],
+    quiet: bool | None,
 ) -> str:
 
     statement = (
@@ -168,6 +210,21 @@ def _interpretation(
         f"resource consumed for no declared functional benefit "
         f"({ENERGY_INEFFICIENCY})."
     )
+
+    if quiet is True:
+        statement += (
+            " Its own logs, read in the same run, show no incoming "
+            "HTTP requests — consistent with resource used at rest, "
+            "though an active session and every non-HTTP shape of "
+            "work remain unchecked (STD-0300 § VS-4 criterion 4.1)."
+        )
+    elif quiet is False:
+        statement += (
+            " Its own logs, read in the same run, do show incoming "
+            "HTTP requests in this window — this consumption may "
+            "reflect real work rather than idling; classification in "
+            "resource_priority.yml is still what is missing."
+        )
 
     if not hot:
         return statement

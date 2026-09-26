@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.111
+  version: 1.112
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-25
+  updated: 2026-09-26
 
 relations:
   references:
@@ -212,8 +212,8 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074 and OS-075 are in
-*Resolved*.
+OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075 and OS-077 are
+in *Resolved*.
 
 Three of those thirteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -322,6 +322,32 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-077 — `OPS-0001` stated criterion 4.5 stays `not verified`, after `STD-0300` recorded it satisfied
+
+**Nature** `non-conforming` · **Opened** 2026-09-26 · **State** resolved 2026-09-26, same session
+**Observed** `OPS-0001-Container-Log-Signatures.md` § *What this register does
+not do* states: "...as STD-0300 § VS-4 criterion 4.5 requires. Inventing that
+four-term vocabulary would be authoring governed knowledge, which GOV-P-001
+forbids. Criterion 4.5 remains `not verified`." `STD-0300-Official-Validation
+-Suite.md`'s own criteria table has recorded 4.5 **satisfied** since
+2026-09-11 (`aistack.runtime.evaluate`, J5), and its own narrative names why.
+`OPS-0001` was last updated 2026-09-04, before `evaluate` existed, and the
+sentence was never revisited once it did — the point it was making (this
+register alone does not classify a finding into the four `OPS-0004` terms)
+survives; only its closing claim about the criterion's own state does not.
+Found while verifying the current, un-drifted state of every VS-4-relevant
+module and document ahead of "on termine les VS-4" (2026-09-26) — a routine
+freshness check, not a functional review.
+**Derivable** no — no check compares a criterion's stated state across two
+governed documents; building one is a further, undecided question, the same
+standing `OS-075` left its own.
+**Qualification** none required to close this instance — the sentence is
+corrected alongside this entry.
+
+**Resolved 2026-09-26** by correcting `OPS-0001`'s closing sentence to name
+that criterion 4.5 was satisfied 2026-09-11, by `evaluate`, not by this
+register.
 
 #### GOV-0002/OS-076 — `STD-0300` criterion 2.4 stays `not verified`; the owner ends further re-runs against the same two model families
 

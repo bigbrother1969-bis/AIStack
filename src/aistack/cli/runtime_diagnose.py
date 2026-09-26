@@ -12,6 +12,7 @@ from aistack.contracts.development_flag import DevelopmentFlagFinding
 from aistack.contracts.gpu_anomaly import GpuAnomaly
 from aistack.contracts.lifecycle import LifecycleRegister
 from aistack.contracts.runtime_finding import CitedReading, MatchedLine, RuntimeFinding
+from aistack.contracts.runtime_observation import RuntimeObservation
 from aistack.contracts.signature import SignatureCatalogue
 from aistack.contracts.storage_shortage import StorageShortage
 from aistack.contracts.storage_threshold import StorageThreshold
@@ -47,7 +48,7 @@ from aistack.runtime.evaluate_gpu import evaluate_gpu
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
-from aistack.runtime.grounding import ground_findings
+from aistack.runtime.grounding import ground_development_flags, ground_findings
 from aistack.runtime.idle_consumption import find_unexplained_consumption
 from aistack.runtime.qualification import qualify
 from aistack.runtime.storage_shortage import find_storage_shortage
@@ -564,6 +565,7 @@ def report(
             print(f"    [{flag.container}] {flag.pattern}")
             print(f"        {flag.interpretation}")
             print(f"        command: {flag.command}")
+            print(f"        grounding: {flag.grounding}")
         print("")
 
     if correlated:
@@ -629,6 +631,13 @@ def main() -> None:
     findings: list[RuntimeFinding] = []
     unobserved: list[tuple[str, str]] = []
 
+    # Kept alongside `findings`, not folded into it: `evaluate` reads
+    # this by container name to add STD-0300 § VS-4 criterion 4.1's
+    # "idle" reading to a consumption finding, from logs this same
+    # sweep already collected to qualify against OPS-0001 — never a
+    # second collection.
+    observations: dict[str, RuntimeObservation] = {}
+
     for subject in subjects:
         try:
             observation = provider.collect_logs(
@@ -640,6 +649,7 @@ def main() -> None:
             unobserved.append((subject, str(error).strip()[:120]))
             continue
 
+        observations[subject] = observation
         findings.extend(qualify(observation, catalogue))
 
     # Consumption and temperature are collected here, ahead of
@@ -676,7 +686,7 @@ def main() -> None:
     # a qualified `RuntimeFinding` (STD-0300 § VS-4 criterion 4.5) —
     # merged into the same list `qualify()` already built, not
     # reported as a sixth, separate section.
-    findings.extend(evaluate(consumption, temperatures))
+    findings.extend(evaluate(consumption, temperatures, observations))
 
     # Storage, `PLAN-J7`'s second domain: a fleet-wide file
     # (`DEFAULT_STORAGE_THRESHOLDS`) narrowed to this host's own
@@ -777,7 +787,15 @@ def main() -> None:
             f"development options are not checked"
         )
     else:
-        development_flags = find_development_flags(commands)
+        # Grounded against the same register every other finding this
+        # run produces already is, STD-0300 § VS-4 criterion 4.3,
+        # advanced 2026-09-26: a container OPS-0003 declares
+        # `continuous` or `intermittent` reads that declaration here,
+        # rather than leaving "permanent" unanswered for it the way
+        # `find_development_flags` deliberately does on its own.
+        development_flags = ground_development_flags(
+            find_development_flags(commands), register
+        )
 
     # 4.2 correlates a subject a prior check already named — never a
     # fresh sweep of the host, since `docker top` takes one container

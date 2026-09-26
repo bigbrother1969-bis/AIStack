@@ -2,11 +2,12 @@ from datetime import datetime, timezone
 
 import pytest
 
+from aistack.contracts.development_flag import DevelopmentFlagFinding
 from aistack.contracts.lifecycle import LifecycleDeclaration, LifecycleRegister
 from aistack.contracts.runtime_finding import MatchedLine, RuntimeFinding
 from aistack.contracts.runtime_observation import LogEntry, RuntimeObservation
 from aistack.contracts.signature import Signature, SignatureCatalogue
-from aistack.runtime.grounding import ground_findings
+from aistack.runtime.grounding import ground_development_flags, ground_findings
 from aistack.runtime.qualification import qualify
 
 
@@ -209,3 +210,93 @@ def test_the_frigate_finding_is_grounded_after_qualification():
 
     assert grounded[0].grounding == "OPS-0003/frigate"
     assert grounded[0].signature == "OPS-0001/S-004"
+
+
+# --------------------------------------------------------------------
+# `ground_development_flags` — STD-0300 § VS-4 criterion 4.3,
+# advanced 2026-09-26
+# --------------------------------------------------------------------
+
+
+CONTINUOUS_DECLARATION = LifecycleDeclaration(
+    container="jellyfin", expected="continuous", reason="Always on."
+)
+
+
+def flag(container: str = "aistack-selection-ui") -> DevelopmentFlagFinding:
+    return DevelopmentFlagFinding(
+        container=container,
+        pattern="--reload",
+        interpretation="Uvicorn's development auto-reload flag is enabled.",
+        command="uvicorn app:app --reload",
+    )
+
+
+def test_a_flag_about_an_undeclared_container_is_unchanged():
+
+    original = flag("aistack-selection-ui")
+
+    grounded = ground_development_flags([original], register(FRIGATE))
+
+    assert grounded == (original,)
+    assert grounded[0].grounding == "unknown"
+
+
+def test_a_flag_about_a_declared_intermittent_container_cites_the_register():
+
+    grounded = ground_development_flags(
+        [flag("frigate")], register(FRIGATE)
+    )
+
+    assert grounded[0].grounding == "OPS-0003/frigate"
+    assert "declared intermittent" in grounded[0].interpretation
+    assert FRIGATE.reason in grounded[0].interpretation
+
+
+def test_a_flag_about_a_declared_continuous_container_also_cites_the_register():
+    """
+    Unlike `ground_findings`, both declared values are cited here —
+    `continuous` is the owner's own confirmation that this is the
+    permanent service criterion 4.3 means, not a value with nothing
+    new to add.
+    """
+
+    grounded = ground_development_flags(
+        [flag("jellyfin")], register(CONTINUOUS_DECLARATION)
+    )
+
+    assert grounded[0].grounding == "OPS-0003/jellyfin"
+    assert "declared continuous" in grounded[0].interpretation
+    assert "permanent service" in grounded[0].interpretation
+
+
+def test_the_original_interpretation_survives_as_a_prefix():
+
+    original = flag("frigate")
+
+    grounded = ground_development_flags([original], register(FRIGATE))[0]
+
+    assert grounded.interpretation.startswith(original.interpretation)
+
+
+def test_command_and_pattern_are_carried_through_unchanged():
+
+    original = flag("frigate")
+
+    grounded = ground_development_flags([original], register(FRIGATE))[0]
+
+    assert grounded.command == original.command
+    assert grounded.pattern == original.pattern
+
+
+def test_only_the_matching_flag_in_a_batch_is_grounded():
+
+    gluetun_flag = flag("gluetun")
+    frigate_flag = flag("frigate")
+
+    grounded = ground_development_flags(
+        [gluetun_flag, frigate_flag], register(FRIGATE)
+    )
+
+    assert grounded[0] == gluetun_flag
+    assert grounded[1].grounding == "OPS-0003/frigate"

@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Operations
   created: 2026-08-22
-  updated: 2026-09-04
+  updated: 2026-09-26
 
 relations:
   references:
@@ -190,8 +190,15 @@ is recorded here rather than settled.
 It does not classify a finding as technical debt, deployment
 misconfiguration, energy inefficiency and sustainability anomaly at once, as
 STD-0300 § VS-4 criterion 4.5 requires. Inventing that four-term vocabulary
-would be authoring governed knowledge, which GOV-P-001 forbids. Criterion 4.5
-remains `not verified`.
+would be authoring governed knowledge, which GOV-P-001 forbids.
+
+**Corrected 2026-09-26, `GOV-0002/OS-077`.** This paragraph once closed with
+"Criterion 4.5 remains `not verified`" — true when it was written, 2026-09-04,
+and false since 2026-09-11: `aistack.runtime.evaluate` satisfies it, from
+`ContainerCpuReading`/`TemperatureReading`, not from a signature in this
+register. What the paragraph is actually saying survives unchanged — this
+register alone does not, and was never meant to, classify a finding into
+`OPS-0004`'s four terms.
 
 It does not describe container state — not running, unhealthy, no healthcheck
 declared. That is a different observation and a different rule, and the

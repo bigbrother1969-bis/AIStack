@@ -125,9 +125,8 @@ the same shape `0.6.0`'s own entry used for the same situation.**
   mechanism `ARCH-0009`/`ARCH-0013` already describe, not yet wired to
   anything a user reaches.
 
-`bigbrother1969/aistack-core:1.1.0`, built from `<commit to be filled in
-at publication — the owner's own build, per OPS-0002>`, digest `<filled
-in at publication>`.
+`bigbrother1969/aistack-core:1.1.0`, built from `3ef455b`, digest
+`sha256:1e1433da6056d940ab2ddf02537f8df264e80eada524d5868b125cde19185e10`.
 2078 tests, 73 knowledge artifacts, `clean: True`.
 
 ## 1.0.0 — 2026-09-18

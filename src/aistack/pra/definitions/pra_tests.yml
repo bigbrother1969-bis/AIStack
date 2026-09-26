@@ -25,6 +25,22 @@
 # This file is edited by hand after each real restore test — no UI
 # and no provider writes it back, the same convention
 # `backup_thresholds.yml` already holds.
+#
+# **`arrstack` recorded as `failed`, 2026-09-26.** The owner ran a
+# real restore attempt against `/srv/arrstack/configs` from the
+# GIGABYTE Duplicity archive (`/media/BACKUP/GIGABYTE_DAILY`) —
+# `duplicity restore --path-to-restore srv/arrstack/configs ...`
+# returned "not found in archive - no files restored." A second,
+# read-only check (`duplicity list-current-files ... | grep
+# arrstack`) confirmed it: nothing under `arrstack` is in that
+# archive at all. The owner then identified that archive as his own
+# weekly Deja Dup backup of GIGABYTE — Deja Dup being a GUI over
+# Duplicity — configured to cover his personal document/media
+# folders, not `/srv`. So this is a real, confirmed gap, not a typo
+# in the restore command: Arrstack's configuration currently has no
+# working backup anywhere this owner could find. No `rto_minutes` —
+# nothing was actually restored, so there is no recovery time to
+# report.
 
 max_age_days: 90
 
@@ -44,4 +60,6 @@ services:
       date: "2026-06-24"
       rto_minutes: 5
   - name: arrstack
-    last_test: null
+    last_test:
+      status: failed
+      date: "2026-09-26"

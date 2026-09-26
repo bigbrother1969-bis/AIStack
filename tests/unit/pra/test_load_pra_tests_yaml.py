@@ -217,7 +217,13 @@ def test_the_real_pra_tests_definition_loads():
     # way, not a fabricated success.
     assert by_service["gigabyte"].status is None
     assert by_service["raspberry"].status is None
-    assert by_service["arrstack"].status is None
+
+    # A real restore attempt, 2026-09-23/26: `/srv/arrstack/configs`
+    # is not in any backup the owner could find (confirmed against
+    # the GIGABYTE Duplicity/Deja-Dup archive) — recorded as a real
+    # failure, not left untested and not given a fabricated RTO.
+    assert by_service["arrstack"].status == "failed"
+    assert by_service["arrstack"].rto_minutes is None
 
     for service in by_service:
         assert thresholds.for_service(service).max_age_days == 90.0

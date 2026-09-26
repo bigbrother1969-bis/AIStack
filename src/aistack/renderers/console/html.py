@@ -215,10 +215,17 @@ def _render_domain_badge(domain: HealthDomain) -> str:
 
 
 def _render_link(link: ConsoleLink) -> str:
+    """
+    The card shows the name and description only — no visible URL
+    text, since 2026-09-26 (the owner's own call: the target still
+    lives in the `href`, so the card is exactly as clickable as
+    before, it just stops repeating a raw hostname the description
+    already conveys in French).
+    """
+
     return f"""  <a class="card" href="{escape_text(link.url)}">
     <h2>{escape_text(link.name)}</h2>
     <p>{escape_text(link.description)}</p>
-    <span class="url">{escape_text(link.url)}</span>
   </a>"""
 
 
@@ -262,7 +269,6 @@ header { text-align: center; margin-bottom: 2rem; }
   font-family: Georgia, "Times New Roman", Times, serif;
 }
 .card p { margin: 0 0 .6rem; font-size: .9rem; color: #5b6b7d; }
-.card .url { font-size: .78rem; color: #8a97a8; font-family: monospace; }
 .health-cartouche {
   border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem 1.2rem;
   margin-bottom: 1.4rem; background: #ffffff;

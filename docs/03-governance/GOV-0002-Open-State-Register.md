@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.117
+  version: 1.118
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -213,7 +213,7 @@ belongs here the day it is written, not the day someone re-reads it.
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
 OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075, OS-077,
-OS-079, OS-080, OS-081 and OS-082 are in *Resolved*.
+OS-079, OS-080, OS-081, OS-082 and OS-083 are in *Resolved*.
 
 Three of those fourteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -322,6 +322,56 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-083 — Two of the five real `claude/*.md` files declare frontmatter that `parse_artifact_frontmatter` has never actually been able to read
+
+**Nature** `non-conforming` · **Opened** 2026-09-27 · **State** resolved 2026-09-27, same session
+**Observed** while building the third Explications importer (`ADR-0011`
+§ *Decision* 8, `claude/` notes): `aistack.explications.from_claude_notes`
+reads a note's own subject and date from its declared frontmatter via
+`aistack.context_bundle.builders.frontmatter.parse_artifact_frontmatter`
+— the same shared reader `aistack.context_bundle.builders
+.artifact_builder.MarkdownArtifactBuilder` already uses for governed
+document discovery. Measured directly against all 5 real files: only 2
+of 5 parse successfully (`VS2-2.4-CHALLENGE-CHATGPT-2026-09-23.md`,
+`VS2-2.4-CROSS-MODEL-COMPARISON-2026-09-23.md`). One of the remaining
+3 (`PLAN-VS2-2.4-PROTOCOL-2026-09-25.md`) genuinely declares no
+frontmatter at all — expected. The other 2
+(`SESSION-2026-09-25-vs2-2.4-rerun.md`,
+`SESSION-2026-09-25-vs2-2.4.md`) **do** declare a real `artifact:`
+block with `id`/`created`/`updated`, but `yaml.safe_load` raises
+`"mapping values are not allowed here"` on both — their own `status`
+field's prose contains an unquoted colon-space sequence ("verdict de
+convergence : READY qualifié…"), which YAML reads as an attempted new
+mapping key mid-scalar. `parse_artifact_frontmatter` catches every
+`yaml.YAMLError` and returns `{}`, exactly as documented ("malformed…
+yields an empty mapping, never a guessed value") — so this is not a
+crash anywhere, but it does mean these two files' own real, intended
+`id` (`SESSION-2026-09-25-VS2-2.4-RERUN`, `SESSION-2026-09-25-VS2-2.4`)
+has never actually been read by anything calling this shared function,
+silently, since the day each file was written.
+**Resolved 2026-09-27.** Fixing `parse_artifact_frontmatter` itself
+(to tolerate or usefully report this shape) or re-quoting these two
+files' own `status:` prose would touch shared, already-tested
+discovery infrastructure and content outside this patch's own scope
+(`ARC-P-006`) — not attempted here. `from_claude_notes`'s own fallback
+(the file's own filename stem and an embedded date) already handles
+this gracefully and correctly: both notes are still imported, as
+`PLAN-VS2-2.4-PROTOCOL-2026-09-25` and
+`SESSION-2026-09-25-vs2-2.4-rerun` already are for the genuinely
+frontmatter-less file, just under the filename-derived subject instead
+of the richer declared `id` — a real, stated degradation, not a silent
+loss, and not a defect in the new importer.
+**Derivable** yes — a check that round-trips every `claude/*.md`
+file's own frontmatter block through `yaml.safe_load` directly (rather
+than through `parse_artifact_frontmatter`, whose empty-mapping return
+looks identical to "no frontmatter at all") would have caught this the
+day either file was written.
+**Qualification** none required — mechanical, no judgement call. Fixing
+the two files' own `status:` prose (quoting it, or removing the
+colon) is a real, cheap follow-up the owner may want to do by hand;
+this session does not do it unasked, since editing already-written
+`claude/` notes is content, not infrastructure.
 
 #### GOV-0002/OS-082 — `ADR-0011` § *Context* claimed AI Reasoning History is one of the four streams already reachable by the graph; measured, it never has been
 

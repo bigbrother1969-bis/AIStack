@@ -547,6 +547,52 @@ confirmed all 14 expected triples, including a single shared
 `file:pra_tests.yml` Agent node attributed by both subjects'
 Explications.
 
+### 16. Explications' third real source: `claude/` session notes
+
+`aistack.explications.from_claude_notes.import_claude_notes` imports
+every `*.md` file directly under `claude/` — the 5 this repository
+itself versions, per the corpus-scope decision § 8 now states. Each
+note's subject and date are read from its own declared frontmatter
+(`aistack.context_bundle.builders.frontmatter
+.parse_artifact_frontmatter`, the same shared reader
+`MarkdownArtifactBuilder` already uses for governed discovery, reused
+directly — not that builder itself, an Explication being no more a
+discovered document here than it was for `pra_tests.yml`) — `id` is
+the subject, `updated` (falling back to `created`) is the date. A note
+declaring neither this way falls back to its own filename's stem and
+embedded date; one with neither is skipped and counted.
+
+**Idempotency here is a content hash, not an instant or a date** —
+unlike `explain` answers (a real recorded instant) or `pra_tests.yml`
+(a stated day), a `claude/` note carries no marker of its own
+separating "the fact" from "when it was noticed"; the file's text
+changing *is* the correction event `ADR-0011` § 7 already models as a
+new version. `metadata["source_content_hash"]` (sha256 of the raw
+file) is what this importer compares before recording.
+
+**Found while building this importer: `GOV-0002/OS-083`.** Measured
+against all 5 real files, only 2 parse their frontmatter successfully.
+One of the remaining 3 genuinely declares none — expected, and handled
+by the documented fallback. The other 2
+(`SESSION-2026-09-25-vs2-2.4-rerun.md`, `SESSION-2026-09-25-vs2-2.4.md`)
+**do** declare a real `id`, but their own `status:` prose contains an
+unquoted colon-space sequence that breaks `yaml.safe_load`, so
+`parse_artifact_frontmatter` — which returns `{}` on any parse error,
+by design — has silently never been able to read either one, for
+anyone calling it, since the day each was written. Resolved by scope,
+not by fixing the shared reader or the two files' own prose: this
+importer's own fallback already imports both notes correctly, just
+keyed by filename instead of the richer declared `id` — a real, stated
+degradation, not a silent loss.
+
+Verified in real execution against the actual 5 committed files: 0
+skipped, 5 recorded (3 via the filename fallback per `OS-083`, 2 via
+real frontmatter), a second run recording nothing new, and — proven
+separately with a controlled clock, since same-wall-clock-second
+writes to one subject collapse to one queryable instant — editing a
+note's own content between two runs correctly records a second
+Explication version rather than being lost to that collision.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -612,6 +658,16 @@ Explications.
   repository's own 5 files, not the owner's separate 73-document
   Claude Project. Two of four named sources (commits, `claude/` notes)
   remain not yet imported.
+- **Explications' third source, `claude/` notes, is real too**
+  (2026-09-27, § 16): `aistack.explications.from_claude_notes
+  .import_claude_notes` and its own CLI,
+  `aistack.cli.explications_import_claude_notes`, exist and were
+  exercised end to end against all 5 real committed files. Building it
+  found `GOV-0002/OS-083` — 2 of the 5 declare frontmatter
+  `parse_artifact_frontmatter` has never actually been able to read,
+  resolved by this importer's own filename fallback rather than by
+  touching the shared reader or the two files' own prose. Only commits
+  remain of the four named sources.
 
 ## Open Points
 

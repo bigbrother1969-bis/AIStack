@@ -135,7 +135,7 @@ def render_html(
 </style>
 </head>
 <body>
-{render_page_nav(t, declared, t.lang)}
+{render_page_nav(t, declared, t.lang, back_to_console=False)}
 <header>
   <img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}">
 </header>

@@ -990,6 +990,7 @@ def test_the_reference_page_keeps_its_french_labels_and_carries_the_nav():
     assert '<option value="all">Toutes les catégories</option>' in document
     assert 'href="/settings"' in document
     assert 'href="?lang=en"' in document
+    assert 'href="/console.html?lang=fr">← Retour à la console<' in document
 
 
 def test_the_unknown_view_message_is_never_injected_as_markup():

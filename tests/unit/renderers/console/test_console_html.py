@@ -415,6 +415,8 @@ def test_every_page_offers_settings_and_every_declared_language():
     assert 'href="?lang=fr"' in document
     assert ">Français<" in document
     assert 'aria-current="true">English<' in document
+    # The console is where the way back leads; it offers none itself.
+    assert 'class="console-link"' not in document
 
 
 def test_an_unknown_language_is_served_in_the_reference():

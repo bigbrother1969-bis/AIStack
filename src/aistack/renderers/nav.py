@@ -4,7 +4,8 @@ from aistack.i18n import Languages, Translator
 from aistack.renderers.text import escape_text
 
 # ADR-0010. The one strip of navigation every page the console serves
-# carries: the link to Settings, and a direct switch between the
+# carries: the way back to the console (on every page but the console
+# itself), the link to Settings, and a direct switch between the
 # declared languages.
 #
 # **Shared, not duplicated, the same way `escape_text` is.** Each
@@ -17,10 +18,23 @@ from aistack.renderers.text import escape_text
 # (`PAGE_NAV_STYLE`), appended by each page to its own `_STYLE`.
 
 
-def render_page_nav(t: Translator, languages: Languages, current: str) -> str:
+def render_page_nav(
+    t: Translator,
+    languages: Languages,
+    current: str,
+    *,
+    back_to_console: bool = True,
+) -> str:
     """
-    The Settings link and the language switch, for a page served in
-    `current`.
+    The way back to the console, the Settings link and the language
+    switch, for a page served in `current`.
+
+    `back_to_console` is `False` on the console alone: every other page
+    it serves (Architecture, the Health cockpit, Settings) is reached
+    from it and must lead back to it without the browser's own Back
+    button — the owner's finding on the first real use, 2026-09-27. The
+    link carries `?lang=`, the same way the console's own links to the
+    mini-apps do, so the way back never changes the language.
 
     Each language is shown by its own name for itself ("English", not
     "Anglais") — a visitor who cannot read the current language can
@@ -46,8 +60,16 @@ def render_page_nav(t: Translator, languages: Languages, current: str) -> str:
                 f'lang="{language.code}">{name}</a>'
             )
 
+    back = (
+        f'<a class="console-link" href="/console.html?lang={current}">'
+        f'{escape_text(t("common.console.back"))}</a>'
+        if back_to_console
+        else ""
+    )
+
     return (
         f'<nav class="page-nav" aria-label="{escape_text(t("common.language.switch_label"))}">'
+        f"{back}"
         f'<span class="lang-switch">{" · ".join(switches)}</span>'
         f'<a class="settings-link" href="/settings">{escape_text(t("common.settings.link"))}</a>'
         f"</nav>"
@@ -61,6 +83,7 @@ PAGE_NAV_STYLE = """\
 }
 .page-nav a { color: #16335c; text-decoration: none; }
 .page-nav a:hover { text-decoration: underline; }
+.console-link { margin-right: auto; }
 .lang-current { font-weight: 600; color: #1f2933; }
 .settings-link {
   border: 1px solid #dde4ed; border-radius: 6px; padding: .25rem .6rem;

@@ -360,13 +360,36 @@ same PRA gap § 11 names and the same eventual fix.
   four streams that feed it are all, honestly, unprotected data on one
   host's disk — this ADR does not claim otherwise while that gap is
   open.
+- **The projection is real, not only designed** (2026-09-27):
+  `project_observation_history` reads `aistack.history` (`available_
+  stems`/`available_instants`/`observation_at` — the same read side
+  `aistack.cli.history_query` already exposes) rather than a second,
+  parallel walk of `reports/generated/`, so the projection and the CLI
+  a human already uses to inspect this history can never disagree
+  about what a stream's history actually contains.
 
 ## Open Points
 
-- **The graph's public contract's exact shape** (`GraphStore`'s method
-  signatures, the RDF vocabulary's exact IRIs) is left to the
-  implementing patch rather than fixed here; this ADR fixes the model,
-  not the Python interface.
+- ~~**The graph's public contract's exact shape**~~ — **resolved,
+  2026-09-27**: `aistack.timemachine.graph.GraphStore` (`add`/`query`/
+  `clear`), `aistack.timemachine.oxigraph_store.OxigraphGraphStore`,
+  and the PROV-O/`aistack:` IRIs (`aistack.timemachine.vocabulary`) all
+  exist. `aistack.timemachine.projection.project_observation_history`
+  walks the four streams and writes what each one honestly states
+  today: a generic entity/`prov:generatedAtTime`/`wasGeneratedBy` fact
+  for every historical observation, of any stream, plus —
+  where a stream's own content parses as the `version`/`provenance`
+  envelope J3 already gave three of the four (Traces, Décisions CPU,
+  Raisonnements IA) — `aistack:stableSubject` from `version.subject`,
+  `prov:wasAttributedTo` an Agent from `provenance.origin`, and
+  `prov:used` naming the request from `provenance.causality` where one
+  exists. The twelve raw Observation History streams carry no such
+  envelope and get the generic facts only; parsing each one's own
+  business schema (a Docker container's identity, a Beszel host's own
+  name) for a richer mapping is real work still deferred to 1.5's
+  collectors, not attempted here — inventing that mapping now, for
+  streams no collector emits in that shape yet, would be exactly
+  `ARC-P-006`'s forbidden guess.
 - **How `aistack:occurredAt` is populated for the Kernel Runtime's own
   execution trace** — its events already happen and are recorded in the
   same call today, same as every other stream, so whether it ever

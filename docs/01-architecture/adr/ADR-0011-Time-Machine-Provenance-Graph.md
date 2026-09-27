@@ -288,6 +288,16 @@ provenance, not a validated claim, and stays that way until a human
 reads and validates one — at which point it is that human's validation,
 not the note, that the graph credits.
 
+**Corpus scope for `claude/` notes, decided the same day this source's
+own import was scheduled (2026-09-27, deferred from here until then):**
+only the 5 files this repository itself versions under `claude/*.md`,
+not the 73 documents the owner's Claude Project separately holds on
+claude.ai. `aistack.cli.timemachine_rebuild` runs headless on GIGABYTE,
+reading only this repository's own tree — it has no path to the
+Project's documents without a new export mechanism this ADR does not
+build; widening the corpus to reach them is its own future decision,
+not a default this one silently assumes.
+
 ### 9. Collection gaps are their own fact
 
 When a stream that has produced facts before stops — a collector
@@ -480,6 +490,63 @@ then a direct SPARQL query over the resulting store, confirming the
 `aistack:explains`/`aistack:confidence`/`aistack:explicationStatus`/
 `prov:wasAttributedTo` facts render exactly as designed.
 
+### 15. Explications' second real source: `pra_tests.yml`'s own dated comments
+
+Decided with the owner, 2026-09-27: of the three sources § 8 still
+named unimported (669 commits, `pra_tests.yml`, `claude/` notes), this
+one goes next — its whole corpus is a handful of hand-written prose
+blocks that already name their own subject and date in plain text, the
+least modelling to invent, unlike a commit's own unclear "subject" or
+the `claude/` corpus's own scope question (resolved the same day:
+**only the 5 files this repository actually versions**, not the 73 the
+owner's Claude Project separately holds — a rebuild running headless
+on GIGABYTE has no way to reach the latter without a new, separate
+export mechanism this patch does not build).
+
+`aistack.explications.from_pra_tests.import_pra_tests_comments` parses
+the file's own bold-lede comment blocks (e.g. "**`arrstack` corrected
+to `success`, same day (2026-09-26).**") — a block's subject is the
+first backtick-quoted token in its lede; a block naming none this way
+(one real block, "Vikunja gap closed...", names its subject only in
+prose) is skipped and counted, not guessed at (`ARC-P-006`). No new
+projection code was needed: `project_explications` already reads every
+subject under `reports/generated/explications/` regardless of which
+importer wrote it, so this source reaches the graph through the exact
+same path § 14 built.
+
+**A same-day correction is merged into one Explication, not recorded
+as a second version.** `pra_tests.yml`'s own dates carry day
+granularity only; recording `arrstack`'s "recorded as failed" and
+"corrected to success, same day" as two separately-timestamped
+versions would assert a precision the source does not have, and would
+collide with a real defect this module's own design avoids rather than
+triggers: two writes to one subject's history landing in the same
+wall-clock second collapse to one queryable instant in
+`aistack.history.query.available_instants` (its own docstring says
+so), so the earlier of two same-second writes would silently stop
+being visible to `read_explication_history` and to the graph
+projection. Writing at most once per (subject, date) pair — same-day
+blocks concatenated in file order — keeps the narrative arc readable
+in one Explication and sidesteps the collision entirely, without
+reaching into `write_artifact_with_history` to fix a timestamp
+precision this source was never going to supply.
+
+A new sibling CLI, `aistack.cli.explications_import_pra_tests` — the
+first of `aistack.cli.explications_import`'s own "siblings, still to
+come" its docstring already named — keeps importing this source the
+owner's own deliberate act, same as the first.
+
+Verified in real execution against the actual committed
+`src/aistack/pra/definitions/pra_tests.yml` (not a fixture): 4 dated
+blocks found, 1 skipped (Vikunja, no backtick subject), 2 subjects
+recorded (`arrstack`, `raspberry`) — `arrstack`'s own two same-day
+blocks correctly merged into one Explication with the failed-then-
+corrected order preserved. Re-running the CLI recorded nothing new.
+Rebuilding and querying the resulting graph directly by SPARQL
+confirmed all 14 expected triples, including a single shared
+`file:pra_tests.yml` Agent node attributed by both subjects'
+Explications.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -534,6 +601,17 @@ then a direct SPARQL query over the resulting store, confirming the
   by giving Raisonnements IA a real path into the graph through
   Explications rather than reshaping the generic scan. The three other
   named sources (§ 8) remain not yet imported.
+- **Explications' second source, `pra_tests.yml`, is real too**
+  (2026-09-27, § 15): `aistack.explications.from_pra_tests
+  .import_pra_tests_comments` and its own CLI,
+  `aistack.cli.explications_import_pra_tests`, exist and were
+  exercised end to end against the real, committed file — no new
+  projection code needed, since `project_explications` already reads
+  every subject Explications holds regardless of source. The `claude/`
+  corpus-scope question § 8 left open is resolved: only this
+  repository's own 5 files, not the owner's separate 73-document
+  Claude Project. Two of four named sources (commits, `claude/` notes)
+  remain not yet imported.
 
 ## Open Points
 

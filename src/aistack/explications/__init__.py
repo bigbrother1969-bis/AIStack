@@ -5,6 +5,11 @@ from aistack.explications.from_ai_reasoning import (
     ExplainImportSummary,
     import_explain_answers,
 )
+from aistack.explications.from_pra_tests import (
+    DEFAULT_PRA_TESTS_PATH,
+    PraTestsImportSummary,
+    import_pra_tests_comments,
+)
 from aistack.explications.store import (
     DEFAULT_OUTPUT_DIR,
     deserialize_explication,
@@ -18,10 +23,13 @@ from aistack.explications.store import (
 __all__ = [
     "DEFAULT_AI_REASONING_DIR",
     "DEFAULT_OUTPUT_DIR",
+    "DEFAULT_PRA_TESTS_PATH",
     "ExplainImportSummary",
+    "PraTestsImportSummary",
     "deserialize_explication",
     "explication_history_path",
     "import_explain_answers",
+    "import_pra_tests_comments",
     "read_explication_history",
     "read_latest_explication",
     "record_explication",

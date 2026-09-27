@@ -1,0 +1,8 @@
+# Messages partagés par tous les écrans — ADR-0010.
+# Langue de référence : chaque clé ici doit exister dans chaque autre
+# langue déclarée (tests/unit/i18n/test_the_real_catalogs.py).
+
+language:
+  switch_label: "Langue de l'interface"
+settings:
+  link: "Paramètres"

@@ -1,0 +1,7 @@
+# Messages shared by every screen — ADR-0010.
+# Mirrors catalogs/fr/common.yml key for key (French is the reference).
+
+language:
+  switch_label: "Interface language"
+settings:
+  link: "Settings"

@@ -1,0 +1,147 @@
+---
+artifact:
+  id: ADR-0010
+  title: User Interface Localization
+  type: ADR
+  semantic_type: ADR
+  domain: Architecture
+  criticality: C2
+  confidence: Declared
+  version: 1.0
+  status: Proposed
+  owner: Architecture
+  created: 2026-09-27
+  updated: 2026-09-27
+
+relations:
+  references:
+    - FDN-0003
+    - ADR-0001
+    - STD-0100
+---
+
+# ADR-0010 — User Interface Localization
+
+## Status
+
+Proposed, 2026-09-27.
+
+Written the day the owner took the decisions it records, and left
+`Proposed` rather than accepted the same day — the rule adopted on
+2026-08-21 (an act binding the heritage is proposed one day and accepted
+the next; ADR-0009 § Status records the one exception taken so far). The
+decisions below are the owner's; what awaits acceptance is this record of
+them.
+
+## Context
+
+*Measured on 2026-09-27, at commit `bcee126`.*
+
+Every screen AIStack serves was written in French and in French only:
+eleven Jinja templates across four mini-apps (`selection_ui`,
+`priority_ui`, `network_discovery_ui`, `troubleshooting_assistant_ui`),
+three renderers producing static pages (`console.html`,
+`architecture.html`, `health.html`), and the `app.py` of each mini-app,
+where error and status sentences are built. Every one declares
+`<html lang="fr">`. The governed heritage itself is written in English;
+the interface is the only part of AIStack that addresses its user, and it
+addressed them in one language with no way to choose another.
+
+The console was a static file (`console.html`) served by the standard
+library's `http.server` on port 8183 (`run_console.sh`), reached from the
+public internet through the owner's reverse proxy at
+`aistack.persiaut-family.fr`, while each mini-app answers on its own port
+of `GIGABYTE`, on the LAN only. A static file server can carry no
+preference, and a browser never shares a cookie between two host names —
+the public console and a mini-app on `GIGABYTE:818x` are two hosts.
+
+The owner's decisions, 2026-09-27
+(`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`):
+
+- the interface language is chosen by the user, in a *Settings* section
+  of the console, and the choice extends to every screen of AIStack;
+- French is the reference language and English the second, which
+  proves the mechanism translates rather than merely wraps French strings;
+  further languages are added by catalog;
+- until users exist the choice is remembered per browser; it becomes a
+  user preference once users and profiles do;
+- the language follows the user from the console to each mini-app in
+  the link itself, since the cookie cannot;
+- every screen is translated in the first version that carries this
+  mechanism, not only the console.
+
+## Decision
+
+### 1. Catalogs, not translated copies of each screen
+
+Every word a screen writes comes from `src/aistack/i18n/catalogs/<code>/
+<namespace>.yml`, one directory per language and one file per screen. A
+screen asks for a message by dotted key through a `Translator`,
+conventionally named `t`. No screen carries a sentence of its own.
+
+`src/aistack/i18n/definitions/languages.yml` declares which languages
+exist and which one is the reference. Adding a language is one entry
+there and one catalog directory; no screen names a language by code.
+
+### 2. The reference language is checked, never assumed
+
+`tests/unit/i18n/test_the_real_catalogs.py` holds, at every suite, that
+every language carries exactly the reference's keys with the same named
+placeholders, that no message is empty, and that every key any screen
+asks for exists — including the four mini-apps, whose `app.py` the
+governed suite cannot import (decision #9, 2026-08-29) but whose text it
+can read. A key missing at runtime from a non-reference language falls
+back to the reference; a key missing from the reference too raises,
+because a screen asking for a message nobody wrote is a defect to state,
+not to render as an empty string (FDN-0003 Article 12).
+
+### 3. One request, one language
+
+A request is served in the language it names (`?lang=`), otherwise the
+one its browser remembers (cookie `aistack_lang`), otherwise the
+reference. A request that names a language sets the cookie. An unknown
+code falls through to the next rule rather than raising.
+`Accept-Language` is deliberately not consulted: guessing from a
+browser's setup would serve English to a French-speaking owner with no
+visible cause, where the reference until someone chooses surprises
+nobody.
+
+### 4. The interface is translated, what it displays is not
+
+Headings, labels, buttons and the sentences a screen writes around its
+data are translated. What the screen displays is not: a container's name,
+a finding's own interpretation, a declared note, an AI answer, the name a
+language gives itself. Those stay in the language they were produced in.
+Translating them would put words in the mouth of whoever — or whatever —
+produced them.
+
+### 5. The console becomes an application
+
+The console's static file server is replaced by a small server
+(`aistack.console.server`), still standard library only — the console
+never needed FastAPI and still does not, so it keeps running on the
+governed interpreter with no dedicated environment. It serves the three
+generated pages in the negotiated language, and the *Settings* page where
+the language is chosen. The static pages stay generated, one file per
+language: the reference language keeps each page's historical name
+(`console.html`, `architecture.html`, `health.html`) and its history
+stream, and every other language adds `<page>.<code>.html` beside it.
+
+## Consequences
+
+- A new screen, or a new sentence on an existing one, is not finished
+  until its words exist in every declared language. The suite refuses it
+  otherwise.
+- The console links to each mini-app with `?lang=` appended, and each
+  mini-app remembers the language for its own host from then on.
+- The AI Runtime's prompts still require an answer in French. What an AI
+  answer is written in is a separate decision, left open here (§ Open
+  Points), and the English interface says so where it shows one.
+
+## Open Points
+
+- **The language of AI answers.** Whether `reason`/`explain`/`recommend`
+  answer in the user's language depends on the quality of the configured
+  model in each language, which has not been measured.
+- **Per-user preference.** Moves from the browser to the user's profile
+  once users and profiles exist; this record is revised then.

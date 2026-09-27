@@ -43,6 +43,13 @@ _EXPECTED_DATA_FILES = (
     # and `.js` above.
     "aistack/renderers/architecture/vendor/icons/pi-hole.png",
     "aistack/renderers/architecture/vendor/icons/router-wireless.svg",
+    # Added 2026-09-27 with ADR-0010: the interface catalogs and the
+    # language declaration are read from disk by every localized
+    # screen — one of each, so a real install dropping either is
+    # caught the same way.
+    "aistack/i18n/definitions/languages.yml",
+    "aistack/i18n/catalogs/fr/common.yml",
+    "aistack/i18n/catalogs/en/common.yml",
 )
 
 

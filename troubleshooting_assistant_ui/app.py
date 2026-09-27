@@ -15,6 +15,8 @@ from aistack.ai_runtime.reasoning_history import record_ai_reasoning
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
+from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
+from aistack.i18n.web import PageLanguage, page_language
 from aistack.priority.definition import (
     BackgroundPriorityDefinition,
     ContainerPriorityDefinition,
@@ -120,6 +122,35 @@ def resource_priority_definition(
         )
 
 
+def _language(request: Request) -> PageLanguage:
+    """
+    ADR-0010: the language this request is answered in — `?lang=` (the
+    console hands it over in its link), then this host's own cookie,
+    then the reference. Tested in `aistack.i18n.web`, not here.
+
+    Only the interface follows it: the AI Runtime's answers stay in
+    French whatever the interface language (ADR-0010 § Open Points),
+    and the English interface says so on the step pages.
+    """
+
+    return page_language(
+        request.query_params.get(LANGUAGE_PARAMETER),
+        request.cookies.get(LANGUAGE_COOKIE),
+    )
+
+
+def _render(request: Request, name: str, context: dict[str, object]) -> HTMLResponse:
+    language = _language(request)
+    response = templates.TemplateResponse(
+        request=request, name=name, context={**context, **language.context()}
+    )
+
+    if language.cookie is not None:
+        response.headers.append("set-cookie", language.cookie)
+
+    return response
+
+
 def qualified_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
     """
     Every `RuntimeFinding` `aistack.runtime.evaluate.evaluate` can
@@ -159,17 +190,17 @@ def aide(request: Request):
     does not match the real remediation (GOV-P-001).
     """
 
-    return templates.TemplateResponse(request=request, name="aide.html", context={})
+    return _render(request, "aide.html", {})
 
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     findings, note = qualified_findings()
 
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={
+    return _render(
+        request,
+        "index.html",
+        {
             "findings": findings,
             "note": note,
             "status": request.query_params.get("status"),
@@ -178,7 +209,7 @@ def index(request: Request):
 
 
 @app.post("/finding/{subject}/start")
-def start(subject: str):
+def start(request: Request, subject: str):
     """
     Computes `reason`/`explain`/`recommend` together, over the real,
     freshly re-collected finding for `subject` — exactly the same
@@ -193,7 +224,7 @@ def start(subject: str):
     finding = next((f for f in findings if f.subject == subject), None)
 
     if finding is None:
-        status = f"Panne introuvable ou déjà résolue : {subject}"
+        status = _language(request).t("troubleshooting.status.not_found", subject=subject)
         return RedirectResponse(f"/?status={quote(status)}", status_code=303)
 
     ai_runtime_definition = load_ai_runtime_yaml(AI_RUNTIME_PATH)
@@ -232,7 +263,7 @@ def step(request: Request, subject: str, step: int):
     session = _SESSIONS.get(subject)
 
     if session is None or step < 1 or step > _STEP_COUNT:
-        status = f"Session expirée pour {subject} — relance depuis la liste."
+        status = _language(request).t("troubleshooting.status.expired", subject=subject)
         return RedirectResponse(f"/?status={quote(status)}", status_code=303)
 
     operation = _OPERATION_BY_STEP.get(step)
@@ -240,10 +271,10 @@ def step(request: Request, subject: str, step: int):
     assert isinstance(answers, dict)
     answer = answers[operation] if operation else None
 
-    return templates.TemplateResponse(
-        request=request,
-        name="step.html",
-        context={
+    return _render(
+        request,
+        "step.html",
+        {
             "subject": subject,
             "step": step,
             "total_steps": _STEP_COUNT,
@@ -254,7 +285,7 @@ def step(request: Request, subject: str, step: int):
 
 
 @app.post("/finding/{subject}/apply")
-def apply(subject: str):
+def apply(request: Request, subject: str):
     """
     Applies the one, single-click-safe fix this assistant knows how
     to make: declaring `subject` a background container in the
@@ -293,6 +324,7 @@ def apply(subject: str):
       is actually gone — never claims success without checking.
     """
 
+    t = _language(request).t
     definition, note = resource_priority_definition(RESOURCE_PRIORITY_PATH)
 
     if definition is None:
@@ -315,22 +347,15 @@ def apply(subject: str):
     if already_priority:
         _SESSIONS.setdefault(subject, {})["applied"] = {
             "outcome": "refused",
-            "message": (
-                f"{subject} est déjà classé « priority » dans "
-                f"resource_priority.yml — cet assistant ne sait "
-                f"appliquer que le classement « background » (utilise "
-                f"priority_ui, http://GIGABYTE:8182, pour changer un "
-                f"classement priority)."
-            ),
+            "message": t("troubleshooting.message.already_priority", subject=subject),
         }
         return RedirectResponse(
             f"/finding/{quote(subject)}/applied", status_code=303
         )
 
     if already_background:
-        action_message = (
-            f"{subject} était déjà classé « background » dans "
-            f"resource_priority.yml — rien à écrire."
+        action_message = t(
+            "troubleshooting.message.already_background", subject=subject
         )
     else:
         updated = ResourcePriorityDefinition(
@@ -351,11 +376,10 @@ def apply(subject: str):
             grace_seconds=definition.grace_seconds,
         )
         save_resource_priority_yaml(updated, RESOURCE_PRIORITY_PATH)
-        action_message = (
-            f"{subject} ajouté à background.containers dans "
-            f"resource_priority.yml (ralenti partagé : "
-            f"{updated.background.default_throttled_cpus} CPU dès que le "
-            f"moniteur resource-priority tourne)."
+        action_message = t(
+            "troubleshooting.message.added",
+            subject=subject,
+            cpus=updated.background.default_throttled_cpus,
         )
 
     findings_after, _ = qualified_findings()
@@ -376,11 +400,9 @@ def applied(request: Request, subject: str):
     result = session.get("applied")
 
     if result is None:
-        status = f"Aucune application en cours pour {subject} — relance depuis la liste."
+        status = _language(request).t(
+            "troubleshooting.status.nothing_applied", subject=subject
+        )
         return RedirectResponse(f"/?status={quote(status)}", status_code=303)
 
-    return templates.TemplateResponse(
-        request=request,
-        name="applied.html",
-        context={"subject": subject, "result": result},
-    )
+    return _render(request, "applied.html", {"subject": subject, "result": result})

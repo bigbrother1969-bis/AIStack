@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
-  <title>AIStack — Assistant de pannes — {{ subject }} — correction</title>
+  <title>{{ t('troubleshooting.title_applied', subject=subject) }}</title>
   <style>
     body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; color: #1f2933; }
     header { margin-bottom: 1.2rem; }
@@ -22,46 +22,46 @@
     .action { margin: 1rem 0; line-height: 1.5; }
     code { background: #eee; padding: .1rem .3rem; border-radius: 4px; }
     .verify { font-size: .88rem; color: #666; margin-top: .6rem; }
+    .lang-switch { font-size: .85rem; margin-left: auto; }
+    .lang-switch a { color: #1f6feb; text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="top-links">
-    <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
-    <a class="back-link" href="/">Liste des pannes</a>
+    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <a class="back-link" href="/">{{ t('troubleshooting.list_link') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<strong lang="{{ option.code }}">{{ option.name }}</strong>{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}">{{ option.name }}</a>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</nav>
   </div>
 
   <header>
     <h1>{{ subject }}</h1>
-    <p>Résultat de l'application de la correction.</p>
+    <p>{{ t('troubleshooting.applied.intro') }}</p>
   </header>
 
   {% if result.outcome == "resolved" %}
     <div class="outcome resolved">
-      ✓ Corrigé — {{ subject }} n'apparaît plus comme panne qualifiée après
-      relance du diagnostic.
+      {{ t('troubleshooting.applied.resolved', subject=subject) }}
     </div>
   {% elif result.outcome == "unresolved" %}
     <div class="outcome unresolved">
-      ⚠ Appliqué, mais {{ subject }} apparaît toujours comme panne qualifiée
-      après relance du diagnostic — la classification a été écrite, une
-      vérification manuelle reste utile.
+      {{ t('troubleshooting.applied.unresolved', subject=subject) }}
     </div>
   {% elif result.outcome == "refused" %}
-    <div class="outcome refused">✗ Rien n'a été appliqué.</div>
+    <div class="outcome refused">{{ t('troubleshooting.applied.refused') }}</div>
   {% else %}
-    <div class="outcome error">✗ Rien n'a été appliqué — erreur.</div>
+    <div class="outcome error">{{ t('troubleshooting.applied.error') }}</div>
   {% endif %}
 
   <p class="action">{{ result.message }}</p>
 
   {% if result.outcome in ("resolved", "unresolved") %}
     <p class="verify">
-      Vérification : le fichier <code>resource_priority.yml</code> a été
-      relu et <code>evaluate()</code> relancé juste après l'écriture — ce
-      n'est pas une supposition, c'est un second diagnostic réel.
+      {{ t('troubleshooting.applied.verify_before') }} <code>resource_priority.yml</code>
+      {{ t('troubleshooting.applied.verify_middle') }} <code>evaluate()</code>
+      {{ t('troubleshooting.applied.verify_after') }}
     </p>
   {% endif %}
 
-  <a class="back-link" href="/">&larr; Retour à la liste des pannes</a>
+  <a class="back-link" href="/">{{ t('troubleshooting.back_list') }}</a>
 </body>
 </html>

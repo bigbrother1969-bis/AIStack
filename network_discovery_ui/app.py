@@ -8,6 +8,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
+from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
+from aistack.i18n.web import PageLanguage, page_language
 from aistack.network_discovery.definition import NetworkDiscoveryDefinition
 from aistack.network_discovery.yaml import (
     load_network_discovery_yaml,
@@ -49,6 +51,20 @@ templates = Jinja2Templates(
 )
 
 
+def _language(request: Request) -> PageLanguage:
+    """
+    ADR-0010: the language this request is answered in — `?lang=` (the
+    console hands it over in its link), then this host's own cookie,
+    then the reference. Everything past reading the two values lives
+    in `aistack.i18n.web`, where the governed suite tests it.
+    """
+
+    return page_language(
+        request.query_params.get(LANGUAGE_PARAMETER),
+        request.cookies.get(LANGUAGE_COOKIE),
+    )
+
+
 def _page_context(definition: NetworkDiscoveryDefinition) -> dict[str, object]:
     return {
         "cidr": definition.cidr,
@@ -60,13 +76,20 @@ def _page_context(definition: NetworkDiscoveryDefinition) -> dict[str, object]:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    language = _language(request)
     definition = load_network_discovery_yaml(DEFINITION_PATH)
     context = _page_context(definition)
     context["status"] = request.query_params.get("status")
+    context.update(language.context())
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request, name="index.html", context=context
     )
+
+    if language.cookie is not None:
+        response.headers.append("set-cookie", language.cookie)
+
+    return response
 
 
 @app.post("/add")
@@ -79,6 +102,7 @@ async def add(request: Request):
     against every discovered host.
     """
 
+    t = _language(request).t
     form = await request.form()
     username = str(form.get("username", "")).strip()
 
@@ -92,11 +116,11 @@ async def add(request: Request):
             ssh_timeout_seconds=definition.ssh_timeout_seconds,
         )
         save_network_discovery_yaml(updated, DEFINITION_PATH)
-        status = f"Ajouté : {username}"
+        status = t("network_discovery.status.added", username=username)
     elif username:
-        status = f"Déjà présent : {username}"
+        status = t("network_discovery.status.already", username=username)
     else:
-        status = "Nom d'utilisateur vide, rien d'ajouté."
+        status = t("network_discovery.status.empty")
 
     return RedirectResponse(f"/?status={quote(status)}", status_code=303)
 
@@ -112,6 +136,7 @@ async def remove(request: Request):
     owner meant to keep.
     """
 
+    t = _language(request).t
     form = await request.form()
     username = str(form.get("username", "")).strip()
 
@@ -127,8 +152,8 @@ async def remove(request: Request):
             ssh_timeout_seconds=definition.ssh_timeout_seconds,
         )
         save_network_discovery_yaml(updated, DEFINITION_PATH)
-        status = f"Retiré : {username}"
+        status = t("network_discovery.status.removed", username=username)
     else:
-        status = f"Introuvable : {username}"
+        status = t("network_discovery.status.not_found", username=username)
 
     return RedirectResponse(f"/?status={quote(status)}", status_code=303)

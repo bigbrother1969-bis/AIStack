@@ -48,3 +48,8 @@ def test_an_unknown_language_gets_the_reference_not_an_error():
 
     assert translator_for("xx").lang == reference
     assert translator_for(None).lang == reference
+
+
+def test_raw_leaves_the_placeholders_for_the_browser_to_fill():
+    assert translator().raw("a.count") == "{measured}/{total} measured"
+    assert translator().raw("a.only_in_reference") == "Seulement en français"

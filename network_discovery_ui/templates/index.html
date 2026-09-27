@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
-  <title>AIStack — Découverte réseau (utilisateurs SSH)</title>
+  <title>{{ t('network_discovery.title') }}</title>
   <style>
     body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; color: #1f2933; }
     header { margin-bottom: 1.5rem; }
@@ -49,6 +49,10 @@
       color: #1f6feb; text-decoration: none;
     }
     .back-link:hover { text-decoration: underline; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+    .lang-switch { font-size: .85rem; }
+    .lang-switch a { color: #1f6feb; text-decoration: none; }
+    .lang-switch a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -60,28 +64,29 @@
     public romprait cette frontière sans raison, puisque la console
     répond aussi en direct sur ce même hôte, au port juste en dessous.
   -->
-  <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
+  <div class="top">
+    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<strong lang="{{ option.code }}">{{ option.name }}</strong>{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}">{{ option.name }}</a>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
+    </nav>
+  </div>
 
   <header>
-    <h1>Découverte réseau — utilisateurs SSH</h1>
+    <h1>{{ t('network_discovery.heading') }}</h1>
     <p class="meta">
-      Sous-réseau scanné : {{ cidr }} — variable d'environnement pour la clé SSH :
-      {{ ssh_key_path_env }} — délai de connexion : {{ ssh_timeout_seconds }}s
+      {{ t('network_discovery.meta', cidr=cidr, key_env=ssh_key_path_env, timeout=ssh_timeout_seconds) }}
     </p>
   </header>
 
   <div class="warning">
-    Cette page tourne uniquement sur le LAN, jamais via
-    aistack.persiaut-family.fr. Chaque nom d'utilisateur ajouté ici sera
-    essayé, sans surveillance, contre chaque hôte trouvé par le scan
-    réseau — n'ajoute que des utilisateurs réels que tu contrôles.
+    {{ t('network_discovery.warning') }}
   </div>
 
   {% if status %}
     <div class="status">{{ status }}</div>
   {% endif %}
 
-  <h2 style="font-size:1rem;">Utilisateurs candidats, essayés dans l'ordre</h2>
+  <h2 style="font-size:1rem;">{{ t('network_discovery.list_heading') }}</h2>
 
   {% if ssh_usernames %}
     <ul class="usernames">
@@ -90,18 +95,18 @@
           <span>{{ username }}</span>
           <form class="inline" method="post" action="/remove">
             <input type="hidden" name="username" value="{{ username }}">
-            <button class="remove" type="submit">Retirer</button>
+            <button class="remove" type="submit">{{ t('network_discovery.remove') }}</button>
           </form>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p class="empty">Aucun utilisateur déclaré — le scan n'authentifiera contre aucun hôte tant qu'un nom n'est pas ajouté.</p>
+    <p class="empty">{{ t('network_discovery.empty') }}</p>
   {% endif %}
 
   <form class="add-form" method="post" action="/add">
-    <input type="text" name="username" placeholder="nom d'utilisateur SSH (ex. pi)" autocomplete="off">
-    <button class="primary" type="submit">Ajouter</button>
+    <input type="text" name="username" placeholder="{{ t('network_discovery.placeholder') }}" aria-label="{{ t('network_discovery.placeholder') }}" autocomplete="off">
+    <button class="primary" type="submit">{{ t('network_discovery.add') }}</button>
   </form>
 </body>
 </html>

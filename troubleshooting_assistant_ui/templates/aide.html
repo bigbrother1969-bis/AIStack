@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
-  <title>AIStack — Aide : terminal et SSH</title>
+  <title>{{ t('troubleshooting.help.title') }}</title>
   <style>
     body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; color: #1f2933; }
     header { margin-bottom: 1.5rem; }
@@ -24,70 +24,60 @@
       padding: .7rem .9rem; border-radius: 6px; background: #fff1cc;
       border: 1px solid #e0b34d; font-size: .85rem; margin-top: .5rem;
     }
+    .lang-switch { font-size: .85rem; margin-left: auto; }
+    .lang-switch a { color: #1f6feb; text-decoration: none; }
   </style>
 </head>
 <body>
-  <a class="back-link" href="/">&larr; Retour à l'assistant de pannes</a>
+  <div style="display: flex; gap: 1rem; align-items: baseline;">
+    <a class="back-link" href="/">{{ t('troubleshooting.help.back') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<strong lang="{{ option.code }}">{{ option.name }}</strong>{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}">{{ option.name }}</a>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</nav>
+  </div>
 
   <header>
-    <h1>Ouvrir un terminal et se connecter en SSH</h1>
-    <p>Un petit aide-mémoire, écrit à la main — pas généré par l'IA, pour ne
-    rien risquer d'inventer (les commandes exactes viennent d'un vrai usage
-    observé pendant les sessions AIStack précédentes).</p>
+    <h1>{{ t('troubleshooting.help.heading') }}</h1>
+    <p>{{ t('troubleshooting.help.intro') }}</p>
   </header>
 
   <section>
-    <h2>1. Ouvrir un terminal sur ton ordinateur</h2>
+    <h2>{{ t('troubleshooting.help.terminal_heading') }}</h2>
     <p>
-      Sous Linux, le raccourci <code>Ctrl+Alt+T</code> ouvre un terminal sur
-      la plupart des environnements de bureau (dont Cinnamon, utilisé par
-      Linux Mint). S'il ne fait rien sur ta machine, cherche
-      « Terminal » dans le menu des applications.
+      {{ t('troubleshooting.help.terminal_before') }} <code>Ctrl+Alt+T</code> {{ t('troubleshooting.help.terminal_after') }}
     </p>
   </section>
 
   <section>
-    <h2>2. Trouver GIGABYTE sur ton réseau local</h2>
+    <h2>{{ t('troubleshooting.help.find_heading') }}</h2>
     <p>
-      Adresse observée pendant cette session : <code>192.168.1.10</code>.
+      {{ t('troubleshooting.help.find_address') }} <code>192.168.1.10</code>.
     </p>
     <div class="note">
-      Cette adresse peut changer si ta box réattribue les adresses
-      (DHCP) — ce n'est pas garanti à vie. Si elle ne répond plus,
-      essaie d'abord le nom <code>GIGABYTE</code> à la place de
-      l'adresse ; sinon, consulte la liste des appareils connectés
-      dans l'interface de ta box/routeur.
+      {{ t('troubleshooting.help.find_note_before') }} <code>GIGABYTE</code> {{ t('troubleshooting.help.find_note_after') }}
     </div>
   </section>
 
   <section>
-    <h2>3. Se connecter en SSH</h2>
-    <p>Depuis le terminal ouvert à l'étape 1 :</p>
+    <h2>{{ t('troubleshooting.help.ssh_heading') }}</h2>
+    <p>{{ t('troubleshooting.help.ssh_from') }}</p>
     <pre><code>ssh big-brother@192.168.1.10</code></pre>
     <p>
-      (remplace l'adresse par celle que tu as retrouvée à l'étape 2 si
-      elle a changé, ou essaie <code>ssh big-brother@GIGABYTE</code>).
-      Le mot de passe du compte <code>big-brother</code> sur GIGABYTE
-      est ensuite demandé — rien ne s'affiche à l'écran pendant que tu
-      tapes, c'est normal en SSH, pas un bug.
+      {{ t('troubleshooting.help.ssh_replace_before') }} <code>ssh big-brother@GIGABYTE</code>{{ t('troubleshooting.help.ssh_replace_middle') }}
+      <code>big-brother</code> {{ t('troubleshooting.help.ssh_replace_after') }}
     </p>
   </section>
 
   <section>
-    <h2>4. Copier-coller une commande</h2>
+    <h2>{{ t('troubleshooting.help.paste_heading') }}</h2>
     <p>
-      Pour coller dans la plupart des terminaux Linux :
-      <code>Ctrl+Maj+V</code> (le <code>Ctrl+V</code> seul ne colle
-      généralement pas dans un terminal — il tape parfois un caractère
-      à la place). Sinon, un clic droit propose souvent « Coller »
-      directement.
+      {{ t('troubleshooting.help.paste_before') }}
+      <code>{{ t('troubleshooting.help.paste_keys') }}</code> {{ t('troubleshooting.help.paste_middle') }} <code>Ctrl+V</code> {{ t('troubleshooting.help.paste_after') }}
     </p>
     <p>
-      Pour copier : sélectionne le texte à la souris, puis
-      <code>Ctrl+Maj+C</code>, ou clic droit → « Copier ».
+      {{ t('troubleshooting.help.copy_before') }}
+      <code>{{ t('troubleshooting.help.copy_keys') }}</code>{{ t('troubleshooting.help.copy_after') }}
     </p>
   </section>
 
-  <a class="back-link" href="/">&larr; Retour à l'assistant de pannes</a>
+  <a class="back-link" href="/">{{ t('troubleshooting.help.back') }}</a>
 </body>
 </html>

@@ -1,0 +1,17 @@
+# Network discovery mini-app (network_discovery_ui) — ADR-0010.
+
+title: "AIStack — Network discovery (SSH users)"
+heading: "Network discovery — SSH users"
+meta: "Scanned subnet: {cidr} — SSH key environment variable: {key_env} — connection timeout: {timeout}s"
+warning: "This page runs on the LAN only, never through aistack.persiaut-family.fr. Every user name added here will be tried, unattended, against every host the network scan finds — only add real users you control."
+list_heading: "Candidate users, tried in order"
+remove: "Remove"
+empty: "No user declared — the scan will not authenticate against any host until a name is added."
+placeholder: "SSH user name (e.g. pi)"
+add: "Add"
+status:
+  added: "Added: {username}"
+  already: "Already present: {username}"
+  empty: "Empty user name, nothing added."
+  removed: "Removed: {username}"
+  not_found: "Not found: {username}"

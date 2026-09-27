@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -19,6 +20,8 @@ from aistack.generators.filesystem.yaml import (
     load_last_generation_yaml,
     save_last_generation_yaml,
 )
+from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER, Translator
+from aistack.i18n.web import PageLanguage, page_language
 from aistack.kernel.application import ApplicationDefinition
 from aistack.kernel.bootstrap import create_kernel
 from aistack.providers.filesystem import (
@@ -53,6 +56,19 @@ app = FastAPI(title="AIStack Selection UI")
 templates = Jinja2Templates(
     directory=str(repository.resolve("selection_ui/templates"))
 )
+
+
+def _language(request: Request) -> PageLanguage:
+    """
+    ADR-0010: the language this request is answered in — `?lang=` (the
+    console hands it over in its link), then this host's own cookie,
+    then the reference. Tested in `aistack.i18n.web`, not here.
+    """
+
+    return page_language(
+        request.query_params.get(LANGUAGE_PARAMETER),
+        request.cookies.get(LANGUAGE_COOKIE),
+    )
 
 
 def load_app_definition() -> ApplicationDefinition:
@@ -152,13 +168,20 @@ def _page_context(definition: ApplicationDefinition) -> dict[str, Any]:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    language = _language(request)
     definition = load_app_definition()
     context = _page_context(definition)
     context["status"] = request.query_params.get("status")
+    context.update(language.context())
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request, name="index.html", context=context
     )
+
+    if language.cookie is not None:
+        response.headers.append("set-cookie", language.cookie)
+
+    return response
 
 
 @app.get("/syncthing-status")
@@ -182,7 +205,7 @@ def syncthing_status() -> dict[str, Any] | None:
 
 
 @app.post("/save")
-def save(selected_ids: list[str] = Form(default=[])):
+def save(request: Request, selected_ids: list[str] = Form(default=[])):
     definition = load_app_definition()
     catalog = _catalog(definition)
     view = build_view(kernel, catalog, definition.view_id)
@@ -215,23 +238,27 @@ def save(selected_ids: list[str] = Form(default=[])):
     save_last_generation_yaml(report, _last_generation_path(definition))
 
     return RedirectResponse(
-        f"/?status={_status_message(report, len(selection.selected_ids))}",
+        f"/?status={quote(_status_message(report, len(selection.selected_ids), _language(request).t))}",
         status_code=303,
     )
 
 
-def _status_message(report: MaterialisationReport, selected_count: int) -> str:
+def _status_message(
+    report: MaterialisationReport, selected_count: int, t: Translator
+) -> str:
     if report.refused:
         return report.refused
 
     changed = len(report.linked) + len(report.relinked) + len(report.removed)
 
     if changed == 0:
-        return f"{selected_count} répertoires sélectionnés, déjà à jour."
+        return t("selection.status.up_to_date", count=selected_count)
 
-    return (
-        f"{selected_count} répertoires sélectionnés — "
-        f"{len(report.linked)} créés, {len(report.relinked)} mis à jour, "
-        f"{len(report.removed)} retirés, "
-        f"{len(report.pruned)} répertoires vidés."
+    return t(
+        "selection.status.changed",
+        count=selected_count,
+        linked=len(report.linked),
+        relinked=len(report.relinked),
+        removed=len(report.removed),
+        pruned=len(report.pruned),
     )

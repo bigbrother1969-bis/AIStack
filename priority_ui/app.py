@@ -3,12 +3,15 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
+from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
+from aistack.i18n.web import PageLanguage, page_language
 from aistack.priority.definition import (
     BackgroundPriorityDefinition,
     ContainerPriorityDefinition,
@@ -41,6 +44,19 @@ app = FastAPI(title="AIStack Priority UI")
 templates = Jinja2Templates(
     directory=str(repository.resolve("priority_ui/templates"))
 )
+
+
+def _language(request: Request) -> PageLanguage:
+    """
+    ADR-0010: the language this request is answered in — `?lang=` (the
+    console hands it over in its link), then this host's own cookie,
+    then the reference. Tested in `aistack.i18n.web`, not here.
+    """
+
+    return page_language(
+        request.query_params.get(LANGUAGE_PARAMETER),
+        request.cookies.get(LANGUAGE_COOKIE),
+    )
 
 
 def _discovered() -> tuple[DiscoveredContainer, ...]:
@@ -135,12 +151,19 @@ def _page_context() -> dict[str, Any]:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    language = _language(request)
     context = _page_context()
     context["status"] = request.query_params.get("status")
+    context.update(language.context())
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request, name="index.html", context=context
     )
+
+    if language.cookie is not None:
+        response.headers.append("set-cookie", language.cookie)
+
+    return response
 
 
 @app.post("/save")
@@ -191,11 +214,13 @@ async def save(request: Request):
 
     save_resource_priority_yaml(updated, DEFINITION_PATH)
 
-    return RedirectResponse(
-        f"/?status={len(priority_entries)} appli(s) prioritaire(s), "
-        f"{len(background_entries)} conteneur(s) au ralenti.",
-        status_code=303,
+    status = _language(request).t(
+        "priority.status.saved",
+        priority=len(priority_entries),
+        throttled=len(background_entries),
     )
+
+    return RedirectResponse(f"/?status={quote(status)}", status_code=303)
 
 
 def _priority_app_from_form(form: Any, name: str) -> PriorityAppDefinition:

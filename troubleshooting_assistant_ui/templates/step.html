@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
-  <title>AIStack — Assistant de pannes — {{ subject }}</title>
+  <title>{{ t('troubleshooting.title_subject', subject=subject) }}</title>
   <style>
     body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; color: #1f2933; }
     header { margin-bottom: 1rem; }
@@ -46,17 +46,20 @@
       margin-top: 1rem;
     }
     .apply-note { color: #666; font-size: .82rem; margin: .5rem 0 0; }
+    .lang-switch { font-size: .85rem; margin-left: auto; }
+    .lang-switch a { color: #1f6feb; text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="top-links">
-    <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
-    <a class="back-link" href="/aide">Besoin d'aide pour ouvrir un terminal ?</a>
+    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <a class="back-link" href="/aide">{{ t('troubleshooting.help_link') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<strong lang="{{ option.code }}">{{ option.name }}</strong>{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}">{{ option.name }}</a>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</nav>
   </div>
 
   <header>
     <h1>{{ subject }}</h1>
-    <p class="meta">Étape {{ step }}/{{ total_steps }} — {{ finding.signature }}</p>
+    <p class="meta">{{ t('troubleshooting.step.meta', step=step, total=total_steps, signature=finding.signature) }}</p>
   </header>
 
   <div class="progress">
@@ -66,41 +69,42 @@
   </div>
 
   {% if step == 1 %}
-    <h2>La panne détectée</h2>
+    <h2>{{ t('troubleshooting.step.detected') }}</h2>
     <p>{{ finding.interpretation }}</p>
     <dl class="config">
-      <dt>Confiance</dt>
+      <dt>{{ t('troubleshooting.step.confidence') }}</dt>
       <dd>{{ finding.confidence }}</dd>
-      <dt>Qualifications</dt>
+      <dt>{{ t('troubleshooting.step.qualifications') }}</dt>
       <dd>{{ finding.qualifications | join(', ') if finding.qualifications else '—' }}</dd>
-      <dt>Remédiation déclarée</dt>
+      <dt>{{ t('troubleshooting.step.remediation') }}</dt>
       <dd>{{ finding.remediation }}</dd>
     </dl>
   {% else %}
     {% if step == 2 %}
-      <h2>Raisonnement (reason)</h2>
+      <h2>{{ t('troubleshooting.step.reason') }}</h2>
     {% elif step == 3 %}
-      <h2>Explication en clair (explain)</h2>
+      <h2>{{ t('troubleshooting.step.explain') }}</h2>
     {% else %}
-      <h2>Recommandation (recommend)</h2>
-      <div class="warning">Suggestion pour toi — rien ne s'applique sans ton clic explicite sur « Appliquer » ci-dessous.</div>
+      <h2>{{ t('troubleshooting.step.recommend') }}</h2>
+      <div class="warning">{{ t('troubleshooting.step.recommend_warning') }}</div>
     {% endif %}
 
     {% if answer.reachable %}
-      <p class="model">Modèle : {{ answer.model }}</p>
-      <p class="response">{{ answer.response }}</p>
+      <p class="model">{{ t('troubleshooting.step.model', model=answer.model) }}</p>
+      {% if lang != 'fr' %}<p class="model">{{ t('common.ai.answers_in_french') }}</p>{% endif %}
+      <p class="response" lang="fr">{{ answer.response }}</p>
     {% else %}
-      <p class="unreachable">Le moteur IA n'a pas pu être contacté : {{ answer.unreachable_reason }}</p>
+      <p class="unreachable">{{ t('troubleshooting.step.unreachable', reason=answer.unreachable_reason) }}</p>
     {% endif %}
 
     {% if step == total_steps %}
       <form method="post" action="/finding/{{ subject | urlencode }}/apply">
-        <button class="apply" type="submit">Appliquer la correction (classer « background »)</button>
+        <button class="apply" type="submit">{{ t('troubleshooting.step.apply') }}</button>
       </form>
       <p class="apply-note">
-        Seule action que ce bouton sait faire : classer <strong>{{ subject }}</strong>
-        comme conteneur « background » dans <code>resource_priority.yml</code> —
-        jamais la réponse ci-dessus, toujours cette action fixe et connue à l'avance.
+        {{ t('troubleshooting.step.apply_note_before') }} <strong>{{ subject }}</strong>
+        {{ t('troubleshooting.step.apply_note_middle') }} <code>resource_priority.yml</code>
+        {{ t('troubleshooting.step.apply_note_after') }}
       </p>
     {% endif %}
   {% endif %}
@@ -108,14 +112,14 @@
   <nav class="steps">
     <div>
       {% if step > 1 %}
-        <a href="/finding/{{ subject | urlencode }}/step/{{ step - 1 }}">← Précédent</a>
+        <a href="/finding/{{ subject | urlencode }}/step/{{ step - 1 }}">{{ t('troubleshooting.step.previous') }}</a>
       {% endif %}
     </div>
     <div>
       {% if step < total_steps %}
-        <a class="primary" href="/finding/{{ subject | urlencode }}/step/{{ step + 1 }}">Suivant →</a>
+        <a class="primary" href="/finding/{{ subject | urlencode }}/step/{{ step + 1 }}">{{ t('troubleshooting.step.next') }}</a>
       {% else %}
-        <a href="/">← Retour à la liste des pannes</a>
+        <a href="/">{{ t('troubleshooting.back_list') }}</a>
       {% endif %}
     </div>
   </nav>

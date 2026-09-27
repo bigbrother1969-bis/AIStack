@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
   <title>{{ definition.title }}</title>
@@ -33,12 +33,21 @@
     .badge.redundant { background: #f0f0f0; color: #666; }
     .footer-actions { margin: 1.5rem 0; }
     #syncthing-unreachable { color: #8a1f1f; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; font-size: .88rem; }
+    .top a { color: #1f6feb; text-decoration: none; }
+    .top a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
+  <div class="top">
+    <a href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<strong lang="{{ option.code }}">{{ option.name }}</strong>{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}">{{ option.name }}</a>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
+    </nav>
+  </div>
   <header>
-    <h1>Synchroniser le smartphone</h1>
-    <p class="meta">{{ definition.title }} — {{ view.items | length }} nœuds — bibliothèque : {{ definition.source_root }}</p>
+    <h1>{{ t('selection.heading') }}</h1>
+    <p class="meta">{{ t('selection.meta', title=definition.title, count=view.items | length, root=definition.source_root) }}</p>
   </header>
 
   {% if status %}
@@ -47,64 +56,64 @@
 
   {% if absent %}
     <div class="warning">
-      <strong>{{ absent | length }} répertoire(s) sélectionné(s) n'existe(nt) plus dans la bibliothèque</strong>
-      — {{ absent | join(", ") }}. Ils disparaîtront de la sélection au prochain clic sur « Synchroniser ».
+      <strong>{{ t('selection.absent_title', count=absent | length) }}</strong>
+      — {{ absent | join(", ") }}. {{ t('selection.absent_detail') }}
     </div>
   {% endif %}
 
   {% if pending.refused %}
-    <div class="warning refused"><strong>La sélection actuelle ne peut pas être matérialisée :</strong> {{ pending.refused }}</div>
+    <div class="warning refused"><strong>{{ t('selection.refused') }}</strong> {{ pending.refused }}</div>
   {% endif %}
 
   <section class="dashboard">
     <div class="card">
-      <div class="label">Sélection</div>
+      <div class="label">{{ t('selection.card.selection') }}</div>
       <div class="value"><span id="selected-count">{{ selected | length }}</span></div>
-      <div class="meta">nœuds cochés directement — <span id="covered-count">{{ covered | length }}</span> avec les sous-arbres inclus</div>
+      <div class="meta">{{ t('selection.card.selection_direct') }} <span id="covered-count">{{ covered | length }}</span> {{ t('selection.card.selection_covered') }}</div>
     </div>
 
     <div class="card" id="capacity-card"
          data-declared="{{ 'true' if capacity.declared else 'false' }}"
          data-declared-bytes="{{ capacity.declared_bytes }}">
-      <div class="label">Capacité</div>
+      <div class="label">{{ t('selection.card.capacity') }}</div>
       <div id="capacity-declared-view" {% if not capacity.declared %}style="display:none"{% endif %}>
         <div class="value"><span id="capacity-percent">{{ "%.1f"|format(capacity.percent_used) }}</span>%</div>
         <div class="bar"><div id="capacity-fill" class="fill {{ 'ok' if capacity.fits else 'warn' }}" style="width: {{ [capacity.percent_used, 100] | min }}%"></div></div>
         <div class="meta" id="capacity-meta">
-          {{ "%.1f"|format(capacity.selected_bytes / 1000000000) }} Go sélectionnés sur {{ "%.0f"|format(capacity.declared_bytes / 1000000000) }} Go déclarés
-          {% if not capacity.fits %} — {{ "%.1f"|format(capacity.overflow_bytes / 1000000000) }} Go de trop{% endif %}
+          {{ t('selection.capacity.meta', selected="%.1f"|format(capacity.selected_bytes / 1000000000), declared="%.0f"|format(capacity.declared_bytes / 1000000000)) }}
+          {% if not capacity.fits %} — {{ t('selection.capacity.over', over="%.1f"|format(capacity.overflow_bytes / 1000000000)) }}{% endif %}
         </div>
       </div>
       <div id="capacity-undeclared-view" {% if capacity.declared %}style="display:none"{% endif %}>
-        <div class="value"><span id="capacity-undeclared-value">{{ "%.1f"|format(capacity.selected_bytes / 1000000000) }}</span> Go</div>
-        <div class="meta">aucun quota déclaré — rien ne limite la sélection</div>
+        <div class="value" id="capacity-undeclared-value">{{ t('selection.capacity.undeclared_value', selected="%.1f"|format(capacity.selected_bytes / 1000000000)) }}</div>
+        <div class="meta">{{ t('selection.capacity.none') }}</div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label">À appliquer</div>
+      <div class="label">{{ t('selection.card.pending') }}</div>
       <div class="value">{{ pending.linked | length + pending.relinked | length }}</div>
-      <div class="meta">fichiers à créer ou mettre à jour — {{ pending.removed | length }} à retirer, {{ pending.pruned | length }} répertoires à vider</div>
+      <div class="meta">{{ t('selection.card.pending_meta', removed=pending.removed | length, pruned=pending.pruned | length) }}</div>
     </div>
 
     <div class="card">
-      <div class="label">Syncthing — dossier {{ definition.syncthing.folder_id if definition.syncthing else "" }}</div>
+      <div class="label">{{ t('selection.card.syncthing', folder=definition.syncthing.folder_id if definition.syncthing else "") }}</div>
       {% if not definition.syncthing %}
-        <div class="meta">non configuré pour cette instance</div>
+        <div class="meta">{{ t('selection.syncthing.not_configured') }}</div>
       {% else %}
         <div id="syncthing-body">
           {% if not syncthing.reachable %}
-            <div id="syncthing-unreachable" class="value">injoignable</div>
+            <div id="syncthing-unreachable" class="value">{{ t('selection.syncthing.unreachable') }}</div>
             <div class="meta">{{ syncthing.unreachable_reason }}</div>
           {% else %}
             <div class="value">{{ syncthing.folder.state | default("?") }}</div>
             {% if syncthing.device.completion is defined %}
               <div class="bar"><div class="fill {{ 'ok' if syncthing.device.completion == 100 else '' }}" style="width: {{ syncthing.device.completion }}%"></div></div>
-              <div class="meta">{{ syncthing.device.completion }}% reçu par le téléphone — {{ syncthing.device.needBytes | default(0) }} octets restants (dossier entier)</div>
+              <div class="meta">{{ t('selection.syncthing.received', completion=syncthing.device.completion, bytes=syncthing.device.needBytes | default(0)) }}</div>
             {% elif syncthing.device.unavailable_reason is defined %}
-              <div class="meta">avancement vers le téléphone : {{ syncthing.device.unavailable_reason }}</div>
+              <div class="meta">{{ t('selection.syncthing.progress') }} {{ syncthing.device.unavailable_reason }}</div>
             {% else %}
-              <div class="meta">appareil non renseigné — état du dossier serveur seulement</div>
+              <div class="meta">{{ t('selection.syncthing.no_device') }}</div>
             {% endif %}
           {% endif %}
         </div>
@@ -113,22 +122,18 @@
   </section>
 
   <section class="card">
-    <h2 style="margin-top:0">Dernière génération</h2>
+    <h2 style="margin-top:0">{{ t('selection.last_generation.heading') }}</h2>
     {% if not last_generation %}
-      <div class="meta">Aucune génération pour l'instant.</div>
+      <div class="meta">{{ t('selection.last_generation.none') }}</div>
     {% else %}
       <div class="meta">{{ last_generation.generated_at }}</div>
       {% if last_generation.report.refused %}
-        <div><strong>Refusée :</strong> {{ last_generation.report.refused }}</div>
+        <div><strong>{{ t('selection.last_generation.refused') }}</strong> {{ last_generation.report.refused }}</div>
       {% else %}
         <div>
-          {{ last_generation.report.linked | length }} créés,
-          {{ last_generation.report.relinked | length }} mis à jour,
-          {{ last_generation.report.removed | length }} retirés,
-          {{ last_generation.report.pruned | length }} répertoires vidés,
-          {{ last_generation.report.unchanged }} inchangés
+          {{ t('selection.last_generation.summary', linked=last_generation.report.linked | length, relinked=last_generation.report.relinked | length, removed=last_generation.report.removed | length, pruned=last_generation.report.pruned | length, unchanged=last_generation.report.unchanged) }}
           {% if last_generation.report.failed %}
-            — <span style="color:#8a1f1f">{{ last_generation.report.failed | length }} échec(s)</span>
+            — <span style="color:#8a1f1f">{{ t('selection.last_generation.failed', count=last_generation.report.failed | length) }}</span>
           {% endif %}
         </div>
       {% endif %}
@@ -136,14 +141,14 @@
   </section>
 
   <div class="toolbar">
-    <input type="search" id="filter" placeholder="Rechercher un répertoire..." onkeyup="filterItems()">
-    <button type="button" onclick="setAllFolds(true)">Tout replier</button>
-    <button type="button" onclick="setAllFolds(false)">Tout déplier</button>
+    <input type="search" id="filter" placeholder="{{ t('selection.toolbar.search') }}" aria-label="{{ t('selection.toolbar.search') }}" onkeyup="filterItems()">
+    <button type="button" onclick="setAllFolds(true)">{{ t('selection.toolbar.collapse_all') }}</button>
+    <button type="button" onclick="setAllFolds(false)">{{ t('selection.toolbar.expand_all') }}</button>
   </div>
 
   <form method="post" action="/save" onsubmit="onSynchronise()">
     <div class="footer-actions">
-      <button class="primary" type="submit" data-role="sync-button">Synchroniser avec le smartphone</button>
+      <button class="primary" type="submit" data-role="sync-button">{{ t('selection.sync_button') }}</button>
     </div>
 
     <div id="tree">
@@ -169,19 +174,19 @@
           <div>
             <span>{{ item.label or item.id }}</span>
             {% if is_selected and is_redundant %}
-              <span class="badge redundant">déjà inclus par un parent coché</span>
+              <span class="badge redundant">{{ t('selection.badge.redundant') }}</span>
             {% endif %}
             {% if is_covered and not is_selected %}
-              <span class="badge covered">inclus (parent coché)</span>
+              <span class="badge covered">{{ t('selection.badge.covered') }}</span>
             {% endif %}
             {% if is_covered %}
               {% if is_materialized %}
-                <span class="badge materialized">matérialisé</span>
+                <span class="badge materialized">{{ t('selection.badge.materialized') }}</span>
               {% else %}
-                <span class="badge pending">à créer</span>
+                <span class="badge pending">{{ t('selection.badge.pending') }}</span>
               {% endif %}
             {% endif %}
-            <div class="meta">{{ item.metadata.relative_path }} — {{ "%.2f"|format(item.metadata.total_media_bytes | int / 1000000000) }} Go, {{ item.metadata.total_media_files }} fichiers</div>
+            <div class="meta">{{ t('selection.item_meta', path=item.metadata.relative_path, size="%.2f"|format(item.metadata.total_media_bytes | int / 1000000000), files=item.metadata.total_media_files) }}</div>
           </div>
           <span></span>
         </div>
@@ -189,11 +194,32 @@
     </div>
 
     <div class="footer-actions">
-      <button class="primary" type="submit" data-role="sync-button">Synchroniser avec le smartphone</button>
+      <button class="primary" type="submit" data-role="sync-button">{{ t('selection.sync_button') }}</button>
     </div>
   </form>
 
+  <script id="messages" type="application/json">{{ {
+    'syncing': t('selection.syncing'),
+    'capacity_meta': t.raw('selection.capacity.meta'),
+    'capacity_over': t.raw('selection.capacity.over'),
+    'capacity_undeclared_value': t.raw('selection.capacity.undeclared_value'),
+    'unreachable': t('selection.syncthing.unreachable'),
+    'received': t.raw('selection.syncthing.received'),
+    'progress': t('selection.syncthing.progress'),
+    'no_device': t('selection.syncthing.no_device'),
+  } | tojson }}</script>
   <script>
+    // ADR-0010: every sentence this script writes comes from the same
+    // catalog as the page around it, handed over above rather than
+    // written here in one language. `fill` completes a message's named
+    // placeholders the way the server's own translator does.
+    const MESSAGES = JSON.parse(document.getElementById("messages").textContent);
+
+    function fill(message, values) {
+      return message.replace(/\{(\w+)\}/g, (match, name) =>
+        values[name] === undefined ? match : String(values[name]));
+    }
+
     function toggleFold(button) {
       const row = button.closest(".row");
       row.dataset.collapsed = row.dataset.collapsed === "1" ? "0" : "1";
@@ -264,7 +290,7 @@
     function onSynchronise() {
       document.querySelectorAll('[data-role="sync-button"]').forEach(button => {
         button.disabled = true;
-        button.textContent = "Synchronisation en cours…";
+        button.textContent = MESSAGES.syncing;
       });
     }
 
@@ -352,11 +378,15 @@
         fill.classList.toggle("ok", fits);
         fill.classList.toggle("warn", !fits);
 
-        let meta = selectedGo.toFixed(1) + " Go sélectionnés sur "
-          + (declaredBytes / 1000000000).toFixed(0) + " Go déclarés";
+        let meta = fill(MESSAGES.capacity_meta, {
+          selected: selectedGo.toFixed(1),
+          declared: (declaredBytes / 1000000000).toFixed(0),
+        });
 
         if (!fits) {
-          meta += " — " + ((totals.selectedBytes - declaredBytes) / 1000000000).toFixed(1) + " Go de trop";
+          meta += " — " + fill(MESSAGES.capacity_over, {
+            over: ((totals.selectedBytes - declaredBytes) / 1000000000).toFixed(1),
+          });
         }
 
         document.getElementById("capacity-meta").textContent = meta;
@@ -364,7 +394,9 @@
       } else {
         const undeclaredValue = document.getElementById("capacity-undeclared-value");
         if (undeclaredValue) {
-          undeclaredValue.textContent = selectedGo.toFixed(1);
+          undeclaredValue.textContent = fill(MESSAGES.capacity_undeclared_value, {
+            selected: selectedGo.toFixed(1),
+          });
         }
       }
     }
@@ -397,7 +429,7 @@
         const unreachable = document.createElement("div");
         unreachable.id = "syncthing-unreachable";
         unreachable.className = "value";
-        unreachable.textContent = "injoignable";
+        unreachable.textContent = MESSAGES.unreachable;
 
         const reason = document.createElement("div");
         reason.className = "meta";
@@ -424,22 +456,24 @@
 
         const meta = document.createElement("div");
         meta.className = "meta";
-        meta.textContent = device.completion + "% reçu par le téléphone — "
-          + (device.needBytes || 0) + " octets restants (dossier entier)";
+        meta.textContent = fill(MESSAGES.received, {
+          completion: device.completion,
+          bytes: device.needBytes || 0,
+        });
 
         body.append(bar, meta);
 
       } else if (device.unavailable_reason !== undefined) {
         const meta = document.createElement("div");
         meta.className = "meta";
-        meta.textContent = "avancement vers le téléphone : ";
+        meta.textContent = MESSAGES.progress + " ";
         meta.appendChild(textNode(device.unavailable_reason));
         body.appendChild(meta);
 
       } else {
         const meta = document.createElement("div");
         meta.className = "meta";
-        meta.textContent = "appareil non renseigné — état du dossier serveur seulement";
+        meta.textContent = MESSAGES.no_device;
         body.appendChild(meta);
       }
     }

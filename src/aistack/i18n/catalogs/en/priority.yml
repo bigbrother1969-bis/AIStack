@@ -1,0 +1,28 @@
+# CPU priority mini-app (priority_ui) — ADR-0010.
+
+title: "AIStack — Container priority"
+heading: "Container priority"
+meta: "{count} container(s) — default throttle: {throttled} CPU, machine cores: {cores}, grace window: {grace}s"
+save: "Save the classification"
+state:
+  absent: "not in Docker"
+  running: "running"
+  stopped: "stopped"
+classification:
+  ignored: "Ignored, left untouched"
+  throttled: "Throttled"
+  priority: "Priority"
+field:
+  throttled_normal_cpus: "Normal CPU (empty = unlimited)"
+  normal_cpus: "Normal CPU"
+  boosted_cpus: "Boosted CPU"
+  detector: "Detector"
+  detector_jellyfin: "Jellyfin (/Sessions)"
+  detector_cpu_threshold: "Sustained CPU threshold"
+  jellyfin_url: "Jellyfin URL"
+  jellyfin_api_key_env: "Environment variable (API key)"
+  jellyfin_timeout: "Timeout (s)"
+  cpu_threshold_percent: "CPU threshold (%)"
+  cpu_sustained_seconds: "Sustained duration (s)"
+status:
+  saved: "{priority} priority app(s), {throttled} throttled container(s)."

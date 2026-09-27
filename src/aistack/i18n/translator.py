@@ -37,6 +37,16 @@ class Translator:
     reference_messages: Mapping[str, str]
 
     def __call__(self, key: str, **params: object) -> str:
+        return self.raw(key).format(**params)
+
+    def raw(self, key: str) -> str:
+        """
+        The message with its placeholders left unfilled — for a page
+        whose own script fills them in the browser (a figure that
+        changes as the visitor ticks boxes), never for text a server
+        renders itself. Same fallback and same `KeyError` as a call.
+        """
+
         template = self.messages.get(key)
 
         if template is None:
@@ -45,7 +55,7 @@ class Translator:
         if template is None:
             raise KeyError(f"no message {key!r} in any interface catalog")
 
-        return template.format(**params)
+        return template
 
     def has(self, key: str) -> bool:
         return key in self.messages or key in self.reference_messages

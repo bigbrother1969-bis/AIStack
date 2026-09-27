@@ -1,0 +1,48 @@
+# Mini-app Selection UI (selection_ui) — ADR-0010. Le titre de la page
+# vient de la définition de l'application (donnée déclarée), pas d'ici.
+
+heading: "Synchroniser le smartphone"
+meta: "{title} — {count} nœuds — bibliothèque : {root}"
+absent_title: "{count} répertoire(s) sélectionné(s) n'existe(nt) plus dans la bibliothèque"
+absent_detail: "Ils disparaîtront de la sélection au prochain clic sur « Synchroniser »."
+refused: "La sélection actuelle ne peut pas être matérialisée :"
+card:
+  selection: "Sélection"
+  selection_direct: "nœuds cochés directement —"
+  selection_covered: "avec les sous-arbres inclus"
+  capacity: "Capacité"
+  pending: "À appliquer"
+  pending_meta: "fichiers à créer ou mettre à jour — {removed} à retirer, {pruned} répertoires à vider"
+  syncthing: "Syncthing — dossier {folder}"
+capacity:
+  meta: "{selected} Go sélectionnés sur {declared} Go déclarés"
+  over: "{over} Go de trop"
+  undeclared_value: "{selected} Go"
+  none: "aucun quota déclaré — rien ne limite la sélection"
+syncthing:
+  not_configured: "non configuré pour cette instance"
+  unreachable: "injoignable"
+  received: "{completion}% reçu par le téléphone — {bytes} octets restants (dossier entier)"
+  progress: "avancement vers le téléphone :"
+  no_device: "appareil non renseigné — état du dossier serveur seulement"
+last_generation:
+  heading: "Dernière génération"
+  none: "Aucune génération pour l'instant."
+  refused: "Refusée :"
+  summary: "{linked} créés, {relinked} mis à jour, {removed} retirés, {pruned} répertoires vidés, {unchanged} inchangés"
+  failed: "{count} échec(s)"
+toolbar:
+  search: "Rechercher un répertoire..."
+  collapse_all: "Tout replier"
+  expand_all: "Tout déplier"
+sync_button: "Synchroniser avec le smartphone"
+syncing: "Synchronisation en cours…"
+badge:
+  redundant: "déjà inclus par un parent coché"
+  covered: "inclus (parent coché)"
+  materialized: "matérialisé"
+  pending: "à créer"
+item_meta: "{path} — {size} Go, {files} fichiers"
+status:
+  up_to_date: "{count} répertoires sélectionnés, déjà à jour."
+  changed: "{count} répertoires sélectionnés — {linked} créés, {relinked} mis à jour, {removed} retirés, {pruned} répertoires vidés."

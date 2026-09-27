@@ -6,3 +6,7 @@ language:
   switch_label: "Langue de l'interface"
 settings:
   link: "Paramètres"
+console:
+  back: "← Retour à la console"
+ai:
+  answers_in_french: "Les réponses de l'IA sont rédigées en français."

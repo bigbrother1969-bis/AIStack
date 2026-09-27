@@ -1,0 +1,48 @@
+# Selection UI mini-app (selection_ui) — ADR-0010. The page title comes
+# from the application's own definition (declared data), not from here.
+
+heading: "Synchronise the smartphone"
+meta: "{title} — {count} nodes — library: {root}"
+absent_title: "{count} selected folder(s) no longer exist(s) in the library"
+absent_detail: "They will leave the selection on the next click on “Synchronise”."
+refused: "The current selection cannot be materialised:"
+card:
+  selection: "Selection"
+  selection_direct: "nodes ticked directly —"
+  selection_covered: "including sub-trees"
+  capacity: "Capacity"
+  pending: "To apply"
+  pending_meta: "files to create or update — {removed} to remove, {pruned} folders to empty"
+  syncthing: "Syncthing — folder {folder}"
+capacity:
+  meta: "{selected} GB selected out of {declared} GB declared"
+  over: "{over} GB too many"
+  undeclared_value: "{selected} GB"
+  none: "no quota declared — nothing limits the selection"
+syncthing:
+  not_configured: "not configured for this instance"
+  unreachable: "unreachable"
+  received: "{completion}% received by the phone — {bytes} bytes left (whole folder)"
+  progress: "progress towards the phone:"
+  no_device: "no device declared — server folder state only"
+last_generation:
+  heading: "Last generation"
+  none: "No generation yet."
+  refused: "Refused:"
+  summary: "{linked} created, {relinked} updated, {removed} removed, {pruned} folders emptied, {unchanged} unchanged"
+  failed: "{count} failure(s)"
+toolbar:
+  search: "Search a folder..."
+  collapse_all: "Collapse all"
+  expand_all: "Expand all"
+sync_button: "Synchronise with the smartphone"
+syncing: "Synchronising…"
+badge:
+  redundant: "already included by a ticked parent"
+  covered: "included (parent ticked)"
+  materialized: "materialised"
+  pending: "to create"
+item_meta: "{path} — {size} GB, {files} files"
+status:
+  up_to_date: "{count} selected folders, already up to date."
+  changed: "{count} selected folders — {linked} created, {relinked} updated, {removed} removed, {pruned} folders emptied."

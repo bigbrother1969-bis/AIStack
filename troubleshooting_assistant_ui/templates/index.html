@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
-  <title>AIStack — Assistant de pannes</title>
+  <title>{{ t('troubleshooting.title') }}</title>
   <style>
     body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; color: #1f2933; }
     header { margin-bottom: 1.5rem; }
@@ -52,12 +52,14 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     #loading-overlay p { color: #1f2933; font-size: .95rem; max-width: 320px; text-align: center; }
+    .lang-switch { font-size: .85rem; margin-left: auto; }
+    .lang-switch a { color: #1f6feb; text-decoration: none; }
   </style>
 </head>
 <body>
   <div id="loading-overlay">
     <div class="spinner"></div>
-    <p>Initialisation en cours… jusqu'à ~45s (trois appels au modèle IA, l'un après l'autre). Ne recharge pas la page.</p>
+    <p>{{ t('troubleshooting.index.loading') }}</p>
   </div>
 
   <!--
@@ -67,15 +69,15 @@
     volontairement LAN-only (voir troubleshooting_assistant_ui/app.py).
   -->
   <div class="top-links">
-    <a class="back-link" href="http://GIGABYTE:8183/console.html">&larr; Retour à la console</a>
-    <a class="back-link" href="/aide">Besoin d'aide pour ouvrir un terminal ?</a>
+    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <a class="back-link" href="/aide">{{ t('troubleshooting.help_link') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<strong lang="{{ option.code }}">{{ option.name }}</strong>{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}">{{ option.name }}</a>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</nav>
   </div>
 
   <header>
-    <h1>Assistant de pannes</h1>
+    <h1>{{ t('troubleshooting.index.heading') }}</h1>
     <p class="meta">
-      Pannes réelles détectées maintenant par <code>evaluate</code> — un
-      accompagnement pas à pas, jamais un cas inventé.
+      {{ t('troubleshooting.index.meta_before') }} <code>evaluate</code> {{ t('troubleshooting.index.meta_after') }}
     </p>
   </header>
 
@@ -97,16 +99,14 @@
             <p class="interpretation">{{ finding.interpretation }}</p>
           </div>
           <form class="start-form" method="post" action="/finding/{{ finding.subject | urlencode }}/start">
-            <button class="primary" type="submit">Commencer →</button>
+            <button class="primary" type="submit">{{ t('troubleshooting.index.start') }}</button>
           </form>
         </li>
       {% endfor %}
     </ul>
   {% else %}
     <p class="empty">
-      Aucune panne réelle qualifiée en ce moment — rien à guider. Cette
-      page ne propose jamais de cas inventé ; repasse plus tard, ou
-      relance <code>ai_reason</code> en ligne de commande pour vérifier.
+      {{ t('troubleshooting.index.empty_before') }} <code>ai_reason</code> {{ t('troubleshooting.index.empty_after') }}
     </p>
   {% endif %}
 

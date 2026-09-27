@@ -38,11 +38,12 @@ _UI_DIRECTORIES = (
     "troubleshooting_assistant_ui",
 )
 
-# `t("a.b")` / `t('a.b')`, in Python and in Jinja alike. Screens name
+# `t("a.b")` / `t('a.b')` — or `t.raw(...)`, the unfilled form a
+# page's own script completes — in Python and in Jinja alike. Screens name
 # their translator `t` so this one pattern finds every lookup; a key
 # built at runtime (a domain name, a bucket) goes through an explicit
 # mapping with its own test instead.
-_KEY_USE = re.compile(r"""\bt\(\s*["']([A-Za-z0-9_.\-]+)["']""")
+_KEY_USE = re.compile(r"""\bt(?:\.raw)?\(\s*["']([A-Za-z0-9_.\-]+)["']""")
 
 
 def catalogs() -> dict[str, dict[str, str]]:

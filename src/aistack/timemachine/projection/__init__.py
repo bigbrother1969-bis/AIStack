@@ -13,6 +13,10 @@ from aistack.timemachine.iri import (
     request_iri as _request_iri,
     stream_iri as _activity_iri,
 )
+from aistack.timemachine.projection.explications import (
+    ExplicationProjectionSummary,
+    project_explications,
+)
 from aistack.timemachine.projection.filter import filter_fact
 from aistack.timemachine.vocabulary import (
     AISTACK_STABLE_SUBJECT,
@@ -209,6 +213,8 @@ def project_observation_history(
 
 __all__ = [
     "DEFAULT_GENERATED_DIR",
+    "ExplicationProjectionSummary",
     "ProjectionSummary",
+    "project_explications",
     "project_observation_history",
 ]

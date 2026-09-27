@@ -94,3 +94,10 @@ AISTACK_CLOCK_SOURCE = f"{AISTACK}clockSource"
 # describes epistemic strength, this describes where in a human
 # review an Explication currently sits.
 AISTACK_EXPLICATION_STATUS = f"{AISTACK}explicationStatus"
+
+# § 7 — an Explication's own `STD-0100` confidence level (`Proposed`
+# today; `Declared` or above once a human becomes its author too).
+# Not needed by the four existing streams, which state no confidence
+# of their own — added alongside the Explications projection that is
+# this predicate's first real caller.
+AISTACK_CONFIDENCE = f"{AISTACK}confidence"

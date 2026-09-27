@@ -54,7 +54,7 @@ timestamped copy under `history/<stem>/`:
 | Observations | `DockerObservationArtifactGenerator` and eleven sibling provider generators (`compose`, `docker`, `http_probe`, `beszel`, `network_docker`, `jellyfin`, `syncthing`, `filesystem`, plus the three renderers) | `reports/generated/history/<stem>/` |
 | Traces | `aistack.kernel.tracing.repository.file` | `reports/generated/history/execution-trace/` |
 | Décisions CPU | `aistack.priority.decision_history` | `reports/generated/history/resource-priority-decision/` |
-| Raisonnements IA | `aistack.ai_runtime.reasoning_history` | `reports/generated/history/ai-reasoning/` |
+| Raisonnements IA | `aistack.ai_runtime.reasoning_history` | `reports/generated/ai-reasoning/<subject>.json`, history at `reports/generated/ai-reasoning/history/<subject>/` — **corrected 2026-09-27, `GOV-0002/OS-082`**: this row previously read `reports/generated/history/ai-reasoning/`, implying it sits under the same top-level `history/` directory the other three streams do; measured directly against `reasoning_history.DEFAULT_OUTPUT_DIR`, it does not, and `project_observation_history`'s generic scan (`available_stems(generated_dir)`, § *Decision* 1's Open Points bullet) has therefore never actually found it |
 
 Explications is not a fifth stream that exists today — it is what this
 ADR's own § *Decision* 7 adds, the "cinq historiques + explications" the
@@ -409,6 +409,77 @@ screens actually built here; the four richer validated maquettes (§
 *Consequences*, below) will need their own mobile pass once 1.4/1.5
 supply the data they assume.
 
+### 14. Explications enter the graph: the first real source, `explain` answers
+
+Decided with the owner, 2026-09-27: the Explications foundation (§ 7,
+the persisted `KnowledgeArtifact` store, `aistack.explications`) had no
+real caller until this patch. § 8 names four real sources; this one
+imports the first — the AI Runtime's own `explain` answers, "already
+collected... already kept since J7" — because they need zero new
+collection code and already carry a real, clean per-subject shape
+(`RuntimeFinding.subject`, e.g. `"booklore_db"`), unlike the other
+three (669 commits with no clear graph subject; `pra_tests.yml`'s
+~5 dated comments, a small but real corpus; `claude/` notes, whose own
+scope — 5 files committed to this repository versus the 73 the owner's
+Claude Project separately holds, unreachable by a rebuild running
+headless on GIGABYTE — is an open question deferred to when that
+source is actually imported, not decided speculatively here).
+
+**`aistack.explications.from_ai_reasoning.import_explain_answers`**
+walks every subject AI Reasoning History holds, keeps only the
+`explain` operation of the three every finding already records
+together (`reason`/`explain`/`recommend`), and records one `Proposed`
+`KnowledgeArtifact` per answer not already imported —
+`metadata["source_instant"]` (the source entry's own recorded instant)
+is the idempotency key, read back from every version already recorded
+for that subject rather than a second, separate ledger of what has
+already run. **Building this importer is what found `GOV-0002/OS-082`**
+(§ *Context*'s table, corrected above): AI Reasoning History's own real
+layout does not match what `project_observation_history`'s generic scan
+looks for, so it has never actually been reachable that way — this
+importer gives it a real path into the graph regardless, through
+Explications specifically, rather than widening the generic scan for
+one stream's own layout quirk (new scope this patch does not need).
+
+**`aistack.timemachine.projection.project_explications`** is a
+separate function, not a branch inside `project_observation_history` —
+an Explication's shape (`KnowledgeArtifact`, no `version`/`provenance`
+pair at all, per that contract's own comment on the second, unwired
+definition merged out of existence 2026-09-18) does not fit the
+generic walk's envelope parser, and forcing it through would either
+match nothing or bend that parser toward a second envelope shape it
+was never about. It runs second in `aistack.cli.timemachine_rebuild`,
+against the same store, never clearing it again — Explications is the
+fifth source stream this ADR's own § *Decision* 1 already named ("soon
+five"), added to the one rebuild pass, not a second graph. For each
+Explication: it exists (`prov:Entity`), when it was recorded
+(`prov:generatedAtTime`), what it explains (`aistack:explains`, a new
+`subject_iri` construction — not `stream_iri`, since a finding's own
+subject is not the same kind of thing as a collection stream and the
+graph has no other node for most subjects yet), its `STD-0100`
+confidence (a new `aistack:confidence` predicate) and, when recorded,
+its workflow position (`aistack:explicationStatus`), and who or what
+produced it (`prov:wasAttributedTo` an Agent from `artifact.source`,
+the same `agent_iri` construction the four existing streams'
+`provenance.origin` already uses).
+
+**Two new CLIs, not one.** `aistack.cli.explications_import` (importing
+raw sources into governed Explications) is deliberately separate from
+`aistack.cli.timemachine_rebuild` (projecting whatever Explications
+already holds): importing is the owner's own deliberate act — which
+sources enter, at what confidence — not something every graph rebuild
+should silently redo, the same "collect, then project" split every
+other historicised stream already keeps between its own collector and
+the Time Machine's read side. Running the importer twice without new
+AI Reasoning History activity records nothing new the second time.
+
+Verified in real execution against a real seeded `explain` answer
+(`RuntimeFinding`/`AIRuntimeAnswer`/`record_ai_reasoning`, the exact
+production types, no hand-typed JSON stand-in): import, then rebuild,
+then a direct SPARQL query over the resulting store, confirming the
+`aistack:explains`/`aistack:confidence`/`aistack:explicationStatus`/
+`prov:wasAttributedTo` facts render exactly as designed.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -453,6 +524,16 @@ supply the data they assume.
   narrower than the four maquettes the roadmap already validated for the
   Time Machine — § *Open Points* states the gap explicitly rather than
   leaving it to be discovered later.
+- **Explications is real too, not only founded** (2026-09-27, § 14):
+  `aistack.explications.from_ai_reasoning.import_explain_answers` and
+  `aistack.timemachine.projection.project_explications` exist, are
+  wired into `aistack.cli.timemachine_rebuild` as the fifth stream, and
+  were exercised end to end against a real seeded `explain` answer —
+  import, rebuild, and a direct SPARQL query over the result. Building
+  this importer is what found `GOV-0002/OS-082`, resolved the same day
+  by giving Raisonnements IA a real path into the graph through
+  Explications rather than reshaping the generic scan. The three other
+  named sources (§ 8) remain not yet imported.
 
 ## Open Points
 
@@ -461,21 +542,29 @@ supply the data they assume.
   `clear`), `aistack.timemachine.oxigraph_store.OxigraphGraphStore`,
   and the PROV-O/`aistack:` IRIs (`aistack.timemachine.vocabulary`) all
   exist. `aistack.timemachine.projection.project_observation_history`
-  walks the four streams and writes what each one honestly states
-  today: a generic entity/`prov:generatedAtTime`/`wasGeneratedBy` fact
-  for every historical observation, of any stream, plus —
-  where a stream's own content parses as the `version`/`provenance`
-  envelope J3 already gave three of the four (Traces, Décisions CPU,
-  Raisonnements IA) — `aistack:stableSubject` from `version.subject`,
+  walks the four streams `available_stems(generated_dir)` actually
+  finds and writes what each one honestly states today: a generic
+  entity/`prov:generatedAtTime`/`wasGeneratedBy` fact for every
+  historical observation, of any stream, plus — where a stream's own
+  content parses as the `version`/`provenance` envelope J3 already
+  gave three of the four streams (Traces, Décisions CPU, Raisonnements
+  IA) — `aistack:stableSubject` from `version.subject`,
   `prov:wasAttributedTo` an Agent from `provenance.origin`, and
   `prov:used` naming the request from `provenance.causality` where one
-  exists. The twelve raw Observation History streams carry no such
-  envelope and get the generic facts only; parsing each one's own
-  business schema (a Docker container's identity, a Beszel host's own
-  name) for a richer mapping is real work still deferred to 1.5's
-  collectors, not attempted here — inventing that mapping now, for
-  streams no collector emits in that shape yet, would be exactly
-  `ARC-P-006`'s forbidden guess.
+  exists. **Raisonnements IA carries the envelope but this generic
+  walk never actually reaches it** (`GOV-0002/OS-082`, found
+  2026-09-27): its own real, subject-keyed layout sits one level
+  outside `available_stems`'s scan, so in practice only two of the
+  four streams (Traces, Décisions CPU) are enriched by this walk —
+  Raisonnements IA's real path into the graph is Explications (§ 14),
+  through its `explain` answers specifically, not this generic scan.
+  The twelve raw Observation History streams carry no envelope and get
+  the generic facts only; parsing each one's own business schema (a
+  Docker container's identity, a Beszel host's own name) for a richer
+  mapping is real work still deferred to 1.5's collectors, not
+  attempted here — inventing that mapping now, for streams no
+  collector emits in that shape yet, would be exactly `ARC-P-006`'s
+  forbidden guess.
 - **How `aistack:occurredAt` is populated for the Kernel Runtime's own
   execution trace** — its events already happen and are recorded in the
   same call today, same as every other stream, so whether it ever

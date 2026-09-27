@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.116
+  version: 1.117
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -213,7 +213,7 @@ belongs here the day it is written, not the day someone re-reads it.
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
 OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075, OS-077,
-OS-079, OS-080 and OS-081 are in *Resolved*.
+OS-079, OS-080, OS-081 and OS-082 are in *Resolved*.
 
 Three of those fourteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -322,6 +322,48 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-082 — `ADR-0011` § *Context* claimed AI Reasoning History is one of the four streams already reachable by the graph; measured, it never has been
+
+**Nature** `non-conforming` · **Opened** 2026-09-27 · **State** resolved 2026-09-27, same session
+**Observed** while building the first real Explications importer
+(`ADR-0011` § *Decision* 8, the AI Runtime's own `explain` answers):
+`ADR-0011` § *Context*'s own table states "Raisonnements IA |
+`aistack.ai_runtime.reasoning_history` | `reports/generated/history/
+ai-reasoning/`" — implying it sits directly under the same top-level
+`history/` directory `aistack.timemachine.projection
+.project_observation_history` scans via `available_stems(generated_dir)`
+for the other three streams. Measured directly against
+`aistack.ai_runtime.reasoning_history.DEFAULT_OUTPUT_DIR`: the real path
+is `reports/generated/ai-reasoning/<subject>.json`, one file per
+subject, with its own nested history at `reports/generated/
+ai-reasoning/history/<subject>/` — a directory `available_stems(reports
+/generated)` never looks inside, since it only lists `reports/
+generated/history/`'s own direct children. Confirmed against GIGABYTE's
+own real graph (patch 0052's screenshots, 2026-09-27): its stream list,
+alphabetically sorted, begins at "architecture" — nothing sorting
+before it, as an "ai-reasoning" stem would. AI Reasoning History has
+never actually been included in the Time Machine graph via the generic
+four-stream walk, despite three separate patch notes (0050 in
+particular) stating that it is.
+**Resolved 2026-09-27.** Reshaping `project_observation_history`'s
+generic scan to also discover this one stream's own nested,
+subject-keyed layout would be new scope this patch does not need: the
+Explications importer just built
+(`aistack.explications.from_ai_reasoning`) already reads AI Reasoning
+History correctly, at its real path, and gives its `explain` answers
+their own real path into the graph through Explications. `ADR-0011`
+§ *Context* is corrected in the same patch to state the real path and
+this gap plainly, rather than leave a table standing that direct
+measurement does not support. The `reason`/`recommend` operations
+within AI Reasoning History remain unreachable by any path — an honest,
+narrower scope, not silently widened to look complete.
+**Derivable** yes — a check comparing each stream writer's own
+`DEFAULT_OUTPUT_DIR`/`DEFAULT_OUTPUT_PATH` against what
+`available_stems` actually scans would have caught this the day
+`reasoning_history.py` was written (2026-09-18), five patches before
+`ADR-0011` first claimed the opposite.
+**Qualification** none required — mechanical, no judgement call.
 
 #### GOV-0002/OS-081 — `.gitignore` never excluded two of the four mini-apps' own dedicated environments
 

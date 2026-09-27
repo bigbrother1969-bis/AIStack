@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from aistack.timemachine.iri import (
     agent_iri,
+    explication_iri,
     observation_iri,
     request_iri,
     stream_iri,
     stream_stem,
+    subject_iri,
 )
 
 
@@ -36,17 +38,30 @@ def test_request_iri_embeds_the_causality():
     assert request_iri("req-42") == "urn:aistack:request:req-42"
 
 
-def test_the_four_builders_use_distinct_prefixes():
+def test_explication_iri_embeds_both_the_subject_and_the_instant_label():
+    iri = explication_iri("booklore_db", "2026-09-27T10-00-00Z")
+    assert iri == "urn:aistack:explication:booklore_db:2026-09-27T10-00-00Z"
+
+
+def test_subject_iri_embeds_the_name():
+    assert subject_iri("booklore_db") == "urn:aistack:subject:booklore_db"
+
+
+def test_the_six_builders_use_distinct_prefixes():
     """
     § *Decision* 1's own contract distinguishes an Entity, an
     Activity, an Agent and a request by IRI alone — two builders
     sharing a prefix could collide on the same identifier for two
-    unrelated real-world things.
+    unrelated real-world things. Explications (§ 7) add two more:
+    an Explication is its own Entity, distinct from the subject it
+    explains.
     """
     prefixes = {
         stream_iri("x").rsplit("x", 1)[0],
         observation_iri("x", "y").rsplit("x:y", 1)[0],
         agent_iri("x").rsplit("x", 1)[0],
         request_iri("x").rsplit("x", 1)[0],
+        explication_iri("x", "y").rsplit("x:y", 1)[0],
+        subject_iri("x").rsplit("x", 1)[0],
     }
-    assert len(prefixes) == 4
+    assert len(prefixes) == 6

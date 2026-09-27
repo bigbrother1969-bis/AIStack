@@ -23,6 +23,8 @@ _STREAM_PREFIX = "urn:aistack:stream:"
 _OBSERVATION_PREFIX = "urn:aistack:observation:"
 _AGENT_PREFIX = "urn:aistack:agent:"
 _REQUEST_PREFIX = "urn:aistack:request:"
+_EXPLICATION_PREFIX = "urn:aistack:explication:"
+_SUBJECT_PREFIX = "urn:aistack:subject:"
 
 
 def stream_iri(stem: str) -> str:
@@ -64,3 +66,31 @@ def request_iri(causality: str) -> str:
     """The IRI of the causal request a `provenance.causality` names."""
 
     return f"{_REQUEST_PREFIX}{causality}"
+
+
+def explication_iri(subject: str, instant_label: str) -> str:
+    """
+    The IRI of one Explication's own `prov:Entity` — `ADR-0011` § 7.
+    Keyed by subject *and* instant, the same shape `observation_iri`
+    already uses: a subject can gain more than one Explication over
+    time (two different `explain` answers, a correction), and each is
+    its own graph node, not a value overwriting the last.
+    """
+
+    return f"{_EXPLICATION_PREFIX}{subject}:{instant_label}"
+
+
+def subject_iri(name: str) -> str:
+    """
+    The IRI of a bare subject an Explication explains (`aistack:
+    explains`'s object) — `ADR-0011` § 7's own wording, "`id` names the
+    subject explained". Not `stream_iri`: a Explication's subject (a
+    `RuntimeFinding.subject` such as `"booklore_db"`, the thing a
+    finding is *about*) is not the same kind of thing as a collection
+    stream (`"architecture"`, `"console"`, the thing a *collector*
+    produces) — the graph has no other node for most subjects yet,
+    and minting one under `stream_iri` would claim a kinship with
+    "this is a collector's own activity" that is not real.
+    """
+
+    return f"{_SUBJECT_PREFIX}{name}"

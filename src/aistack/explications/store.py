@@ -62,8 +62,31 @@ from typing import Any
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.generators.history import write_artifact_with_history
+from aistack.history import available_instants, observation_at
 
-DEFAULT_OUTPUT_DIR = Path("reports/generated/history/explications")
+# **Corrected before any real data ever existed at the old path** —
+# patch 0054 declared this as `reports/generated/history/explications`,
+# directly inside the top-level `history/` directory
+# `aistack.timemachine.projection.project_observation_history` already
+# scans via `available_stems(reports/generated)` for the four existing
+# streams. Measured while building the first real importer (patch
+# after 0054): that scan expects each entry under `history/` to itself
+# be a stem's own flat timestamped-snapshot directory
+# (`history/<stem>/<timestamp>.json`), not another subject-keyed layer
+# (`history/explications/<subject>.json` plus *its own* nested
+# `history/explications/history/<subject>/`) — the same shape mismatch
+# `aistack.ai_runtime.reasoning_history` already has relative to that
+# scan (see `from_ai_reasoning.py`'s own note). Explications is its own
+# named stream, one file per subject, exactly like `ai-reasoning`
+# already is: `reports/generated/explications/<subject>.json`, read by
+# its own `available_stems`/`available_instants` call
+# (`aistack.timemachine.projection.project_explications`) rather than
+# folded into the generic four-stream scan. `reports/generated/` was
+# never gitignored by exception for `history/` alone (`.gitignore` line
+# 46 excludes the whole tree), so nothing on disk anywhere ever held
+# data at the old path — this is a pre-launch correction, not a
+# migration.
+DEFAULT_OUTPUT_DIR = Path("reports/generated/explications")
 
 
 def explication_history_path(
@@ -172,3 +195,27 @@ def read_latest_explication(
         return None
 
     return deserialize_explication(json.loads(path.read_text(encoding="utf-8")))
+
+
+def read_explication_history(
+    subject: str, output_dir: Path = DEFAULT_OUTPUT_DIR
+) -> list[KnowledgeArtifact]:
+    """
+    Every version of `subject`'s Explication ever recorded, oldest
+    first — the full history `write_artifact_with_history` already
+    keeps, not only the current one `read_latest_explication` reads.
+    An importer uses this to tell "already recorded" from "new" (see
+    `aistack.explications.from_ai_reasoning`'s own docstring) without
+    a second, separate ledger of what it has already imported — the
+    files already on disk are the only ledger, the same principle
+    `aistack.kernel.time.next_version_from_history` already applies
+    for versioning itself.
+    """
+
+    history: list[KnowledgeArtifact] = []
+    for instant in available_instants(output_dir, subject):
+        observation = observation_at(output_dir, subject, instant)
+        if observation is not None:
+            history.append(deserialize_explication(json.loads(observation.read())))
+
+    return history

@@ -6,6 +6,7 @@ from pathlib import Path
 from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 from aistack.timemachine.projection import (
     DEFAULT_GENERATED_DIR,
+    project_explications,
     project_observation_history,
 )
 
@@ -13,8 +14,8 @@ from aistack.timemachine.projection import (
 def main() -> None:
     """
     Rebuild the Time Machine's graph from whatever Observation
-    History currently holds — `ADR-0011` § *Decision* 1 and 10: a
-    full rebuild every time, on demand, never incremental.
+    History and Explications currently hold — `ADR-0011` § *Decision*
+    1 and 10: a full rebuild every time, on demand, never incremental.
 
     The first real caller of `project_observation_history` —
     everything before this module was contract and mechanism with
@@ -28,6 +29,16 @@ def main() -> None:
     streams it is built from) — a second, separate directory for it
     would split one already-unified, already-governed disposable area
     into two for no real benefit.
+
+    **`project_explications` runs second, against the same store,
+    never clearing it again** — Explications is the fifth source
+    stream `project_observation_history`'s own docstring already
+    named ("soon five"), added to the one rebuild pass rather than a
+    second, independent graph. It projects whatever
+    `aistack.cli.explications_import` (or a sibling importer, still to
+    come for the other three sources) has already recorded — this
+    command never imports raw sources itself, only what Explications'
+    own store already holds.
 
     **The leaf directory, created here, not assumed.** `pyoxigraph
     .Store`'s own documented behaviour creates the directory its
@@ -47,14 +58,23 @@ def main() -> None:
 
     store = OxigraphGraphStore(store_path)
     summary = project_observation_history(store, generated_dir=generated_dir)
+    explications_summary = project_explications(store, generated_dir=generated_dir)
 
     print("Time Machine Projection")
     print(f"- Source: {generated_dir}")
     print(f"- Store: {store_path}")
     print(f"- Streams seen: {summary.streams_seen}")
     print(f"- Observations seen: {summary.observations_seen}")
-    print(f"- Facts written: {summary.facts_written}")
-    print(f"- Facts dropped: {summary.facts_dropped}")
+    print(f"- Explication subjects seen: {explications_summary.subjects_seen}")
+    print(f"- Explications seen: {explications_summary.explications_seen}")
+    print(
+        "- Facts written: "
+        f"{summary.facts_written + explications_summary.facts_written}"
+    )
+    print(
+        "- Facts dropped: "
+        f"{summary.facts_dropped + explications_summary.facts_dropped}"
+    )
 
 
 if __name__ == "__main__":

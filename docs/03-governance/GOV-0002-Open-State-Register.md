@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.113
+  version: 1.114
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -212,8 +212,8 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075 and OS-077 are
-in *Resolved*.
+OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075, OS-077 and
+OS-079 are in *Resolved*.
 
 Three of those thirteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -322,6 +322,27 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-079 — The roadmap states the Time Machine's four histories are "in git"; they are entirely gitignored
+
+**Nature** `non-conforming` · **Opened** 2026-09-27 · **State** resolved 2026-09-27, same session
+**Observed** `claude/ROADMAP-1.2-TO-2.0-2026-09-27.md` § *Point de départ*
+states "patrimoine dans git" for Observation History, Traces, Décisions
+CPU and Raisonnements IA. Read directly while grounding `ADR-0011`: every
+one of the four writes through `aistack.generators.history
+.write_artifact_with_history`, entirely under `reports/generated/`, and
+`.gitignore` line 46 excludes that whole tree with no exception for
+`history/`. Not one byte of any of the four streams is source-controlled.
+**Resolved 2026-09-27.** `ADR-0011` § *Context* states the measured fact
+in the artifact that next depended on it, and sharpens R4 (`claude/
+ROADMAP-1.2-TO-2.0-2026-09-27.md` § *Revue de conception*) rather than
+merely repeating it: the gap is not an unverified backup, it is no
+backup and no version control at all, which is what makes `ADR-0011` §
+11's condition — AIStack in its own PRA before any of this is relied on
+— a precondition rather than an optional hardening.
+**Derivable** yes — a check comparing `.gitignore` patterns against a
+claim of "in git" for a named path
+**Qualification** none required; the decision was taken 2026-09-27.
 
 #### GOV-0002/OS-078 — `sync_mirrors.sh` never fetches a tag pointing at a commit it already has
 

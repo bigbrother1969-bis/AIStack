@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.1.1
+### Concrete capabilities, as of 1.2.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -113,6 +113,11 @@ AIStack transforms observations into sustainable knowledge assets.
   console itself, Architecture and Cockpit Santé are reachable from
   outside the LAN — every other screen (Selection UI, Priority CPU,
   network discovery, the troubleshooting assistant) is LAN-only.
+- **French and English interface** — the console is served by AIStack
+  itself, with a Settings page; every screen (console, Architecture,
+  Health Cockpit and the four mini-apps) switches between French and
+  English, the choice following the visitor from the console into each
+  screen. The AI Runtime's own answers stay in French.
 - **Context Bundle self-onboarding** — a portable, integrity-checked
   archive of the whole governed knowledge base, so a new AI session or
   contributor can get up to speed without reading the repository's
@@ -167,9 +172,9 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.1.1**: `pytest -q` — **2081 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **484 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **73 knowledge artifacts**,
+**As of 1.2.0**: `pytest -q` — **2183 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **495 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **74 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

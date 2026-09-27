@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-09-26
+  updated: 2026-09-27
 
 relations:
   references:
@@ -38,6 +38,58 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.2.0 — 2026-09-27
+
+**The first version of the roadmap toward `2.0`
+(`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`, decided by the owner the same
+day): from here on every step is numbered `1.2`, `1.3`… and `2.0` is the
+end of that roadmap. `1.2` makes the console an application with its own
+Settings page, and puts every screen of AIStack in French and in
+English.**
+
+- **The console is served by AIStack itself.** The standard library's
+  static file server on port 8183 is replaced by a small server of
+  AIStack's own (`aistack.console.server`, standard library only — no
+  web framework added to the governed environment), same port, so the
+  reverse proxy and every existing link are unchanged. It serves the
+  console, Architecture and the Health cockpit, and a Settings page;
+  anything else is a plain "not found", never a directory listing.
+- **Settings, and a choice of language.** The Settings page lets the
+  visitor pick the interface language. The choice is remembered by the
+  browser (a cookie, one year) — users and profiles, and with them a
+  per-user preference, come with a later version of the roadmap. A
+  language switch, shown as flags, sits at the top of every page, next
+  to the Settings link and — on every page but the console itself — a
+  way back to the console.
+- **Every screen in French and in English.** The console, Architecture,
+  the Health cockpit and the four mini-apps (Selection UI, Priority CPU,
+  network discovery, the troubleshooting assistant) all switch language.
+  The console hands its language to each mini-app in the link, since a
+  browser never shares a cookie between two addresses; each mini-app
+  then remembers it for itself. French stays the reference language:
+  anything a screen displays rather than says — container names,
+  findings, notes, a service's declared description — is shown as it
+  was written.
+- **What stays in French.** The AI Runtime's answers in the
+  troubleshooting assistant: their quality in English has not been
+  measured, and the English interface says so on the page rather than
+  presenting an unmeasured translation as equivalent.
+- **Guarded by the test suite, not by care.** Every language must carry
+  exactly the reference language's messages, with the same
+  placeholders, none empty, and every message a screen — mini-apps
+  included — asks for must exist; a missing translation fails the suite
+  before it can reach a page.
+- **Decision record.** `ADR-0010` (User Interface Localization) records
+  these choices. It is published with this version as *Proposed* — the
+  heritage's own rule since 2026-08-21 accepts a decision the day after
+  it is proposed, and the owner chose not to hold the release for it;
+  its acceptance, on 2026-09-28, changes no behaviour.
+
+`bigbrother1969/aistack-core:1.2.0`, built from `<commit to be filled in
+at publication — the owner's own build, per OPS-0002>`, digest `<filled
+in at publication>`.
+2183 tests, 74 knowledge artifacts, `clean: True`.
 
 ## 1.1.1 — 2026-09-26
 
@@ -505,7 +557,7 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 1.1.1 (2026-09-26), taken together.
+Not what changed — what runs, as of 1.2.0 (2026-09-27), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
@@ -547,7 +599,10 @@ Not what changed — what runs, as of 1.1.1 (2026-09-26), taken together.
   console itself, Architecture and Cockpit Santé are reachable from
   outside the LAN — Selection UI and Priorité CPU joined the rest
   (network discovery, the troubleshooting assistant) as LAN-only as of
-  1.0.0.
+  1.0.0. As of 1.2.0 the console is served by AIStack itself, has a
+  Settings page, and every screen — console, Architecture, Health
+  Cockpit and the four mini-apps — is available in French and in
+  English, the choice following the visitor from one screen to the next.
 - **Context Bundle — self-onboarding for an AI assistant.** A single
   portable archive carries the project's whole governed knowledge base,
   with a manifest that proves what commit it was taken from and lets a

@@ -216,6 +216,43 @@ second machine then diverges from the SPOT at its next pull.
 git push origin main
 ```
 
+### Tagging the version, when the patch just applied was a release
+
+**Added 2026-09-27 — four versions (`1.0.0`, `1.1.0`, `1.1.1`, `1.2.0`) had
+already shipped with no tag anywhere, because nothing had ever written down
+that one should exist.** The owner created the four missing tags by hand,
+after the fact, once the gap was noticed while publishing `1.2.1` — this
+section exists so a fifth version does not repeat it.
+
+**Only a `release(X.Y.Z): ...bump version, publish notes` commit is
+tagged** — never a fix or feature commit earlier in the same patch series,
+and never the later `docs: record the X.Y.Z image publication` commit that
+fills in the digest once the owner has built and pushed the image (§
+*Recording the publication*, below). The tag names the version at the
+moment it was declared, not the moment its image was proven. A version
+published without a following digest-recording patch — it can take a few
+days — is tagged as soon as its own `release(X.Y.Z)` commit reaches the
+SPOT, not held back for the later commit.
+
+**A lightweight tag, not annotated** — this heritage has not needed the
+message an annotated tag carries, and every tag created so far, including
+the four caught up by hand, is lightweight:
+
+```bash
+git tag v$VERSION <the release(X.Y.Z) commit just pushed>
+git push origin v$VERSION
+```
+
+(`$VERSION` is the same value § *Publishing an image* reads from
+`pyproject.toml` rather than typing twice — read it the same way here, if
+this runs later than the push above in the same sitting.)
+
+**Reaches the mirrors the same way a commit does.** `sync_mirrors.sh`
+already pushes `--tags` on every run (§ *3. Verify, then publish the
+mirrors*, below) — nothing there changes; a tag pushed to the SPOT here is
+carried to GitHub and Codeberg the next time that script runs, whether that
+is this same sitting or the next scheduled one.
+
 ### 3. Verify, then publish the mirrors, on the publisher
 
 **Decided 2026-09-10 by the owner: the publisher verifies the commit it

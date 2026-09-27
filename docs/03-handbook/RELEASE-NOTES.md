@@ -77,9 +77,8 @@ with — the opposite of what `1.2.0`'s own README bullet and
   enforcing the right language is not the same claim as the answer
   being a good one in it.
 
-`bigbrother1969/aistack-core:1.2.1`, built from `<commit to be filled in
-at publication — the owner's own build, per OPS-0002>`, digest `<filled
-in at publication>`.
+`bigbrother1969/aistack-core:1.2.1`, built from `1843a62`, digest
+`sha256:f3310341240def1190a7c55360d7308813bca138b53625ab63be399a845f76fe`.
 2195 tests, 74 knowledge artifacts, `clean: True`.
 
 ## 1.2.0 — 2026-09-27

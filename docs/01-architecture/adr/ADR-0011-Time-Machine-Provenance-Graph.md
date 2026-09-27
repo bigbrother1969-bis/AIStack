@@ -274,19 +274,21 @@ removed.
 
 ### 8. Import target: commits, `pra_tests.yml`, existing `explain`s, and `claude/` notes
 
-The 669 commit messages, the dated comments already in `pra_tests.yml`,
-and the AI Runtime's own `explain` answers (already kept since J7) enter
-as `Proposed` — none of them a human's own stated claim; a commit
-message states what its author did, not that they vouch for it as an
-explanation. The owner's decision, 2026-09-27: the project's own
-`claude/*.md` session notes are imported too, at the same `Proposed`
-level — never higher, since `STD-0100` (independently of this ADR) is
-explicit that a `claude/` citation is provenance, never the sole
-statement of a fact or a decision. Importing them as `Proposed`
-Explications keeps that rule intact: a `Proposed` Explication is exactly
-provenance, not a validated claim, and stays that way until a human
-reads and validates one — at which point it is that human's validation,
-not the note, that the graph credits.
+The commit messages (669 at the time this ADR was first written; 695 by
+the time the last of the four sources was actually imported, § 17 —
+growing history, not a stale count corrected in place), the dated
+comments already in `pra_tests.yml`, and the AI Runtime's own `explain`
+answers (already kept since J7) enter as `Proposed` — none of them a
+human's own stated claim; a commit message states what its author did,
+not that they vouch for it as an explanation. The owner's decision,
+2026-09-27: the project's own `claude/*.md` session notes are imported
+too, at the same `Proposed` level — never higher, since `STD-0100`
+(independently of this ADR) is explicit that a `claude/` citation is
+provenance, never the sole statement of a fact or a decision. Importing
+them as `Proposed` Explications keeps that rule intact: a `Proposed`
+Explication is exactly provenance, not a validated claim, and stays
+that way until a human reads and validates one — at which point it is
+that human's validation, not the note, that the graph credits.
 
 **Corpus scope for `claude/` notes, decided the same day this source's
 own import was scheduled (2026-09-27, deferred from here until then):**
@@ -593,6 +595,72 @@ writes to one subject collapse to one queryable instant — editing a
 note's own content between two runs correctly records a second
 Explication version rather than being lost to that collision.
 
+### 17. Explications' fourth and last real source: commit history
+
+Unlike the other three sources, a commit's own "subject" has no single
+answer — measured, not assumed, against this repository's real 695
+commits (669 when § 8 was first written): only 240 (35%) open with the
+conventional `type(scope): message` first line that names a real
+architectural subject in backtick-free plain text (`kernel`, `console`,
+`explications`...); 149 (21%, overlapping) instead reference a
+governance document id (`OS-071`, `ADR-0011`) with no scope at all;
+318 (46%) have neither. Three shapes were put to the owner via
+`AskUserQuestion` — scope-only with the rest skipped; scope falling
+back to the referenced document id; or every commit, falling back to
+its bare `type` as a coarse subject when nothing else names one — and
+the narrowest was chosen: **only the 240 scoped commits are imported,
+the scope is the subject, and a document id inside any message stays
+in the Explication's own content, never promoted to a subject** — a
+governance register entry and an architecture component are not the
+same kind of thing, and a bare `type` like `docs` or `feat` is a
+category, not an identity (`ARC-P-006`).
+`aistack.explications.from_commits.import_commits` implements exactly
+this: one `Proposed` Explication per scoped commit, the scope as
+subject, the commit's own sha as its idempotency key (immutable and
+already unique — no content hash or recorded instant needed, unlike
+the other three sources), the commit's own author date as
+`created_at`/`updated_at`, and `source` naming the commit itself
+(`git:<sha>`) rather than its author — this repository's own commit
+authors are not spelled consistently (`Fabrice`, `Fabrice Persiaut`,
+`fabrice.persiaut`, `Claude`, `Claude Sonnet 5`, measured, not assumed),
+and naming one of those spellings as the `prov:Agent` would fragment a
+single real actor across several graph nodes; the real identity stays
+readable in the Explication's own content (the full commit message),
+just not promoted to `prov:wasAttributedTo`.
+
+**A real write-pacing hazard, paced around rather than fixed at the
+source.** `aistack.generators.history.write_artifact_with_history`
+always stamps its history file with the real wall-clock instant of the
+call, never a caller-supplied one, and `aistack.history.query
+.available_instants` collapses two same-subject writes landing in the
+same wall-clock second to one queryable instant (its own docstring
+already says so plainly) — harmless for the other three sources' small,
+naturally-spaced corpora, not harmless here: this repository's busiest
+scope, `kernel`, has 38 real commits, all importable in one script run.
+Measured: zero real commits share both a scope and an author-instant to
+the same second, so the real history itself never collides — only an
+unpaced batch import would manufacture a collision `git log` does not
+have. Rather than add a caller-supplied-instant parameter to shared,
+already-tested infrastructure five other producers also call, this
+importer paces its own writes: before a second or later write to the
+same subject within one run, it waits out the current wall-clock second.
+Measured worst case, against the real 240-commit corpus across 80
+distinct scopes: 160 forced one-second waits, under three minutes total
+— a one-time cost for a one-time deliberate backfill, confirmed by the
+real run (1m49s for the first import of all 240, 0.3s for an idempotent
+second run finding nothing new).
+
+Verified in real execution against this repository's own full history:
+695 commits seen, 455 skipped (no conventional scope), 80 subjects, 240
+Explications recorded; a second run recording nothing new; `kernel`'s
+own history read back as all 38 distinct commits, in real chronological
+order, none lost to the collision this section describes; a full
+rebuild alongside the other three sources (87 subjects, 247
+Explications, 1729 facts, none dropped) and a direct SPARQL query
+confirming all 38 `kernel` Explications reached the graph, each
+correctly ordered by its own real `generatedAtTime` and attributed to
+its own distinct `git:<sha>` agent.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -666,8 +734,19 @@ Explication version rather than being lost to that collision.
   found `GOV-0002/OS-083` — 2 of the 5 declare frontmatter
   `parse_artifact_frontmatter` has never actually been able to read,
   resolved by this importer's own filename fallback rather than by
-  touching the shared reader or the two files' own prose. Only commits
-  remain of the four named sources.
+  touching the shared reader or the two files' own prose.
+- **All four named sources are now real** (2026-09-27, § 17):
+  `aistack.explications.from_commits.import_commits` and its own CLI,
+  `aistack.cli.explications_import_commits`, close the set — 240 of
+  this repository's own 695 commits (the ones with a real conventional
+  scope; the rest skipped and counted, not guessed at), each a
+  `Proposed` Explication keyed by its own immutable sha. Building it
+  surfaced no new defect, but did require actively pacing writes around
+  the same `available_instants` same-second collision the other two
+  real-source patches had each, separately, already designed safely
+  around — this is the first of the four sources where that hazard was
+  a real risk rather than a theoretical one, given how many commits
+  this repository's busiest scopes already carry.
 
 ## Open Points
 

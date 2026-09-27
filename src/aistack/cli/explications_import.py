@@ -13,11 +13,12 @@ def main() -> None:
     decision, 2026-09-27, on which sources enter and at what
     confidence), not something every graph rebuild should silently
     redo. `timemachine_rebuild` only ever projects what this command
-    (and its siblings — `aistack.cli.explications_import_pra_tests`
-    and `aistack.cli.explications_import_claude_notes`, with commits
-    still to come) has already recorded — the same "collect, then
-    project" split every other historicised stream already keeps
-    between its own collector and the Time Machine's read side.
+    (and its siblings — `aistack.cli.explications_import_pra_tests`,
+    `aistack.cli.explications_import_claude_notes` and
+    `aistack.cli.explications_import_commits`, all three now real)
+    has already recorded — the same "collect, then project" split
+    every other historicised stream already keeps between its own
+    collector and the Time Machine's read side.
 
     Idempotent: running this twice without new AI Reasoning History
     activity records nothing new the second time

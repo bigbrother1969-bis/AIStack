@@ -39,6 +39,49 @@ it says what the build was *for*.
 
 ---
 
+## 1.2.1 — 2026-09-27
+
+**A same-day follow-up to `1.2.0`. A real defect the owner found using
+the guided troubleshooting assistant in the browser: the AI Runtime's
+answers came back in English regardless of the display language, and
+regardless of the French-only instruction every prompt already ended
+with — the opposite of what `1.2.0`'s own README bullet and
+`ADR-0010`'s § *Consequences* claimed the day they were published.**
+
+- **The AI Runtime's answers now follow the display language.**
+  `reason`/`explain`/`recommend` (`aistack.ai_runtime.operations`) take
+  a `target_language` — the CLI's own unchanged French default, or
+  whatever language the guided troubleshooting UI's visitor is reading
+  the page in — and, whenever that is not English, a second, fast
+  model (`qwen2.5:0.5b`, declared as `translator_model:` in
+  `ai_runtime.yml`, the same model already confirmed installed on this
+  host, 2026-09-18) translates the answer into it. English needs no
+  enforcement: the model's own unprompted behaviour already tends
+  there, which is the very defect this release fixes for every other
+  language. Left undeclared, `translator_model:` skips the pass
+  entirely and every answer travels exactly as it did before this
+  version — never blocked on a second model nobody confirmed is
+  installed, the same guard `model` itself already gets.
+- **`AIRuntimeAnswer` gains `language`** — the language `response` was
+  asked to be in, carried alongside it into J7's own reasoning history
+  (`aistack.ai_runtime.reasoning_history`) and into the guided UI's
+  `step.html`, replacing the hardcoded `lang="fr"` and the note telling
+  the English interface its answers were untranslated.
+- **The now-inaccurate claims corrected**: README's own capability
+  bullet, and `ADR-0010`'s § *Consequences*/§ *Open Points* (still
+  `Proposed`, so revising it before its own acceptance changes nothing
+  it already decided). What remains genuinely open is named in
+  `ADR-0010` itself: the *quality* of a translated answer, in each
+  language, is `R8`'s own prerequisite for `1.4`
+  (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`) and still unmeasured —
+  enforcing the right language is not the same claim as the answer
+  being a good one in it.
+
+`bigbrother1969/aistack-core:1.2.1`, built from `<commit to be filled in
+at publication — the owner's own build, per OPS-0002>`, digest `<filled
+in at publication>`.
+2195 tests, 74 knowledge artifacts, `clean: True`.
+
 ## 1.2.0 — 2026-09-27
 
 **The first version of the roadmap toward `2.0`

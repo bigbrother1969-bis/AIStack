@@ -150,3 +150,97 @@ def test_the_real_console_links_definition_loads():
     # LAN-only, deliberately — v1 choice, not a security necessity
     # (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`).
     assert by_name["Assistant de pannes"].url == "http://GIGABYTE:8185"
+
+
+# --------------------------------------------------------------------
+# Localized fields (ADR-0010, 2026-09-27)
+# --------------------------------------------------------------------
+
+
+def _localized(tmp_path: Path) -> Path:
+    return write(
+        tmp_path / "console_links.yml",
+        """
+        links:
+          - name:
+              fr: Cockpit Santé
+              en: Health cockpit
+            description:
+              fr: Score de santé
+              en: Health score
+            url: /health.html
+          - name: Selection UI
+            description:
+              fr: Sélection des candidats
+            url: http://GIGABYTE:8181
+        """,
+    )
+
+
+def test_a_localized_field_is_resolved_for_the_requested_language(tmp_path: Path):
+    links = load_console_links_yaml(_localized(tmp_path), lang="en")
+
+    assert links[0].name == "Health cockpit"
+    assert links[0].description == "Health score"
+    assert links[0].url == "/health.html"
+
+
+def test_a_plain_string_is_the_same_in_every_language(tmp_path: Path):
+    links = load_console_links_yaml(_localized(tmp_path), lang="en")
+
+    assert links[1].name == "Selection UI"
+
+
+def test_a_language_a_field_lacks_falls_back_to_the_reference(tmp_path: Path):
+    links = load_console_links_yaml(_localized(tmp_path), lang="en")
+
+    assert links[1].description == "Sélection des candidats"
+
+
+def test_no_language_means_the_reference(tmp_path: Path):
+    links = load_console_links_yaml(_localized(tmp_path))
+
+    assert links[0].name == "Cockpit Santé"
+
+
+def test_a_localized_field_without_the_reference_is_refused(tmp_path: Path):
+    path = write(
+        tmp_path / "console_links.yml",
+        "links:\n  - name: {en: Health}\n    description: x\n    url: /health.html\n",
+    )
+
+    with pytest.raises(ValueError, match="missing the reference language: fr"):
+        load_console_links_yaml(path)
+
+
+def test_an_undeclared_language_code_is_refused(tmp_path: Path):
+    path = write(
+        tmp_path / "console_links.yml",
+        "links:\n  - name: {fr: Santé, eng: Health}\n    description: x\n    url: /h\n",
+    )
+
+    with pytest.raises(ValueError, match="undeclared language"):
+        load_console_links_yaml(path)
+
+
+def test_the_real_definition_carries_every_declared_language():
+    """
+    The loader serves the reference when a translation is missing, so
+    a card left untranslated would never raise — it would quietly show
+    French on the English console. Held here instead.
+    """
+
+    import yaml
+
+    from aistack.i18n import default_languages, missing_languages
+
+    repo_root = Path(__file__).resolve().parents[3]
+    path = repo_root / "src" / "aistack" / "console" / "definitions" / "console_links.yml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+
+    for link in data["links"]:
+        for field in ("name", "description"):
+            assert missing_languages(link[field], default_languages()) == (), (
+                link["url"],
+                field,
+            )

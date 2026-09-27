@@ -9,7 +9,16 @@ from aistack.contracts.health_score import (
 )
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
+from aistack.health.labels import bucket_label, domain_label
+from aistack.i18n import (
+    Languages,
+    Translator,
+    default_languages,
+    translator_for,
+    with_language,
+)
 from aistack.renderers.console.assets import LOCKUP_DATA_URI, MARK_DATA_URI
+from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import escape_text
 
 # Duplicated from `aistack.renderers.health.html._BUCKET_BADGE_CLASS`
@@ -31,6 +40,8 @@ def render_html(
     score_note: str = "",
     technical_debt_score: TechnicalDebtScore | None = None,
     technical_debt_note: str = "",
+    lang: str | None = None,
+    languages: Languages | None = None,
 ) -> str:
     """
     Wrap the owner's declared `ConsoleLink`s into one self-contained
@@ -89,30 +100,44 @@ def render_html(
     (`aistack/generators/console/html_artifact.py`) is what stamps
     *when* a copy was produced, via `write_artifact_with_history`, not
     this function.
+
+    **`lang`, added 2026-09-27** (ADR-0010): the page is written in
+    `lang`, the reference language when `None` — whose output is
+    exactly what this page said before localization, apart from the
+    navigation strip (Settings link, language switch) every served
+    page now carries. `links` are expected already resolved for the
+    same language (`load_console_links_yaml(..., lang=...)`); each
+    absolute link carries `?lang=` so the language follows the visitor
+    to a mini-app on another host, where the cookie cannot.
     """
 
-    cards = "\n".join(_render_link(link) for link in links)
+    t = translator_for(lang)
+    declared = languages if languages is not None else default_languages()
+
+    cards = "\n".join(_render_link(link, t) for link in links)
     cartouche_html = (
         _render_health_cartouche(
-            cockpit, score, score_note, technical_debt_score, technical_debt_note
+            cockpit, score, score_note, technical_debt_score, technical_debt_note, t
         )
         if cockpit is not None
         else ""
     )
 
     return f"""<!doctype html>
-<html lang="fr">
+<html lang="{t.lang}">
 <head>
 <meta charset="utf-8">
-<title>AIStack — Console</title>
+<title>{escape_text(t("console.title"))}</title>
 <link rel="icon" href="{MARK_DATA_URI}">
 <style>
 {_STYLE}
+{PAGE_NAV_STYLE}
 </style>
 </head>
 <body>
+{render_page_nav(t, declared, t.lang)}
 <header>
-  <img class="lockup" src="{LOCKUP_DATA_URI}" alt="AIStack — Infrastructure Knowledge Platform">
+  <img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}">
 </header>
 
 {cartouche_html}
@@ -131,90 +156,101 @@ def _render_health_cartouche(
     score_note: str,
     technical_debt_score: TechnicalDebtScore | None,
     technical_debt_note: str,
+    t: Translator,
 ) -> str:
     if not cockpit.domains:
         return ""
 
-    score_html = _render_cartouche_score(score, score_note)
+    score_html = _render_cartouche_score(score, score_note, t)
     technical_debt_html = _render_cartouche_technical_debt(
-        technical_debt_score, technical_debt_note
+        technical_debt_score, technical_debt_note, t
     )
-    badges = "\n".join(_render_domain_badge(domain) for domain in cockpit.domains)
+    badges = "\n".join(_render_domain_badge(domain, t) for domain in cockpit.domains)
 
     return f"""<section class="health-cartouche">
   <div class="cartouche-header">
-    <h2>État de santé du homelab</h2>
+    <h2>{escape_text(t("console.cartouche.title"))}</h2>
     {score_html}
   </div>
   {technical_debt_html}
   <div class="cartouche-badges">
 {badges}
   </div>
-  <a class="cartouche-link" href="/health.html">Voir le détail par domaine →</a>
+  <a class="cartouche-link" href="/health.html">{escape_text(t("console.cartouche.detail_link"))}</a>
 </section>"""
 
 
-def _render_cartouche_score(score: HealthScore | None, score_note: str) -> str:
+def _render_cartouche_score(
+    score: HealthScore | None, score_note: str, t: Translator
+) -> str:
     if score is not None:
         badge_class = _BUCKET_BADGE_CLASS[score.bucket]
 
         return (
-            f'<span class="cartouche-score">Score de santé : '
+            f'<span class="cartouche-score">{escape_text(t("console.cartouche.score"))} '
             f'<strong>{score.value}/100</strong> '
-            f'<span class="badge {badge_class}">{escape_text(score.bucket)}</span></span>'
+            f'<span class="badge {badge_class}">'
+            f"{escape_text(bucket_label(t, score.bucket))}</span></span>"
         )
 
     if score_note:
         return (
             f'<span class="cartouche-score cartouche-score-unavailable">'
-            f"Score de santé : non calculé — {escape_text(score_note)}</span>"
+            f'{escape_text(t("console.cartouche.score_unavailable", note=score_note))}'
+            f"</span>"
         )
 
     return ""
 
 
 def _render_cartouche_technical_debt(
-    score: TechnicalDebtScore | None, note: str
+    score: TechnicalDebtScore | None, note: str, t: Translator
 ) -> str:
     if score is not None:
         badge_class = _BUCKET_BADGE_CLASS[score.bucket]
 
         return (
-            f'<div class="cartouche-technical-debt">Dette technique : '
+            f'<div class="cartouche-technical-debt">'
+            f'{escape_text(t("console.cartouche.technical_debt"))} '
             f'<strong>{score.value}/100</strong> '
-            f'<span class="badge {badge_class}">{escape_text(score.bucket)}</span></div>'
+            f'<span class="badge {badge_class}">'
+            f"{escape_text(bucket_label(t, score.bucket))}</span></div>"
         )
 
     if note:
         return (
             f'<div class="cartouche-technical-debt '
             f'cartouche-technical-debt-unavailable">'
-            f"Dette technique : non calculée — {escape_text(note)}</div>"
+            f'{escape_text(t("console.cartouche.technical_debt_unavailable", note=note))}'
+            f"</div>"
         )
 
     return ""
 
 
-def _render_domain_badge(domain: HealthDomain) -> str:
+def _render_domain_badge(domain: HealthDomain, t: Translator) -> str:
+    name = domain_label(t, domain.name)
+
     if not domain.instrumented:
         return (
             f'  <span class="domain-badge badge-not-instrumented">'
-            f"{escape_text(domain.name)} — non instrumenté</span>"
+            f'{escape_text(t("health.domain_state.not_instrumented", domain=name))}</span>'
         )
 
     if not domain.findings:
         return (
             f'  <span class="domain-badge badge-clean">'
-            f"{escape_text(domain.name)} — rien à signaler</span>"
+            f'{escape_text(t("health.domain_state.clean", domain=name))}</span>'
         )
 
     return (
         f'  <span class="domain-badge badge-alert">'
-        f"{escape_text(domain.name)} — {len(domain.findings)} finding(s)</span>"
+        f'{escape_text(t("health.domain_state.findings", domain=name, count=len(domain.findings)))}'
+        f"</span>"
     )
 
 
-def _render_link(link: ConsoleLink) -> str:
+def _render_link(link: ConsoleLink, t: Translator) -> str:
     """
     The card shows the name and description only — no visible URL
     text, since 2026-09-26 (the owner's own call: the target still
@@ -223,10 +259,25 @@ def _render_link(link: ConsoleLink) -> str:
     already conveys in French).
     """
 
-    return f"""  <a class="card" href="{escape_text(link.url)}">
+    return f"""  <a class="card" href="{escape_text(_link_href(link.url, t.lang))}">
     <h2>{escape_text(link.name)}</h2>
     <p>{escape_text(link.description)}</p>
   </a>"""
+
+
+def _link_href(url: str, lang: str) -> str:
+    """
+    An absolute link — a mini-app on another host — carries the
+    current language in its query string (ADR-0010: the cookie never
+    crosses host names). A relative link stays as declared: it is
+    served by this same console, which already knows the language
+    from its own cookie.
+    """
+
+    if url.startswith(("http://", "https://")):
+        return with_language(url, lang)
+
+    return url
 
 
 # Palette and type sourced 2026-09-26 from persiaut-consulting.eu (the

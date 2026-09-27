@@ -86,7 +86,11 @@ def test_every_link_becomes_one_card():
     assert document.count('<a class="card"') == 2
     assert "Selection UI" in document
     assert "Cockpit Santé" in document
-    assert 'href="http://GIGABYTE:8181"' in document
+    # ADR-0010 (2026-09-27): an absolute link — a mini-app on another
+    # host — carries the language, since the console's cookie cannot
+    # follow it there; a relative page of the console itself does not
+    # need to.
+    assert 'href="http://GIGABYTE:8181?lang=fr"' in document
     assert 'href="/health.html"' in document
 
 
@@ -344,3 +348,76 @@ def _dummy_finding():
             ),
         ),
     )
+
+
+# --------------------------------------------------------------------
+# Localization (ADR-0010, 2026-09-27)
+# --------------------------------------------------------------------
+
+
+def _cockpit() -> HealthCockpit:
+    return HealthCockpit(
+        domains=(
+            HealthDomain(name="Stockage", instrumented=True, findings=()),
+            HealthDomain(name="Services", instrumented=False, note="pas encore"),
+            HealthDomain(name="Tests PRA", instrumented=True, findings=(_dummy_finding(),)),
+        )
+    )
+
+
+def test_the_reference_language_is_served_when_none_is_asked_for():
+    document = render_html((selection_ui_link(),), cockpit=_cockpit())
+
+    assert '<html lang="fr">' in document
+    assert "État de santé du homelab" in document
+
+
+def test_the_page_is_written_in_the_requested_language():
+    score = HealthScore(value=72, measured_domains=2, total_domains=3, bucket=TO_WATCH)
+
+    document = render_html(
+        (selection_ui_link(),), cockpit=_cockpit(), score=score, lang="en"
+    )
+
+    assert '<html lang="en">' in document
+    assert "Homelab health" in document
+    assert "Health score:" in document
+    assert "to watch" in document
+    assert "Storage — nothing to report" in document
+    assert "Services — not instrumented" in document
+    assert "DR tests — 1 finding(s)" in document
+    assert "See the detail by domain" in document
+    assert "État de santé" not in document
+
+
+def test_what_the_page_displays_is_not_translated():
+    """ADR-0010 § 4: a declared note stays in the language it was written in."""
+
+    document = render_html(
+        (selection_ui_link(),), cockpit=_cockpit(), score_note="poids absents", lang="en"
+    )
+
+    assert "Health score: not computed — poids absents" in document
+
+
+def test_an_absolute_link_carries_the_page_language():
+    document = render_html((selection_ui_link(), health_link()), lang="en")
+
+    assert 'href="http://GIGABYTE:8181?lang=en"' in document
+    assert 'href="/health.html"' in document
+
+
+def test_every_page_offers_settings_and_every_declared_language():
+    document = render_html((selection_ui_link(),), lang="en")
+
+    assert 'href="/settings"' in document
+    assert ">Settings<" in document
+    assert 'href="?lang=fr"' in document
+    assert ">Français<" in document
+    assert 'aria-current="true">English<' in document
+
+
+def test_an_unknown_language_is_served_in_the_reference():
+    document = render_html((selection_ui_link(),), lang="xx")
+
+    assert '<html lang="fr">' in document

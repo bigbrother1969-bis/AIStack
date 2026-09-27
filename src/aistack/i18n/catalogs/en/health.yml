@@ -1,0 +1,17 @@
+# Homelab health — messages shared by the console (cartouche) and the
+# Health cockpit. Mirrors catalogs/fr/health.yml key for key.
+
+bucket:
+  excellent: "excellent"
+  to_watch: "to watch"
+  action_required: "action required"
+domain:
+  storage: "Storage"
+  services: "Services"
+  backup: "Backup / DR"
+  gpu: "GPU"
+  pra_tests: "DR tests"
+domain_state:
+  not_instrumented: "{domain} — not instrumented"
+  clean: "{domain} — nothing to report"
+  findings: "{domain} — {count} finding(s)"

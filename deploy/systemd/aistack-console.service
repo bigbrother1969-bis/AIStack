@@ -7,11 +7,19 @@
 # server for `reports/generated/`, which had until 2026-09-11 only
 # ever been read by SSHing into GIGABYTE and opening a file directly.
 #
-# Runs on the host, not in a container: serves a directory of static
-# files (`reports/generated/public/`) that already live on this
-# filesystem — nothing here needs a Docker socket or a container
-# runtime, the same "no container needed" reasoning
-# `aistack-selection-ui.service` already documents for itself.
+# Runs on the host, not in a container: serves pages generated on
+# this filesystem (`reports/generated/`) — nothing here needs a Docker
+# socket or a container runtime, the same "no container needed"
+# reasoning `aistack-selection-ui.service` already documents for
+# itself.
+#
+# **Since 2026-09-27 (ADR-0010) the server is `aistack.console.server`,
+# not `python -m http.server`**: it serves each page in the language
+# the visitor chose and adds the Settings page. `run_console.sh` is
+# unchanged in name and port, so an already-installed unit needs only
+# a restart, not a reinstall:
+#
+#   systemctl restart aistack-console
 #
 # Install (as root, on GIGABYTE):
 #

@@ -86,6 +86,29 @@ def test_main_writes_the_console_html_artifact(workspace):
     assert "Dette technique" in document
 
 
+def test_main_writes_one_console_per_declared_language(workspace):
+    """
+    ADR-0010 § 5 (2026-09-27): the reference language keeps
+    `console.html` and its history stream; every other declared
+    language adds `console.<code>.html` beside it.
+    """
+
+    cli.main()
+
+    generated_dir = workspace / "reports" / "generated"
+    english = (generated_dir / "console.en.html").read_text(encoding="utf-8")
+    french = (generated_dir / "console.html").read_text(encoding="utf-8")
+
+    assert '<html lang="fr">' in french
+    assert '<html lang="en">' in english
+    assert "Homelab health" in english
+    assert "Health cockpit" in english
+    assert "http://GIGABYTE:8181?lang=en" in english
+    assert "http://GIGABYTE:8181?lang=fr" in french
+    assert (generated_dir / "history" / "console").is_dir()
+    assert (generated_dir / "history" / "console.en").is_dir()
+
+
 def test_main_prints_a_confirmation_line(workspace, capsys):
     cli.main()
 

@@ -4,6 +4,7 @@ import socket
 import subprocess
 from pathlib import Path
 
+from aistack.console.server import page_file
 from aistack.console.yaml import load_console_links_yaml
 from aistack.contracts.health_score import HealthScoreWeights
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
@@ -12,6 +13,7 @@ from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
 from aistack.health.technical_debt import compute_technical_debt_score
+from aistack.i18n import default_languages
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,
@@ -321,24 +323,48 @@ def main() -> None:
     (`PLAN-J11` § 11.9.1) — the same "Dette technique" card
     `health_render.main()` writes, from the same cockpit and weights,
     never a second load of either.
+
+    **One console per declared language, since 2026-09-27** (ADR-0010
+    § 5). The cockpit and its scores are computed once — the host is
+    the same whatever language the page is read in — and the page is
+    written once per language: the reference keeps `console.html` and
+    its history stream, every other language adds
+    `console.<code>.html` beside it. `aistack.console.server` picks one
+    per request. `PUBLIC_DIR` keeps its reference-language symlinks: the
+    new server does not read it, but a host that has to fall back to the
+    old `http.server` launcher still finds the three pages there.
     """
 
-    links = load_console_links_yaml(DEFAULT_CONSOLE_LINKS)
+    languages = default_languages()
 
     cockpit = build_cockpit(socket.gethostname())
     weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
     score = compute_health_score(cockpit, weights) if weights is not None else None
     debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
-    ConsoleHtmlArtifactGenerator().generate(
-        links=links,
-        output_path=GENERATED_DIR / "console.html",
-        cockpit=cockpit,
-        score=score,
-        score_note=score_note,
-        technical_debt_score=debt_score,
-        technical_debt_note=debt_score_note,
-    )
+    written: list[str] = []
+    links_count = 0
+
+    for language in languages.available:
+        links = load_console_links_yaml(
+            DEFAULT_CONSOLE_LINKS, lang=language.code, languages=languages
+        )
+        links_count = len(links)
+        output_path = page_file(
+            GENERATED_DIR, "console.html", language.code, languages.reference
+        )
+
+        ConsoleHtmlArtifactGenerator().generate(
+            links=links,
+            output_path=output_path,
+            cockpit=cockpit,
+            score=score,
+            score_note=score_note,
+            technical_debt_score=debt_score,
+            technical_debt_note=debt_score_note,
+            lang=language.code,
+        )
+        written.append(output_path.name)
 
     PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -349,7 +375,8 @@ def main() -> None:
 
     print(
         f"Console written to {GENERATED_DIR / 'console.html'} "
-        f"({len(links)} link(s)); served from {PUBLIC_DIR}"
+        f"({links_count} link(s); {', '.join(written)}); served from "
+        f"{GENERATED_DIR} by aistack.console.server"
     )
 
 

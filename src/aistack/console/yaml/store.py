@@ -6,11 +6,14 @@ from typing import Any
 import yaml
 
 from aistack.contracts.console_link import ConsoleLink
+from aistack.i18n import Languages, default_languages, pick_localized
 
 _REQUIRED_LINK_FIELDS = ("name", "description", "url")
 
 
-def load_console_links_yaml(path: Path) -> tuple[ConsoleLink, ...]:
+def load_console_links_yaml(
+    path: Path, lang: str | None = None, languages: Languages | None = None
+) -> tuple[ConsoleLink, ...]:
     """
     Load `PLAN-J11`'s declared console links from YAML.
 
@@ -20,7 +23,16 @@ def load_console_links_yaml(path: Path) -> tuple[ConsoleLink, ...]:
     `url` already carries whatever host-specific fact it names
     (`GIGABYTE:8181`, a relative `/health.html`), so there is nothing
     left for this loader itself to scope by host.
+
+    **`name` and `description` may be localized, since 2026-09-27**
+    (ADR-0010): either a plain string, the same in every language, or
+    a mapping from language code to text, resolved here for `lang`
+    (the reference language when `lang` is `None`). `url` is never
+    localized — where a service lives does not depend on who reads
+    the card.
     """
+
+    declared = languages if languages is not None else default_languages()
 
     with path.open("r", encoding="utf-8") as stream:
         try:
@@ -42,11 +54,14 @@ def load_console_links_yaml(path: Path) -> tuple[ConsoleLink, ...]:
         raise ValueError(f"console link definition {path}: links must be a list")
 
     return tuple(
-        _load_link(item, path, index) for index, item in enumerate(links_data)
+        _load_link(item, path, index, lang, declared)
+        for index, item in enumerate(links_data)
     )
 
 
-def _load_link(data: Any, path: Path, index: int) -> ConsoleLink:
+def _load_link(
+    data: Any, path: Path, index: int, lang: str | None, languages: Languages
+) -> ConsoleLink:
     label = f"console link definition {path}: links[{index}]"
 
     if not isinstance(data, dict):
@@ -58,7 +73,9 @@ def _load_link(data: Any, path: Path, index: int) -> ConsoleLink:
         raise ValueError(f"{label} is missing: {', '.join(missing)}")
 
     return ConsoleLink(
-        name=data["name"],
-        description=data["description"],
+        name=pick_localized(data["name"], lang, languages, f"{label}.name"),
+        description=pick_localized(
+            data["description"], lang, languages, f"{label}.description"
+        ),
         url=data["url"],
     )

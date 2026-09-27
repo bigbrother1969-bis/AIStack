@@ -1,0 +1,11 @@
+# AIStack console — ADR-0010. Mirrors catalogs/fr/console.yml.
+
+title: "AIStack — Console"
+lockup_alt: "AIStack — Infrastructure Knowledge Platform"
+cartouche:
+  title: "Homelab health"
+  score: "Health score:"
+  score_unavailable: "Health score: not computed — {note}"
+  technical_debt: "Technical debt:"
+  technical_debt_unavailable: "Technical debt: not computed — {note}"
+  detail_link: "See the detail by domain →"

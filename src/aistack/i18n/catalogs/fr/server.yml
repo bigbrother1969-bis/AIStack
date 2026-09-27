@@ -1,0 +1,8 @@
+# Réponses du serveur de la console quand il n'a pas de page à servir
+# — ADR-0010.
+
+not_found_title: "Page introuvable"
+not_found: "Cette adresse ne correspond à aucune page de la console."
+not_generated_title: "Page pas encore générée"
+not_generated: "La page {page} n'a pas encore été générée sur cet hôte."
+back: "← Retour à la console"

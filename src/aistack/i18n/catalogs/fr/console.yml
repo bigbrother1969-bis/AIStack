@@ -1,0 +1,12 @@
+# Console AIStack — ADR-0010. Le texte français est exactement celui
+# que la console affichait avant la localisation.
+
+title: "AIStack — Console"
+lockup_alt: "AIStack — Infrastructure Knowledge Platform"
+cartouche:
+  title: "État de santé du homelab"
+  score: "Score de santé :"
+  score_unavailable: "Score de santé : non calculé — {note}"
+  technical_debt: "Dette technique :"
+  technical_debt_unavailable: "Dette technique : non calculée — {note}"
+  detail_link: "Voir le détail par domaine →"

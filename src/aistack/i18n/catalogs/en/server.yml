@@ -1,0 +1,8 @@
+# Console server responses when it has no page to serve — ADR-0010.
+# Mirrors catalogs/fr/server.yml.
+
+not_found_title: "Page not found"
+not_found: "This address matches no page of the console."
+not_generated_title: "Page not generated yet"
+not_generated: "The page {page} has not been generated on this host yet."
+back: "← Back to the console"

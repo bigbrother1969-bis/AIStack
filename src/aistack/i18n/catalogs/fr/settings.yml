@@ -1,0 +1,11 @@
+# Page Paramètres de la console — ADR-0010.
+
+title: "Paramètres"
+page_title: "AIStack — Paramètres"
+intro: "Réglages de l'interface d'AIStack."
+language:
+  heading: "Langue de l'interface"
+  save: "Enregistrer"
+  saved: "Langue enregistrée pour ce navigateur."
+  hint: "Ce choix est mémorisé dans ce navigateur. Il s'applique à la console, à Architecture, au Cockpit Santé et aux mini-apps ouvertes depuis la console."
+back: "← Retour à la console"

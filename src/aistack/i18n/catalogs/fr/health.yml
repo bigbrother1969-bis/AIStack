@@ -1,0 +1,18 @@
+# Santé du homelab — messages partagés par la console (cartouche) et
+# le Cockpit Santé. Les identifiants (buckets, noms de domaine) sont
+# traduits via aistack.health.labels, jamais construits à la volée.
+
+bucket:
+  excellent: "excellent"
+  to_watch: "à surveiller"
+  action_required: "action requise"
+domain:
+  storage: "Stockage"
+  services: "Services"
+  backup: "Sauvegarde / PRA"
+  gpu: "GPU"
+  pra_tests: "Tests PRA"
+domain_state:
+  not_instrumented: "{domain} — non instrumenté"
+  clean: "{domain} — rien à signaler"
+  findings: "{domain} — {count} finding(s)"

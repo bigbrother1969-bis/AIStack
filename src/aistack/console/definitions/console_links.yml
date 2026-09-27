@@ -76,31 +76,70 @@
 #     exposed surface while real usage is still being discovered,
 #     widen later only if asked.
 
+#   - **Localized 2026-09-27** (ADR-0010, the owner's own decision to
+#     let each user choose the interface language, French the
+#     reference, English the second). `name` and `description` are
+#     each either one string, the same in every language (a product
+#     name such as "Selection UI" is not translated), or a mapping
+#     from language code to text; `url` never is — where a service
+#     lives does not depend on who reads the card. The French text is
+#     exactly what each card said before; the console adds `?lang=` to
+#     each absolute `url` itself, so none is written here.
+
 links:
   - name: Selection UI
-    description: >-
-      Sélection des candidats — service Docker Compose,
-      LAN uniquement (GIGABYTE:8181)
+    description:
+      fr: >-
+        Sélection des candidats — service Docker Compose,
+        LAN uniquement (GIGABYTE:8181)
+      en: >-
+        Candidate selection — Docker Compose service,
+        LAN only (GIGABYTE:8181)
     url: http://GIGABYTE:8181
-  - name: Priorité CPU
-    description: >-
-      Arbitrage de priorité CPU — service systemd/uvicorn,
-      LAN uniquement (GIGABYTE:8182)
+  - name:
+      fr: Priorité CPU
+      en: CPU priority
+    description:
+      fr: >-
+        Arbitrage de priorité CPU — service systemd/uvicorn,
+        LAN uniquement (GIGABYTE:8182)
+      en: >-
+        CPU priority arbitration — systemd/uvicorn service,
+        LAN only (GIGABYTE:8182)
     url: http://GIGABYTE:8182
   - name: Architecture
-    description: Diagramme de topologie du homelab (PLAN-J2)
+    description:
+      fr: Diagramme de topologie du homelab (PLAN-J2)
+      en: Homelab topology diagram (PLAN-J2)
     url: /architecture.html
-  - name: Cockpit Santé
-    description: Score de santé et findings par domaine (PLAN-J7)
+  - name:
+      fr: Cockpit Santé
+      en: Health cockpit
+    description:
+      fr: Score de santé et findings par domaine (PLAN-J7)
+      en: Health score and findings by domain (PLAN-J7)
     url: /health.html
-  - name: Découverte réseau
-    description: >-
-      Utilisateurs SSH candidats pour le scan réseau — service
-      systemd/uvicorn, LAN uniquement (GIGABYTE:8184)
+  - name:
+      fr: Découverte réseau
+      en: Network discovery
+    description:
+      fr: >-
+        Utilisateurs SSH candidats pour le scan réseau — service
+        systemd/uvicorn, LAN uniquement (GIGABYTE:8184)
+      en: >-
+        Candidate SSH users for the network scan — systemd/uvicorn
+        service, LAN only (GIGABYTE:8184)
     url: http://GIGABYTE:8184
-  - name: Assistant de pannes
-    description: >-
-      Guide pas à pas evaluate → reason/explain/recommend sur une
-      panne réelle — service systemd/uvicorn, LAN uniquement
-      (GIGABYTE:8185)
+  - name:
+      fr: Assistant de pannes
+      en: Troubleshooting assistant
+    description:
+      fr: >-
+        Guide pas à pas evaluate → reason/explain/recommend sur une
+        panne réelle — service systemd/uvicorn, LAN uniquement
+        (GIGABYTE:8185)
+      en: >-
+        Step-by-step guide through evaluate → reason/explain/recommend
+        on a real fault — systemd/uvicorn service, LAN only
+        (GIGABYTE:8185)
     url: http://GIGABYTE:8185

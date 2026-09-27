@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from aistack.timemachine.oxigraph_store import OxigraphGraphStore
+from aistack.timemachine.projection import (
+    DEFAULT_GENERATED_DIR,
+    project_observation_history,
+)
+
+
+def main() -> None:
+    """
+    Rebuild the Time Machine's graph from whatever Observation
+    History currently holds — `ADR-0011` § *Decision* 1 and 10: a
+    full rebuild every time, on demand, never incremental.
+
+    The first real caller of `project_observation_history` —
+    everything before this module was contract and mechanism with
+    nothing to invoke it. `generated_dir` takes the one optional
+    argument every other CLI in this package already accepts this
+    way (`aistack.cli.knowledge_integrity`'s own bundle override);
+    the store always lives at `<generated_dir>/timemachine/graph`,
+    inside the same tree the four source streams already occupy and
+    `.gitignore` already excludes wholesale (`FDN-0003`: a generated
+    artifact is disposable, and the graph is one, exactly like the
+    streams it is built from) — a second, separate directory for it
+    would split one already-unified, already-governed disposable area
+    into two for no real benefit.
+
+    **The leaf directory, created here, not assumed.** `pyoxigraph
+    .Store`'s own documented behaviour creates the directory its
+    `path` names if it is missing — measured, 2026-09-27, to create
+    only that leaf, never its parents (`FileNotFoundError` on a
+    freshly emptied tree otherwise, since `reports/generated/` itself
+    may not exist yet on a host that has never run a provider
+    generator). `mkdir(parents=True, exist_ok=True)` closes that gap
+    before `OxigraphGraphStore` ever opens the store.
+    """
+
+    generated_dir = (
+        Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_GENERATED_DIR
+    )
+    store_path = generated_dir / "timemachine" / "graph"
+    store_path.mkdir(parents=True, exist_ok=True)
+
+    store = OxigraphGraphStore(store_path)
+    summary = project_observation_history(store, generated_dir=generated_dir)
+
+    print("Time Machine Projection")
+    print(f"- Source: {generated_dir}")
+    print(f"- Store: {store_path}")
+    print(f"- Streams seen: {summary.streams_seen}")
+    print(f"- Observations seen: {summary.observations_seen}")
+    print(f"- Facts written: {summary.facts_written}")
+    print(f"- Facts dropped: {summary.facts_dropped}")
+
+
+if __name__ == "__main__":
+    main()

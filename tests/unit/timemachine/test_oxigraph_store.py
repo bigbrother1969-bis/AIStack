@@ -6,6 +6,40 @@ from aistack.timemachine.graph import Literal
 from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 
 
+def test_a_real_path_persists_and_creates_only_its_own_leaf_directory(tmp_path):
+    """
+    `pyoxigraph.Store`'s own documented behaviour creates the
+    directory its `path` names when missing — measured here to cover
+    only that leaf, never its parents: a caller wanting the whole
+    chain created still calls `Path.mkdir(parents=True,
+    exist_ok=True)` itself first, as `aistack.cli.timemachine_rebuild`
+    does.
+    """
+    leaf = tmp_path / "graph"
+    store = OxigraphGraphStore(leaf)
+    store.add("https://example/s", "https://example/p", "https://example/o")
+
+    assert leaf.is_dir()
+
+    # `pyoxigraph.Store` holds an exclusive lock on `path` for as long
+    # as this object is alive (RocksDB's own `LOCK` file) — dropped
+    # before reopening the same path, the same discipline a real
+    # second process would need to observe too.
+    del store
+
+    reopened = OxigraphGraphStore(leaf)
+    assert list(reopened.query("SELECT ?s WHERE { ?s ?p ?o }")) == [
+        {"s": "https://example/s"}
+    ]
+
+
+def test_a_real_path_with_a_missing_parent_raises(tmp_path):
+    missing_parent = tmp_path / "a" / "b" / "graph"
+
+    with pytest.raises(OSError):
+        OxigraphGraphStore(missing_parent)
+
+
 def test_a_fact_added_with_an_iri_object_is_read_back_as_two_plain_iris():
     """
     `GraphStore.add`'s common case — `subject`/`predicate`/`obj` all

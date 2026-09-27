@@ -147,16 +147,24 @@ it is pulled from DockerHub — nobody who runs it separately installs the
 graph engine, because `Dockerfile`'s `pip install .` already carries it,
 the same way it already carries `PyYAML`. Pinned to `>=0.5.11`, the exact
 version § *Context* confirmed on GIGABYTE, not a looser range nothing has
-run. **What this does not yet settle**: the container's volumes — a
-mount for the four (soon five) source streams the projection reads, and
-a writable one for the graph's own on-disk files and the FTS5 index
-(§ 12) so a rebuild persists across container restarts instead of
-starting from nothing. Both need real paths from `GraphStore`'s
-implementation, which does not exist yet (§ *Open Points* already leaves
-its exact shape to the implementing patch) — declaring a volume for a
-path nobody has coded would be exactly the invented infrastructure
-`ARC-P-006` forbids. That wiring is this ADR's next open point, closed
-by the same patch that writes `GraphStore` for real.
+run.
+
+**The container's volumes, resolved 2026-09-27.** `GraphStore` existing
+was not enough on its own: nothing in the image actually called it
+either, and declaring a volume for a path nothing reads or writes would
+still have been the invented infrastructure `ARC-P-006` forbids —
+closed instead by giving the graph its first real caller,
+`aistack.cli.timemachine_rebuild` (`main()`, overriding `Dockerfile`'s
+default `CMD` the same way `knowledge_integrity`'s own bundle argument
+already does), before touching `docker-compose.yml` at all. One mount,
+not two: `docker-compose.yml`'s `aistack-core` service binds
+`./reports/generated:/app/reports/generated`, read-write — the graph
+(`<generated_dir>/timemachine/graph`) lives inside the same tree the
+four source streams already occupy and `FDN-0003`/`.gitignore` already
+treat as one disposable area, so a second, separate mount for "just the
+graph" would split one already-unified directory in two for no real
+benefit. The FTS5 index (§ 12) has no such mount yet — it has no code
+yet either, the Explications foundation's concern, not this patch's.
 
 ### 2. PROV-O plus four AIStack extensions
 
@@ -402,11 +410,15 @@ same PRA gap § 11 names and the same eventual fix.
 - **The GUI Time Machine itself** (roadmap item 6, R1's LAN restriction,
   R12's mobile layout) is this ADR's consumer, not its subject — it
   reads the graph this ADR defines, and is designed separately.
-- **The container's volumes for the graph's data** (§ 1's addendum) —
-  a read path to the source streams and a writable path for the store
-  and its FTS5 index — wait for `GraphStore`'s real implementation,
-  which is what will fix the paths a volume declaration would otherwise
-  guess at.
+- ~~**The container's volumes for the graph's data**~~ — **resolved,
+  2026-09-27** (§ 1's addendum): `aistack.cli.timemachine_rebuild`
+  gives the graph its first real caller, and `docker-compose.yml`'s
+  `aistack-core` service binds one read-write volume,
+  `./reports/generated:/app/reports/generated`, covering both the four
+  source streams and the graph's own on-disk files
+  (`<generated_dir>/timemachine/graph`) in the one already-disposable
+  tree they share. The FTS5 index still has no mount — it still has no
+  code, the Explications foundation's concern.
 - **Secret-shape masking in the projection filter** (§ 6) is deliberately
   not built yet — the owner's decision, 2026-09-27, once § 6's earlier
   attribution to a nonexistent `aistack.observability` was found and

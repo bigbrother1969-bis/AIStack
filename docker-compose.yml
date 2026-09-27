@@ -23,6 +23,15 @@ services:
   #     python -m aistack.cli.knowledge_integrity \
   #     /app/bundles/AIStack-Context-Bundle.zip
   #
+  # The same image also carries the Time Machine's rebuild command
+  # (`ADR-0011`) — overriding the default CMD the same way, against
+  # the `reports/generated` volume below rather than a second mount,
+  # since the graph it writes to `<generated_dir>/timemachine/graph`
+  # lives inside the one tree the four source streams already occupy:
+  #
+  #   docker compose run --rm aistack-core \
+  #     python -m aistack.cli.timemachine_rebuild
+  #
   # ---------------------------------------------------------------
   # Published images, pinned by digest so a record is not a label
   # someone can move. OPS-0002 § *Publishing an image* governs the
@@ -310,4 +319,15 @@ services:
     container_name: aistack-core
     volumes:
       - ./context/bundles:/app/context/bundles:ro
+      # Read-write, not `:ro` — the Time Machine's own graph
+      # (`<generated_dir>/timemachine/graph`, ADR-0011 § *Decision*
+      # 1's addendum) lives inside this same tree, beside the four
+      # source streams it reads. One mount, not two: both are already
+      # one disposable, already-gitignored area on the host
+      # (`FDN-0003`), and splitting it across two volumes for paths
+      # that already coexist would add a second declaration nothing
+      # needs. `knowledge_integrity` (the default CMD) never touches
+      # this path; only `timemachine_rebuild`, run by overriding the
+      # command above, does.
+      - ./reports/generated:/app/reports/generated
     restart: "no"

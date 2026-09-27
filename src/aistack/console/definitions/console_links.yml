@@ -76,6 +76,21 @@
 #     exposed surface while real usage is still being discovered,
 #     widen later only if asked.
 
+#   - Time Machine — added 2026-09-27 (`ADR-0011`, roadmap
+#     `ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.3), a separate
+#     systemd/uvicorn process on GIGABYTE:8186 ("next free port after
+#     the Troubleshooting Assistant's 8185"), `timemachine_ui`.
+#     LAN-only for the same reason as Découverte réseau and Assistant
+#     de pannes, and by the same mechanism (never a Proxy Host in
+#     NPM) — a firm rule here (roadmap R1), not a v1-only reduction:
+#     this screen shows the graph `ADR-0011` projects from every
+#     historicised stream (commands, packages, image versions, AI
+#     reasoning), a reconnaissance map for an attacker, and stays
+#     LAN-only until 1.7's connection layer exists, regardless of how
+#     the other four mini-apps' own LAN choices evolve.
+#     `name` is not a mapping (not translated) — a product name, the
+#     same reasoning as "Selection UI"'s own entry above.
+#
 #   - **Localized 2026-09-27** (ADR-0010, the owner's own decision to
 #     let each user choose the interface language, French the
 #     reference, English the second). `name` and `description` are
@@ -143,3 +158,12 @@ links:
         on a real fault — systemd/uvicorn service, LAN only
         (GIGABYTE:8185)
     url: http://GIGABYTE:8185
+  - name: Time Machine
+    description:
+      fr: >-
+        Historique complet d'AIStack projeté en graphe PROV-O —
+        service systemd/uvicorn, LAN uniquement (GIGABYTE:8186)
+      en: >-
+        AIStack's complete history projected as a PROV-O graph —
+        systemd/uvicorn service, LAN only (GIGABYTE:8186)
+    url: http://GIGABYTE:8186

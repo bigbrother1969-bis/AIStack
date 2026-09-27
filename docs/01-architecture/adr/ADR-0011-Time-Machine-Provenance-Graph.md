@@ -341,6 +341,74 @@ is rebuilt on the same trigger as the graph (§ 10) and is exactly as
 disposable — a `.sqlite` file under `reports/generated/`, covered by the
 same PRA gap § 11 names and the same eventual fix.
 
+### 13. The GUI is a fifth mini-app, read-only, LAN-only by the same convention as the other four
+
+Decided with the owner, 2026-09-27, over a static-HTML page generated
+once by a CLI command (`aistack.cli.console_render`'s own pattern,
+already used for the console, Architecture and Health Cockpit): the
+Time Machine is something a person chooses an instant or a subject in
+and follows provenance edges from, not a fixed snapshot, so it belongs
+with `priority_ui`/`selection_ui`/`network_discovery_ui`/
+`troubleshooting_assistant_ui` — a separate FastAPI+Jinja2 process
+(`timemachine_ui`, port 8186, "next free after the Troubleshooting
+Assistant's 8185"), its own dedicated venv outside the governed one
+(decision #9, 2026-08-29), its own `run_timemachine_ui.sh`/
+`scripts/setup_timemachine_ui_env.sh` pair, linked from
+`console_links.yml`.
+
+**LAN-only is measured, not designed, here** — the other four mini-apps
+already establish it as a pure operational convention, not a code-level
+restriction: bound to `0.0.0.0` (reachable from anywhere on the LAN,
+the owner's own laptop included), and kept off the public internet only
+by never declaring an NPM Proxy Host for its port in Nginx Proxy
+Manager, with `console_links.yml` linking to the direct LAN address,
+never a `...persiaut-family.fr` subdomain. Roadmap R1 makes this a firm
+rule for the Time Machine specifically, not the v1-only reduction the
+other four still carry: it stays LAN-only until 1.7's connection layer
+exists, regardless of how the others' own exposure evolves later.
+
+**Read-only, never a writer.** `OxigraphGraphStore.read_only`
+(`aistack.timemachine.oxigraph_store`, new alongside this decision)
+wraps `pyoxigraph.Store.read_only`, measured 2026-09-27 not to conflict
+with `aistack.cli.timemachine_rebuild`'s own read-write handle on the
+same path — unlike a second `Store(path)`, which holds the same
+exclusive lock a first one does. `timemachine_ui` opens a fresh handle
+per request rather than one held for its process lifetime, so a rebuild
+between two requests is picked up by the next one without a restart.
+Reconstruction stays § *Decision* 10's own full rebuild, on demand, run
+by the owner — never triggered by a screen a browser reaches.
+
+**v1 scope, chosen with the owner over a raw SPARQL query box**: three
+levels — the streams (`prov:Activity`), the instants each one recorded
+(`prov:Entity` via `prov:wasGeneratedBy`, newest first), and every known
+fact about one instant, generic or enriched (§ *Decision* 2's declared
+predicates only — an outgoing fact this screen does not recognise falls
+back to its own raw IRI rather than a guessed label). Implemented as one
+generic node view rather than three separate routes: a `prov:Activity`
+node's own incoming `wasGeneratedBy` edges *are* its instants list; any
+node's outgoing facts are its own facts table; any node's other incoming
+edges (an Agent's attributions, a causal request's own activity) are
+"referenced by" — so following `prov:wasAttributedTo`/`prov:used` from
+an entity to its Agent or its causal Request, and back, needs no special
+case. `aistack.timemachine.iri` was split out of
+`aistack.timemachine.projection` the same day, for the same reason
+`aistack.history.format_instant`/`parse_instant` already is one shared
+module for writer and reader: `timemachine_ui` needs `stream_stem` to
+label a stream without duplicating `projection`'s own URN scheme,
+though every IRI it ever *links* to comes straight out of a SPARQL
+result, never reconstructed from parts.
+
+**Mobile layout (R12)**, "bandes empilées" per the roadmap's own
+wording — no earlier screen in this heritage declares a viewport meta
+tag or a media query (measured 2026-09-27), so this is the first real
+instance rather than an adaptation of one: every list — streams,
+instants, facts, references — is a single column of stacked cards, and
+each card's own label/value pairs stack too below 480px, so nothing
+requires horizontal scrolling on a phone. This satisfies R12 for the v1
+screens actually built here; the four richer validated maquettes (§
+*Consequences*, below) will need their own mobile pass once 1.4/1.5
+supply the data they assume.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -375,6 +443,16 @@ same PRA gap § 11 names and the same eventual fix.
   parallel walk of `reports/generated/`, so the projection and the CLI
   a human already uses to inspect this history can never disagree
   about what a stream's history actually contains.
+- **The GUI is real too, not only designed** (2026-09-27): `timemachine_ui`
+  exists, runs, and was exercised end to end against a real seeded graph
+  (two streams, one enriched by the `version`/`provenance` envelope, one
+  not) — streams list, drill into instants, drill into facts, follow
+  `wasAttributedTo`/`used` to an Agent/Request and back via "referenced
+  by", both languages, the not-yet-built message when
+  `aistack.cli.timemachine_rebuild` has never run. Its v1 scope is
+  narrower than the four maquettes the roadmap already validated for the
+  Time Machine — § *Open Points* states the gap explicitly rather than
+  leaving it to be discovered later.
 
 ## Open Points
 
@@ -407,9 +485,24 @@ same PRA gap § 11 names and the same eventual fix.
   principle, not designed; a later version's concern once the corpus
   this ADR intentionally left small enough to rebuild in full actually
   stops being small.
-- **The GUI Time Machine itself** (roadmap item 6, R1's LAN restriction,
-  R12's mobile layout) is this ADR's consumer, not its subject — it
-  reads the graph this ADR defines, and is designed separately.
+- ~~**The GUI Time Machine itself**~~ — **resolved, 2026-09-27** (§
+  *Decision* 13): a fifth mini-app, `timemachine_ui`, LAN-only the same
+  operational way as the other four (R1), read-only against the graph
+  this ADR defines via `OxigraphGraphStore.read_only`, with a
+  responsive layout (R12). **Its v1 scope is narrower than the four
+  maquettes the roadmap already validated** (a time ribbon, a network
+  tree, a "why" panel) — those assume `aistack:occurredAt`, collection
+  gaps and Explications, none of which this graph holds yet (1.4/1.5's
+  own concern); building toward their visual richness ahead of that
+  data would be exactly the invented infrastructure `ARC-P-006`
+  forbids. What shipped instead reproduces `aistack.cli.history_query`
+  from the graph — streams, the instants each recorded, the facts known
+  about one instant, and the reverse edges (agent, causal request) the
+  enriched three-of-four streams already carry — so the graph is seen
+  to agree with the files it was built from before anything richer is
+  built on top of it. Named here so the gap between what was demoed and
+  what shipped is stated, not silently left for whoever opens the four
+  maquettes next to discover on their own.
 - ~~**The container's volumes for the graph's data**~~ — **resolved,
   2026-09-27** (§ 1's addendum): `aistack.cli.timemachine_rebuild`
   gives the graph its first real caller, and `docker-compose.yml`'s

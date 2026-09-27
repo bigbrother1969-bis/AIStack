@@ -6,6 +6,77 @@ from aistack.timemachine.graph import Literal
 from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 
 
+def test_read_only_reads_back_what_a_prior_read_write_handle_wrote(tmp_path):
+    """
+    `timemachine_ui`'s own shape: build the store once (as
+    `aistack.cli.timemachine_rebuild` does), close that handle, then
+    open a fresh read-only one and query it — the same round trip a
+    request to the mini-app performs.
+    """
+    store_path = tmp_path / "graph"
+    writer = OxigraphGraphStore(store_path)
+    writer.add("https://example/s", "https://example/p", "https://example/o")
+    del writer
+
+    reader = OxigraphGraphStore.read_only(store_path)
+
+    assert list(reader.query("SELECT ?o WHERE { ?s ?p ?o }")) == [
+        {"o": "https://example/o"}
+    ]
+
+
+def test_read_only_on_a_missing_path_raises_file_not_found(tmp_path):
+    """
+    A real signal (`aistack.cli.timemachine_rebuild` has never run
+    against this `generated_dir`), not this adapter's own error — it
+    propagates unwrapped so a caller can tell "no store yet" from any
+    other failure.
+    """
+    with pytest.raises(FileNotFoundError):
+        OxigraphGraphStore.read_only(tmp_path / "never-built")
+
+
+def test_read_only_does_not_conflict_with_a_concurrent_read_write_handle(tmp_path):
+    """
+    `pyoxigraph.Store(path)`'s own exclusive lock (regression-tested
+    below by its absence here) is what makes reopening a plain
+    read-write handle on a live path fail — `read_only` measured
+    2026-09-27 not to hit it, which is what lets `timemachine_ui`
+    open a fresh handle per request without coordinating with
+    whichever process last ran the rebuild command.
+    """
+    store_path = tmp_path / "graph"
+    writer = OxigraphGraphStore(store_path)
+    writer.add("https://example/s", "https://example/p", "https://example/o")
+
+    reader = OxigraphGraphStore.read_only(store_path)
+
+    assert list(reader.query("SELECT ?o WHERE { ?s ?p ?o }")) == [
+        {"o": "https://example/o"}
+    ]
+
+
+def test_read_only_add_raises_runtime_error(tmp_path):
+    """
+    Not disabled by this adapter — `pyoxigraph` itself refuses a
+    transaction on a read-only handle, which is exactly the
+    fail-loud behaviour a caller that mixed up `read_only` and the
+    constructor should see, rather than a silent no-op.
+    """
+    store_path = tmp_path / "graph"
+    OxigraphGraphStore(store_path).add(
+        "https://example/s", "https://example/p", "https://example/o"
+    )
+
+    reader = OxigraphGraphStore.read_only(store_path)
+
+    with pytest.raises(RuntimeError):
+        reader.add("https://example/s2", "https://example/p", "https://example/o")
+
+    with pytest.raises(RuntimeError):
+        reader.clear()
+
+
 def test_a_real_path_persists_and_creates_only_its_own_leaf_directory(tmp_path):
     """
     `pyoxigraph.Store`'s own documented behaviour creates the

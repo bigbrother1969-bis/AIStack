@@ -1,0 +1,31 @@
+# Time Machine mini-app (timemachine_ui) — ADR-0010, ADR-0011.
+
+title: "AIStack — Time Machine"
+heading: "Time Machine"
+warning: "This page runs on the LAN only, never through aistack.persiaut-family.fr. It shows AIStack's complete history — commands, packages, image versions, AI reasoning."
+streams_intro: "One stream per history projected into the graph (ADR-0011)."
+empty_streams: "No stream in the graph."
+not_built:
+  heading: "Graph not found"
+  body: "The Time Machine graph has not been built yet at this location: {path}"
+  rebuild_hint: "Rebuild it: docker compose run --rm aistack-core python -m aistack.cli.timemachine_rebuild"
+back_to_streams: "← All streams"
+node_heading: "Graph node"
+instants_heading: "Observed instants (most recent first)"
+facts_heading: "Known facts about this node"
+referenced_by_heading: "Referenced by"
+empty_instants: "No instant observed for this stream."
+empty_facts: "No known fact about this node."
+empty_referenced_by: "Nothing references this node."
+node_iri_label: "Node identifier"
+predicate:
+  type: "type"
+  generated_at: "recorded at"
+  generated_by: "stream"
+  stable_subject: "stable subject"
+  attributed_to: "attributed to"
+  used: "causal request"
+type_label:
+  entity: "Entity"
+  activity: "Stream"
+  agent: "Agent"

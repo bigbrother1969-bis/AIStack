@@ -7,6 +7,12 @@ from typing import Iterable
 
 from aistack.history import available_instants, available_stems, format_instant, observation_at
 from aistack.timemachine.graph import GraphStore, Literal
+from aistack.timemachine.iri import (
+    agent_iri as _agent_iri,
+    observation_iri as _entity_iri,
+    request_iri as _request_iri,
+    stream_iri as _activity_iri,
+)
 from aistack.timemachine.projection.filter import filter_fact
 from aistack.timemachine.vocabulary import (
     AISTACK_STABLE_SUBJECT,
@@ -17,10 +23,9 @@ from aistack.timemachine.vocabulary import (
     PROV_USED,
     PROV_WAS_ATTRIBUTED_TO,
     PROV_WAS_GENERATED_BY,
+    RDF_TYPE,
+    XSD_DATE_TIME,
 )
-
-RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-XSD_DATE_TIME = "http://www.w3.org/2001/XMLSchema#dateTime"
 
 # STD-0002's own reasoning, extended here: a project-relative
 # default, matching every CLI module that already redeclares
@@ -30,26 +35,13 @@ XSD_DATE_TIME = "http://www.w3.org/2001/XMLSchema#dateTime"
 # declared.
 DEFAULT_GENERATED_DIR = Path("reports/generated")
 
-_ENTITY_URN = "urn:aistack:observation:"
-_ACTIVITY_URN = "urn:aistack:stream:"
-_AGENT_URN = "urn:aistack:agent:"
-_REQUEST_URN = "urn:aistack:request:"
-
-
-def _entity_iri(stem: str, instant_label: str) -> str:
-    return f"{_ENTITY_URN}{stem}:{instant_label}"
-
-
-def _activity_iri(stem: str) -> str:
-    return f"{_ACTIVITY_URN}{stem}"
-
-
-def _agent_iri(origin: str) -> str:
-    return f"{_AGENT_URN}{origin}"
-
-
-def _request_iri(causality: str) -> str:
-    return f"{_REQUEST_URN}{causality}"
+# `RDF_TYPE`/`XSD_DATE_TIME` and the four IRI builders used to live
+# here, inline — moved to `aistack.timemachine.vocabulary` and
+# `aistack.timemachine.iri` 2026-09-27 so `timemachine_ui` (the first
+# reader of this graph other than its own tests) can share the exact
+# same constants and construction rather than re-deriving them. The
+# aliases above keep every call below unchanged; this module remains
+# the one writer.
 
 
 def _parse_envelope(content: str) -> tuple[str, str, str | None] | None:

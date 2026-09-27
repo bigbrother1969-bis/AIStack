@@ -133,6 +133,7 @@ def test_the_real_console_links_definition_loads():
         "Cockpit Santé",
         "Découverte réseau",
         "Assistant de pannes",
+        "Time Machine",
     }
     # LAN-only since 2026-09-18: the owner closed every remaining
     # public exception reachable from the console — these two were

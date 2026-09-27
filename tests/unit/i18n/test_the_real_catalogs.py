@@ -36,6 +36,7 @@ _UI_DIRECTORIES = (
     "priority_ui",
     "network_discovery_ui",
     "troubleshooting_assistant_ui",
+    "timemachine_ui",
 )
 
 # `t("a.b")` / `t('a.b')` — or `t.raw(...)`, the unfilled form a

@@ -1,0 +1,31 @@
+# Mini-app Time Machine (timemachine_ui) — ADR-0010, ADR-0011.
+
+title: "AIStack — Time Machine"
+heading: "Time Machine"
+warning: "Cette page tourne uniquement sur le LAN, jamais via aistack.persiaut-family.fr. Elle affiche l'historique complet d'AIStack — commandes, paquets, versions d'images, raisonnements IA."
+streams_intro: "Un flux par historique projeté dans le graphe (ADR-0011)."
+empty_streams: "Aucun flux dans le graphe."
+not_built:
+  heading: "Graphe introuvable"
+  body: "Le graphe de la Time Machine n'a pas encore été construit à cet emplacement : {path}"
+  rebuild_hint: "Reconstruis-le : docker compose run --rm aistack-core python -m aistack.cli.timemachine_rebuild"
+back_to_streams: "← Tous les flux"
+node_heading: "Nœud du graphe"
+instants_heading: "Instants observés (du plus récent au plus ancien)"
+facts_heading: "Faits connus sur ce nœud"
+referenced_by_heading: "Référencé par"
+empty_instants: "Aucun instant observé pour ce flux."
+empty_facts: "Aucun fait connu sur ce nœud."
+empty_referenced_by: "Rien ne référence ce nœud."
+node_iri_label: "Identifiant du nœud"
+predicate:
+  type: "type"
+  generated_at: "enregistré le"
+  generated_by: "flux"
+  stable_subject: "sujet stable"
+  attributed_to: "attribué à"
+  used: "requête causale"
+type_label:
+  entity: "Entité"
+  activity: "Flux"
+  agent: "Agent"

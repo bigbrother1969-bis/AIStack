@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.115
+  version: 1.116
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -213,7 +213,7 @@ belongs here the day it is written, not the day someone re-reads it.
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
 OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075, OS-077,
-OS-079 and OS-080 are in *Resolved*.
+OS-079, OS-080 and OS-081 are in *Resolved*.
 
 Three of those fourteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
@@ -322,6 +322,25 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-081 — `.gitignore` never excluded two of the four mini-apps' own dedicated environments
+
+**Nature** `non-conforming` · **Opened** 2026-09-27 · **State** resolved 2026-09-27, same session
+**Observed** while adding `timemachine_ui`'s own `.venv-timemachine-ui/`
+entry to `.gitignore`: `.venv-selection-ui/` and `.venv-priority-ui/` are
+both there (decision #9, 2026-08-29), but `.venv-network-discovery-ui/`
+and `.venv-troubleshooting-assistant-ui/` are not, despite both mini-apps
+carrying a `run_*.sh`/`setup_*_env.sh` pair naming those exact paths
+since 2026-09-12 and 2026-09-18 respectively — `git status` on a real
+checkout that had run either setup script would show it untracked. Their
+own `.env.<name>` files were missing the same way.
+**Resolved 2026-09-27.** Both venv patterns and both `.env.<name>`
+patterns added to `.gitignore`, alongside `timemachine_ui`'s own new
+entries, in the same edit.
+**Derivable** yes — a check comparing every `run_*.sh`'s own
+`WEB_VENV`/`.env.*` path against `.gitignore`'s patterns would have
+caught this the day either mini-app was added.
+**Qualification** none required — mechanical, no judgement call.
 
 #### GOV-0002/OS-080 — `ADR-0011` § 6 attributed secret masking to `aistack.observability`, a module that does not exist
 

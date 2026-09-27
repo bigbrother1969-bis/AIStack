@@ -21,6 +21,24 @@ PROV = "http://www.w3.org/ns/prov#"
 AISTACK = "https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack/vocab#"
 
 
+# --- Core RDF/XSD, cited the same way `PROV` is above ----------------
+#
+# Not `ADR-0011`'s own vocabulary — `rdf:type` and `xsd:dateTime` are
+# RDF/XSD itself, needed by any writer or reader that touches this
+# store at all (`aistack.timemachine.projection` writes both; a
+# browsing screen over the graph reads both back). Named once, here,
+# rather than redeclared as a private constant in every module that
+# needs one — `RDF_TYPE`/`XSD_DATE_TIME` moved here from
+# `aistack.timemachine.projection`'s own module scope 2026-09-27, the
+# same day `aistack.timemachine.iri` was split out for the same
+# reason (one shared place, not one per caller).
+RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+XSD = "http://www.w3.org/2001/XMLSchema#"
+
+RDF_TYPE = f"{RDF}type"
+XSD_DATE_TIME = f"{XSD}dateTime"
+
+
 # --- PROV-O classes and predicates § *Decision* 2 names -------------
 
 PROV_ENTITY = f"{PROV}Entity"

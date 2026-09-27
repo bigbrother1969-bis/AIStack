@@ -21,12 +21,29 @@ __pycache__/
 # priority_ui/requirements.txt and scripts/setup_priority_ui_env.sh.
 .venv-priority-ui/
 
+# network_discovery_ui's and troubleshooting_assistant_ui's own
+# environments, same reasoning — added 2026-09-27, found missing
+# here while adding timemachine_ui's own entry below: both mini-apps
+# have carried a `run_*.sh`/`setup_*_env.sh` pair naming these exact
+# paths since 2026-09-12 and 2026-09-18 respectively, and neither was
+# ever added to this file (`GOV-0002/OS-081`).
+.venv-network-discovery-ui/
+.venv-troubleshooting-assistant-ui/
+
+# timemachine_ui's own environment, same reasoning, 2026-09-27 — see
+# timemachine_ui/requirements.txt and
+# scripts/setup_timemachine_ui_env.sh.
+.venv-timemachine-ui/
+
 # Local environment and secrets. Never committed: these carry
 # per-machine values, and one of them carries credentials.
 .env
 .env.selection-ui
 .env.priority-ui
 .env.resource-priority
+.env.network-discovery-ui
+.env.troubleshooting-assistant-ui
+.env.timemachine-ui
 
 # Deployment-specific transfer target. The path a given host
 # ships bundles to is a property of that host, not of AIStack.

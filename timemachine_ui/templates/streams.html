@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('timemachine.title') }}</title>
+  <style>{% include "_style.html" %}</style>
+</head>
+<body>
+  <!--
+    Lien direct LAN (GIGABYTE:8183), jamais l'adresse publique —
+    même raisonnement que network_discovery_ui/templates/index.html :
+    ce mini-app est volontairement LAN-only (ADR-0011 roadmap R1).
+  -->
+  <div class="top">
+    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+
+  <header>
+    <h1>{{ t('timemachine.heading') }}</h1>
+    <p class="meta">{{ t('timemachine.streams_intro') }}</p>
+  </header>
+
+  <div class="warning">{{ t('timemachine.warning') }}</div>
+
+  {% if streams %}
+    <ul class="band-list">
+      {% for stream in streams %}
+        <li class="band">
+          <a class="band-link band-title" href="/node?iri={{ stream.iri | urlencode }}&amp;lang={{ lang }}">
+            {{ stream.label }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">{{ t('timemachine.empty_streams') }}</p>
+  {% endif %}
+</body>
+</html>

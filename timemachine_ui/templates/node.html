@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('timemachine.title') }}</title>
+  <style>{% include "_style.html" %}</style>
+</head>
+<body>
+  <div class="top">
+    <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?iri={{ iri | urlencode }}&amp;lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+
+  <header>
+    <h1>
+      {{ t('timemachine.node_heading') }}
+      {% if node_type_label_key %}&mdash; {{ t(node_type_label_key) }}{% endif %}
+    </h1>
+    <p class="node-iri">{{ t('timemachine.node_iri_label') }}: {{ iri }}</p>
+  </header>
+
+  {% if instants is defined and instants %}
+    <h2>{{ t('timemachine.instants_heading') }}</h2>
+    <ul class="band-list">
+      {% for instant in instants %}
+        <li class="band">
+          <a class="band-link" href="/node?iri={{ instant.iri | urlencode }}&amp;lang={{ lang }}">
+            <div class="band-title">{{ instant.generated_at }}</div>
+            {% if instant.subject %}
+              <div class="band-row"><span class="k">{{ t('timemachine.predicate.stable_subject') }}</span><span class="v">{{ instant.subject }}</span></div>
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif instants is defined %}
+    <h2>{{ t('timemachine.instants_heading') }}</h2>
+    <p class="empty">{{ t('timemachine.empty_instants') }}</p>
+  {% endif %}
+
+  <h2>{{ t('timemachine.facts_heading') }}</h2>
+  {% if facts %}
+    <ul class="band-list">
+      {% for fact in facts %}
+        <li class="band">
+          <div class="band-row">
+            <span class="k">
+              {% if fact.predicate_label_key %}{{ t(fact.predicate_label_key) }}{% else %}{{ fact.predicate }}{% endif %}
+            </span>
+            <span class="v">
+              {% if fact.object_type_label_key %}
+                {{ t(fact.object_type_label_key) }}
+              {% elif fact.object_iri %}
+                <a href="/node?iri={{ fact.object_iri | urlencode }}&amp;lang={{ lang }}">{{ fact.object }}</a>
+              {% else %}
+                {{ fact.object }}
+              {% endif %}
+            </span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">{{ t('timemachine.empty_facts') }}</p>
+  {% endif %}
+
+  <h2>{{ t('timemachine.referenced_by_heading') }}</h2>
+  {% if referenced_by %}
+    <ul class="band-list">
+      {% for ref in referenced_by %}
+        <li class="band">
+          <a class="band-link" href="/node?iri={{ ref.iri | urlencode }}&amp;lang={{ lang }}">
+            <div class="band-row">
+              <span class="k">
+                {% if ref.predicate_label_key %}{{ t(ref.predicate_label_key) }}{% else %}{{ ref.predicate }}{% endif %}
+              </span>
+              <span class="v">{{ ref.iri }}</span>
+            </div>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">{{ t('timemachine.empty_referenced_by') }}</p>
+  {% endif %}
+</body>
+</html>

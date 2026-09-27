@@ -15,6 +15,7 @@ class LanguageOption:
     code: str
     name: str
     current: bool
+    flag: str = ""
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,7 @@ def page_language(
                 code=language.code,
                 name=language.name,
                 current=language.code == choice.lang,
+                flag=language.flag,
             )
             for language in declared.available
         ),

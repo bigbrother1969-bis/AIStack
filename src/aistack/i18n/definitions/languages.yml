@@ -17,13 +17,24 @@
 # of it — "English", not "Anglais" — so a visitor who cannot read the
 # current language can still find their own in the list.
 #
-# Adding a language is adding one entry here and one directory under
-# `catalogs/`, nothing else: no screen names a language by code.
+# `flag` names an SVG file under `flags/`, shown in every language
+# switch in place of the name (owner's request, 2026-09-27: "des
+# drapeaux au lieu du nom des langues"). A flag stands for a country,
+# not a language, so the name stays attached to it as its alternative
+# text and tooltip — what a screen reader says, and what a visitor
+# sees on hover. English uses the United Kingdom's flag. A language
+# declared without `flag` shows its name instead; nothing breaks.
+#
+# Adding a language is adding one entry here, its flag under `flags/`
+# and one directory under `catalogs/`, nothing else: no screen names a
+# language by code.
 
 reference: fr
 
 languages:
   - code: fr
     name: Français
+    flag: fr.svg
   - code: en
     name: English
+    flag: gb.svg

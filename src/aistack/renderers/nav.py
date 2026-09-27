@@ -36,9 +36,11 @@ def render_page_nav(
     link carries `?lang=`, the same way the console's own links to the
     mini-apps do, so the way back never changes the language.
 
-    Each language is shown by its own name for itself ("English", not
-    "Anglais") — a visitor who cannot read the current language can
-    still find theirs. The switch links carry only `?lang=`: relative
+    Each language is shown by its declared flag (owner's request,
+    2026-09-27), with its own name for itself ("English", not
+    "Anglais") as the flag's alternative text and tooltip — a flag
+    names a country, not a language, and a visitor who cannot read the
+    current language can still find theirs. The switch links carry only `?lang=`: relative
     to the page being read, so the same markup works on the console,
     Architecture and the Health cockpit alike, and the server answers
     each with the same page in the other language.
@@ -48,16 +50,17 @@ def render_page_nav(
 
     for language in languages.available:
         name = escape_text(language.name)
+        label = language_label(language.flag, name)
 
         if language.code == current:
             switches.append(
                 f'<span class="lang-current" lang="{language.code}" '
-                f'aria-current="true">{name}</span>'
+                f'title="{name}" aria-current="true">{label}</span>'
             )
         else:
             switches.append(
                 f'<a href="?lang={language.code}" hreflang="{language.code}" '
-                f'lang="{language.code}">{name}</a>'
+                f'lang="{language.code}" title="{name}">{label}</a>'
             )
 
     back = (
@@ -70,9 +73,25 @@ def render_page_nav(
     return (
         f'<nav class="page-nav" aria-label="{escape_text(t("common.language.switch_label"))}">'
         f"{back}"
-        f'<span class="lang-switch">{" · ".join(switches)}</span>'
+        f'<span class="lang-switch">{"".join(switches)}</span>'
         f'<a class="settings-link" href="/settings">{escape_text(t("common.settings.link"))}</a>'
         f"</nav>"
+    )
+
+
+def language_label(flag: str, escaped_name: str) -> str:
+    """
+    What a language switch shows for one language: its flag, with the
+    name as the image's alternative text — or the name itself when the
+    language declares no flag. `escaped_name` is already escaped.
+    """
+
+    if not flag:
+        return escaped_name
+
+    return (
+        f'<img class="flag" src="{flag}" alt="{escaped_name}" '
+        f'width="24" height="16">'
     )
 
 
@@ -84,7 +103,15 @@ PAGE_NAV_STYLE = """\
 .page-nav a { color: #16335c; text-decoration: none; }
 .page-nav a:hover { text-decoration: underline; }
 .console-link { margin-right: auto; }
+.lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
+.lang-switch a, .lang-current { display: inline-flex; line-height: 0; }
 .lang-current { font-weight: 600; color: #1f2933; }
+.flag {
+  width: 24px; height: 16px; border-radius: 2px;
+  box-shadow: 0 0 0 1px #dde4ed; opacity: .55;
+}
+.lang-switch a:hover .flag { opacity: 1; }
+.lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
 .settings-link {
   border: 1px solid #dde4ed; border-radius: 6px; padding: .25rem .6rem;
   background: #ffffff;

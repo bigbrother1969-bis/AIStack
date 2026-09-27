@@ -136,3 +136,51 @@ def test_invalid_yaml_is_reported_as_a_value_error(tmp_path: Path):
 
     with pytest.raises(ValueError, match="not valid YAML"):
         load_catalogs(languages, root)
+
+
+# --------------------------------------------------------------------
+# flags — owner's request, 2026-09-27
+# --------------------------------------------------------------------
+
+
+def with_flag(tmp_path: Path, flag: str) -> Path:
+    return write(
+        tmp_path / "languages.yml",
+        f"""
+        reference: fr
+        languages:
+          - code: fr
+            name: Français
+            flag: {flag}
+        """,
+    )
+
+
+def test_a_declared_flag_is_loaded_as_a_data_uri(tmp_path: Path):
+    write(tmp_path / "flags" / "fr.svg", '<svg xmlns="http://www.w3.org/2000/svg"/>')
+
+    language = load_languages_yaml(with_flag(tmp_path, "fr.svg")).available[0]
+
+    assert language.flag.startswith("data:image/svg+xml;base64,")
+
+
+def test_a_language_without_a_flag_has_none(tmp_path: Path):
+    languages = load_languages_yaml(two_languages(tmp_path))
+
+    assert languages.available[0].flag == ""
+
+
+def test_a_declared_flag_that_does_not_exist_is_refused(tmp_path: Path):
+    with pytest.raises(ValueError, match="flag file not found"):
+        load_languages_yaml(with_flag(tmp_path, "fr.svg"))
+
+
+@pytest.mark.parametrize("flag", ["../secret.svg", "fr.png", "sub/fr.svg"])
+def test_a_flag_is_a_plain_svg_file_name(tmp_path: Path, flag: str):
+    with pytest.raises(ValueError, match=r"flag must be an \.svg file name"):
+        load_languages_yaml(with_flag(tmp_path, flag))
+
+
+def test_every_real_language_declares_a_flag():
+    for language in load_languages_yaml().available:
+        assert language.flag.startswith("data:image/svg+xml;base64,"), language.code

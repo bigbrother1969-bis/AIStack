@@ -46,3 +46,14 @@ def test_the_template_context_carries_the_three_names():
 
     assert set(context) == {"lang", "t", "language_options"}
     assert context["lang"] == "fr"
+
+
+def test_each_option_carries_its_language_flag():
+    flagged = Languages(
+        reference="fr",
+        available=(Language("fr", "Français", flag="data:image/svg+xml;base64,AA=="),),
+    )
+
+    page = page_language(None, None, flagged)
+
+    assert page.options[0].flag == "data:image/svg+xml;base64,AA=="

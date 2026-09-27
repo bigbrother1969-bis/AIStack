@@ -413,8 +413,12 @@ def test_every_page_offers_settings_and_every_declared_language():
     assert 'href="/settings"' in document
     assert ">Settings<" in document
     assert 'href="?lang=fr"' in document
-    assert ">Français<" in document
-    assert 'aria-current="true">English<' in document
+    # Each language by its flag, its own name kept as alt text and
+    # tooltip (owner's request, 2026-09-27).
+    assert 'title="Français"' in document
+    assert 'alt="Français"' in document
+    assert 'title="English" aria-current="true"><img class="flag"' in document
+    assert 'src="data:image/svg+xml;base64,' in document
     # The console is where the way back leads; it offers none itself.
     assert 'class="console-link"' not in document
 

@@ -48,6 +48,8 @@ _EXPECTED_DATA_FILES = (
     # screen — one of each, so a real install dropping either is
     # caught the same way.
     "aistack/i18n/definitions/languages.yml",
+    "aistack/i18n/definitions/flags/fr.svg",
+    "aistack/i18n/definitions/flags/gb.svg",
     "aistack/i18n/catalogs/fr/common.yml",
     "aistack/i18n/catalogs/en/common.yml",
 )

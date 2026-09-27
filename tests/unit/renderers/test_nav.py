@@ -10,7 +10,7 @@ own Back button, and in the language being read.
 
 from __future__ import annotations
 
-from aistack.i18n import default_languages, translator_for
+from aistack.i18n import Language, Languages, default_languages, translator_for
 from aistack.renderers.console.settings import render_settings_html
 from aistack.renderers.nav import render_page_nav
 
@@ -43,3 +43,24 @@ def test_the_settings_page_leads_back_to_the_console():
     document = render_settings_html("en", default_languages(), saved=False)
 
     assert '<a class="console-link" href="/console.html?lang=en">' in document
+
+
+def test_each_language_is_shown_by_its_flag_named_in_its_alt_text():
+    strip = render_page_nav(translator_for("fr"), default_languages(), "fr")
+
+    assert '<img class="flag" src="data:image/svg+xml;base64,' in strip
+    assert 'alt="English"' in strip
+    assert 'title="English"' in strip
+    assert 'title="Français" aria-current="true">' in strip
+
+
+def test_a_language_without_a_flag_is_shown_by_its_name():
+    languages = Languages(
+        reference="fr",
+        available=(Language("fr", "Français"), Language("en", "English")),
+    )
+
+    strip = render_page_nav(translator_for("fr"), languages, "fr")
+
+    assert "<img" not in strip
+    assert ">English</a>" in strip

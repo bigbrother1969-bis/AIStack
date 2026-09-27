@@ -38,7 +38,7 @@ def render_settings_html(
         f'      <label class="choice" lang="{language.code}">'
         f'<input type="radio" name="lang" value="{language.code}"'
         f'{" checked" if language.code == t.lang else ""}> '
-        f"{escape_text(language.name)}</label>"
+        f"{_flag(language.flag)}{escape_text(language.name)}</label>"
         for language in declared.available
     )
 
@@ -84,6 +84,15 @@ def render_settings_html(
 """
 
 
+def _flag(flag: str) -> str:
+    """The language's flag beside its name; decorative here, the name is written out."""
+
+    if not flag:
+        return ""
+
+    return f'<img class="flag" src="{flag}" alt="" width="24" height="16">'
+
+
 # Same palette and type as the console itself (see
 # `aistack.renderers.console.html._STYLE`, 2026-09-26): this page is
 # reached from the console and returns to it, and must read as part
@@ -121,6 +130,7 @@ legend {
   font-size: .95rem;
 }
 .choice input { width: 18px; height: 18px; accent-color: #16335c; }
+.choice .flag { opacity: 1; box-shadow: 0 0 0 1px #dde4ed; }
 button {
   min-height: 44px; padding: 0 1.2rem; border: 0; border-radius: 8px;
   background: #16335c; color: #ffffff; font-size: .95rem; cursor: pointer;

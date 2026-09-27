@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -19,10 +20,19 @@ DEFAULT_CATALOGS = Path(__file__).resolve().parent / "catalogs"
 
 @dataclass(frozen=True)
 class Language:
-    """One interface language, as `languages.yml` declares it."""
+    """
+    One interface language, as `languages.yml` declares it.
+
+    `flag` is the declared flag as a `data:` URI, ready for an `<img>`
+    in any page — the console's pages are single files and the
+    mini-apps serve no static files, so an image travels inside the
+    markup, the same way the console's lockup already does. Empty when
+    the language declares no flag: its switch then shows `name`.
+    """
 
     code: str
     name: str
+    flag: str = ""
 
 
 @dataclass(frozen=True)
@@ -81,7 +91,13 @@ def load_languages_yaml(path: Path = DEFAULT_LANGUAGES) -> Languages:
         if missing:
             raise ValueError(f"{label} is missing: {', '.join(missing)}")
 
-        available.append(Language(code=str(entry["code"]), name=str(entry["name"])))
+        available.append(
+            Language(
+                code=str(entry["code"]),
+                name=str(entry["name"]),
+                flag=_flag_uri(path, entry.get("flag"), label),
+            )
+        )
 
     codes = [language.code for language in available]
 
@@ -156,6 +172,30 @@ def _flatten(
                 f"message catalog {path}: {dotted} must be a string, "
                 f"not {type(value).__name__} (quote it in YAML)"
             )
+
+
+def _flag_uri(definition: Path, flag: Any, label: str) -> str:
+    """
+    The declared flag file, beside the definition under `flags/`, as a
+    `data:image/svg+xml` URI. A declared flag that does not exist is
+    refused here, at load time, rather than shown as a broken image.
+    """
+
+    if flag is None:
+        return ""
+
+    name = str(flag)
+
+    if "/" in name or "\\" in name or not name.endswith(".svg"):
+        raise ValueError(f"{label}: flag must be an .svg file name, not {name!r}")
+
+    file = definition.parent / "flags" / name
+
+    if not file.is_file():
+        raise ValueError(f"{label}: flag file not found: {file}")
+
+    encoded = base64.b64encode(file.read_bytes()).decode("ascii")
+    return f"data:image/svg+xml;base64,{encoded}"
 
 
 def _read_yaml(path: Path, what: str) -> Any:

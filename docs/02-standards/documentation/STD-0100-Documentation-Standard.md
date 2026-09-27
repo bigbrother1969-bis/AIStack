@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 2.11
+  version: 2.12
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-09-25
+  updated: 2026-09-27
 
 relations:
   references:
@@ -164,7 +164,7 @@ always been enforced.
 |---|---|
 | `owner` | The role or person accountable for the artifact. |
 | `status` | `Draft` · `Proposed` · `Accepted` · `Published` |
-| `confidence` | `Verified` · `Reviewed` · `Declared` |
+| `confidence` | `Verified` · `Reviewed` · `Declared` · `Proposed` |
 
 ### The confidence scale
 
@@ -179,6 +179,18 @@ appreciation**:
   its content.
 - **`Declared`** — the artifact states what its author believes to be true. Nothing has
   been checked. This is the honest default for a new artifact.
+- **`Proposed`** — added 2026-09-27 (`ADR-0011` § *Decision* 7, the Time Machine's
+  Explications). The artifact was produced by a process that is not itself a human
+  declaring belief — an AI model's answer, an import of a commit message or a test
+  log's own dated comment. Sitting below `Declared` rather than beside it: `Declared`
+  already presumes an author standing behind the claim, and a `Proposed` artifact
+  presumes nothing at all — nobody has yet read it, let alone declared it. An
+  artifact with a human author is never `Proposed`; its own author declares it via
+  `Declared` or above, the same as always. This is a different axis from `status`'s
+  own `Proposed` value above — one is how sure the content is, the other is where a
+  document sits in a review workflow, and an Explication can be `confidence:
+  Proposed` while ADR-0011 itself, the document describing this, stays whatever its
+  own `status` says.
 
 A confidence level shall never be raised because the content feels solid. It is raised
 by performing the act that the next level names. `High` / `Medium` / `Low` scales are

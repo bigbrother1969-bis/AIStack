@@ -43,6 +43,37 @@ def test_model_null_loads_as_none(tmp_path: Path):
     assert definition.model is None
 
 
+def test_translator_model_absent_loads_as_none(tmp_path: Path):
+    path = write(tmp_path, "host: GIGABYTE\nport: 11434\nmodel: llama3.1:8b\n")
+
+    definition = load_ai_runtime_yaml(path)
+
+    assert definition.translator_model is None
+
+
+def test_a_declared_translator_model_loads(tmp_path: Path):
+    path = write(
+        tmp_path,
+        "host: GIGABYTE\nport: 11434\nmodel: deepseek-r1:1.5b\n"
+        "translator_model: qwen2.5:0.5b\n",
+    )
+
+    definition = load_ai_runtime_yaml(path)
+
+    assert definition.translator_model == "qwen2.5:0.5b"
+
+
+def test_translator_model_null_loads_as_none(tmp_path: Path):
+    path = write(
+        tmp_path,
+        "host: GIGABYTE\nport: 11434\ntranslator_model: null\n",
+    )
+
+    definition = load_ai_runtime_yaml(path)
+
+    assert definition.translator_model is None
+
+
 def test_a_declared_timeout_loads(tmp_path: Path):
     path = write(
         tmp_path,
@@ -92,3 +123,14 @@ def test_the_real_ai_runtime_definition_loads():
     # binds to (`ss -tlnp` showed `127.0.0.1:11434` only).
     assert definition.host == "127.0.0.1"
     assert definition.port == 11434
+
+
+def test_the_real_ai_runtime_definition_declares_a_translator_model():
+    # 2026-09-27: the owner's own fix for the AI Runtime's answers
+    # coming back in English regardless of the display language —
+    # `aistack.ai_runtime.operations`'s own docstring. Re-verify with
+    # `ollama list` on the real host before trusting this is still
+    # pulled there; this test only locks in what the file declares.
+    definition = load_ai_runtime_yaml(DEFAULT_AI_RUNTIME)
+
+    assert definition.translator_model == "qwen2.5:0.5b"

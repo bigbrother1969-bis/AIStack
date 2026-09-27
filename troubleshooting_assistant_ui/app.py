@@ -128,9 +128,15 @@ def _language(request: Request) -> PageLanguage:
     console hands it over in its link), then this host's own cookie,
     then the reference. Tested in `aistack.i18n.web`, not here.
 
-    Only the interface follows it: the AI Runtime's answers stay in
-    French whatever the interface language (ADR-0010 § Open Points),
-    and the English interface says so on the step pages.
+    **The AI Runtime's answers now follow it too (2026-09-27),
+    corrected from the original ADR-0010 § Open Points design**: this
+    same language is passed to `reason`/`explain`/`recommend` as their
+    own `target_language` in `start()` below, with a translation pass
+    enforcing it whenever it is not English (`aistack.ai_runtime
+    .operations`'s own docstring names why "the interface follows it,
+    the model's own answer does not" turned out to be the wrong fix —
+    the model did not reliably answer in French either, whatever the
+    interface said).
     """
 
     return page_language(
@@ -228,6 +234,7 @@ def start(request: Request, subject: str):
         return RedirectResponse(f"/?status={quote(status)}", status_code=303)
 
     ai_runtime_definition = load_ai_runtime_yaml(AI_RUNTIME_PATH)
+    target_language = _language(request).lang
 
     # Built even when `model` is empty — same note
     # `aistack.cli.ai_reason.main()` already carries for the same
@@ -238,10 +245,36 @@ def start(request: Request, subject: str):
         model=ai_runtime_definition.model or "",
     )
 
+    # A second engine, a second (fast) model — never `engine` again —
+    # asked to translate into `target_language` whenever it is not
+    # English (`aistack.ai_runtime.operations`'s own docstring,
+    # 2026-09-27). `None` when the owner has not declared
+    # `translator_model:` yet: every answer then travels exactly as
+    # it did before this feature existed, the same "nothing is asked
+    # for unconfirmed" guard `engine` itself already gets above.
+    translator = (
+        OllamaEngine(
+            host=ai_runtime_definition.host,
+            port=ai_runtime_definition.port,
+            model=ai_runtime_definition.translator_model,
+        )
+        if ai_runtime_definition.translator_model
+        else None
+    )
+
     answers: tuple[AIRuntimeAnswer, AIRuntimeAnswer, AIRuntimeAnswer] = (
-        reason(finding, engine, ai_runtime_definition.model),
-        explain(finding, engine, ai_runtime_definition.model),
-        recommend(finding, engine, ai_runtime_definition.model),
+        reason(
+            finding, engine, ai_runtime_definition.model,
+            target_language=target_language, translator=translator,
+        ),
+        explain(
+            finding, engine, ai_runtime_definition.model,
+            target_language=target_language, translator=translator,
+        ),
+        recommend(
+            finding, engine, ai_runtime_definition.model,
+            target_language=target_language, translator=translator,
+        ),
     )
 
     record_ai_reasoning(finding, answers)

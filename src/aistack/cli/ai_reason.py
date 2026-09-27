@@ -147,11 +147,30 @@ def main() -> None:
         timeout=ai_runtime_definition.timeout,
     )
 
+    # A second engine, a second (fast) model — never `engine` again —
+    # asked to translate into French whenever `engine`'s own answer
+    # is not already there (`aistack.ai_runtime.operations`'s own
+    # docstring, 2026-09-27). `None` when the owner has not declared
+    # `translator_model:` yet, the same "nothing is asked for
+    # unconfirmed" guard `model`'s own absence already gets — every
+    # answer then travels exactly as it did before this feature
+    # existed.
+    translator = (
+        OllamaEngine(
+            host=ai_runtime_definition.host,
+            port=ai_runtime_definition.port,
+            model=ai_runtime_definition.translator_model,
+            timeout=ai_runtime_definition.timeout,
+        )
+        if ai_runtime_definition.translator_model
+        else None
+    )
+
     for finding in findings:
         answers = (
-            reason(finding, engine, ai_runtime_definition.model),
-            explain(finding, engine, ai_runtime_definition.model),
-            recommend(finding, engine, ai_runtime_definition.model),
+            reason(finding, engine, ai_runtime_definition.model, translator=translator),
+            explain(finding, engine, ai_runtime_definition.model, translator=translator),
+            recommend(finding, engine, ai_runtime_definition.model, translator=translator),
         )
 
         # J7, AI Reasoning History — traced unconditionally, even

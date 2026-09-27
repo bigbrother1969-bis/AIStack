@@ -42,8 +42,26 @@
 # with the same known YES/NO reliability gap named rather than hidden
 # at the time. Kept here as history, not repeated as the current
 # value: revert both lines to return to that choice.
+#
+# `translator_model` is new, 2026-09-27: the owner's own real use of
+# the guided troubleshooting UI found `deepseek-r1:1.5b` answering in
+# English regardless of the French-only instruction every prompt
+# still ends with (`aistack.ai_runtime.operations`'s own docstring) —
+# also making the just-published 1.2.0 README/RELEASE-NOTES claim
+# ("the AI Runtime's own answers stay in French") false the day it
+# shipped. The owner's chosen fix, over a stricter prompt or a model
+# change: a second, fast model translates the answer into whichever
+# language the caller actually asked for, whenever that is not
+# English. `qwen2.5:0.5b` is reused for it — the same fast model this
+# file's own history above already names as one of the five `ollama
+# list` showed installed on this host, 2026-09-18 — not a new model
+# pulled for this alone. Nine days separate that confirmation from
+# this line: re-run `ollama list` on this host before trusting it is
+# still there, the same "an owner's declared fact, not a guess"
+# discipline `model`'s own paragraph above already holds.
 
 host: 127.0.0.1
 port: 11434
 model: deepseek-r1:1.5b
 timeout: 900
+translator_model: qwen2.5:0.5b

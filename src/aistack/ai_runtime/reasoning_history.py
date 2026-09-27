@@ -111,6 +111,7 @@ def serialize_ai_reasoning(
                 "response": answer.response,
                 "reachable": answer.reachable,
                 "unreachable_reason": answer.unreachable_reason,
+                "language": answer.language,
             }
             for answer in answers
         ],

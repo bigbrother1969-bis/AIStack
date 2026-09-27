@@ -117,7 +117,9 @@ AIStack transforms observations into sustainable knowledge assets.
   itself, with a Settings page; every screen (console, Architecture,
   Health Cockpit and the four mini-apps) switches between French and
   English, the choice following the visitor from the console into each
-  screen. The AI Runtime's own answers stay in French.
+  screen. The AI Runtime's own answers now follow it too: enforced by a
+  second, fast model's translation pass whenever the display language
+  is not English.
 - **Context Bundle self-onboarding** — a portable, integrity-checked
   archive of the whole governed knowledge base, so a new AI session or
   contributor can get up to speed without reading the repository's

@@ -31,6 +31,11 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
     `timeout:` line at all, and that means "use the ordinary default,"
     the same backward-compatible reading `model`'s own absence already
     gets, not an error.
+
+    **`translator_model` is optional and defaults to `None`, the same
+    reading as `model`'s own absence** — a file written before
+    2026-09-27 has no `translator_model:` line at all, and that means
+    "no translation pass configured," not an error.
     """
 
     with path.open("r", encoding="utf-8") as stream:
@@ -51,12 +56,14 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
 
     model = data.get("model")
     timeout = data.get("timeout")
+    translator_model = data.get("translator_model")
 
     if timeout is None:
         return AIRuntimeDefinition(
             host=str(data["host"]),
             port=int(data["port"]),
             model=str(model) if model else None,
+            translator_model=str(translator_model) if translator_model else None,
         )
 
     return AIRuntimeDefinition(
@@ -64,4 +71,5 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
         port=int(data["port"]),
         model=str(model) if model else None,
         timeout=float(timeout),
+        translator_model=str(translator_model) if translator_model else None,
     )

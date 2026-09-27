@@ -134,14 +134,35 @@ stream, and every other language adds `<page>.<code>.html` beside it.
   otherwise.
 - The console links to each mini-app with `?lang=` appended, and each
   mini-app remembers the language for its own host from then on.
-- The AI Runtime's prompts still require an answer in French. What an AI
-  answer is written in is a separate decision, left open here (§ Open
-  Points), and the English interface says so where it shows one.
+- **The AI Runtime's answers now follow the display language too**
+  (corrected 2026-09-27, still `Proposed`: this record did not need to
+  wait for its own acceptance to be revised). The original design left
+  this open on the assumption that the interface language was the only
+  thing that could drift; the owner's own real use of the guided
+  troubleshooting UI found the model itself does not reliably follow a
+  French-only instruction either — the answer came back in English
+  regardless of what the prompt asked for, whatever the interface said.
+  `reason`/`explain`/`recommend` (`aistack.ai_runtime.operations`) still
+  ask the model for `target_language` in the prompt, but a second, fast
+  model now translates the answer into it whenever it is not English —
+  English needs no enforcement, since the model's own unprompted
+  behaviour already tends there. `target_language` is whatever language
+  the caller is answering for: the CLI's own unchanged French default,
+  or the guided UI's own display language.
 
 ## Open Points
 
-- **The language of AI answers.** Whether `reason`/`explain`/`recommend`
-  answer in the user's language depends on the quality of the configured
-  model in each language, which has not been measured.
+- **The quality of AI answers, in each language.** Enforcing the
+  *language* an answer comes back in (above) says nothing about how
+  good that answer is once translated — that is `R8`
+  (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`), a prerequisite of `1.4`
+  and still unmeasured, and `QUAL-0001`'s own human evaluation is still
+  open.
+- **No translator configured is a silent pass-through.** Without
+  `translator_model:` declared in `ai_runtime.yml`, every answer travels
+  exactly as before this record's 2026-09-27 revision — a real,
+  reachable answer, just not provably in `target_language`
+  (`aistack.contracts.ai_runtime_answer.AIRuntimeAnswer.language`'s own
+  docstring names the same gap).
 - **Per-user preference.** Moves from the browser to the user's profile
   once users and profiles exist; this record is revised then.

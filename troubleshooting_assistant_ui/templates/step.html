@@ -96,8 +96,7 @@
 
     {% if answer.reachable %}
       <p class="model">{{ t('troubleshooting.step.model', model=answer.model) }}</p>
-      {% if lang != 'fr' %}<p class="model">{{ t('common.ai.answers_in_french') }}</p>{% endif %}
-      <p class="response" lang="fr">{{ answer.response }}</p>
+      <p class="response" lang="{{ answer.language }}">{{ answer.response }}</p>
     {% else %}
       <p class="unreachable">{{ t('troubleshooting.step.unreachable', reason=answer.unreachable_reason) }}</p>
     {% endif %}

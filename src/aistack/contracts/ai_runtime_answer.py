@@ -31,6 +31,18 @@ class AIRuntimeAnswer:
     — an engine that could not be reached is a real, reportable
     outcome (`FDN-0003` Article 12), not an exception a caller has to
     catch.
+
+    **`language` names what `response` was asked to be in, not a
+    verified fact about the text itself** — `aistack.ai_runtime
+    .operations`'s own `target_language`, 2026-09-27. When that
+    module's translation pass ran and produced text, `response` is
+    genuinely in this language; when no translator was configured, or
+    the translation call itself failed, `response` is left exactly as
+    the reasoning model gave it and `language` still names what was
+    requested, not what `response` provably is — the same honest gap
+    `unreachable_reason` already names for the engine itself, one
+    layer further out. Defaults to `"fr"`, the original, only
+    language this ever asked for before 2026-09-27.
     """
 
     operation: str
@@ -40,6 +52,7 @@ class AIRuntimeAnswer:
     response: str
     reachable: bool
     unreachable_reason: str = ""
+    language: str = "fr"
 
     def __post_init__(self) -> None:
         if not self.operation.strip():

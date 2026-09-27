@@ -56,9 +56,27 @@ class AIRuntimeDefinition:
     implementation `aistack.ai_runtime.engine.AIEngine` has today, and
     widening this shape happens when a second real engine exists to
     justify it, not before.
+
+    **`translator_model` starts `None` for the same reason `model`
+    does — an undetermined fact stays absent, never a guessed name**
+    (added 2026-09-27, `aistack.ai_runtime.operations`'s own
+    docstring: the owner's own real use of the guided UI found
+    `deepseek-r1:1.5b` does not reliably answer in the language its
+    prompt asks for, and chose a second, fast model's own translation
+    pass over a stricter prompt or a model change). `qwen2.5:0.5b` is
+    this file's own real candidate — one of the five models this same
+    host's `ollama list` already showed installed, 2026-09-18 — but
+    that was nine days before this field existed, and reused here as
+    the owner's own recorded fact, not re-confirmed for this date;
+    still worth an `ollama list` before relying on it. Left `None`,
+    `aistack.ai_runtime.operations._ask` skips the translation pass
+    entirely and every answer travels exactly as before this field
+    existed — the same "no engine is asked for anything unconfirmed"
+    guard `model`'s own absence already gets.
     """
 
     host: str
     port: int
     model: str | None = None
     timeout: float = DEFAULT_TIMEOUT_SECONDS
+    translator_model: str | None = None

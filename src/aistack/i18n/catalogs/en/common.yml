@@ -7,5 +7,3 @@ settings:
   link: "Settings"
 console:
   back: "← Back to the console"
-ai:
-  answers_in_french: "AI answers are currently written in French: the model's quality in English has not been measured yet."

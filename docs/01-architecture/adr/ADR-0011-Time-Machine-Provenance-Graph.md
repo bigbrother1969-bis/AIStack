@@ -139,6 +139,25 @@ nobody has chosen (`ARC-P-006`), it is the same "neutral interface in
 front of one real implementation" `ADR-0005`'s Context Bundle Engine
 already established for a comparable reason.
 
+**`pyoxigraph` is a core dependency of the `aistack` package itself**
+(`pyproject.toml`, added same day as this ADR), not an extra a deployer
+opts into. The owner's explicit requirement, 2026-09-27: the published
+`bigbrother1969/aistack-core` image must be self-sufficient the moment
+it is pulled from DockerHub — nobody who runs it separately installs the
+graph engine, because `Dockerfile`'s `pip install .` already carries it,
+the same way it already carries `PyYAML`. Pinned to `>=0.5.11`, the exact
+version § *Context* confirmed on GIGABYTE, not a looser range nothing has
+run. **What this does not yet settle**: the container's volumes — a
+mount for the four (soon five) source streams the projection reads, and
+a writable one for the graph's own on-disk files and the FTS5 index
+(§ 12) so a rebuild persists across container restarts instead of
+starting from nothing. Both need real paths from `GraphStore`'s
+implementation, which does not exist yet (§ *Open Points* already leaves
+its exact shape to the implementing patch) — declaring a volume for a
+path nobody has coded would be exactly the invented infrastructure
+`ARC-P-006` forbids. That wiring is this ADR's next open point, closed
+by the same patch that writes `GraphStore` for real.
+
 ### 2. PROV-O plus four AIStack extensions
 
 Every fact the graph carries is a `prov:Entity`, `prov:Activity` or
@@ -306,6 +325,13 @@ same PRA gap § 11 names and the same eventual fix.
 
 ## Consequences
 
+- **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
+  `aistack` package** (added 2026-09-27, still `Proposed`: like
+  ADR-0010's own AI-language revision, this record did not need to wait
+  for its own acceptance to be revised). Every environment that installs
+  `aistack` — the venv on the laptop and on GIGABYTE, and every
+  `bigbrother1969/aistack-core` image built from `Dockerfile` from now
+  on — carries it, whether or not any Time Machine code has landed yet.
 - Nothing already committed to any of the four streams needs migrating;
   every fact this ADR describes is derived from what they already
   contain, at read time, by the projection (§ 6) — no schema owns
@@ -343,3 +369,8 @@ same PRA gap § 11 names and the same eventual fix.
 - **The GUI Time Machine itself** (roadmap item 6, R1's LAN restriction,
   R12's mobile layout) is this ADR's consumer, not its subject — it
   reads the graph this ADR defines, and is designed separately.
+- **The container's volumes for the graph's data** (§ 1's addendum) —
+  a read path to the source streams and a writable path for the store
+  and its FTS5 index — wait for `GraphStore`'s real implementation,
+  which is what will fix the paths a volume declaration would otherwise
+  guess at.

@@ -31,6 +31,17 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "PyYAML>=6.0",
+    # The Time Machine's graph engine (ADR-0011). Declared here, not
+    # in an optional extra, so `pip install .` — what `Dockerfile`
+    # runs — always carries it: the owner's requirement, 2026-09-27,
+    # that the published container be self-sufficient the moment it
+    # is pulled from DockerHub, with no separate install step for
+    # anyone who runs it. Pinned to the exact version confirmed
+    # 2026-09-27 on GIGABYTE's own Phenom X4 (no AVX2) — the fact
+    # ADR-0011 § Context was written to establish before this
+    # dependency existed anywhere, not assumed from the library's own
+    # claims.
+    "pyoxigraph>=0.5.11",
 ]
 
 authors = [

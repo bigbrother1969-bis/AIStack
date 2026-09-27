@@ -126,6 +126,20 @@ def break_mirror(clone: Path, remote: str, tmp_path: Path) -> None:
     )
 
 
+def tags_of(bare: Path) -> set[str]:
+    listed = subprocess.run(
+        ["git", "ls-remote", "--tags", str(bare)],
+        capture_output=True,
+        text=True,
+    )
+
+    return {
+        line.split("\t")[1]
+        for line in listed.stdout.strip().splitlines()
+        if line
+    }
+
+
 # --------------------------------------------------------------------
 # The control case
 # --------------------------------------------------------------------
@@ -302,6 +316,46 @@ def test_a_pull_that_rewrites_the_script_does_not_change_this_run(
     pulled = (chain["clone"] / "scripts" / "sync_mirrors.sh").read_text()
 
     assert "THE-NEW-VERSION-SPOKE" in pulled
+
+
+# --------------------------------------------------------------------
+# GOV-0002/OS-078 — a tag on an already-known commit is never fetched
+# --------------------------------------------------------------------
+
+
+def test_a_tag_added_to_an_already_known_commit_reaches_both_mirrors(
+    chain,
+):
+    """
+    The occurrence, 2026-09-27: `v1.2.1` was tagged on the laptop,
+    on a commit GIGABYTE already had from an earlier `pull` — the
+    normal timing, since OPS-0002 has the owner tag the release
+    commit once every host already carries it. A plain `git pull`
+    follows a tag automatically only when the commit it names is
+    part of what that pull is receiving; one that points at a
+    commit already on disk is never fetched by it, so the tag sat
+    on the SPOT alone through two runs of this script.
+
+    Here the tag is pushed to the SPOT after the clone already has
+    its commit — reproducing the shape of the occurrence, not just
+    asserting the fix in the abstract.
+    """
+
+    work = chain["work"]
+    clone = chain["clone"]
+
+    head = git("rev-parse", "HEAD", cwd=work).stdout.strip()
+
+    assert git("rev-parse", "HEAD", cwd=clone).stdout.strip() == head
+
+    git("tag", "v1.0.0", head, cwd=work)
+    git("push", "origin", "v1.0.0", cwd=work)
+
+    result = run(clone)
+
+    assert result.returncode == 0, result.stderr
+    assert "refs/tags/v1.0.0" in tags_of(chain["github"])
+    assert "refs/tags/v1.0.0" in tags_of(chain["codeberg"])
 
 
 def test_the_body_runs_only_from_the_final_invocation():

@@ -58,6 +58,18 @@ main() {
 
     echo "===== $(date '+%F %T') ====="
 
+    # A plain `git pull` only follows a tag automatically when the
+    # commit it names is part of what that pull is receiving. A
+    # version tag is created after the fact, on a commit every host
+    # already carries — OPS-0002 § *Tagging the version* has the
+    # owner tag the release commit once it has already reached
+    # every host, which is exactly the case the automatic-follow
+    # rule does not cover. `v1.2.1` sat on the SPOT alone through
+    # two runs of this script on 2026-09-27 for exactly this reason.
+    # Fetching tags explicitly, every run, closes it. GOV-0002/OS-078.
+    echo "Fetching tags from Gitea (SPOT)..."
+    git fetch origin --tags
+
     local BEFORE_PULL AFTER_PULL
     BEFORE_PULL="$(git rev-parse "$REFERENCE_BRANCH")"
 

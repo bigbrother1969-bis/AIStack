@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.112
+  version: 1.113
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-26
+  updated: 2026-09-27
 
 relations:
   references:
@@ -228,8 +228,8 @@ were opened and resolved together later that evening.*
 
 # Defects
 
-None open. OS-009, OS-010, OS-044, OS-052, OS-053, OS-056, OS-057, OS-058
-and OS-059 are in *Resolved*.
+None open. OS-009, OS-010, OS-044, OS-052, OS-053, OS-056, OS-057, OS-058,
+OS-059 and OS-078 are in *Resolved*.
 
 *An empty section is kept rather than removed: a register with no defects
 section could not be told from one that never looked for any. That argument was
@@ -322,6 +322,31 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-078 — `sync_mirrors.sh` never fetches a tag pointing at a commit it already has
+
+**Nature** `defect` · **Opened** 2026-09-27 · **State** resolved 2026-09-27 by fetching tags explicitly before the pull
+**Observed** `v1.2.1` was tagged on the laptop on `1843a62`, a commit
+GIGABYTE already carried from an earlier pull. `sync_mirrors.sh` ran twice
+on GIGABYTE afterwards and each `git push --tags` it issued reported
+nothing new; `git ls-remote --tags` against GitHub confirmed the tag was
+simply absent there. A plain `git pull` follows a tag automatically only
+when the commit it names is part of what that pull is receiving — a tag
+created after its commit has already reached every host, which is what
+OPS-0002 § *Tagging the version* now documents as the normal timing, never
+triggers that rule. The tag stayed on the SPOT alone through both runs.
+**Resolved 2026-09-27.** `main` now runs `git fetch origin --tags`
+unconditionally before the pull, every time — every tag the SPOT carries
+reaches this clone whether or not its commit is new here, so the
+`git push --tags` each mirror already receives has what the SPOT has to
+offer.
+
+`tests/integration/scripts/test_sync_mirrors.py::test_a_tag_added_to_an_already_known_commit_reaches_both_mirrors`
+tags a commit the clone already holds, reproducing the shape of the
+occurrence rather than only its symptom, and fails against the version
+this replaces.
+**Derivable** no
+**Qualification** none required.
 
 #### GOV-0002/OS-077 — `OPS-0001` stated criterion 4.5 stays `not verified`, after `STD-0300` recorded it satisfied
 

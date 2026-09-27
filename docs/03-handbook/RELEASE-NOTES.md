@@ -86,9 +86,8 @@ English.**
   it is proposed, and the owner chose not to hold the release for it;
   its acceptance, on 2026-09-28, changes no behaviour.
 
-`bigbrother1969/aistack-core:1.2.0`, built from `<commit to be filled in
-at publication — the owner's own build, per OPS-0002>`, digest `<filled
-in at publication>`.
+`bigbrother1969/aistack-core:1.2.0`, built from `eb4905c`, digest
+`sha256:098f6dd0957e24a2a966e03b06ed0d2b5b793de3f6903d791682e4a7e224972c`.
 2183 tests, 74 knowledge artifacts, `clean: True`.
 
 ## 1.1.1 — 2026-09-26

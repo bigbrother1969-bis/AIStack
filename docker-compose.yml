@@ -29,6 +29,23 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
+  # **1.2.0 — published 2026-09-27, current.**
+  #
+  #   bigbrother1969/aistack-core:1.2.0
+  #   @sha256:098f6dd0957e24a2a966e03b06ed0d2b5b793de3f6903d791682e4a7e224972c
+  #
+  # Built from eb4905c on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 2183 tests with `clean: True`.
+  # 74 artifacts, 17 checks. Before the build, 1.1.1 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.2.0 entry gives the
+  # full account; in short, the first version of the roadmap toward
+  # 2.0 (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`) — the console is
+  # served by AIStack itself, with a Settings page and a language
+  # switch, and every screen (console, Architecture, Health Cockpit,
+  # the four mini-apps) is available in French and in English.
+  #
   # **1.1.1 — published 2026-09-26, current.**
   #
   #   bigbrother1969/aistack-core:1.1.1

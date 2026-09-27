@@ -222,15 +222,25 @@ under deadline.
 ### 6. The projection filters before anything is indexed
 
 A pass — `aistack.timemachine.projection.filter` — runs on every fact
-before it reaches the store: secrets (the shapes `aistack.observability`
-already knows to redact, extended here to AI prompts and commit
-messages) are masked, and any fact whose subject is user data rather
+before it reaches the store: any fact whose subject is user data rather
 than configuration or binaries (a Nextcloud or Immich file path, per R2's
 own example) is dropped outright rather than masked — masking still
 proves such a path exists and roughly where; dropping does not. This runs
 inside the projection step itself, not as a property of the store or a
 query-time restriction, so no path from a raw history file to the graph
 skips it.
+
+An earlier draft of this section attributed secret masking (API keys,
+tokens, connection strings in AI prompts or commit messages) to
+`aistack.observability`, a module that does not exist anywhere in this
+codebase — `find`/`grep` across `src/` confirm it, and confirm no other
+utility does this today either (`GOV-0002/OS-080`). Rather than invent a
+detection scheme for a case the corpus has not yet shown, the owner's
+decision, 2026-09-27: the filter ships with the user-data exclusion above
+only. Secret-shape masking is deferred until a real instance turns up in
+the 669 commits, the AI Runtime's `explain` corpus, or the imported
+`claude/` notes — grounding the detector in an observed shape rather than
+a guessed one (`ARC-P-006`).
 
 ### 7. Explications are `KnowledgeArtifact`, not a new contract
 
@@ -374,3 +384,10 @@ same PRA gap § 11 names and the same eventual fix.
   and its FTS5 index — wait for `GraphStore`'s real implementation,
   which is what will fix the paths a volume declaration would otherwise
   guess at.
+- **Secret-shape masking in the projection filter** (§ 6) is deliberately
+  not built yet — the owner's decision, 2026-09-27, once § 6's earlier
+  attribution to a nonexistent `aistack.observability` was found and
+  corrected (`GOV-0002/OS-080`): ship the user-data exclusion only, and
+  design a real detector once an actual instance of a secret shape turns
+  up in the imported corpus, rather than guess at the vocabulary of
+  secrets no one has observed here yet.

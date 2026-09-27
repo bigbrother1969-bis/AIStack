@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.114
+  version: 1.115
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -212,10 +212,10 @@ belongs here the day it is written, not the day someone re-reads it.
 # Non-conforming instances
 
 None open. OS-006, OS-007, OS-021, OS-023, OS-024, OS-028, OS-036, OS-060,
-OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075, OS-077 and
-OS-079 are in *Resolved*.
+OS-063, OS-064, OS-065, OS-067, OS-071, OS-073, OS-074, OS-075, OS-077,
+OS-079 and OS-080 are in *Resolved*.
 
-Three of those thirteen closed by **retiring or narrowing the rule** rather
+Three of those fourteen closed by **retiring or narrowing the rule** rather
 than by conforming to it. A heritage that only ever fixed instances would end
 with rules nothing could satisfy.
 
@@ -322,6 +322,28 @@ forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
 An entry moves here with the date and what discharged it, and is never
 deleted. A register that erased what it had closed could not show that a
 rule ever bound anything.
+
+#### GOV-0002/OS-080 — `ADR-0011` § 6 attributed secret masking to `aistack.observability`, a module that does not exist
+
+**Nature** `non-conforming` · **Opened** 2026-09-27 · **State** resolved 2026-09-27, same session
+**Observed** § 6 of `ADR-0011` (patch 0047, already applied on both hosts)
+read: "secrets (the shapes `aistack.observability` already knows to
+redact...) are masked." Checked while starting the implementing patch for
+`GraphStore`: `find src/aistack/observability` returns nothing, and a
+broader `grep -rln "redact\|secret" --include="*.py" src` finds only four
+incidental prose mentions in docstrings and comments — no redaction
+utility exists anywhere in this codebase to reuse. The ADR described
+reusing something that was never built.
+**Resolved 2026-09-27.** § 6 corrected to state the module does not
+exist rather than name it as a source; the owner then decided the
+filter's real scope, same session (`AskUserQuestion`): ship the § 6
+user-data exclusion only, and design secret-shape masking once an actual
+instance is observed in the imported corpus rather than guessed at
+(`ARC-P-006`) — recorded as a new Open Points bullet in the same ADR.
+**Derivable** no — no check compares an ADR's cited module names against
+the package tree; the same standing OS-075 and OS-077 already leave open.
+**Qualification** none required — the sentence and its consequence are
+corrected alongside this entry.
 
 #### GOV-0002/OS-079 — The roadmap states the Time Machine's four histories are "in git"; they are entirely gitignored
 

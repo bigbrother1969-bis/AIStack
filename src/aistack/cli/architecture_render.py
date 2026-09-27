@@ -19,6 +19,8 @@ from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.generators.architecture import ArchitectureHtmlArtifactGenerator
 from aistack.generators.beszel import BeszelObservationArtifactGenerator
 from aistack.generators.http_probe import HttpProbeObservationArtifactGenerator
+from aistack.i18n import default_languages
+from aistack.i18n.pages import page_file
 from aistack.kernel.bootstrap import create_kernel
 from aistack.providers.beszel import BeszelProvider
 from aistack.providers.http_probe import HttpProbeProvider
@@ -153,16 +155,34 @@ def main(environ: Mapping[str, str] | None = None) -> None:
             http_probe_observation["http_probe"]["targets"]
         )
 
-    output_path = ArchitectureHtmlArtifactGenerator().generate(
-        views=views,
-        output_path=Path("reports/generated/architecture.html"),
-        topology=topology,
-        beszel_readings=beszel_readings,
-        dependency_graph=dependency_graph,
-        cmdb_readings=cmdb_readings,
-    )
+    # ADR-0010 § 5 (2026-09-27): one page per declared language, from
+    # the same views and readings — observed once, written once per
+    # language. The reference keeps `architecture.html` and its
+    # history stream.
+    languages = default_languages()
+    generated_dir = Path("reports/generated")
+    written: list[str] = []
 
-    print(f"Architecture diagram written to {output_path}")
+    for language in languages.available:
+        path = ArchitectureHtmlArtifactGenerator().generate(
+            views=views,
+            output_path=page_file(
+                generated_dir, "architecture.html", language.code, languages.reference
+            ),
+            topology=topology,
+            beszel_readings=beszel_readings,
+            dependency_graph=dependency_graph,
+            cmdb_readings=cmdb_readings,
+            lang=language.code,
+        )
+        written.append(path.name)
+
+    output_path = generated_dir / "architecture.html"
+
+    print(
+        f"Architecture diagram written to {output_path} "
+        f"({', '.join(written)})"
+    )
 
 
 if __name__ == "__main__":

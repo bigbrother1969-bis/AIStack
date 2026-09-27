@@ -9,6 +9,9 @@ from aistack.contracts.health_score import (
 from aistack.contracts.runtime_finding import CitedReading, MatchedLine, RuntimeFinding
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
+from aistack.health.labels import bucket_label, domain_label
+from aistack.i18n import Languages, Translator, default_languages, translator_for
+from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import escape_text
 
 _BUCKET_BADGE_CLASS = {
@@ -24,6 +27,8 @@ def render_html(
     score_note: str = "",
     technical_debt_score: TechnicalDebtScore | None = None,
     technical_debt_note: str = "",
+    lang: str | None = None,
+    languages: Languages | None = None,
 ) -> str:
     """
     Wrap a `HealthCockpit` snapshot into one self-contained HTML
@@ -71,52 +76,63 @@ def render_html(
     this function.
     """
 
+    t = translator_for(lang)
+    declared = languages if languages is not None else default_languages()
+
     domain_count = len(cockpit.domains)
     instrumented_count = sum(1 for domain in cockpit.domains if domain.instrumented)
 
-    sections = "\n".join(_render_domain(domain) for domain in cockpit.domains)
+    sections = "\n".join(_render_domain(domain, t) for domain in cockpit.domains)
 
     return f"""<!doctype html>
-<html lang="fr">
+<html lang="{t.lang}">
 <head>
 <meta charset="utf-8">
-<title>AIStack — Cockpit Santé</title>
+<title>{escape_text(t("health.page.title"))}</title>
 <style>
 {_STYLE}
+{PAGE_NAV_STYLE}
 </style>
 </head>
 <body>
+{render_page_nav(t, declared, t.lang)}
 <header>
-  <h1>Cockpit santé — AIStack</h1>
+  <h1>{escape_text(t("health.page.heading"))}</h1>
   <p class="meta">
-    {instrumented_count} / {domain_count} domaine(s) instrumenté(s)
+    {escape_text(t("health.page.instrumented", instrumented=instrumented_count, total=domain_count))}
   </p>
-  {_render_score(score, score_note)}
+  {_render_score(score, score_note, t)}
 </header>
 
-{_render_technical_debt(technical_debt_score, technical_debt_note)}
+{_render_technical_debt(technical_debt_score, technical_debt_note, t)}
 {sections}
 </body>
 </html>
 """
 
 
-def _render_score(score: HealthScore | None, score_note: str) -> str:
+def _render_score(score: HealthScore | None, score_note: str, t: Translator) -> str:
     if score is not None:
         badge_class = _BUCKET_BADGE_CLASS[score.bucket]
+        measured = t(
+            "health.page.score_measured",
+            measured=score.measured_domains,
+            total=score.total_domains,
+        )
 
         return (
-            f'<p class="score">Score de santé : '
+            f'<p class="score">{escape_text(t("health.page.score"))} '
             f"<strong>{score.value}/100</strong> "
-            f'<span class="badge {badge_class}">{escape_text(score.bucket)}</span> '
-            f"— {score.measured_domains}/{score.total_domains} domaine(s) mesuré(s)"
+            f'<span class="badge {badge_class}">'
+            f"{escape_text(bucket_label(t, score.bucket))}</span> "
+            f"— {escape_text(measured)}"
             f"</p>"
         )
 
     if score_note:
         return (
             f'<p class="score score-unavailable">'
-            f"Score de santé : non calculé — {escape_text(score_note)}"
+            f'{escape_text(t("health.page.score_unavailable", note=score_note))}'
             f"</p>"
         )
 
@@ -124,51 +140,65 @@ def _render_score(score: HealthScore | None, score_note: str) -> str:
 
 
 def _render_technical_debt(
-    score: TechnicalDebtScore | None, note: str
+    score: TechnicalDebtScore | None, note: str, t: Translator
 ) -> str:
+    heading = escape_text(t("health.page.technical_debt"))
+
     if score is not None:
         badge_class = _BUCKET_BADGE_CLASS[score.bucket]
+        findings = t("health.page.technical_debt_findings", count=len(score.findings))
 
         return f"""<section class="technical-debt">
-  <h2>Dette technique <span class="badge {badge_class}">{escape_text(score.bucket)}</span></h2>
+  <h2>{heading} <span class="badge {badge_class}">{escape_text(bucket_label(t, score.bucket))}</span></h2>
   <p class="score">
-    <strong>{score.value}/100</strong> — {len(score.findings)} finding(s)
-    qualifié(s) {escape_text("OPS-0004/technical-debt")}
+    <strong>{score.value}/100</strong> — {escape_text(findings)}
+    {escape_text("OPS-0004/technical-debt")}
   </p>
 </section>"""
 
     if note:
+        unavailable = t("health.page.technical_debt_unavailable", note=note)
+
         return f"""<section class="technical-debt technical-debt-unavailable">
-  <h2>Dette technique</h2>
-  <p class="note score-unavailable">Dette technique : non calculée — {escape_text(note)}</p>
+  <h2>{heading}</h2>
+  <p class="note score-unavailable">{escape_text(unavailable)}</p>
 </section>"""
 
     return ""
 
 
-def _render_domain(domain: HealthDomain) -> str:
+def _render_domain(domain: HealthDomain, t: Translator) -> str:
+    name = escape_text(domain_label(t, domain.name))
+
     if not domain.instrumented:
         return f"""<section class="domain domain-not-instrumented">
-  <h2>{escape_text(domain.name)} <span class="badge badge-not-instrumented">non instrumenté</span></h2>
+  <h2>{name} <span class="badge badge-not-instrumented">{escape_text(t("health.page.not_instrumented"))}</span></h2>
   <p class="note">{escape_text(domain.note)}</p>
 </section>"""
 
     if not domain.findings:
         return f"""<section class="domain domain-clean">
-  <h2>{escape_text(domain.name)} <span class="badge badge-clean">rien à signaler</span></h2>
+  <h2>{name} <span class="badge badge-clean">{escape_text(t("health.page.clean"))}</span></h2>
 </section>"""
 
-    findings = "\n".join(_render_finding(finding) for finding in domain.findings)
+    findings = "\n".join(_render_finding(finding, t) for finding in domain.findings)
+    count = escape_text(t("health.page.findings", count=len(domain.findings)))
 
     return f"""<section class="domain domain-alert">
-  <h2>{escape_text(domain.name)} <span class="badge badge-alert">{len(domain.findings)} finding(s)</span></h2>
+  <h2>{name} <span class="badge badge-alert">{count}</span></h2>
   {findings}
 </section>"""
 
 
-def _render_finding(finding: RuntimeFinding) -> str:
+def _render_finding(finding: RuntimeFinding, t: Translator) -> str:
+    """
+    Only the labels around a finding are translated (ADR-0010 § 4): its
+    subject, signature, interpretation, remediation, confidence and
+    grounding are shown exactly as the runtime qualified them.
+    """
+
     qualifications = (
-        f"<p class=\"qualifications\">qualifications : "
+        f'<p class="qualifications">{escape_text(t("health.page.qualifications"))} '
         f"{escape_text(', '.join(finding.qualifications))}</p>"
         if finding.qualifications
         else ""
@@ -178,29 +208,36 @@ def _render_finding(finding: RuntimeFinding) -> str:
     <h3>{escape_text(finding.subject)} — {escape_text(finding.signature)}</h3>
     <p class="interpretation">{escape_text(finding.interpretation)}</p>
     <p class="remediation">→ {escape_text(finding.remediation)}</p>
-    <p class="confidence">confiance : {escape_text(finding.confidence)} —
-      fondement : {escape_text(finding.grounding)}</p>
+    <p class="confidence">{escape_text(t("health.page.confidence"))} {escape_text(finding.confidence)} —
+      {escape_text(t("health.page.grounding"))} {escape_text(finding.grounding)}</p>
     {qualifications}
-    <p class="evidence">{_evidence_summary(finding.evidence)}</p>
+    <p class="evidence">{_evidence_summary(finding.evidence, t)}</p>
   </article>"""
 
 
-def _evidence_summary(evidence: tuple[MatchedLine | CitedReading, ...]) -> str:
+def _evidence_summary(
+    evidence: tuple[MatchedLine | CitedReading, ...], t: Translator
+) -> str:
     readings = [item for item in evidence if isinstance(item, CitedReading)]
     lines = [item for item in evidence if isinstance(item, MatchedLine)]
 
     parts = []
     if readings:
         parts.append(
-            f"{len(readings)} lecture(s) citée(s) : "
+            escape_text(t("health.page.readings", count=len(readings)))
+            + " "
             + escape_text(
                 ", ".join(f"{item.provider} → {item.reading!r}" for item in readings)
             )
         )
     if lines:
-        parts.append(f"{len(lines)} ligne(s) de log citée(s)")
+        parts.append(escape_text(t("health.page.log_lines", count=len(lines))))
 
-    return " — ".join(parts) if parts else f"{len(evidence)} élément(s) de preuve"
+    return (
+        " — ".join(parts)
+        if parts
+        else escape_text(t("health.page.evidence", count=len(evidence)))
+    )
 
 
 # Same charte graphique retouch as `aistack.renderers.console.html`

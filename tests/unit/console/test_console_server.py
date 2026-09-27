@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from aistack.console.server import PAGES, make_handler, page_file, respond
+from aistack.console.server import PAGES, make_handler, respond
+from aistack.i18n.pages import page_file
 from aistack.i18n import LANGUAGE_COOKIE, Language, Languages
 
 LANGUAGES = Languages(

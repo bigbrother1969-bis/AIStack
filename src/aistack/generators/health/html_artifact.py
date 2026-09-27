@@ -30,7 +30,9 @@ class HealthHtmlArtifactGenerator:
     (no score, no note) so a caller with nothing to weigh yet renders
     exactly as it always has. `technical_debt_score`/
     `technical_debt_note` default the same way for the "Dette
-    technique" card added 2026-09-23 (`PLAN-J11` § 11.9.1).
+    technique" card added 2026-09-23 (`PLAN-J11` § 11.9.1). `lang`
+    (ADR-0010, 2026-09-27) is the language the page is written in, the
+    reference when `None`.
     """
 
     def generate(
@@ -41,6 +43,7 @@ class HealthHtmlArtifactGenerator:
         score_note: str = "",
         technical_debt_score: TechnicalDebtScore | None = None,
         technical_debt_note: str = "",
+        lang: str | None = None,
     ) -> Path:
         content = render_html(
             cockpit,
@@ -48,6 +51,7 @@ class HealthHtmlArtifactGenerator:
             score_note=score_note,
             technical_debt_score=technical_debt_score,
             technical_debt_note=technical_debt_note,
+            lang=lang,
         )
         write_artifact_with_history(content, output_path)
 

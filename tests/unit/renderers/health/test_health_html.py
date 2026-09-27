@@ -381,3 +381,41 @@ def test_the_technical_debt_card_appears_right_after_the_global_score():
     document = render_html(cockpit, score=score, technical_debt_score=debt_score)
 
     assert document.index("Score de santé") < document.index("Dette technique")
+
+
+# --------------------------------------------------------------------
+# Localization (ADR-0010, 2026-09-27)
+# --------------------------------------------------------------------
+
+
+def test_the_cockpit_is_written_in_the_requested_language():
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(name="Stockage", instrumented=True, findings=()),
+            HealthDomain(name="Sauvegarde / PRA", instrumented=False, note="aucun seuil déclaré"),
+        )
+    )
+    score = HealthScore(value=82, measured_domains=1, total_domains=2, bucket=TO_WATCH)
+
+    document = render_html(cockpit, score=score, lang="en")
+
+    assert '<html lang="en">' in document
+    assert "<title>AIStack — Health cockpit</title>" in document
+    assert "1 / 2 domain(s) instrumented" in document
+    assert "Health score:" in document
+    assert "to watch" in document
+    assert "1/2 domain(s) measured" in document
+    assert "Storage <span" in document
+    assert "nothing to report" in document
+    assert "Backup / DR <span" in document
+    assert "not instrumented" in document
+    # ADR-0010 § 4: a declared note is shown as it was written.
+    assert "aucun seuil déclaré" in document
+
+
+def test_the_reference_page_carries_the_navigation_strip():
+    document = render_html(HealthCockpit(domains=()))
+
+    assert '<html lang="fr">' in document
+    assert 'href="/settings"' in document
+    assert 'href="?lang=en"' in document

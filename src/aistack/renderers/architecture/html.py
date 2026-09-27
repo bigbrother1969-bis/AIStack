@@ -8,6 +8,8 @@ from aistack.architecture.dependency_graph import DependencyGraph
 from aistack.architecture.http_probe_reading import HttpProbeReading
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import FULL_VIEW, ArchitectureView
+from aistack.i18n import Languages, Translator, default_languages, translator_for
+from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.architecture.dependency_mermaid import render_dependency_mermaid
 from aistack.renderers.architecture.icons import load_icon_data_uri
 from aistack.renderers.architecture.mermaid import escape_text, render_mermaid
@@ -19,7 +21,6 @@ from aistack.renderers.architecture.mermaid import escape_text, render_mermaid
 # there is no real collision to guard beyond the defensive check
 # `render_html` itself makes before adding it).
 _DEPENDENCY_VIEW_NAME = "dependencies"
-_DEPENDENCY_VIEW_LABEL = "Dépendances (Docker)"
 
 _VENDOR_PATH = Path(__file__).resolve().parent / "vendor" / "mermaid.min.js"
 
@@ -71,6 +72,8 @@ def render_html(
     beszel_readings: tuple[BeszelSystemReading, ...] = (),
     dependency_graph: DependencyGraph | None = None,
     cmdb_readings: tuple[HttpProbeReading, ...] = (),
+    lang: str | None = None,
+    languages: Languages | None = None,
 ) -> str:
     """
     Wrap every view of an `ArchitectureGraph` into one self-contained
@@ -153,6 +156,9 @@ def render_html(
             "<script> tag it is embedded in — see vendor/PROVENANCE.md"
         )
 
+    t = translator_for(lang)
+    declared = languages if languages is not None else default_languages()
+
     full = views[0]
     category_count = len(full.graph.categories)
     service_count = sum(len(category.services) for category in full.graph.categories)
@@ -161,7 +167,7 @@ def render_html(
 
     options_list = [
         f'    <option value="{escape_text(view.name)}">'
-        f"{escape_text(_view_label(view.name))}</option>"
+        f"{escape_text(_view_label(view.name, t))}</option>"
         for view in views
     ]
 
@@ -175,7 +181,7 @@ def render_html(
         )
         options_list.append(
             f'    <option value="{_DEPENDENCY_VIEW_NAME}">'
-            f"{escape_text(_DEPENDENCY_VIEW_LABEL)}</option>"
+            f'{escape_text(t("architecture.view_dependencies"))}</option>'
         )
 
     # `</` inside a JSON string, re-serialized as `<\/`, is a valid
@@ -188,40 +194,42 @@ def render_html(
 
     options = "\n".join(options_list)
 
-    service_index_html = _render_service_index(full)
-    topology_html = _render_topology_section(topology)
-    beszel_html = _render_beszel_section(beszel_readings)
-    cmdb_html = _render_cmdb_section(cmdb_readings)
+    service_index_html = _render_service_index(full, t)
+    topology_html = _render_topology_section(topology, t)
+    beszel_html = _render_beszel_section(beszel_readings, t)
+    cmdb_html = _render_cmdb_section(cmdb_readings, t)
 
     return f"""<!doctype html>
-<html lang="fr">
+<html lang="{t.lang}">
 <head>
 <meta charset="utf-8">
-<title>AIStack — Architecture</title>
+<title>{escape_text(t("architecture.title"))}</title>
 <style>
 {_STYLE}
+{PAGE_NAV_STYLE}
 </style>
 </head>
 <body>
+{render_page_nav(t, declared, t.lang)}
 <header>
-  <h1>Architecture — AIStack</h1>
+  <h1>{escape_text(t("architecture.heading"))}</h1>
   <p class="meta">
-    {category_count} catégorie(s), {service_count} service(s) déclaré(s)
+    {escape_text(t("architecture.meta", categories=category_count, services=service_count))}
   </p>
 </header>
 
-<label for="view-select">Vue</label>
+<label for="view-select">{escape_text(t("architecture.view_label"))}</label>
 <select id="view-select">
 {options}
 </select>
 
 <div class="legend">
-  <span><span class="swatch swatch-confirmed"></span> observé (Docker ou Compose)</span>
-  <span><span class="swatch swatch-declared"></span> déclaré, non observé</span>
-  <span><span class="swatch swatch-none"></span> sans conteneur déclaré</span>
+  <span><span class="swatch swatch-confirmed"></span> {escape_text(t("architecture.legend.confirmed"))}</span>
+  <span><span class="swatch swatch-declared"></span> {escape_text(t("architecture.legend.declared"))}</span>
+  <span><span class="swatch swatch-none"></span> {escape_text(t("architecture.legend.none"))}</span>
 </div>
 
-<div id="diagram">Chargement…</div>
+<div id="diagram" data-unknown-view="{escape_text(t("architecture.unknown_view"))}">{escape_text(t("architecture.loading"))}</div>
 
 {service_index_html}
 
@@ -243,11 +251,11 @@ def render_html(
 """
 
 
-def _view_label(name: str) -> str:
-    return "Toutes les catégories" if name == FULL_VIEW else name
+def _view_label(name: str, t: Translator) -> str:
+    return t("architecture.view_all") if name == FULL_VIEW else name
 
 
-def _render_service_index(full: ArchitectureView) -> str:
+def _render_service_index(full: ArchitectureView, t: Translator) -> str:
     """
     Icône + nom + lien + description, une fois par service, groupé par
     catégorie — ajouté 2026-09-12 (`claude/PLAN-J11-CONSOLE-2026-09-11.md`
@@ -317,7 +325,7 @@ def _render_service_index(full: ArchitectureView) -> str:
 
     return (
         '<section class="service-index">\n'
-        "  <h2>Services déclarés</h2>\n"
+        f'  <h2>{escape_text(t("architecture.services_heading"))}</h2>\n'
         + "\n".join(sections)
         + "\n</section>"
     )
@@ -325,6 +333,7 @@ def _render_service_index(full: ArchitectureView) -> str:
 
 def _render_topology_section(
     topology: InfrastructureTopologyDefinition | None,
+    t: Translator,
 ) -> str:
     """
     Topologie réseau externe + fiches matérielles — ajouté 2026-09-12
@@ -346,23 +355,23 @@ def _render_topology_section(
     blocks: list[str] = []
 
     if topology.external_nodes:
-        blocks.append(_render_external_nodes_block(topology.external_nodes))
+        blocks.append(_render_external_nodes_block(topology.external_nodes, t))
 
     if topology.hardware:
-        blocks.append(_render_hardware_block(topology.hardware))
+        blocks.append(_render_hardware_block(topology.hardware, t))
 
     if not blocks:
         return ""
 
     return (
         '<section class="topology-index">\n'
-        "  <h2>Topologie &amp; matériel</h2>\n"
+        f'  <h2>{escape_text(t("architecture.topology.heading"))}</h2>\n'
         + "\n".join(blocks)
         + "\n</section>"
     )
 
 
-def _render_external_nodes_block(nodes: tuple) -> str:
+def _render_external_nodes_block(nodes: tuple, t: Translator) -> str:
     items = []
 
     for node in nodes:
@@ -381,7 +390,7 @@ def _render_external_nodes_block(nodes: tuple) -> str:
 
     return (
         '  <div class="topology-block">\n'
-        "    <h3>Topologie réseau externe</h3>\n"
+        f'    <h3>{escape_text(t("architecture.topology.external"))}</h3>\n'
         '    <ul class="topology-list">\n'
         + "\n".join(items)
         + "\n    </ul>\n"
@@ -389,12 +398,12 @@ def _render_external_nodes_block(nodes: tuple) -> str:
     )
 
 
-def _render_hardware_block(profiles: tuple) -> str:
+def _render_hardware_block(profiles: tuple, t: Translator) -> str:
     cards = []
 
     for profile in profiles:
         gpu_row = (
-            f"<dt>GPU</dt><dd>{escape_text(profile.gpu)}</dd>"
+            f'<dt>{escape_text(t("architecture.spec.gpu"))}</dt><dd>{escape_text(profile.gpu)}</dd>'
             if profile.gpu
             else ""
         )
@@ -403,19 +412,19 @@ def _render_hardware_block(profiles: tuple) -> str:
             f"        <h4>{escape_text(profile.name)}</h4>\n"
             f'        <p class="hardware-model">{escape_text(profile.model)}</p>\n'
             '        <dl class="hardware-specs">\n'
-            f"          <dt>CPU</dt><dd>{escape_text(profile.cpu)}</dd>\n"
-            f"          <dt>RAM</dt><dd>{escape_text(profile.ram)}</dd>\n"
+            f'          <dt>{escape_text(t("architecture.spec.cpu"))}</dt><dd>{escape_text(profile.cpu)}</dd>\n'
+            f'          <dt>{escape_text(t("architecture.spec.ram"))}</dt><dd>{escape_text(profile.ram)}</dd>\n'
             f"          {gpu_row}\n"
-            f"          <dt>Stockage</dt><dd>{escape_text(profile.storage)}</dd>\n"
-            f"          <dt>OS</dt><dd>{escape_text(profile.os_name)}</dd>\n"
-            f"          <dt>Rôle</dt><dd>{escape_text(profile.role)}</dd>\n"
+            f'          <dt>{escape_text(t("architecture.spec.storage"))}</dt><dd>{escape_text(profile.storage)}</dd>\n'
+            f'          <dt>{escape_text(t("architecture.spec.os"))}</dt><dd>{escape_text(profile.os_name)}</dd>\n'
+            f'          <dt>{escape_text(t("architecture.spec.role"))}</dt><dd>{escape_text(profile.role)}</dd>\n'
             "        </dl>\n"
             "      </li>"
         )
 
     return (
         '  <div class="topology-block">\n'
-        "    <h3>Fiches matérielles</h3>\n"
+        f'    <h3>{escape_text(t("architecture.topology.hardware"))}</h3>\n'
         '    <ul class="hardware-list">\n'
         + "\n".join(cards)
         + "\n    </ul>\n"
@@ -425,6 +434,7 @@ def _render_hardware_block(profiles: tuple) -> str:
 
 def _render_beszel_section(
     readings: tuple[BeszelSystemReading, ...],
+    t: Translator,
 ) -> str:
     """
     « État en direct » — un instantané par système Beszel, pris au
@@ -440,11 +450,11 @@ def _render_beszel_section(
     if not readings:
         return ""
 
-    cards = "\n".join(_render_beszel_card(reading) for reading in readings)
+    cards = "\n".join(_render_beszel_card(reading, t) for reading in readings)
 
     return (
         '<section class="beszel-index">\n'
-        "  <h2>État en direct (Beszel)</h2>\n"
+        f'  <h2>{escape_text(t("architecture.beszel.heading"))}</h2>\n'
         '  <ul class="beszel-list">\n'
         f"{cards}\n"
         "  </ul>\n"
@@ -452,39 +462,52 @@ def _render_beszel_section(
     )
 
 
-def _render_beszel_card(reading: BeszelSystemReading) -> str:
+def _render_beszel_card(reading: BeszelSystemReading, t: Translator) -> str:
     status_class = "beszel-status-up" if reading.status == "up" else "beszel-status-other"
+
+    def label(key: str) -> str:
+        return escape_text(t(key))
 
     rows = [
         (
-            '        <dt>Statut</dt>'
+            f'        <dt>{label("architecture.beszel.status")}</dt>'
             f'<dd><span class="beszel-status {status_class}">'
             f"{escape_text(reading.status or '?')}</span></dd>"
         )
     ]
 
     if reading.cpu_pct is not None:
-        rows.append(f"        <dt>CPU</dt><dd>{reading.cpu_pct:.1f} %</dd>")
+        rows.append(
+            f'        <dt>{label("architecture.beszel.cpu")}</dt><dd>{reading.cpu_pct:.1f} %</dd>'
+        )
 
     if reading.mem_pct is not None:
-        rows.append(f"        <dt>Mémoire</dt><dd>{reading.mem_pct:.1f} %</dd>")
+        rows.append(
+            f'        <dt>{label("architecture.beszel.memory")}</dt><dd>{reading.mem_pct:.1f} %</dd>'
+        )
 
     if reading.disk_pct is not None:
-        rows.append(f"        <dt>Disque</dt><dd>{reading.disk_pct:.1f} %</dd>")
+        rows.append(
+            f'        <dt>{label("architecture.beszel.disk")}</dt><dd>{reading.disk_pct:.1f} %</dd>'
+        )
 
     if reading.temp_c is not None:
-        rows.append(f"        <dt>Température</dt><dd>{reading.temp_c:.1f} °C</dd>")
+        rows.append(
+            f'        <dt>{label("architecture.beszel.temperature")}</dt>'
+            f"<dd>{reading.temp_c:.1f} °C</dd>"
+        )
 
     if reading.load_avg is not None:
         one, five, fifteen = reading.load_avg
         rows.append(
-            "        <dt>Charge</dt>"
+            f'        <dt>{label("architecture.beszel.load")}</dt>'
             f"<dd>{one:.2f} / {five:.2f} / {fifteen:.2f}</dd>"
         )
 
     if reading.uptime_seconds is not None:
         rows.append(
-            f"        <dt>Disponibilité</dt><dd>{_format_uptime(reading.uptime_seconds)}</dd>"
+            f'        <dt>{label("architecture.beszel.uptime")}</dt>'
+            f"<dd>{escape_text(_format_uptime(reading.uptime_seconds, t))}</dd>"
         )
 
     return (
@@ -502,32 +525,34 @@ def _render_beszel_card(reading: BeszelSystemReading) -> str:
     )
 
 
-def _format_uptime(seconds: int) -> str:
+def _format_uptime(seconds: int, t: Translator) -> str:
     """
-    Whole days and whole hours, French-labelled (`j`/`h`) — the same
+    Whole days and whole hours, labelled in the page's own language
+    (`j`/`h` in French, `d`/`h` in English, ADR-0010) — the same
     register as every other label on this page. Under a day: hours
     and minutes instead, so a system rebooted an hour ago does not
     read as "0 j".
     """
 
     if seconds < 0:
-        return "0 h"
+        return t("architecture.uptime.zero")
 
     days, remainder = divmod(seconds, 86400)
     hours, remainder = divmod(remainder, 3600)
     minutes, _ = divmod(remainder, 60)
 
     if days > 0:
-        return f"{days} j {hours} h"
+        return t("architecture.uptime.days_hours", days=days, hours=hours)
 
     if hours > 0:
-        return f"{hours} h {minutes} min"
+        return t("architecture.uptime.hours_minutes", hours=hours, minutes=minutes)
 
-    return f"{minutes} min"
+    return t("architecture.uptime.minutes", minutes=minutes)
 
 
 def _render_cmdb_section(
     readings: tuple[HttpProbeReading, ...],
+    t: Translator,
 ) -> str:
     """
     « CMDB temps réel » — un instantané par cible HTTP, pris au moment
@@ -544,11 +569,11 @@ def _render_cmdb_section(
     if not readings:
         return ""
 
-    cards = "\n".join(_render_cmdb_card(reading) for reading in readings)
+    cards = "\n".join(_render_cmdb_card(reading, t) for reading in readings)
 
     return (
         '<section class="cmdb-index">\n'
-        "  <h2>CMDB temps réel</h2>\n"
+        f'  <h2>{escape_text(t("architecture.cmdb.heading"))}</h2>\n'
         '  <ul class="cmdb-list">\n'
         f"{cards}\n"
         "  </ul>\n"
@@ -556,8 +581,8 @@ def _render_cmdb_section(
     )
 
 
-def _render_cmdb_card(reading: HttpProbeReading) -> str:
-    status_class, status_label = _cmdb_status(reading)
+def _render_cmdb_card(reading: HttpProbeReading, t: Translator) -> str:
+    status_class, status_label = _cmdb_status(reading, t)
 
     return (
         '      <li class="cmdb-card">\n'
@@ -569,7 +594,7 @@ def _render_cmdb_card(reading: HttpProbeReading) -> str:
     )
 
 
-def _cmdb_status(reading: HttpProbeReading) -> tuple[str, str]:
+def _cmdb_status(reading: HttpProbeReading, t: Translator) -> tuple[str, str]:
     """
     Three states, not two — unlike Beszel's own up/other split. A
     successful response (2xx/3xx) is `ok`; an HTTP error status the
@@ -581,7 +606,7 @@ def _cmdb_status(reading: HttpProbeReading) -> tuple[str, str]:
     """
 
     if not reading.reachable:
-        return "cmdb-status-unreachable", "Injoignable"
+        return "cmdb-status-unreachable", t("architecture.cmdb.unreachable")
 
     if reading.status_code is None:
         return "cmdb-status-error", "?"
@@ -783,7 +808,10 @@ _BOOTSTRAP_JS = """\
     var definition = data[name];
 
     if (definition === undefined) {
-      container.innerHTML = '<p class="render-error">Vue inconnue : ' + name + '</p>';
+      var unknown = document.createElement('p');
+      unknown.className = 'render-error';
+      unknown.textContent = container.dataset.unknownView + ' ' + name;
+      container.replaceChildren(unknown);
       return;
     }
 

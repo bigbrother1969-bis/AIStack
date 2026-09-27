@@ -1,0 +1,46 @@
+# Page Architecture — ADR-0010. Le texte français est exactement celui
+# que la page affichait avant la localisation. Les noms de services,
+# catégories, nœuds et fiches matérielles sont des données déclarées :
+# ils restent tels qu'écrits (ADR-0010 § 4).
+
+title: "AIStack — Architecture"
+heading: "Architecture — AIStack"
+meta: "{categories} catégorie(s), {services} service(s) déclaré(s)"
+view_label: "Vue"
+view_all: "Toutes les catégories"
+view_dependencies: "Dépendances (Docker)"
+legend:
+  confirmed: "observé (Docker ou Compose)"
+  declared: "déclaré, non observé"
+  none: "sans conteneur déclaré"
+loading: "Chargement…"
+unknown_view: "Vue inconnue :"
+services_heading: "Services déclarés"
+topology:
+  heading: "Topologie & matériel"
+  external: "Topologie réseau externe"
+  hardware: "Fiches matérielles"
+spec:
+  cpu: "CPU"
+  ram: "RAM"
+  gpu: "GPU"
+  storage: "Stockage"
+  os: "OS"
+  role: "Rôle"
+beszel:
+  heading: "État en direct (Beszel)"
+  status: "Statut"
+  cpu: "CPU"
+  memory: "Mémoire"
+  disk: "Disque"
+  temperature: "Température"
+  load: "Charge"
+  uptime: "Disponibilité"
+uptime:
+  days_hours: "{days} j {hours} h"
+  hours_minutes: "{hours} h {minutes} min"
+  minutes: "{minutes} min"
+  zero: "0 h"
+cmdb:
+  heading: "CMDB temps réel"
+  unreachable: "Injoignable"

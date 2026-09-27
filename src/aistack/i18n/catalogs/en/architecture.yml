@@ -1,0 +1,45 @@
+# Architecture page — ADR-0010. Mirrors catalogs/fr/architecture.yml.
+# Service, category, node and hardware names are declared data and
+# stay as written (ADR-0010 § 4).
+
+title: "AIStack — Architecture"
+heading: "Architecture — AIStack"
+meta: "{categories} category(ies), {services} declared service(s)"
+view_label: "View"
+view_all: "All categories"
+view_dependencies: "Dependencies (Docker)"
+legend:
+  confirmed: "observed (Docker or Compose)"
+  declared: "declared, not observed"
+  none: "no declared container"
+loading: "Loading…"
+unknown_view: "Unknown view:"
+services_heading: "Declared services"
+topology:
+  heading: "Topology & hardware"
+  external: "External network topology"
+  hardware: "Hardware sheets"
+spec:
+  cpu: "CPU"
+  ram: "RAM"
+  gpu: "GPU"
+  storage: "Storage"
+  os: "OS"
+  role: "Role"
+beszel:
+  heading: "Live status (Beszel)"
+  status: "Status"
+  cpu: "CPU"
+  memory: "Memory"
+  disk: "Disk"
+  temperature: "Temperature"
+  load: "Load"
+  uptime: "Uptime"
+uptime:
+  days_hours: "{days} d {hours} h"
+  hours_minutes: "{hours} h {minutes} min"
+  minutes: "{minutes} min"
+  zero: "0 h"
+cmdb:
+  heading: "Real-time CMDB"
+  unreachable: "Unreachable"

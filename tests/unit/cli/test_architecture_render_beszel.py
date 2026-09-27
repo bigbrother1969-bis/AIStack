@@ -308,3 +308,26 @@ def test_a_topology_with_no_beszel_block_never_constructs_the_provider(
         workspace / "reports" / "generated" / "architecture.html"
     ).read_text(encoding="utf-8")
     assert '<section class="beszel-index">' not in document
+
+
+
+def test_main_writes_one_architecture_page_per_declared_language(
+    stubbed_providers, workspace
+):
+    """ADR-0010 § 5 (2026-09-27): `architecture.html` stays the reference page."""
+
+    FakeBeszelProvider.next_observation = _observation_with_systems(
+        [{"name": "Gigabyte", "host": "192.168.1.10", "status": "up", "info": {"cpu": 17.42}}]
+    )
+
+    architecture_render.main(environ={})
+
+    generated_dir = workspace / "reports" / "generated"
+    english = (generated_dir / "architecture.en.html").read_text(encoding="utf-8")
+
+    assert '<html lang="en">' in english
+    assert "Live status (Beszel)" in english
+    assert "<dt>Status</dt>" in english
+    assert '<html lang="fr">' in (generated_dir / "architecture.html").read_text(
+        encoding="utf-8"
+    )

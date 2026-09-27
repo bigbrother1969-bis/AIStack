@@ -11,6 +11,8 @@ from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
 from aistack.health.technical_debt import compute_technical_debt_score
+from aistack.i18n import default_languages
+from aistack.i18n.pages import page_file
 from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
@@ -394,14 +396,29 @@ def main() -> None:
     score = compute_health_score(cockpit, weights) if weights is not None else None
     debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
-    output_path = HealthHtmlArtifactGenerator().generate(
-        cockpit=cockpit,
-        output_path=Path("reports/generated/health.html"),
-        score=score,
-        score_note=score_note,
-        technical_debt_score=debt_score,
-        technical_debt_note=debt_score_note,
-    )
+    # ADR-0010 § 5 (2026-09-27): one page per declared language, the
+    # reference keeping `health.html` and its history stream. The
+    # cockpit is built once — the host does not change with the
+    # language it is read in.
+    languages = default_languages()
+    generated_dir = Path("reports/generated")
+    output_path = generated_dir / "health.html"
+
+    for language in languages.available:
+        written = HealthHtmlArtifactGenerator().generate(
+            cockpit=cockpit,
+            output_path=page_file(
+                generated_dir, "health.html", language.code, languages.reference
+            ),
+            score=score,
+            score_note=score_note,
+            technical_debt_score=debt_score,
+            technical_debt_note=debt_score_note,
+            lang=language.code,
+        )
+
+        if language.code == languages.reference:
+            output_path = written
 
     if score is not None:
         print(

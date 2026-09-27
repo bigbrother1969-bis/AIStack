@@ -51,9 +51,17 @@ class ArchitectureHtmlArtifactGenerator:
         beszel_readings: tuple[BeszelSystemReading, ...] = (),
         dependency_graph: DependencyGraph | None = None,
         cmdb_readings: tuple[HttpProbeReading, ...] = (),
+        lang: str | None = None,
     ) -> Path:
+        # `lang` (ADR-0010, 2026-09-27): the language the page is
+        # written in, the reference when `None`.
         content = render_html(
-            views, topology, beszel_readings, dependency_graph, cmdb_readings
+            views,
+            topology,
+            beszel_readings,
+            dependency_graph,
+            cmdb_readings,
+            lang=lang,
         )
         write_artifact_with_history(content, output_path)
 

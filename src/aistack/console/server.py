@@ -15,6 +15,7 @@ from aistack.i18n import (
     read_cookie,
     translator_for,
 )
+from aistack.i18n.pages import page_file
 from aistack.renderers.console.settings import render_settings_html
 from aistack.renderers.text import escape_text
 
@@ -44,20 +45,6 @@ class Response:
     status: int
     body: bytes = b""
     headers: tuple[tuple[str, str], ...] = field(default_factory=tuple)
-
-
-def page_file(generated_dir: Path, page: str, lang: str, reference: str) -> Path:
-    """
-    Where one generated page lives in one language. The reference
-    language keeps each page's historical name — and its history
-    stream — (`console.html`); every other language sits beside it as
-    `<stem>.<code>.html` (`console.en.html`), ADR-0010 § 5.
-    """
-
-    if lang == reference:
-        return generated_dir / page
-
-    return generated_dir / f"{page.removesuffix('.html')}.{lang}.html"
 
 
 def respond(

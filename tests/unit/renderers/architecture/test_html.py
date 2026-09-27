@@ -945,3 +945,57 @@ def test_rendering_the_same_views_twice_is_byte_identical():
     views = build_all_views(graph_with_categories("Supervision", "Développement"))
 
     assert render_html(views) == render_html(views)
+
+
+
+# --------------------------------------------------------------------
+# Localization (ADR-0010, 2026-09-27)
+# --------------------------------------------------------------------
+
+
+def test_the_page_is_written_in_the_requested_language():
+    views = build_all_views(graph_with_categories("Media"))
+    reading = BeszelSystemReading(
+        name="Gigabyte",
+        host="192.168.1.10",
+        status="up",
+        cpu_pct=17.42,
+        mem_pct=67.74,
+        uptime_seconds=241495,
+    )
+    probe = HttpProbeReading(name="Gitea", url="https://gitea.example", reachable=False)
+
+    document = render_html(views, None, (reading,), None, (probe,), lang="en")
+
+    assert '<html lang="en">' in document
+    assert '<option value="all">All categories</option>' in document
+    assert "observed (Docker or Compose)" in document
+    assert "Declared services" in document
+    assert "Live status (Beszel)" in document
+    assert "<dt>Memory</dt><dd>67.7 %</dd>" in document
+    assert "<dt>Uptime</dt><dd>2 d 19 h</dd>" in document
+    assert "Real-time CMDB" in document
+    assert "Unreachable" in document
+    assert 'data-unknown-view="Unknown view:"' in document
+    # ADR-0010 § 4: a declared category name is shown as written.
+    assert "Media" in document
+
+
+def test_the_reference_page_keeps_its_french_labels_and_carries_the_nav():
+    views = build_all_views(graph_with_categories("Media"))
+
+    document = render_html(views)
+
+    assert '<html lang="fr">' in document
+    assert '<option value="all">Toutes les catégories</option>' in document
+    assert 'href="/settings"' in document
+    assert 'href="?lang=en"' in document
+
+
+def test_the_unknown_view_message_is_never_injected_as_markup():
+    """The bootstrap script writes it with `textContent`, not `innerHTML`."""
+
+    document = render_html(build_all_views(graph_with_categories("Media")))
+
+    assert "unknown.textContent = container.dataset.unknownView" in document
+    assert "Vue inconnue : ' + name" not in document

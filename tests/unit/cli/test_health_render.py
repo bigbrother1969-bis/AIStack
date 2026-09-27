@@ -549,6 +549,24 @@ def test_main_writes_the_health_html_artifact(monkeypatch, tmp_path, workspace):
     assert "Score de santé" in document
 
 
+def test_main_writes_one_cockpit_per_declared_language(monkeypatch, tmp_path, workspace):
+    """ADR-0010 § 5 (2026-09-27): `health.html` stays the reference page."""
+
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+
+    cli.main()
+
+    generated_dir = workspace / "reports" / "generated"
+    english = (generated_dir / "health.en.html").read_text(encoding="utf-8")
+
+    assert '<html lang="en">' in english
+    assert "Health cockpit" in english
+    assert "DR tests" in english
+    assert "not instrumented" in english
+    assert "Health score" in english
+    assert '<html lang="fr">' in (generated_dir / "health.html").read_text(encoding="utf-8")
+
+
 # --------------------------------------------------------------------
 # main() — the score (OPS-0008)
 # --------------------------------------------------------------------

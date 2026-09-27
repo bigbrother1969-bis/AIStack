@@ -4,7 +4,6 @@ import socket
 import subprocess
 from pathlib import Path
 
-from aistack.console.server import page_file
 from aistack.console.yaml import load_console_links_yaml
 from aistack.contracts.health_score import HealthScoreWeights
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
@@ -14,6 +13,7 @@ from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
 from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import default_languages
+from aistack.i18n.pages import page_file
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,

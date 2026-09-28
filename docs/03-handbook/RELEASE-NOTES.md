@@ -89,9 +89,8 @@ sources for the first time, commit history among them.**
   each file's real `id`, alongside — never replacing — what was already
   recorded under the old, filename-derived one.
 
-`bigbrother1969/aistack-core:1.3.0`, built from `<commit to be filled in
-at publication — the owner's own build, per OPS-0002>`, digest `<filled
-in at publication>`.
+`bigbrother1969/aistack-core:1.3.0`, built from `a856006`, digest
+`sha256:72a477a914d86bd3798fa9c5fa8e2f668afaa4dc5d7efb6608834e3c74f6dfd3`.
 2270 tests, 75 knowledge artifacts, `clean: True`.
 
 ## 1.2.1 — 2026-09-27

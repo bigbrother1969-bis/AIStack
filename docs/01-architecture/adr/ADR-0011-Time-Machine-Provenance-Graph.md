@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Proposed
   owner: Architecture
   created: 2026-09-27
-  updated: 2026-09-27
+  updated: 2026-09-28
 
 relations:
   references:
@@ -671,6 +671,109 @@ confirming all 38 `kernel` Explications reached the graph, each
 correctly ordered by its own real `generatedAtTime` and attributed to
 its own distinct `git:<sha>` agent.
 
+### 18. The network tree — `timemachine_ui`'s second view, from the live catalogs, never the graph
+
+Roadmap `ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.4 assigns this version two
+things: the "arbre hiérarchique pliable Réseau → Hôte → Stack →
+Conteneur → Historique, avec recherche" (ungated), and a "file des
+brouillons IA" (gated by R8). The owner's decision, 2026-09-28
+(`AskUserQuestion`, "Arbre d'abord, R8 tranché plus tard"): build the
+tree now; the R8/brouillons-IA gate is left open, for a later cadrage,
+rather than resolved here by assumption. R8 itself requires closing
+QUAL-0001's human evaluation before automatic drafts can ship; measured
+directly against `claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md`,
+its 2026-09-25 closure addressed AI Runtime model choice in general (a
+real production test on `deepseek-r1:1.5b` against the real
+`OllamaEngine`), not the quality of an AI-generated Explication
+specifically — a concept this repository did not have until 1.3's
+Explications subsystem (§ 7, § 14-17 above) existed to generate one.
+Stating that scope mismatch plainly, rather than silently treating
+QUAL-0001 as already satisfying R8 or silently demanding a fresh
+evaluation campaign nobody asked for, is what let the owner choose
+instead of inheriting a choice.
+
+Three further cadrage decisions, same day, one `AskUserQuestion` call,
+all the "recommandé" option:
+
+- **Emplacement: a new tab inside `timemachine_ui`, not a sixth
+  mini-app.** The tree reads the same LAN-only FastAPI process, port
+  8186, and — for Historique — the same `OxigraphGraphStore` § 13
+  already gives it; a second process would duplicate both for no real
+  gain. In the library analogy the roadmap itself uses, this is "Plan
+  des rayonnages" placed right after "Salle de lecture" (§ 13's
+  streams/instants/facts view), not a separate building.
+- **Historique v1: the honest gap, not a richer promise.** Real
+  per-container passive tracing is 1.5's own collectors' job (§
+  *Open Points*, below, restates why); until then most nodes show
+  "aucun historique lié pour l'instant" and only what already has a
+  real `aistack:stableSubject` or `aistack:explains` match today (in
+  practice, `jellyfin`'s CPU priority decisions) shows anything. Same
+  discipline § 13's own v1-vs-four-maquettes gap already holds.
+- **No Stack level for a remote host, ever.** A remote host (Raspberry
+  Pi, Pi-hole VM) is known only through `network_docker_discover`'s
+  own on-demand, never-automatic SSH `docker ps` scan — no compose
+  file is ever read over SSH. Inventing a Stack grouping there from
+  nothing observed would be exactly the guessed infrastructure
+  `ARC-P-006` forbids; a remote host's containers attach directly to
+  its host node.
+
+**Where the hierarchy actually comes from — measured, not the graph.**
+The local host's real Stack ⊃ Container structure is not itself in the
+graph: the twelve raw Observation History streams carry no per-container
+business schema yet (§ *Open Points*, above, already states this for
+the generic projection walk), and inventing one now, for a shape no
+collector emits, would be the same forbidden guess. It already exists
+as real, live, governed data through
+`DockerRuntimeCatalogBuilder`/`ComposeRuntimeCatalogBuilder`
+(`src/aistack/catalog/docker/assets.py`,
+`src/aistack/catalog/compose/builder.py`) — the same builders
+`architecture_render.main` already calls to draw the Architecture view.
+`ComposeRuntimeCatalogBuilder.build()` always sets a `"containers"`
+metadata field per compose-project item, one entry per container the
+project actually observed, regardless of whether that container has any
+`depends_on` edge — confirmed by reading `compose/builder.py` directly,
+and deliberately not reused from
+`aistack.architecture.dependency_graph.build_dependency_graph`, which
+narrows to "only projects with at least one edge" for its own, different
+purpose (drawing dependency arrows, not enumerating membership). A
+remote host's containers come the same way § *Decision* 9's own
+`network_docker_discover` scan already writes them: the **last stored**
+`network-docker-observation` snapshot, read via `aistack.history`
+(`available_instants`/`observation_at`), never a live scan triggered by
+this or any screen — the same "never triggered automatically" rule
+`NetworkDockerDiscoveryProvider`'s own docstring already states and
+`network_discovery_ui` already honours.
+
+**`aistack.timemachine.tree`, built and verified 2026-09-28.**
+`NetworkTreeNode` (id, label, kind, parent_id, depth, has_children) and
+`RemoteHost` (host, containers) are plain dataclasses;
+`build_network_tree` orders a caller-built `Catalog` pair into the flat,
+depth-first, "every parent immediately before its own descendants" list
+`aistack.catalog.views.media.tree.MediaTreeViewEngine` already
+established for a surface that folds/renders in one pass without
+knowing the tree's shape — followed here rather than a new
+representation invented for this one screen. `parse_remote_hosts` reads
+`NetworkDockerDiscoveryProvider.collect()`'s own real JSON shape,
+tolerantly (a missing or malformed section degrades to "nothing
+observed", never raises — the same reasoning
+`build_dependency_graph` already gives for reading a governed artifact
+that is machine-written, not hand-edited). `historique_names` answers
+Historique from the graph, in exactly two batched SPARQL `SELECT`
+queries built with `VALUES` (a `stableSubject` literal match, an
+`aistack:explains` subject-IRI match via `aistack.timemachine.iri
+.subject_iri`), never one query per candidate name — the same batching
+discipline the Explications importers (§ 14-17) already hold for their
+own idempotency checks. 11 unit tests (a real in-memory
+`OxigraphGraphStore`, never a mock, for the `historique_names` cases;
+plain `Catalog`/`CatalogItem` construction, no live provider mocking,
+for the ordering cases), `ruff check`, and `mypy` are all clean.
+
+**Not yet built, named here rather than implied finished**: the
+`timemachine_ui` route, its template, the new i18n catalog entries, the
+tree's own CSS, and the search itself — the same "state the gap
+plainly" discipline § 13's own *Open Points* bullet already holds
+between what was demoed and what shipped.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -831,3 +934,14 @@ its own distinct `git:<sha>` agent.
   design a real detector once an actual instance of a secret shape turns
   up in the imported corpus, rather than guess at the vocabulary of
   secrets no one has observed here yet.
+- **The network tree's `timemachine_ui` wiring** (§ 18) — the route, its
+  template, the new i18n entries, the CSS, and the search itself are not
+  yet built; only `aistack.timemachine.tree` (the module ordering a
+  caller-built catalog pair into the tree, and answering Historique from
+  the graph) exists and is verified today.
+- **R8 / the brouillons-IA gate** (§ 18) remains explicitly open — the
+  owner's own 2026-09-28 decision was to build the ungated tree first
+  and revisit R8 at a later cadrage, not to resolve it here by assuming
+  QUAL-0001's 2026-09-25 closure (model choice, general) already covers
+  Explication-quality evaluation specifically (a narrower question that
+  did not exist as a concept before 1.3).

@@ -38,6 +38,22 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
+  # **1.4.0 — published 2026-09-28, current.**
+  #
+  #   bigbrother1969/aistack-core:1.4.0
+  #   @sha256:afa0098bfcae644623e8555dbfd92d2ae58782a010dfe96a65a65b8e88160b68
+  #
+  # Built from c33f8dd on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 2294 tests with `clean: True`.
+  # 75 artifacts, 18 checks. Before the build, 1.3.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.4.0 entry gives the
+  # full account; in short, the roadmap's second Time Machine step
+  # (`ADR-0011` § 18-19): a foldable network tree read from the live
+  # Docker/Compose catalogs, and a Mermaid provenance-graph diagram on
+  # every node page, centred on the node being viewed.
+  #
   # **1.3.0 — published 2026-09-28, current.**
   #
   #   bigbrother1969/aistack-core:1.3.0

@@ -75,9 +75,8 @@ rather than assume `QUAL-0001`'s earlier closure already covers it.**
   `ADR-0011` states the gap explicitly rather than leaving it to be
   found later.
 
-`bigbrother1969/aistack-core:1.4.0`, built from `<commit to be filled in
-at publication — the owner's own build, per OPS-0002>`, digest `<filled
-in at publication>`.
+`bigbrother1969/aistack-core:1.4.0`, built from `c33f8dd`, digest
+`sha256:afa0098bfcae644623e8555dbfd92d2ae58782a010dfe96a65a65b8e88160b68`.
 2294 tests, 75 knowledge artifacts, `clean: True`.
 
 ## 1.3.0 — 2026-09-28

@@ -13,6 +13,7 @@ from aistack.cli.docker_events_monitor import (
     USAGE,
     load_checkpoint,
     log_cycle,
+    main,
     parse,
     run_cycle,
     save_checkpoint,
@@ -41,16 +42,17 @@ def _docker_events(stdout: str = "", returncode: int = 0):
 
 
 def test_parse_defaults():
-    output_path, checkpoint_path, once, dry_run = parse([])
+    output_path, checkpoint_path, generated_dir, once, dry_run = parse([])
 
     assert output_path.name == "docker-events.json"
     assert checkpoint_path.name == "checkpoint.json"
+    assert generated_dir == Path("reports/generated")
     assert once is False
     assert dry_run is False
 
 
 def test_parse_accepts_output_and_checkpoint_overrides():
-    output_path, checkpoint_path, _, _ = parse(
+    output_path, checkpoint_path, _, _, _ = parse(
         ["--output", "/tmp/out.json", "--checkpoint", "/tmp/cp.json"]
     )
 
@@ -58,8 +60,14 @@ def test_parse_accepts_output_and_checkpoint_overrides():
     assert checkpoint_path == Path("/tmp/cp.json")
 
 
+def test_parse_accepts_a_generated_dir_override():
+    _, _, generated_dir, _, _ = parse(["--generated-dir", "/tmp/generated"])
+
+    assert generated_dir == Path("/tmp/generated")
+
+
 def test_parse_accepts_once_and_dry_run_together():
-    _, _, once, dry_run = parse(["--once", "--dry-run"])
+    _, _, _, once, dry_run = parse(["--once", "--dry-run"])
 
     assert once is True
     assert dry_run is True
@@ -80,7 +88,7 @@ def test_parse_rejects_an_unknown_argument():
 
 
 def test_usage_names_every_flag_parse_accepts():
-    for flag in ("--output", "--checkpoint", "--once", "--dry-run"):
+    for flag in ("--output", "--checkpoint", "--generated-dir", "--once", "--dry-run"):
         assert flag in USAGE
 
 
@@ -198,3 +206,59 @@ def test_dry_run_writes_nothing_and_does_not_advance_the_checkpoint(tmp_path: Pa
     assert len(events) == 1
     assert not output_path.exists()
     assert load_checkpoint(checkpoint_path) is None
+
+
+def _main_args(tmp_path: Path) -> list[str]:
+    return [
+        "--output", str(tmp_path / "docker-events" / "docker-events.json"),
+        "--checkpoint", str(tmp_path / "checkpoint.json"),
+        "--generated-dir", str(tmp_path),
+        "--once",
+    ]
+
+
+def test_main_first_run_ever_records_no_gap(tmp_path: Path):
+    """
+    `record_collection_gap`'s own contract: no prior checkpoint means
+    no prior coverage to have gapped from — `main`'s own first-ever
+    invocation on a host must not fabricate a gap out of nothing.
+    """
+    with _docker_events(stdout=""):
+        main(_main_args(tmp_path))
+
+    assert not (tmp_path / "collection-gaps").exists()
+
+
+def test_main_records_a_gap_on_restart_after_a_checkpoint(tmp_path: Path):
+    """
+    `ADR-0011` § 9 (R11) — the scenario this whole mechanism exists
+    for: the monitor stopped (a checkpoint from an earlier run is
+    still on disk) and is starting again now. `main` must detect and
+    record that gap once, before its own first cycle.
+    """
+    checkpoint_path = tmp_path / "checkpoint.json"
+    save_checkpoint(checkpoint_path, "2026-09-28T10:00:00+00:00")
+
+    with _docker_events(stdout=""):
+        main(_main_args(tmp_path))
+
+    gap_path = tmp_path / "collection-gaps" / "docker-events" / "collection-gap.json"
+    assert gap_path.exists()
+    written = json.loads(gap_path.read_text(encoding="utf-8"))
+    assert written == {"stream": "docker-events", "start": "2026-09-28T10:00:00+00:00"}
+
+
+def test_main_dry_run_records_no_gap_even_after_a_checkpoint(tmp_path: Path):
+    """
+    `--dry-run` already suppresses `run_cycle`'s own persistence — R11
+    is the same suppression applied a second time, so a repeated
+    manual `--once --dry-run` check never fabricates gap noise from
+    a checkpoint it is not advancing anyway.
+    """
+    checkpoint_path = tmp_path / "checkpoint.json"
+    save_checkpoint(checkpoint_path, "2026-09-28T10:00:00+00:00")
+
+    with _docker_events(stdout=""):
+        main(_main_args(tmp_path) + ["--dry-run"])
+
+    assert not (tmp_path / "collection-gaps").exists()

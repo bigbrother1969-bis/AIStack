@@ -16,7 +16,7 @@ and, since 1.4's provenance graph view (`ADR-0011` § 19),
 `short_label` for the same reason across every other IRI shape this
 module builds — it never constructs an IRI itself; every IRI it links
 to comes straight out of a SPARQL result, never rebuilt from parts.
-The seven builders below exist for the writer, and for round-trip
+The eight builders below exist for the writer, and for round-trip
 tests.
 """
 
@@ -29,6 +29,7 @@ _REQUEST_PREFIX = "urn:aistack:request:"
 _EXPLICATION_PREFIX = "urn:aistack:explication:"
 _SUBJECT_PREFIX = "urn:aistack:subject:"
 _DOCKER_EVENT_PREFIX = "urn:aistack:docker-event:"
+_COLLECTION_GAP_PREFIX = "urn:aistack:collection-gap:"
 
 
 def stream_iri(stem: str) -> str:
@@ -118,6 +119,20 @@ def docker_event_iri(instant_label: str, index: int) -> str:
     return f"{_DOCKER_EVENT_PREFIX}{instant_label}:{index}"
 
 
+def collection_gap_iri(stream_stem: str, instant_label: str) -> str:
+    """
+    The IRI of one recorded collection gap's own `prov:Entity` —
+    `ADR-0011` § 9 (R11), `aistack.timemachine.projection
+    .collection_gaps`. Keyed by the stream it belongs to *and* the
+    instant it was recorded, the same reasoning `docker_event_iri`
+    already holds for `instant_label:index`: one stream can gap and
+    resume more than once over its lifetime, so `stream_stem` alone
+    would collide across separate gaps.
+    """
+
+    return f"{_COLLECTION_GAP_PREFIX}{stream_stem}:{instant_label}"
+
+
 _ALL_PREFIXES = (
     _STREAM_PREFIX,
     _OBSERVATION_PREFIX,
@@ -126,13 +141,14 @@ _ALL_PREFIXES = (
     _EXPLICATION_PREFIX,
     _SUBJECT_PREFIX,
     _DOCKER_EVENT_PREFIX,
+    _COLLECTION_GAP_PREFIX,
 )
 
 
 def short_label(iri: str) -> str:
     """
     A short, human-readable label for any IRI this module builds —
-    `stream_stem` generalised across all six prefixes, added for 1.4's
+    `stream_stem` generalised across all eight prefixes, added for 1.4's
     provenance graph view (`ADR-0011` § 19): a diagram centred on one
     node needs a real label for every neighbour it draws, not only a
     stream's own name.

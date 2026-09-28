@@ -8,11 +8,18 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from aistack.generators.collection_gap import record_collection_gap
 from aistack.providers.docker.events import collect_docker_events, enrich
 from aistack.providers.docker.events_history import (
     DEFAULT_OUTPUT_PATH,
     record_docker_events,
 )
+
+# `aistack.timemachine.projection.docker_events.STEM` redeclared here
+# the same way this module's own `DEFAULT_OUTPUT_PATH` import already
+# crosses the collector/projector boundary by value, not by importing
+# across it — the stream this monitor's own gaps are filed under.
+STREAM_STEM = "docker-events"
 
 # Cadrage 2026-09-28 (`go 1.5`): a governed polling loop, the same
 # shape `aistack.cli.resource_priority_monitor` already established
@@ -56,9 +63,17 @@ FIRST_RUN_LOOKBACK_SECONDS = 60.0
 
 DEFAULT_CHECKPOINT_PATH = Path("reports/generated/docker-events/checkpoint.json")
 
+# `aistack.generators.collection_gap.record_collection_gap`'s own
+# `generated_dir` parameter — redeclared here the same convention
+# `aistack.timemachine.projection`'s own comment already names ("every
+# CLI module... redeclares `GENERATED_DIR`... rather than importing a
+# shared constant nothing in this heritage has ever declared").
+DEFAULT_GENERATED_DIR = Path("reports/generated")
+
 USAGE = (
     "usage: python -m aistack.cli.docker_events_monitor "
-    "[--output PATH] [--checkpoint PATH] [--once] [--dry-run]\n"
+    "[--output PATH] [--checkpoint PATH] [--generated-dir PATH] "
+    "[--once] [--dry-run]\n"
     "\n"
     "  Polls `docker events` since its own last checkpoint and\n"
     "  records every new event to Observation History.\n"
@@ -74,11 +89,17 @@ USAGE = (
     "                dry-run suppresses a mutating `docker update`\n"
     "                call this one has no equivalent of, so here the\n"
     "                closest side effect to suppress is persistence\n"
-    "                itself.\n"
+    "                itself — and, since R11, the same call this\n"
+    "                flag already suppresses a second time.\n"
     "  --output      path to the events history artifact (default:\n"
     "                the real one this repository ships).\n"
     "  --checkpoint  path to the checkpoint file (default: the real\n"
     "                one this repository ships).\n"
+    "  --generated-dir  root `record_collection_gap` (R11) writes\n"
+    "                under (default: the real one this repository\n"
+    "                ships) — independent of `--output`/`--checkpoint`\n"
+    "                so a caller can redirect either without silently\n"
+    "                redirecting the other.\n"
 )
 
 
@@ -86,10 +107,11 @@ class _Stop(Exception):
     """Raised from the SIGTERM handler to unwind the loop cleanly."""
 
 
-def parse(argv: list[str]) -> tuple[Path, Path, bool, bool]:
+def parse(argv: list[str]) -> tuple[Path, Path, Path, bool, bool]:
 
     output_path = DEFAULT_OUTPUT_PATH
     checkpoint_path = DEFAULT_CHECKPOINT_PATH
+    generated_dir = DEFAULT_GENERATED_DIR
     once = False
     dry_run = False
     rest = list(argv)
@@ -115,6 +137,13 @@ def parse(argv: list[str]) -> tuple[Path, Path, bool, bool]:
             checkpoint_path = Path(rest.pop(0))
             continue
 
+        if argument == "--generated-dir":
+            if not rest:
+                print("--generated-dir expects a path")
+                raise SystemExit(2)
+            generated_dir = Path(rest.pop(0))
+            continue
+
         if argument == "--once":
             once = True
             continue
@@ -126,7 +155,7 @@ def parse(argv: list[str]) -> tuple[Path, Path, bool, bool]:
         print(f"unrecognised argument: {argument}")
         raise SystemExit(2)
 
-    return output_path, checkpoint_path, once, dry_run
+    return output_path, checkpoint_path, generated_dir, once, dry_run
 
 
 def load_checkpoint(checkpoint_path: Path) -> str | None:
@@ -226,9 +255,25 @@ def main(argv: list[str] | None = None) -> None:
     # default.
     sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
-    output_path, checkpoint_path, once, dry_run = parse(
+    output_path, checkpoint_path, generated_dir, once, dry_run = parse(
         sys.argv[1:] if argv is None else argv
     )
+
+    # `ADR-0011` § 9 (R11) — detected once, here, before the first
+    # cycle of this process's own run: `record_collection_gap`'s own
+    # docstring is why it must be the *pre-existing* checkpoint (this
+    # process's last-known coverage before it started again), not the
+    # one `run_cycle`'s own first iteration is about to overwrite.
+    # `--dry-run` suppresses this the same way it already suppresses
+    # `run_cycle`'s own persistence — the closest side effect to
+    # suspend, applied a second time.
+    if not dry_run:
+        record_collection_gap(
+            STREAM_STEM,
+            checkpoint_until=load_checkpoint(checkpoint_path),
+            now=datetime.now(timezone.utc),
+            generated_dir=generated_dir,
+        )
 
     def handle_sigterm(signum: int, frame: Any) -> None:
         raise _Stop()

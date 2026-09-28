@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from aistack.timemachine.iri import (
     agent_iri,
+    collection_gap_iri,
     docker_event_iri,
     explication_iri,
     observation_iri,
@@ -54,7 +55,12 @@ def test_docker_event_iri_embeds_both_the_instant_label_and_the_index():
     assert iri == "urn:aistack:docker-event:2026-09-28T10-00-00Z:3"
 
 
-def test_short_label_strips_each_of_the_seven_prefixes():
+def test_collection_gap_iri_embeds_both_the_stream_and_the_instant_label():
+    iri = collection_gap_iri("docker-events", "2026-09-28T10-05-00Z")
+    assert iri == "urn:aistack:collection-gap:docker-events:2026-09-28T10-05-00Z"
+
+
+def test_short_label_strips_each_of_the_eight_prefixes():
     assert short_label(stream_iri("observations")) == "observations"
     assert short_label(observation_iri("traces", "2026-09-27T10-00-00Z")) == (
         "traces:2026-09-27T10-00-00Z"
@@ -68,6 +74,9 @@ def test_short_label_strips_each_of_the_seven_prefixes():
     assert short_label(docker_event_iri("2026-09-28T10-00-00Z", 3)) == (
         "2026-09-28T10-00-00Z:3"
     )
+    assert short_label(collection_gap_iri("docker-events", "2026-09-28T10-05-00Z")) == (
+        "docker-events:2026-09-28T10-05-00Z"
+    )
 
 
 def test_short_label_returns_an_unrecognised_iri_unchanged():
@@ -75,15 +84,16 @@ def test_short_label_returns_an_unrecognised_iri_unchanged():
     assert short_label("urn:prov:something-else") == "urn:prov:something-else"
 
 
-def test_the_seven_builders_use_distinct_prefixes():
+def test_the_eight_builders_use_distinct_prefixes():
     """
     § *Decision* 1's own contract distinguishes an Entity, an
     Activity, an Agent and a request by IRI alone — two builders
     sharing a prefix could collide on the same identifier for two
     unrelated real-world things. Explications (§ 7) add two more:
     an Explication is its own Entity, distinct from the subject it
-    explains. 1.5 (cadrage 2026-09-28) adds a seventh: one Docker
-    event is its own Entity too, distinct from every other kind of
+    explains. 1.5 (cadrage 2026-09-28) adds a seventh, one Docker
+    event, and an eighth (R11, same day): one recorded collection
+    gap is its own Entity too, distinct from every other kind of
     Entity this module builds.
     """
     prefixes = {
@@ -94,5 +104,6 @@ def test_the_seven_builders_use_distinct_prefixes():
         explication_iri("x", "y").rsplit("x:y", 1)[0],
         subject_iri("x").rsplit("x", 1)[0],
         docker_event_iri("x", 1).rsplit("x:1", 1)[0],
+        collection_gap_iri("x", "y").rsplit("x:y", 1)[0],
     }
-    assert len(prefixes) == 7
+    assert len(prefixes) == 8

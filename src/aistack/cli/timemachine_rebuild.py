@@ -6,6 +6,7 @@ from pathlib import Path
 from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 from aistack.timemachine.projection import (
     DEFAULT_GENERATED_DIR,
+    project_collection_gaps,
     project_docker_events,
     project_explications,
     project_observation_history,
@@ -48,6 +49,19 @@ def main() -> None:
     .timemachine.projection.docker_events`'s own docstring says why a
     dedicated one, not a branch inside the generic walk).
 
+    **`project_collection_gaps` runs fourth, against the same store,
+    last on purpose.** `ADR-0011` § 9 (R11), built 2026-09-28 as a
+    mechanism shared by every 1.5 monitor rather than per-collector —
+    it links a recorded gap to a stream's own activity node
+    (`aistack.timemachine.iri.stream_iri`), which that stream's own
+    pass (third, above, for docker-events; a future pass for each
+    remaining 1.5 collector) is what actually creates as a
+    `prov:Activity` fact. Running after every stream's own projection
+    pass, in the same rebuild, means that node already exists by the
+    time a gap tries to link to it, for every stream this rebuild
+    knows how to project — never a second, competing activity node
+    minted here for one this module does not own.
+
     **The leaf directory, created here, not assumed.** `pyoxigraph
     .Store`'s own documented behaviour creates the directory its
     `path` names if it is missing — measured, 2026-09-27, to create
@@ -68,6 +82,7 @@ def main() -> None:
     summary = project_observation_history(store, generated_dir=generated_dir)
     explications_summary = project_explications(store, generated_dir=generated_dir)
     docker_events_summary = project_docker_events(store, generated_dir=generated_dir)
+    collection_gaps_summary = project_collection_gaps(store, generated_dir=generated_dir)
 
     print("Time Machine Projection")
     print(f"- Source: {generated_dir}")
@@ -78,13 +93,15 @@ def main() -> None:
     print(f"- Explications seen: {explications_summary.explications_seen}")
     print(f"- Docker-events batches seen: {docker_events_summary.batches_seen}")
     print(f"- Docker events seen: {docker_events_summary.events_seen}")
+    print(f"- Collection-gap streams seen: {collection_gaps_summary.streams_seen}")
+    print(f"- Collection gaps seen: {collection_gaps_summary.gaps_seen}")
     print(
         "- Facts written: "
-        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written}"
+        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + collection_gaps_summary.facts_written}"
     )
     print(
         "- Facts dropped: "
-        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped}"
+        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + collection_gaps_summary.facts_dropped}"
     )
 
 

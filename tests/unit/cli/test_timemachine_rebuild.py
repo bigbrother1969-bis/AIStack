@@ -56,3 +56,23 @@ def test_rebuild_is_a_no_op_on_an_empty_generated_dir(tmp_path: Path):
 
     assert "- Streams seen: 0" in output
     assert "- Facts written: 0" in output
+    assert "- Collection-gap streams seen: 0" in output
+    assert "- Collection gaps seen: 0" in output
+
+
+def test_rebuild_reports_a_recorded_collection_gap(tmp_path: Path):
+    generated_dir = tmp_path / "reports" / "generated"
+    from aistack.generators.collection_gap import record_collection_gap
+    from datetime import datetime, timezone
+
+    record_collection_gap(
+        "docker-events",
+        checkpoint_until="2026-09-28T10:00:00+00:00",
+        now=datetime(2026, 9, 28, 10, 5, 0, tzinfo=timezone.utc),
+        generated_dir=generated_dir,
+    )
+
+    output = _run(tmp_path, str(generated_dir))
+
+    assert "- Collection-gap streams seen: 1" in output
+    assert "- Collection gaps seen: 1" in output

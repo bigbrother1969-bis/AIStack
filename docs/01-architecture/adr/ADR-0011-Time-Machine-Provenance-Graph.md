@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -311,6 +311,42 @@ the chronology can display "no observation between X and Y" as a stated
 fact rather than a silence that looks the same as a quiet period (R11).
 1.3 declares the model; 1.5's collectors are what actually detects a stop
 and writes the fact.
+
+**Built, 2026-09-28, before § 20's own remaining three collectors —
+the owner's own decision.** `aistack.generators.collection_gap
+.record_collection_gap` is the one shared mechanism every 1.5 monitor
+calls at its own startup, not one implementation per collector: a
+monitor cannot write anything while it is not running, so the only
+moment it can ever detect a gap is the moment it comes back up, with
+both ends already known — its own last checkpoint (where coverage
+last reached) and "now" (where it resumes). This is why a
+collection-gap fact is always written whole, start and end together,
+never as an "open" interval a still-down collector could not have
+written anyway — exactly this section's own "once it resumes, an end"
+already said, just not yet built when it was written. A first run ever
+(no checkpoint) writes nothing — there is no prior coverage to have
+gapped from, the same restraint `docker_events_monitor`'s own
+`FIRST_RUN_LOOKBACK_SECONDS` already holds for `since`. A dedicated
+projector, `aistack.timemachine.projection.collection_gaps`, reads
+every stream's own recorded gaps back and links each one to that
+stream's own `prov:Activity` node (`aistack.timemachine.iri.stream_iri`
+— never a second, competing activity minted for a stream this module
+does not own) via `aistack:collectionGap`, its first real writer;
+`aistack:occurredAt` states the gap's start, `prov:generatedAtTime`
+its end (the recording instant, which — see above — is always the
+resumption instant too). Retrofitted into `docker_events_monitor`,
+1.5's one collector that already existed; the remaining three named
+collectors call the same shared mechanism from the day each ships,
+never retrofitted after the fact.
+
+**First cut is stream-level, not per-tracked-subject.** § 9's own
+wording names "a subject" for a gap; this first cut's subject is the
+whole collector's own stream name (`"docker-events"`), not a narrower
+subject such as one container this collector temporarily lost track
+of while others kept reporting — the whole monitor process stopping
+and resuming is the only kind of gap a checkpoint-based design can see
+today. A future refinement, not invented ahead of a real case that
+needs it (`ARC-P-006`).
 
 ### 10. Full rebuild on demand, never incremental, never scheduled
 
@@ -1121,7 +1157,23 @@ daemon has been observed at least once.
   graph facts — the first collector to populate `aistack:occurredAt`
   (§ 4) with a real, independently-stated instant rather than leave it
   unstated. `aistack:clockSource` (§ 5) and any correlated "upgrade"
-  fact both remain open, by design — see § *Open Points*.
+  fact both remain open, by design — see § *Open Points*. Enabled as a
+  real systemd service on GIGABYTE the same day, confirmed against real
+  production traffic (18 real containers, hundreds of events per
+  10-second poll) and, after a real rebuild, confirmed rendering
+  correctly in `timemachine_ui` — see the *Open Points* entry this
+  resolves.
+- **R11, collection gaps, is real too, not only modelled** (2026-09-28,
+  § 9's own addendum): `aistack.generators.collection_gap` (the shared
+  detect-and-record mechanism every 1.5 monitor now calls at startup)
+  and `aistack.timemachine.projection.collection_gaps` (its dedicated
+  projector, `aistack:collectionGap`'s first real writer) exist,
+  retrofitted into `docker_events_monitor`, and are wired into
+  `aistack.cli.timemachine_rebuild` as a fourth projection pass. The
+  owner's own decision, 2026-09-28: build this once, shared, before
+  three more 1.5 monitors would each have needed it separately, rather
+  than defer it the way `aistack:clockSource` and upgrade-correlation
+  are deliberately still deferred above.
 
 ## Open Points
 
@@ -1212,15 +1264,17 @@ daemon has been observed at least once.
   further today follows a neighbour's own click-through, one node at a
   time; a second, deeper hop rendered in the same diagram is real
   future work, not assumed here.
-- **`timemachine_ui`'s own docker-events wiring** (§ 20) is deliberately
-  not part of this patch — a node's existing generic facts view already
-  renders whatever `aistack:dockerAction`/`aistack:occurredAt` facts the
-  graph holds for it with no new template code once a real rebuild has
-  run against a real batch, so the "GUI construite au fur et à mesure"
-  the owner asked for (2026-09-28) is checked against a real Docker
-  daemon's output first, not built against a batch this verification
-  host invented — GIGABYTE has no `docker` binary reachable from where
-  this patch was verified.
+- ~~**`timemachine_ui`'s own docker-events wiring**~~ — **resolved,
+  2026-09-28, in production on GIGABYTE**: the monitor was enabled as
+  a real systemd service, `timemachine_rebuild` run against 123 real
+  batches (4764 events, 51148 facts written, 0 dropped), and the owner
+  confirmed by screenshot that a node's existing generic facts view
+  already renders every event with its real `aistack:stableSubject`
+  and instant, no new template code required — exactly the "GUI
+  construite au fur et à mesure" the owner asked for (2026-09-28),
+  checked against the real Docker daemon this ADR's own text once
+  named as unreachable from the verification host, not invented ahead
+  of it.
 - **Correlated "upgrade" facts** (§ 1.5's own wording: "Trace également
   les upgrades sur les containers docker") are not built by § 20's raw
   collector, deliberately — `ARC-P-012`'s boundary keeps a collector

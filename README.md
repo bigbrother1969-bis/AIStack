@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.3.0
+### Concrete capabilities, as of 1.4.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -124,16 +124,19 @@ AIStack transforms observations into sustainable knowledge assets.
   archive of the whole governed knowledge base, so a new AI session or
   contributor can get up to speed without reading the repository's
   entire history.
-- **Time Machine and Explications — new as of 1.3.0** — AIStack's own five
-  histories, projected as a real PROV-O graph (Oxigraph), rebuilt in full
-  on demand, browsable through a new LAN-only screen — streams, the
-  instants each one recorded, and every fact known about one instant,
-  including the provenance edges back to whoever or whatever caused it.
-  The "why" itself, Explications, is read for the first time from four
-  real sources: the AI Runtime's own answers, `pra_tests.yml`'s dated
-  comments, this project's `claude/` session notes, and its own commit
-  history.
-- **Knowledge integrity validation** — sixteen checks run against the
+- **Time Machine and Explications — new as of 1.3.0, two more views as of
+  1.4.0** — AIStack's own five histories, projected as a real PROV-O graph
+  (Oxigraph), rebuilt in full on demand, browsable through a new LAN-only
+  screen — streams, the instants each one recorded, and every fact known
+  about one instant, including the provenance edges back to whoever or
+  whatever caused it. The "why" itself, Explications, is read for the
+  first time from four real sources: the AI Runtime's own answers,
+  `pra_tests.yml`'s dated comments, this project's `claude/` session
+  notes, and its own commit history. As of 1.4.0: a foldable network tree
+  (Réseau → Hôte → Stack → Conteneur, with search) read from the live
+  Docker/Compose catalogs, and a Mermaid provenance-graph diagram on every
+  node page, centred on the node being viewed.
+- **Knowledge integrity validation** — eighteen checks run against the
   governed documentation on every test suite and before every
   publication.
 - **CPU resource priority scheduling** — declared priority applications
@@ -183,8 +186,8 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.3.0**: `pytest -q` — **2270 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **514 source files**;
+**As of 1.4.0**: `pytest -q` — **2294 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **517 source files**;
 `python3 -m aistack.cli.knowledge_integrity` — **75 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 

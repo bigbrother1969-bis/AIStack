@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -38,6 +38,47 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.4.0 — 2026-09-28
+
+**The roadmap's second step for the Time Machine
+(`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md` § *1.4*, `ADR-0011` § 18-19):
+`timemachine_ui` gains two new views over the graph 1.3 built — a
+foldable network tree read from the live catalogs, and a provenance
+graph diagram centred on whatever node is being viewed. The roadmap's
+third 1.4 item, the AI-drafts queue, stays explicitly open behind R8
+(qualifying AI-explanation quality) — the owner's own decision was to
+build the two ungated items now and revisit R8 at a later cadrage,
+rather than assume `QUAL-0001`'s earlier closure already covers it.**
+
+- **The network tree, `timemachine_ui`'s second view.** A foldable
+  Réseau → Hôte → Stack → Conteneur hierarchy with search, built from
+  the live Docker/Compose catalogs — never the graph, which carries no
+  per-container business schema yet — with each node's real Historique
+  looked up in the graph where one exists. Native `<details>`/
+  `<summary>` gives the fold/unfold with no JavaScript at all. A remote
+  host (reached only through an explicit, never-automatic SSH scan)
+  attaches its containers directly, with no invented Stack level.
+- **The provenance graph, `timemachine_ui`'s third view.** Every node
+  page now also renders a Mermaid diagram of its own immediate
+  neighbours — "centré sur l'étape," per the roadmap's own already
+  validated maquette — reusing the same vendored Mermaid.js mechanism
+  Architecture's own dependency view already draws real arrows with,
+  rather than a second graph-rendering engine. Deliberately one hop
+  only: a caller wanting to go further clicks through to a neighbour,
+  one node at a time. A node with no real neighbour shows the same
+  honest empty state every other section of the screen already uses.
+- **Two of the roadmap's four already-validated Time Machine maquettes
+  narrow their remaining gap.** A time ribbon and a full "why" panel
+  still assume data (occurrence time, collection gaps, Explications
+  woven through every stream) that 1.5 and 1.7 have yet to supply —
+  `ADR-0011` states the gap explicitly rather than leaving it to be
+  found later.
+
+`bigbrother1969/aistack-core:1.4.0`, built from `<commit to be filled in
+at publication — the owner's own build, per OPS-0002>`, digest `<filled
+in at publication>`.
+2294 tests, 75 knowledge artifacts, `clean: True`.
 
 ## 1.3.0 — 2026-09-28
 
@@ -652,7 +693,7 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 1.3.0 (2026-09-28), taken together.
+Not what changed — what runs, as of 1.4.0 (2026-09-28), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
@@ -704,17 +745,20 @@ Not what changed — what runs, as of 1.3.0 (2026-09-28), taken together.
   recipient verify two bundles carry the same content without trusting
   whoever sent it. This is how a new AI session, or a new contributor,
   gets up to speed without reading the repository's entire history.
-- **Time Machine and Explications — new as of 1.3.0.** AIStack's own five
-  histories, projected as a real PROV-O graph (Oxigraph), rebuilt in full
-  on demand, browsable through a new LAN-only screen — streams, the
-  instants each one recorded, and every fact known about one instant,
-  including the provenance edges back to whoever or whatever caused it.
-  The "why" itself, Explications, is read for the first time from four
-  real sources: the AI Runtime's own answers, `pra_tests.yml`'s dated
-  comments, this project's `claude/` session notes, and its own commit
-  history — each import deliberate, attributed, and never silently
-  overwritten.
-- **Knowledge integrity validation.** Sixteen checks run against the
+- **Time Machine and Explications — new as of 1.3.0, two more views as of
+  1.4.0.** AIStack's own five histories, projected as a real PROV-O graph
+  (Oxigraph), rebuilt in full on demand, browsable through a new LAN-only
+  screen — streams, the instants each one recorded, and every fact known
+  about one instant, including the provenance edges back to whoever or
+  whatever caused it. The "why" itself, Explications, is read for the
+  first time from four real sources: the AI Runtime's own answers,
+  `pra_tests.yml`'s dated comments, this project's `claude/` session
+  notes, and its own commit history — each import deliberate, attributed,
+  and never silently overwritten. As of 1.4.0, two more views: a foldable
+  Réseau → Hôte → Stack → Conteneur tree read from the live catalogs, with
+  search, and a Mermaid provenance-graph diagram on every node page,
+  centred on the node being viewed and its immediate neighbours.
+- **Knowledge integrity validation.** Eighteen checks run against the
   governed documentation on every test suite and before every
   publication — missing metadata, broken cross-references, undated
   claims about a moving system, decisions nobody recorded as implemented

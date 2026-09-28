@@ -39,6 +39,41 @@ it says what the build was *for*.
 
 ---
 
+## 1.5.1 — 2026-09-28
+
+**1.5's fourth and last named collector, deferred past 1.5.0, plus the
+first two GUI/interpretation pieces the roadmap's own maquettes
+described (`ADR-0011` § 23-25): package inventory, a time ribbon, and
+an upgrade correlation.**
+
+- **Inventaire des paquets.** A running container's own installed
+  packages, `docker exec` + `dpkg-query` first, falling back to
+  Alpine's own `/lib/apk/db/installed` database, and `"none"` — never
+  a silently empty list — when neither mechanism answers. Which
+  mechanism actually responded is itself recorded as a graph fact.
+  Runs as its own governed systemd poll, the same shape every other
+  1.5 collector already holds.
+- **Ruban du temps.** `timemachine_ui`'s third view (`/ribbon`): a
+  single chronological list, one row per recorded instant, across
+  every stream the graph currently holds — not only the four Docker
+  streams. Each stream gets its own colour-and-shape badge (never
+  colour alone), a collection gap is tagged rather than shown as an
+  ordinary event, and every row links into the existing per-node
+  provenance drill-down. A deliberately narrower v1 than the
+  maquette's own full sketch — the stepping cursor, the paired network
+  tree, and the event detail's "why" panel are named but not built
+  here.
+- **Corrélation upgrade.** The trigger the roadmap named ("Trace
+  également les upgrades sur les containers docker") needed no new
+  detection code: an image-digest change alone, already the local
+  proof an upgrade happened per 1.5.0's own digest-drift collector.
+  A new graph predicate links the package inventory nearest before
+  that change to the nearest one after it, on the same subject, with
+  no bounded time window — an unusually large real gap stays a
+  visible, dated fact, never hidden behind an invented threshold.
+
+2538 tests, 75 knowledge artifacts, `clean: True`.
+
 ## 1.5.0 — 2026-09-28
 
 **The roadmap's third step for the Time Machine

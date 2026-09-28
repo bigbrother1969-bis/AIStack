@@ -39,6 +39,49 @@ it says what the build was *for*.
 
 ---
 
+## 1.5.0 — 2026-09-28
+
+**The roadmap's third step for the Time Machine
+(`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md` § *1.5*, `ADR-0011` § 20-22):
+passive traceability of what happens inside a container, upgrades
+included — three of the section's four named collectors, each its own
+governed polling loop feeding the same graph 1.3-1.4 already built.
+The fourth, package inventory, is explicitly deferred past this
+release — the owner's own decision, not yet cadred.**
+
+- **Docker events.** Every container lifecycle action Docker itself
+  reports — exec, pull, create, recreate, destroy — polled every ten
+  seconds and recorded only when something actually happened, keyed by
+  each container's own stable identity (a Compose `project/service`
+  pair, never a Docker id recreation would break) so a subject's own
+  thread survives being recreated.
+- **`docker diff` périodique.** Every running container's own
+  filesystem drift since creation, mount-path noise filtered out at
+  the source against that container's own declared mounts (`docker
+  diff`'s own volume exclusion is not reliable — verified against a
+  real upstream defect before trusting it), written only when the
+  value actually changed. A real production incident, found the same
+  day it was enabled — `docker diff`'s own line order is not stable
+  across repeated calls — is fixed at the source: this stream's own
+  output is now sorted before comparison, so an unchanged container
+  reads as unchanged.
+- **Dérive du digest.** A running container's own current image
+  digest, compared against the last one observed for the same stable
+  subject — purely local, no registry call — the local proof an
+  upgrade happened the moment `docker inspect` reports one.
+- **Collection gaps recorded as their own fact** (R11), built once as
+  a mechanism shared by every 1.5 monitor rather than three separate
+  copies: a monitor that stops and restarts states the gap in its own
+  coverage explicitly, rather than leaving a silent hole a later query
+  could mistake for "nothing happened."
+
+Every one of the three collectors runs as its own systemd service on
+GIGABYTE, each verified against the real Docker daemon before being
+left running, and each already rendering through `timemachine_ui`'s
+existing generic per-node facts view with no new template code.
+
+2473 tests, 75 knowledge artifacts, `clean: True`.
+
 ## 1.4.0 — 2026-09-28
 
 **The roadmap's second step for the Time Machine

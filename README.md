@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.4.0
+### Concrete capabilities, as of 1.5.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -135,7 +135,13 @@ AIStack transforms observations into sustainable knowledge assets.
   notes, and its own commit history. As of 1.4.0: a foldable network tree
   (Réseau → Hôte → Stack → Conteneur, with search) read from the live
   Docker/Compose catalogs, and a Mermaid provenance-graph diagram on every
-  node page, centred on the node being viewed.
+  node page, centred on the node being viewed. As of 1.5.0: three passive
+  collectors feed the same graph in real time — Docker events (exec,
+  pull, create, recreate, destroy), periodic `docker diff` (filesystem
+  drift since creation, mount noise filtered out), and image-digest drift
+  (a purely local upgrade signal, no registry call) — each its own
+  governed systemd poll, with a stream's own collection gaps recorded as
+  a fact when one stops and restarts.
 - **Knowledge integrity validation** — eighteen checks run against the
   governed documentation on every test suite and before every
   publication.
@@ -186,8 +192,8 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.4.0**: `pytest -q` — **2294 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **517 source files**;
+**As of 1.5.0**: `pytest -q` — **2473 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **532 source files**;
 `python3 -m aistack.cli.knowledge_integrity` — **75 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 

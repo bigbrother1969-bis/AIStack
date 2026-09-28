@@ -5,6 +5,8 @@ import subprocess
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
+from aistack.providers.docker.identity import stable_subject_from_labels
+
 
 # 1.5, Traçabilité passive des conteneurs (`claude/ROADMAP-1.2-TO-2.0-
 # 2026-09-27.md` § 1.5). Cadrage 2026-09-28: the owner chose `docker
@@ -102,26 +104,29 @@ def stable_subject_of(event: Mapping[str, Any]) -> str:
     Deliberately not the container's own Docker id as a first choice:
     § 3 fixes this exactly to avoid it — "recreation always changes
     it and identity by definition must not."
+
+    **A thin adapter, since 2026-09-28.** The identity rule itself
+    moved to `aistack.providers.docker.identity.stable_subject_from_
+    labels` that day, cadrage for 1.5's second collector (`docker
+    diff` périodique) — the owner's own decision to factor it out
+    before a third and fourth caller (dérive du digest, inventaire
+    des paquets) would each otherwise need their own copy. This
+    function is now only the part specific to a Docker *event*'s own
+    payload shape: pulling `attributes`/`actor_id` out of `Actor`
+    before handing them to the shared rule. Behaviour unchanged —
+    this is a refactor, not a redesign.
     """
 
     actor = event.get("Actor")
     attributes = actor.get("Attributes") if isinstance(actor, dict) else None
     attributes = attributes if isinstance(attributes, dict) else {}
-
-    project = attributes.get("com.docker.compose.project")
-    service = attributes.get("com.docker.compose.service")
-    if project and service:
-        return f"{project}/{service}"
-
-    name = attributes.get("name")
-    if name:
-        return str(name)
-
     actor_id = actor.get("ID") if isinstance(actor, dict) else None
-    if actor_id:
-        return str(actor_id)
 
-    return "unknown"
+    return stable_subject_from_labels(
+        attributes,
+        name=str(attributes.get("name") or ""),
+        container_id=str(actor_id or ""),
+    )
 
 
 def occurred_at_of(event: Mapping[str, Any]) -> datetime:

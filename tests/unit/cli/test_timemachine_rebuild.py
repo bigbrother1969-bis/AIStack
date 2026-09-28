@@ -56,6 +56,8 @@ def test_rebuild_is_a_no_op_on_an_empty_generated_dir(tmp_path: Path):
 
     assert "- Streams seen: 0" in output
     assert "- Facts written: 0" in output
+    assert "- Docker-diff subjects seen: 0" in output
+    assert "- Docker-diff snapshots seen: 0" in output
     assert "- Collection-gap streams seen: 0" in output
     assert "- Collection gaps seen: 0" in output
 
@@ -76,3 +78,19 @@ def test_rebuild_reports_a_recorded_collection_gap(tmp_path: Path):
 
     assert "- Collection-gap streams seen: 1" in output
     assert "- Collection gaps seen: 1" in output
+
+
+def test_rebuild_reports_a_recorded_docker_diff_snapshot(tmp_path: Path):
+    generated_dir = tmp_path / "reports" / "generated"
+    from aistack.providers.docker.diff_history import record_docker_diff
+
+    record_docker_diff(
+        "arrstack/gluetun",
+        [{"kind": "A", "path": "/run/nginx.pid"}],
+        generated_dir=generated_dir,
+    )
+
+    output = _run(tmp_path, str(generated_dir))
+
+    assert "- Docker-diff subjects seen: 1" in output
+    assert "- Docker-diff snapshots seen: 1" in output

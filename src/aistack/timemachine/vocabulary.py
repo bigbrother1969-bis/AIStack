@@ -38,6 +38,13 @@ XSD = "http://www.w3.org/2001/XMLSchema#"
 RDF_TYPE = f"{RDF}type"
 XSD_DATE_TIME = f"{XSD}dateTime"
 
+# Added 2026-09-28 alongside `aistack.timemachine.projection
+# .docker_diff` — this heritage's first typed numeric literal
+# (`AISTACK_CHANGE_COUNT`, below). Every literal before it was either
+# a plain string or `XSD_DATE_TIME`; no predicate needed a magnitude
+# before this one.
+XSD_INTEGER = f"{XSD}integer"
+
 
 # --- PROV-O classes and predicates § *Decision* 2 names -------------
 
@@ -115,3 +122,13 @@ AISTACK_CONFIDENCE = f"{AISTACK}confidence"
 # closed enum this project would then have to keep in sync with
 # Docker's own.
 AISTACK_DOCKER_ACTION = f"{AISTACK}dockerAction"
+
+# 1.5, added 2026-09-28 alongside `aistack.timemachine.projection
+# .docker_diff` — how many filesystem paths a `docker diff` snapshot
+# reported (after this collector's own mount-path filtering), typed
+# `XSD_INTEGER` since it is a magnitude, not an identifier. The full
+# path list is deliberately not promoted to individual graph facts —
+# see that module's own docstring for why — so this is the one
+# lightweight signal the graph gets from a snapshot beyond "it
+# happened, for this subject, at this instant."
+AISTACK_CHANGE_COUNT = f"{AISTACK}changeCount"

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -1037,6 +1037,140 @@ payload run for real) — full governed chain
 view — is deliberately not part of this patch: § *Open Points* names
 it as the next increment, once a real batch from GIGABYTE's own Docker
 daemon has been observed at least once.
+
+### 21. `docker diff` périodique — 1.5's second collector, mount-filtered at the source, write-on-change per subject
+
+Cadrage 2026-09-28 (`AskUserQuestion`, right after § 20 shipped),
+grounded in live research before any code: `WebSearch`/`WebFetch`
+against Docker's own reference
+(<https://docs.docker.com/engine/reference/commandline/diff/>) and a
+real `moby/moby` issue (#3840), not assumed from training data
+(`ARC-P-006`, "search first"). Two facts that research settled,
+directly: `docker diff`/`docker container diff` takes no `--format`
+or JSON option at all — plain-text `<A|C|D> <path>` lines only, one
+column, unlike `docker events`' own `--format {{json .}}` — and its
+own exclusion of mounted-volume paths from that listing is not
+reliable: a bind mount is indistinguishable from a real filesystem
+change via `stat()` across storage drivers, a maintainer's own
+clarification on that issue explains, and a real reported case shows
+it misreporting a change inside a mounted volume.
+
+Four decisions, all confirmed with the owner before any code: (1)
+running containers only (`docker ps`, not `docker ps -a` — a stopped
+container's filesystem is not drifting under active use); (2) volume/
+mount paths filtered explicitly at the collector's own level, using
+each container's own `docker inspect`-reported `.Mounts[].Destination`
+— never trusted to `docker diff` itself (per the research above), and
+never deferred to § 6's own projection-side `filter_fact` (a different
+mechanism, built for a statically-declared root, not a per-container
+mount Docker itself already states); (3) a shared identity module,
+factored out *before* this collector rather than after — the owner's
+own decision, the same "build the shared thing first" pattern already
+set for R11 (§ 9's own addendum); (4) the full current diff listing
+written on each write-on-change, never an invented incremental delta
+— `docker diff` is already cumulative since container creation, not
+since the last poll, so tracking a separate "since I last looked"
+delta would only duplicate what Docker already does for free and risk
+drifting from it.
+
+**`aistack.providers.docker.identity`, the shared module decision 3
+asks for.** `stable_subject_from_labels` is § 3's identity rule,
+generalised off any source of Compose labels rather than cabled to
+`docker events`' own `Actor.Attributes` shape — `aistack.providers
+.docker.events.stable_subject_of` (§ 20) is now a thin adapter over
+it, pulling `attributes`/`actor_id` out of an event's own `Actor`
+before handing them to the shared rule; behaviour unchanged, a
+refactor rather than a redesign, its own 14 tests still pass
+unmodified. `list_running_container_names` (`docker ps`) and
+`inspect_containers`/`identities_of` (`docker inspect`, every
+container in one call, not one subprocess per name) round out the
+module — `ContainerIdentity` pairs a container's own stable subject
+with its declared mount destinations, the one shape both this
+collector and the two still to come (dérive du digest, inventaire des
+paquets) need from `docker inspect`.
+
+**One subdirectory per subject, a real fork from § 20's own shape —
+decided by what each stream's own "write on change" actually
+compares.** A Docker event is individually new by nature (Docker
+itself never reports one twice), so that stream only ever asks "is
+there anything at all this cycle." A `docker diff` snapshot is
+cumulative and, for a quiet container, often *identical* to the last
+poll — the real question is "did the value change," which needs
+something to compare against. `aistack.providers.docker.diff_history
+.record_docker_diff` answers it by reading back the stable "latest"
+file `aistack.generators.history.write_artifact_with_history` already
+keeps per subject (`generated_dir / "docker-diff" / <subject> /
+"docker-diff.json"` — a subject embedding a `/`, a Compose
+`project/service` pair, simply nests one directory deeper; no
+escaping, no second checkpoint state to keep in sync with it) —
+the first stream in this package whose own novelty needs a read-back
+rather than a value its caller already holds in hand
+(`aistack.priority.decision_history.record_decision`'s own
+`ApplyReport.changed` is computed by its caller, not read from disk).
+`has_changed` is the read-only half of that same comparison, exposed
+so `--dry-run` can report what would be recorded without writing
+anything — the same distinction § 20's own monitor already draws.
+
+**A dedicated projector that reverses the nesting.**
+`aistack.timemachine.projection.docker_diff.project_docker_diff` finds
+every subject root by locating each `history/docker-diff` leaf under
+`generated_dir / "docker-diff"`, however deep a subject's own `/`
+nests it — it cannot assume one `iterdir()` level per subject the way
+`aistack.timemachine.projection.collection_gaps` safely can (that
+module's own stream names never carry a `/`) — and rebuilds the exact
+subject string from the path between the two. Wired into
+`aistack.cli.timemachine_rebuild.main` as the fourth projection pass,
+after docker-events, before collection gaps (which needs every
+stream's own activity node to already exist).
+
+**`aistack:changeCount`, not every changed path, as a graph fact.** A
+snapshot can hold anywhere from zero to hundreds of paths; promoting
+each to its own graph triple would turn a provenance graph meant to
+answer "when did this happen, for which subject" into a bulk
+file-change log nothing here queries that way. The full path list
+stays exactly where it was recorded, reachable through
+`aistack.cli.history_query` the same way any other stream's raw
+content already is; `aistack:changeCount` (`aistack.timemachine
+.vocabulary`, this heritage's first `xsd:integer`-typed literal —
+every one before it was a plain string or `xsd:dateTime`) gives the
+graph the one lightweight magnitude signal worth a fact of its own. No
+`aistack:occurredAt` — `docker diff` states only that a path changed
+*since the container's own creation*, never when.
+
+**Built, tested, and wired end to end, 2026-09-28**:
+`aistack.providers.docker.identity` (`stable_subject_from_labels`,
+`list_running_container_names`, `inspect_containers`,
+`identities_of` — 17 tests, including the container-vanished-between-
+`docker ps`-and-`docker inspect` race); `aistack.providers.docker.diff`
+(`collect_docker_diff`, `collect_running_container_diffs` — 13 tests,
+including the real plain-text parsing shape and the mount-path
+filter's own boundary discipline: a mount matches itself and its
+children, never a sibling merely sharing its prefix); `aistack
+.providers.docker.diff_history` (`record_docker_diff`, `has_changed` —
+11 tests); a ninth `aistack.timemachine.iri` builder, `docker_diff_iri`
+(keyed by subject and recording instant); one new `xsd:integer`
+constant and `aistack:changeCount` in `aistack.timemachine.vocabulary`;
+`aistack.timemachine.projection.docker_diff` (`project_docker_diff`,
+10 tests, including a same-second-collision-aware regression for two
+snapshots of one subject and a direct assertion the generic walk never
+finds this stream either); `aistack.cli.docker_diff_monitor` (`parse`,
+checkpoint load/save, `log_cycle`, `run_cycle` — 19 tests, real
+subprocess boundary mocked, real tmp-path files, a checkpoint-still-
+advances-on-a-quiet-cycle regression, a dry-run-writes-nothing
+regression); `deploy/systemd/aistack-docker-diff-monitor.service` and
+`run_docker_diff_monitor.sh`, mirroring § 20's own install/watch
+instructions. Full governed chain (`pytest`, `ruff check src tests
+timemachine_ui`, `mypy src`, `knowledge_integrity`) clean.
+`timemachine_ui`'s own generic node-facts view (§ 19) already renders
+this stream with no new template code, the same way § 20's own
+*Open Points* entry found for `docker events`: `aistack:stableSubject`
+already carries a friendly label there, shared across every stream
+that states one, and `aistack:changeCount` degrades gracefully to its
+raw predicate IRI (`_PREDICATE_LABELS.get(predicate, (None, False))`'s
+own fallback) rather than failing to render — checked by reading that
+view's own code, not yet re-confirmed against a real batch from
+GIGABYTE's own Docker daemon the way § 20's entry was (`docker` is not
+reachable from this verification host).
 
 ## Consequences
 

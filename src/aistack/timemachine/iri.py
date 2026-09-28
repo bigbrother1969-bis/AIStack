@@ -16,7 +16,7 @@ and, since 1.4's provenance graph view (`ADR-0011` § 19),
 `short_label` for the same reason across every other IRI shape this
 module builds — it never constructs an IRI itself; every IRI it links
 to comes straight out of a SPARQL result, never rebuilt from parts.
-The eight builders below exist for the writer, and for round-trip
+The nine builders below exist for the writer, and for round-trip
 tests.
 """
 
@@ -30,6 +30,7 @@ _EXPLICATION_PREFIX = "urn:aistack:explication:"
 _SUBJECT_PREFIX = "urn:aistack:subject:"
 _DOCKER_EVENT_PREFIX = "urn:aistack:docker-event:"
 _COLLECTION_GAP_PREFIX = "urn:aistack:collection-gap:"
+_DOCKER_DIFF_PREFIX = "urn:aistack:docker-diff:"
 
 
 def stream_iri(stem: str) -> str:
@@ -133,6 +134,22 @@ def collection_gap_iri(stream_stem: str, instant_label: str) -> str:
     return f"{_COLLECTION_GAP_PREFIX}{stream_stem}:{instant_label}"
 
 
+def docker_diff_iri(subject: str, instant_label: str) -> str:
+    """
+    The IRI of one `docker diff` snapshot's own `prov:Entity` — 1.5's
+    second collector, `aistack.timemachine.projection.docker_diff`.
+    Keyed by `subject` (§ 3's stable identity, which may itself embed
+    a `/` for a Compose `project/service` pair — the same raw,
+    unescaped embedding `explication_iri` already holds for a bare
+    subject string) *and* the recording instant, the same reasoning
+    `explication_iri` already holds: one subject gains a new snapshot
+    on every write-on-change, so `subject` alone would collide across
+    them.
+    """
+
+    return f"{_DOCKER_DIFF_PREFIX}{subject}:{instant_label}"
+
+
 _ALL_PREFIXES = (
     _STREAM_PREFIX,
     _OBSERVATION_PREFIX,
@@ -142,13 +159,14 @@ _ALL_PREFIXES = (
     _SUBJECT_PREFIX,
     _DOCKER_EVENT_PREFIX,
     _COLLECTION_GAP_PREFIX,
+    _DOCKER_DIFF_PREFIX,
 )
 
 
 def short_label(iri: str) -> str:
     """
     A short, human-readable label for any IRI this module builds —
-    `stream_stem` generalised across all eight prefixes, added for 1.4's
+    `stream_stem` generalised across all nine prefixes, added for 1.4's
     provenance graph view (`ADR-0011` § 19): a diagram centred on one
     node needs a real label for every neighbour it draws, not only a
     stream's own name.

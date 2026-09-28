@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -774,6 +774,102 @@ tree's own CSS, and the search itself — the same "state the gap
 plainly" discipline § 13's own *Open Points* bullet already holds
 between what was demoed and what shipped.
 
+### 19. The provenance graph — `timemachine_ui`'s third view, one node centred on itself
+
+Roadmap `ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.4's own "une vue du
+graphe" is a separate line from § 18's tree, confirmed by re-reading
+the roadmap directly rather than assuming the tree alone already
+closed 1.4's ungated scope (`AskUserQuestion`, 2026-09-28, "Diagramme
+visuel node-link (recommandé)" against two narrower alternatives — a
+text list, or treating `node.html`'s existing text view as already
+sufficient). A follow-up message the same turn — "on se cale sur les
+maquettes que tu m'as proposé précédemment" — pointed this at a
+specific one of the four already-validated maquettes: maquette 2,
+"Suivre les évolutions," whose own wording is "graphe de provenance
+centré sur l'étape." That phrase is this section's whole scope: one
+node, and everything one hop away from it — not a whole-graph
+explorer nobody validated, and not the ribbon or "pourquoi" panel the
+other three maquettes separately ask for (§ *Open Points* already
+states those remain outside v1).
+
+**The same mechanism § 13's Architecture view already vendored, not a
+second one invented.** `aistack.renderers.architecture
+.dependency_mermaid.render_dependency_mermaid` already draws a real,
+arrowed Mermaid `flowchart` from observed edges (`ARC-P-012`); the
+vendored `mermaid.min.js` bundle `aistack.renderers.architecture.html
+.load_vendored_mermaid_js` already ships is reused as-is. The new
+module, `aistack.renderers.timemachine.provenance_mermaid`
+(`ProvenanceNeighbor`, `render_provenance_mermaid`), turns `node`'s
+own already-computed `facts`/`referenced_by` — the exact two lists §
+13's text view already renders — into that same Mermaid text, rather
+than a third graph-layout engine for one screen.
+
+**One documented divergence from the Architecture precedent.**
+`aistack.renderers.architecture.mermaid`'s own `_click_line` passes
+`service.href` through `escape_text` before embedding it, correct
+there because nothing about `escape_text` matters to an href that
+never contains `&`. `ProvenanceNeighbor.href` is a self-built
+`/node?iri=...&lang=...` query string that genuinely does — escaping
+it would turn the real query separator into `&amp;`, corrupting the
+link a click actually follows — so `render_provenance_mermaid` embeds
+`href` verbatim, and the module's own docstring states why rather
+than silently doing something different from its own precedent with
+no explanation.
+
+**Deliberately one hop, and never an activity's own instants.**
+`node`'s existing route already excludes an activity's `wasGeneratedBy`
+edges from `referenced_by` (shown instead as the chronological
+`instants` list, § 13) — this section trusts and reuses that existing
+exclusion rather than re-filtering, so a stream with many recorded
+instants does not clutter a diagram that is supposed to be centred on
+one étape. `_provenance_neighbors` (`timemachine_ui/app.py`) narrows
+`facts`/`referenced_by` to real neighbours the same way `node.html`'s
+own text view already distinguishes a link from a plain-text type
+badge: an outgoing fact only becomes a neighbour when `object_iri is
+not None and object_type_label_key is None`, the exact check the
+template already made for `RDF_TYPE` — reused, not re-derived.
+`aistack.timemachine.iri.short_label` generalises the existing
+`stream_stem` across all six of that module's IRI prefixes, so any
+neighbour — a stream, an observation, an agent, a request, an
+Explication, a subject — gets a real label, defensively falling back
+to the raw IRI on anything it does not recognise, the same discipline
+`stream_stem` itself already holds.
+
+**The vendored bundle's own `</script` hazard, checked again at this
+new call site.** `render_html` (§ 13) already guards against the
+vendored bundle ever containing a literal `</script` before embedding
+it raw inside a `<script>` tag; `load_vendored_mermaid_js` itself
+performs no such check — it is a bare file read, shared by both
+callers. `timemachine_ui/app.py` repeats the same guard rather than
+trusting `render_html`'s own check to somehow also cover a second,
+independent embedding a few files away.
+
+**Built, tested, and wired end to end, 2026-09-28**:
+`provenance_mermaid.py` (8 unit tests: the centre alone, an outgoing
+edge, an incoming edge, click-line placement and ordering, label
+escaping, the href left deliberately unescaped, determinism);
+`short_label` (2 more unit tests, alongside the existing `stream_stem`
+suite); `timemachine_ui/app.py`'s `_node_href`/`_provenance_neighbors`
+and the `node()` route's own wiring (`provenance_graph`, `mermaid_js`,
+the repeated `_SCRIPT_TERMINATOR` check); `node.html`'s new "Graphe"
+section (a "Graphe" heading always present, the diagram or the same
+`.empty` convention every other section already holds), the vendored
+JS and the Mermaid definition embedded via Jinja's own `tojson` filter
+— Jinja2's built-in HTML-safe JSON escaping, the idiomatic equivalent
+of `render_html`'s own manual `</`-replacement, confirmed by direct
+inspection to encode a real `&` in an href as `&`, a JS string
+escape a browser decodes back to the literal character at runtime,
+never HTML-entity-corrupted; new `graph.*` i18n keys in both
+catalogs; new `#provenance-graph`/`.render-error` CSS in `_style.html`.
+Exercised end to end with a `TestClient` against a real, in-memory-then-
+on-disk `OxigraphGraphStore` seeded with real PROV/`aistack:` triples
+(never a mock) — both languages, a node with real outgoing and
+incoming neighbours (`node0`/`node1`/`node2`/`node3` all present, click
+hrefs intact through the `tojson` round-trip), and a node with none
+(the `.empty` fallback, no diagram markup emitted at all) — plus the
+full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
+`mypy src`).
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -874,6 +970,16 @@ between what was demoed and what shipped.
   set `historique_names` already confirmed has a real match
   (`historique_entity_iri`, never per candidate). R8/brouillons-IA
   remains its own open decision (§ 18's own text), untouched by this.
+- **The provenance graph is real too, not only designed** (2026-09-28,
+  § 19): `aistack.renderers.timemachine.provenance_mermaid`, `short_
+  label`, and `timemachine_ui`'s own `/node` wiring exist and were
+  exercised end to end (a `TestClient` against a real seeded graph, both
+  languages, a node with real neighbours and one without). Maquette 2's
+  "graphe de provenance centré sur l'étape" is the first of the
+  roadmap's four already-validated maquettes to actually ship against
+  this graph — § *Open Points*' existing "narrower than the four
+  maquettes" gap narrows by exactly this much; the ribbon and the
+  "pourquoi" panel remain outside v1.
 
 ## Open Points
 
@@ -958,3 +1064,9 @@ between what was demoed and what shipped.
   QUAL-0001's 2026-09-25 closure (model choice, general) already covers
   Explication-quality evaluation specifically (a narrower question that
   did not exist as a concept before 1.3).
+- **Multi-hop / whole-graph browsing** (§ 19) is deliberately not
+  built — maquette 2's own wording is "centré sur l'étape," one hop,
+  not a graph explorer nobody validated. A caller wanting to go
+  further today follows a neighbour's own click-through, one node at a
+  time; a second, deeper hop rendered in the same diagram is real
+  future work, not assumed here.

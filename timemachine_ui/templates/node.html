@@ -22,6 +22,13 @@
     <p class="node-iri">{{ t('timemachine.node_iri_label') }}: {{ iri }}</p>
   </header>
 
+  <h2>{{ t('timemachine.graph.heading') }}</h2>
+  {% if provenance_graph %}
+    <div id="provenance-graph">{{ t('timemachine.graph.loading') }}</div>
+  {% else %}
+    <p class="empty">{{ t('timemachine.graph.empty') }}</p>
+  {% endif %}
+
   {% if instants is defined and instants %}
     <h2>{{ t('timemachine.instants_heading') }}</h2>
     <ul class="band-list">
@@ -85,6 +92,26 @@
     </ul>
   {% else %}
     <p class="empty">{{ t('timemachine.empty_referenced_by') }}</p>
+  {% endif %}
+
+  {% if provenance_graph %}
+    <script>{{ mermaid_js | safe }}</script>
+    <script>
+    (function () {
+      var definition = {{ provenance_graph | tojson }};
+      var container = document.getElementById('provenance-graph');
+      var errorPrefix = {{ t('timemachine.graph.render_error') | tojson }};
+
+      mermaid.initialize({ startOnLoad: false });
+
+      mermaid.render('provenance-graph-svg', definition).then(function (result) {
+        container.innerHTML = result.svg;
+      }).catch(function (error) {
+        var message = error && error.message ? error.message : String(error);
+        container.innerHTML = '<p class="render-error">' + errorPrefix + ' ' + message + '</p>';
+      });
+    })();
+    </script>
   {% endif %}
 </body>
 </html>

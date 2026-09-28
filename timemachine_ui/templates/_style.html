@@ -144,3 +144,16 @@ header { margin-bottom: 1.2rem; }
   .tree-children { padding-left: 1rem; }
   .tree-historique { margin-left: 0; }
 }
+
+/*
+  The provenance graph (ADR-0011 §19, added 2026-09-28) — one Mermaid
+  diagram, always rendered (never a <select>-driven switcher, unlike
+  architecture_render's own #diagram): #provenance-graph is the same
+  bordered, scrollable box that mechanism already uses there, restyled
+  to this page's own band palette rather than imported wholesale.
+*/
+#provenance-graph {
+  border: 1px solid #ddd; border-radius: 6px; padding: 1rem;
+  background: #fafafa; overflow: auto; margin: 0 0 1.2rem;
+}
+.render-error { color: #9c2b2b; white-space: pre-wrap; font-family: monospace; }

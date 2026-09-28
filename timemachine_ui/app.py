@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
@@ -17,6 +18,8 @@ from aistack.i18n.web import PageLanguage, page_language
 from aistack.kernel.bootstrap import create_kernel
 from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.repository import RepositoryProvider
+from aistack.renderers.architecture.html import load_vendored_mermaid_js
+from aistack.renderers.timemachine import ProvenanceNeighbor, render_provenance_mermaid
 from aistack.timemachine import (
     GraphStore,
     NetworkTreeNode,
@@ -28,6 +31,7 @@ from aistack.timemachine import (
     parse_remote_hosts,
     stream_stem,
 )
+from aistack.timemachine.iri import short_label
 from aistack.timemachine.projection import DEFAULT_GENERATED_DIR
 from aistack.timemachine.vocabulary import (
     AISTACK_STABLE_SUBJECT,
@@ -51,6 +55,19 @@ from aistack.timemachine.vocabulary import (
 DEFAULT_TOPOLOGY = "src/aistack/architecture/definitions/infrastructure_topology.yml"
 DEFAULT_NETWORK_DISCOVERY = "src/aistack/network_discovery/definitions/network_discovery.yml"
 NETWORK_DOCKER_OBSERVATION_STEM = "network-docker-observation"
+
+# `ADR-0011` § 19 — the same guard `aistack.renderers.architecture.html
+# .render_html` makes before embedding `load_vendored_mermaid_js()`'s
+# own return value verbatim inside a `<script>` tag: a browser ends a
+# script element at the first literal `</script` it finds, wherever in
+# the source it sits. `load_vendored_mermaid_js()` itself performs no
+# such check (it is a bare file read, shared by both callers); each
+# caller that embeds it raw checks again at render time rather than
+# trusting the other caller's own check to somehow cover this one too
+# — `vendor/PROVENANCE.md` records today's bundle carries no such
+# substring, not that it never could after a future
+# `npm install mermaid@<newer>`.
+_SCRIPT_TERMINATOR = "</script"
 
 # A fifth mini-app, same family as `priority_ui`/`selection_ui`/
 # `network_discovery_ui`/`troubleshooting_assistant_ui` — decided with
@@ -333,6 +350,57 @@ def streams(request: Request):
     )
 
 
+def _node_href(neighbor_iri: str, language: PageLanguage) -> str:
+    return f"/node?iri={quote(neighbor_iri, safe='')}&lang={language.lang}"
+
+
+def _provenance_neighbors(
+    facts: list[dict[str, object]],
+    referenced_by: list[dict[str, str]],
+    language: PageLanguage,
+) -> tuple[ProvenanceNeighbor, ...]:
+    """
+    `ADR-0011` § 19 — the same `facts`/`referenced_by` `node`'s own
+    text view already computed, narrowed to real neighbours only: a
+    fact whose object is a literal, or `RDF_TYPE`'s own type badge
+    (`object_type_label_key` set), names nothing to draw an edge to —
+    `node.html`'s existing table already makes this exact distinction
+    (it shows the type badge as plain text, never as a link), this
+    reuses it rather than re-deriving it.
+    """
+
+    neighbors: list[ProvenanceNeighbor] = []
+
+    for fact in facts:
+        object_iri = fact["object_iri"]
+        if object_iri is None or fact["object_type_label_key"] is not None:
+            continue
+        label_key = fact["predicate_label_key"]
+        predicate_label = language.t(label_key) if label_key else str(fact["predicate"])
+        neighbors.append(
+            ProvenanceNeighbor(
+                href=_node_href(str(object_iri), language),
+                label=short_label(str(object_iri)),
+                predicate_label=predicate_label,
+                direction="out",
+            )
+        )
+
+    for ref in referenced_by:
+        label_key = ref["predicate_label_key"]
+        predicate_label = language.t(label_key) if label_key else ref["predicate"]
+        neighbors.append(
+            ProvenanceNeighbor(
+                href=_node_href(ref["iri"], language),
+                label=short_label(ref["iri"]),
+                predicate_label=predicate_label,
+                direction="in",
+            )
+        )
+
+    return tuple(neighbors)
+
+
 @app.get("/node", response_class=HTMLResponse)
 def node(request: Request, iri: str):
     language = _language(request)
@@ -407,12 +475,40 @@ def node(request: Request, iri: str):
         None,
     )
 
+    # `ADR-0011` § 19 (1.4, "une vue du graphe", maquette 2 "graphe de
+    # provenance centré sur l'étape") — a real diagram of this node's
+    # own immediate neighbours, drawn from the exact same `facts`/
+    # `referenced_by` the text view above already computed. `None`
+    # when there is nothing real to draw (no fact points at another
+    # node, nothing points back) — the template falls back to the
+    # same `.empty` convention every other section already holds,
+    # rather than a diagram of one lone, edgeless box.
+    neighbors = _provenance_neighbors(facts, referenced_by, language)
+    provenance_graph = (
+        render_provenance_mermaid(short_label(iri), neighbors) if neighbors else None
+    )
+    # The vendored bundle is only worth embedding when there is a
+    # diagram to render with it (`load_vendored_mermaid_js` reads a
+    # multi-megabyte file every call — cheap on the LAN this screen
+    # never leaves, but no reason to pay it for a node with nothing to
+    # draw).
+    mermaid_js = load_vendored_mermaid_js() if provenance_graph else None
+    if mermaid_js is not None and _SCRIPT_TERMINATOR in mermaid_js.lower():
+        raise ValueError(
+            "The vendored mermaid.js bundle contains "
+            f"{_SCRIPT_TERMINATOR!r}, which would truncate the "
+            "<script> tag it is embedded in — see "
+            "src/aistack/renderers/architecture/vendor/PROVENANCE.md"
+        )
+
     context: dict[str, object] = {
         "iri": iri,
         "node_type_label_key": node_type_label_key,
         "instants": instants,
         "facts": facts,
         "referenced_by": referenced_by,
+        "provenance_graph": provenance_graph,
+        "mermaid_js": mermaid_js,
     }
     context.update(language.context())
     return _finish(

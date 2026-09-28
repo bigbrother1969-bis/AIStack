@@ -18,6 +18,11 @@ empty_instants: "Aucun instant observé pour ce flux."
 empty_facts: "Aucun fait connu sur ce nœud."
 empty_referenced_by: "Rien ne référence ce nœud."
 node_iri_label: "Identifiant du nœud"
+graph:
+  heading: "Graphe"
+  loading: "Chargement du graphe…"
+  empty: "Aucun voisin direct à représenter pour ce nœud."
+  render_error: "Le graphe n'a pas pu être dessiné :"
 predicate:
   type: "type"
   generated_at: "enregistré le"

@@ -18,6 +18,11 @@ empty_instants: "No instant observed for this stream."
 empty_facts: "No known fact about this node."
 empty_referenced_by: "Nothing references this node."
 node_iri_label: "Node identifier"
+graph:
+  heading: "Graph"
+  loading: "Loading graph…"
+  empty: "No direct neighbour to draw for this node."
+  render_error: "The graph could not be drawn:"
 predicate:
   type: "type"
   generated_at: "recorded at"

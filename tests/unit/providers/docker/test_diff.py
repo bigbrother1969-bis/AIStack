@@ -85,6 +85,40 @@ def test_no_changes_at_all_is_a_real_empty_observation():
         assert collect_docker_diff("x") == []
 
 
+def test_output_is_sorted_by_path_regardless_of_docker_s_own_order():
+    """
+    Found in production, 2026-09-28, GIGABYTE: `docker diff`'s own
+    line order is not stable across repeated calls against the same
+    container even when the underlying set of changes is identical —
+    a real diagnostic against the recorded history found 30 of 32
+    multi-snapshot subjects holding the exact same set, merely
+    re-ordered, on every poll. Sorted at the source so the same real
+    set always parses to the same list, whatever order Docker itself
+    happened to report it in this time.
+    """
+    reordered = "D /var/log/old_file\nA /run/nginx.pid\nC /etc/hosts\n"
+    with _run(stdout=reordered):
+        changes = collect_docker_diff("x")
+
+    assert changes == [
+        {"kind": "C", "path": "/etc/hosts"},
+        {"kind": "A", "path": "/run/nginx.pid"},
+        {"kind": "D", "path": "/var/log/old_file"},
+    ]
+
+
+def test_two_calls_with_the_same_set_in_different_order_parse_identically():
+    first_order = "A /run/nginx.pid\nC /etc/hosts\n"
+    second_order = "C /etc/hosts\nA /run/nginx.pid\n"
+
+    with _run(stdout=first_order):
+        first = collect_docker_diff("x")
+    with _run(stdout=second_order):
+        second = collect_docker_diff("x")
+
+    assert first == second
+
+
 def test_the_container_name_is_passed_through():
     with _run(stdout="") as mocked:
         collect_docker_diff("arrstack-gluetun-1")

@@ -1172,6 +1172,40 @@ view's own code, not yet re-confirmed against a real batch from
 GIGABYTE's own Docker daemon the way § 20's entry was (`docker` is not
 reachable from this verification host).
 
+**Correction, found the same day on GIGABYTE, first real use** — the
+same kind of gap § 20's own first-run-lookback correction closed for
+`docker events`. Enabled as a real systemd service, the monitor's own
+first `--dry-run` check reported all 59 running subjects as changed
+(expected — a first observation ever, nothing to compare against);
+once enabled for real, `timemachine_rebuild` against a few minutes of
+real polling reported 163 snapshots for those same 59 subjects — far
+more write-on-change activity than a few 10-second cycles should
+plausibly produce. A diagnostic run directly against the real recorded
+history (comparing each subject's first and most recent snapshot as
+*sets* of `(kind, path)` rather than as ordered lists) found the cause:
+`docker diff`'s own line order is not stable across repeated calls
+against the same container, even when the underlying set of changes is
+completely unchanged — 30 of the 32 multi-snapshot subjects held the
+exact same set, merely re-ordered, on every poll (one, `firefly/
+firefly`, was a real content change — new PHP session files an
+actively-used container keeps creating). `aistack.providers.docker
+.diff.collect_docker_diff` now sorts its parsed output by `path` (then
+`kind`) before returning it, once, at the source — order was never
+itself a fact worth keeping for this stream, unlike `docker events`'
+own chronological order, which `aistack.providers.docker.events` never
+touches — so `aistack.providers.docker.diff_history.has_changed`'s own
+list-equality comparison, and the content actually written to history,
+are both now deterministic for an unchanged real diff, without asking
+every future caller of `collect_docker_diff` to remember to canonicalise
+it themselves. 2 new regression tests (a reordered real transcript
+parses identically; two calls returning the same set in different
+order parse to the same list). Full governed chain re-run, clean.
+GIGABYTE's own accumulated pre-fix history under `reports/generated/
+docker-diff/` — real but low-value churn, `FDN-0003` disposable data,
+never committed — is the owner's to clear before restarting the
+service with the fix applied, not something this correction migrates
+in place.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the

@@ -50,8 +50,10 @@ _KIND_CODES = {"A", "C", "D"}
 def collect_docker_diff(name: str) -> list[dict[str, str]]:
     """
     `docker diff <name>`, parsed into `{"kind": "A"|"C"|"D", "path":
-    ...}` entries, oldest-reported-first (Docker's own output order,
-    unchanged) — plain-text `<A|C|D> <path>` lines, confirmed
+    ...}` entries, sorted by `path` (then `kind`) — **not** Docker's
+    own reported order, deliberately, since 2026-09-28 (see the sort
+    call's own comment below for the production incident that found
+    this needed) — plain-text `<A|C|D> <path>` lines, confirmed
     2026-09-28 against Docker's own reference: no `--format`/JSON
     option exists for this command, unlike `docker events`
     (`aistack.providers.docker.events.collect_docker_events`).
@@ -82,6 +84,29 @@ def collect_docker_diff(name: str) -> list[dict[str, str]]:
         if not separator or kind not in _KIND_CODES or not path:
             continue
         changes.append({"kind": kind, "path": path})
+
+    # Found in production, 2026-09-28, the day this monitor was first
+    # enabled on GIGABYTE: `docker diff`'s own line order is not
+    # stable across repeated calls against the same container, even
+    # when the underlying set of changes is identical — a diagnostic
+    # against the real host's own recorded history showed 30 of 32
+    # multi-snapshot subjects holding the exact same set of changes,
+    # re-ordered, on every poll (one genuine content change, in a
+    # container actively writing new session files, was the only real
+    # exception). `docker diff` itself gives no documented ordering
+    # guarantee (this heritage's own research before building this
+    # collector, § *Decision* above, found none) — Docker's own
+    # overlay-filesystem enumeration order is the plausible cause,
+    # itself not guaranteed stable by any storage driver. Sorted here,
+    # once, at the source, rather than left to `aistack.providers
+    # .docker.diff_history.has_changed`'s own comparison: order was
+    # never itself a fact worth keeping (unlike `docker events`, whose
+    # order is real chronology `aistack.providers.docker.events` never
+    # reorders), so canonicalising it here makes both the stored
+    # content and the "did anything actually change" comparison
+    # deterministic, without asking every future caller of `changes`
+    # to remember to do it themselves.
+    changes.sort(key=lambda change: (change["path"], change["kind"]))
 
     return changes
 

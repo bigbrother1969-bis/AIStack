@@ -1,0 +1,54 @@
+# AIStack — docker-packages monitor
+#
+# 1.5's fourth and last named collector (`claude/ROADMAP-1.2-TO-2.0-
+# 2026-09-27.md` § 1.5, inventaire des paquets): polls every running
+# container's own current package inventory each cycle (`docker exec`
+# + `dpkg-query`, falling back to `/lib/apk/db/installed` — cadrage
+# 2026-09-28) and records a subject's own observation to Observation
+# History only when it changed. Deferred past 1.5.0
+# (`ADR-0011` § 22's own closing note), shipped in 1.5.1. The raw
+# stream `aistack.timemachine.projection.project_docker_packages`
+# turns into graph facts on the next `timemachine_rebuild`.
+#
+# Runs on the host, not in a container — the same reasoning
+# `aistack-docker-digest-monitor.service`'s own comment already gives
+# for its own Docker-socket dependency, applied here to a fourth
+# process with the same requirement.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-docker-packages-monitor.service \
+#       /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-docker-packages-monitor
+#
+# Before enabling it as a service, run it once by hand to check it
+# against the real Docker daemon without risking an unattended loop:
+#
+#   ./run_docker_packages_monitor.sh --once --dry-run
+#
+# Watch it with:
+#
+#   journalctl -u aistack-docker-packages-monitor -f
+
+[Unit]
+Description=AIStack docker-packages monitor (container package inventory, 1.5)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_docker_packages_monitor.sh
+Restart=on-failure
+RestartSec=5
+
+# SIGTERM is what lets the monitor log a clean "stopping" line and
+# return promptly, the same `KillSignal`/`TimeoutStopSec` pair every
+# other 1.5 monitor's own unit already declares for its own
+# clean-shutdown handling.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -1337,6 +1337,134 @@ rather than assumed to block this one, per the roadmap's own § 1.5
 sequencing (diff → digest → paquets) treated as an ordering, not a
 bundling requirement.
 
+### 23. Inventaire des paquets — 1.5's fourth and last named collector, shipped in 1.5.1
+
+The owner's own 2026-09-28 decision, the same day: pick this deferred
+collector back up for 1.5.1, alongside the first two `timemachine_ui`
+pieces the roadmap's own four validated maquettes had left unassigned
+to a version (§ *Open Points*, "The GUI Time Machine itself").
+
+A fresh cadrage (`AskUserQuestion`) settled the two questions § 22's
+own closing note left open, grounded in real research before any code
+(`ARC-P-006`), confirmed with the owner:
+
+**Mechanism: `docker exec` + `dpkg-query`, `/lib/apk/db/installed` as
+the fallback, "no known package manager" when neither answers.**
+Verified against `dpkg-query(1)`'s own manual page (man7.org): `-W`
+with a custom `-f` format string (`'${Package}\t${Version}\n'`) prints
+one package per line with no table-parsing needed — passed as a
+single `subprocess.run` argv entry, never through a shell, so nothing
+here needs to escape dpkg-query's own `${...}` placeholders. Alpine's
+own `apk info -v` display output was considered and rejected: it
+concatenates a package's name and version into one string with no
+declared separator contract, an unreliable split — the structured,
+documented alternative this collector uses instead is Alpine's own
+`/lib/apk/db/installed` database (the Alpine wiki's own `Apk_spec`
+page), a plain line-prefixed, blank-line-separated record format
+(`P:` the name, `V:` the version). **Which mechanism actually
+answered is itself recorded as a fact** (`"dpkg"` / `"apk"` /
+`"none"`), never collapsed into an empty package list — a container
+with no package manager this collector knows how to query is a
+different observation from one a real inventory found genuinely
+empty.
+
+**`docker-packages`, staying in the naming family** — the owner's own
+decision, the same reasoning § 22's own "`docker-digest`, not
+`image-digest`" decision already gives: this collector's own
+directory/stream name follows `docker-events`/`docker-diff`/
+`docker-digest`, not the roadmap's own French wording ("inventaire des
+paquets").
+
+**`aistack.providers.docker.packages`**
+(`collect_running_container_packages`, `collect_package_inventory`)
+mirrors § 22's own `aistack.providers.docker.digest` in shape —
+running containers only, the shared `aistack.providers.docker
+.identity` module, unchanged — with `_dpkg_packages`/`_apk_packages`
+each returning `None` (not `[]`) on failure, so "this mechanism did
+not answer" and "a real, empty inventory" stay distinguishable
+outcomes for `collect_package_inventory`'s own fallback chain.
+`dpkg-query`'s own output is sorted by package name before being
+returned, the same production-caution § 21's own `docker diff`
+line-order incident already taught this project: no ordering
+guarantee is documented for either mechanism's own output, so
+canonicalising it here keeps the write-on-change comparison
+deterministic without asking every future caller to remember to do it
+themselves.
+
+**`aistack.providers.docker.packages_history`**
+(`record_package_inventory`, `has_changed`) is § 22's own write-on-change
+shape, one subdirectory per subject, applied to a `{mechanism,
+packages}` pair instead of a single string: a mechanism change alone
+(e.g. `"dpkg"` to `"none"`) counts as a real change even when
+`packages` happens to compare equal (both empty) — the mechanism that
+answered is itself part of what this stream states.
+
+**`aistack.timemachine.projection.docker_packages`**
+(`project_docker_packages`) is an eleventh `aistack.timemachine.iri`
+builder (`docker_packages_iri`, keyed by subject and recording instant
+— the same reasoning `docker_digest_iri` already holds) and two new
+predicates: `aistack:packageCount` (`XSD_INTEGER`, the same reasoning
+`aistack:changeCount` already holds — a magnitude, not an identifier)
+and `aistack:packageMechanism` (a plain string literal, the same
+reasoning `aistack:imageDigest` already holds for a label). **The full
+name/version list is deliberately not promoted to individual graph
+facts** — § 21's own `aistack:changeCount` reasoning, doubled here: a
+package inventory can hold not hundreds but potentially thousands of
+entries, reachable through `aistack.cli.history_query` the same way
+any other stream's raw content already is. No `aistack:occurredAt`,
+the same restraint every 1.5 stream in this package already documents.
+Wired into `aistack.cli.timemachine_rebuild.main` as the sixth
+projection pass, after docker-digest, before collection gaps (which
+stays last, unchanged).
+
+**`aistack.cli.docker_packages_monitor`** is § 22's own governed
+polling loop (`POLL_SECONDS = 10.0`, unchanged), R11 built in from its
+first version, `--once`/`--dry-run` for a first manual check against
+the real Docker daemon before enabling as a service. Its own console
+log reports `{subject, mechanism, package_count}` per changed
+subject, deliberately not the full package list — the same restraint
+the projector's own module comment gives for the graph, applied here
+to a human-facing summary instead.
+
+**Built, tested, and wired end to end, 2026-09-28**:
+`aistack.providers.docker.packages` (`collect_package_inventory`,
+`collect_running_container_packages` — 9 tests, including the
+dpkg-first/apk-fallback/neither-answers chain, sort-by-name, and a
+malformed record being skipped on each mechanism);
+`aistack.providers.docker.packages_history` (`record_package_inventory`,
+`has_changed` — 11 tests, the exact shape § 22's own `digest_history`
+suite already holds, plus the mechanism-alone-changes regression);
+an eleventh `aistack.timemachine.iri` builder, `docker_packages_iri`;
+`AISTACK_PACKAGE_COUNT`/`AISTACK_PACKAGE_MECHANISM` in `aistack
+.timemachine.vocabulary`; `aistack.timemachine.projection
+.docker_packages` (`project_docker_packages`, 11 tests, including the
+same same-second-collision-aware regression every prior projector
+suite already holds, and an empty inventory still being a real
+observation with count zero); `aistack.cli.docker_packages_monitor`
+(`parse`, checkpoint load/save, `log_cycle`, `run_cycle` — 21 tests,
+real subprocess boundary mocked, real tmp-path files, the
+checkpoint-still-advances-on-a-quiet-cycle and
+dry-run-writes-nothing regressions every prior monitor suite already
+holds); `deploy/systemd/aistack-docker-packages-monitor.service` and
+`run_docker_packages_monitor.sh`, mirroring § 20–22's own
+install/watch instructions. Full governed chain (`pytest`, `ruff check
+src tests timemachine_ui`, `mypy`, `knowledge_integrity`) clean —
+2527 tests passing (54 new), 536 source files.
+
+`timemachine_ui`'s own generic node-facts view (§ 19) is expected to
+render this stream with no new template code, the same open item §
+21 and § 22's own entries already carry forward for the same reason
+(`docker` unreachable from this verification host) — not yet
+re-confirmed against a real batch from GIGABYTE's own Docker daemon.
+
+With § 20 through this section, **1.5's four named Docker collectors
+are all built, tested, and delivered**: `docker events`, `docker diff`
+périodique, dérive du digest, inventaire des paquets. The roadmap's
+own § 1.5 wording ("Trace également les upgrades sur les containers
+docker") now has every raw fact a later interpretation layer needs to
+attach a before/after image and package inventory to a detected
+upgrade — see the *Open Points* entry below, updated the same day.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -1577,15 +1705,24 @@ bundling requirement.
 - **Correlated "upgrade" facts** (§ 1.5's own wording: "Trace également
   les upgrades sur les containers docker") are not built by § 20's raw
   collector, deliberately — `ARC-P-012`'s boundary keeps a collector
-  reporting what happened, never an interpretation of it. Recognising a
-  `destroy`+`create` pair (or § 22's own image-digest change) as one
-  upgrade, and attaching the before/after image and package-inventory
-  facts § 1.5 itself asks for, is real work for a later interpretation
-  layer — informed by three of 1.5's four named collectors, now built
-  (§ 20, § 21, § 22); inventaire des paquets, deferred past this
-  release (§ 22's own closing note), is still needed before this
-  layer can attach a before/after package list, not guessed at ahead
-  of it.
+  reporting what happened, never an interpretation of it. Recognising
+  one upgrade and attaching a before/after image and package inventory
+  to it is real work for a later interpretation layer — every raw fact
+  it needs now exists, all four of 1.5's named collectors having
+  shipped (§ 20, § 21, § 22, § 23). **The trigger, cadré with the owner
+  2026-09-28 alongside § 23: an image-digest change alone** (§ 22's own
+  wording, "the local proof an upgrade happened"), not a `destroy`+
+  `create` pair — two consecutive `docker-digest` observations for the
+  same `aistack:stableSubject` with a different `aistack:imageDigest`,
+  needing only that one already-reliable stream rather than correlating
+  across `docker events` (which R11 can independently gap) and
+  `docker-digest` together. The before/after package lists this layer
+  attaches come from `docker-packages`'s own snapshots nearest each side
+  of the digest-change instant, by the same `aistack:stableSubject` —
+  not yet designed in any further detail (what "nearest" means when a
+  package snapshot is itself sparse, whether the correlated fact is a
+  new vocabulary predicate or a computed view over existing ones), and
+  not yet built.
 - **`aistack:clockSource`** (§ 5, reopened by § 20) stays unpopulated
   until § 1.5's own sequencing reaches a second host (GIGABYTE first,
   remote hosts over SSH after) and a real drift measurement exists

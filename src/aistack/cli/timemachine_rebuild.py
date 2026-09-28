@@ -10,6 +10,7 @@ from aistack.timemachine.projection import (
     project_docker_diff,
     project_docker_digest,
     project_docker_events,
+    project_docker_packages,
     project_explications,
     project_observation_history,
 )
@@ -66,18 +67,27 @@ def main() -> None:
     (`aistack.timemachine.projection.docker_digest`'s own docstring
     says why a dedicated one, not a branch inside the generic walk).
 
-    **`project_collection_gaps` runs sixth, against the same store,
+    **`project_docker_packages` runs sixth, against the same store,
+    for the same reason** — 1.5's fourth and last named collector
+    (`aistack.cli.docker_packages_monitor`, cadré 2026-09-28, deferred
+    past 1.5.0 and shipped in 1.5.1), a ninth source stream with its
+    own dedicated projector (`aistack.timemachine.projection
+    .docker_packages`'s own docstring says why a dedicated one, not a
+    branch inside the generic walk).
+
+    **`project_collection_gaps` runs seventh, against the same store,
     last on purpose.** `ADR-0011` § 9 (R11), built 2026-09-28 as a
     mechanism shared by every 1.5 monitor rather than per-collector —
     it links a recorded gap to a stream's own activity node
     (`aistack.timemachine.iri.stream_iri`), which that stream's own
     pass (third, above, for docker-events; fourth, for docker-diff;
-    fifth, for docker-digest) is what actually creates as a
-    `prov:Activity` fact. Running after every stream's own projection
-    pass, in the same rebuild, means that node already exists by the
-    time a gap tries to link to it, for every stream this rebuild
-    knows how to project — never a second, competing activity node
-    minted here for one this module does not own.
+    fifth, for docker-digest; sixth, for docker-packages) is what
+    actually creates as a `prov:Activity` fact. Running after every
+    stream's own projection pass, in the same rebuild, means that node
+    already exists by the time a gap tries to link to it, for every
+    stream this rebuild knows how to project — never a second,
+    competing activity node minted here for one this module does not
+    own.
 
     **The leaf directory, created here, not assumed.** `pyoxigraph
     .Store`'s own documented behaviour creates the directory its
@@ -101,6 +111,7 @@ def main() -> None:
     docker_events_summary = project_docker_events(store, generated_dir=generated_dir)
     docker_diff_summary = project_docker_diff(store, generated_dir=generated_dir)
     docker_digest_summary = project_docker_digest(store, generated_dir=generated_dir)
+    docker_packages_summary = project_docker_packages(store, generated_dir=generated_dir)
     collection_gaps_summary = project_collection_gaps(store, generated_dir=generated_dir)
 
     print("Time Machine Projection")
@@ -116,15 +127,17 @@ def main() -> None:
     print(f"- Docker-diff snapshots seen: {docker_diff_summary.snapshots_seen}")
     print(f"- Docker-digest subjects seen: {docker_digest_summary.subjects_seen}")
     print(f"- Docker-digest observations seen: {docker_digest_summary.snapshots_seen}")
+    print(f"- Docker-packages subjects seen: {docker_packages_summary.subjects_seen}")
+    print(f"- Docker-packages observations seen: {docker_packages_summary.snapshots_seen}")
     print(f"- Collection-gap streams seen: {collection_gaps_summary.streams_seen}")
     print(f"- Collection gaps seen: {collection_gaps_summary.gaps_seen}")
     print(
         "- Facts written: "
-        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + collection_gaps_summary.facts_written}"
+        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + collection_gaps_summary.facts_written}"
     )
     print(
         "- Facts dropped: "
-        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + collection_gaps_summary.facts_dropped}"
+        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + collection_gaps_summary.facts_dropped}"
     )
 
 

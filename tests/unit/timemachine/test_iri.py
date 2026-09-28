@@ -6,6 +6,7 @@ from aistack.timemachine.iri import (
     docker_diff_iri,
     docker_digest_iri,
     docker_event_iri,
+    docker_packages_iri,
     explication_iri,
     observation_iri,
     request_iri,
@@ -72,7 +73,12 @@ def test_docker_digest_iri_embeds_both_the_subject_and_the_instant_label():
     assert iri == "urn:aistack:docker-digest:arrstack/gluetun:2026-09-28T10-00-00Z"
 
 
-def test_short_label_strips_each_of_the_ten_prefixes():
+def test_docker_packages_iri_embeds_both_the_subject_and_the_instant_label():
+    iri = docker_packages_iri("arrstack/gluetun", "2026-09-28T10-00-00Z")
+    assert iri == "urn:aistack:docker-packages:arrstack/gluetun:2026-09-28T10-00-00Z"
+
+
+def test_short_label_strips_each_of_the_eleven_prefixes():
     assert short_label(stream_iri("observations")) == "observations"
     assert short_label(observation_iri("traces", "2026-09-27T10-00-00Z")) == (
         "traces:2026-09-27T10-00-00Z"
@@ -95,6 +101,9 @@ def test_short_label_strips_each_of_the_ten_prefixes():
     assert short_label(docker_digest_iri("arrstack/gluetun", "2026-09-28T10-00-00Z")) == (
         "arrstack/gluetun:2026-09-28T10-00-00Z"
     )
+    assert short_label(docker_packages_iri("arrstack/gluetun", "2026-09-28T10-00-00Z")) == (
+        "arrstack/gluetun:2026-09-28T10-00-00Z"
+    )
 
 
 def test_short_label_returns_an_unrecognised_iri_unchanged():
@@ -102,7 +111,7 @@ def test_short_label_returns_an_unrecognised_iri_unchanged():
     assert short_label("urn:prov:something-else") == "urn:prov:something-else"
 
 
-def test_the_ten_builders_use_distinct_prefixes():
+def test_the_eleven_builders_use_distinct_prefixes():
     """
     § *Decision* 1's own contract distinguishes an Entity, an
     Activity, an Agent and a request by IRI alone — two builders
@@ -112,8 +121,10 @@ def test_the_ten_builders_use_distinct_prefixes():
     explains. 1.5 (cadrage 2026-09-28) adds a seventh, one Docker
     event, and an eighth (R11, same day): one recorded collection
     gap is its own Entity too. A ninth, same day: one `docker diff`
-    snapshot. A tenth, same day: one image-digest observation,
-    distinct from every other kind of Entity this module builds.
+    snapshot. A tenth, same day: one image-digest observation. An
+    eleventh, 1.5.1 (cadrage 2026-09-28): one package-inventory
+    snapshot, distinct from every other kind of Entity this module
+    builds.
     """
     prefixes = {
         stream_iri("x").rsplit("x", 1)[0],
@@ -126,5 +137,6 @@ def test_the_ten_builders_use_distinct_prefixes():
         collection_gap_iri("x", "y").rsplit("x:y", 1)[0],
         docker_diff_iri("x", "y").rsplit("x:y", 1)[0],
         docker_digest_iri("x", "y").rsplit("x:y", 1)[0],
+        docker_packages_iri("x", "y").rsplit("x:y", 1)[0],
     }
-    assert len(prefixes) == 10
+    assert len(prefixes) == 11

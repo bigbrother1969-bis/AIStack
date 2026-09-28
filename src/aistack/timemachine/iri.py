@@ -16,7 +16,7 @@ and, since 1.4's provenance graph view (`ADR-0011` § 19),
 `short_label` for the same reason across every other IRI shape this
 module builds — it never constructs an IRI itself; every IRI it links
 to comes straight out of a SPARQL result, never rebuilt from parts.
-The ten builders below exist for the writer, and for round-trip
+The eleven builders below exist for the writer, and for round-trip
 tests.
 """
 
@@ -32,6 +32,7 @@ _DOCKER_EVENT_PREFIX = "urn:aistack:docker-event:"
 _COLLECTION_GAP_PREFIX = "urn:aistack:collection-gap:"
 _DOCKER_DIFF_PREFIX = "urn:aistack:docker-diff:"
 _DOCKER_DIGEST_PREFIX = "urn:aistack:docker-digest:"
+_DOCKER_PACKAGES_PREFIX = "urn:aistack:docker-packages:"
 
 
 def stream_iri(stem: str) -> str:
@@ -164,6 +165,19 @@ def docker_digest_iri(subject: str, instant_label: str) -> str:
     return f"{_DOCKER_DIGEST_PREFIX}{subject}:{instant_label}"
 
 
+def docker_packages_iri(subject: str, instant_label: str) -> str:
+    """
+    The IRI of one package-inventory snapshot's own `prov:Entity` —
+    1.5's fourth and last named collector, `aistack.timemachine
+    .projection.docker_packages`. Keyed by `subject` and the recording
+    instant, the same reasoning `docker_digest_iri` already holds: one
+    subject gains a new snapshot on every write-on-change, so
+    `subject` alone would collide across them.
+    """
+
+    return f"{_DOCKER_PACKAGES_PREFIX}{subject}:{instant_label}"
+
+
 _ALL_PREFIXES = (
     _STREAM_PREFIX,
     _OBSERVATION_PREFIX,
@@ -175,6 +189,7 @@ _ALL_PREFIXES = (
     _COLLECTION_GAP_PREFIX,
     _DOCKER_DIFF_PREFIX,
     _DOCKER_DIGEST_PREFIX,
+    _DOCKER_PACKAGES_PREFIX,
 )
 
 

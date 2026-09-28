@@ -53,6 +53,23 @@ def test_rebuild_reports_a_recorded_image_digest_observation(tmp_path: Path):
     assert "- Docker-digest observations seen: 1" in output
 
 
+def test_rebuild_reports_a_recorded_package_inventory_observation(tmp_path: Path):
+    generated_dir = tmp_path / "reports" / "generated"
+    from aistack.providers.docker.packages_history import record_package_inventory
+
+    record_package_inventory(
+        "arrstack/gluetun",
+        "dpkg",
+        [{"name": "curl", "version": "7.88.1-10"}],
+        generated_dir=generated_dir,
+    )
+
+    output = _run(tmp_path, str(generated_dir))
+
+    assert "- Docker-packages subjects seen: 1" in output
+    assert "- Docker-packages observations seen: 1" in output
+
+
 def test_rebuild_creates_the_store_directory_on_disk(tmp_path: Path):
     generated_dir = tmp_path / "reports" / "generated"
     write_artifact_with_history("{}", generated_dir / "some-stream.json")
@@ -74,6 +91,8 @@ def test_rebuild_is_a_no_op_on_an_empty_generated_dir(tmp_path: Path):
     assert "- Docker-diff snapshots seen: 0" in output
     assert "- Docker-digest subjects seen: 0" in output
     assert "- Docker-digest observations seen: 0" in output
+    assert "- Docker-packages subjects seen: 0" in output
+    assert "- Docker-packages observations seen: 0" in output
     assert "- Collection-gap streams seen: 0" in output
     assert "- Collection gaps seen: 0" in output
 

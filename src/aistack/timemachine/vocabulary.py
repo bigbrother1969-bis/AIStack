@@ -142,3 +142,30 @@ AISTACK_CHANGE_COUNT = f"{AISTACK}changeCount"
 # same reasoning `aistack:stableSubject` itself already holds for a
 # `Literal` with no `datatype=` given.
 AISTACK_IMAGE_DIGEST = f"{AISTACK}imageDigest"
+
+# 1.5.1, added 2026-09-28 alongside `aistack.timemachine.projection
+# .docker_packages` — 1.5's fourth and last named collector
+# (inventaire des paquets), deferred past 1.5.0 (`ADR-0011` § 22's own
+# closing note) and shipped here. How many packages a `docker exec`
+# inventory reported for one subject, typed `XSD_INTEGER` for the same
+# reason `aistack:changeCount` already is: a magnitude, not an
+# identifier. The full name/version list is deliberately not promoted
+# to individual graph facts — the same reasoning `aistack.timemachine
+# .projection.docker_diff`'s own module comment already gives for
+# `aistack:changeCount`, doubled here: a package inventory can hold
+# not hundreds but potentially thousands of entries, reachable through
+# `aistack.cli.history_query` the same way any other stream's raw
+# content already is.
+AISTACK_PACKAGE_COUNT = f"{AISTACK}packageCount"
+
+# 1.5.1, same cadrage — which mechanism actually answered this
+# subject's own inventory (`"dpkg"`, `"apk"`, or `"none"` — no known
+# package manager responded; `aistack.providers.docker.packages`'s own
+# module comment explains why this is itself recorded as a fact,
+# never collapsed into an empty `packages` list). A plain string
+# literal, the same reasoning `aistack:imageDigest` already holds for
+# a label rather than a magnitude — not a closed enum this project
+# would have to keep in sync with every future base image family, the
+# same restraint `aistack:dockerAction` already holds by naming
+# Docker's own vocabulary directly rather than inventing one.
+AISTACK_PACKAGE_MECHANISM = f"{AISTACK}packageMechanism"

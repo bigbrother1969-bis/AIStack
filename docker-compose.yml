@@ -38,6 +38,24 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
+  # **1.5.0 — published 2026-09-28, current.**
+  #
+  #   bigbrother1969/aistack-core:1.5.0
+  #   @sha256:7a81a42dbc0030fad27ead3a1d1d9f74f32096a5b3b85419e6f2392257ff1314
+  #
+  # Built from 1faad79 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 2473 tests with `clean: True`.
+  # 75 artifacts, 18 checks. Before the build, 1.4.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.0 entry gives the
+  # full account; in short, the roadmap's third Time Machine step
+  # (`ADR-0011` § 20-22): three passive collectors — Docker events,
+  # periodic `docker diff`, and image-digest drift — feeding the same
+  # graph in real time, each its own governed systemd poll with
+  # collection gaps recorded as their own fact. Package inventory, the
+  # fourth named collector, is explicitly deferred past this release.
+  #
   # **1.4.0 — published 2026-09-28, current.**
   #
   #   bigbrother1969/aistack-core:1.4.0

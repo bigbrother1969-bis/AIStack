@@ -80,6 +80,8 @@ GIGABYTE, each verified against the real Docker daemon before being
 left running, and each already rendering through `timemachine_ui`'s
 existing generic per-node facts view with no new template code.
 
+`bigbrother1969/aistack-core:1.5.0`, built from `1faad79`, digest
+`sha256:7a81a42dbc0030fad27ead3a1d1d9f74f32096a5b3b85419e6f2392257ff1314`.
 2473 tests, 75 knowledge artifacts, `clean: True`.
 
 ## 1.4.0 — 2026-09-28

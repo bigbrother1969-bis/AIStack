@@ -1,0 +1,53 @@
+# AIStack — docker-events monitor
+#
+# Passive traceability of container events (1.5, `claude/ROADMAP-1.2-
+# TO-2.0-2026-09-27.md` § 1.5): polls `docker events` since its own
+# last checkpoint and records every new event — container exec, pull,
+# create, recreate, destroy — to Observation History, the raw stream
+# `aistack.timemachine.projection.project_docker_events` turns into
+# graph facts on the next `timemachine_rebuild`.
+#
+# Runs on the host, not in a container — the same reasoning
+# `aistack-resource-priority-monitor.service`'s own comment already
+# gives for its own Docker-socket dependency, applied here to a
+# second process with the same requirement.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-docker-events-monitor.service \
+#       /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-docker-events-monitor
+#
+# Before enabling it as a service, run it once by hand to check it
+# against the real Docker daemon without risking an unattended loop:
+#
+#   ./run_docker_events_monitor.sh --once --dry-run
+#
+# Watch it with:
+#
+#   journalctl -u aistack-docker-events-monitor -f
+
+[Unit]
+Description=AIStack docker-events monitor (passive container traceability, 1.5)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_docker_events_monitor.sh
+Restart=on-failure
+RestartSec=5
+
+# SIGTERM is what lets the monitor log a clean "stopping" line and
+# return promptly, the same `KillSignal`/`TimeoutStopSec` pair
+# `aistack-resource-priority-monitor.service` already declares for
+# its own clean-shutdown handling — this monitor has no throttled
+# container to release on exit, but the same signal contract keeps
+# both services' shutdown behaviour uniform.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

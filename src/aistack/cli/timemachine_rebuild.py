@@ -6,6 +6,7 @@ from pathlib import Path
 from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 from aistack.timemachine.projection import (
     DEFAULT_GENERATED_DIR,
+    project_docker_events,
     project_explications,
     project_observation_history,
 )
@@ -40,6 +41,13 @@ def main() -> None:
     command never imports raw sources itself, only what Explications'
     own store already holds.
 
+    **`project_docker_events` runs third, against the same store, for
+    the same reason** — 1.5's first collector
+    (`aistack.cli.docker_events_monitor`, cadrage 2026-09-28), a sixth
+    source stream with its own dedicated projector (`aistack
+    .timemachine.projection.docker_events`'s own docstring says why a
+    dedicated one, not a branch inside the generic walk).
+
     **The leaf directory, created here, not assumed.** `pyoxigraph
     .Store`'s own documented behaviour creates the directory its
     `path` names if it is missing — measured, 2026-09-27, to create
@@ -59,6 +67,7 @@ def main() -> None:
     store = OxigraphGraphStore(store_path)
     summary = project_observation_history(store, generated_dir=generated_dir)
     explications_summary = project_explications(store, generated_dir=generated_dir)
+    docker_events_summary = project_docker_events(store, generated_dir=generated_dir)
 
     print("Time Machine Projection")
     print(f"- Source: {generated_dir}")
@@ -67,13 +76,15 @@ def main() -> None:
     print(f"- Observations seen: {summary.observations_seen}")
     print(f"- Explication subjects seen: {explications_summary.subjects_seen}")
     print(f"- Explications seen: {explications_summary.explications_seen}")
+    print(f"- Docker-events batches seen: {docker_events_summary.batches_seen}")
+    print(f"- Docker events seen: {docker_events_summary.events_seen}")
     print(
         "- Facts written: "
-        f"{summary.facts_written + explications_summary.facts_written}"
+        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written}"
     )
     print(
         "- Facts dropped: "
-        f"{summary.facts_dropped + explications_summary.facts_dropped}"
+        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped}"
     )
 
 

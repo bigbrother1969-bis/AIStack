@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -870,6 +870,121 @@ hrefs intact through the `tojson` round-trip), and a node with none
 full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
 `mypy src`).
 
+### 20. Docker events — 1.5's first collector, a governed polling loop and its own dedicated projector
+
+Roadmap `ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.5, "Traçabilité passive
+des conteneurs, upgrades compris" — the version opened by the owner's
+"go 1.5", 2026-09-28. Cadrage the same day, `AskUserQuestion`, resolved
+two open architectural questions before any code: which of § 1.5's four
+named collectors (`docker events`, periodic `docker diff`, package
+inventory, digest drift) to build first — `docker events`, since it is
+the source the upgrade events § 1.5 itself names (exec, pull, create,
+recreate, destroy) come from, and every other collector's richer
+"upgrade" correlation depends on having it; and how it should run — a
+governed polling loop, the same shape `aistack.cli
+.resource_priority_monitor` already established as this heritage's one
+precedent for a long-running collector, over a continuous `docker
+events` subscription this heritage has no precedent for at all (every
+other provider's own `collect()` is a point-in-time snapshot; a
+subscription would be the first process in this codebase attached to a
+live stream rather than calling out and returning).
+
+**The raw collector states nothing beyond what `ADR-0011` § 3-4 already
+name as a collector's job.** `aistack.providers.docker.events` derives
+exactly three facts from each real Docker event — `aistack
+:stableSubject` (§ 3's identity rule: the Compose project/service name
+when the event's own actor carries both, falling back to its plain
+name, then its own Docker id only as a last resort), `aistack
+:occurredAt` (§ 4's own still-unfulfilled field, first populated here
+via Docker's own `timeNano`), and the action Docker recorded — and
+keeps the raw payload alongside them, never replacing it
+(`ARC-P-012`'s own boundary, "returns lines, never a verdict",
+extended here to Docker events: correlating a `destroy`+`create` pair
+into a richer "upgrade" fact is real interpretation, deliberately not
+attempted by this collector — a later, separate concern, § *Open
+Points*).
+
+**A dedicated root, off the generic walk's own.**
+`aistack.providers.docker.events_history` writes under `generated_dir
+/ "docker-events"`, not `generated_dir` itself — the same reasoning §
+7's Explications already established for keeping its own content off
+`project_observation_history`'s `available_stems` scan: a Docker-events
+batch (`since`/`until`, zero or more discrete events) does not fit the
+generic two-tier fact model built for one subject's own snapshot, and
+a dedicated projector, `aistack.timemachine.projection.docker_events
+.project_docker_events`, is what actually understands it — the same
+"a fifth mechanism where a fourth one does not actually fit" caution §
+7's own docstring already names, applied here to a sixth. Wired into
+`aistack.cli.timemachine_rebuild.main` as the third projection pass,
+after Explications, against the same store, never clearing it again.
+
+**Write-on-change, watermark checkpointing, one accepted edge.**
+`aistack.cli.docker_events_monitor` polls every `POLL_SECONDS` (10s,
+the agent's own proposed default — double `resource_priority_monitor`'s
+5s, since nothing here watches for a human-perceptible transition —
+the owner's to tune with a single edit, the same way that monitor's own
+constant is already documented as theirs to tune); records a batch only
+when it observed at least one new event (`aistack.priority
+.decision_history.record_decision`'s own "write on change" cadence,
+applied per-cycle here rather than per-priority-app); and persists its
+own `since` watermark to a checkpoint file so a restart resumes from
+where it left off rather than replaying or silently losing whatever
+happened while it was down. The checkpoint advances to each cycle's
+own `until`, not to the last event's own `occurred_at` — a quiet host
+must still move the window forward — which accepts one stated,
+undissolved edge: an event landing exactly on a previous cycle's
+`until` boundary could in principle be seen twice, since Docker's own
+`--since` is inclusive. Left as a known trade-off, not solved for a
+duplicate this project has not yet observed in practice (`ARC-P-006`).
+A first run with no checkpoint yet starts observing from the moment it
+starts, never backfilling further back — an unbounded backfill against
+a host's full Docker history is exactly the unmeasured scope
+`ARC-P-006` warns against.
+
+**`aistack:clockSource` (§ 5) is still not populated.** This first
+collector runs on GIGABYTE alone; § 5 reserves that field for once a
+collector "runs on more than one host" and a drift measurement exists
+between their clocks — § 1.5's own sequencing (GIGABYTE first, remote
+hosts over SSH after) is exactly when that becomes real, not before.
+
+**One new predicate.** `aistack:dockerAction` (`aistack.timemachine
+.vocabulary`) — PROV-O has no predicate for which kind of occurrence
+one Entity represents, and a container lifecycle stream is exactly a
+sequence of these labels; named directly from Docker's own vocabulary
+rather than a closed enum this project would have to keep in sync with
+Docker's.
+
+**Built, tested, and wired end to end, 2026-09-28**:
+`aistack.providers.docker.events` (`collect_docker_events`,
+`stable_subject_of`, `occurred_at_of`, `docker_action_of`, `enrich` —
+14 unit tests, including the real Compose-label precedence, the
+Docker-id-never-preferred rule, and a real nanosecond-precision
+regression: `timeNano / 1_000_000_000` was measured to round the last
+microsecond digit incorrectly on a real 19-digit value, fixed with
+integer `divmod` instead); `aistack.providers.docker.events_history`
+(`record_docker_events`, 3 tests); a seventh `aistack.timemachine.iri`
+builder, `docker_event_iri` (keyed by batch instant and in-batch index,
+since one cycle can record several events at once); `aistack.timemachine
+.projection.docker_events` (`project_docker_events`, 6 tests, including
+a direct assertion that the generic walk's own `available_stems` never
+finds this stream); `aistack.cli.docker_events_monitor` (`parse`,
+checkpoint load/save, `log_cycle`, `run_cycle` — 16 tests, real
+subprocess boundary mocked, real tmp-path files, a first-run-has-no-
+backfill regression, a dry-run-writes-nothing regression);
+`deploy/systemd/aistack-docker-events-monitor.service` and
+`run_docker_events_monitor.sh`, mirroring `aistack-resource-priority-
+monitor.service`'s own install/watch instructions. Exercised end to
+end via `aistack.cli.timemachine_rebuild` against a real recorded
+batch (a real `subprocess.run` call never made — `docker` is not on
+this verification host — but every step downstream of the raw event
+payload run for real) — full governed chain
+(`pytest`, `ruff check src tests timemachine_ui`, `mypy src`,
+`knowledge_integrity`) clean. `timemachine_ui`'s own wiring — surfacing
+`aistack:dockerAction`/`aistack:occurredAt` on a node's existing facts
+view — is deliberately not part of this patch: § *Open Points* names
+it as the next increment, once a real batch from GIGABYTE's own Docker
+daemon has been observed at least once.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -980,6 +1095,16 @@ full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
   this graph — § *Open Points*' existing "narrower than the four
   maquettes" gap narrows by exactly this much; the ribbon and the
   "pourquoi" panel remain outside v1.
+- **1.5's first collector is real too, not only sequenced** (2026-09-28,
+  § 20): `docker events`, cadrage-chosen as § 1.5's own opening
+  collector, running as a governed polling loop
+  (`aistack.cli.docker_events_monitor`), recording enriched, checkpointed
+  batches (`aistack.providers.docker.events_history`) that a dedicated
+  projector (`aistack.timemachine.projection.docker_events`) turns into
+  graph facts — the first collector to populate `aistack:occurredAt`
+  (§ 4) with a real, independently-stated instant rather than leave it
+  unstated. `aistack:clockSource` (§ 5) and any correlated "upgrade"
+  fact both remain open, by design — see § *Open Points*.
 
 ## Open Points
 
@@ -1070,3 +1195,32 @@ full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
   further today follows a neighbour's own click-through, one node at a
   time; a second, deeper hop rendered in the same diagram is real
   future work, not assumed here.
+- **`timemachine_ui`'s own docker-events wiring** (§ 20) is deliberately
+  not part of this patch — a node's existing generic facts view already
+  renders whatever `aistack:dockerAction`/`aistack:occurredAt` facts the
+  graph holds for it with no new template code once a real rebuild has
+  run against a real batch, so the "GUI construite au fur et à mesure"
+  the owner asked for (2026-09-28) is checked against a real Docker
+  daemon's output first, not built against a batch this verification
+  host invented — GIGABYTE has no `docker` binary reachable from where
+  this patch was verified.
+- **Correlated "upgrade" facts** (§ 1.5's own wording: "Trace également
+  les upgrades sur les containers docker") are not built by § 20's raw
+  collector, deliberately — `ARC-P-012`'s boundary keeps a collector
+  reporting what happened, never an interpretation of it. Recognising a
+  `destroy`+`create` pair (or an image-digest change) as one upgrade,
+  and attaching the before/after image and package-inventory facts §
+  1.5 itself asks for, is real work for a later interpretation layer —
+  informed by 1.5's remaining three named collectors (periodic `docker
+  diff`, package inventory, digest drift), not guessed at ahead of them.
+- **`aistack:clockSource`** (§ 5, reopened by § 20) stays unpopulated
+  until § 1.5's own sequencing reaches a second host (GIGABYTE first,
+  remote hosts over SSH after) and a real drift measurement exists
+  between two clocks to record.
+- **Parsing each of the twelve raw Observation History streams' own
+  business schema** (reopened by § 20, originally named under "The
+  graph's public contract's exact shape" above) is one collector
+  narrower now that `docker events` has its own dedicated projector;
+  the other eleven (a Beszel host's own name, a Compose catalog's own
+  service list, ...) remain generic-baseline-only, each its own future
+  decision rather than a pattern assumed to generalise from this one.

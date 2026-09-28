@@ -16,7 +16,7 @@ and, since 1.4's provenance graph view (`ADR-0011` § 19),
 `short_label` for the same reason across every other IRI shape this
 module builds — it never constructs an IRI itself; every IRI it links
 to comes straight out of a SPARQL result, never rebuilt from parts.
-The six builders below exist for the writer, and for round-trip
+The seven builders below exist for the writer, and for round-trip
 tests.
 """
 
@@ -28,6 +28,7 @@ _AGENT_PREFIX = "urn:aistack:agent:"
 _REQUEST_PREFIX = "urn:aistack:request:"
 _EXPLICATION_PREFIX = "urn:aistack:explication:"
 _SUBJECT_PREFIX = "urn:aistack:subject:"
+_DOCKER_EVENT_PREFIX = "urn:aistack:docker-event:"
 
 
 def stream_iri(stem: str) -> str:
@@ -99,6 +100,24 @@ def subject_iri(name: str) -> str:
     return f"{_SUBJECT_PREFIX}{name}"
 
 
+def docker_event_iri(instant_label: str, index: int) -> str:
+    """
+    The IRI of one Docker event's own `prov:Entity` — 1.5,
+    `aistack.timemachine.projection.docker_events`. Keyed by the
+    historicised batch's own instant *and* the event's position within
+    it, the same reasoning `observation_iri` already holds for
+    `stem:instant_label`: one poll cycle can (and typically does)
+    record several events at once, so `instant_label` alone would
+    collide. `index` is the event's own position in that batch's
+    `events` list — stable for as long as the batch file itself is
+    never rewritten, which `write_artifact_with_history` already
+    guarantees (a new write is a new history file, never an edit of
+    one already on disk).
+    """
+
+    return f"{_DOCKER_EVENT_PREFIX}{instant_label}:{index}"
+
+
 _ALL_PREFIXES = (
     _STREAM_PREFIX,
     _OBSERVATION_PREFIX,
@@ -106,6 +125,7 @@ _ALL_PREFIXES = (
     _REQUEST_PREFIX,
     _EXPLICATION_PREFIX,
     _SUBJECT_PREFIX,
+    _DOCKER_EVENT_PREFIX,
 )
 
 

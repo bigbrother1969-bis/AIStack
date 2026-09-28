@@ -13,6 +13,10 @@ from aistack.timemachine.iri import (
     request_iri as _request_iri,
     stream_iri as _activity_iri,
 )
+from aistack.timemachine.projection.docker_events import (
+    DockerEventsProjectionSummary,
+    project_docker_events,
+)
 from aistack.timemachine.projection.explications import (
     ExplicationProjectionSummary,
     project_explications,
@@ -213,8 +217,10 @@ def project_observation_history(
 
 __all__ = [
     "DEFAULT_GENERATED_DIR",
+    "DockerEventsProjectionSummary",
     "ExplicationProjectionSummary",
     "ProjectionSummary",
+    "project_docker_events",
     "project_explications",
     "project_observation_history",
 ]

@@ -101,3 +101,17 @@ AISTACK_EXPLICATION_STATUS = f"{AISTACK}explicationStatus"
 # of their own — added alongside the Explications projection that is
 # this predicate's first real caller.
 AISTACK_CONFIDENCE = f"{AISTACK}confidence"
+
+# 1.5, added 2026-09-28 alongside `aistack.timemachine.projection
+# .docker_events` — the action Docker itself recorded for one event
+# (`"start"`, `"destroy"`, `"exec_create"`, ...). PROV-O has
+# `prov:Activity` for "something that occurred" but no predicate for
+# *which kind* of occurrence one Entity represents; the four existing
+# streams never needed one (their own Entity is always "an
+# observation was recorded", one kind, needing no further label).
+# A `docker events` fact is different by its own nature — a container
+# lifecycle stream is exactly the sequence of these labels — so this
+# names Docker's own vocabulary directly rather than inventing a
+# closed enum this project would then have to keep in sync with
+# Docker's own.
+AISTACK_DOCKER_ACTION = f"{AISTACK}dockerAction"

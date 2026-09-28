@@ -1,0 +1,54 @@
+# AIStack — docker-digest monitor
+#
+# 1.5's third collector (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`
+# § 1.5, dérive du digest): polls every running container's own
+# current image digest each cycle (`docker inspect`'s own `.Image` —
+# cadrage 2026-09-28) and records a subject's own observation to
+# Observation History only when it changed — a changed digest for a
+# stable subject is the local proof an upgrade happened, no registry
+# call on either side. The raw stream `aistack.timemachine.projection
+# .project_docker_digest` turns into graph facts on the next
+# `timemachine_rebuild`.
+#
+# Runs on the host, not in a container — the same reasoning
+# `aistack-docker-diff-monitor.service`'s own comment already gives
+# for its own Docker-socket dependency, applied here to a third
+# process with the same requirement.
+#
+# Install (as root, on GIGABYTE):
+#
+#   cp deploy/systemd/aistack-docker-digest-monitor.service \
+#       /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-docker-digest-monitor
+#
+# Before enabling it as a service, run it once by hand to check it
+# against the real Docker daemon without risking an unattended loop:
+#
+#   ./run_docker_digest_monitor.sh --once --dry-run
+#
+# Watch it with:
+#
+#   journalctl -u aistack-docker-digest-monitor -f
+
+[Unit]
+Description=AIStack docker-digest monitor (container image digest drift, 1.5)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_docker_digest_monitor.sh
+Restart=on-failure
+RestartSec=5
+
+# SIGTERM is what lets the monitor log a clean "stopping" line and
+# return promptly, the same `KillSignal`/`TimeoutStopSec` pair
+# `aistack-docker-diff-monitor.service` already declares for its own
+# clean-shutdown handling.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

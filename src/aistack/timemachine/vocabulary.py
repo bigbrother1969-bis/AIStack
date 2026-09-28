@@ -132,3 +132,13 @@ AISTACK_DOCKER_ACTION = f"{AISTACK}dockerAction"
 # lightweight signal the graph gets from a snapshot beyond "it
 # happened, for this subject, at this instant."
 AISTACK_CHANGE_COUNT = f"{AISTACK}changeCount"
+
+# 1.5, added 2026-09-28 alongside `aistack.timemachine.projection
+# .docker_digest` — 1.5's third collector (dérive du digest). A plain
+# string literal (Docker's own `sha256:...` configuration digest,
+# `aistack.providers.docker.identity`'s own comment explains exactly
+# which one), not a new `XSD_INTEGER`-like type: unlike
+# `aistack:changeCount`, this is an identifier, never a magnitude, the
+# same reasoning `aistack:stableSubject` itself already holds for a
+# `Literal` with no `datatype=` given.
+AISTACK_IMAGE_DIGEST = f"{AISTACK}imageDigest"

@@ -39,6 +39,20 @@ def test_rebuild_reports_what_it_projected(tmp_path: Path):
     assert "- Facts dropped: 0" in output
 
 
+def test_rebuild_reports_a_recorded_image_digest_observation(tmp_path: Path):
+    generated_dir = tmp_path / "reports" / "generated"
+    from aistack.providers.docker.digest_history import record_image_digest
+
+    record_image_digest(
+        "arrstack/gluetun", "sha256:image-digest-1", generated_dir=generated_dir
+    )
+
+    output = _run(tmp_path, str(generated_dir))
+
+    assert "- Docker-digest subjects seen: 1" in output
+    assert "- Docker-digest observations seen: 1" in output
+
+
 def test_rebuild_creates_the_store_directory_on_disk(tmp_path: Path):
     generated_dir = tmp_path / "reports" / "generated"
     write_artifact_with_history("{}", generated_dir / "some-stream.json")
@@ -58,6 +72,8 @@ def test_rebuild_is_a_no_op_on_an_empty_generated_dir(tmp_path: Path):
     assert "- Facts written: 0" in output
     assert "- Docker-diff subjects seen: 0" in output
     assert "- Docker-diff snapshots seen: 0" in output
+    assert "- Docker-digest subjects seen: 0" in output
+    assert "- Docker-digest observations seen: 0" in output
     assert "- Collection-gap streams seen: 0" in output
     assert "- Collection gaps seen: 0" in output
 

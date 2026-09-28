@@ -13,6 +13,28 @@ from typing import Any, Mapping
 # and inventaire des paquets would each otherwise have needed their own
 # copy of the same rule against a different input shape (`docker
 # inspect`'s own `Config.Labels`, a plain dict, not an event's actor).
+#
+# `image_digest` added 2026-09-28 alongside 1.5's third collector
+# (`aistack.providers.docker.digest`, cadrage the same day): the
+# owner's own decision was to extend `ContainerIdentity` here rather
+# than have that collector run its own second `docker inspect` — this
+# module already reads every field `docker inspect` reports for a
+# container in one call, and a container's own `.Image` (its current
+# image's own *configuration* digest, a `sha256:...` id) is already
+# right there in the same JSON entry `mount_destinations` is built
+# from. Verified 2026-09-28 (GitHub issue search, `pmdroid/barkvisor`
+# #642, and Moby's own v27.5.1 behaviour it cites): this is a
+# different digest from an image's own `RepoDigests` (a *manifest*
+# digest, comparable only to what a registry itself reports, and not
+# reliably present on a container inspect at all) — the two are not
+# interchangeable, so this module states plainly which one it captures
+# rather than calling it just "the digest". Cadrage decision 4 for
+# `docker diff` already fixed the scope this needs: a purely local
+# comparison against the last digest observed for the same
+# `aistack:stableSubject`, never a registry call — `.Image` is exactly
+# the field that comparison needs, and the only one two successive
+# `docker inspect` calls on this project's own hosts can compare
+# without a network fetch on either side.
 
 
 def stable_subject_from_labels(
@@ -60,6 +82,7 @@ class ContainerIdentity:
     name: str
     stable_subject: str
     mount_destinations: tuple[str, ...]
+    image_digest: str = ""
 
 
 def list_running_container_names() -> list[str]:
@@ -156,6 +179,9 @@ def identities_of(names: list[str]) -> list[ContainerIdentity]:
             if isinstance(mount, dict) and mount.get("Destination")
         ) if isinstance(mounts, list) else ()
 
+        raw_image = entry.get("Image")
+        image_digest = str(raw_image) if raw_image else ""
+
         identities.append(
             ContainerIdentity(
                 name=name,
@@ -163,6 +189,7 @@ def identities_of(names: list[str]) -> list[ContainerIdentity]:
                     labels, name=name, container_id=str(container_id or "")
                 ),
                 mount_destinations=destinations,
+                image_digest=image_digest,
             )
         )
 

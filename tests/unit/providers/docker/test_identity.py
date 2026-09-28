@@ -26,6 +26,7 @@ INSPECT_ENTRY = {
         {"Destination": "/gluetun"},
         {"Type": "tmpfs"},  # no Destination — must not crash
     ],
+    "Image": "sha256:image-digest-1",
 }
 
 BARE_ENTRY = {
@@ -150,6 +151,7 @@ def test_identities_of_resolves_compose_identity_and_mounts():
             name="arrstack-gluetun-1",
             stable_subject="arrstack/gluetun",
             mount_destinations=("/data", "/gluetun"),
+            image_digest="sha256:image-digest-1",
         )
     ]
 
@@ -163,8 +165,35 @@ def test_identities_of_falls_back_to_name_with_no_compose_labels():
             name="some-container",
             stable_subject="some-container",
             mount_destinations=(),
+            image_digest="",
         )
     ]
+
+
+# --- image_digest (1.5's third collector, cadrage 2026-09-28) --------
+
+
+def test_identities_of_captures_the_container_s_own_image_digest():
+    """
+    `.Image` on a container inspect — the image's own *configuration*
+    digest, not a registry `RepoDigests` manifest digest (verified
+    2026-09-28, `identity.py`'s own module comment) — is exactly the
+    field 1.5's third collector needs for a purely local comparison.
+    """
+    with _run(stdout=json.dumps([INSPECT_ENTRY])):
+        identities = identities_of(["arrstack-gluetun-1"])
+
+    assert identities[0].image_digest == "sha256:image-digest-1"
+
+
+def test_identities_of_defaults_to_an_empty_image_digest_when_absent():
+    """`BARE_ENTRY` carries no `Image` key at all — not observed in
+    practice, but `docker inspect`'s own contract does not guarantee
+    it, so this must not crash."""
+    with _run(stdout=json.dumps([BARE_ENTRY])):
+        identities = identities_of(["some-container"])
+
+    assert identities[0].image_digest == ""
 
 
 def test_a_container_docker_ps_saw_but_inspect_no_longer_resolves_is_simply_absent():

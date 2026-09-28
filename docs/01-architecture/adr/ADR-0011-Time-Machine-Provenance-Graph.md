@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -1206,6 +1206,137 @@ never committed — is the owner's to clear before restarting the
 service with the fix applied, not something this correction migrates
 in place.
 
+### 22. Dérive du digest — 1.5's third collector, a purely local comparison, no registry call
+
+Cadrage decision 4 (§ 21, confirmed 2026-09-27 alongside the ordering
+of all three remaining collectors, before any of them was built): a
+running container's own current image digest, compared against the
+last digest observed for the same `aistack:stableSubject` — the same
+bitemporal, stable-identity machinery every other 1.5 collector
+already uses, with no registry network call on either side. A changed
+digest for a stable subject is § 1.5's own wording made concrete:
+"l'image avant/après" for an upgrade is a real, local, observable
+fact the moment `docker inspect` reports one, no external fetch
+needed to say *that* something changed, only *what* it changed from
+and to.
+
+A fresh cadrage (`AskUserQuestion`) settled the two questions decision
+4 left open, grounded in real research before any code
+(`ARC-P-006`): which `docker inspect` field states this locally, and
+how to capture it. `WebSearch`/`WebFetch` against a real incident
+(GitHub, `pmdroid/barkvisor` #642) confirmed a container's own
+`.Image` field is its current image's *configuration* digest
+(`sha256:...`), a different kind of digest from an image's own
+`RepoDigests` (a *manifest* digest, comparable only to what a registry
+itself reports — Moby v27.5.1 itself does not reliably expose
+`RepoDigests` on a container inspect at all, that issue's own findings
+state). The two are not interchangeable, and confusing them is exactly
+the false-positive trap that real tool's own bug describes — comparing
+a container's configuration digest against a registry manifest digest.
+This collector never makes that comparison: both sides of its own
+"did it change" question are `.Image`, read by two successive
+`docker inspect` calls on this project's own hosts, so the mismatch
+does not arise.
+
+**`ContainerIdentity` extended, not a second `docker inspect`
+caller.** The owner's own decision: `aistack.providers.docker.identity`
+already resolves every field `docker inspect` reports for a running
+container in one call (§ 21's own shared-module decision, built
+*before* this collector specifically so the two still to come would
+not each need their own copy); `image_digest` is simply one more field
+read off the same JSON entry `mount_destinations` already comes from,
+default `""` for the (unobserved on this project's own hosts, but not
+guaranteed by Docker's own contract) case where `.Image` is absent.
+
+**`docker-digest`, not `image-digest`, for the stream/directory
+name.** The owner's own decision: stays in the naming family § 20 and
+§ 21 already established (`docker-events`, `docker-diff`) rather than
+the roadmap's own French wording — this collector is specifically a
+`docker inspect` fact, the same kind of thing its two siblings already
+name themselves after.
+
+**`aistack.providers.docker.digest`** (`collect_running_container
+_digests`) mirrors § 21's own `collect_running_container_diffs` in
+shape — running containers only (the same restriction, the same
+reason: a stopped container's image reference is not drifting under
+active use) — but skips, rather than records empty, an identity whose
+own `image_digest` came back `""`: an empty digest is the absence of
+an observation, not a real one, and `aistack.providers.docker
+.digest_history`'s own write-on-change contract has nothing meaningful
+to compare an empty value against.
+
+**`aistack.providers.docker.digest_history`** (`record_image_digest`,
+`has_changed`) is § 21's own write-on-change shape, one subdirectory
+per subject, applied to a single string value instead of a list: the
+same real question — "did the value change since last recorded" —
+needing the same read-back against the stable "latest" file
+`write_artifact_with_history` already keeps per subject
+(`generated_dir / "docker-digest" / <subject> / "docker-digest.json"`).
+
+**`aistack.timemachine.projection.docker_digest`**
+(`project_docker_digest`) is a tenth `aistack.timemachine.iri` builder
+(`docker_digest_iri`, keyed by subject and recording instant — the
+same reasoning `docker_diff_iri` already holds) and a new predicate,
+`aistack:imageDigest` (a plain string literal — an identifier, never a
+magnitude, unlike `aistack:changeCount`), the one fact this stream
+states beyond "it happened, for this subject, at this instant." No
+`aistack:occurredAt`, the same restraint § 21 already documents for
+the same reason: a digest observed this cycle states only that this
+is the digest *now*, never when it last changed. Wired into
+`aistack.cli.timemachine_rebuild.main` as the fifth projection pass,
+after docker-diff, before collection gaps.
+
+**`aistack.cli.docker_digest_monitor`** is § 21's own governed polling
+loop (`POLL_SECONDS = 10.0`, unchanged — not tuned against a real
+measurement, the owner's own decision to change with a single edit if
+it ever needs to), R11 built in from its first version (never
+retrofitted, the same rule every 1.5 monitor has held since § 20's own
+addendum), `--once`/`--dry-run` for a first manual check against the
+real Docker daemon before enabling as a service.
+
+**Built, tested, and wired end to end, 2026-09-28**:
+`aistack.providers.docker.identity` extended (`image_digest` on
+`ContainerIdentity` — 2 new tests, the real digest capture and the
+absent-field default); `aistack.providers.docker.digest`
+(`collect_running_container_digests` — 4 tests, including the
+empty-digest-is-skipped regression and two containers each getting
+their own entry); `aistack.providers.docker.digest_history`
+(`record_image_digest`, `has_changed` — 10 tests, the exact shape §
+21's own `diff_history` suite already holds, against a single value
+instead of a list); a tenth `aistack.timemachine.iri` builder,
+`docker_digest_iri`; `AISTACK_IMAGE_DIGEST` in `aistack.timemachine
+.vocabulary`; `aistack.timemachine.projection.docker_digest`
+(`project_docker_digest`, 9 tests, including the same same-second-
+collision-aware regression § 21's own projector suite already holds);
+`aistack.cli.docker_digest_monitor` (`parse`, checkpoint load/save,
+`log_cycle`, `run_cycle` — 20 tests, real subprocess boundary mocked,
+real tmp-path files, the checkpoint-still-advances-on-a-quiet-cycle
+and dry-run-writes-nothing regressions § 21's own monitor suite
+already holds); `deploy/systemd/aistack-docker-digest-monitor.service`
+and `run_docker_digest_monitor.sh`, mirroring § 20 and § 21's own
+install/watch instructions. Full governed chain (`pytest`, `ruff check
+src tests timemachine_ui`, `mypy src`, `knowledge_integrity`) clean in
+clean-room, against a fresh GitHub clone.
+
+`timemachine_ui`'s own generic node-facts view (§ 19) is expected to
+render this stream with no new template code the same way § 20 and §
+21's own entries already found for their streams (`aistack
+:stableSubject` and `aistack:imageDigest` both degrade through the
+same generic predicate-label mechanism) — not yet re-confirmed against
+a real batch from GIGABYTE's own Docker daemon, the same open item §
+21's own entry already carries forward for the same reason (`docker`
+unreachable from this verification host).
+
+With § 20, § 21, and this section, 1.5 now has three of its four named
+collectors built, tested, and delivered — `docker events`, `docker
+diff` périodique, dérive du digest. **Inventaire des paquets, the
+fourth, is explicitly deferred past this release** — the owner's own
+2026-09-28 decision (`GOV-P-001`): 1.5 ships with the three collectors
+above, `docker exec`-based package inventory left for a later version
+rather than assumed to block this one, per the roadmap's own § 1.5
+sequencing (diff → digest → paquets) treated as an ordering, not a
+bundling requirement.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -1447,11 +1578,14 @@ in place.
   les upgrades sur les containers docker") are not built by § 20's raw
   collector, deliberately — `ARC-P-012`'s boundary keeps a collector
   reporting what happened, never an interpretation of it. Recognising a
-  `destroy`+`create` pair (or an image-digest change) as one upgrade,
-  and attaching the before/after image and package-inventory facts §
-  1.5 itself asks for, is real work for a later interpretation layer —
-  informed by 1.5's remaining three named collectors (periodic `docker
-  diff`, package inventory, digest drift), not guessed at ahead of them.
+  `destroy`+`create` pair (or § 22's own image-digest change) as one
+  upgrade, and attaching the before/after image and package-inventory
+  facts § 1.5 itself asks for, is real work for a later interpretation
+  layer — informed by three of 1.5's four named collectors, now built
+  (§ 20, § 21, § 22); inventaire des paquets, deferred past this
+  release (§ 22's own closing note), is still needed before this
+  layer can attach a before/after package list, not guessed at ahead
+  of it.
 - **`aistack:clockSource`** (§ 5, reopened by § 20) stays unpopulated
   until § 1.5's own sequencing reaches a second host (GIGABYTE first,
   remote hosts over SSH after) and a real drift measurement exists

@@ -21,6 +21,10 @@ from aistack.timemachine.projection.docker_diff import (
     DockerDiffProjectionSummary,
     project_docker_diff,
 )
+from aistack.timemachine.projection.docker_digest import (
+    DockerDigestProjectionSummary,
+    project_docker_digest,
+)
 from aistack.timemachine.projection.docker_events import (
     DockerEventsProjectionSummary,
     project_docker_events,
@@ -227,11 +231,13 @@ __all__ = [
     "CollectionGapsProjectionSummary",
     "DEFAULT_GENERATED_DIR",
     "DockerDiffProjectionSummary",
+    "DockerDigestProjectionSummary",
     "DockerEventsProjectionSummary",
     "ExplicationProjectionSummary",
     "ProjectionSummary",
     "project_collection_gaps",
     "project_docker_diff",
+    "project_docker_digest",
     "project_docker_events",
     "project_explications",
     "project_observation_history",

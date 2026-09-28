@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -1553,6 +1553,88 @@ catalog's own static scan (`tests/unit/i18n/test_the_real_catalogs.py`)
 is what actually exercises every new `timemachine.ribbon.*` key this
 section adds, both languages, no missing or orphaned key.
 
+### 25. La corrélation "upgrade" — 1.5.1's third and last named piece, linking two already-collected facts
+
+The Open Points entry § 22's own closing note left open ("not yet
+designed in any further detail... not yet built"), designed and shipped
+here, 2026-09-28 — the same segment as § 23 and § 24, closing 1.5.1's
+GUI scope in full.
+
+A fresh cadrage (`AskUserQuestion`) settled the two real design
+questions before any code:
+
+1. **How the correlated fact appears in the graph.** The owner's own
+   choice, over a view computed at read time: a new predicate,
+   `aistack:upgradeCorrelatesWith`, written into the graph at
+   projection time — interrogable in SPARQL the same way every other
+   fact this ADR describes already is, rather than a shape only one
+   particular reader (`history_query`, `timemachine_ui`) knows how to
+   reconstruct.
+2. **The pairing window.** The owner's own choice, over a bounded
+   window (e.g. 24h each side): always the nearest `docker-packages`
+   snapshot on each side of a detected digest change, with no time
+   limit — `ARC-P-006`: no real measured gap yet exists to size a
+   threshold from, and an unusually large real gap stays a visible,
+   dated fact once queried (the two entities' own
+   `prov:generatedAtTime` subtract), never a threshold silently
+   hiding it.
+
+**The trigger needed no new detection logic at all — it was already
+implicit in § 22's own write-on-change contract.**
+`aistack.providers.docker.digest_history.record_image_digest` only
+ever writes when the new digest differs from the last one recorded for
+that subject (§ 22's own decision). So every `docker-digest` instant
+recorded for a subject *after* its own first is, by that contract
+alone, already a genuine digest change — this module never re-opens a
+digest observation's own value to compare it against the previous one;
+`digest_history` already made that comparison once, at collection
+time.
+
+**`aistack.timemachine.projection.upgrade_correlation`**
+(`project_upgrade_correlation`) — a projection pass unlike every one
+before it in this package: it links two already-projected
+`docker-packages` entities together rather than collecting a new
+source stream of its own, so it mints no new `prov:Activity` (the same
+restraint `aistack:partOf`/`aistack:explains` already hold for a
+predicate between existing entities). It walks both `docker-digest`
+and `docker-packages` subject trees directly (the same `rglob`-based
+walk every write-on-change stream's projector in this package already
+holds, generalised here into one function serving both), re-validating
+each side's own shape independently (`{"digest": str}`;
+`{"mechanism": str, "packages": list}`) before treating an instant as
+a candidate — so this module never links to an IRI the stream's own
+projector itself declined to emit. `aistack.cli.timemachine_rebuild`
+runs it seventh, after both `project_docker_digest` (fifth) and
+`project_docker_packages` (sixth) — the two entities a correlation
+links already have to exist before this module can link them — and
+before `project_collection_gaps` (now eighth, unchanged in its own
+reasoning for running last).
+
+11 new tests (2527→2538): `test_project_upgrade_correlation.py` (10 —
+no root, only-digest-root, only-packages-root, a first digest
+observation is not itself a change, one change correctly bracketed,
+two changes each picking their own nearest pair, a change with no
+packages before/after it left uncorrelated, a subject with digest
+history but no packages history entirely skipped, a subject name
+embedding `/`) plus one `test_timemachine_rebuild.py` case exercising
+the three new printed lines end to end through the real CLI. Every
+timing-sensitive test pins real instants through the same frozen-
+`datetime` monkeypatch `test_project_docker_packages.py`'s own
+write-on-change test already established, rather than "a second
+apart" — nearest-neighbour pairing needs controlled, known instants to
+verify precisely.
+
+**Caught before committing**: this section was first built against a
+stale scratch clone (`1aee28a`, missing § 24's own already-pushed
+commit) — `git stash` before a `git fetch && git reset --hard
+origin/main`, then `git stash pop`, corrected it cleanly before any
+patch was generated, the same `origin/main`-drift discipline every
+patch this segment has already followed.
+
+Full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
+`mypy`, `knowledge_integrity`) clean against the real current
+`origin/main` tip (`d71e79a`, § 24's own commit).
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -1797,27 +1879,17 @@ section adds, both languages, no missing or orphaned key.
   checked against the real Docker daemon this ADR's own text once
   named as unreachable from the verification host, not invented ahead
   of it.
-- **Correlated "upgrade" facts** (§ 1.5's own wording: "Trace également
-  les upgrades sur les containers docker") are not built by § 20's raw
-  collector, deliberately — `ARC-P-012`'s boundary keeps a collector
-  reporting what happened, never an interpretation of it. Recognising
-  one upgrade and attaching a before/after image and package inventory
-  to it is real work for a later interpretation layer — every raw fact
-  it needs now exists, all four of 1.5's named collectors having
-  shipped (§ 20, § 21, § 22, § 23). **The trigger, cadré with the owner
-  2026-09-28 alongside § 23: an image-digest change alone** (§ 22's own
-  wording, "the local proof an upgrade happened"), not a `destroy`+
-  `create` pair — two consecutive `docker-digest` observations for the
-  same `aistack:stableSubject` with a different `aistack:imageDigest`,
-  needing only that one already-reliable stream rather than correlating
-  across `docker events` (which R11 can independently gap) and
-  `docker-digest` together. The before/after package lists this layer
-  attaches come from `docker-packages`'s own snapshots nearest each side
-  of the digest-change instant, by the same `aistack:stableSubject` —
-  not yet designed in any further detail (what "nearest" means when a
-  package snapshot is itself sparse, whether the correlated fact is a
-  new vocabulary predicate or a computed view over existing ones), and
-  not yet built.
+- ~~**Correlated "upgrade" facts**~~ — **resolved, 2026-09-28** (§ 25):
+  `aistack:upgradeCorrelatesWith`, written at projection time, links
+  the nearest `docker-packages` snapshot before a detected
+  `docker-digest` change to the nearest one after it, no time window
+  (both cadré with the owner, `AskUserQuestion`, this same segment).
+  `ARC-P-012`'s boundary still holds — § 20's raw collector reports
+  what happened, never an interpretation of it; this is a separate
+  projection pass, not a change to any collector. The trigger itself
+  needed no new detection code: § 22's own write-on-change contract
+  already means every `docker-digest` instant after a subject's first
+  is a genuine change, by construction.
 - **`aistack:clockSource`** (§ 5, reopened by § 20) stays unpopulated
   until § 1.5's own sequencing reaches a second host (GIGABYTE first,
   remote hosts over SSH after) and a real drift measurement exists

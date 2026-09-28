@@ -93,6 +93,9 @@ def test_rebuild_is_a_no_op_on_an_empty_generated_dir(tmp_path: Path):
     assert "- Docker-digest observations seen: 0" in output
     assert "- Docker-packages subjects seen: 0" in output
     assert "- Docker-packages observations seen: 0" in output
+    assert "- Upgrade-correlation subjects seen: 0" in output
+    assert "- Digest changes seen: 0" in output
+    assert "- Upgrade correlations written: 0" in output
     assert "- Collection-gap streams seen: 0" in output
     assert "- Collection gaps seen: 0" in output
 
@@ -113,6 +116,47 @@ def test_rebuild_reports_a_recorded_collection_gap(tmp_path: Path):
 
     assert "- Collection-gap streams seen: 1" in output
     assert "- Collection gaps seen: 1" in output
+
+
+def test_rebuild_reports_an_upgrade_correlation(tmp_path: Path, monkeypatch):
+    generated_dir = tmp_path / "reports" / "generated"
+    import aistack.generators.history as history_module
+
+    from aistack.providers.docker.digest_history import record_image_digest
+    from aistack.providers.docker.packages_history import record_package_inventory
+
+    def _at(hour: int) -> type:
+        class Frozen(history_module.datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return cls(2026, 9, 28, hour, 0, 0, tzinfo=tz)
+
+        return Frozen
+
+    monkeypatch.setattr(history_module, "datetime", _at(8))
+    record_image_digest("arrstack/gluetun", "sha256:aaa", generated_dir=generated_dir)
+    monkeypatch.setattr(history_module, "datetime", _at(9))
+    record_package_inventory(
+        "arrstack/gluetun",
+        "dpkg",
+        [{"name": "curl", "version": "7.88.1-10"}],
+        generated_dir=generated_dir,
+    )
+    monkeypatch.setattr(history_module, "datetime", _at(10))
+    record_image_digest("arrstack/gluetun", "sha256:bbb", generated_dir=generated_dir)
+    monkeypatch.setattr(history_module, "datetime", _at(11))
+    record_package_inventory(
+        "arrstack/gluetun",
+        "dpkg",
+        [{"name": "curl", "version": "7.90.0-1"}],
+        generated_dir=generated_dir,
+    )
+
+    output = _run(tmp_path, str(generated_dir))
+
+    assert "- Upgrade-correlation subjects seen: 1" in output
+    assert "- Digest changes seen: 1" in output
+    assert "- Upgrade correlations written: 1" in output
 
 
 def test_rebuild_reports_a_recorded_docker_diff_snapshot(tmp_path: Path):

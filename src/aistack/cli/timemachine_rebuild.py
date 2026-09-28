@@ -13,6 +13,7 @@ from aistack.timemachine.projection import (
     project_docker_packages,
     project_explications,
     project_observation_history,
+    project_upgrade_correlation,
 )
 
 
@@ -75,7 +76,17 @@ def main() -> None:
     .docker_packages`'s own docstring says why a dedicated one, not a
     branch inside the generic walk).
 
-    **`project_collection_gaps` runs seventh, against the same store,
+    **`project_upgrade_correlation` runs seventh, against the same
+    store, for a different reason than every pass before it.** 1.5.1's
+    GUI cadrage (`ADR-0011` § 22's own closing note, design finished
+    2026-09-28) — it links, never collects: `aistack
+    :upgradeCorrelatesWith` connects two `docker-packages` entities
+    that `project_docker_packages` (sixth, above) already wrote, so it
+    must run after that pass, not alongside it as a new source stream
+    (`aistack.timemachine.projection.upgrade_correlation`'s own
+    docstring says why no new `prov:Activity` is minted here).
+
+    **`project_collection_gaps` runs eighth, against the same store,
     last on purpose.** `ADR-0011` § 9 (R11), built 2026-09-28 as a
     mechanism shared by every 1.5 monitor rather than per-collector —
     it links a recorded gap to a stream's own activity node
@@ -112,6 +123,7 @@ def main() -> None:
     docker_diff_summary = project_docker_diff(store, generated_dir=generated_dir)
     docker_digest_summary = project_docker_digest(store, generated_dir=generated_dir)
     docker_packages_summary = project_docker_packages(store, generated_dir=generated_dir)
+    upgrade_correlation_summary = project_upgrade_correlation(store, generated_dir=generated_dir)
     collection_gaps_summary = project_collection_gaps(store, generated_dir=generated_dir)
 
     print("Time Machine Projection")
@@ -129,15 +141,18 @@ def main() -> None:
     print(f"- Docker-digest observations seen: {docker_digest_summary.snapshots_seen}")
     print(f"- Docker-packages subjects seen: {docker_packages_summary.subjects_seen}")
     print(f"- Docker-packages observations seen: {docker_packages_summary.snapshots_seen}")
+    print(f"- Upgrade-correlation subjects seen: {upgrade_correlation_summary.subjects_seen}")
+    print(f"- Digest changes seen: {upgrade_correlation_summary.digest_changes_seen}")
+    print(f"- Upgrade correlations written: {upgrade_correlation_summary.correlations_written}")
     print(f"- Collection-gap streams seen: {collection_gaps_summary.streams_seen}")
     print(f"- Collection gaps seen: {collection_gaps_summary.gaps_seen}")
     print(
         "- Facts written: "
-        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + collection_gaps_summary.facts_written}"
+        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + upgrade_correlation_summary.facts_written + collection_gaps_summary.facts_written}"
     )
     print(
         "- Facts dropped: "
-        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + collection_gaps_summary.facts_dropped}"
+        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + upgrade_correlation_summary.facts_dropped + collection_gaps_summary.facts_dropped}"
     )
 
 

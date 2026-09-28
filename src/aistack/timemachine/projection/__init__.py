@@ -38,6 +38,10 @@ from aistack.timemachine.projection.explications import (
     project_explications,
 )
 from aistack.timemachine.projection.filter import filter_fact
+from aistack.timemachine.projection.upgrade_correlation import (
+    UpgradeCorrelationProjectionSummary,
+    project_upgrade_correlation,
+)
 from aistack.timemachine.vocabulary import (
     AISTACK_STABLE_SUBJECT,
     PROV_ACTIVITY,
@@ -240,6 +244,7 @@ __all__ = [
     "DockerPackagesProjectionSummary",
     "ExplicationProjectionSummary",
     "ProjectionSummary",
+    "UpgradeCorrelationProjectionSummary",
     "project_collection_gaps",
     "project_docker_diff",
     "project_docker_digest",
@@ -247,4 +252,5 @@ __all__ = [
     "project_docker_packages",
     "project_explications",
     "project_observation_history",
+    "project_upgrade_correlation",
 ]

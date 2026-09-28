@@ -169,3 +169,14 @@ AISTACK_PACKAGE_COUNT = f"{AISTACK}packageCount"
 # same restraint `aistack:dockerAction` already holds by naming
 # Docker's own vocabulary directly rather than inventing one.
 AISTACK_PACKAGE_MECHANISM = f"{AISTACK}packageMechanism"
+
+# 1.5.1, added 2026-09-28 alongside `aistack.timemachine.projection
+# .upgrade_correlation` — cadrage decision 1 (`AskUserQuestion`,
+# 2026-09-28): links one `docker-packages` entity (the nearest
+# snapshot before a detected `docker-digest` change) to another (the
+# nearest snapshot after it). Not a new `prov:Activity` — this states
+# a relationship between two already-collected facts, the same
+# restraint `aistack:partOf`/`aistack:explains` already hold for a
+# predicate that links existing entities rather than announcing a new
+# collection stream of its own.
+AISTACK_UPGRADE_CORRELATES_WITH = f"{AISTACK}upgradeCorrelatesWith"

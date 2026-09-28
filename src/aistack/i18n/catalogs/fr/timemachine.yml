@@ -29,3 +29,21 @@ type_label:
   entity: "Entité"
   activity: "Flux"
   agent: "Agent"
+nav:
+  streams: "Flux"
+  tree: "Arbre"
+tree:
+  heading: "Arbre du réseau"
+  intro: "Réseau → Hôte → Stack → Conteneur, à partir des catalogues Docker/Compose en direct (ADR-0011 §18) — pas du graphe."
+  historique_notice: "L'historique par élément est encore limité en 1.4 : la plupart des conteneurs n'ont pas encore d'historique réel lié (collecte fine, 1.5)."
+  search_placeholder: "Rechercher un nom…"
+  search_button: "Rechercher"
+  search_clear: "Réinitialiser"
+  search_empty: "Rien ne correspond à « {query} »."
+  empty: "Aucun hôte ni conteneur observé."
+  historique_link: "Historique"
+  kind_label:
+    network: "Réseau"
+    host: "Hôte"
+    stack: "Stack"
+    container: "Conteneur"

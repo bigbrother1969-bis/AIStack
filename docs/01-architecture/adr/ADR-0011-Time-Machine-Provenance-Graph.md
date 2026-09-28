@@ -860,6 +860,20 @@ between what was demoed and what shipped.
   around — this is the first of the four sources where that hazard was
   a real risk rather than a theoretical one, given how many commits
   this repository's busiest scopes already carry.
+- **The network tree's `timemachine_ui` wiring is real too** (2026-09-28,
+  § 18): a `/tree` route, its template, the new i18n entries and CSS
+  exist and were exercised end to end (a `TestClient` against real
+  rendered HTML, in both languages, with and without a search query,
+  and with a seeded graph match) — `aistack.timemachine.tree` (§ 18's
+  earlier patch) had no caller in `timemachine_ui` until this one.
+  Native `<details>`/`<summary>` gives the fold/unfold the roadmap's
+  own "arbre pliable" asks for with no JavaScript: every node open
+  except a "stack" (containers hidden behind one click), a non-blank
+  search forcing everything open since the filtered set already holds
+  only matches and their ancestors. Historique links only the small
+  set `historique_names` already confirmed has a real match
+  (`historique_entity_iri`, never per candidate). R8/brouillons-IA
+  remains its own open decision (§ 18's own text), untouched by this.
 
 ## Open Points
 
@@ -934,11 +948,10 @@ between what was demoed and what shipped.
   design a real detector once an actual instance of a secret shape turns
   up in the imported corpus, rather than guess at the vocabulary of
   secrets no one has observed here yet.
-- **The network tree's `timemachine_ui` wiring** (§ 18) — the route, its
-  template, the new i18n entries, the CSS, and the search itself are not
-  yet built; only `aistack.timemachine.tree` (the module ordering a
-  caller-built catalog pair into the tree, and answering Historique from
-  the graph) exists and is verified today.
+- ~~**The network tree's `timemachine_ui` wiring**~~ — **resolved,
+  2026-09-28** (§ 18's own *Consequences* addendum): the `/tree` route,
+  its template, the i18n entries, the CSS, and the search all exist and
+  are verified.
 - **R8 / the brouillons-IA gate** (§ 18) remains explicitly open — the
   owner's own 2026-09-28 decision was to build the ungated tree first
   and revisit R8 at a later cadrage, not to resolve it here by assuming

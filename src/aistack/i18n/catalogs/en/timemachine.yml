@@ -29,3 +29,21 @@ type_label:
   entity: "Entity"
   activity: "Stream"
   agent: "Agent"
+nav:
+  streams: "Streams"
+  tree: "Tree"
+tree:
+  heading: "Network tree"
+  intro: "Network → Host → Stack → Container, from the live Docker/Compose catalogs (ADR-0011 §18) — not from the graph."
+  historique_notice: "Per-item history is still limited in 1.4: most containers have no real linked history yet (fine-grained collection, 1.5)."
+  search_placeholder: "Search a name…"
+  search_button: "Search"
+  search_clear: "Clear"
+  search_empty: "Nothing matches \"{query}\"."
+  empty: "No host or container observed."
+  historique_link: "History"
+  kind_label:
+    network: "Network"
+    host: "Host"
+    stack: "Stack"
+    container: "Container"

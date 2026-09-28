@@ -76,3 +76,71 @@ header { margin-bottom: 1.2rem; }
   body { padding: 0 .75rem; margin-top: 1rem; }
   .top { flex-direction: column; align-items: flex-start; gap: .4rem; }
 }
+
+/*
+  The network tree (ADR-0011 §18, added 2026-09-28) — its own rules,
+  appended here rather than woven into the bands above: a foldable
+  tree is a different shape from a flat list of bands, and keeping
+  its rules together is easier to read than interleaving two
+  unrelated layouts. Native <details>/<summary> nesting needs no
+  script; the marker/indent rules below are the only thing making it
+  look like a tree instead of a stack of plain disclosure widgets.
+*/
+.view-switch {
+  display: flex; gap: 1rem; font-size: .88rem; margin: 0 0 1rem;
+}
+.view-switch a { color: #1f6feb; text-decoration: none; }
+.view-switch a:hover { text-decoration: underline; }
+.view-switch .view-current { font-weight: 600; }
+
+.tree-search {
+  display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
+  margin: 0 0 1.2rem;
+}
+.tree-search input[type="search"] {
+  flex: 1 1 14rem; padding: .4rem .6rem; border: 1px solid #ccc;
+  border-radius: 4px; font-size: .9rem;
+}
+.tree-search button {
+  padding: .4rem .9rem; border: 1px solid #1f6feb; border-radius: 4px;
+  background: #1f6feb; color: #fff; font-size: .88rem; cursor: pointer;
+}
+.tree-search button:hover { background: #1858c4; }
+.tree-search-clear { font-size: .85rem; color: #1f6feb; text-decoration: none; }
+.tree-search-clear:hover { text-decoration: underline; }
+
+.tree-node {
+  border: 1px solid #ddd; border-radius: 6px; background: #fafafa;
+  margin-bottom: .5rem;
+}
+.tree-node > summary {
+  cursor: pointer; padding: .5rem .8rem; list-style: none;
+  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+}
+.tree-node > summary::-webkit-details-marker { display: none; }
+.tree-node > summary::before {
+  content: "\25B8"; display: inline-block; color: #888; font-size: .75rem;
+  transition: transform .1s ease;
+}
+.tree-node[open] > summary::before { transform: rotate(90deg); }
+.tree-kind {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .03em;
+  color: #888; font-weight: 600;
+}
+.tree-label { font-weight: 600; word-break: break-word; }
+.tree-historique {
+  margin-left: auto; font-size: .78rem; padding: .1rem .5rem;
+  border-radius: 10px; background: #e6f0ff; color: #1f6feb;
+  text-decoration: none;
+}
+.tree-historique:hover { background: #d3e4ff; }
+.tree-historique--unlinked { color: #666; background: #eee; }
+.tree-children {
+  padding: 0 .8rem .6rem 1.6rem; border-top: 1px solid #eee;
+}
+.tree-children > .tree-node { margin-top: .5rem; }
+
+@media (max-width: 480px) {
+  .tree-children { padding-left: 1rem; }
+  .tree-historique { margin-left: 0; }
+}

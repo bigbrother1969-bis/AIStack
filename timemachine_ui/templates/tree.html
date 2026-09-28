@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('timemachine.title') }}</title>
+  <style>{% include "_style.html" %}</style>
+</head>
+<body>
+  <!--
+    ADR-0011 §18 (1.4 cadrage, 2026-09-28) — a second view of this
+    same mini-app, same LAN-only convention as streams.html/node.html
+    (ADR-0011 roadmap R1): direct LAN link, never the public address.
+  -->
+  <div class="top">
+    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?q={{ query | urlencode }}&amp;lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+
+  <header>
+    <h1>{{ t('timemachine.tree.heading') }}</h1>
+    <p class="meta">{{ t('timemachine.tree.intro') }}</p>
+  </header>
+
+  <nav class="view-switch">
+    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
+    <span class="view-current">{{ t('timemachine.nav.tree') }}</span>
+  </nav>
+
+  <!--
+    Cadrage 1.4, 2026-09-28: the honest gap, not a richer promise —
+    real per-container history is 1.5's own collectors' job, so most
+    nodes show no Historique link today.
+  -->
+  <div class="warning">{{ t('timemachine.tree.historique_notice') }}</div>
+
+  <form class="tree-search" method="get" action="/tree">
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <input
+      type="search" name="q" value="{{ query }}"
+      placeholder="{{ t('timemachine.tree.search_placeholder') }}"
+      aria-label="{{ t('timemachine.tree.search_placeholder') }}"
+    >
+    <button type="submit">{{ t('timemachine.tree.search_button') }}</button>
+    {% if query %}
+      <a class="tree-search-clear" href="/tree?lang={{ lang }}">{{ t('timemachine.tree.search_clear') }}</a>
+    {% endif %}
+  </form>
+
+  {% if root %}
+    {#
+      One recursive macro over the nested tree the route already
+      built from the flat, depth-first `NetworkTreeNode` list
+      (`aistack.timemachine.tree`'s own contract, ADR-0011 §18) —
+      nesting is a template-side concern only, not a second data
+      model. Native <details>/<summary> gives the "arbre pliable" the
+      roadmap asks for with no JavaScript: every node is open except
+      a "stack" (the one real folding boundary, containers hidden
+      behind one click) — a non-blank search forces everything open,
+      since the filtered set already holds only matches and their
+      ancestors and nothing here should stay hidden from a search
+      result.
+    #}
+    {% macro render_node(node, force_open) %}
+      <details class="tree-node tree-node--{{ node.kind }}"{% if force_open or node.kind != 'stack' %} open{% endif %}>
+        <summary>
+          <span class="tree-kind">{{ t(node.kind_label_key) }}</span>
+          <span class="tree-label">{{ node.label }}</span>
+          {% if node.has_historique %}
+            {% if node.historique_iri %}
+              <a class="tree-historique" href="/node?iri={{ node.historique_iri | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.historique_link') }}</a>
+            {% else %}
+              <span class="tree-historique tree-historique--unlinked">{{ t('timemachine.tree.historique_link') }}</span>
+            {% endif %}
+          {% endif %}
+        </summary>
+        {% if node.children %}
+          <div class="tree-children">
+            {% for child in node.children %}
+              {{ render_node(child, force_open) }}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </details>
+    {% endmacro %}
+
+    {{ render_node(root, query.strip() | length > 0) }}
+  {% elif search_empty %}
+    <p class="empty">{{ t('timemachine.tree.search_empty', query=query) }}</p>
+  {% else %}
+    <p class="empty">{{ t('timemachine.tree.empty') }}</p>
+  {% endif %}
+</body>
+</html>

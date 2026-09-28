@@ -24,6 +24,17 @@
     <p class="meta">{{ t('timemachine.streams_intro') }}</p>
   </header>
 
+  <!--
+    ADR-0011 §18 (1.4 cadrage, 2026-09-28): the network tree is a
+    second view of this same mini-app, not a sixth one — this nav is
+    the only thing new here, everything else on this page is
+    unchanged.
+  -->
+  <nav class="view-switch">
+    <span class="view-current">{{ t('timemachine.nav.streams') }}</span>
+    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
+  </nav>
+
   <div class="warning">{{ t('timemachine.warning') }}</div>
 
   {% if streams %}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -7,10 +8,26 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
+from aistack.architecture.yaml import load_infrastructure_topology_yaml
+from aistack.catalog.compose import ComposeRuntimeCatalogBuilder
+from aistack.catalog.docker import DockerRuntimeCatalogBuilder
+from aistack.history.query import available_instants, observation_at
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
+from aistack.kernel.bootstrap import create_kernel
+from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.repository import RepositoryProvider
-from aistack.timemachine import OxigraphGraphStore, stream_stem
+from aistack.timemachine import (
+    GraphStore,
+    NetworkTreeNode,
+    OxigraphGraphStore,
+    RemoteHost,
+    build_network_tree,
+    historique_entity_iri,
+    historique_names,
+    parse_remote_hosts,
+    stream_stem,
+)
 from aistack.timemachine.projection import DEFAULT_GENERATED_DIR
 from aistack.timemachine.vocabulary import (
     AISTACK_STABLE_SUBJECT,
@@ -23,6 +40,17 @@ from aistack.timemachine.vocabulary import (
     PROV_WAS_GENERATED_BY,
     RDF_TYPE,
 )
+
+# `ADR-0011` § 18 (1.4 cadrage, 2026-09-28) — same
+# `Path(__file__).resolve()`-relative convention `architecture_render
+# .py`'s own `DEFAULT_TOPOLOGY`/`DEFAULT_CATEGORIZATION` already use,
+# each CLI/screen declaring its own default rather than importing one
+# from another entry-point module. `REPO_ROOT` already exists below
+# for `RepositoryProvider`; these two are resolved through it the same
+# way `GENERATED_DIR`/`STORE_PATH` already are.
+DEFAULT_TOPOLOGY = "src/aistack/architecture/definitions/infrastructure_topology.yml"
+DEFAULT_NETWORK_DISCOVERY = "src/aistack/network_discovery/definitions/network_discovery.yml"
+NETWORK_DOCKER_OBSERVATION_STEM = "network-docker-observation"
 
 # A fifth mini-app, same family as `priority_ui`/`selection_ui`/
 # `network_discovery_ui`/`troubleshooting_assistant_ui` — decided with
@@ -96,6 +124,19 @@ _TYPE_LABELS = {
     PROV_AGENT: "timemachine.type_label.agent",
 }
 
+# `NetworkTreeNode.kind` -> its i18n key, resolved here rather than
+# built at runtime in the template: a translator call's own key must
+# be a literal string for `tests/unit/i18n/test_the_real_catalogs.py`'s
+# static scan to see it — the same reason `_PREDICATE_LABELS`/
+# `_TYPE_LABELS` above are a dict, not a string built from a
+# predicate's own name.
+_TREE_KIND_LABELS: dict[str, str] = {
+    "network": "timemachine.tree.kind_label.network",
+    "host": "timemachine.tree.kind_label.host",
+    "stack": "timemachine.tree.kind_label.stack",
+    "container": "timemachine.tree.kind_label.container",
+}
+
 
 def _language(request: Request) -> PageLanguage:
     """ADR-0010 — same mechanism every mini-app already shares
@@ -149,6 +190,119 @@ def _not_built(request: Request, language: PageLanguage) -> HTMLResponse:
         templates.TemplateResponse(request=request, name="not_built.html", context=context),
         language,
     )
+
+
+def _local_host_label() -> str:
+    """
+    The local host's own real name — `infrastructure_topology.yml`'s
+    first `hardware:` entry, hand-confirmed by the owner
+    (`ADR-0011` § 18, `infrastructure_topology.yml`'s own header
+    comment: "écrit à la main... chaque fait ci-dessous a été
+    confirmé directement avec le owner"). GIGABYTE today; never
+    guessed from `socket.gethostname()` or an environment variable
+    nothing here declares.
+    """
+
+    topology = load_infrastructure_topology_yaml(repository.resolve(DEFAULT_TOPOLOGY))
+    return topology.hardware[0].name if topology.hardware else ""
+
+
+def _remote_hosts() -> tuple[RemoteHost, ...]:
+    """
+    The remote hosts the last `network_docker_discover` run actually
+    found — read from its own last stored Observation History
+    snapshot, **never a live scan triggered from here** (`ADR-0011`
+    § 18, `NetworkDockerDiscoveryProvider`'s own docstring: "never
+    triggered automatically"). `()` when the scan has never run —
+    a real, expected state on a fresh checkout, not this screen's own
+    error, the same degradation `_open_store` already gives the graph.
+    """
+
+    instants = available_instants(GENERATED_DIR, NETWORK_DOCKER_OBSERVATION_STEM)
+    if not instants:
+        return ()
+
+    historical = observation_at(GENERATED_DIR, NETWORK_DOCKER_OBSERVATION_STEM, instants[-1])
+    if historical is None:
+        return ()
+
+    observation = json.loads(historical.read())
+    return parse_remote_hosts(observation)
+
+
+def _network_cidr() -> str:
+    return load_network_discovery_yaml(repository.resolve(DEFAULT_NETWORK_DISCOVERY)).cidr
+
+
+def _build_tree() -> list[NetworkTreeNode]:
+    """
+    Réseau ⊃ Hôte ⊃ Stack ⊃ Conteneur, from the same live catalogs
+    `architecture_render.main` already builds (`ADR-0011` § 18) — not
+    from the graph, which does not hold this structure yet.
+    """
+
+    ctx = create_kernel()
+    docker_observation = ctx.registries.providers.get("docker").collect()
+    docker_catalog = DockerRuntimeCatalogBuilder().build(docker_observation)
+
+    compose_observation = ctx.registries.providers.get("compose").collect()
+    compose_catalog = ComposeRuntimeCatalogBuilder().build(compose_observation)
+
+    return build_network_tree(
+        cidr=_network_cidr(),
+        local_host_label=_local_host_label(),
+        docker_catalog=docker_catalog,
+        compose_catalog=compose_catalog,
+        remote_hosts=_remote_hosts(),
+    )
+
+
+def _filter_tree(nodes: list[NetworkTreeNode], query: str) -> list[NetworkTreeNode]:
+    """
+    `nodes`, narrowed to every node whose own label matches `query`
+    (case-insensitive substring) plus every ancestor of a match — so
+    a matched container stays reachable through its real stack and
+    host rather than appearing detached from the tree it lives in.
+    Original depth-first order is preserved. An empty/blank `query`
+    returns `nodes` unchanged.
+    """
+
+    needle = query.strip().lower()
+    if not needle:
+        return nodes
+
+    by_id = {node.id: node for node in nodes}
+    keep: set[str] = set()
+    for node in nodes:
+        if needle not in node.label.lower():
+            continue
+        current: str | None = node.id
+        while current is not None and current not in keep:
+            keep.add(current)
+            current = by_id[current].parent_id
+
+    return [node for node in nodes if node.id in keep]
+
+
+def _historique_links(
+    store: GraphStore | None, nodes: list[NetworkTreeNode]
+) -> dict[str, str | None]:
+    """
+    One entry per node whose label has real history in the graph
+    today (`historique_names`, batched — `ADR-0011` § 18), mapped to
+    the entity IRI it links to (`historique_entity_iri`, called only
+    for that small, already-matched set — never per candidate).
+    `{}` when the graph itself has not been built yet.
+    """
+
+    if store is None:
+        return {}
+
+    candidate_names = frozenset(
+        node.label for node in nodes if node.kind in ("host", "stack", "container")
+    )
+    matched_names = historique_names(store, candidate_names)
+    return {name: historique_entity_iri(store, name) for name in matched_names}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -263,5 +417,60 @@ def node(request: Request, iri: str):
     context.update(language.context())
     return _finish(
         templates.TemplateResponse(request=request, name="node.html", context=context),
+        language,
+    )
+
+
+@app.get("/tree", response_class=HTMLResponse)
+def tree_view(request: Request, q: str = ""):
+    """
+    `ADR-0011` § 18 — Réseau ⊃ Hôte ⊃ Stack ⊃ Conteneur, `timemachine_
+    ui`'s second view, built from the live Docker/Compose catalogs
+    (never the graph) plus the last stored network-discovery snapshot,
+    with each node's real Historique looked up in the graph (empty,
+    honestly, when the graph has never been built). `q` narrows the
+    tree to matches and their ancestors (`_filter_tree`); an empty
+    result for a non-blank `q` is a real, distinct state from "no
+    devices observed at all", both handled by the template.
+    """
+
+    language = _language(request)
+
+    nodes = _build_tree()
+    store = _open_store()
+    historique_links = _historique_links(store, nodes)
+
+    filtered = _filter_tree(nodes, q)
+    children_by_parent: dict[str, list[NetworkTreeNode]] = {}
+    for node in filtered:
+        if node.parent_id is not None:
+            children_by_parent.setdefault(node.parent_id, []).append(node)
+
+    def _to_context(node: NetworkTreeNode) -> dict[str, object]:
+        has_historique = node.kind in ("host", "stack", "container") and (
+            node.label in historique_links
+        )
+        return {
+            "id": node.id,
+            "label": node.label,
+            "kind": node.kind,
+            "kind_label_key": _TREE_KIND_LABELS[node.kind],
+            "depth": node.depth,
+            "has_historique": has_historique,
+            "historique_iri": historique_links.get(node.label) if has_historique else None,
+            "children": [_to_context(child) for child in children_by_parent.get(node.id, [])],
+        }
+
+    root_node = next((node for node in filtered if node.id == "network"), None)
+    root = _to_context(root_node) if root_node is not None else None
+
+    context: dict[str, object] = {
+        "root": root,
+        "query": q,
+        "search_empty": bool(q.strip()) and root is None,
+    }
+    context.update(language.context())
+    return _finish(
+        templates.TemplateResponse(request=request, name="tree.html", context=context),
         language,
     )

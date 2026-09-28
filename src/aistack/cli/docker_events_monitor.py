@@ -4,7 +4,7 @@ import json
 import signal
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +31,28 @@ from aistack.providers.docker.events_history import (
 # `resource_priority_monitor.py`'s own comment already names its
 # constant as "the owner's own decision... not tuned here".
 POLL_SECONDS = 10.0
+
+# Found needed 2026-09-28, the day this monitor was first run by hand on
+# GIGABYTE: `./run_docker_events_monitor.sh --once --dry-run`, its own
+# `USAGE` text's stated purpose ("for a first manual check against the
+# real Docker daemon"), printed nothing at all — not an error, silence.
+# A first run with no checkpoint set `since = until = now()`, a
+# zero-width window that structurally cannot observe anything Docker has
+# ever reported, however real; `--dry-run` compounds it, since it never
+# persists a checkpoint either, so a *second* `--once --dry-run` right
+# after computes its own fresh "now" and is exactly as empty as the
+# first — two manual checks can never build on each other.
+#
+# `run_cycle`'s own first-run default now looks back this many seconds
+# instead of starting at `until` — small and bounded, not the unmeasured
+# backfill `ARC-P-006` warns this module's own docstring against; long
+# enough that `docker restart <container>` followed immediately by
+# `--once --dry-run` has a real chance of being seen, on GIGABYTE's own
+# 5-second `POLL_SECONDS`-adjacent order of magnitude. Applies to every
+# first run, looping or `--once` alike — a service started fresh, or
+# restarted after a crash, is no worse off catching the few seconds
+# before its own start than losing them outright.
+FIRST_RUN_LOOKBACK_SECONDS = 60.0
 
 DEFAULT_CHECKPOINT_PATH = Path("reports/generated/docker-events/checkpoint.json")
 
@@ -139,12 +161,13 @@ def run_cycle(
     now: datetime | None = None,
 ) -> list[dict[str, Any]]:
     """
-    One poll: read the checkpoint (or default to `now` — a first run
-    observes from the moment it starts, never backfilling further back
-    than that; an unbounded backfill against a host's full Docker
-    history is exactly the kind of unmeasured scope `ARC-P-006` warns
-    against, and nothing today needs it), collect every event since
-    then, enrich, and record.
+    One poll: read the checkpoint (or, on a first run, default to
+    `FIRST_RUN_LOOKBACK_SECONDS` before `until` — a small, bounded
+    lookback, not the unmeasured full-history backfill `ARC-P-006`
+    warns against, but enough for a manual `--once --dry-run` check to
+    actually have a chance of observing something real; see that
+    constant's own comment for the incident that found this needed),
+    collect every event since then, enrich, and record.
 
     **The checkpoint advances to `until`, not to the last event's own
     `occurred_at`.** A cycle observing zero events must still move the
@@ -160,7 +183,10 @@ def run_cycle(
     """
 
     when = now if now is not None else datetime.now(timezone.utc)
-    since = load_checkpoint(checkpoint_path) or when.isoformat()
+    checkpoint = load_checkpoint(checkpoint_path)
+    since = checkpoint or (
+        when - timedelta(seconds=FIRST_RUN_LOOKBACK_SECONDS)
+    ).isoformat()
     until = when.isoformat()
 
     raw_events = collect_docker_events(since, until)
@@ -213,7 +239,16 @@ def main(argv: list[str] | None = None) -> None:
     try:
         while True:
             events = run_cycle(output_path, checkpoint_path, dry_run)
-            log_cycle(events)
+
+            # `--once` always prints — the same incident
+            # `FIRST_RUN_LOOKBACK_SECONDS`'s own comment names: a manual
+            # check that stays silent on an empty cycle looks
+            # indistinguishable from one that never ran at all. The
+            # loop keeps `log_cycle`'s own "silent unless something"
+            # discipline unchanged — a service polling every
+            # `POLL_SECONDS` for days must not flood the journal with a
+            # line for every empty cycle.
+            log_cycle(events, label="check" if once else "")
 
             if once:
                 return

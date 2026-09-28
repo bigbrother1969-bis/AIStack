@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -941,6 +941,22 @@ starts, never backfilling further back — an unbounded backfill against
 a host's full Docker history is exactly the unmeasured scope
 `ARC-P-006` warns against.
 
+**Correction, found the same day on GIGABYTE, first real use.** "Starts
+observing from the moment it starts" above meant `since = until = now`
+on a first run — a zero-width window, not merely a cautious one: the
+owner's very first `./run_docker_events_monitor.sh --once --dry-run`,
+run exactly as `USAGE` itself prescribes ("for a first manual check
+against the real Docker daemon"), printed nothing at all, and could
+never have printed anything, whatever Docker had actually done —
+`--dry-run` compounds it further, since it never persists a checkpoint
+either, so a second manual check right after computes its own fresh
+"now" and is exactly as empty as the first. `run_cycle`'s own default
+is now `FIRST_RUN_LOOKBACK_SECONDS` (60s, a small bounded constant, not
+the unbounded backfill the paragraph above still correctly warns
+against) before `until`, applied uniformly to a first run whether
+looping or `--once` — closing the gap between what this paragraph
+described and what the tool's own `USAGE` text promised it could do.
+
 **`aistack:clockSource` (§ 5) is still not populated.** This first
 collector runs on GIGABYTE alone; § 5 reserves that field for once a
 collector "runs on more than one host" and a drift measurement exists
@@ -968,9 +984,10 @@ since one cycle can record several events at once); `aistack.timemachine
 .projection.docker_events` (`project_docker_events`, 6 tests, including
 a direct assertion that the generic walk's own `available_stems` never
 finds this stream); `aistack.cli.docker_events_monitor` (`parse`,
-checkpoint load/save, `log_cycle`, `run_cycle` — 16 tests, real
-subprocess boundary mocked, real tmp-path files, a first-run-has-no-
-backfill regression, a dry-run-writes-nothing regression);
+checkpoint load/save, `log_cycle`, `run_cycle` — 17 tests, real
+subprocess boundary mocked, real tmp-path files, a first-run-bounded-
+lookback regression, a dry-run-writes-nothing regression, a
+`--once`-always-prints regression);
 `deploy/systemd/aistack-docker-events-monitor.service` and
 `run_docker_events_monitor.sh`, mirroring `aistack-resource-priority-
 monitor.service`'s own install/watch instructions. Exercised end to

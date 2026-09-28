@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from aistack.cli.docker_events_monitor import (
+    FIRST_RUN_LOOKBACK_SECONDS,
     USAGE,
     load_checkpoint,
     log_cycle,
@@ -116,17 +117,36 @@ def test_log_cycle_prints_new_event_subjects(capsys):
     assert "aistack/aistack-core" in out
 
 
+def test_log_cycle_with_the_check_label_prints_even_with_no_events(capsys):
+    """
+    `main`'s own `--once` branch passes `label="check"` for exactly
+    this reason — found 2026-09-28, GIGABYTE: a manual `--once
+    --dry-run` that stays silent on an empty cycle is indistinguishable
+    from one that never ran, defeating its own stated purpose (`USAGE`:
+    "for a first manual check against the real Docker daemon").
+    """
+    log_cycle([], label="check")
+
+    out = capsys.readouterr().out
+    assert "check" in out
+    assert "new=0" in out
+
+
 def test_log_cycle_always_prints_a_labelled_line(capsys):
     log_cycle([], label="stopping")
 
     assert "stopping" in capsys.readouterr().out
 
 
-def test_run_cycle_first_run_has_no_backfill(tmp_path: Path):
+def test_run_cycle_first_run_looks_back_a_bounded_amount(tmp_path: Path):
     """
-    No checkpoint yet: `since` defaults to `now`, never backfilling
-    further back — `run_cycle`'s own docstring names the reason
-    (`ARC-P-006`).
+    No checkpoint yet: `since` defaults to `FIRST_RUN_LOOKBACK_SECONDS`
+    before `until`, not `until` itself — a zero-width window on a first
+    run was found, 2026-09-28, to make `--once --dry-run` (the manual
+    check `USAGE` itself promises) structurally unable to observe
+    anything, however real. Still bounded, not the unmeasured full-
+    history backfill `ARC-P-006` warns `run_cycle`'s own docstring
+    against.
     """
     output_path = tmp_path / "docker-events" / "docker-events.json"
     checkpoint_path = tmp_path / "checkpoint.json"
@@ -136,7 +156,8 @@ def test_run_cycle_first_run_has_no_backfill(tmp_path: Path):
         run_cycle(output_path, checkpoint_path, dry_run=False, now=now)
 
     since_arg = mocked.call_args[0][0][mocked.call_args[0][0].index("--since") + 1]
-    assert since_arg == now.isoformat()
+    expected = now - timedelta(seconds=FIRST_RUN_LOOKBACK_SECONDS)
+    assert since_arg == expected.isoformat()
 
 
 def test_run_cycle_records_new_events_and_advances_the_checkpoint(tmp_path: Path):

@@ -5,6 +5,7 @@ from aistack.timemachine.iri import (
     explication_iri,
     observation_iri,
     request_iri,
+    short_label,
     stream_iri,
     stream_stem,
     subject_iri,
@@ -45,6 +46,24 @@ def test_explication_iri_embeds_both_the_subject_and_the_instant_label():
 
 def test_subject_iri_embeds_the_name():
     assert subject_iri("booklore_db") == "urn:aistack:subject:booklore_db"
+
+
+def test_short_label_strips_each_of_the_six_prefixes():
+    assert short_label(stream_iri("observations")) == "observations"
+    assert short_label(observation_iri("traces", "2026-09-27T10-00-00Z")) == (
+        "traces:2026-09-27T10-00-00Z"
+    )
+    assert short_label(agent_iri("aistack.cli.ai_reason")) == "aistack.cli.ai_reason"
+    assert short_label(request_iri("req-42")) == "req-42"
+    assert short_label(explication_iri("booklore_db", "2026-09-27T10-00-00Z")) == (
+        "booklore_db:2026-09-27T10-00-00Z"
+    )
+    assert short_label(subject_iri("booklore_db")) == "booklore_db"
+
+
+def test_short_label_returns_an_unrecognised_iri_unchanged():
+    assert short_label("https://example/not-ours") == "https://example/not-ours"
+    assert short_label("urn:prov:something-else") == "urn:prov:something-else"
 
 
 def test_the_six_builders_use_distinct_prefixes():

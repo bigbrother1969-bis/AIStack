@@ -12,9 +12,12 @@ these four functions inline before this module existed, 2026-09-27).
 `timemachine_ui`, a browsing screen over the graph, is the first
 reader — it only ever needs `stream_stem` (to show a stream's own
 name, not its full URN, once a query has already handed it the IRI)
-and never constructs an IRI itself; every IRI it links to comes
-straight out of a SPARQL result, never rebuilt from parts. The three
-builders below exist for the writer, and for round-trip tests.
+and, since 1.4's provenance graph view (`ADR-0011` § 19),
+`short_label` for the same reason across every other IRI shape this
+module builds — it never constructs an IRI itself; every IRI it links
+to comes straight out of a SPARQL result, never rebuilt from parts.
+The six builders below exist for the writer, and for round-trip
+tests.
 """
 
 from __future__ import annotations
@@ -94,3 +97,36 @@ def subject_iri(name: str) -> str:
     """
 
     return f"{_SUBJECT_PREFIX}{name}"
+
+
+_ALL_PREFIXES = (
+    _STREAM_PREFIX,
+    _OBSERVATION_PREFIX,
+    _AGENT_PREFIX,
+    _REQUEST_PREFIX,
+    _EXPLICATION_PREFIX,
+    _SUBJECT_PREFIX,
+)
+
+
+def short_label(iri: str) -> str:
+    """
+    A short, human-readable label for any IRI this module builds —
+    `stream_stem` generalised across all six prefixes, added for 1.4's
+    provenance graph view (`ADR-0011` § 19): a diagram centred on one
+    node needs a real label for every neighbour it draws, not only a
+    stream's own name.
+
+    Defensive, like `stream_stem`: an IRI matching none of this
+    module's own prefixes (a raw predicate IRI, something a future
+    stream or a different SPARQL query wrote) returns unchanged rather
+    than raising — the graph is a projection other code can also
+    write to, and a screen showing whatever it actually holds should
+    degrade to the full IRI rather than fail on one it does not
+    recognise.
+    """
+
+    for prefix in _ALL_PREFIXES:
+        if iri.startswith(prefix):
+            return iri[len(prefix) :]
+    return iri

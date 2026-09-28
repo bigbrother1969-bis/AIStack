@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('timemachine.title') }}</title>
+  <style>{% include "_style.html" %}</style>
+</head>
+<body>
+  <!--
+    ADR-0011 §24 (1.5.1 cadrage, 2026-09-28) — a third view of this
+    same mini-app, same LAN-only convention as streams.html/tree.html/
+    node.html (ADR-0011 roadmap R1): direct LAN link, never the
+    public address.
+  -->
+  <div class="top">
+    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+
+  <header>
+    <h1>{{ t('timemachine.ribbon.heading') }}</h1>
+    <p class="meta">{{ t('timemachine.ribbon.intro') }}</p>
+  </header>
+
+  <nav class="view-switch">
+    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
+    <span class="view-current">{{ t('timemachine.nav.ribbon') }}</span>
+  </nav>
+
+  <div class="warning">{{ t('timemachine.warning') }}</div>
+
+  {% if filter_streams %}
+    <form class="ribbon-filter" method="get" action="/ribbon">
+      <input type="hidden" name="lang" value="{{ lang }}">
+      <input type="hidden" name="submitted" value="1">
+      {% for row in filter_streams %}
+        <label class="ribbon-filter-item">
+          <input type="checkbox" name="streams" value="{{ row.stream }}"{% if row.checked %} checked{% endif %}>
+          <span class="ribbon-badge" style="color: {{ row.badge.color }}">{{ row.badge.shape }}</span>
+          {{ row.stream }}
+        </label>
+      {% endfor %}
+      <button type="submit">{{ t('timemachine.ribbon.filter_apply') }}</button>
+      {% if submitted %}
+        <a class="tree-search-clear" href="/ribbon?lang={{ lang }}">{{ t('timemachine.ribbon.filter_all') }}</a>
+      {% endif %}
+    </form>
+  {% endif %}
+
+  {% if entries %}
+    <ul class="band-list">
+      {% for entry in entries %}
+        <li class="band{% if entry.is_gap %} band--gap{% endif %}">
+          <a class="band-link" href="{{ entry.href }}">
+            <div class="band-title">
+              <span class="ribbon-badge" style="color: {{ entry.badge.color }}">{{ entry.badge.shape }}</span>
+              {{ entry.stream }}
+              {% if entry.is_gap %}<span class="ribbon-gap-tag">{{ t('timemachine.ribbon.gap_label') }}</span>{% endif %}
+            </div>
+            <div class="band-row">
+              <span class="k">
+                {% if entry.is_occurred_at %}{{ t('timemachine.ribbon.occurred_at_label') }}{% else %}{{ t('timemachine.ribbon.recorded_at_label') }}{% endif %}
+              </span>
+              <span class="v">{{ entry.instant }}</span>
+            </div>
+            {% if entry.subject %}
+              <div class="band-row">
+                <span class="k">{{ t('timemachine.predicate.stable_subject') }}</span>
+                <span class="v">{{ entry.subject }}</span>
+              </div>
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif submitted %}
+    <p class="empty">{{ t('timemachine.ribbon.filtered_empty') }}</p>
+  {% else %}
+    <p class="empty">{{ t('timemachine.ribbon.empty') }}</p>
+  {% endif %}
+</body>
+</html>

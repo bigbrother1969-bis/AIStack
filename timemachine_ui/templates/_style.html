@@ -157,3 +157,34 @@ header { margin-bottom: 1.2rem; }
   background: #fafafa; overflow: auto; margin: 0 0 1.2rem;
 }
 .render-error { color: #9c2b2b; white-space: pre-wrap; font-family: monospace; }
+
+/*
+  The time ribbon (ADR-0011 §24, added 2026-09-28) — v1 slice of
+  maquette 1: reuses .band/.band-list wholesale (it is, structurally,
+  one more time-sorted list of bands, same as streams/instants/facts
+  already render), and adds only what is genuinely new — a per-stream
+  colour+shape badge (never colour alone, dataviz skill's own
+  categorical-identity rule) and the filter form/gap tag that go with
+  it.
+*/
+.ribbon-badge { font-size: 1rem; margin-right: .35rem; }
+.ribbon-filter {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem;
+  margin: 0 0 1.2rem; font-size: .85rem;
+}
+.ribbon-filter-item { display: inline-flex; align-items: center; gap: .3rem; }
+.ribbon-filter button {
+  padding: .35rem .9rem; border: 1px solid #1f6feb; border-radius: 4px;
+  background: #1f6feb; color: #fff; font-size: .85rem; cursor: pointer;
+}
+.ribbon-filter button:hover { background: #1858c4; }
+.band--gap { border-style: dashed; background: #fff8f2; }
+.ribbon-gap-tag {
+  margin-left: .5rem; font-size: .72rem; text-transform: uppercase;
+  letter-spacing: .03em; padding: .1rem .5rem; border-radius: 10px;
+  background: #ffe3cf; color: #a04a1a;
+}
+
+@media (max-width: 480px) {
+  .ribbon-filter { gap: .5rem .8rem; }
+}

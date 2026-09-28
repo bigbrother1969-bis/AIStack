@@ -37,6 +37,7 @@ type_label:
 nav:
   streams: "Flux"
   tree: "Arbre"
+  ribbon: "Ruban"
 tree:
   heading: "Arbre du réseau"
   intro: "Réseau → Hôte → Stack → Conteneur, à partir des catalogues Docker/Compose en direct (ADR-0011 §18) — pas du graphe."
@@ -52,3 +53,13 @@ tree:
     host: "Hôte"
     stack: "Stack"
     container: "Conteneur"
+ribbon:
+  heading: "Ruban du temps"
+  intro: "Tout instant enregistré dans le graphe, tous flux confondus, du plus ancien au plus récent (maquette 1 — sans curseur pas-à-pas ni arbre associé pour l'instant, voir ADR-0011 §24)."
+  filter_apply: "Filtrer"
+  filter_all: "Tout afficher"
+  occurred_at_label: "Survenu le"
+  recorded_at_label: "Enregistré le (heure de survenue inconnue)"
+  gap_label: "Trou de collecte"
+  empty: "Aucun instant enregistré dans le graphe."
+  filtered_empty: "Aucun instant pour les flux sélectionnés."

@@ -37,6 +37,7 @@ type_label:
 nav:
   streams: "Streams"
   tree: "Tree"
+  ribbon: "Ribbon"
 tree:
   heading: "Network tree"
   intro: "Network → Host → Stack → Container, from the live Docker/Compose catalogs (ADR-0011 §18) — not from the graph."
@@ -52,3 +53,13 @@ tree:
     host: "Host"
     stack: "Stack"
     container: "Container"
+ribbon:
+  heading: "Time ribbon"
+  intro: "Every instant recorded in the graph, across every stream, oldest first (maquette 1 — no step cursor and no paired tree yet, see ADR-0011 §24)."
+  filter_apply: "Filter"
+  filter_all: "Show all"
+  occurred_at_label: "Occurred at"
+  recorded_at_label: "Recorded at (occurrence time unknown)"
+  gap_label: "Collection gap"
+  empty: "No instant recorded in the graph."
+  filtered_empty: "No instant for the selected streams."

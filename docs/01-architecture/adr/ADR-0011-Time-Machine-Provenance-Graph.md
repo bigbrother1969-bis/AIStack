@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -1465,6 +1465,94 @@ docker") now has every raw fact a later interpretation layer needs to
 attach a before/after image and package inventory to a detected
 upgrade — see the *Open Points* entry below, updated the same day.
 
+### 24. Ruban du temps — a v1 slice of maquette 1, 2026-09-28
+
+The owner's own 2026-09-28 decision, the same breath as § 23: pick the
+first of maquette 1's own pieces back up now that both bitemporal data
+(`aistack:occurredAt`, docker-events, § 20) and R11's own collection
+gaps (§ 9's addendum) are real in the graph — the exact precondition
+§ 18's own *Open Points* entry named this piece as blocked on.
+
+A fresh cadrage (`AskUserQuestion`) settled the one real design
+question before any code: **which streams get their own band.** The
+owner's own decision, over narrowing this to the four 1.5 Docker
+streams: every `prov:Activity` the graph currently holds, the same
+generic-over-whatever-the-graph-holds philosophy `streams` (`/`) and
+`tree_view` (`/tree`) already hold — a future stream needs no change
+here to appear on the ribbon.
+
+**A deliberately narrower v1 than the validated maquette — the same
+restraint § 19's own graph view already exercised for maquette 2.**
+The maquette's own wording ("ruban du temps, curseur d'instant,
+pas-à-pas ; arbre du réseau ; ... ; fiche de l'événement avec panneau
+« Pourquoi »") names five real pieces; this section ships one of them.
+**Built**: a single, chronological, per-stream-filterable list of
+every recorded instant in the graph — every real "bande par historique
+(masquable)" the maquette asks for, plus its own colour-*and*-shape
+badge per stream (never colour alone — the `dataviz` skill's own
+categorical-identity rule), plus an honest label distinguishing a real
+`aistack:occurredAt` from a `prov:generatedAtTime` recording-time
+fallback, plus a plain distinction for a collection gap (R11) — itself
+a real, dated graph fact, but one that states an absence, not an
+observation, so it is tagged rather than shown as if it were one more
+ordinary event. Every row links into `/node`, reusing the full
+provenance drill-down § 19 already built rather than duplicating it.
+**Not built, named here rather than left to discover**: the "curseur
+d'instant, pas-à-pas" stepping control itself (this v1 is a full list,
+browsed top to bottom, not a position stepped through one instant at a
+time); the network tree shown paired alongside it (`/tree` already
+exists as its own separate view — linking the two, or merging them
+into one screen, is real future design, not attempted here); and the
+event detail card's own "panneau Pourquoi", explicitly 1.7's own
+concern already (`claude/SESSION-2026-09-28-1.4-arbre-et-graphe.md`).
+
+**`timemachine_ui/app.py`** (`_ribbon_entries`, `ribbon_view`) — a
+third route (`GET /ribbon`) and view, alongside `/` and `/tree`. One
+SPARQL query across the whole store (widening `node`'s own per-stream
+`instants` query to every stream at once) builds the merged,
+time-sorted list; a second, small query over `aistack:collectionGap`
+marks which entities are gaps. **Per-stream visibility, `masquable`,
+is a GET query string, not client state** — the same stateless-
+navigation convention `tree_view`'s own `q` parameter already holds,
+consistent with this mini-app's own read-only, per-request
+`OxigraphGraphStore.read_only` handle (§ *Decision* 10: no server-side
+session this screen would otherwise have to keep). A hidden
+`submitted` field in the filter form is what lets "every box
+unchecked, on purpose" be told apart from "no query string at all" —
+an empty `streams` list means something different in each of those
+two requests, and a GET form has no other way to say which one this
+is.
+
+**No pytest coverage for this route**, the same `timemachine_ui`-wide
+convention every other route in this file already holds (decision #9,
+2026-08-29: FastAPI stays out of the governed venv, so `app.py` is
+verified by real execution, never by the governed suite). Verified
+this way, 2026-09-28: a real graph seeded from real collector output
+(two `docker-events` with real `occurredAt`, one `docker-diff`
+snapshot, one `docker-digest` observation, one collection gap on
+`docker-events`), a real server started against it — five entries
+rendered in the correct chronological order, each stream's own badge
+colour consistent between its filter checkbox and every one of its
+own rows, the collection gap correctly tagged and excluded from
+looking like a normal `docker-events` entry, the per-stream filter
+correctly narrowing the list, the "every box unchecked" and "no
+filter at all" states correctly distinguished, a ribbon row correctly
+following through to its own real `/node` page, and both languages
+rendering their own distinct labels. `/tree`'s own pre-existing
+dependency on a real Docker daemon (unrelated to this section) is the
+one route this verification could not also exercise, the same
+open item § 21 through § 23 already carry forward for the same reason.
+
+`fastapi.Query` added to `pyproject.toml`'s own `extend-immutable
+-calls` (`ADR-0011`'s own reasoning already covers `fastapi.Form` —
+the same marker-object idiom, applied to a repeated query parameter).
+Full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
+`mypy`, `knowledge_integrity`) clean, `2527` tests unchanged (this
+route carries no pytest of its own, per decision #9) — the i18n
+catalog's own static scan (`tests/unit/i18n/test_the_real_catalogs.py`)
+is what actually exercises every new `timemachine.ribbon.*` key this
+section adds, both languages, no missing or orphaned key.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -1645,20 +1733,27 @@ upgrade — see the *Open Points* entry below, updated the same day.
   *Decision* 13): a fifth mini-app, `timemachine_ui`, LAN-only the same
   operational way as the other four (R1), read-only against the graph
   this ADR defines via `OxigraphGraphStore.read_only`, with a
-  responsive layout (R12). **Its v1 scope is narrower than the four
+  responsive layout (R12). **Its v1 scope was narrower than the four
   maquettes the roadmap already validated** (a time ribbon, a network
-  tree, a "why" panel) — those assume `aistack:occurredAt`, collection
-  gaps and Explications, none of which this graph holds yet (1.4/1.5's
-  own concern); building toward their visual richness ahead of that
-  data would be exactly the invented infrastructure `ARC-P-006`
-  forbids. What shipped instead reproduces `aistack.cli.history_query`
-  from the graph — streams, the instants each recorded, the facts known
-  about one instant, and the reverse edges (agent, causal request) the
-  enriched three-of-four streams already carry — so the graph is seen
-  to agree with the files it was built from before anything richer is
-  built on top of it. Named here so the gap between what was demoed and
-  what shipped is stated, not silently left for whoever opens the four
-  maquettes next to discover on their own.
+  tree, a "why" panel) — those assumed `aistack:occurredAt`, collection
+  gaps and Explications, none of which the graph held yet at the time
+  (1.4/1.5's own concern); building toward their visual richness ahead
+  of that data would have been exactly the invented infrastructure
+  `ARC-P-006` forbids. What shipped first reproduced `aistack.cli
+  .history_query` from the graph — streams, the instants each
+  recorded, the facts known about one instant, and the reverse edges
+  (agent, causal request) the enriched three-of-four streams already
+  carried. **Two of the four maquettes have since gained a real slice**:
+  the network tree (§ 18) and, § 24, a v1 of the time ribbon — a
+  chronological, per-stream, colour-and-shape-badged, gap-aware list,
+  deliberately without its own "curseur pas-à-pas" stepping control or
+  a network tree paired alongside it. **Still not built**: that
+  stepping control; the ribbon/tree pairing; the "why" panel (1.7's own
+  concern); and maquette 3 ("reconstituer en trois clics"), which has
+  no named step in the roadmap at all yet. Named here so the gap
+  between what was demoed and what has actually shipped stays stated,
+  not silently left for whoever opens the remaining maquette pieces
+  next to discover on their own.
 - ~~**The container's volumes for the graph's data**~~ — **resolved,
   2026-09-27** (§ 1's addendum): `aistack.cli.timemachine_rebuild`
   gives the graph its first real caller, and `docker-compose.yml`'s

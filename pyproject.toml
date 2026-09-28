@@ -173,8 +173,15 @@ ignore = ["B011", "B024"]
 # here as one of the calls this project has actually decided are
 # safe in that position — not a blanket disabling of B008 itself,
 # which stays selected and catches every other case.
+#
+# `fastapi.Query`, added 2026-09-28 alongside `timemachine_ui/app.py`'s
+# own `ribbon_view` (`ADR-0011` §24): the same reasoning as `Form`
+# above, applied to the marker FastAPI uses to bind a repeated query
+# parameter (`streams: list[str] = Query(default=[])`) — a fresh,
+# framework-owned object each call, not a mutable default a caller
+# could corrupt.
 [tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Form"]
+extend-immutable-calls = ["fastapi.Form", "fastapi.Query"]
 
 # python_version pins mypy's own understanding of the language to
 # what `pyproject.toml`'s own `requires-python` already declares —

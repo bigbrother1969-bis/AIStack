@@ -595,6 +595,16 @@ writes to one subject collapse to one queryable instant — editing a
 note's own content between two runs correctly records a second
 Explication version rather than being lost to that collision.
 
+**`OS-083` itself fixed at the source, 2026-09-28** — the owner asked
+for the follow-up this section's own text named as optional. Both
+files' `status:` prose is now quoted; `parse_artifact_frontmatter`
+reads both correctly (confirmed directly). A future re-import of
+these two notes records a new Explication under each one's real
+declared `id`, alongside — not replacing — the Explication already
+recorded under its old, filename-derived subject; that older entry is
+not edited or removed (§ 7), it stands as an accurate record of what
+the importer read before the correction.
+
 ### 17. Explications' fourth and last real source: commit history
 
 Unlike the other three sources, a commit's own "subject" has no single

@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.118
+  version: 1.119
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-27
+  updated: 2026-09-28
 
 relations:
   references:
@@ -372,6 +372,25 @@ the two files' own `status:` prose (quoting it, or removing the
 colon) is a real, cheap follow-up the owner may want to do by hand;
 this session does not do it unasked, since editing already-written
 `claude/` notes is content, not infrastructure.
+
+**Addendum, 2026-09-28.** The owner asked for the follow-up named
+above. Both files' own `status:` value is now double-quoted
+(`SESSION-2026-09-25-vs2-2.4.md`'s own embedded `"no manufactured
+unknowns"` phrase escaped, not removed) — `yaml.safe_load` parses both
+cleanly, confirmed directly and via `parse_artifact_frontmatter`
+against the real files, which now read back the intended `id`s
+(`SESSION-2026-09-25-VS2-2.4-RERUN`, `SESSION-2026-09-25-VS2-2.4`)
+rather than `{}`. `parse_artifact_frontmatter` itself is still
+untouched — only the two files' own content changed. A real,
+expected consequence, not a defect: `from_claude_notes`'s own
+idempotency is keyed by subject and content hash together, so a
+future re-import of these two files records a new Explication under
+each file's now-real declared `id`, distinct from — not replacing —
+the Explication already recorded under each file's old,
+filename-derived subject. That older entry is not deleted or
+migrated (`ADR-0011` § 7: nothing already written is edited or
+removed); it stands as an accurate record of what the importer read
+before this correction, superseded rather than wrong.
 
 #### GOV-0002/OS-082 — `ADR-0011` § *Context* claimed AI Reasoning History is one of the four streams already reachable by the graph; measured, it never has been
 

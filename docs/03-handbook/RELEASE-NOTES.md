@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-09-27
+  updated: 2026-09-28
 
 relations:
   references:
@@ -38,6 +38,61 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.3.0 — 2026-09-28
+
+**The first step of the roadmap's Time Machine
+(`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md` § *1.3*, `ADR-0011`): AIStack's
+own five histories, projected as a real PROV-O graph, browsable through a
+new LAN-only screen, plus the "why" — Explications — read from four real
+sources for the first time, commit history among them.**
+
+- **The provenance graph is real, not only designed.** `aistack.timemachine`
+  (Oxigraph, `pyoxigraph`) projects the four existing history streams plus
+  the new Explications stream into a PROV-O graph — `prov:Entity`/
+  `prov:Activity`/`prov:Agent`, `wasGeneratedBy`/`wasAttributedTo`/`used`,
+  plus AIStack's own stable-subject, bitemporal and clock-source
+  extensions. The files stay the source of truth; the graph is a
+  projection, rebuilt in full on demand (`aistack.cli.timemachine_rebuild`),
+  never incrementally, never scheduled. A filter runs before anything is
+  indexed, excluding user-data volumes; secret-shape masking is
+  deliberately not built yet — designed once a real secret shape actually
+  turns up in the imported corpus, not guessed at in advance.
+- **A fifth mini-app, `timemachine_ui`.** A new LAN-only screen (GIGABYTE,
+  port 8186, same operational convention as Priorité CPU, Selection UI, the
+  network-discovery screen and the troubleshooting assistant), read-only
+  against the graph. Its v1 scope browses three levels — the streams, the
+  instants each one recorded, and every fact known about one instant,
+  including the reverse provenance edges back to an Agent or a causal
+  request — deliberately narrower than the four richer maquettes the
+  roadmap already validated (a time ribbon, a network tree, a "why"
+  panel): those assume data (occurrence time, collection gaps,
+  Explications woven through every stream) that 1.4 and 1.5 still have to
+  supply, and building toward their visual richness ahead of that data
+  would be exactly the invented infrastructure `ARC-P-006` forbids. Both
+  languages, a responsive single-column layout on a phone, and an honest
+  "not built yet" page when the rebuild has never run.
+- **Explications, read for the first time, from four real sources.** A new
+  `KnowledgeArtifact` kind (`STD-0100` gains a fourth confidence level,
+  `Proposed`) answering "why" for a subject, always attributed, dated and
+  versioned, never silently overwritten. Four sources now import into it
+  for real: the AI Runtime's own `explain` answers, `pra_tests.yml`'s
+  dated comments, this repository's five `claude/` session notes, and —
+  last — its own commit history (240 of 695 commits carry a real
+  conventional scope; the rest are skipped and counted, never guessed
+  at). Each import is idempotent and a deliberate, owner-run act, never
+  automatic.
+- **`GOV-0002/OS-083` fixed at the source.** The two `claude/` notes whose
+  own `status:` frontmatter broke `yaml.safe_load` since the day each was
+  written (an unquoted colon-space sequence in their own prose) are
+  corrected in place; a future re-import records a new Explication under
+  each file's real `id`, alongside — never replacing — what was already
+  recorded under the old, filename-derived one.
+
+`bigbrother1969/aistack-core:1.3.0`, built from `<commit to be filled in
+at publication — the owner's own build, per OPS-0002>`, digest `<filled
+in at publication>`.
+2270 tests, 75 knowledge artifacts, `clean: True`.
 
 ## 1.2.1 — 2026-09-27
 
@@ -598,7 +653,7 @@ survived.
 
 ## Everything AIStack does, as of this release
 
-Not what changed — what runs, as of 1.2.0 (2026-09-27), taken together.
+Not what changed — what runs, as of 1.3.0 (2026-09-28), taken together.
 
 - **Docker infrastructure discovery.** Point AIStack at a Docker host and
   it produces a governed catalog of what is running: identity, image,
@@ -650,6 +705,16 @@ Not what changed — what runs, as of 1.2.0 (2026-09-27), taken together.
   recipient verify two bundles carry the same content without trusting
   whoever sent it. This is how a new AI session, or a new contributor,
   gets up to speed without reading the repository's entire history.
+- **Time Machine and Explications — new as of 1.3.0.** AIStack's own five
+  histories, projected as a real PROV-O graph (Oxigraph), rebuilt in full
+  on demand, browsable through a new LAN-only screen — streams, the
+  instants each one recorded, and every fact known about one instant,
+  including the provenance edges back to whoever or whatever caused it.
+  The "why" itself, Explications, is read for the first time from four
+  real sources: the AI Runtime's own answers, `pra_tests.yml`'s dated
+  comments, this project's `claude/` session notes, and its own commit
+  history — each import deliberate, attributed, and never silently
+  overwritten.
 - **Knowledge integrity validation.** Sixteen checks run against the
   governed documentation on every test suite and before every
   publication — missing metadata, broken cross-references, undated

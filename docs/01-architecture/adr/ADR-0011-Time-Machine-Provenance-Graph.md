@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.12
+  version: 1.13
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -1866,6 +1866,85 @@ the graphic debt — this slice, the remaining Time Machine work, and
 the console/architecture/health audit's own findings — being caught up
 and confirmed applied on both hosts, not on this slice alone.
 
+**Third slice, 2026-09-29 — patch 0082 applied and published (both
+hosts, `798c527`) within hours, and production immediately found two
+more real gaps.** The owner's own screenshots of `/ribbon` after
+applying it: (1) the whole page still sits in a fixed narrow column no
+matter how wide the browser window is — `900px` on every Time Machine
+screen and on `console.html`/`health.html`, `1100px` on
+`architecture.html`, none of it new to this slice; and (2) —
+`ribbon_svg.py`'s own — `docker-events` alone carried 49125 real
+instants in a roughly four-hour window, which the second slice's own
+clustering chained into one glyph labelled `"●49125"`, and
+`resource-priority-decision`'s own dozens of smaller clusters sat
+close enough that their own multi-digit count labels (`"22"`,
+`"3353"`) visually ran into each other even though the underlying
+marks stayed more than `_CLUSTER_MIN_GAP_PX` apart. The owner read the
+second symptom as broken timestamps at first — they are cluster
+counts colliding, not instants, an honest misreading this slice's own
+fix should make impossible to have again.
+
+A fresh cadrage (`AskUserQuestion`, 2026-09-29) settled both, together,
+as one patch:
+
+1. **Every screen adapts to the available window width** — the
+   owner's own broader answer, "toute l'appli," not the ribbon alone.
+   `max-width: min(96vw, 1600px)` replaces the fixed `900px`/`1100px`
+   column on all four Time Machine screens (`timemachine_ui/_style
+   .html`) and on `console.html`/`architecture.html`/`health.html`
+   alike (`architecture.html`'s own `1100px` carried no stated
+   rationale for being wider than the other two static pages, so it
+   converges to the same rule rather than staying a bespoke
+   exception). `ribbon_svg.py`'s own `_VIEWBOX_WIDTH` grows from 900
+   to 1600 in step, so the extra room actually reaches the geometry
+   this module computes, not only the CSS stretching the same cramped
+   layout across more physical pixels.
+2. **Clusters space themselves by their own real label footprint, and
+   a lane too dense to plot honestly gets one summary badge instead**
+   — the owner's own combined answer, treating what looked like one
+   ask ("les horodatages à corriger") as the two real, separate causes
+   it actually was. `_cluster_lane` (`ribbon_svg.py`) now runs a
+   second, label-aware coalescing pass on top of its own first,
+   position-only one (unchanged): `_estimated_label_width` gives a
+   deliberately conservative per-character estimate of a cluster's own
+   rendered text (no browser is available to this pure module to ask
+   for a real text metric — `R5`'s own "logic in `src/`, tested"
+   constraint), and adjacent clusters whose own estimated footprints
+   would still overlap once drawn keep merging until a full pass makes
+   no further change. Separately, `_lane_needs_summary` catches what
+   the label-aware pass cannot: a single cluster swallowing more than
+   `_LANE_SUMMARY_MEMBER_THRESHOLD` (50 — far beyond any close-in-time
+   burst this heritage tested before this slice, the largest
+   deliberately tested being 6, and cleanly below the smallest real
+   production count found the same day, 49125) means no pixel position
+   on that lane means anything any more; that whole lane then renders
+   as one honest `_render_lane_summary` badge — a real total count and
+   a real earliest/latest instant, still linking to a real `/node`
+   (the earliest member's), drawn as a pill (a background `<rect>`) so
+   it reads as clearly different from an ordinary mark or cluster,
+   never a fabricated position and never a dead link.
+
+4 new tests (2554→2558) in `test_ribbon_svg.py`: two clusters more
+than the position-only gap apart still merge once their own two-digit
+labels would overlap; a 60-member burst renders one honest summary
+covering the whole lane rather than one illegible mega-cluster glyph;
+and, testing `_lane_needs_summary` directly rather than through a
+fragile pixel-exact reconstruction of `render_ribbon_svg`'s own public
+positioning (this heritage's own precedent for a private geometry
+helper when the alternative is that fragile) — 70 individually
+reasonable two-member clusters still overflow the available width,
+and a handful of them comfortably fit.
+
+**Verified beyond the governed suite, the same standalone Jinja2 +
+Playwright pattern already used twice above**: a fabricated graph
+carrying 5000 `docker-events`-style instants in a four-hour window and
+400 `resource-priority-decision`-style instants over 25 days,
+screenshotted at 1800px width — the 5000-instant lane renders as one
+clean `"5000 événements"` pill rather than an illegible number, the
+400-instant lane the same via the member-count path, and the page's
+own content area now spans nearly the full browser window instead of
+sitting in a narrow fixed column.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -2151,17 +2230,27 @@ and confirmed applied on both hosts, not on this slice alone.
   decision rather than a pattern assumed to generalise from this one.
 - ~~**The ribbon's own illegibility at real production scale**~~ —
   **resolved, narrower than the maquette, 2026-09-29** (§ 26's second
-  slice): the owner's own screenshot of `/ribbon` in use, roughly
-  twenty real streams and a close-instant burst on `docker-events`
-  rendering as one overlapping smear, found this gap; category
-  grouping (Docker collectors vs. everything else, each its own
-  foldable, independently-scaled picture) and chained mark clustering
-  now close it. **Still not built**: a cluster does not unfold back
-  into its own individual marks in place — every clustered instant
-  stays reachable only through its own `<title>` tooltip or the flat
-  `.band-list` beneath the graphic, not a click on the cluster glyph
+  slice, extended by its third the same day): the owner's own
+  screenshot of `/ribbon` in use, roughly twenty real streams and a
+  close-instant burst on `docker-events` rendering as one overlapping
+  smear, found this gap; category grouping (Docker collectors vs.
+  everything else, each its own foldable, independently-scaled
+  picture) and chained mark clustering closed most of it. Applied to
+  real production the same day, two more real symptoms surfaced at the
+  true scale (`docker-events`' own 49125 instants, not the handful
+  tested against): one cluster's own label swallowing the whole lane
+  as a meaningless single glyph, and several clusters' own multi-digit
+  labels visually running into each other even while comfortably apart
+  by raw position — both closed by the third slice's own label-aware
+  clustering pass and its lane-level summary fallback, and the whole
+  page (this mini-app and the three static pages alike) now adapts to
+  the real window width instead of sitting in a fixed narrow column.
+  **Still not built**: a cluster (or a lane's own summary badge) does
+  not unfold back into its own individual marks in place — every
+  instant stays reachable only through its own `<title>` tooltip or the
+  flat `.band-list` beneath the graphic, not a click on the glyph
   itself; and the lane labels' own genuinely-small mobile size (named
-  above, § 26) is unchanged by this slice. The console/architecture/
+  above, § 26) is unchanged by either slice. The console/architecture/
   health screens' own finish level against their validated maquettes
   — asked about in the same conversation that found this gap — is a
   separate, not-yet-started audit: findings first, no code until the

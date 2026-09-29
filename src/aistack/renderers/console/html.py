@@ -295,12 +295,20 @@ def _link_href(url: str, lang: str) -> str:
 # kept unchanged; the health-status badges below keep their
 # green/amber/red meaning, only lightly retinted to sit next to navy
 # rather than pure primary blue).
+#
+# Width (ADR-0011 §26, 1.5.2 graphic-debt cadrage, 2026-09-29): a
+# fixed 900px column, no wider on a wide monitor than on a laptop —
+# the owner's own finding, from the Time Machine ribbon's own
+# crowding, extended here at the owner's own broader request ("toute
+# l'appli") to this page too, not just the mini-app that found it.
+# `min(96vw, 1600px)` adapts to the real window instead of sitting
+# fixed, while still capping line length on an ultra-wide monitor.
 _STYLE = """\
 :root { color-scheme: light; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
-  max-width: 900px; margin: 2rem auto;
+  max-width: min(96vw, 1600px); margin: 2rem auto;
   color: #1f2933; background: #f7f9fc; padding: 0 1rem;
 }
 header { text-align: center; margin-bottom: 2rem; }

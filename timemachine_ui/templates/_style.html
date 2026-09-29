@@ -29,9 +29,20 @@
   cites (`aistack.renderers.console.html`'s own comment, pixel-sampled
   + DevTools-confirmed from persiaut-consulting.eu), not re-sampled
   here.
+
+  Width (ADR-0011 §26, third slice, 2026-09-29): `max-width` was
+  900px, a fixed narrow column no wider on a wide monitor than on a
+  laptop — the owner's own finding, the same day the ribbon's own
+  `_VIEWBOX_WIDTH` grew from 900 to 1600 to use that room. `min(96vw,
+  1600px)` adapts to the real window instead of sitting fixed, while
+  still capping line length on text-heavy content (the flat
+  `.band-list`) on an ultra-wide monitor. The same rule is applied to
+  `console.html`/`architecture.html`/`health.html` (each keeps its own
+  literal `_STYLE`, not a shared file) — the owner's own broader
+  decision, "toute l'appli", not this mini-app alone.
 #}
 body {
-  font-family: sans-serif; max-width: 900px; margin: 1.5rem auto 3rem;
+  font-family: sans-serif; max-width: min(96vw, 1600px); margin: 1.5rem auto 3rem;
   padding: 0 1rem; color: #1f2933; line-height: 1.4;
 }
 header { margin-bottom: 1.2rem; }
@@ -223,6 +234,8 @@ header h1 {
 .ribbon-mark { cursor: pointer; }
 .ribbon-mark--gap { opacity: .55; }
 .ribbon-mark--cluster { font-weight: 700; }
+.ribbon-mark-summary-box { fill: #eef3fa; stroke: #16335c; stroke-width: 1; }
+.ribbon-mark--summary { font-weight: 600; font-style: italic; }
 .ribbon-cursor { stroke: #16335c; stroke-width: 1.5; stroke-dasharray: 4 3; }
 .ribbon-list-heading {
   font-size: .85rem; font-weight: 600; color: #5b6b7d;

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 from aistack.renderers.timemachine import RibbonMark, render_ribbon_svg
+from aistack.renderers.timemachine.ribbon_svg import _Positioned, _lane_needs_summary
 
 
 def mark(
@@ -191,3 +194,105 @@ def test_a_cluster_containing_a_gap_still_gets_the_gap_css_class():
 
     assert "ribbon-mark--gap" in result.markup
     assert "ribbon-mark--cluster" in result.markup
+
+
+# --- Third slice (ADR-0011 §26, production found two more real gaps
+# within hours of the second slice, 2026-09-29) -----------------------
+#
+# Real production data: `docker-events` collapsed 49125 real instants
+# into one glyph labelled "●49125" (no useful position left at all),
+# and `resource-priority-decision`'s dozens of small clusters had
+# multi-digit count labels ("22", "3353") visually running into their
+# neighbours' even though the underlying marks stayed more than
+# `_CLUSTER_MIN_GAP_PX` apart. The owner read the second symptom as
+# broken timestamps at first — they are cluster counts colliding, not
+# instants.
+
+
+def _iso(base: datetime, seconds: float) -> str:
+    return (base + timedelta(seconds=seconds)).isoformat()
+
+
+def test_clusters_more_than_min_gap_apart_still_merge_once_their_own_multi_digit_labels_would_overlap():
+    # Two eleven-member bursts (each chains into its own "●11" cluster
+    # under the first, position-only pass — an 11px-wide run each) with
+    # a 15px gap between them: more than `_CLUSTER_MIN_GAP_PX` (14), so
+    # the first pass alone would keep them apart. Once each carries its
+    # own two-digit count, their labels are wide enough that they still
+    # visually overlap at that distance — the second, label-aware pass
+    # is what merges them into one "●22".
+    base = datetime(2026, 9, 28, 9, 0, 0, tzinfo=timezone.utc)
+
+    earliest = mark(instant=_iso(base, 0), href="/node?iri=earliest")
+    cluster_a = [mark(instant=_iso(base, 500 + i), href=f"/node?iri=a{i}") for i in range(11)]
+    cluster_b = [mark(instant=_iso(base, 525 + i), href=f"/node?iri=b{i}") for i in range(11)]
+    latest = mark(instant=_iso(base, 1430), href="/node?iri=latest")
+
+    result = render_ribbon_svg((earliest, *cluster_a, *cluster_b, latest), ("docker-events",))
+
+    assert result.mark_count == 24
+    assert "ribbon-mark--cluster" in result.markup
+    assert "●22" in result.markup
+    assert "●11" not in result.markup
+    # Three cursor points: the lone earliest mark, the merged 22-member
+    # cluster, and the lone latest mark — never four (A and B staying
+    # separate) and never two (the lone marks joining in too).
+    assert result.markup.count('"href"') == 3
+
+
+def test_a_lane_with_an_abnormally_large_cluster_renders_one_honest_summary_instead():
+    # A 60-member burst — comfortably past `_LANE_SUMMARY_MEMBER_
+    # THRESHOLD` (50), the same order-of-magnitude jump `docker-events`
+    # showed in production (49125) — collapses the whole lane (all 62
+    # marks, not just the burst) into one summary badge rather than one
+    # illegible mega-cluster glyph.
+    base = datetime(2026, 9, 28, 9, 0, 0, tzinfo=timezone.utc)
+
+    earliest = mark(instant=_iso(base, 0), href="/node?iri=earliest")
+    burst = [mark(instant=_iso(base, 700 + i), href=f"/node?iri=burst{i}") for i in range(60)]
+    latest = mark(instant=_iso(base, 1430), href="/node?iri=latest")
+
+    result = render_ribbon_svg((earliest, *burst, latest), ("docker-events",))
+
+    assert result.mark_count == 62
+    assert "ribbon-mark--summary" in result.markup
+    assert "62 événements" in result.markup
+    assert 'href="/node?iri=earliest"' in result.markup
+    # One picture element for the whole lane — never 62 individual
+    # points, and never a giant illegible cluster glyph either.
+    assert result.markup.count('"href"') == 1
+
+
+def _bare_cluster(member_count: int) -> list[_Positioned]:
+    """A cluster with no real spread of instants — `_lane_needs_summary`
+    and the helpers it calls only ever read a cluster's own member
+    count and its rendered label width, never its `x`, so constructing
+    this through `render_ribbon_svg`'s own public, timestamp-driven
+    positioning would mean packing clusters to within a pixel of their
+    own minimum non-overlap spacing: a genuinely fragile, boundary-
+    precision reconstruction for what this is — a plain sum comparison.
+    Testing the private geometry helper directly, as this heritage
+    already does elsewhere when the alternative is that fragile, is
+    the more honest test (`R5`)."""
+
+    instant = datetime(2026, 9, 28, 9, 0, 0, tzinfo=timezone.utc)
+    m = mark(instant=instant.isoformat())
+    return [_Positioned(x=0.0, instant=instant, mark=m) for _ in range(member_count)]
+
+
+def test_many_individually_reasonable_clusters_still_overflow_the_available_width():
+    # 70 two-member clusters ("●2" each, far under the 50-member
+    # threshold on their own) still add up to more label footprint
+    # than a 1430px plot has room for — `resource-priority-decision`'s
+    # own real shape: no single cluster is abnormal, but there are too
+    # many of them to lay out side by side without their labels
+    # colliding.
+    clusters = [_bare_cluster(2) for _ in range(70)]
+
+    assert _lane_needs_summary(clusters, plot_width=1430.0) is True
+
+
+def test_a_handful_of_well_separated_small_clusters_fit_comfortably():
+    clusters = [_bare_cluster(2) for _ in range(5)]
+
+    assert _lane_needs_summary(clusters, plot_width=1430.0) is False

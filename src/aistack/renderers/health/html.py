@@ -245,12 +245,14 @@ def _evidence_summary(
 # and where each value comes from) — identical across the three
 # static pages by design, not by shared code. The `.domain-*`/
 # `.badge-*` state tints keep their meaning, only lightly retinted.
+# Width, same reasoning and same value as that module's own comment
+# (ADR-0011 §26, 2026-09-29): `min(96vw, 1600px)`, not a fixed 900px.
 _STYLE = """\
 :root { color-scheme: light; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
-  max-width: 900px; margin: 2rem auto;
+  max-width: min(96vw, 1600px); margin: 2rem auto;
   color: #1f2933; background: #f7f9fc; padding: 0 1rem;
 }
 h1, h2, h3 {

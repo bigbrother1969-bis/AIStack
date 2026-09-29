@@ -624,12 +624,18 @@ def _cmdb_status(reading: HttpProbeReading, t: Translator) -> tuple[str, str]:
 # green/amber/red meaning, only lightly retinted), are identical
 # across all three static pages by design, not by shared code — each
 # renderer keeps its own literal `_STYLE`.
+#
+# Width, same reasoning and same value as that module's own comment
+# (ADR-0011 §26, 2026-09-29): `min(96vw, 1600px)`. This page's own
+# 1100px predated that decision and carried no stated rationale of its
+# own for being wider than the other two static pages — converged to
+# the same rule as all of them, not kept as a bespoke exception.
 _STYLE = """\
 :root { color-scheme: light; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
-  max-width: 1100px; margin: 2rem auto;
+  max-width: min(96vw, 1600px); margin: 2rem auto;
   color: #1f2933; background: #f7f9fc; padding: 0 1rem;
 }
 h1, h2, h3, h4 {

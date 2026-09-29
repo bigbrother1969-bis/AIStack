@@ -64,3 +64,5 @@ ribbon:
   empty: "Aucun instant enregistré dans le graphe."
   filtered_empty: "Aucun instant pour les flux sélectionnés."
   list_heading: "Liste complète (vue accessible)"
+  group_docker: "Collecteurs Docker (1.5)"
+  group_observation: "Historique d'observations"

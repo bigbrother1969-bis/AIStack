@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.11
+  version: 1.12
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -1770,6 +1770,102 @@ Full governed chain (`pytest`, `ruff check .`, `mypy`,
 `knowledge_integrity`) clean against the real current `origin/main`
 tip (`a8556c7`, patch 0080's own commit).
 
+**Second slice, 2026-09-29 — real production data found two more real
+gaps, grounded in the owner's own screenshot of `/ribbon` in use, not
+guessed.** Roughly twenty real streams exist today, not the five or
+six the v1 slice above was designed against: crowded lane labels, and
+several close instants on one lane — `docker-events` worst of all —
+rendering as one illegible, overlapping smear. A fresh cadrage
+(`AskUserQuestion`) settled two more decisions before any code, plus a
+priority order and an audit-first plan for the screens beyond the
+Time Machine:
+
+1. **Streams group by category, foldable** — not an invented
+   taxonomy: the only two kinds of stream this graph's own code
+   distinguishes are the four 1.5 Docker collectors (each its own
+   dedicated projector module, each declaring its own `STEM`
+   constant — `docker_events`/`docker_diff`/`docker_digest`/
+   `docker_packages`) and everything else, which shares the exact same
+   generic `project_observation_history` walk and the exact same
+   `stream_iri` scheme. `timemachine_ui.app`'s `ribbon_view` now
+   partitions `all_streams`/`svg_marks` into `_DOCKER_COLLECTOR_STREAMS`
+   and its complement, and calls `render_ribbon_svg` twice — once per
+   category, each its own independent local time axis (which
+   incidentally also softens the uneven-distribution problem, since
+   each sub-ribbon scales only to its own category's own min/max).
+   `render_ribbon_svg` itself stays fully category-agnostic — the split
+   is the web layer's own responsibility, the same reasoning
+   `aistack.timemachine.iri`'s own docstring already states for
+   staying prefix-agnostic. `ribbon.html` wraps each category's own SVG
+   in a native `<details>`/`<summary>` disclosure, the same pattern
+   `.tree-node` already uses for the network tree — both open by
+   default, so folding is available without any instant becoming
+   invisible by default.
+2. **Marks too close together to tell apart merge into one counted,
+   still-navigable cluster** — `_cluster_lane`/`_render_cluster` (new,
+   `ribbon_svg.py`) group a lane's own marks, sorted by pixel position,
+   into runs where each mark sits under `_CLUSTER_MIN_GAP_PX` (14px) of
+   the one immediately before it in the same cluster — a chained
+   distance, not a fixed window, so a long run of close marks collapses
+   into one cluster even when its own first and last members are
+   further apart than the threshold from each other. A cluster's own
+   glyph carries its member count (`"●3"`); its `<title>` tooltip names
+   every member's own stream/instant/subject line, never averaging one
+   away; its `href` still opens a real `/node` card (the earliest
+   member's) — never a dead link. **Narrower than the option's own "qui
+   se déplie" (unfolds in place) wording, named here rather than left
+   to discover**: this slice does not unfold a cluster back into its
+   individual marks in place — the same restraint already applied to
+   the cursor's own real-but-narrower scope above. Every clustered
+   instant stays fully visible, unclustered, in the flat `.band-list`
+   this screen already keeps beneath the graphic.
+
+The cursor script (`ribbon.html`'s own static `<script>`) now wires
+every `.ribbon-svg` on the page independently — `document
+.querySelectorAll` paired with each SVG's own sibling `.ribbon-marks-
+data` data island (via `nextElementSibling`) — rather than the v1
+slice's singular `getElementById` lookup; a category with zero visible
+marks emits no data island at all and is skipped, never a crash. Each
+SVG's own nearest-instant search stays scoped to its own marks: a
+cursor in one category's picture never jumps to the other's.
+
+Two new translation keys (`timemachine.ribbon.group_docker`,
+`timemachine.ribbon.group_observation`) in both catalogs.
+
+5 new tests (2549→2554) in `test_ribbon_svg.py`: two marks a second
+apart on a day-long axis merge into one cluster (and only two cursor
+points are emitted, not three); a clustered mark still names every
+member in its own tooltip; a cluster still navigates to a real node,
+never a dead link; marks genuinely far apart on a short axis do not
+cluster; a cluster containing a gap still carries the gap's own CSS
+class alongside the cluster's own. `timemachine_ui/app.py`'s own
+category split stays outside the governed suite, the same decision #9
+convention every other route in this file already holds.
+
+**Verified beyond the governed suite, the same standalone Jinja2 +
+Playwright pattern already used above**: a fabricated twenty-stream
+graph (four Docker collectors, sixteen observation streams, a
+six-member burst on `docker-events` three seconds apart) rendered
+through both templates, screenshotted, and confirmed the burst renders
+as one bold `"■6"` glyph rather than six overlapping marks. A scripted
+click on the Docker group's own cluster opened its earliest member
+(`docker-events:0`); a scripted drag across the Observation group's
+own picture opened a mark from that group alone — confirming the two
+groups' cursors never cross-navigate.
+
+**Priority and next steps, the owner's own decision, 2026-09-29**: the
+Time Machine screens (ribbon, tree, node, streams) are worked first,
+before console/architecture/health — which already received the navy/
+Georgia charte graphique retrofit (`SESSION-2026-09-26-charte-
+graphique-persiaut-1.1.1.md`) but not yet a finish-level audit against
+their own validated maquettes. That audit is a separate, not-yet-
+started deliverable: findings first, no code changes to those three
+screens until the owner has seen them. 1.5.2 (version bump,
+`RELEASE-NOTES.md`, image publication per `OPS-0002`) stays gated on
+the graphic debt — this slice, the remaining Time Machine work, and
+the console/architecture/health audit's own findings — being caught up
+and confirmed applied on both hosts, not on this slice alone.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -2053,3 +2149,21 @@ tip (`a8556c7`, patch 0080's own commit).
   the other eleven (a Beszel host's own name, a Compose catalog's own
   service list, ...) remain generic-baseline-only, each its own future
   decision rather than a pattern assumed to generalise from this one.
+- ~~**The ribbon's own illegibility at real production scale**~~ —
+  **resolved, narrower than the maquette, 2026-09-29** (§ 26's second
+  slice): the owner's own screenshot of `/ribbon` in use, roughly
+  twenty real streams and a close-instant burst on `docker-events`
+  rendering as one overlapping smear, found this gap; category
+  grouping (Docker collectors vs. everything else, each its own
+  foldable, independently-scaled picture) and chained mark clustering
+  now close it. **Still not built**: a cluster does not unfold back
+  into its own individual marks in place — every clustered instant
+  stays reachable only through its own `<title>` tooltip or the flat
+  `.band-list` beneath the graphic, not a click on the cluster glyph
+  itself; and the lane labels' own genuinely-small mobile size (named
+  above, § 26) is unchanged by this slice. The console/architecture/
+  health screens' own finish level against their validated maquettes
+  — asked about in the same conversation that found this gap — is a
+  separate, not-yet-started audit: findings first, no code until the
+  owner has seen them (the owner's own 2026-09-29 priority: Time
+  Machine screens first).

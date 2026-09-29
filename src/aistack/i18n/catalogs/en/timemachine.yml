@@ -64,3 +64,5 @@ ribbon:
   empty: "No instant recorded in the graph."
   filtered_empty: "No instant for the selected streams."
   list_heading: "Full list (accessible view)"
+  group_docker: "Docker collectors (1.5)"
+  group_observation: "Observation history"

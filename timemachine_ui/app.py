@@ -38,6 +38,10 @@ from aistack.timemachine import (
 )
 from aistack.timemachine.iri import short_label
 from aistack.timemachine.projection import DEFAULT_GENERATED_DIR
+from aistack.timemachine.projection.docker_diff import STEM as _DOCKER_DIFF_STEM
+from aistack.timemachine.projection.docker_digest import STEM as _DOCKER_DIGEST_STEM
+from aistack.timemachine.projection.docker_events import STEM as _DOCKER_EVENTS_STEM
+from aistack.timemachine.projection.docker_packages import STEM as _DOCKER_PACKAGES_STEM
 from aistack.timemachine.vocabulary import (
     AISTACK_COLLECTION_GAP,
     AISTACK_OCCURRED_AT,
@@ -604,6 +608,21 @@ _RIBBON_PALETTE: tuple[dict[str, str], ...] = (
     {"color": "#3f8fa8", "shape": "▶"},  # bleu-vert, flèche
 )
 
+# `ADR-0011` §26 (1.5.2 graphic-debt cadrage, 2026-09-29) — the ribbon's
+# own two real categories, and the only two this graph's code actually
+# distinguishes: a stream is either one of the four 1.5 Docker
+# collectors (each mints its own `prov:Activity` from its own dedicated
+# projector module, each exporting a `STEM` constant) or it shares the
+# exact same generic `project_observation_history` walk and the exact
+# same `stream_iri(stem)` scheme as every other subject. There is no
+# further structural distinction in the codebase to subdivide the
+# second bucket without inventing a taxonomy nothing states (ARC-P-006)
+# — Explications entities never reach the ribbon at all, so this is a
+# real two-way split, not an arbitrary one.
+_DOCKER_COLLECTOR_STREAMS: frozenset[str] = frozenset(
+    {_DOCKER_DIFF_STEM, _DOCKER_DIGEST_STEM, _DOCKER_EVENTS_STEM, _DOCKER_PACKAGES_STEM}
+)
+
 
 def _ribbon_entries(store: GraphStore) -> list[dict[str, object]]:
     """
@@ -728,12 +747,29 @@ def ribbon_view(
     # colour/shape never shifts when another stream is hidden"
     # guarantee this route's own docstring already states, extended to
     # its lane's own position.
-    ribbon_svg = render_ribbon_svg(tuple(svg_marks), tuple(all_streams))
+    #
+    # `ADR-0011` §26's second slice — the graph itself stays split into
+    # its own two real categories (`_DOCKER_COLLECTOR_STREAMS`, above):
+    # each gets its own independent `render_ribbon_svg` call, its own
+    # local time axis, and its own foldable group in the template. The
+    # renderer itself stays category-agnostic — this split is this
+    # route's own responsibility, not `render_ribbon_svg`'s.
+    docker_streams = tuple(s for s in all_streams if s in _DOCKER_COLLECTOR_STREAMS)
+    observation_streams = tuple(s for s in all_streams if s not in _DOCKER_COLLECTOR_STREAMS)
+    docker_marks = tuple(m for m in svg_marks if m.stream in _DOCKER_COLLECTOR_STREAMS)
+    observation_marks = tuple(m for m in svg_marks if m.stream not in _DOCKER_COLLECTOR_STREAMS)
+
+    ribbon_svg_docker = render_ribbon_svg(docker_marks, docker_streams)
+    ribbon_svg_observation = render_ribbon_svg(observation_marks, observation_streams)
 
     context: dict[str, object] = {
         "entries": filtered,
-        "ribbon_svg": ribbon_svg.markup,
-        "ribbon_svg_mark_count": ribbon_svg.mark_count,
+        "ribbon_svg_docker": ribbon_svg_docker.markup,
+        "ribbon_svg_docker_mark_count": ribbon_svg_docker.mark_count,
+        "ribbon_svg_docker_stream_count": len(docker_streams),
+        "ribbon_svg_observation": ribbon_svg_observation.markup,
+        "ribbon_svg_observation_mark_count": ribbon_svg_observation.mark_count,
+        "ribbon_svg_observation_stream_count": len(observation_streams),
         "filter_streams": [
             {"stream": stream, "badge": badges[stream], "checked": stream in visible}
             for stream in all_streams

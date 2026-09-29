@@ -53,18 +53,41 @@
 
   {% if entries %}
     <!--
-      ADR-0011 §26 (1.5.2 cadrage, 2026-09-29) — v2 of maquette 1's
+      ADR-0011 §26 (1.5.2 cadrage, 2026-09-28/29) — v2 of maquette 1's
       ruban: a real horizontal time axis, one lane per stream, plus a
       cursor that opens the nearest instant's own /node card on click
       or on releasing a drag (never on every mousemove). Hover uses
       SVG's own native <title> element inside each mark — a real,
       correctly-positioned browser tooltip, not hand-rolled JS.
+
+      Second slice (2026-09-29, grounded in the owner's own production
+      screenshot): the graph splits into its own two real categories —
+      the four 1.5 Docker collectors, and everything else — each its
+      own foldable group with its own independent time axis
+      (`ribbon_svg.py`'s own docstring), and marks too close together
+      to tell apart merge into one counted, still-navigable cluster.
+
       The flat list below is kept, unremoved: the dataviz skill's own
       "a table view exists" non-negotiable, and every mark's own
       accessible <a href> still works by keyboard alone with no script
       at all.
     -->
-    <div class="ribbon-graphic">{{ ribbon_svg | safe }}</div>
+    <div class="ribbon-groups">
+      <details class="ribbon-group" open>
+        <summary>
+          {{ t('timemachine.ribbon.group_docker') }}
+          <span class="ribbon-group-count">{{ ribbon_svg_docker_mark_count }}</span>
+        </summary>
+        <div class="ribbon-graphic">{{ ribbon_svg_docker | safe }}</div>
+      </details>
+      <details class="ribbon-group" open>
+        <summary>
+          {{ t('timemachine.ribbon.group_observation') }}
+          <span class="ribbon-group-count">{{ ribbon_svg_observation_mark_count }}</span>
+        </summary>
+        <div class="ribbon-graphic">{{ ribbon_svg_observation | safe }}</div>
+      </details>
+    </div>
     <h2 class="ribbon-list-heading">{{ t('timemachine.ribbon.list_heading') }}</h2>
     <ul class="band-list">
       {% for entry in entries %}
@@ -110,10 +133,20 @@
       // <a href>, reachable by tap, keyboard, or a screen reader with
       // no script at all — this cursor is a bonus gesture on top of
       // that, never a replacement for it.
-      (function () {
-        var dataEl = document.getElementById("ribbon-marks-data");
-        var svg = document.querySelector(".ribbon-svg");
-        if (!dataEl || !svg) { return; }
+      //
+      // Second slice (2026-09-29): the page can now hold two
+      // independent <svg class="ribbon-svg"> pictures (one category
+      // each — `render_ribbon_svg` is called once per category), each
+      // with its own sibling `.ribbon-marks-data` data island right
+      // after its own `</svg>` (`ribbon_svg.py`'s own emission order).
+      // The old singular getElementById lookup is replaced by a loop
+      // that wires each svg to its own sibling island — a category
+      // with zero marks emits no island at all and is skipped, never
+      // a crash. Every svg gets its own independent nearest-instant
+      // search: a cursor never jumps across categories.
+      Array.prototype.forEach.call(document.querySelectorAll(".ribbon-svg"), function (svg) {
+        var dataEl = svg.nextElementSibling;
+        if (!dataEl || !dataEl.classList.contains("ribbon-marks-data")) { return; }
 
         var marks;
         try {
@@ -182,7 +215,7 @@
         // covers it; no separate "click" listener is added, so a mark's
         // own native <a> click is never raced against a second,
         // JS-driven navigation to the same href.
-      })();
+      });
     </script>
   {% endif %}
 </body>

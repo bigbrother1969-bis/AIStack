@@ -19,7 +19,12 @@ from aistack.kernel.bootstrap import create_kernel
 from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.repository import RepositoryProvider
 from aistack.renderers.architecture.html import load_vendored_mermaid_js
-from aistack.renderers.timemachine import ProvenanceNeighbor, render_provenance_mermaid
+from aistack.renderers.timemachine import (
+    ProvenanceNeighbor,
+    RibbonMark,
+    render_provenance_mermaid,
+    render_ribbon_svg,
+)
 from aistack.timemachine import (
     GraphStore,
     NetworkTreeNode,
@@ -694,16 +699,41 @@ def ribbon_view(
 
     visible = set(streams) if submitted else set(all_streams)
     filtered: list[dict[str, object]] = []
+    svg_marks: list[RibbonMark] = []
     for entry in entries:
         if entry["stream"] not in visible:
             continue
         row = dict(entry)
-        row["badge"] = badges[str(entry["stream"])]
-        row["href"] = _node_href(str(entry["iri"]), language)
+        badge = badges[str(entry["stream"])]
+        href = _node_href(str(entry["iri"]), language)
+        row["badge"] = badge
+        row["href"] = href
         filtered.append(row)
+        svg_marks.append(
+            RibbonMark(
+                href=href,
+                stream=str(entry["stream"]),
+                instant=str(entry["instant"]),
+                subject=str(entry["subject"]) if entry["subject"] is not None else None,
+                is_gap=bool(entry["is_gap"]),
+                is_occurred_at=bool(entry["is_occurred_at"]),
+                color=badge["color"],
+                shape=badge["shape"],
+            )
+        )
+
+    # `all_streams` (not `visible`) decides which lanes are drawn: a
+    # filtered-out stream keeps its own empty row rather than the
+    # remaining lanes shifting up, the same "a stream's own
+    # colour/shape never shifts when another stream is hidden"
+    # guarantee this route's own docstring already states, extended to
+    # its lane's own position.
+    ribbon_svg = render_ribbon_svg(tuple(svg_marks), tuple(all_streams))
 
     context: dict[str, object] = {
         "entries": filtered,
+        "ribbon_svg": ribbon_svg.markup,
+        "ribbon_svg_mark_count": ribbon_svg.mark_count,
         "filter_streams": [
             {"stream": stream, "badge": badges[stream], "checked": stream in visible}
             for stream in all_streams

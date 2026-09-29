@@ -52,6 +52,20 @@
   {% endif %}
 
   {% if entries %}
+    <!--
+      ADR-0011 §26 (1.5.2 cadrage, 2026-09-29) — v2 of maquette 1's
+      ruban: a real horizontal time axis, one lane per stream, plus a
+      cursor that opens the nearest instant's own /node card on click
+      or on releasing a drag (never on every mousemove). Hover uses
+      SVG's own native <title> element inside each mark — a real,
+      correctly-positioned browser tooltip, not hand-rolled JS.
+      The flat list below is kept, unremoved: the dataviz skill's own
+      "a table view exists" non-negotiable, and every mark's own
+      accessible <a href> still works by keyboard alone with no script
+      at all.
+    -->
+    <div class="ribbon-graphic">{{ ribbon_svg | safe }}</div>
+    <h2 class="ribbon-list-heading">{{ t('timemachine.ribbon.list_heading') }}</h2>
     <ul class="band-list">
       {% for entry in entries %}
         <li class="band{% if entry.is_gap %} band--gap{% endif %}">
@@ -81,6 +95,95 @@
     <p class="empty">{{ t('timemachine.ribbon.filtered_empty') }}</p>
   {% else %}
     <p class="empty">{{ t('timemachine.ribbon.empty') }}</p>
+  {% endif %}
+
+  {% if entries %}
+    <script>
+      // ADR-0011 §26 — the ribbon's own navigation cursor. Hand-written
+      // once, static: it reads the JSON data island `render_ribbon_svg`
+      // (aistack.renderers.timemachine.ribbon_svg) already generated
+      // per-request, so no per-request script text is ever produced.
+      // Click, or releasing a drag, opens the nearest instant's own
+      // /node card — never on every mousemove mid-drag, which would
+      // spam navigations. No touch handling yet (named here rather
+      // than left to discover): every mark stays its own accessible
+      // <a href>, reachable by tap, keyboard, or a screen reader with
+      // no script at all — this cursor is a bonus gesture on top of
+      // that, never a replacement for it.
+      (function () {
+        var dataEl = document.getElementById("ribbon-marks-data");
+        var svg = document.querySelector(".ribbon-svg");
+        if (!dataEl || !svg) { return; }
+
+        var marks;
+        try {
+          marks = JSON.parse(dataEl.textContent || "[]");
+        } catch (err) {
+          return;
+        }
+        if (!marks.length) { return; }
+
+        var minX = parseFloat(svg.dataset.cursorMinX);
+        var maxX = parseFloat(svg.dataset.cursorMaxX);
+        var cursor = svg.querySelector(".ribbon-cursor");
+
+        function nearest(x) {
+          var best = marks[0];
+          var bestDistance = Math.abs(marks[0].x - x);
+          for (var i = 1; i < marks.length; i++) {
+            var distance = Math.abs(marks[i].x - x);
+            if (distance < bestDistance) {
+              best = marks[i];
+              bestDistance = distance;
+            }
+          }
+          return best;
+        }
+
+        function svgXFromEvent(evt) {
+          var rect = svg.getBoundingClientRect();
+          var point = evt.touches ? evt.touches[0] : evt;
+          var viewBox = svg.viewBox.baseVal;
+          var ratio = rect.width > 0 ? viewBox.width / rect.width : 1;
+          var x = (point.clientX - rect.left) * ratio;
+          if (x < minX) { x = minX; }
+          if (x > maxX) { x = maxX; }
+          return x;
+        }
+
+        function showCursor(x) {
+          if (!cursor) { return; }
+          cursor.setAttribute("x1", x);
+          cursor.setAttribute("x2", x);
+          cursor.setAttribute("y2", svg.viewBox.baseVal.height);
+          cursor.style.display = "";
+        }
+
+        var dragging = false;
+
+        svg.addEventListener("mousedown", function (evt) {
+          dragging = true;
+          showCursor(svgXFromEvent(evt));
+          evt.preventDefault();
+        });
+
+        window.addEventListener("mousemove", function (evt) {
+          if (dragging) { showCursor(svgXFromEvent(evt)); }
+        });
+
+        window.addEventListener("mouseup", function (evt) {
+          if (!dragging) { return; }
+          dragging = false;
+          var mark = nearest(svgXFromEvent(evt));
+          window.location.href = mark.href;
+        });
+        // A plain click is already a mousedown immediately followed by
+        // a mouseup at (almost) the same point — the handler above
+        // covers it; no separate "click" listener is added, so a mark's
+        // own native <a> click is never raced against a second,
+        // JS-driven navigation to the same href.
+      })();
+    </script>
   {% endif %}
 </body>
 </html>

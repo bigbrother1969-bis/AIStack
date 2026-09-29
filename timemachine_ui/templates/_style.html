@@ -19,12 +19,25 @@
   meta tag or a media query (measured 2026-09-27) — so it is written
   from R12's own wording ("bandes empilées") rather than adapted from
   a precedent that does not exist yet.
+
+  Charte graphique PERSIAUT (ADR-0011 §26, 1.5.2 cadrage, 2026-09-29):
+  this mini-app did not exist yet when `SESSION-2026-09-26-charte-
+  graphique-persiaut-1.1.1.md` retinted console.html/architecture.html/
+  health.html to navy `#16335c`/Georgia — the accent colour below was
+  still the pre-charte generic blue `#1f6feb` until now. Values copied
+  from the same source every other renderer's own charte block already
+  cites (`aistack.renderers.console.html`'s own comment, pixel-sampled
+  + DevTools-confirmed from persiaut-consulting.eu), not re-sampled
+  here.
 #}
 body {
   font-family: sans-serif; max-width: 900px; margin: 1.5rem auto 3rem;
   padding: 0 1rem; color: #1f2933; line-height: 1.4;
 }
 header { margin-bottom: 1.2rem; }
+header h1 {
+  font-family: Georgia, "Times New Roman", Times, serif; color: #16335c;
+}
 .meta { color: #666; font-size: .85rem; }
 .warning {
   padding: .8rem 1rem; border-radius: 6px; background: #fff1cc;
@@ -33,7 +46,7 @@ header { margin-bottom: 1.2rem; }
 .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
 .back-link {
   display: inline-block; margin-bottom: 1.2rem; font-size: .88rem;
-  color: #1f6feb; text-decoration: none;
+  color: #16335c; text-decoration: none;
 }
 .back-link:hover { text-decoration: underline; }
 .lang-switch { font-size: .85rem; display: inline-flex; align-items: center; gap: .5rem; }
@@ -61,7 +74,7 @@ header { margin-bottom: 1.2rem; }
 }
 .band-row .k { color: #666; font-weight: 600; }
 .band-row .v { word-break: break-word; }
-.band-row .v a { color: #1f6feb; text-decoration: none; }
+.band-row .v a { color: #16335c; text-decoration: none; }
 .band-row .v a:hover { text-decoration: underline; }
 .node-iri {
   font-size: .8rem; color: #666; word-break: break-all; margin: .3rem 0 1.2rem;
@@ -89,7 +102,7 @@ header { margin-bottom: 1.2rem; }
 .view-switch {
   display: flex; gap: 1rem; font-size: .88rem; margin: 0 0 1rem;
 }
-.view-switch a { color: #1f6feb; text-decoration: none; }
+.view-switch a { color: #16335c; text-decoration: none; }
 .view-switch a:hover { text-decoration: underline; }
 .view-switch .view-current { font-weight: 600; }
 
@@ -102,11 +115,11 @@ header { margin-bottom: 1.2rem; }
   border-radius: 4px; font-size: .9rem;
 }
 .tree-search button {
-  padding: .4rem .9rem; border: 1px solid #1f6feb; border-radius: 4px;
-  background: #1f6feb; color: #fff; font-size: .88rem; cursor: pointer;
+  padding: .4rem .9rem; border: 1px solid #16335c; border-radius: 4px;
+  background: #16335c; color: #fff; font-size: .88rem; cursor: pointer;
 }
-.tree-search button:hover { background: #1858c4; }
-.tree-search-clear { font-size: .85rem; color: #1f6feb; text-decoration: none; }
+.tree-search button:hover { filter: brightness(.85); }
+.tree-search-clear { font-size: .85rem; color: #16335c; text-decoration: none; }
 .tree-search-clear:hover { text-decoration: underline; }
 
 .tree-node {
@@ -130,7 +143,7 @@ header { margin-bottom: 1.2rem; }
 .tree-label { font-weight: 600; word-break: break-word; }
 .tree-historique {
   margin-left: auto; font-size: .78rem; padding: .1rem .5rem;
-  border-radius: 10px; background: #e6f0ff; color: #1f6feb;
+  border-radius: 10px; background: #e6f0ff; color: #16335c;
   text-decoration: none;
 }
 .tree-historique:hover { background: #d3e4ff; }
@@ -174,10 +187,10 @@ header { margin-bottom: 1.2rem; }
 }
 .ribbon-filter-item { display: inline-flex; align-items: center; gap: .3rem; }
 .ribbon-filter button {
-  padding: .35rem .9rem; border: 1px solid #1f6feb; border-radius: 4px;
-  background: #1f6feb; color: #fff; font-size: .85rem; cursor: pointer;
+  padding: .35rem .9rem; border: 1px solid #16335c; border-radius: 4px;
+  background: #16335c; color: #fff; font-size: .85rem; cursor: pointer;
 }
-.ribbon-filter button:hover { background: #1858c4; }
+.ribbon-filter button:hover { filter: brightness(.85); }
 .band--gap { border-style: dashed; background: #fff8f2; }
 .ribbon-gap-tag {
   margin-left: .5rem; font-size: .72rem; text-transform: uppercase;
@@ -187,4 +200,30 @@ header { margin-bottom: 1.2rem; }
 
 @media (max-width: 480px) {
   .ribbon-filter { gap: .5rem .8rem; }
+}
+
+/*
+  The time ribbon's v2 (ADR-0011 §26, added 2026-09-29) — a real
+  horizontal time axis, drawn by `aistack.renderers.timemachine.
+  ribbon_svg`, above the same `.band-list` the v1 slice already
+  rendered (kept as the accessible/no-JS view, dataviz skill's own
+  "a table view exists" non-negotiable). `width: 100%` on the `<svg>`
+  with its own `viewBox` is what makes it scale down to the same
+  480px/700px breakpoints as everything else here, without a media
+  query of its own.
+*/
+.ribbon-graphic { margin: 0 0 1.2rem; overflow-x: auto; }
+.ribbon-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+.ribbon-lane-line { stroke: #dde4ed; stroke-width: 1; }
+.ribbon-lane-label {
+  font-size: 11px; fill: #5b6b7d; dominant-baseline: middle;
+}
+.ribbon-axis-line { stroke: #b7c2cf; stroke-width: 1; }
+.ribbon-axis-label { font-size: 10px; fill: #5b6b7d; }
+.ribbon-mark { cursor: pointer; }
+.ribbon-mark--gap { opacity: .55; }
+.ribbon-cursor { stroke: #16335c; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ribbon-list-heading {
+  font-size: .85rem; font-weight: 600; color: #5b6b7d;
+  text-transform: uppercase; letter-spacing: .03em; margin: 0 0 .6rem;
 }

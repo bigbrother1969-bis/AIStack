@@ -55,7 +55,7 @@ tree:
     container: "Conteneur"
 ribbon:
   heading: "Ruban du temps"
-  intro: "Tout instant enregistré dans le graphe, tous flux confondus, du plus ancien au plus récent (maquette 1 — sans curseur pas-à-pas ni arbre associé pour l'instant, voir ADR-0011 §24)."
+  intro: "Tout instant enregistré dans le graphe, tous flux confondus, du plus ancien au plus récent — cliquer ou glisser sur le ruban ouvre l'instant le plus proche (maquette 1 — sans arbre associé ni panneau « Pourquoi » pour l'instant, voir ADR-0011 §24 et §26)."
   filter_apply: "Filtrer"
   filter_all: "Tout afficher"
   occurred_at_label: "Survenu le"
@@ -63,3 +63,4 @@ ribbon:
   gap_label: "Trou de collecte"
   empty: "Aucun instant enregistré dans le graphe."
   filtered_empty: "Aucun instant pour les flux sélectionnés."
+  list_heading: "Liste complète (vue accessible)"

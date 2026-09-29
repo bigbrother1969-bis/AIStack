@@ -55,7 +55,7 @@ tree:
     container: "Container"
 ribbon:
   heading: "Time ribbon"
-  intro: "Every instant recorded in the graph, across every stream, oldest first (maquette 1 — no step cursor and no paired tree yet, see ADR-0011 §24)."
+  intro: "Every instant recorded in the graph, across every stream, oldest first — click or drag the ribbon to open the nearest instant (maquette 1 — no paired tree and no “why” panel yet, see ADR-0011 §24 and §26)."
   filter_apply: "Filter"
   filter_all: "Show all"
   occurred_at_label: "Occurred at"
@@ -63,3 +63,4 @@ ribbon:
   gap_label: "Collection gap"
   empty: "No instant recorded in the graph."
   filtered_empty: "No instant for the selected streams."
+  list_heading: "Full list (accessible view)"

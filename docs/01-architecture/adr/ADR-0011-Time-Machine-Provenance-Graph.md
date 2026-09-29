@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.10
+  version: 1.11
   status: Proposed
   owner: Architecture
   created: 2026-09-27
-  updated: 2026-09-28
+  updated: 2026-09-29
 
 relations:
   references:
@@ -1635,6 +1635,141 @@ Full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
 `mypy`, `knowledge_integrity`) clean against the real current
 `origin/main` tip (`d71e79a`, § 24's own commit).
 
+### 26. Ruban v2 — a real time axis, a navigation cursor, and the charte graphique the mini-app never got
+
+The owner's own question, 2026-09-29, the morning after 1.5.1 closed:
+what technology would actually close the gap between § 24's v1 slice —
+a plain `<ul>` of bordered cards — and the four validated maquettes'
+own visual finish, and why had `timemachine_ui` never received the
+navy/Georgia charte graphique `SESSION-2026-09-26-charte-graphique-
+persiaut-1.1.1.md` already gave `console.html`/`architecture.html`/
+`health.html`? The honest answer to the second question: the mini-app
+did not exist yet on 2026-09-26 — nothing to retrofit, not an
+oversight.
+
+**A fresh cadrage (`AskUserQuestion`) settled two real design
+questions before any code.** First, rendering technology: SVG plus
+inline vanilla JS, no vendored library and no CDN — the owner's own
+choice, over vendoring a second charting library the way `mermaid.min
+.js` is already vendored, because a general-purpose chart widget would
+carry its own visual opinions likely to diverge from the validated
+maquette's own precise marks/colours rather than respect them, and
+because this heritage already holds exactly the zero-dependency, self-
+contained-per-page discipline SVG + vanilla JS needs, nothing new to
+justify. Second, whether to fold the charte graphique retrofit into
+the same patch: yes, in the same effort, rather than as a separate
+one later.
+
+**A second, narrower cadrage settled the one point still open after
+those two**: what the "curseur d'instant, pas-à-pas" the maquette
+names should actually do, given that maquette 3 ("reconstituer en
+trois clics") — the feature the cursor exists to drive — has no
+backend at all yet, not one route. Building a cursor that moves but
+triggers nothing would be decoration, exactly what `ARC-P-006`
+forbids. The owner's own decision: give it real, if narrower,
+behaviour today — click, or releasing a drag, opens the nearest
+instant's own `/node` card, the drill-down § 19 already built — rather
+than ship nothing, or ship a reconstruction backend nobody asked for
+yet.
+
+**Built:**
+
+- `aistack.renderers.timemachine.ribbon_svg` (`RibbonMark`,
+  `RibbonSvg`, `render_ribbon_svg`) — pure, deterministic geometry, the
+  same `href`-arrives-pre-built contract `ProvenanceNeighbor` already
+  holds. One lane per stream, in the caller's own already-sorted
+  order (a lane's row never reshuffles when a filter hides another
+  stream); a linear time scale from the earliest to the latest visible
+  instant, degenerating safely to the lane's own midpoint when every
+  mark shares one instant (no division by zero); every mark keeps its
+  existing colour-and-shape badge (never colour alone), now positioned
+  by real time instead of stacked in a flat list; a gap entry (R11)
+  gets its own CSS class and says "enregistré"/"occurred" honestly in
+  its own tooltip exactly as the flat list already did. Hover uses
+  SVG's own native `<title>` element inside each mark — a real,
+  correctly positioned tooltip in every browser, satisfying the
+  `dataviz` skill's own hover-layer requirement without one line of
+  hand-rolled positioning JS to get subtly wrong.
+- `timemachine_ui/templates/ribbon.html` — the SVG sits above the
+  existing `.band-list`, which stays exactly as it was: the `dataviz`
+  skill's own non-negotiable, "a table view exists," and every mark's
+  `<a href>` keeps working by keyboard or a screen reader with no
+  script running at all. One small, hand-written, static `<script>`
+  (never regenerated per request) reads a JSON data island
+  `render_ribbon_svg` emits next to the `<svg>` and wires the cursor:
+  `mousedown`+`mousemove` previews a position, `mouseup` (a plain click
+  is a `mousedown`/`mouseup` pair with no movement between them) snaps
+  to the nearest mark and navigates — never mid-drag, which would spam
+  navigations.
+- `timemachine_ui/templates/_style.html` — charte graphique retrofit:
+  every accent that was still the pre-charte generic blue `#1f6feb`
+  (back-link, view-switch, tree-search/ribbon-filter buttons, the tree
+  node's own historique badge) is now `#16335c`, and page headings
+  (`header h1`) now carry the same Georgia stack `console.html`'s own
+  titles already do — values copied from the same already-verified
+  source every other renderer's charte comment cites
+  (`aistack.renderers.console.html`), not re-sampled. A button's hover
+  state uses `filter: brightness(.85)` rather than inventing an
+  unverified darker hex the way the old `#1f6feb`→`#1858c4` pair once
+  did — computed, not guessed, the same discipline the charte
+  session's own colour work already held ("pas devinées"). New ribbon-
+  specific rules (`.ribbon-svg`, `.ribbon-lane-line`, `.ribbon-axis-
+  line`, `.ribbon-cursor`, …) scale with the SVG's own `viewBox` at
+  `width: 100%`, reaching the same 700px/480px breakpoints (R12) as
+  everything else on this shared stylesheet without a media query of
+  its own — though lane labels do shrink to a genuinely small size on
+  a narrow phone, named here as a real, not-yet-refined limitation
+  rather than left to discover.
+- Two new translation keys (`timemachine.ribbon.list_heading`, and a
+  rewritten `intro` naming the cursor and the still-open panel/tree
+  gaps honestly) in both `catalogs/fr/timemachine.yml` and
+  `catalogs/en/timemachine.yml` — the closed set every localized
+  screen's own test already enforces.
+
+11 new tests (2538→2549): `test_ribbon_svg.py` — no streams and no
+marks still render a real axis, not a crash; every box unchecked still
+draws empty lanes; a single mark lands at its lane's own midpoint with
+no division by zero; two marks on one stream share one lane line; two
+streams keep their own given lane order; the earliest and latest
+instant both get an axis label; every mark sharing one identical
+instant still renders without dividing by zero; a gap entry gets its
+own CSS class; a recording-time fallback says "enregistré" in its own
+tooltip rather than being presented as a real occurrence; marks emit
+the cursor script's own JSON data island; a stream name carrying
+markup characters is escaped in its own lane label. No test touches
+`timemachine_ui/app.py` itself or the hand-written cursor script — the
+same decision #9 convention (2026-08-29) every other route in this
+file already holds (FastAPI stays outside the governed venv), extended
+here to the one JS file this mini-app now ships.
+
+**Verified beyond the governed suite, the same way patch 0025's own
+charte graphique work already was**: a standalone Jinja2 render (no
+FastAPI, no running store — `aistack.renderers.timemachine.
+render_ribbon_svg` and `aistack.i18n.web.page_language` are both
+framework-free) against a fabricated fifteen-mark, five-stream graph,
+screenshotted with Playwright/Chromium at 1000px and 375px widths, and
+a scripted `page.mouse` click and a drag-then-release, each intercepted
+before navigating, both confirmed to resolve to the nearest mark's own
+`href` — a plain click near the earliest `docker-diff` mark opened
+exactly that instant; a drag ending near the `observation` lane's
+rightmost mark opened exactly that one, snapping on release, not
+mid-drag.
+
+**Deliberately still narrower than the validated maquette — the same
+restraint § 24 and § 19 already exercised.** Not built here, named
+rather than left to discover: the network tree shown paired alongside
+the ribbon (`/tree` stays its own separate view); the event card's own
+"panneau Pourquoi" (1.7's own concern, unchanged); maquette 3's actual
+reconstitution, which the cursor deliberately does not attempt; touch
+drag on a phone (every mark's own `<a href>` still works by a plain
+tap, with or without the cursor script); and a mobile-specific lane
+layout wider than the shared stylesheet's existing scaling already
+gives it for free.
+
+Full governed chain (`pytest`, `ruff check .`, `mypy`,
+`knowledge_integrity`) clean against the real current `origin/main`
+tip (`a8556c7`, patch 0080's own commit).
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the
@@ -1771,6 +1906,19 @@ Full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
   three more 1.5 monitors would each have needed it separately, rather
   than defer it the way `aistack:clockSource` and upgrade-correlation
   are deliberately still deferred above.
+- **The ribbon's v2 is real too, not only cadred** (2026-09-29, § 26):
+  `aistack.renderers.timemachine.ribbon_svg` gives the time ribbon a
+  real horizontal time axis and a navigation cursor (click or drag-
+  release opens the nearest instant's own `/node` card — never a
+  reconstruction, which has no backend yet), and `timemachine_ui`'s own
+  screens finally carry the navy/Georgia charte graphique
+  `console.html`/`architecture.html`/`health.html` already held since
+  2026-09-26 — this mini-app simply did not exist yet on that date.
+  Verified with a standalone, framework-free render plus a scripted
+  Playwright click and drag, each confirmed to resolve to the correct
+  nearest mark. The network tree pairing, the "why" panel, and
+  maquette 3's actual reconstitution all remain open — see § *Open
+  Points*.
 
 ## Open Points
 
@@ -1829,13 +1977,17 @@ Full governed chain (`pytest`, `ruff check src tests timemachine_ui`,
   the network tree (§ 18) and, § 24, a v1 of the time ribbon — a
   chronological, per-stream, colour-and-shape-badged, gap-aware list,
   deliberately without its own "curseur pas-à-pas" stepping control or
-  a network tree paired alongside it. **Still not built**: that
-  stepping control; the ribbon/tree pairing; the "why" panel (1.7's own
-  concern); and maquette 3 ("reconstituer en trois clics"), which has
-  no named step in the roadmap at all yet. Named here so the gap
-  between what was demoed and what has actually shipped stays stated,
-  not silently left for whoever opens the remaining maquette pieces
-  next to discover on their own.
+  a network tree paired alongside it. ~~**Its own stepping control was
+  still not built**~~ — **resolved, narrower than the maquette,
+  2026-09-29** (§ 26): the ribbon's own cursor now opens the nearest
+  instant's `/node` card on click or drag-release — real navigation,
+  never the reconstruction maquette 3 asks for, which has no backend
+  to drive it. **Still not built**: the ribbon/tree pairing; the "why"
+  panel (1.7's own concern); and maquette 3 ("reconstituer en trois
+  clics") itself, which has no named step in the roadmap at all yet.
+  Named here so the gap between what was demoed and what has actually
+  shipped stays stated, not silently left for whoever opens the
+  remaining maquette pieces next to discover on their own.
 - ~~**The container's volumes for the graph's data**~~ — **resolved,
   2026-09-27** (§ 1's addendum): `aistack.cli.timemachine_rebuild`
   gives the graph its first real caller, and `docker-compose.yml`'s

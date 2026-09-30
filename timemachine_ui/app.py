@@ -749,6 +749,7 @@ def ribbon_view(
     request: Request,
     streams: list[str] = Query(default=[]),
     submitted: str = "",
+    subject: str = "",
 ):
     """
     `ADR-0011` §24 — the filter form's own hidden `submitted` field is
@@ -760,6 +761,29 @@ def ribbon_view(
     is. Badges are assigned once, over every stream the graph holds,
     before filtering — so a stream's own colour/shape never shifts
     when another stream is hidden.
+
+    **`subject`, added 2026-09-30** (`claude/SESSION-2026-09-29-ribbon-
+    v2-charte-graphique.md`, owner: "apparier par nom, couverture
+    partielle") — the ribbon's own half of a name-matched cross-link
+    with the network tree (`/tree`'s own `historique_iri`, built from
+    `tree.py`'s `historique_names`/`historique_entity_iri`): a tree
+    node whose label has real graph history links here with that same
+    label as `subject`, narrowing to every instant carrying that exact
+    `aistack:stableSubject`. Applied on top of the existing
+    `streams`/`submitted` filter, never instead of it, so a visitor
+    who already narrowed by stream keeps that narrowing when a subject
+    is added.
+
+    **Genuinely partial, not silently so.** A tree node can also match
+    `historique_names` via `aistack:explains` (an Explication entity) —
+    `_ribbon_entries` only ever reads `aistack:stableSubject`
+    (`ribbon_svg.py`'s own docstring: Explications never reach the
+    ribbon), so that second, real match kind lands here on an honest
+    "no instant for this subject" (the template's own empty state)
+    rather than a fabricated one. Matched by exact equality, the same
+    way `historique_names` itself matches a candidate name — never the
+    substring search `/tree`'s own `q` uses, a different, UI-search
+    concern.
     """
 
     language = _language(request)
@@ -775,10 +799,15 @@ def ribbon_view(
     }
 
     visible = set(streams) if submitted else set(all_streams)
+    subject_query = subject.strip()
     filtered: list[dict[str, object]] = []
     svg_marks: list[RibbonMark] = []
     for entry in entries:
         if entry["stream"] not in visible:
+            continue
+        if subject_query and (
+            entry["subject"] is None or str(entry["subject"]) != subject_query
+        ):
             continue
         row = dict(entry)
         badge = badges[str(entry["stream"])]
@@ -806,19 +835,40 @@ def ribbon_view(
     # guarantee this route's own docstring already states, extended to
     # its lane's own position.
     #
+    # `subject`, added 2026-09-30, is a different kind of narrowing —
+    # not the streams checkbox this stability guarantee was written
+    # for, but one specific tree node's own cross-link, so a
+    # subject-filtered ribbon draws lanes only for the streams that
+    # actually carry this subject, never a page of otherwise-empty
+    # rows for the other streams that never will.
+    #
     # `ADR-0011` §26's second slice — the graph itself stays split into
     # its own two real categories (`_DOCKER_COLLECTOR_STREAMS`, above):
     # each gets its own independent `render_ribbon_svg` call, its own
     # local time axis, and its own foldable group in the template. The
     # renderer itself stays category-agnostic — this split is this
     # route's own responsibility, not `render_ribbon_svg`'s.
-    docker_streams = tuple(s for s in all_streams if s in _DOCKER_COLLECTOR_STREAMS)
-    observation_streams = tuple(s for s in all_streams if s not in _DOCKER_COLLECTOR_STREAMS)
+    lane_streams = sorted({m.stream for m in svg_marks}) if subject_query else all_streams
+    docker_streams = tuple(s for s in lane_streams if s in _DOCKER_COLLECTOR_STREAMS)
+    observation_streams = tuple(s for s in lane_streams if s not in _DOCKER_COLLECTOR_STREAMS)
     docker_marks = tuple(m for m in svg_marks if m.stream in _DOCKER_COLLECTOR_STREAMS)
     observation_marks = tuple(m for m in svg_marks if m.stream not in _DOCKER_COLLECTOR_STREAMS)
 
     ribbon_svg_docker = render_ribbon_svg(docker_marks, docker_streams)
     ribbon_svg_observation = render_ribbon_svg(observation_marks, observation_streams)
+
+    # `page_nav`'s own language switch, extended 2026-09-30 to keep
+    # this route's real filter state (streams/submitted/subject)
+    # across a language change — the same gap `ribbon.html`'s own
+    # header comment already named rather than left to discover, now
+    # closed the same way `/tree`'s own `q` and `/node`'s own `iri`
+    # already are (`_page_nav`'s `extra_query`).
+    extra_query_parts = [f"&streams={quote(stream)}" for stream in streams]
+    if submitted:
+        extra_query_parts.append("&submitted=1")
+    if subject_query:
+        extra_query_parts.append(f"&subject={quote(subject_query)}")
+    extra_query = "".join(extra_query_parts)
 
     context: dict[str, object] = {
         "entries": filtered,
@@ -833,9 +883,10 @@ def ribbon_view(
             for stream in all_streams
         ],
         "submitted": bool(submitted),
+        "subject": subject_query,
     }
     context.update(language.context())
-    context["page_nav"] = _page_nav(language)
+    context["page_nav"] = _page_nav(language, extra_query=extra_query)
     return _finish(
         templates.TemplateResponse(request=request, name="ribbon.html", context=context),
         language,

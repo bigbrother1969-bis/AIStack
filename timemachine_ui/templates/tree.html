@@ -75,6 +75,23 @@
             {% else %}
               <span class="tree-historique tree-historique--unlinked">{{ t('timemachine.tree.historique_link') }}</span>
             {% endif %}
+            <!--
+              tree-ribbon, added 2026-09-30 ("on finit les points
+              ouverts avant 1.5.2", owner: "apparier par nom, couverture
+              partielle") — `/ribbon`'s own new `subject` filter
+              (`timemachine_ui/app.py`'s `ribbon_view`), reached with
+              this node's own label. Shown for every `has_historique`
+              node, not only the ones matched via `aistack:
+              stableSubject` specifically: `has_historique` also
+              covers an `aistack:explains` match (an Explication),
+              which never reaches the ribbon (`ribbon_svg.py`'s own
+              docstring) — that case lands on `/ribbon`'s own honest
+              "no instant for this subject" rather than a silently
+              wrong link. Distinguishing the two here would need a new
+              governed lookup in `tree.py` for a narrow gain; named as
+              a deliberate choice rather than left undiscussed.
+            -->
+            <a class="tree-ribbon" href="/ribbon?subject={{ node.label | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.ribbon_link') }}</a>
           {% endif %}
         </summary>
         {% if node.children %}

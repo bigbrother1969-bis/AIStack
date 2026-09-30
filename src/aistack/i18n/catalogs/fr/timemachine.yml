@@ -48,6 +48,7 @@ tree:
   search_empty: "Rien ne correspond à « {query} »."
   empty: "Aucun hôte ni conteneur observé."
   historique_link: "Historique"
+  ribbon_link: "Voir dans le ruban"
   kind_label:
     network: "Réseau"
     host: "Hôte"
@@ -55,7 +56,7 @@ tree:
     container: "Conteneur"
 ribbon:
   heading: "Ruban du temps"
-  intro: "Tout instant enregistré dans le graphe, tous flux confondus, du plus ancien au plus récent — cliquer ou glisser sur le ruban ouvre l'instant le plus proche (maquette 1 — sans arbre associé ni panneau « Pourquoi » pour l'instant, voir ADR-0011 §24 et §26)."
+  intro: "Tout instant enregistré dans le graphe, tous flux confondus, du plus ancien au plus récent — cliquer ou glisser sur le ruban ouvre l'instant le plus proche. Une entrée à sujet stable renvoie aussi vers l'arbre (appariement par nom, couverture partielle) ; pas encore de panneau « Pourquoi » (voir ADR-0011 §24 et §26)."
   filter_apply: "Filtrer"
   filter_all: "Tout afficher"
   occurred_at_label: "Survenu le"
@@ -63,6 +64,9 @@ ribbon:
   gap_label: "Trou de collecte"
   empty: "Aucun instant enregistré dans le graphe."
   filtered_empty: "Aucun instant pour les flux sélectionnés."
+  subject_empty: "Aucun instant pour ce sujet."
+  subject_filter_label: "Filtré sur :"
+  view_in_tree: "Voir dans l'arbre"
   list_heading: "Liste complète (vue accessible)"
   group_docker: "Collecteurs Docker (1.5)"
   group_observation: "Historique d'observations"

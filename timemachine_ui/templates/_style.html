@@ -125,6 +125,20 @@ header h1 {
 .band-row .v { word-break: break-word; }
 .band-row .v a { color: #16335c; text-decoration: none; }
 .band-row .v a:hover { text-decoration: underline; }
+/*
+  Added 2026-09-30 ("on finit les points ouverts avant 1.5.2", owner:
+  "apparier par nom, couverture partielle") — a sibling of `.band` `>`
+  `.band-link`, not a rule inside it: `ribbon.html`'s own comment at
+  its call site explains why this link cannot live inside `.band-link`
+  (nested anchors). Small and secondary by design — `entry.subject` is
+  already shown as plain text inside the card; this is a distinct
+  navigation affordance, not a repeat of the same information.
+*/
+.band-tree-link {
+  display: block; margin-top: .4rem; font-size: .78rem;
+  color: #16335c; text-decoration: none;
+}
+.band-tree-link:hover { text-decoration: underline; }
 .node-iri {
   font-size: .8rem; color: #5b6b7d; word-break: break-all; margin: .3rem 0 1.2rem;
 }
@@ -196,6 +210,19 @@ header h1 {
 }
 .tree-historique:hover { background: #d3e4ff; }
 .tree-historique--unlinked { color: #5b6b7d; background: #eee; }
+/*
+  Added 2026-09-30, same cadrage as `.band-tree-link` above — the
+  tree's own half of the same name-matched cross-link. Follows
+  `.tree-historique` in the summary row (that one still carries the
+  `margin-left: auto` that pushes the pair to the right; this one only
+  needs a small gap from its neighbour, not a second auto-margin).
+*/
+.tree-ribbon {
+  margin-left: .4rem; font-size: .78rem; padding: .1rem .5rem;
+  border-radius: 10px; background: #eef3fa; color: #16335c;
+  text-decoration: none;
+}
+.tree-ribbon:hover { background: #dce8fa; }
 .tree-children {
   padding: 0 .8rem .6rem 1.6rem; border-top: 1px solid #eee;
 }
@@ -240,6 +267,17 @@ header h1 {
   it.
 */
 .ribbon-badge { font-size: 1rem; margin-right: .35rem; }
+/*
+  Added 2026-09-30, same cadrage as `.band-tree-link`/`.tree-ribbon`
+  above — the banner `ribbon.html` shows when `/ribbon?subject=…` was
+  reached from a tree node, so the narrowed ribbon explains itself
+  rather than looking like a stream filter silently hid the rest.
+  `.tree-search-clear` (already styled, `tree.html`'s own search) is
+  reused verbatim for the "show all" link here rather than a second,
+  near-identical link style.
+*/
+.ribbon-subject-filter { font-size: .85rem; margin: 0 0 .8rem; }
+.ribbon-subject-filter strong { color: #16335c; }
 .ribbon-filter {
   display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem;
   margin: 0 0 1.2rem; font-size: .85rem;
@@ -272,7 +310,36 @@ header h1 {
   query of its own.
 */
 .ribbon-graphic { margin: 0 0 1.2rem; overflow-x: auto; }
-.ribbon-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+/*
+  `min-width`, added 2026-09-30 ("on finit les points ouverts avant
+  1.5.2") — the same shrink `#provenance-graph svg { min-width: 600px;
+  }` above was already fixed for the Mermaid diagram existed here too,
+  left unfixed until now: no floor at all meant `width: 100%` could
+  shrink the ribbon's own `viewBox="0 0 1600 …"` (`ribbon_svg.py`'s own
+  `_VIEWBOX_WIDTH`) down to whatever a narrow phone's screen allowed,
+  `.ribbon-lane-label`'s fixed `font-size: 11px` included — pure
+  proportional shrink, never clipping, but real: measured down to
+  roughly a fifth of native size on a 375px viewport before this rule
+  existed. `.ribbon-graphic`'s own `overflow-x: auto` (already present,
+  just above) is what turns that floor into a scroll instead of a
+  further shrink, the same pairing the Mermaid fix already established.
+
+  900px, not 1600px (`_VIEWBOX_WIDTH` itself, which would guarantee
+  true 1:1 native scale): a pragmatic floor, the same kind of judgment
+  call `#provenance-graph`'s own 600px already was rather than a value
+  derived from Mermaid's own layout. 1600px would force horizontal
+  scrolling on every ordinary laptop screen, not only phones — 900px
+  keeps the whole ribbon shrink-free on any viewport wide enough for
+  this page's own `max-width: min(96vw, 1600px)` to exceed roughly
+  950px (in practice, most laptops), while still capping the worst-case
+  phone shrink at 900/1600 ≈ 56% of native size rather than the
+  unbounded shrink measured before this rule — legible, not full-size,
+  and never below that floor.
+*/
+.ribbon-svg {
+  width: 100%; height: auto; display: block; cursor: crosshair;
+  min-width: 900px;
+}
 .ribbon-lane-line { stroke: #dde4ed; stroke-width: 1; }
 .ribbon-lane-label {
   font-size: 11px; fill: #5b6b7d; dominant-baseline: middle;

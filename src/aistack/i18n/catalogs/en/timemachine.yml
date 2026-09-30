@@ -48,6 +48,7 @@ tree:
   search_empty: "Nothing matches \"{query}\"."
   empty: "No host or container observed."
   historique_link: "History"
+  ribbon_link: "View in ribbon"
   kind_label:
     network: "Network"
     host: "Host"
@@ -55,7 +56,7 @@ tree:
     container: "Container"
 ribbon:
   heading: "Time ribbon"
-  intro: "Every instant recorded in the graph, across every stream, oldest first — click or drag the ribbon to open the nearest instant (maquette 1 — no paired tree and no “why” panel yet, see ADR-0011 §24 and §26)."
+  intro: "Every instant recorded in the graph, across every stream, oldest first — click or drag the ribbon to open the nearest instant. A stable-subject entry also links back to the tree (matched by name, partial coverage); still no “why” panel yet (see ADR-0011 §24 and §26)."
   filter_apply: "Filter"
   filter_all: "Show all"
   occurred_at_label: "Occurred at"
@@ -63,6 +64,9 @@ ribbon:
   gap_label: "Collection gap"
   empty: "No instant recorded in the graph."
   filtered_empty: "No instant for the selected streams."
+  subject_empty: "No instant for this subject."
+  subject_filter_label: "Filtered to:"
+  view_in_tree: "View in tree"
   list_heading: "Full list (accessible view)"
   group_docker: "Docker collectors (1.5)"
   group_observation: "Observation history"

@@ -13,9 +13,11 @@
     same mini-app, same LAN-only convention as streams.html/tree.html/
     node.html (ADR-0011 roadmap R1): direct LAN link, never the
     public address. Nav partagée depuis 2026-09-30 (constat 5) — ce
-    switch de langue ne conserve pas le filtre `streams`/`submitted`
-    au changement de langue, ni avant ni après cette convergence :
-    limitation préexistante, pas une régression de ce patch.
+    switch de langue conserve désormais le filtre `streams`/
+    `submitted`/`subject` au changement de langue (`ribbon_view`'s own
+    `extra_query`, "on finit les points ouverts avant 1.5.2") : la
+    limitation nommée ici jusque-là est refermée, pas seulement
+    documentée.
   -->
   {{ page_nav | safe }}
 
@@ -32,10 +34,27 @@
 
   <div class="warning">{{ t('timemachine.warning') }}</div>
 
+  {% if subject %}
+    <!--
+      ribbon-subject-filter, added 2026-09-30 ("on finit les points
+      ouverts avant 1.5.2", owner: "apparier par nom, couverture
+      partielle") — the tree's own half of the cross-link
+      (`tree.html`'s `tree-ribbon` link) lands here with `?subject=`;
+      this banner says so plainly rather than leaving a silently
+      narrowed ribbon unexplained, the same reasoning `tree.html`'s
+      own search-clear (`tree-search-clear`) already applies.
+    -->
+    <p class="ribbon-subject-filter">
+      {{ t('timemachine.ribbon.subject_filter_label') }} <strong>{{ subject }}</strong>
+      <a class="tree-search-clear" href="/ribbon?lang={{ lang }}">{{ t('timemachine.ribbon.filter_all') }}</a>
+    </p>
+  {% endif %}
+
   {% if filter_streams %}
     <form class="ribbon-filter" method="get" action="/ribbon">
       <input type="hidden" name="lang" value="{{ lang }}">
       <input type="hidden" name="submitted" value="1">
+      <input type="hidden" name="subject" value="{{ subject }}">
       {% for row in filter_streams %}
         <label class="ribbon-filter-item">
           <input type="checkbox" name="streams" value="{{ row.stream }}"{% if row.checked %} checked{% endif %}>
@@ -110,11 +129,28 @@
               </div>
             {% endif %}
           </a>
+          {% if entry.subject %}
+            <!--
+              band-tree-link, added 2026-09-30 (owner: "apparier par
+              nom, couverture partielle") — a sibling of `.band-link`
+              above, deliberately not nested inside it: `.band-link`
+              already wraps the whole card in one `<a>`, and an anchor
+              inside an anchor is invalid HTML with inconsistent
+              browser behaviour. `/tree`'s own `q` (substring search,
+              `_filter_tree`) finds this subject's own node when one
+              exists; when none does, `/tree`'s existing `search_empty`
+              state already says so honestly — no new plumbing needed
+              on that side.
+            -->
+            <a class="band-tree-link" href="/tree?q={{ entry.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.ribbon.view_in_tree') }}</a>
+          {% endif %}
         </li>
       {% endfor %}
     </ul>
-  {% elif submitted %}
-    <p class="empty">{{ t('timemachine.ribbon.filtered_empty') }}</p>
+  {% elif submitted or subject %}
+    <p class="empty">
+      {% if subject %}{{ t('timemachine.ribbon.subject_empty') }}{% else %}{{ t('timemachine.ribbon.filtered_empty') }}{% endif %}
+    </p>
   {% else %}
     <p class="empty">{{ t('timemachine.ribbon.empty') }}</p>
   {% endif %}
@@ -127,11 +163,29 @@
       // per-request, so no per-request script text is ever produced.
       // Click, or releasing a drag, opens the nearest instant's own
       // /node card — never on every mousemove mid-drag, which would
-      // spam navigations. No touch handling yet (named here rather
-      // than left to discover): every mark stays its own accessible
+      // spam navigations. Every mark stays its own accessible
       // <a href>, reachable by tap, keyboard, or a screen reader with
       // no script at all — this cursor is a bonus gesture on top of
       // that, never a replacement for it.
+      //
+      // Touch, added 2026-09-30 ("on finit les points ouverts avant
+      // 1.5.2") — deliberately narrower than the mouse handlers below,
+      // not a straight mirror of them, for a real reason found while
+      // building this, not before: `.ribbon-graphic`'s own
+      // `overflow-x: auto` (needed so a narrow phone can pan a ribbon
+      // wider than its screen, see `.ribbon-svg`'s own `min-width` in
+      // `_style.html`) and a click-drag cursor both want the same
+      // horizontal finger gesture on the same element — there is no
+      // touch direction left to tell "pan the ribbon" from "drag the
+      // cursor" apart. Panning wins: touchstart/touchmove call no
+      // preventDefault, so the browser's native scroll and a mark's
+      // own native <a> tap both keep working exactly as before this
+      // patch. What touch adds is a plain tap (touchend with barely
+      // any movement since touchstart) opening the nearest instant —
+      // the same outcome a mouse click already gives on the axis
+      // background, not only exactly on a mark. A tap that moved more
+      // than the small deadzone below was a scroll, not a tap, and
+      // navigates nowhere.
       //
       // Second slice (2026-09-29): the page can now hold two
       // independent <svg class="ribbon-svg"> pictures (one category
@@ -214,6 +268,41 @@
         // covers it; no separate "click" listener is added, so a mark's
         // own native <a> click is never raced against a second,
         // JS-driven navigation to the same href.
+
+        // Touch tap-to-navigate (see the header comment above for why
+        // this is not a full drag-to-scrub mirror of the mouse
+        // handlers). `{ passive: true }` on touchstart/touchmove is
+        // not just an optimisation here — it is what tells the browser
+        // these listeners will never call preventDefault, so its own
+        // scroll can start immediately rather than waiting on this
+        // script.
+        var touchStartX = null;
+        var touchStartY = null;
+        var touchMoved = false;
+
+        svg.addEventListener("touchstart", function (evt) {
+          if (!evt.touches.length) { return; }
+          touchStartX = evt.touches[0].clientX;
+          touchStartY = evt.touches[0].clientY;
+          touchMoved = false;
+        }, { passive: true });
+
+        svg.addEventListener("touchmove", function (evt) {
+          if (touchStartX === null || !evt.touches.length) { return; }
+          var dx = evt.touches[0].clientX - touchStartX;
+          var dy = evt.touches[0].clientY - touchStartY;
+          if (Math.sqrt(dx * dx + dy * dy) > 10) { touchMoved = true; }
+        }, { passive: true });
+
+        svg.addEventListener("touchend", function () {
+          if (touchStartX === null || touchMoved) {
+            touchStartX = null;
+            return;
+          }
+          var mark = nearest(svgXFromEvent({ clientX: touchStartX, clientY: touchStartY }));
+          touchStartX = null;
+          window.location.href = mark.href;
+        });
       });
     </script>
   {% endif %}

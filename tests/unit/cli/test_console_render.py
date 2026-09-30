@@ -76,7 +76,7 @@ def test_main_writes_the_console_html_artifact(workspace):
     assert "Cockpit Santé" in document
     # PLAN-J11 § 11.9 — the health cartouche, built from a real
     # HealthCockpit against this sandbox's own hostname: whichever
-    # host runs this suite, `main()` still writes all five domains.
+    # host runs this suite, `main()` still writes all six domains.
     assert "État de santé du homelab" in document
     # PLAN-J11 § 11.9.1's third and last named gap ("tests PRA"),
     # reopened and closed 2026-09-23 — `DEFAULT_PRA_TESTS` is the
@@ -244,11 +244,12 @@ def test_the_default_console_links_definition_exists():
 # --------------------------------------------------------------------
 
 
-def test_build_cockpit_always_names_all_five_domains(monkeypatch, tmp_path):
+def test_build_cockpit_always_names_all_six_domains(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -260,6 +261,7 @@ def test_build_cockpit_always_names_all_five_domains(monkeypatch, tmp_path):
         "Sauvegarde / PRA",
         "GPU",
         "Tests PRA",
+        "État persistant",
     }
 
 
@@ -333,6 +335,7 @@ def test_technical_debt_score_reports_findings_across_domains(monkeypatch, tmp_p
     """
 
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",
@@ -403,6 +406,27 @@ services:
     assert len(domain.findings) == 1
 
 
+def test_uncovered_state_domain_reports_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "backup_strategy.yml"
+    path.write_text(
+        """
+services:
+  - name: nextcloud
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+
+    domain = cli.uncovered_state_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
 # --------------------------------------------------------------------
 # Drift guard — this module's duplicated constants must match
 # aistack.cli.health_render's own, the same way health_render.py's own
@@ -435,6 +459,11 @@ def test_the_default_health_score_weights_path_matches_health_renders():
 def test_the_default_pra_tests_path_matches_health_renders():
     assert cli.DEFAULT_PRA_TESTS == health_render.DEFAULT_PRA_TESTS
     assert cli.DEFAULT_PRA_TESTS.exists()
+
+
+def test_the_default_backup_strategy_path_matches_health_renders():
+    assert cli.DEFAULT_BACKUP_STRATEGY == health_render.DEFAULT_BACKUP_STRATEGY
+    assert cli.DEFAULT_BACKUP_STRATEGY.exists()
 
 
 def test_technical_debt_score_matches_health_renders_own_behavior(monkeypatch):

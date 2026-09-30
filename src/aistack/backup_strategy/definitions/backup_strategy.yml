@@ -1,0 +1,157 @@
+# Backup strategy declarations — OPS-0010's own declared values.
+#
+# Loaded by `load_backup_strategy_yaml`
+# (`src/aistack/backup_strategy/yaml/store.py`), read by
+# `aistack.cli.health_render` and `aistack.cli.console_render`
+# (domain "État persistant").
+#
+# Declared 2026-09-30, 1.6 tranche 2 (R9): the owner chose "le stock
+# déjà réel" as this domain's scope — the services already named in
+# this session's own real PRA history (`pra_tests.yml`, `OPS-0009`)
+# rather than the ~60 services `service_categorization.yml` lists,
+# most of which have never had a backup mechanism cited for them at
+# all. `service_categorization.yml`'s own ~50 remaining services stay
+# out of this file until the owner cites a real backup mechanism for
+# one of them (`ARC-P-006`) — not a silent narrowing, a declared one.
+#
+# This file is edited by hand — no UI writes it back, the same
+# convention `pra_tests.yml`/`backup_thresholds.yml` already hold.
+#
+# **Three real engines, not an abstract taxonomy** (see
+# `aistack.contracts.backup_strategy_declaration` for the full
+# grounding): `dump_sql` (a live database dumped without stopping the
+# service), `stop_and_archive` (the service stopped, archived,
+# restarted), `live_file_backup` (plain files backed up while the
+# service keeps running, no stop, no dump).
+#
+# **`wordpress`** — GIGABYTE. `/srv/scripts/backup-wordpress.sh`:
+# `mysqldump` of the WordPress database plus a `tar` of `wp-content`,
+# both taken live (no container stop). Already the basis of
+# `backup_thresholds.yml`/`OPS-0006`'s own freshness check — this file
+# adds the mechanism, that one the freshness threshold, on the same
+# real script.
+#
+# **`arrstack`** — GIGABYTE. `/srv/scripts/backup-arrstack.sh`: stops
+# every arrstack container (`docker compose stop`), `tar czf`s
+# `/srv/arrstack/configs`, restarts them. The clean single-engine
+# example (`claude/SESSION-2026-09-26-pra-arrstack-restore-test.md`).
+#
+# **`changedetection`/`homepage`/`npm`/`pocketid`/`uptime-kuma`/
+# `vaultwarden`** — Raspberry. `/usr/local/bin/backup_raspberry.sh`:
+# a restic snapshot of each stack's files, taken live (no stop) —
+# acceptable for these six because each holds its state in a SQLite
+# file restic captures whole, not a live multi-file database engine
+# (`claude/SESSION-2026-09-26-pra-raspberry-restore-test.md`).
+#
+# **`vikunja`** — Raspberry. Same script, extended 2026-09-26: its
+# files (`/srv/vikunja/files`) go through the same restic snapshot as
+# the six services above (`live_file_backup`), but its live MariaDB
+# data directory (`/srv/vikunja/db`) is never captured directly — a
+# `mariadb-dump --single-transaction` against the `vikunja-db`
+# container runs first, writing to `/srv/vikunja/db_dump`, which is
+# what actually gets backed up (`dump_sql`). Both engines are real and
+# confirmed by a real restore test the same day (34 tables restored
+# into a scratch MariaDB container).
+#
+# **`nextcloud`/`immich`** — GIGABYTE, `has_state: true`,
+# `engines: []`. A 2026-09-11 note mentions "des timers systemd pour
+# les bases Nextcloud/Immich" in passing, but this session could not
+# ground the script name, path, or exact mechanism — asked directly of
+# the owner 2026-09-30, who did not know it by heart either. Declared
+# here as a real, confirmed gap in what this session could ground
+# (`GOV-P-001`: never guessed), the same honest "not confirmed"
+# `pra_tests.yml` already gives `gigabyte.last_test`, not a placeholder
+# to quietly fill in later.
+#
+# **`gigabyte`** — the host itself, distinct from the services that
+# run on it (`wordpress`, `arrstack`): its own system-level state
+# (OS, configuration not captured by either app-level backup above).
+# `pra_tests.yml` already declares `gigabyte.last_test: null` — this
+# entry mirrors that same real, still-open gap rather than assuming
+# the restic backup or Clonezilla imaging mentioned but never
+# confirmed in this session's history actually cover it.
+
+services:
+  - name: wordpress
+    host: GIGABYTE
+    has_state: true
+    engines: [dump_sql]
+    mechanism: >-
+      /srv/scripts/backup-wordpress.sh — mysqldump de la base
+      WordPress + tar de wp-content, à chaud (pas d'arrêt de
+      conteneur)
+  - name: arrstack
+    host: GIGABYTE
+    has_state: true
+    engines: [stop_and_archive]
+    mechanism: >-
+      /srv/scripts/backup-arrstack.sh — arrêt des conteneurs arrstack
+      (docker compose stop), tar czf de /srv/arrstack/configs,
+      redémarrage
+  - name: nextcloud
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+  - name: immich
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+  - name: gigabyte
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+  - name: changedetection
+    host: raspberry
+    has_state: true
+    engines: [live_file_backup]
+    mechanism: >-
+      /usr/local/bin/backup_raspberry.sh — snapshot restic des
+      fichiers du stack, à chaud
+  - name: homepage
+    host: raspberry
+    has_state: true
+    engines: [live_file_backup]
+    mechanism: >-
+      /usr/local/bin/backup_raspberry.sh — snapshot restic des
+      fichiers du stack, à chaud
+  - name: npm
+    host: raspberry
+    has_state: true
+    engines: [live_file_backup]
+    mechanism: >-
+      /usr/local/bin/backup_raspberry.sh — snapshot restic des
+      fichiers du stack, à chaud
+  - name: pocketid
+    host: raspberry
+    has_state: true
+    engines: [live_file_backup]
+    mechanism: >-
+      /usr/local/bin/backup_raspberry.sh — snapshot restic des
+      fichiers du stack, à chaud
+  - name: uptime-kuma
+    host: raspberry
+    has_state: true
+    engines: [live_file_backup]
+    mechanism: >-
+      /usr/local/bin/backup_raspberry.sh — snapshot restic des
+      fichiers du stack, à chaud
+  - name: vaultwarden
+    host: raspberry
+    has_state: true
+    engines: [live_file_backup]
+    mechanism: >-
+      /usr/local/bin/backup_raspberry.sh — snapshot restic des
+      fichiers du stack, à chaud
+  - name: vikunja
+    host: raspberry
+    has_state: true
+    engines: [dump_sql, live_file_backup]
+    mechanism: >-
+      /usr/local/bin/backup_raspberry.sh — mariadb-dump
+      --single-transaction de vikunja-db vers /srv/vikunja/db_dump
+      (dump_sql), snapshot restic de /srv/vikunja/files
+      (live_file_backup) ; /srv/vikunja/db lui-même n'est jamais
+      capturé directement

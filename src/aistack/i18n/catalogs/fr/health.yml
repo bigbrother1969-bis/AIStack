@@ -12,6 +12,7 @@ domain:
   backup: "Sauvegarde / PRA"
   gpu: "GPU"
   pra_tests: "Tests PRA"
+  uncovered_state: "État persistant"
 domain_state:
   not_instrumented: "{domain} — non instrumenté"
   clean: "{domain} — rien à signaler"

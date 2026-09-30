@@ -44,7 +44,14 @@ from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
 from aistack.contracts.health_score import DomainWeight, HealthScoreWeights
 
-_DOMAIN_NAMES = {"Stockage", "Services", "Sauvegarde / PRA", "GPU", "Tests PRA"}
+_DOMAIN_NAMES = {
+    "Stockage",
+    "Services",
+    "Sauvegarde / PRA",
+    "GPU",
+    "Tests PRA",
+    "État persistant",
+}
 
 
 class FakeDockerProvider:
@@ -192,13 +199,14 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
     assert "no storage-threshold definition at" in storage.note
 
 
-def test_all_five_domains_are_always_present(monkeypatch, tmp_path):
+def test_all_six_domains_are_always_present(monkeypatch, tmp_path):
     """
     `PLAN-J7` § 1's domain vocabulary, reopened from four to five on
     the owner's own explicit decision, 2026-09-23 (Storage, Services,
-    Sauvegarde/PRA, GPU, and now Tests PRA — `PLAN-J11` § 11.9.1's
-    third and last named gap, reopened and closed the same day) —
-    every build lists all five, whatever their instrumented state,
+    Sauvegarde/PRA, GPU, and Tests PRA — `PLAN-J11` § 11.9.1's third
+    and last named gap, reopened and closed the same day), and from
+    five to six, 2026-09-30 (État persistant — 1.6 tranche 2, R9) —
+    every build lists all six, whatever their instrumented state,
     never silently fewer (`FDN-0003` Article 12).
     """
 
@@ -206,6 +214,7 @@ def test_all_five_domains_are_always_present(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -523,6 +532,82 @@ def test_a_missing_pra_tests_definition_is_not_instrumented(monkeypatch, tmp_pat
 
 
 # --------------------------------------------------------------------
+# uncovered_state_domain — 1.6 tranche 2, R9 (OPS-0010), 2026-09-30.
+# Not host-scoped, the same reason pra_tests_domain is not —
+# `uncovered_state_domain()` takes no hostname.
+# --------------------------------------------------------------------
+
+
+def backup_strategy_yaml(*, has_state: bool = True, engines: list[str] | None = None) -> str:
+    engines = engines if engines is not None else []
+    mechanism = "mechanism: a real script" if engines else "mechanism: null"
+    engines_line = f"engines: {engines!r}".replace("'", "")
+
+    return f"""
+services:
+  - name: nextcloud
+    host: GIGABYTE
+    has_state: {str(has_state).lower()}
+    {engines_line}
+    {mechanism}
+"""
+
+
+def test_an_uncovered_stateful_service_is_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "backup_strategy.yml"
+    path.write_text(backup_strategy_yaml(has_state=True, engines=[]), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+
+    domain = cli.uncovered_state_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].qualifications == (
+        "OPS-0004/technical-debt",
+        "OPS-0004/deployment-misconfiguration",
+        "OPS-0004/energy-inefficiency",
+        "OPS-0004/sustainability-anomaly",
+    )
+
+
+def test_a_covered_stateful_service_reads_as_clean(monkeypatch, tmp_path):
+    path = tmp_path / "backup_strategy.yml"
+    path.write_text(
+        backup_strategy_yaml(has_state=True, engines=["dump_sql"]), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+
+    domain = cli.uncovered_state_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_stateless_service_reads_as_clean(monkeypatch, tmp_path):
+    path = tmp_path / "backup_strategy.yml"
+    path.write_text(backup_strategy_yaml(has_state=False, engines=[]), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+
+    domain = cli.uncovered_state_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_missing_backup_strategy_definition_is_not_instrumented(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+
+    domain = cli.uncovered_state_domain()
+
+    assert domain.instrumented is False
+    assert "no backup strategy definition at" in domain.note
+
+
+def test_the_default_backup_strategy_definition_exists():
+    assert cli.DEFAULT_BACKUP_STRATEGY.exists()
+
+
+# --------------------------------------------------------------------
 # main() — end to end
 # --------------------------------------------------------------------
 
@@ -638,6 +723,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",
@@ -651,8 +737,9 @@ hosts:
     assert score is not None
     # One from Services (the restarting container), one from
     # Sauvegarde/PRA (the missing backup) — both cite technical-debt.
-    # Tests PRA is deliberately not instrumented here (`DEFAULT_PRA_TESTS`
-    # points at nothing) so it contributes none of its own.
+    # Tests PRA and État persistant are deliberately not instrumented
+    # here (their `DEFAULT_*` paths point at nothing) so neither
+    # contributes any finding of its own.
     assert len(score.findings) == 2
     assert score.value == 70  # 100 - 2*15
 
@@ -680,6 +767,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -693,6 +781,7 @@ hosts:
 
 def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",

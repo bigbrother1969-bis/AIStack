@@ -4,6 +4,7 @@ import socket
 import subprocess
 from pathlib import Path
 
+from aistack.backup_strategy.yaml import load_backup_strategy_yaml
 from aistack.contracts.health_score import HealthScoreWeights
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.health import HealthHtmlArtifactGenerator
@@ -29,9 +30,11 @@ from aistack.runtime.evaluate_gpu import evaluate_gpu
 from aistack.runtime.evaluate_pra_tests import evaluate_pra_tests
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
+from aistack.runtime.evaluate_uncovered_state import evaluate_uncovered_state
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
 from aistack.runtime.pra_test_gap import find_pra_test_gaps
 from aistack.runtime.storage_shortage import find_storage_shortage
+from aistack.runtime.uncovered_state_gap import find_uncovered_state
 
 # `OPS-0005`'s own declared thresholds — the same file
 # `aistack.cli.runtime_diagnose.DEFAULT_STORAGE_THRESHOLDS` reads.
@@ -97,6 +100,18 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
 # varies by which host renders the page.
 DEFAULT_PRA_TESTS = (
     Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml"
+)
+
+# `OPS-0010`'s own declared backup-strategy records — not scoped by
+# host, the same reason `DEFAULT_PRA_TESTS` is not: which engine (if
+# any) covers a service's persistent state is a fleet-wide fact the
+# owner records by hand, not a threshold that varies by which host
+# renders the page.
+DEFAULT_BACKUP_STRATEGY = (
+    Path(__file__).resolve().parents[1]
+    / "backup_strategy"
+    / "definitions"
+    / "backup_strategy.yml"
 )
 
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
@@ -308,6 +323,57 @@ def pra_tests_domain() -> HealthDomain:
     )
 
 
+def uncovered_state_domain() -> HealthDomain:
+    """
+    1.6 tranche 2's own domain (R9, 2026-09-30): `OPS-0004`'s sixth
+    reference case — every stateful service already named in this
+    session's real PRA history, confronted against the backup engine
+    (if any) actually confirmed to cover it. `load_backup_strategy_yaml`
+    reads `OPS-0010`'s declared record, `find_uncovered_state` decides
+    which declared services hold state with no known engine,
+    `evaluate_uncovered_state` states the finding.
+
+    **Not host-scoped, the same reason `pra_tests_domain` is not.** A
+    backup strategy declaration is a fleet-wide fact the owner records
+    by hand, not a per-host observation a live Provider collects from
+    the machine this process happens to run on.
+
+    A missing or unreadable definition is `instrumented=False` with a
+    note naming why — the same absence, stated the same way, every
+    other domain already holds for its own declared file.
+    """
+
+    if not DEFAULT_BACKUP_STRATEGY.exists():
+        return HealthDomain(
+            name="État persistant",
+            instrumented=False,
+            note=(
+                f"no backup strategy definition at {DEFAULT_BACKUP_STRATEGY}; "
+                f"state coverage is not checked"
+            ),
+        )
+
+    try:
+        declarations = load_backup_strategy_yaml(DEFAULT_BACKUP_STRATEGY)
+    except (ValueError, OSError) as error:
+        return HealthDomain(
+            name="État persistant",
+            instrumented=False,
+            note=(
+                f"backup strategy definition not readable ({error}); state "
+                f"coverage is not checked"
+            ),
+        )
+
+    gaps = find_uncovered_state(declarations)
+
+    return HealthDomain(
+        name="État persistant",
+        instrumented=True,
+        findings=evaluate_uncovered_state(gaps),
+    )
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     return HealthCockpit(
         domains=(
@@ -316,6 +382,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             backup_domain(hostname),
             gpu_domain(hostname),
             pra_tests_domain(),
+            uncovered_state_domain(),
         )
     )
 

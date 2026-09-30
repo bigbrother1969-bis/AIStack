@@ -14,6 +14,13 @@
 # is not a fifth domain). Weighted 25, the same as `Sauvegarde / PRA`
 # — the owner's own choice, 2026-09-23 ("même ordre de grandeur que le
 # domaine le plus proche en signification").
+#
+# `État persistant` added 2026-09-30 (1.6 tranche 2, R9): the domain
+# vocabulary reopened to six by the owner's own explicit decision,
+# the same deliberate-reopening discipline `Tests PRA` already
+# followed. Weighted 25, the owner's own choice, same criterion as
+# `Tests PRA` ("même ordre de grandeur que le domaine le plus proche
+# en signification").
 
 weights:
   - domain: Stockage
@@ -25,4 +32,6 @@ weights:
   - domain: GPU
     points: 8
   - domain: Tests PRA
+    points: 25
+  - domain: État persistant
     points: 25

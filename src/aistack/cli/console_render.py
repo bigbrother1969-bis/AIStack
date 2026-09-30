@@ -4,6 +4,7 @@ import socket
 import subprocess
 from pathlib import Path
 
+from aistack.backup_strategy.yaml import load_backup_strategy_yaml
 from aistack.console.yaml import load_console_links_yaml
 from aistack.contracts.health_score import HealthScoreWeights
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
@@ -31,9 +32,11 @@ from aistack.runtime.evaluate_gpu import evaluate_gpu
 from aistack.runtime.evaluate_pra_tests import evaluate_pra_tests
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
+from aistack.runtime.evaluate_uncovered_state import evaluate_uncovered_state
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
 from aistack.runtime.pra_test_gap import find_pra_test_gaps
 from aistack.runtime.storage_shortage import find_storage_shortage
+from aistack.runtime.uncovered_state_gap import find_uncovered_state
 
 # Same convention as `architecture_render.py`'s own
 # `DEFAULT_CATEGORIZATION` — a `Path(__file__).resolve()`-relative
@@ -112,6 +115,13 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
 # package imports another" convention (see the comment above).
 DEFAULT_PRA_TESTS = (
     Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml"
+)
+
+DEFAULT_BACKUP_STRATEGY = (
+    Path(__file__).resolve().parents[1]
+    / "backup_strategy"
+    / "definitions"
+    / "backup_strategy.yml"
 )
 
 
@@ -223,6 +233,40 @@ def pra_tests_domain() -> HealthDomain:
     )
 
 
+def uncovered_state_domain() -> HealthDomain:
+    """Mirrors `aistack.cli.health_render.uncovered_state_domain` exactly."""
+
+    if not DEFAULT_BACKUP_STRATEGY.exists():
+        return HealthDomain(
+            name="État persistant",
+            instrumented=False,
+            note=(
+                f"no backup strategy definition at {DEFAULT_BACKUP_STRATEGY}; "
+                f"state coverage is not checked"
+            ),
+        )
+
+    try:
+        declarations = load_backup_strategy_yaml(DEFAULT_BACKUP_STRATEGY)
+    except (ValueError, OSError) as error:
+        return HealthDomain(
+            name="État persistant",
+            instrumented=False,
+            note=(
+                f"backup strategy definition not readable ({error}); state "
+                f"coverage is not checked"
+            ),
+        )
+
+    gaps = find_uncovered_state(declarations)
+
+    return HealthDomain(
+        name="État persistant",
+        instrumented=True,
+        findings=evaluate_uncovered_state(gaps),
+    )
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     """Mirrors `aistack.cli.health_render.build_cockpit` exactly."""
 
@@ -233,6 +277,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             backup_domain(hostname),
             gpu_domain(hostname),
             pra_tests_domain(),
+            uncovered_state_domain(),
         )
     )
 

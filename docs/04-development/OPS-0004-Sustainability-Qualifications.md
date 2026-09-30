@@ -304,6 +304,57 @@ first):
   memory occupancy **90 %**. Consigned in **`OPS-0007-GPU-Consumption-
   Thresholds.md`** (new registry, mirror `OPS-0005`/`OPS-0006`).
 
+## Sixth reference case — État persistant, 2026-09-30, qualified
+
+A sixth case, given by the roadmap's own revue de conception (R9,
+`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`, validated by the owner in full
+2026-09-27) and examined against `OPS-0004`'s vocabulary directly with the
+owner, 2026-09-30, for 1.6 tranche 2's own cadrage.
+
+**Not an incident — a declared requirement, the same distinction the
+fourth and fifth reference cases recorded rather than smoothed over.** R9's
+own text: "Services avec état confrontés aux sauvegardes connues ; constat
+« état persistant non couvert » avec stratégie par moteur... Pas de
+généralisation au-delà (`ARC-P-006`)." No missing backup for a stateful
+service was observed as an incident here the way GIGABYTE's disk
+exhaustion was — the requirement to detect one is what the roadmap named
+and what this case qualifies.
+
+Examined against the vocabulary, 2026-09-30, the owner found this case to
+carry:
+
+- **technical debt** — yes;
+- **deployment misconfiguration** — yes;
+- **energy inefficiency** — yes;
+- **sustainability anomaly** — yes.
+
+**All four qualifications, none excluded — the second reference case,
+after GPU, to carry the complete vocabulary.** Put to the owner directly
+alongside the closest prior case (Sauvegarde/PRA, which carries only the
+first two) rather than assumed to match it, and found to carry all four
+instead.
+
+**Scope, declared alongside the qualifications.** Three further questions
+were put to the owner before any code, per `ARC-P-006`:
+
+- **Which services** — the owner chose **"le stock déjà réel"**: the
+  services already named in this session's own real PRA history
+  (`OPS-0009`'s `pra_tests.yml`), not the ~60 services
+  `service_categorization.yml` lists, most of which have never had a
+  backup mechanism cited for them at all.
+- **Mechanism** — a **new dedicated file**, `backup_strategy.yml`
+  (`OPS-0010`), the same "declared, never guessed" convention
+  `pra_tests.yml`/`backup_thresholds.yml` already hold.
+- **Exposure** — a **sixth cockpit domain**, "État persistant" — the
+  domain vocabulary (`OPS-0008`) reopened again, the same deliberate
+  reopening `Tests PRA` already went through 2026-09-23. Weighted **25
+  points**, the owner's own choice, same criterion as `Tests PRA` ("même
+  ordre de grandeur que le domaine le plus proche en signification").
+
+Full detail — the three real engines declared, the twelve services in
+scope, and the three real gaps this session could not ground further
+(Nextcloud, Immich, GIGABYTE's own host-level state) — is in `OPS-0010`.
+
 ## What this register does not do
 
 **Updated 2026-09-11 (fourth time, for the fifth reference case)** — this
@@ -363,6 +414,13 @@ This is the first domain-specific evaluator to cite `energy inefficiency`
 correlation (CPU consumption against temperature), not by a domain
 evaluator built for a `PLAN-J7` reference case.
 
+As of 1.6 tranche 2 (État persistant domain, `OPS-0010`, 2026-09-30), all
+four qualifications are additionally wired together a second time by
+`aistack.runtime.evaluate_uncovered_state`, citing an `UncoveredStateGap`
+already confirmed by `find_uncovered_state` — a declared stateful service
+under `OPS-0010`'s own record found to name no known backup engine, on the
+twelve services the owner confirmed ("le stock déjà réel").
+
 Every one of `OPS-0004`'s four qualifications is now cited by multiple
-wired `RuntimeFinding` producers, across five reference cases — the
+wired `RuntimeFinding` producers, across six reference cases — the
 vocabulary's coverage is no longer a gap this section needs to track.

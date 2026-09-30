@@ -77,3 +77,74 @@ def test_a_language_without_a_flag_is_shown_by_its_name():
 
     assert "<img" not in strip
     assert ">English</a>" in strip
+
+
+# --------------------------------------------------------------------
+# `console_base_url` / `extra_query` — added 2026-09-30
+# (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat
+# 5): `timemachine_ui` runs on its own port, so its console and
+# Settings links must be absolute rather than relative to itself.
+# --------------------------------------------------------------------
+
+
+def test_an_empty_console_base_url_keeps_the_links_relative():
+    """The default — every existing caller (console/architecture/
+    health/settings) passes nothing here and must see byte-identical
+    markup to before this parameter existed."""
+
+    strip = render_page_nav(translator_for("en"), default_languages(), "en")
+
+    assert '<a class="console-link" href="/console.html?lang=en">' in strip
+    assert 'href="/settings"' in strip
+
+
+def test_a_console_base_url_makes_both_links_absolute():
+    strip = render_page_nav(
+        translator_for("en"),
+        default_languages(),
+        "en",
+        console_base_url="http://GIGABYTE:8183",
+    )
+
+    assert (
+        '<a class="console-link" href="http://GIGABYTE:8183/console.html?lang=en">'
+        in strip
+    )
+    assert 'href="http://GIGABYTE:8183/settings"' in strip
+
+
+def test_a_console_base_url_never_touches_the_language_switch():
+    """The switch must always stay on the CURRENT page, whichever
+    process serves it — only the console/Settings links cross the
+    port boundary."""
+
+    strip = render_page_nav(
+        translator_for("fr"),
+        default_languages(),
+        "fr",
+        console_base_url="http://GIGABYTE:8183",
+    )
+
+    assert 'href="?lang=en"' in strip
+    assert 'href="http://GIGABYTE:8183?lang=en"' not in strip
+
+
+def test_an_empty_extra_query_keeps_the_switch_links_unchanged():
+    strip = render_page_nav(translator_for("fr"), default_languages(), "fr")
+
+    assert 'href="?lang=en"' in strip
+
+
+def test_extra_query_is_appended_to_every_switch_link():
+    """`/node`'s own reason to exist: switching language must keep the
+    node being read, or the visitor is dropped back to an unparented
+    `/node` request."""
+
+    strip = render_page_nav(
+        translator_for("fr"),
+        default_languages(),
+        "fr",
+        extra_query="&iri=https%3A%2F%2Fexample.org%2Fa",
+    )
+
+    assert 'href="?lang=en&iri=https%3A%2F%2Fexample.org%2Fa"' in strip

@@ -12,13 +12,12 @@
     ADR-0011 §18 (1.4 cadrage, 2026-09-28) — a second view of this
     same mini-app, same LAN-only convention as streams.html/node.html
     (ADR-0011 roadmap R1): direct LAN link, never the public address.
+    Nav partagée depuis 2026-09-30 (constat 5) — `page_nav` porte déjà
+    `&q=…` (route `/tree`'s own `_page_nav(..., extra_query=…)` call)
+    quand une recherche est active, pour ne jamais la perdre au
+    changement de langue.
   -->
-  <div class="top">
-    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
-    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
-      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?q={{ query | urlencode }}&amp;lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
-    </nav>
-  </div>
+  {{ page_nav | safe }}
 
   <header>
     <h1>{{ t('timemachine.tree.heading') }}</h1>

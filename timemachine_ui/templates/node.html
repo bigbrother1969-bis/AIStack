@@ -8,12 +8,21 @@
   <style>{% include "_style.html" %}</style>
 </head>
 <body>
-  <div class="top">
-    <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
-    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
-      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?iri={{ iri | urlencode }}&amp;lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
-    </nav>
-  </div>
+  <!--
+    Nav partagée (aistack.renderers.nav.render_page_nav), 2026-09-30
+    (constat 5) — `page_nav` porte déjà `&iri=…` (route `/node`'s own
+    `_page_nav(..., extra_query=…)` call) pour que le switch de langue
+    garde le nœud en cours de lecture, plutôt que de retomber sur un
+    `/node` sans paramètre. Ce nouveau bloc ajoute un lien console que
+    cet écran n'avait jamais eu — conséquence assumée du périmètre
+    "convergence complète" retenu pour constat 5 (AskUserQuestion,
+    2026-09-30). Le retour vers l'écran des flux, propre à cet écran,
+    reste un lien distinct juste en dessous : `page_nav` ne connaît
+    que le retour vers la console, pas la navigation interne de
+    Time Machine elle-même.
+  -->
+  {{ page_nav | safe }}
+  <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
 
   <header>
     <h1>

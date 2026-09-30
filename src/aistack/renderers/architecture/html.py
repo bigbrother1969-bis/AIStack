@@ -661,6 +661,20 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
   border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem;
   background: #fafafa; overflow: auto;
 }
+/*
+  Added 2026-09-30 (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-
+  29.md`, constat 2) — measured, not guessed: rendering this page at
+  375px showed every other section reflowing correctly (the existing
+  `auto-fit`/`auto-fill` grids already stack to one column on their
+  own), but Mermaid renders its SVG with `width="100%"` and an inline
+  `max-width`, so it shrinks in step with `#diagram`'s own width —
+  proportionally, meaning its label text shrinks too, down to
+  illegible on a phone. A minimum width on the SVG itself stops that:
+  `#diagram`'s own `overflow: auto` above then scrolls the box
+  horizontally instead, keeping every label at a legible, constant
+  size regardless of viewport width.
+*/
+#diagram svg { min-width: 600px; }
 .render-error { color: #9c2b2b; white-space: pre-wrap; font-family: monospace; }
 .legend {
   display: flex; gap: 1.2rem; flex-wrap: wrap; margin: .6rem 0 1.2rem;

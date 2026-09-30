@@ -13,13 +13,14 @@ from aistack.architecture.yaml import load_infrastructure_topology_yaml
 from aistack.catalog.compose import ComposeRuntimeCatalogBuilder
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.history.query import available_instants, observation_at
-from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
+from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER, default_languages
 from aistack.i18n.web import PageLanguage, page_language
 from aistack.kernel.bootstrap import create_kernel
 from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.repository import RepositoryProvider
 from aistack.renderers.architecture.html import load_vendored_mermaid_js
 from aistack.renderers.assets import MARK_DATA_URI
+from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.timemachine import (
     ProvenanceNeighbor,
     RibbonMark,
@@ -143,6 +144,47 @@ templates = Jinja2Templates(directory=str(repository.resolve("timemachine_ui/tem
 # same day so a package outside `console/` could reuse it).
 templates.env.globals["favicon"] = MARK_DATA_URI
 
+# `page_nav_style`, added 2026-09-30 (same audit, constat 5): the CSS
+# `aistack.renderers.nav.render_page_nav`'s own markup needs
+# (`.page-nav`/`.console-link`/`.settings-link`), travelling with the
+# shared function the same way it already does for `console.html`/
+# `architecture.html`/`health.html`/`settings.html` (each appends
+# `PAGE_NAV_STYLE` to its own `_STYLE`) — set once as a Jinja global,
+# same reasoning as `favicon` just above, rather than re-declared by
+# hand in `_style.html` and left to drift from the source it was
+# copied from.
+templates.env.globals["page_nav_style"] = PAGE_NAV_STYLE
+
+# Direct LAN link (GIGABYTE:8183), never the public address — same
+# reasoning `network_discovery_ui/templates/index.html` already holds:
+# this mini-app is deliberately LAN-only (ADR-0011 roadmap R1).
+# Moved here 2026-09-30 (constat 5) from five templates that each
+# hardcoded this same string by hand — one value now, not five copies
+# to keep in sync; `_local_host_label` above reads its own "GIGABYTE"
+# from declared data for a different purpose (the topology's first
+# hardware entry) and is not reused here, since this is a URL origin
+# for a cross-port link, not a display label.
+_CONSOLE_BASE_URL = "http://GIGABYTE:8183"
+
+
+def _page_nav(language: PageLanguage, *, extra_query: str = "") -> str:
+    """
+    The shared console/Settings/language nav
+    (`aistack.renderers.nav.render_page_nav`), rendered once per
+    request rather than hand-copied per template (constat 5, same
+    audit as `page_nav_style` above). `extra_query` is `/node`'s own
+    escape hatch — its language switch must keep the `iri` of the node
+    being read (see `render_page_nav`'s own docstring).
+    """
+
+    return render_page_nav(
+        language.t,
+        default_languages(),
+        language.lang,
+        console_base_url=_CONSOLE_BASE_URL,
+        extra_query=extra_query,
+    )
+
 # One label, and whether its object is an IRI (linkable) or a literal
 # (displayed as-is) — the closed set `aistack.timemachine.projection`
 # actually writes today (`ADR-0011` § *Decision* 2), not a guess at
@@ -224,8 +266,9 @@ def _finish(response: HTMLResponse, language: PageLanguage) -> HTMLResponse:
 
 
 def _not_built(request: Request, language: PageLanguage) -> HTMLResponse:
-    context = {"store_path": str(STORE_PATH)}
+    context: dict[str, object] = {"store_path": str(STORE_PATH)}
     context.update(language.context())
+    context["page_nav"] = _page_nav(language)
     return _finish(
         templates.TemplateResponse(request=request, name="not_built.html", context=context),
         language,
@@ -367,6 +410,7 @@ def streams(request: Request):
 
     context: dict[str, object] = {"streams": entries}
     context.update(language.context())
+    context["page_nav"] = _page_nav(language)
     return _finish(
         templates.TemplateResponse(request=request, name="streams.html", context=context),
         language,
@@ -534,6 +578,7 @@ def node(request: Request, iri: str):
         "mermaid_js": mermaid_js,
     }
     context.update(language.context())
+    context["page_nav"] = _page_nav(language, extra_query=f"&iri={quote(iri)}")
     return _finish(
         templates.TemplateResponse(request=request, name="node.html", context=context),
         language,
@@ -589,6 +634,7 @@ def tree_view(request: Request, q: str = ""):
         "search_empty": bool(q.strip()) and root is None,
     }
     context.update(language.context())
+    context["page_nav"] = _page_nav(language, extra_query=f"&q={quote(q)}" if q else "")
     return _finish(
         templates.TemplateResponse(request=request, name="tree.html", context=context),
         language,
@@ -789,6 +835,7 @@ def ribbon_view(
         "submitted": bool(submitted),
     }
     context.update(language.context())
+    context["page_nav"] = _page_nav(language)
     return _finish(
         templates.TemplateResponse(request=request, name="ribbon.html", context=context),
         language,

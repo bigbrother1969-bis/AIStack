@@ -109,6 +109,24 @@ def test_the_page_declares_a_viewport():
     assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in document
 
 
+def test_the_diagram_declares_a_minimum_width():
+    """
+    Added 2026-09-30
+    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat
+    2) — measured at 375px, not guessed: Mermaid renders its SVG at
+    `width: 100%`, so without a floor it shrinks — labels and all —
+    in step with `#diagram`'s own width, down to illegible on a
+    phone. `#diagram`'s own `overflow: auto` then scrolls horizontally
+    instead of shrinking further.
+    """
+
+    views = build_all_views(graph_with_categories("Supervision"))
+
+    document = render_html(views)
+
+    assert "#diagram svg { min-width:" in document
+
+
 def test_the_mark_is_embedded_as_the_favicon():
     """
     Added 2026-09-30

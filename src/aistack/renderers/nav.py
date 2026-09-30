@@ -24,6 +24,8 @@ def render_page_nav(
     current: str,
     *,
     back_to_console: bool = True,
+    console_base_url: str = "",
+    extra_query: str = "",
 ) -> str:
     """
     The way back to the console, the Settings link and the language
@@ -44,6 +46,29 @@ def render_page_nav(
     to the page being read, so the same markup works on the console,
     Architecture and the Health cockpit alike, and the server answers
     each with the same page in the other language.
+
+    **`console_base_url`, added 2026-09-30** (`claude/AUDIT-CONSOLE-
+    ARCHITECTURE-HEALTH-2026-09-29.md`, constat 5) — empty by default,
+    which reproduces the exact markup this function always emitted:
+    the console and Settings links stay relative (`/console.html?...`,
+    `/settings`), correct only when the caller is served by the same
+    process as the console itself (console/architecture/health/
+    settings, still true today). A caller served from a different
+    process on a different port — `timemachine_ui`, on its own FastAPI
+    instance — passes its own console origin here (the same `http://
+    GIGABYTE:8183` its five screens already hardcoded before this
+    field existed) so both links resolve correctly across the port
+    boundary; the language switch itself is untouched by this
+    parameter, since it must always stay on the CURRENT page.
+
+    **`extra_query`, added 2026-09-30, same constat** — appended
+    verbatim (already encoded by the caller) after each language
+    switch's own `?lang=<code>`. Empty by default, so every existing
+    caller's switch links are byte-identical to before. `timemachine_
+    ui`'s `/node` screen is the one caller that needs this: its
+    language switch must keep the `iri` of the node being read, or
+    switching language would silently drop the visitor back to an
+    unparented `/node` request.
     """
 
     switches = []
@@ -59,12 +84,12 @@ def render_page_nav(
             )
         else:
             switches.append(
-                f'<a href="?lang={language.code}" hreflang="{language.code}" '
+                f'<a href="?lang={language.code}{extra_query}" hreflang="{language.code}" '
                 f'lang="{language.code}" title="{name}">{label}</a>'
             )
 
     back = (
-        f'<a class="console-link" href="/console.html?lang={current}">'
+        f'<a class="console-link" href="{console_base_url}/console.html?lang={current}">'
         f'{escape_text(t("common.console.back"))}</a>'
         if back_to_console
         else ""
@@ -74,7 +99,7 @@ def render_page_nav(
         f'<nav class="page-nav" aria-label="{escape_text(t("common.language.switch_label"))}">'
         f"{back}"
         f'<span class="lang-switch">{"".join(switches)}</span>'
-        f'<a class="settings-link" href="/settings">{escape_text(t("common.settings.link"))}</a>'
+        f'<a class="settings-link" href="{console_base_url}/settings">{escape_text(t("common.settings.link"))}</a>'
         f"</nav>"
     )
 

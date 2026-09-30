@@ -12,14 +12,12 @@
     ADR-0011 §24 (1.5.1 cadrage, 2026-09-28) — a third view of this
     same mini-app, same LAN-only convention as streams.html/tree.html/
     node.html (ADR-0011 roadmap R1): direct LAN link, never the
-    public address.
+    public address. Nav partagée depuis 2026-09-30 (constat 5) — ce
+    switch de langue ne conserve pas le filtre `streams`/`submitted`
+    au changement de langue, ni avant ni après cette convergence :
+    limitation préexistante, pas une régression de ce patch.
   -->
-  <div class="top">
-    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
-    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
-      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
-    </nav>
-  </div>
+  {{ page_nav | safe }}
 
   <header>
     <h1>{{ t('timemachine.ribbon.heading') }}</h1>

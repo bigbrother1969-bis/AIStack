@@ -65,7 +65,7 @@ header h1 {
   padding: .8rem 1rem; border-radius: 6px; background: #fff1cc;
   border: 1px solid #e0b34d; margin: 1rem 0; font-size: .88rem;
 }
-.top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+{{ page_nav_style }}
 .back-link {
   display: inline-block; margin-bottom: 1.2rem; font-size: .88rem;
   color: #16335c; text-decoration: none;
@@ -109,7 +109,6 @@ header h1 {
 
 @media (max-width: 480px) {
   body { padding: 0 .75rem; margin-top: 1rem; }
-  .top { flex-direction: column; align-items: flex-start; gap: .4rem; }
 }
 
 /*
@@ -191,6 +190,17 @@ header h1 {
   border: 1px solid #ddd; border-radius: 6px; padding: 1rem;
   background: #fafafa; overflow: auto; margin: 0 0 1.2rem;
 }
+/*
+  Added 2026-09-30 (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-
+  29.md`, constat 2 — extended here for the same reason it was found
+  on `architecture_render`'s own #diagram, same root cause: Mermaid
+  renders its SVG at `width: 100%`, so it shrinks — labels and all —
+  in step with this box on a narrow screen, down to illegible.
+  `#provenance-graph`'s own `overflow: auto` above then scrolls
+  horizontally instead, same fix, same value, both diagrams sharing
+  one Mermaid bundle already.
+*/
+#provenance-graph svg { min-width: 600px; }
 .render-error { color: #9c2b2b; white-space: pre-wrap; font-family: monospace; }
 
 /*

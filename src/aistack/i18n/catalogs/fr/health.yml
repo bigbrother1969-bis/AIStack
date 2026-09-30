@@ -37,3 +37,4 @@ page:
   readings: "{count} lecture(s) citée(s) :"
   log_lines: "{count} ligne(s) de log citée(s)"
   evidence: "{count} élément(s) de preuve"
+  diagnose: "Diagnostiquer avec l'assistant IA →"

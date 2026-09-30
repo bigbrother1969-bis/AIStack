@@ -36,3 +36,4 @@ page:
   readings: "{count} cited reading(s):"
   log_lines: "{count} cited log line(s)"
   evidence: "{count} piece(s) of evidence"
+  diagnose: "Diagnose with the AI assistant →"

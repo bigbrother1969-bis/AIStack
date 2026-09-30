@@ -19,7 +19,7 @@ from aistack.i18n import (
 )
 from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
-from aistack.renderers.text import escape_text
+from aistack.renderers.text import domain_slug, escape_text
 
 # Duplicated from `aistack.renderers.health.html._BUCKET_BADGE_CLASS`
 # rather than imported: each renderer in this package is pure and
@@ -248,10 +248,20 @@ def _render_domain_badge(domain: HealthDomain, t: Translator) -> str:
             f'{escape_text(t("health.domain_state.clean", domain=name))}</span>'
         )
 
+    # A link, not a plain span, since 2026-09-30 — the owner, reading
+    # this exact badge: "les findings en rouge doivent être cliquables
+    # et doivent diriger vers une explication". `console.html` only
+    # shows a domain's count, never its individual findings — the
+    # detail lives at `health.html`, this anchors straight to that
+    # domain's own section there (`aistack.renderers.health.html`'s
+    # own `id="domain-<slug>"`, the same `domain_slug` computed the
+    # same way on both sides). Only the alert state links: a clean or
+    # not-instrumented domain has nothing further to read there that
+    # this badge does not already say.
     return (
-        f'  <span class="domain-badge badge-alert">'
+        f'  <a class="domain-badge badge-alert" href="/health.html#domain-{domain_slug(domain.name)}">'
         f'{escape_text(t("health.domain_state.findings", domain=name, count=len(domain.findings)))}'
-        f"</span>"
+        f"</a>"
     )
 
 
@@ -451,8 +461,10 @@ header { text-align: center; margin-bottom: 2rem; }
 }
 .domain-badge {
   font-size: .82rem; padding: .3rem .6rem; border-radius: 999px;
-  border: 1px solid;
+  border: 1px solid; display: inline-block; text-decoration: none;
 }
+a.domain-badge.badge-alert { cursor: pointer; }
+a.domain-badge.badge-alert:hover { filter: brightness(0.96); text-decoration: underline; }
 .badge {
   font-size: .72rem; font-weight: normal; padding: .15rem .5rem;
   border-radius: 999px; border: 1px solid;

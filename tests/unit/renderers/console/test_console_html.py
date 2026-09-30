@@ -264,6 +264,45 @@ def test_a_domain_with_findings_shows_its_count():
     assert "badge-alert" in document
 
 
+def test_a_domain_with_findings_links_to_its_health_html_anchor():
+    """
+    Added 2026-09-30 — the owner, reading this exact badge: "les
+    findings en rouge doivent être cliquables". `domain_slug` (shared
+    with `aistack.renderers.health.html`'s own `id="domain-<slug>"`)
+    is what the two renderers agree on without sharing code.
+    """
+
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(
+                name="Tests PRA", instrumented=True, findings=(_dummy_finding(),)
+            ),
+        )
+    )
+
+    document = render_html((selection_ui_link(),), cockpit=cockpit)
+
+    assert '<a class="domain-badge badge-alert" href="/health.html#domain-tests-pra">' in document
+
+
+def test_a_clean_domain_is_not_a_link():
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True, findings=()),))
+
+    document = render_html((selection_ui_link(),), cockpit=cockpit)
+
+    assert "<a" not in document.split('class="cartouche-badges"')[1].split("</div>")[0]
+
+
+def test_a_not_instrumented_domain_is_not_a_link():
+    cockpit = HealthCockpit(
+        domains=(HealthDomain(name="Services", instrumented=False, note="pas encore"),)
+    )
+
+    document = render_html((selection_ui_link(),), cockpit=cockpit)
+
+    assert "<a" not in document.split('class="cartouche-badges"')[1].split("</div>")[0]
+
+
 def test_no_score_and_no_note_renders_no_score_line():
     cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
 

@@ -64,7 +64,10 @@
 
   <header>
     <h1>{{ subject }}</h1>
-    <p class="meta">{{ t('troubleshooting.step.meta', step=step, total=total_steps, signature=finding.signature) }}</p>
+    <p class="meta">
+      {{ t('troubleshooting.step.meta', step=step, total=total_steps, signature=finding.signature) }}
+      — {{ t('troubleshooting.step.domain', domain=domain) }}
+    </p>
   </header>
 
   <div class="progress">
@@ -102,26 +105,30 @@
     {% endif %}
 
     {% if step == total_steps %}
-      <form method="post" action="/finding/{{ subject | urlencode }}/apply">
-        <button class="apply" type="submit">{{ t('troubleshooting.step.apply') }}</button>
-      </form>
-      <p class="apply-note">
-        {{ t('troubleshooting.step.apply_note_before') }} <strong>{{ subject }}</strong>
-        {{ t('troubleshooting.step.apply_note_middle') }} <code>resource_priority.yml</code>
-        {{ t('troubleshooting.step.apply_note_after') }}
-      </p>
+      {% if applyable %}
+        <form method="post" action="/finding/{{ key | urlencode }}/apply">
+          <button class="apply" type="submit">{{ t('troubleshooting.step.apply') }}</button>
+        </form>
+        <p class="apply-note">
+          {{ t('troubleshooting.step.apply_note_before') }} <strong>{{ subject }}</strong>
+          {{ t('troubleshooting.step.apply_note_middle') }} <code>resource_priority.yml</code>
+          {{ t('troubleshooting.step.apply_note_after') }}
+        </p>
+      {% else %}
+        <p class="apply-note">{{ t('troubleshooting.step.no_apply', domain=domain) }}</p>
+      {% endif %}
     {% endif %}
   {% endif %}
 
   <nav class="steps">
     <div>
       {% if step > 1 %}
-        <a href="/finding/{{ subject | urlencode }}/step/{{ step - 1 }}">{{ t('troubleshooting.step.previous') }}</a>
+        <a href="/finding/{{ key | urlencode }}/step/{{ step - 1 }}">{{ t('troubleshooting.step.previous') }}</a>
       {% endif %}
     </div>
     <div>
       {% if step < total_steps %}
-        <a class="primary" href="/finding/{{ subject | urlencode }}/step/{{ step + 1 }}">{{ t('troubleshooting.step.next') }}</a>
+        <a class="primary" href="/finding/{{ key | urlencode }}/step/{{ step + 1 }}">{{ t('troubleshooting.step.next') }}</a>
       {% else %}
         <a href="/">{{ t('troubleshooting.back_list') }}</a>
       {% endif %}

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import re
+
+_SLUG_RE = re.compile(r"[^a-z0-9]+")
+
 
 def escape_text(text: str) -> str:
     """
@@ -32,3 +36,34 @@ def escape_text(text: str) -> str:
         .replace("<", "&lt;")
         .replace(">", "&gt;")
     )
+
+
+def domain_slug(name: str) -> str:
+    """
+    A stable, URL-anchor-safe id for a `HealthDomain.name` — "Tests
+    PRA" -> "tests-pra". An accented character is dropped, not
+    transliterated, the same trade-off
+    `aistack.renderers.architecture.mermaid._slug` already makes for
+    its own Mermaid node ids (that function keeps its own private
+    `_slug`, with underscores rather than this function's hyphens —
+    a Mermaid node id and an HTML anchor id are different enough
+    targets that sharing one helper would tie them together for no
+    real benefit; only the small regex idea is the same).
+
+    Every domain name `aistack.cli.health_render.build_cockpit`
+    assembles (Stockage, Services, Sauvegarde / PRA, GPU, Tests PRA,
+    État persistant, Écarts d'inventaire) stays unique after slugging
+    — checked directly in `tests/unit/renderers/test_text.py`, not
+    just assumed.
+
+    **Added 2026-09-30** so `console.html`'s own domain pills
+    (`aistack.renderers.console.html`) can link to `health.html`'s
+    matching `<section id="domain-<slug>">`
+    (`aistack.renderers.health.html`) — the two renderers never share
+    code, only this one small transform, the same "one shared
+    function rather than two that could drift" reasoning
+    `escape_text` itself already holds in this module.
+    """
+
+    slug = _SLUG_RE.sub("-", name.strip().lower()).strip("-")
+    return slug or "domain"

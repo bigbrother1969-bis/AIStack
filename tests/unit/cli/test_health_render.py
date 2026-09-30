@@ -950,6 +950,63 @@ def test_main_prints_the_score_when_weights_are_available(monkeypatch, tmp_path,
     assert "domain(s) measured" in captured.out
 
 
+# --------------------------------------------------------------------
+# main() — the Troubleshooting Assistant link (2026-09-30)
+# --------------------------------------------------------------------
+
+
+def test_main_links_a_real_finding_to_the_troubleshooting_assistant(
+    monkeypatch, tmp_path, workspace
+):
+    """
+    `DEFAULT_INSTANCE_CONFIG` is left unpatched here — the real,
+    shipped `instance_config.yml` already declares
+    `troubleshooting_assistant_ui: 8185` — so `main()`'s own
+    resolution should reach a real finding's "Diagnostiquer" button,
+    not only `render_html`'s own unit tests (which hand the base URL
+    in directly, never exercising `main()`'s own resolution step).
+    """
+
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+
+    cli.main()
+
+    document = (workspace / "reports" / "generated" / "health.html").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'action="http://GIGABYTE:8185/finding/nextcloud/start"' in document
+
+
+def test_main_renders_no_diagnose_button_when_the_instance_config_is_unreadable(
+    monkeypatch, tmp_path, workspace
+):
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_INSTANCE_CONFIG", tmp_path / "absent.yml")
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+
+    cli.main()
+
+    document = (workspace / "reports" / "generated" / "health.html").read_text(
+        encoding="utf-8"
+    )
+
+    assert "/finding/" not in document
+
+
+def test_the_default_instance_config_path_matches_console_render():
+    from aistack.cli import console_render
+
+    assert cli.DEFAULT_INSTANCE_CONFIG == console_render.DEFAULT_INSTANCE_CONFIG
+
+
 def test_main_falls_back_to_the_note_when_weights_are_unavailable(
     monkeypatch, tmp_path, workspace, capsys
 ):

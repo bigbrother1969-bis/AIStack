@@ -12,13 +12,13 @@ back_list: "← Retour à la liste des pannes"
 index:
   loading: "Initialisation en cours… jusqu'à ~45s (trois appels au modèle IA, l'un après l'autre). Ne recharge pas la page."
   heading: "Assistant de pannes"
-  meta_before: "Pannes réelles détectées maintenant par"
-  meta_after: "— un accompagnement pas à pas, jamais un cas inventé."
+  meta: "Pannes réelles détectées maintenant par le Cockpit Santé (stockage, services, sauvegarde, GPU, tests PRA, état persistant, écarts d'inventaire) et la surveillance de consommation CPU — un accompagnement pas à pas, jamais un cas inventé."
+  domain: "Domaine : {domain}"
   start: "Commencer →"
-  empty_before: "Aucune panne réelle qualifiée en ce moment — rien à guider. Cette page ne propose jamais de cas inventé ; repasse plus tard, ou relance"
-  empty_after: "en ligne de commande pour vérifier."
+  empty: "Aucune panne réelle qualifiée en ce moment, dans aucun domaine du Cockpit Santé ni côté consommation CPU — rien à guider. Cette page ne propose jamais de cas inventé ; les données sont recalculées à chaque visite, pas de vérification supplémentaire nécessaire."
 step:
   meta: "Étape {step}/{total} — {signature}"
+  domain: "Domaine : {domain}"
   detected: "La panne détectée"
   confidence: "Confiance"
   qualifications: "Qualifications"
@@ -33,6 +33,7 @@ step:
   apply_note_before: "Seule action que ce bouton sait faire : classer"
   apply_note_middle: "comme conteneur « background » dans"
   apply_note_after: "— jamais la réponse ci-dessus, toujours cette action fixe et connue à l'avance."
+  no_apply: "Ce type de panne ({domain}) n'a pas encore de correction automatique proposée par cet assistant — seules les pannes de consommation CPU en offrent une pour l'instant."
   previous: "← Précédent"
   next: "Suivant →"
 applied:
@@ -48,6 +49,7 @@ status:
   not_found: "Panne introuvable ou déjà résolue : {subject}"
   expired: "Session expirée pour {subject} — relance depuis la liste."
   nothing_applied: "Aucune application en cours pour {subject} — relance depuis la liste."
+  not_applyable: "Aucune correction automatique disponible pour {subject} — seules les pannes de consommation CPU proposent ce bouton, relance depuis la liste."
 message:
   already_priority: "{subject} est déjà classé « priority » dans resource_priority.yml — cet assistant ne sait appliquer que le classement « background » (utilise priority_ui, http://GIGABYTE:8182, pour changer un classement priority)."
   already_background: "{subject} était déjà classé « background » dans resource_priority.yml — rien à écrire."

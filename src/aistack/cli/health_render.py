@@ -17,6 +17,7 @@ from aistack.health.score_weights import health_score_weights
 from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import default_languages
 from aistack.i18n.pages import page_file
+from aistack.instance.yaml import load_instance_config_yaml
 from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
@@ -146,6 +147,20 @@ DEFAULT_CATEGORIZATION = (
 # not a shipped definition.
 DEFAULT_NETWORK_DOCKER_OBSERVATION = Path(
     "reports/generated/network-docker-observation.json"
+)
+
+# R10, 2026-09-30 — resolves the Troubleshooting Assistant's own LAN
+# address for `render_html`'s new `troubleshooting_base_url`
+# parameter (see that function's own docstring), the exact same
+# convention `aistack.cli.console_render.DEFAULT_INSTANCE_CONFIG`
+# already uses for its own `console_links.yml` `service:` entries —
+# declared explicitly here rather than left to a loader's own internal
+# fallback, the same reasoning that module's own comment gives.
+DEFAULT_INSTANCE_CONFIG = (
+    Path(__file__).resolve().parents[1]
+    / "instance"
+    / "definitions"
+    / "instance_config.yml"
 )
 
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
@@ -603,6 +618,16 @@ def main() -> None:
     (`PLAN-J11` § 11.9.1) — computed from the same cockpit and the
     same `OPS-0008` weights the health score already reads, never a
     second load of either.
+
+    **Also resolves the Troubleshooting Assistant's own LAN address,
+    added 2026-09-30** — the owner's own "Élargir + relier" cadrage:
+    every finding this page shows should link into that assistant's
+    guided `reason`/`explain`/`recommend` chain. Resolved once, from
+    the declared instance config, the same `service_url(...)` call
+    `console_render.py` already makes for its own links — `None` (the
+    v1 shape every call before this existed) if that config is
+    missing or unreadable, which renders every finding exactly as
+    before rather than failing the whole page over one optional link.
     """
 
     cockpit = build_cockpit(socket.gethostname())
@@ -610,6 +635,18 @@ def main() -> None:
     weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
     score = compute_health_score(cockpit, weights) if weights is not None else None
     debt_score, debt_score_note = technical_debt_score(cockpit, weights)
+
+    try:
+        troubleshooting_base_url: str | None = load_instance_config_yaml(
+            DEFAULT_INSTANCE_CONFIG
+        ).service_url("troubleshooting_assistant_ui")
+    except (ValueError, OSError):
+        # Optional, best-effort — the same tolerant absence every
+        # other `DEFAULT_*` definition in this module already holds
+        # for its own file: a missing or unreadable instance config
+        # narrows this render to no "Diagnostiquer" button anywhere,
+        # never a failed page.
+        troubleshooting_base_url = None
 
     # ADR-0010 § 5 (2026-09-27): one page per declared language, the
     # reference keeping `health.html` and its history stream. The
@@ -630,6 +667,7 @@ def main() -> None:
             technical_debt_score=debt_score,
             technical_debt_note=debt_score_note,
             lang=language.code,
+            troubleshooting_base_url=troubleshooting_base_url,
         )
 
         if language.code == languages.reference:

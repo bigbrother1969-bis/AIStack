@@ -449,3 +449,136 @@ def test_the_reference_page_carries_the_navigation_strip():
     assert 'href="/settings"' in document
     assert 'href="?lang=en"' in document
     assert 'href="/console.html?lang=fr">← Retour à la console<' in document
+
+
+# --------------------------------------------------------------------
+# Domain anchors and the troubleshooting-assistant link (2026-09-30)
+# --------------------------------------------------------------------
+
+
+def test_every_domain_section_carries_an_anchor_id_whatever_its_state():
+    """
+    `console.html`'s own domain pills (`aistack.renderers.console.html`)
+    link to `health.html#domain-<slug>` — every domain section needs
+    the matching `id`, not only the ones currently in alert, so a pill
+    keeps working if a domain's state changes between the two renders.
+    """
+
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(name="Stockage", instrumented=True, findings=(storage_finding(),)),
+            HealthDomain(name="Services", instrumented=True, findings=()),
+            HealthDomain(name="GPU", instrumented=False, note="aucun capteur"),
+        )
+    )
+
+    document = render_html(cockpit)
+
+    assert 'id="domain-stockage"' in document
+    assert 'id="domain-services"' in document
+    assert 'id="domain-gpu"' in document
+
+
+def test_no_diagnose_button_when_troubleshooting_base_url_is_absent():
+    """
+    `None` (every call before this feature existed) renders exactly as
+    before — the same idiom `score`/`technical_debt_score` already
+    hold for their own optional parameters.
+    """
+
+    cockpit = HealthCockpit(
+        domains=(HealthDomain(name="Stockage", instrumented=True, findings=(storage_finding(),)),)
+    )
+
+    document = render_html(cockpit)
+
+    # The `.diagnose` CSS rule ships unconditionally (a handful of
+    # harmless, unused bytes) — what must be absent is the button
+    # itself and any actual submission target.
+    assert "<form" not in document
+    assert "/finding/" not in document
+
+
+def test_diagnose_button_links_to_the_troubleshooting_assistant_by_bare_subject():
+    cockpit = HealthCockpit(
+        domains=(HealthDomain(name="Stockage", instrumented=True, findings=(storage_finding("/data"),)),)
+    )
+
+    document = render_html(cockpit, troubleshooting_base_url="http://GIGABYTE:8185")
+
+    # The subject is written into the form action as-is, not
+    # URL-encoded by this renderer — the browser's own form
+    # submission takes care of that when the button is clicked.
+    assert (
+        '<form class="diagnose" method="post" '
+        'action="http://GIGABYTE:8185/finding//data/start">' in document
+    )
+
+
+def test_diagnose_button_uses_a_domain_qualified_key_on_a_real_subject_collision():
+    """
+    The same collision `troubleshooting_assistant_ui.app.QualifiedFinding`
+    guards against — two different domains naming the same subject —
+    confirmed real for "gigabyte"/"nextcloud"/"immich" across Tests PRA
+    and État persistant, 2026-09-30. This renderer must route each to
+    a distinct key, never silently pick one.
+    """
+
+    def finding(subject: str, signature: str) -> RuntimeFinding:
+        return RuntimeFinding(
+            subject=subject,
+            signature=signature,
+            interpretation="synthetic",
+            remediation="synthetic",
+            confidence="Measured",
+            grounding="unknown",
+            evidence=(CitedReading(provider="synthetic", reading="synthetic"),),
+            qualifications=(),
+        )
+
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(
+                name="Tests PRA", instrumented=True, findings=(finding("gigabyte", "OPS-0009"),)
+            ),
+            HealthDomain(
+                name="État persistant",
+                instrumented=True,
+                findings=(finding("gigabyte", "OPS-0010"),),
+            ),
+        )
+    )
+
+    document = render_html(cockpit, troubleshooting_base_url="http://GIGABYTE:8185")
+
+    assert "http://GIGABYTE:8185/finding/Tests PRA::gigabyte/start" in document
+    assert "http://GIGABYTE:8185/finding/État persistant::gigabyte/start" in document
+    # Never the bare, ambiguous subject on its own.
+    assert "/finding/gigabyte/start" not in document
+
+
+def test_diagnose_button_keeps_the_bare_subject_when_it_is_unique():
+    cockpit = HealthCockpit(
+        domains=(
+            HealthDomain(
+                name="Tests PRA",
+                instrumented=True,
+                findings=(
+                    RuntimeFinding(
+                        subject="raspberry",
+                        signature="OPS-0009",
+                        interpretation="synthetic",
+                        remediation="synthetic",
+                        confidence="Measured",
+                        grounding="unknown",
+                        evidence=(CitedReading(provider="synthetic", reading="synthetic"),),
+                        qualifications=(),
+                    ),
+                ),
+            ),
+        )
+    )
+
+    document = render_html(cockpit, troubleshooting_base_url="http://GIGABYTE:8185")
+
+    assert "http://GIGABYTE:8185/finding/raspberry/start" in document

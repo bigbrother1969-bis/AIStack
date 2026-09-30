@@ -10,13 +10,13 @@ back_list: "← Back to the fault list"
 index:
   loading: "Starting… up to ~45s (three calls to the AI model, one after the other). Do not reload the page."
   heading: "Troubleshooting assistant"
-  meta_before: "Real faults detected right now by"
-  meta_after: "— step-by-step guidance, never an invented case."
+  meta: "Real faults detected right now by the Health Cockpit (storage, services, backup, GPU, PRA tests, persistent state, inventory gaps) and CPU consumption monitoring — step-by-step guidance, never an invented case."
+  domain: "Domain: {domain}"
   start: "Start →"
-  empty_before: "No qualified real fault right now — nothing to guide. This page never offers an invented case; come back later, or run"
-  empty_after: "on the command line to check."
+  empty: "No qualified real fault right now, in any Health Cockpit domain or CPU consumption — nothing to guide. This page never offers an invented case; the data is recomputed on every visit, no extra check needed."
 step:
   meta: "Step {step}/{total} — {signature}"
+  domain: "Domain: {domain}"
   detected: "The detected fault"
   confidence: "Confidence"
   qualifications: "Qualifications"
@@ -31,6 +31,7 @@ step:
   apply_note_before: "The only action this button can take: classify"
   apply_note_middle: "as a “background” container in"
   apply_note_after: "— never the answer above, always this fixed action known in advance."
+  no_apply: "This type of fault ({domain}) has no automatic fix offered by this assistant yet — only CPU consumption faults have one for now."
   previous: "← Previous"
   next: "Next →"
 applied:
@@ -46,6 +47,7 @@ status:
   not_found: "Fault not found or already resolved: {subject}"
   expired: "Session expired for {subject} — start again from the list."
   nothing_applied: "No fix in progress for {subject} — start again from the list."
+  not_applyable: "No automatic fix available for {subject} — only CPU consumption faults offer this button, start again from the list."
 message:
   already_priority: "{subject} is already classified “priority” in resource_priority.yml — this assistant can only apply the “background” classification (use priority_ui, http://GIGABYTE:8182, to change a priority classification)."
   already_background: "{subject} was already classified “background” in resource_priority.yml — nothing to write."

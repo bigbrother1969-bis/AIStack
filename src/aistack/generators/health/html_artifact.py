@@ -32,7 +32,12 @@ class HealthHtmlArtifactGenerator:
     `technical_debt_note` default the same way for the "Dette
     technique" card added 2026-09-23 (`PLAN-J11` § 11.9.1). `lang`
     (ADR-0010, 2026-09-27) is the language the page is written in, the
-    reference when `None`.
+    reference when `None`. `troubleshooting_base_url` (2026-09-30,
+    `PLAN-J7`'s own cockpit findings made clickable into the
+    Troubleshooting Assistant, see `aistack.renderers.health.html
+    .render_html`'s own docstring) defaults to `None` the same way —
+    no "Diagnostiquer" button on any finding until a caller hands one
+    in.
     """
 
     def generate(
@@ -44,6 +49,7 @@ class HealthHtmlArtifactGenerator:
         technical_debt_score: TechnicalDebtScore | None = None,
         technical_debt_note: str = "",
         lang: str | None = None,
+        troubleshooting_base_url: str | None = None,
     ) -> Path:
         content = render_html(
             cockpit,
@@ -52,6 +58,7 @@ class HealthHtmlArtifactGenerator:
             technical_debt_score=technical_debt_score,
             technical_debt_note=technical_debt_note,
             lang=lang,
+            troubleshooting_base_url=troubleshooting_base_url,
         )
         write_artifact_with_history(content, output_path)
 

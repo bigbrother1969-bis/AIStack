@@ -21,6 +21,11 @@
       gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: .9rem 1.1rem;
       margin-bottom: .7rem; background: #fafafa;
     }
+    .domain {
+      display: inline-block; font-size: .72rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .02em; color: #1f6feb; background: #e8f0fe; border-radius: 4px;
+      padding: .12rem .5rem; margin-right: .5rem; vertical-align: middle;
+    }
     .subject { font-weight: 700; margin-right: .5rem; }
     .signature { color: #666; font-size: .8rem; font-family: monospace; }
     .interpretation { margin: .4rem 0 0; font-size: .9rem; }
@@ -83,9 +88,7 @@
 
   <header>
     <h1>{{ t('troubleshooting.index.heading') }}</h1>
-    <p class="meta">
-      {{ t('troubleshooting.index.meta_before') }} <code>evaluate</code> {{ t('troubleshooting.index.meta_after') }}
-    </p>
+    <p class="meta">{{ t('troubleshooting.index.meta') }}</p>
   </header>
 
   {% if status %}
@@ -98,23 +101,22 @@
 
   {% if findings %}
     <ul class="findings">
-      {% for finding in findings %}
+      {% for entry in findings %}
         <li>
           <div>
-            <span class="subject">{{ finding.subject }}</span>
-            <span class="signature">{{ finding.signature }}</span>
-            <p class="interpretation">{{ finding.interpretation }}</p>
+            <span class="domain">{{ t('troubleshooting.index.domain', domain=entry.domain) }}</span>
+            <span class="subject">{{ entry.finding.subject }}</span>
+            <span class="signature">{{ entry.finding.signature }}</span>
+            <p class="interpretation">{{ entry.finding.interpretation }}</p>
           </div>
-          <form class="start-form" method="post" action="/finding/{{ finding.subject | urlencode }}/start">
+          <form class="start-form" method="post" action="/finding/{{ entry.key | urlencode }}/start">
             <button class="primary" type="submit">{{ t('troubleshooting.index.start') }}</button>
           </form>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p class="empty">
-      {{ t('troubleshooting.index.empty_before') }} <code>ai_reason</code> {{ t('troubleshooting.index.empty_after') }}
-    </p>
+    <p class="empty">{{ t('troubleshooting.index.empty') }}</p>
   {% endif %}
 
   <script>

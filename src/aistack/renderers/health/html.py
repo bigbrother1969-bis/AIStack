@@ -13,7 +13,7 @@ from aistack.health.labels import bucket_label, domain_label
 from aistack.i18n import Languages, Translator, default_languages, translator_for
 from aistack.renderers.assets import MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
-from aistack.renderers.text import escape_text
+from aistack.renderers.text import domain_slug, escape_text
 
 _BUCKET_BADGE_CLASS = {
     EXCELLENT: "badge-clean",
@@ -30,6 +30,7 @@ def render_html(
     technical_debt_note: str = "",
     lang: str | None = None,
     languages: Languages | None = None,
+    troubleshooting_base_url: str | None = None,
 ) -> str:
     """
     Wrap a `HealthCockpit` snapshot into one self-contained HTML
@@ -81,6 +82,43 @@ def render_html(
     1/3) — this page had neither. `MARK_DATA_URI` comes from
     `aistack.renderers.assets`, the same vendored mark `console.html`
     already shows.
+
+    **`troubleshooting_base_url`, added 2026-09-30** (the owner,
+    reading this page's own real findings: "les findings en rouge
+    doivent être cliquables et doivent diriger vers... la possibilité
+    de résoudre le problème de façon accompagnée par les modules
+    d'IA"). `None` (every call this function had before this
+    feature existed) renders every finding exactly as before — no
+    "Diagnostiquer" button — the same "absent parameter changes
+    nothing" idiom `score`/`technical_debt_score` already hold. A
+    real base URL (`aistack.cli.health_render.main` resolves it via
+    `service_url("troubleshooting_assistant_ui")`, the R10 pattern
+    `console_render.py` already uses for its own links) adds one
+    small `<form method="post" action="{base_url}/finding/{key}
+    /start">` per finding, pointing at that LAN-only assistant —
+    still pure: the base URL is handed in, never looked up here.
+
+    **The routing `key` a finding's button submits to is not always
+    `finding.subject`** — the same collision-safe composite key
+    `troubleshooting_assistant_ui.app.QualifiedFinding` computes for
+    its own routing (see that module's docstring for the full
+    reasoning and the confirmed real collision — "gigabyte",
+    "nextcloud", "immich" each named today by both Tests PRA and État
+    persistant), computed independently here from `cockpit.domains`
+    alone since this renderer never imports that FastAPI app (`aistack
+    .renderers` imports nothing outside itself and the packages it
+    already depended on). **A known, accepted narrowing**: this
+    renderer's own collision set only spans `cockpit.domains` — the
+    assistant's own CPU/consumption check (`CONSUMPTION_DOMAIN`, never
+    part of `HealthCockpit`) is outside what this pure function can
+    see, so a finding whose subject *also* happens to be flagged for
+    CPU consumption right now could, in the rare case, submit to a key
+    the assistant resolves differently. That failure mode is a plain
+    "not found, start again from the list" redirect at the
+    assistant — never a wrong write, never a silently mismatched
+    finding — so it is accepted rather than solved by duplicating the
+    CPU-consumption check a fourth time into this renderer, a scope
+    this feature was never cadred to take on.
     """
 
     t = translator_for(lang)
@@ -89,7 +127,15 @@ def render_html(
     domain_count = len(cockpit.domains)
     instrumented_count = sum(1 for domain in cockpit.domains if domain.instrumented)
 
-    sections = "\n".join(_render_domain(domain, t) for domain in cockpit.domains)
+    subject_counts: dict[str, int] = {}
+    for domain in cockpit.domains:
+        for finding in domain.findings:
+            subject_counts[finding.subject] = subject_counts.get(finding.subject, 0) + 1
+
+    sections = "\n".join(
+        _render_domain(domain, t, troubleshooting_base_url, subject_counts)
+        for domain in cockpit.domains
+    )
 
     return f"""<!doctype html>
 <html lang="{t.lang}">
@@ -176,30 +222,45 @@ def _render_technical_debt(
     return ""
 
 
-def _render_domain(domain: HealthDomain, t: Translator) -> str:
+def _render_domain(
+    domain: HealthDomain,
+    t: Translator,
+    troubleshooting_base_url: str | None,
+    subject_counts: dict[str, int],
+) -> str:
     name = escape_text(domain_label(t, domain.name))
+    anchor = f'id="domain-{domain_slug(domain.name)}"'
 
     if not domain.instrumented:
-        return f"""<section class="domain domain-not-instrumented">
+        return f"""<section class="domain domain-not-instrumented" {anchor}>
   <h2>{name} <span class="badge badge-not-instrumented">{escape_text(t("health.page.not_instrumented"))}</span></h2>
   <p class="note">{escape_text(domain.note)}</p>
 </section>"""
 
     if not domain.findings:
-        return f"""<section class="domain domain-clean">
+        return f"""<section class="domain domain-clean" {anchor}>
   <h2>{name} <span class="badge badge-clean">{escape_text(t("health.page.clean"))}</span></h2>
 </section>"""
 
-    findings = "\n".join(_render_finding(finding, t) for finding in domain.findings)
+    findings = "\n".join(
+        _render_finding(finding, t, troubleshooting_base_url, domain.name, subject_counts)
+        for finding in domain.findings
+    )
     count = escape_text(t("health.page.findings", count=len(domain.findings)))
 
-    return f"""<section class="domain domain-alert">
+    return f"""<section class="domain domain-alert" {anchor}>
   <h2>{name} <span class="badge badge-alert">{count}</span></h2>
   {findings}
 </section>"""
 
 
-def _render_finding(finding: RuntimeFinding, t: Translator) -> str:
+def _render_finding(
+    finding: RuntimeFinding,
+    t: Translator,
+    troubleshooting_base_url: str | None,
+    domain_name: str,
+    subject_counts: dict[str, int],
+) -> str:
     """
     Only the labels around a finding are translated (ADR-0010 § 4): its
     subject, signature, interpretation, remediation, confidence and
@@ -213,6 +274,20 @@ def _render_finding(finding: RuntimeFinding, t: Translator) -> str:
         else ""
     )
 
+    diagnose = ""
+    if troubleshooting_base_url:
+        key = (
+            finding.subject
+            if subject_counts.get(finding.subject, 0) <= 1
+            else f"{domain_name}::{finding.subject}"
+        )
+        diagnose = (
+            f'<form class="diagnose" method="post" '
+            f'action="{escape_text(troubleshooting_base_url)}/finding/{escape_text(key)}/start">'
+            f'<button type="submit">{escape_text(t("health.page.diagnose"))}</button>'
+            f"</form>"
+        )
+
     return f"""  <article class="finding">
     <h3>{escape_text(finding.subject)} — {escape_text(finding.signature)}</h3>
     <p class="interpretation">{escape_text(finding.interpretation)}</p>
@@ -221,6 +296,7 @@ def _render_finding(finding: RuntimeFinding, t: Translator) -> str:
       {escape_text(t("health.page.grounding"))} {escape_text(finding.grounding)}</p>
     {qualifications}
     <p class="evidence">{_evidence_summary(finding.evidence, t)}</p>
+    {diagnose}
   </article>"""
 
 
@@ -302,5 +378,11 @@ header { margin-bottom: 1.4rem; }
 .finding h3 { margin: 0 0 .3rem; font-size: .98rem; }
 .finding p { margin: .25rem 0; }
 .remediation { color: #1f6d43; }
-.qualifications, .confidence, .evidence { color: #5b6b7d; font-size: .85rem; }\
+.qualifications, .confidence, .evidence { color: #5b6b7d; font-size: .85rem; }
+.diagnose { margin: .5rem 0 0; }
+.diagnose button {
+  padding: .35rem .8rem; font-size: .82rem; cursor: pointer; font-weight: 600;
+  border: 1px solid #1f6feb; border-radius: 6px; background: #eef4fe; color: #1f6feb;
+}
+.diagnose button:hover { background: #1f6feb; color: white; }\
 """

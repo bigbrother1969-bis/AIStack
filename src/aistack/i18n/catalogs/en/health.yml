@@ -12,6 +12,7 @@ domain:
   gpu: "GPU"
   pra_tests: "DR tests"
   uncovered_state: "Uncovered state"
+  inventory_gap: "Inventory gaps"
 domain_state:
   not_instrumented: "{domain} — not instrumented"
   clean: "{domain} — nothing to report"

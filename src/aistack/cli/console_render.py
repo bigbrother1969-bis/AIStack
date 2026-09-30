@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
 import socket
 import subprocess
 from pathlib import Path
 
+from aistack.architecture.yaml import load_service_categorization_yaml
 from aistack.backup_strategy.yaml import load_backup_strategy_yaml
+from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.console.yaml import load_console_links_yaml
 from aistack.contracts.health_score import HealthScoreWeights
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
@@ -29,11 +32,16 @@ from aistack.runtime.backup_gap import find_backup_gaps
 from aistack.runtime.container_distress import find_container_distress
 from aistack.runtime.evaluate_backup import evaluate_backup
 from aistack.runtime.evaluate_gpu import evaluate_gpu
+from aistack.runtime.evaluate_inventory_gap import evaluate_inventory_gap
 from aistack.runtime.evaluate_pra_tests import evaluate_pra_tests
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.evaluate_uncovered_state import evaluate_uncovered_state
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
+from aistack.runtime.inventory_gap import (
+    discovered_containers_from_network_observation,
+    find_inventory_gaps,
+)
 from aistack.runtime.pra_test_gap import find_pra_test_gaps
 from aistack.runtime.storage_shortage import find_storage_shortage
 from aistack.runtime.uncovered_state_gap import find_uncovered_state
@@ -122,6 +130,28 @@ DEFAULT_BACKUP_STRATEGY = (
     / "backup_strategy"
     / "definitions"
     / "backup_strategy.yml"
+)
+
+# Mirrors `aistack.cli.health_render.DEFAULT_CATEGORIZATION` exactly —
+# this module never imports the other, per this file's own "no CLI in
+# this package imports another" convention (see the comment above).
+DEFAULT_CATEGORIZATION = (
+    Path(__file__).resolve().parents[1]
+    / "architecture"
+    / "definitions"
+    / "service_categorization.yml"
+)
+
+# Mirrors `aistack.cli.health_render.DEFAULT_NETWORK_DOCKER_OBSERVATION`
+# exactly — the cwd-relative convention `network_docker_discover.main`
+# itself uses for this same output path, not the
+# `Path(__file__).resolve()`-relative convention the constants above
+# hold, since this names an output, not a shipped definition. A plain
+# literal, not `GENERATED_DIR / ...`: that constant is declared much
+# further down this module, next to `main()`, and every domain
+# function above it already runs before `main` does.
+DEFAULT_NETWORK_DOCKER_OBSERVATION = Path(
+    "reports/generated/network-docker-observation.json"
 )
 
 
@@ -267,6 +297,59 @@ def uncovered_state_domain() -> HealthDomain:
     )
 
 
+def inventory_gap_domain() -> HealthDomain:
+    """Mirrors `aistack.cli.health_render.inventory_gap_domain` exactly."""
+
+    if not DEFAULT_CATEGORIZATION.exists():
+        return HealthDomain(
+            name="Écarts d'inventaire",
+            instrumented=False,
+            note=(
+                f"no service categorization at {DEFAULT_CATEGORIZATION}; "
+                f"inventory is not checked"
+            ),
+        )
+
+    try:
+        categorization = load_service_categorization_yaml(DEFAULT_CATEGORIZATION)
+    except (ValueError, OSError) as error:
+        return HealthDomain(
+            name="Écarts d'inventaire",
+            instrumented=False,
+            note=(
+                f"service categorization not readable ({error}); "
+                f"inventory is not checked"
+            ),
+        )
+
+    try:
+        docker_catalog = DockerRuntimeCatalogBuilder().build(DockerProvider().collect())
+        discovered: dict[str, str | None] = {
+            item.id: None
+            for item in docker_catalog.items
+            if item.kind == "container"
+        }
+    except (subprocess.SubprocessError, OSError):
+        discovered = {}
+
+    if DEFAULT_NETWORK_DOCKER_OBSERVATION.exists():
+        try:
+            observation = json.loads(
+                DEFAULT_NETWORK_DOCKER_OBSERVATION.read_text(encoding="utf-8")
+            )
+            discovered.update(discovered_containers_from_network_observation(observation))
+        except (ValueError, OSError):
+            pass
+
+    gaps = find_inventory_gaps(categorization, discovered)
+
+    return HealthDomain(
+        name="Écarts d'inventaire",
+        instrumented=True,
+        findings=evaluate_inventory_gap(gaps),
+    )
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     """Mirrors `aistack.cli.health_render.build_cockpit` exactly."""
 
@@ -278,6 +361,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             gpu_domain(hostname),
             pra_tests_domain(),
             uncovered_state_domain(),
+            inventory_gap_domain(),
         )
     )
 

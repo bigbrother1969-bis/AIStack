@@ -42,6 +42,20 @@ class FakeDockerProvider:
             for entry in (self._states or ())
         )
 
+    def collect(self):
+        """Mirrors `test_health_render.py`'s own fake for the same reason."""
+
+        return {
+            "provider": {"id": "fake", "name": "Fake Docker Provider"},
+            "collected_at": "2026-09-30T00:00:00+00:00",
+            "docker": {
+                "containers": list(self._states or ()),
+                "images": [],
+                "networks": [],
+                "volumes": [],
+            },
+        }
+
 
 class FakeGpuProvider:
     """Mirrors `test_health_render.py`'s own fake for the same reason."""
@@ -244,12 +258,13 @@ def test_the_default_console_links_definition_exists():
 # --------------------------------------------------------------------
 
 
-def test_build_cockpit_always_names_all_six_domains(monkeypatch, tmp_path):
+def test_build_cockpit_always_names_all_seven_domains(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -262,6 +277,7 @@ def test_build_cockpit_always_names_all_six_domains(monkeypatch, tmp_path):
         "GPU",
         "Tests PRA",
         "État persistant",
+        "Écarts d'inventaire",
     }
 
 
@@ -336,6 +352,7 @@ def test_technical_debt_score_reports_findings_across_domains(monkeypatch, tmp_p
 
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",
@@ -427,6 +444,28 @@ services:
     assert len(domain.findings) == 1
 
 
+def test_inventory_gap_domain_reports_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "service_categorization.yml"
+    path.write_text(
+        """
+categories:
+  - name: Homelab
+    services:
+      - name: WordPress
+        container: wordpress
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
 # --------------------------------------------------------------------
 # Drift guard — this module's duplicated constants must match
 # aistack.cli.health_render's own, the same way health_render.py's own
@@ -464,6 +503,18 @@ def test_the_default_pra_tests_path_matches_health_renders():
 def test_the_default_backup_strategy_path_matches_health_renders():
     assert cli.DEFAULT_BACKUP_STRATEGY == health_render.DEFAULT_BACKUP_STRATEGY
     assert cli.DEFAULT_BACKUP_STRATEGY.exists()
+
+
+def test_the_default_categorization_path_matches_health_renders():
+    assert cli.DEFAULT_CATEGORIZATION == health_render.DEFAULT_CATEGORIZATION
+    assert cli.DEFAULT_CATEGORIZATION.exists()
+
+
+def test_the_default_network_docker_observation_path_matches_health_renders():
+    assert (
+        cli.DEFAULT_NETWORK_DOCKER_OBSERVATION
+        == health_render.DEFAULT_NETWORK_DOCKER_OBSERVATION
+    )
 
 
 def test_technical_debt_score_matches_health_renders_own_behavior(monkeypatch):

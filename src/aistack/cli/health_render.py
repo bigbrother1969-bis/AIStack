@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
 import socket
 import subprocess
 from pathlib import Path
 
+from aistack.architecture.yaml import load_service_categorization_yaml
 from aistack.backup_strategy.yaml import load_backup_strategy_yaml
+from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.contracts.health_score import HealthScoreWeights
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.health import HealthHtmlArtifactGenerator
@@ -27,11 +30,16 @@ from aistack.runtime.backup_gap import find_backup_gaps
 from aistack.runtime.container_distress import find_container_distress
 from aistack.runtime.evaluate_backup import evaluate_backup
 from aistack.runtime.evaluate_gpu import evaluate_gpu
+from aistack.runtime.evaluate_inventory_gap import evaluate_inventory_gap
 from aistack.runtime.evaluate_pra_tests import evaluate_pra_tests
 from aistack.runtime.evaluate_services import evaluate_services
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.evaluate_uncovered_state import evaluate_uncovered_state
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
+from aistack.runtime.inventory_gap import (
+    discovered_containers_from_network_observation,
+    find_inventory_gaps,
+)
 from aistack.runtime.pra_test_gap import find_pra_test_gaps
 from aistack.runtime.storage_shortage import find_storage_shortage
 from aistack.runtime.uncovered_state_gap import find_uncovered_state
@@ -112,6 +120,32 @@ DEFAULT_BACKUP_STRATEGY = (
     / "backup_strategy"
     / "definitions"
     / "backup_strategy.yml"
+)
+
+# The same file `aistack.cli.architecture_render.DEFAULT_CATEGORIZATION`
+# reads — declared again here rather than imported, the same "no CLI
+# in this package imports another" convention every other `DEFAULT_*`
+# constant in this module already holds.
+DEFAULT_CATEGORIZATION = (
+    Path(__file__).resolve().parents[1]
+    / "architecture"
+    / "definitions"
+    / "service_categorization.yml"
+)
+
+# `network_docker_discover.py`'s own output path — the last observation
+# it wrote, read here rather than collected live: that command is
+# never triggered automatically (`NetworkDockerDiscoveryProvider`'s own
+# docstring, decided with the owner 2026-09-12), so this domain reads
+# whatever it last found, exactly like every other `reports/generated/`
+# artifact this heritage reads back rather than regenerates on render.
+# A plain `Path("reports/generated/...")`, the same cwd-relative
+# convention `network_docker_discover.main` itself already uses for
+# this exact file, not the `Path(__file__).resolve()`-relative
+# convention the constants above hold — this one names an *output*,
+# not a shipped definition.
+DEFAULT_NETWORK_DOCKER_OBSERVATION = Path(
+    "reports/generated/network-docker-observation.json"
 )
 
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
@@ -374,6 +408,86 @@ def uncovered_state_domain() -> HealthDomain:
     )
 
 
+def inventory_gap_domain() -> HealthDomain:
+    """
+    1.6 tranche 3's own domain (R9, 2026-09-30): `OPS-0004`'s seventh
+    reference case — `service_categorization.yml`'s own declared
+    containers, joined against what is actually found running.
+    `load_service_categorization_yaml` reads the declared inventory,
+    `DockerRuntimeCatalogBuilder`/`DockerProvider` observe this host's
+    own containers live, `network_docker_discover`'s last observation
+    (if any) adds every other LAN host it last found, `find_inventory_
+    gaps` decides which containers are declared nowhere or found
+    nowhere, `evaluate_inventory_gap` states the finding.
+
+    **A missing or unreadable `service_categorization.yml` is
+    `instrumented=False`** — the same absence, stated the same way,
+    every other domain already holds for its own declared file. A
+    missing or unreadable `network-docker-observation.json` is *not*
+    the same kind of absence: that file is optional, best-effort,
+    supplementary data (`network_docker_discover` "only runs when
+    invoked explicitly" — most renders will not have a fresh one) —
+    its absence silently narrows this domain to a local-only
+    reconciliation rather than declaring the whole domain
+    uninstrumented over a file nothing here requires to exist.
+    """
+
+    if not DEFAULT_CATEGORIZATION.exists():
+        return HealthDomain(
+            name="Écarts d'inventaire",
+            instrumented=False,
+            note=(
+                f"no service categorization at {DEFAULT_CATEGORIZATION}; "
+                f"inventory is not checked"
+            ),
+        )
+
+    try:
+        categorization = load_service_categorization_yaml(DEFAULT_CATEGORIZATION)
+    except (ValueError, OSError) as error:
+        return HealthDomain(
+            name="Écarts d'inventaire",
+            instrumented=False,
+            note=(
+                f"service categorization not readable ({error}); "
+                f"inventory is not checked"
+            ),
+        )
+
+    try:
+        docker_catalog = DockerRuntimeCatalogBuilder().build(DockerProvider().collect())
+        discovered: dict[str, str | None] = {
+            item.id: None
+            for item in docker_catalog.items
+            if item.kind == "container"
+        }
+    except (subprocess.SubprocessError, OSError):
+        # The same tolerant absence `services_domain` already holds for
+        # an unreachable local Docker daemon — local containers are
+        # simply not added, never treated as "none exist".
+        discovered = {}
+
+    if DEFAULT_NETWORK_DOCKER_OBSERVATION.exists():
+        try:
+            observation = json.loads(
+                DEFAULT_NETWORK_DOCKER_OBSERVATION.read_text(encoding="utf-8")
+            )
+            discovered.update(discovered_containers_from_network_observation(observation))
+        except (ValueError, OSError):
+            # The last network discovery is optional, best-effort data
+            # — a corrupt or unreadable file narrows this render to a
+            # local-only reconciliation rather than failing the domain.
+            pass
+
+    gaps = find_inventory_gaps(categorization, discovered)
+
+    return HealthDomain(
+        name="Écarts d'inventaire",
+        instrumented=True,
+        findings=evaluate_inventory_gap(gaps),
+    )
+
+
 def build_cockpit(hostname: str) -> HealthCockpit:
     return HealthCockpit(
         domains=(
@@ -383,6 +497,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             gpu_domain(hostname),
             pra_tests_domain(),
             uncovered_state_domain(),
+            inventory_gap_domain(),
         )
     )
 

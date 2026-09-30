@@ -13,6 +13,7 @@ domain:
   gpu: "GPU"
   pra_tests: "Tests PRA"
   uncovered_state: "État persistant"
+  inventory_gap: "Écarts d'inventaire"
 domain_state:
   not_instrumented: "{domain} — non instrumenté"
   clean: "{domain} — rien à signaler"

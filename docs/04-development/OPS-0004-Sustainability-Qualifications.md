@@ -355,6 +355,64 @@ Full detail — the three real engines declared, the twelve services in
 scope, and the three real gaps this session could not ground further
 (Nextcloud, Immich, GIGABYTE's own host-level state) — is in `OPS-0010`.
 
+## Seventh reference case — Écarts d'inventaire, 2026-09-30, qualified
+
+A seventh case, given by the roadmap's own revue de conception (R9,
+`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`, validated by the owner in full
+2026-09-27) and examined against `OPS-0004`'s vocabulary directly with the
+owner, 2026-09-30, for 1.6 tranche 3's own cadrage — R9's remaining
+bullet after tranche 2 (État persistant) closed its first.
+
+**Not an incident — a declared requirement, the same distinction the
+fourth, fifth and sixth reference cases recorded rather than smoothed
+over.** R9's own text: "Écarts d'inventaire → quai → validation →
+inventaire déclaré ; le CIDR reste une décision du owner." No real
+inventory mismatch was observed as an incident here the way GIGABYTE's
+disk exhaustion was — the requirement to detect one is what the roadmap
+named and what this case qualifies.
+
+Examined against the vocabulary, 2026-09-30, the owner found this case to
+carry:
+
+- **technical debt** — yes;
+- **deployment misconfiguration** — yes;
+- **energy inefficiency** — yes;
+- **sustainability anomaly** — yes.
+
+**All four qualifications, none excluded — the third reference case,
+after GPU and État persistant, to carry the complete vocabulary.** Put to
+the owner directly alongside the closest prior case (Sauvegarde/PRA,
+which carries only the first two) rather than assumed to match it, and
+found to carry all four instead.
+
+**Scope, declared alongside the qualifications.** Four further questions
+were put to the owner before any code, per `ARC-P-006`:
+
+- **Which declared inventory** — the owner chose
+  **`service_categorization.yml` alone**, not also `pra_tests.yml`: the
+  only declared inventory with a `container` field alignable to what
+  discovery actually observes. `cmdb_probe_targets.yml` (HTTP-probed
+  URLs) has no equivalent on the discovery side at all.
+- **Mechanism** — a **new dedicated runtime module**
+  (`aistack.runtime.inventory_gap`/`evaluate_inventory_gap`), not an
+  extension of `aistack.package_manager` — `ARCH-0013`'s own four Open
+  Points (exact `PackageManager` interfaces, validation policies,
+  integration conflict resolution, package version lifecycle) stay
+  untouched.
+- **Exposure** — a **seventh cockpit domain**, "Écarts d'inventaire" —
+  the domain vocabulary (`OPS-0008`) reopened again, the same deliberate
+  reopening `Tests PRA`/`État persistant` already went through. Weighted
+  **25 points**, the owner's own choice, same criterion ("même ordre de
+  grandeur que le domaine le plus proche en signification").
+- **Directions** — **les deux sens**: a container discovered but
+  declared nowhere, and a declared container never found running,
+  neither locally nor via the last network discovery.
+
+Full detail — the two sources joined, the two gap kinds, and what stays
+explicitly out of scope (`pra_tests.yml`, `cmdb_probe_targets.yml`,
+extending `aistack.package_manager`, widening the declared CIDR) — is in
+`OPS-0011`.
+
 ## What this register does not do
 
 **Updated 2026-09-11 (fourth time, for the fifth reference case)** — this
@@ -421,6 +479,14 @@ already confirmed by `find_uncovered_state` — a declared stateful service
 under `OPS-0010`'s own record found to name no known backup engine, on the
 twelve services the owner confirmed ("le stock déjà réel").
 
+As of 1.6 tranche 3 (Écarts d'inventaire domain, `OPS-0011`, 2026-09-30),
+all four qualifications are additionally wired together a third time by
+`aistack.runtime.evaluate_inventory_gap`, citing an `InventoryGap` already
+confirmed by `find_inventory_gaps` — a container declared in
+`service_categorization.yml` and never found running, or found running
+and declared nowhere, joined against `OPS-0011`'s own two sources (the
+local Docker catalog, and the last network discovery).
+
 Every one of `OPS-0004`'s four qualifications is now cited by multiple
-wired `RuntimeFinding` producers, across six reference cases — the
+wired `RuntimeFinding` producers, across seven reference cases — the
 vocabulary's coverage is no longer a gap this section needs to track.

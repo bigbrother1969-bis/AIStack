@@ -21,6 +21,13 @@
 # followed. Weighted 25, the owner's own choice, same criterion as
 # `Tests PRA` ("même ordre de grandeur que le domaine le plus proche
 # en signification").
+#
+# `Écarts d'inventaire` added 2026-09-30 (1.6 tranche 3, R9): the
+# domain vocabulary reopened to seven by the owner's own explicit
+# decision, the same deliberate-reopening discipline `Tests PRA`/
+# `État persistant` already followed. Weighted 25, the owner's own
+# choice, same criterion ("même ordre de grandeur que le domaine le
+# plus proche en signification").
 
 weights:
   - domain: Stockage
@@ -34,4 +41,6 @@ weights:
   - domain: Tests PRA
     points: 25
   - domain: État persistant
+    points: 25
+  - domain: Écarts d'inventaire
     points: 25

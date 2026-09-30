@@ -106,6 +106,7 @@ def test_the_real_health_score_weights_definition_loads():
     assert weights.for_domain("GPU") == 8
     assert weights.for_domain("Tests PRA") == 25
     assert weights.for_domain("État persistant") == 25
+    assert weights.for_domain("Écarts d'inventaire") == 25
 
     # Every domain PLAN-J7 names has a declared weight — the closed-set
     # discipline `OPS-0008` § *No weight for a domain outside this

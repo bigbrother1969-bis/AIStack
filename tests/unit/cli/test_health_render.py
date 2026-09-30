@@ -32,6 +32,7 @@ monkeypatched path.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -51,6 +52,7 @@ _DOMAIN_NAMES = {
     "GPU",
     "Tests PRA",
     "État persistant",
+    "Écarts d'inventaire",
 }
 
 
@@ -77,6 +79,34 @@ class FakeDockerProvider:
             )
             for entry in (self._states or ())
         )
+
+    def collect(self):
+        """
+        `inventory_gap_domain`'s own call, added 1.6 tranche 3
+        (2026-09-30) — the raw `DockerProvider.collect()` shape
+        `DockerRuntimeCatalogBuilder.build` expects, built from the
+        same `self._states` fixture `collect_container_states` already
+        reads (real `docker ps --format json` entries carry both a
+        `Names` field and whatever state fields a test declared).
+        Raises the same way `collect_container_states` does when a
+        test fakes an unreachable daemon — `inventory_gap_domain`
+        catches it the same tolerant way `services_domain` already
+        does.
+        """
+
+        if isinstance(self._states, Exception):
+            raise self._states
+
+        return {
+            "provider": {"id": "fake", "name": "Fake Docker Provider"},
+            "collected_at": "2026-09-30T00:00:00+00:00",
+            "docker": {
+                "containers": list(self._states or ()),
+                "images": [],
+                "networks": [],
+                "volumes": [],
+            },
+        }
 
 
 class FakeGpuProvider:
@@ -199,15 +229,16 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
     assert "no storage-threshold definition at" in storage.note
 
 
-def test_all_six_domains_are_always_present(monkeypatch, tmp_path):
+def test_all_seven_domains_are_always_present(monkeypatch, tmp_path):
     """
     `PLAN-J7` § 1's domain vocabulary, reopened from four to five on
     the owner's own explicit decision, 2026-09-23 (Storage, Services,
     Sauvegarde/PRA, GPU, and Tests PRA — `PLAN-J11` § 11.9.1's third
-    and last named gap, reopened and closed the same day), and from
-    five to six, 2026-09-30 (État persistant — 1.6 tranche 2, R9) —
-    every build lists all six, whatever their instrumented state,
-    never silently fewer (`FDN-0003` Article 12).
+    and last named gap, reopened and closed the same day), from five
+    to six, 2026-09-30 (État persistant — 1.6 tranche 2, R9), and from
+    six to seven the same day (Écarts d'inventaire — 1.6 tranche 3,
+    R9) — every build lists all seven, whatever their instrumented
+    state, never silently fewer (`FDN-0003` Article 12).
     """
 
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
@@ -215,6 +246,7 @@ def test_all_six_domains_are_always_present(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -608,6 +640,155 @@ def test_the_default_backup_strategy_definition_exists():
 
 
 # --------------------------------------------------------------------
+# inventory_gap_domain — 1.6 tranche 3, R9, 2026-09-30. Not
+# host-scoped — `service_categorization.yml` names no host either
+# (`ServiceCategorizationDefinition`'s own docstring).
+# --------------------------------------------------------------------
+
+
+def categorization_yaml(container: str = "wordpress", name: str = "WordPress") -> str:
+    return f"""
+categories:
+  - name: Homelab
+    services:
+      - name: {name}
+        container: {container}
+"""
+
+
+def test_a_declared_container_never_discovered_is_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "service_categorization.yml"
+    path.write_text(categorization_yaml(), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].subject == "WordPress"
+    assert domain.findings[0].qualifications == (
+        "OPS-0004/technical-debt",
+        "OPS-0004/deployment-misconfiguration",
+        "OPS-0004/energy-inefficiency",
+        "OPS-0004/sustainability-anomaly",
+    )
+
+
+def test_a_declared_container_found_locally_reads_as_clean(monkeypatch, tmp_path):
+    path = tmp_path / "service_categorization.yml"
+    path.write_text(categorization_yaml(), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    monkeypatch.setattr(
+        cli, "DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
+    )
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_discovered_container_not_declared_is_an_alert(monkeypatch, tmp_path):
+    path = tmp_path / "service_categorization.yml"
+    path.write_text(categorization_yaml(), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=[{"Names": "wordpress"}, {"Names": "mystery"}]),
+    )
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].subject == "mystery"
+
+
+def test_a_container_found_only_via_network_discovery_reads_as_clean(monkeypatch, tmp_path):
+    path = tmp_path / "service_categorization.yml"
+    path.write_text(
+        categorization_yaml(container="vikunja", name="Vikunja"), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+
+    observation_path = tmp_path / "network-docker-observation.json"
+    observation_path.write_text(
+        json.dumps(
+            {
+                "network_docker": {
+                    "hosts": [
+                        {"host": "raspberry", "containers": [{"Names": "vikunja"}]}
+                    ]
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", observation_path)
+    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_missing_service_categorization_is_not_instrumented(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is False
+    assert "no service categorization at" in domain.note
+
+
+def test_a_corrupt_network_observation_falls_back_to_local_only(monkeypatch, tmp_path):
+    path = tmp_path / "service_categorization.yml"
+    path.write_text(categorization_yaml(), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+
+    observation_path = tmp_path / "network-docker-observation.json"
+    observation_path.write_text("not valid json", encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", observation_path)
+    monkeypatch.setattr(
+        cli, "DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
+    )
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_docker_not_reachable_falls_back_gracefully(monkeypatch, tmp_path):
+    path = tmp_path / "service_categorization.yml"
+    path.write_text(categorization_yaml(), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(states=OSError("docker not found")),
+    )
+
+    domain = cli.inventory_gap_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+def test_the_default_categorization_path_matches_architecture_render():
+    from aistack.cli import architecture_render
+
+    assert cli.DEFAULT_CATEGORIZATION == architecture_render.DEFAULT_CATEGORIZATION
+
+
+# --------------------------------------------------------------------
 # main() — end to end
 # --------------------------------------------------------------------
 
@@ -724,6 +905,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",
@@ -737,9 +919,10 @@ hosts:
     assert score is not None
     # One from Services (the restarting container), one from
     # Sauvegarde/PRA (the missing backup) — both cite technical-debt.
-    # Tests PRA and État persistant are deliberately not instrumented
-    # here (their `DEFAULT_*` paths point at nothing) so neither
-    # contributes any finding of its own.
+    # Tests PRA, État persistant and Écarts d'inventaire are
+    # deliberately not instrumented here (their `DEFAULT_*` paths
+    # point at nothing) so none of the three contributes a finding of
+    # its own.
     assert len(score.findings) == 2
     assert score.value == 70  # 100 - 2*15
 
@@ -768,6 +951,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -782,6 +966,7 @@ hosts:
 def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(
         cli,
         "DockerProvider",

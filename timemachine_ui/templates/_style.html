@@ -417,3 +417,30 @@ header h1 {
   border-radius: 10px; background: #e6f0ff; color: #16335c;
 }
 .ribbon-group .ribbon-graphic { margin: 0; }
+
+/*
+  Grouped, multi-column flat list (added 2026-09-30, owner reading the
+  real ribbon page: "revoir l'affichage de la liste complète... sous
+  forme de cartes sur plusieurs colonnes, regroupées par symbole
+  graphique"). `ribbon.html` now renders one foldable `.ribbon-group`
+  per stream below the graphic — the same disclosure pattern the
+  Docker/Observation categories above already use, reused rather than
+  a second one invented for the same shape of problem — each holding
+  its own cards in a responsive grid.
+
+  `.band-list`/`.band` themselves are not restyled: they are shared
+  wholesale with `streams.html`/`tree.html`/`node.html` (this file's
+  own header comment), so only this page's own list gets the
+  `.ribbon-card-grid` modifier layered alongside them, never a change
+  to the base rules. `auto-fill, minmax(260px, 1fr)` is what gives the
+  multi-column layout on a wide screen and folds back to a single
+  column under roughly 560px on its own, no separate media query
+  needed — the same "let the browser's own layout degrade gracefully"
+  choice `.ribbon-svg`'s own width rule above already made.
+*/
+.ribbon-entry-groups { margin: 0 0 .4rem; }
+.ribbon-card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: .6rem;
+}
+.ribbon-card-grid .band { margin-bottom: 0; }

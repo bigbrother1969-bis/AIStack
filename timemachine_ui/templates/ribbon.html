@@ -107,46 +107,68 @@
       </details>
     </div>
     <h2 class="section-heading">{{ t('timemachine.ribbon.list_heading') }}</h2>
-    <ul class="band-list">
-      {% for entry in entries %}
-        <li class="band{% if entry.is_gap %} band--gap{% endif %}">
-          <a class="band-link" href="{{ entry.href }}">
-            <div class="band-title">
-              <span class="ribbon-badge" style="color: {{ entry.badge.color }}">{{ entry.badge.shape }}</span>
-              {{ entry.stream }}
-              {% if entry.is_gap %}<span class="ribbon-gap-tag">{{ t('timemachine.ribbon.gap_label') }}</span>{% endif %}
-            </div>
-            <div class="band-row">
-              <span class="k">
-                {% if entry.is_occurred_at %}{{ t('timemachine.ribbon.occurred_at_label') }}{% else %}{{ t('timemachine.ribbon.recorded_at_label') }}{% endif %}
-              </span>
-              <span class="v">{{ entry.instant }}</span>
-            </div>
-            {% if entry.subject %}
-              <div class="band-row">
-                <span class="k">{{ t('timemachine.predicate.stable_subject') }}</span>
-                <span class="v">{{ entry.subject }}</span>
-              </div>
-            {% endif %}
-          </a>
-          {% if entry.subject %}
-            <!--
-              band-tree-link, added 2026-09-30 (owner: "apparier par
-              nom, couverture partielle") — a sibling of `.band-link`
-              above, deliberately not nested inside it: `.band-link`
-              already wraps the whole card in one `<a>`, and an anchor
-              inside an anchor is invalid HTML with inconsistent
-              browser behaviour. `/tree`'s own `q` (substring search,
-              `_filter_tree`) finds this subject's own node when one
-              exists; when none does, `/tree`'s existing `search_empty`
-              state already says so honestly — no new plumbing needed
-              on that side.
-            -->
-            <a class="band-tree-link" href="/tree?q={{ entry.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.ribbon.view_in_tree') }}</a>
-          {% endif %}
-        </li>
+    <!--
+      Grouped by stream (= by symbol: one badge per stream, assigned
+      once in `ribbon_view` over every stream the graph holds — see
+      `_style.html`'s own comment above `.ribbon-entry-groups`).
+      Jinja's `groupby` filter sorts by the given attribute before
+      grouping, so this needs no pre-sorting on the Python side: the
+      backend keeps handing over `entries` in chronological order
+      (unchanged, same paginated `page_entries` as before this
+      change), and grouping stays a template-only concern. Within
+      each group, entries keep their original (chronological) order —
+      `sorted()` is stable.
+    -->
+    <div class="ribbon-entry-groups">
+      {% for stream, group_entries in entries | groupby('stream') %}
+        <details class="ribbon-group" open>
+          <summary>
+            <span class="ribbon-badge" style="color: {{ group_entries[0].badge.color }}">{{ group_entries[0].badge.shape }}</span>
+            {{ stream }}
+            <span class="ribbon-group-count">{{ group_entries | length }}</span>
+          </summary>
+          <ul class="band-list ribbon-card-grid">
+            {% for entry in group_entries %}
+              <li class="band{% if entry.is_gap %} band--gap{% endif %}">
+                <a class="band-link" href="{{ entry.href }}">
+                  {% if entry.is_gap %}
+                    <div class="band-title"><span class="ribbon-gap-tag">{{ t('timemachine.ribbon.gap_label') }}</span></div>
+                  {% endif %}
+                  <div class="band-row">
+                    <span class="k">
+                      {% if entry.is_occurred_at %}{{ t('timemachine.ribbon.occurred_at_label') }}{% else %}{{ t('timemachine.ribbon.recorded_at_label') }}{% endif %}
+                    </span>
+                    <span class="v">{{ entry.instant }}</span>
+                  </div>
+                  {% if entry.subject %}
+                    <div class="band-row">
+                      <span class="k">{{ t('timemachine.predicate.stable_subject') }}</span>
+                      <span class="v">{{ entry.subject }}</span>
+                    </div>
+                  {% endif %}
+                </a>
+                {% if entry.subject %}
+                  <!--
+                    band-tree-link, added 2026-09-30 (owner: "apparier
+                    par nom, couverture partielle") — a sibling of
+                    `.band-link` above, deliberately not nested inside
+                    it: `.band-link` already wraps the whole card in
+                    one `<a>`, and an anchor inside an anchor is
+                    invalid HTML with inconsistent browser behaviour.
+                    `/tree`'s own `q` (substring search,
+                    `_filter_tree`) finds this subject's own node when
+                    one exists; when none does, `/tree`'s existing
+                    `search_empty` state already says so honestly — no
+                    new plumbing needed on that side.
+                  -->
+                  <a class="band-tree-link" href="/tree?q={{ entry.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.ribbon.view_in_tree') }}</a>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </details>
       {% endfor %}
-    </ul>
+    </div>
     {% if total_pages > 1 %}
       <!--
         ribbon-pagination, added 2026-09-30 (owner: "la page rubans...

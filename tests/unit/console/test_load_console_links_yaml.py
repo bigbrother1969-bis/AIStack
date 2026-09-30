@@ -20,9 +20,11 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
           - name: Selection UI
             description: Sélection des candidats
             url: http://GIGABYTE:8181
+            scope: lan
           - name: Cockpit Santé
             description: Score de santé
             url: /health.html
+            scope: public
         """,
     )
 
@@ -33,8 +35,10 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
         name="Selection UI",
         description="Sélection des candidats",
         url="http://GIGABYTE:8181",
+        scope="lan",
     )
     assert links[1].name == "Cockpit Santé"
+    assert links[1].scope == "public"
 
 
 def test_a_definition_missing_the_links_key_is_refused(tmp_path: Path):
@@ -61,7 +65,8 @@ def test_an_entry_that_is_not_a_mapping_is_refused(tmp_path: Path):
 def test_an_entry_missing_name_is_refused(tmp_path: Path):
     path = write(
         tmp_path / "bad.yml",
-        "links:\n  - description: x\n    url: http://GIGABYTE:8181\n",
+        "links:\n  - description: x\n    url: http://GIGABYTE:8181\n"
+        "    scope: lan\n",
     )
 
     with pytest.raises(ValueError, match="missing: name"):
@@ -71,7 +76,8 @@ def test_an_entry_missing_name_is_refused(tmp_path: Path):
 def test_an_entry_missing_description_is_refused(tmp_path: Path):
     path = write(
         tmp_path / "bad.yml",
-        "links:\n  - name: Selection UI\n    url: http://GIGABYTE:8181\n",
+        "links:\n  - name: Selection UI\n    url: http://GIGABYTE:8181\n"
+        "    scope: lan\n",
     )
 
     with pytest.raises(ValueError, match="missing: description"):
@@ -81,10 +87,21 @@ def test_an_entry_missing_description_is_refused(tmp_path: Path):
 def test_an_entry_missing_url_is_refused(tmp_path: Path):
     path = write(
         tmp_path / "bad.yml",
-        "links:\n  - name: Selection UI\n    description: x\n",
+        "links:\n  - name: Selection UI\n    description: x\n    scope: lan\n",
     )
 
     with pytest.raises(ValueError, match="missing: url"):
+        load_console_links_yaml(path)
+
+
+def test_an_entry_missing_scope_is_refused(tmp_path: Path):
+    path = write(
+        tmp_path / "bad.yml",
+        "links:\n  - name: Selection UI\n    description: x\n"
+        "    url: http://GIGABYTE:8181\n",
+    )
+
+    with pytest.raises(ValueError, match="missing: scope"):
         load_console_links_yaml(path)
 
 
@@ -151,6 +168,19 @@ def test_the_real_console_links_definition_loads():
     # LAN-only, deliberately — v1 choice, not a security necessity
     # (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`).
     assert by_name["Assistant de pannes"].url == "http://GIGABYTE:8185"
+    # `scope`, added 2026-09-30: the same LAN/public split this file's
+    # own header comments already narrated by hand above, now a field
+    # `console/html.py` groups cards by.
+    for name in (
+        "Selection UI",
+        "Priorité CPU",
+        "Découverte réseau",
+        "Assistant de pannes",
+        "Time Machine",
+    ):
+        assert by_name[name].scope == "lan", name
+    for name in ("Architecture", "Cockpit Santé"):
+        assert by_name[name].scope == "public", name
 
 
 # --------------------------------------------------------------------
@@ -170,10 +200,12 @@ def _localized(tmp_path: Path) -> Path:
               fr: Score de santé
               en: Health score
             url: /health.html
+            scope: public
           - name: Selection UI
             description:
               fr: Sélection des candidats
             url: http://GIGABYTE:8181
+            scope: lan
         """,
     )
 
@@ -207,7 +239,8 @@ def test_no_language_means_the_reference(tmp_path: Path):
 def test_a_localized_field_without_the_reference_is_refused(tmp_path: Path):
     path = write(
         tmp_path / "console_links.yml",
-        "links:\n  - name: {en: Health}\n    description: x\n    url: /health.html\n",
+        "links:\n  - name: {en: Health}\n    description: x\n    url: /health.html\n"
+        "    scope: public\n",
     )
 
     with pytest.raises(ValueError, match="missing the reference language: fr"):
@@ -217,7 +250,8 @@ def test_a_localized_field_without_the_reference_is_refused(tmp_path: Path):
 def test_an_undeclared_language_code_is_refused(tmp_path: Path):
     path = write(
         tmp_path / "console_links.yml",
-        "links:\n  - name: {fr: Santé, eng: Health}\n    description: x\n    url: /h\n",
+        "links:\n  - name: {fr: Santé, eng: Health}\n    description: x\n"
+        "    url: /h\n    scope: public\n",
     )
 
     with pytest.raises(ValueError, match="undeclared language"):

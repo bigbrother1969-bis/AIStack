@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aistack.contracts.console_link import ConsoleLink
+from aistack.contracts.console_link import LAN, PUBLIC, ConsoleLink
 from aistack.contracts.health_score import (
     ACTION_REQUIRED,
     EXCELLENT,
@@ -109,12 +109,16 @@ def render_html(
     same language (`load_console_links_yaml(..., lang=...)`); each
     absolute link carries `?lang=` so the language follows the visitor
     to a mini-app on another host, where the cookie cannot.
+
+    **Grouped by `ConsoleLink.scope` since 2026-09-30** (the owner:
+    "on regroupera les cartes 'LAN' et les cartes 'Internet'") — see
+    `_render_link_groups` below.
     """
 
     t = translator_for(lang)
     declared = languages if languages is not None else default_languages()
 
-    cards = "\n".join(_render_link(link, t) for link in links)
+    link_groups_html = _render_link_groups(links, t)
     cartouche_html = (
         _render_health_cartouche(
             cockpit, score, score_note, technical_debt_score, technical_debt_note, t
@@ -143,7 +147,7 @@ def render_html(
 {cartouche_html}
 
 <main class="links">
-{cards}
+{link_groups_html}
 </main>
 </body>
 </html>
@@ -250,6 +254,68 @@ def _render_domain_badge(domain: HealthDomain, t: Translator) -> str:
     )
 
 
+def _render_link_groups(links: tuple[ConsoleLink, ...], t: Translator) -> str:
+    """
+    Split the declared cards into two foldable groups by
+    `ConsoleLink.scope` — added 2026-09-30, the owner's own request
+    ("on regroupera les cartes 'LAN' et les cartes 'Internet'").
+
+    Same `<details open><summary>title <span class="…-count">N</span>
+    </summary>…</details>` disclosure `timemachine_ui/templates/
+    ribbon.html` already established for its own two categories
+    (ADR-0011 §26, patch 0082) — open by default here too (this page
+    has 7 cards total across the two groups, not Time Machine's dozens
+    of streams, so there is nothing to hide by default). Coded
+    independently in this module rather than imported: each renderer
+    in this package keeps its own `_STYLE`, "no shared stylesheet, no
+    cross-renderer import" (see this module's own docstring above),
+    and the same holds for the markup that pairs with it.
+
+    A group with no cards is not rendered at all — the same
+    None/empty-renders-nothing idiom `_render_health_cartouche`
+    already holds for a cockpit with no domains. `console_links.yml`
+    declares at least one card of each scope today, but nothing here
+    assumes that stays true.
+    """
+
+    groups = [
+        rendered
+        for rendered in (
+            _render_link_group(
+                LAN,
+                t("console.groups.lan_title"),
+                tuple(link for link in links if link.scope == LAN),
+                t,
+            ),
+            _render_link_group(
+                PUBLIC,
+                t("console.groups.public_title"),
+                tuple(link for link in links if link.scope == PUBLIC),
+                t,
+            ),
+        )
+        if rendered
+    ]
+
+    return "\n".join(groups)
+
+
+def _render_link_group(
+    scope: str, title: str, links: tuple[ConsoleLink, ...], t: Translator
+) -> str:
+    if not links:
+        return ""
+
+    cards = "\n".join(_render_link(link, t) for link in links)
+
+    return f"""  <details class="link-group link-group-{scope}" open>
+    <summary>{escape_text(title)} <span class="link-group-count">{len(links)}</span></summary>
+    <div class="link-group-grid">
+{cards}
+    </div>
+  </details>"""
+
+
 def _render_link(link: ConsoleLink, t: Translator) -> str:
     """
     The card shows the name and description only — no visible URL
@@ -257,12 +323,20 @@ def _render_link(link: ConsoleLink, t: Translator) -> str:
     lives in the `href`, so the card is exactly as clickable as
     before, it just stops repeating a raw hostname the description
     already conveys in French).
+
+    **`card-{link.scope}` added 2026-09-30** — the owner's "bandeau de
+    couleur différent" for a LAN vs a public card, a left-edge accent
+    stripe (`_STYLE` below) deliberately not drawn from the
+    `badge-clean`/`badge-watch`/`badge-alert` health-state colors
+    already used elsewhere on this page: a LAN card is not "healthy"
+    and a public card is not "in alert", so reusing that triptych here
+    would misuse a meaning it already carries.
     """
 
-    return f"""  <a class="card" href="{escape_text(_link_href(link.url, t.lang))}">
-    <h2>{escape_text(link.name)}</h2>
-    <p>{escape_text(link.description)}</p>
-  </a>"""
+    return f"""    <a class="card card-{link.scope}" href="{escape_text(_link_href(link.url, t.lang))}">
+      <h2>{escape_text(link.name)}</h2>
+      <p>{escape_text(link.description)}</p>
+    </a>"""
 
 
 def _link_href(url: str, lang: str) -> str:
@@ -313,7 +387,27 @@ body {
 }
 header { text-align: center; margin-bottom: 2rem; }
 .lockup { max-width: 340px; width: 100%; height: auto; }
-.links {
+.links { margin: 0; }
+.link-group {
+  border: 1px solid #dde4ed; border-radius: 8px; background: #fafbfc;
+  margin: 0 0 1.2rem; padding: 0 1rem 1rem;
+}
+.link-group > summary {
+  cursor: pointer; padding: .8rem 0; list-style: none;
+  display: flex; align-items: center; gap: .5rem;
+  font-weight: 600; font-size: 1rem; color: #16335c;
+}
+.link-group > summary::-webkit-details-marker { display: none; }
+.link-group > summary::before {
+  content: "\25B8"; display: inline-block; color: #888; font-size: .75rem;
+  transition: transform .1s ease;
+}
+.link-group[open] > summary::before { transform: rotate(90deg); }
+.link-group-count {
+  font-size: .75rem; font-weight: 600; padding: .05rem .5rem;
+  border-radius: 10px; background: #e6f0ff; color: #16335c;
+}
+.link-group-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
 }
@@ -328,6 +422,13 @@ header { text-align: center; margin-bottom: 2rem; }
   font-family: Georgia, "Times New Roman", Times, serif;
 }
 .card p { margin: 0 0 .6rem; font-size: .9rem; color: #5b6b7d; }
+/* Scope accent, 2026-09-30 (the owner's "bandeau de couleur
+   différent") — a left-edge stripe, deliberately not the health
+   triptych above: blue-gray for a LAN-only card, amber-gold for a
+   public one, values distinct from badge-watch's own amber
+   (#8a6100/#faf1d8) so the two are never mistaken for one meaning. */
+.card-lan { border-left: 4px solid #3d5a73; }
+.card-public { border-left: 4px solid #a3791a; }
 .health-cartouche {
   border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem 1.2rem;
   margin-bottom: 1.4rem; background: #ffffff;

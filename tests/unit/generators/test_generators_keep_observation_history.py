@@ -251,6 +251,7 @@ def test_console_html_artifact_generator_keeps_history(tmp_path: Path):
             name="Selection UI",
             description="Sélection des candidats",
             url="http://GIGABYTE:8181",
+            scope="lan",
         ),
     )
 

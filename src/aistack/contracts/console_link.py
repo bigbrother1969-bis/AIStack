@@ -2,6 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+# The two network reaches a console card can declare — closed, the
+# same two-way split `console_links.yml`'s own header comment has
+# narrated by hand since 2026-09-18 (the day the owner closed
+# Selection UI and Priorité CPU down to LAN-only, "y compris pour
+# selection et priority") and again since ADR-0011 §1.3 (Time
+# Machine, "LAN-only... regardless of how the other four mini-apps'
+# own LAN choices evolve"): every card is either reachable only on the
+# owner's own LAN, or reachable from the public internet through the
+# reverse proxy. No third reach exists in this heritage today — the
+# same closed-vocabulary discipline `aistack.contracts.health_score`'s
+# `BUCKETS` already holds for a computed score's three buckets.
+LAN = "lan"
+PUBLIC = "public"
+
+SCOPES = (LAN, PUBLIC)
+
 
 @dataclass(frozen=True)
 class ConsoleLink:
@@ -22,11 +38,22 @@ class ConsoleLink:
     (`PLAN-J11` § 4) actually reaches, never rewrites or normalizes
     it, the same "ported, not designed" discipline
     `ServiceDefinition.container` already holds for a name.
+
+    **`scope`, added 2026-09-30** (the owner: "un bandeau de couleur
+    différent pour les cartes accessibles sur le réseau local ou
+    depuis internet"): an explicit declaration, one of `LAN`/`PUBLIC`,
+    never inferred from `url`'s own shape — the same "never guessed"
+    discipline `url` itself already holds above. `console_links.yml`
+    already narrated which of its seven cards is which, by hand, in
+    its own header comments, well before this field existed; `scope`
+    only turns that existing narration into something this renderer
+    can read instead of a human alone.
     """
 
     name: str
     description: str
     url: str
+    scope: str
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -47,4 +74,10 @@ class ConsoleLink:
                 f"{self.name} declares a url this console cannot link to: "
                 f"{self.url!r} — expected http://, https:// or a relative "
                 f"/path"
+            )
+
+        if self.scope not in SCOPES:
+            raise ValueError(
+                f"{self.name} declares a scope this console does not know: "
+                f"{self.scope!r} — expected one of {', '.join(SCOPES)}"
             )

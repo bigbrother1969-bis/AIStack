@@ -8,7 +8,7 @@ import yaml
 from aistack.contracts.console_link import ConsoleLink
 from aistack.i18n import Languages, default_languages, pick_localized
 
-_REQUIRED_LINK_FIELDS = ("name", "description", "url")
+_REQUIRED_LINK_FIELDS = ("name", "description", "url", "scope")
 
 
 def load_console_links_yaml(
@@ -30,6 +30,11 @@ def load_console_links_yaml(
     (the reference language when `lang` is `None`). `url` is never
     localized — where a service lives does not depend on who reads
     the card.
+
+    **`scope`, added 2026-09-30, is never localized either** — same
+    reason as `url`: whether a card is LAN-only or public does not
+    depend on who reads the card, so it is read as a plain string, not
+    passed through `pick_localized`.
     """
 
     declared = languages if languages is not None else default_languages()
@@ -78,4 +83,5 @@ def _load_link(
             data["description"], lang, languages, f"{label}.description"
         ),
         url=data["url"],
+        scope=data["scope"],
     )

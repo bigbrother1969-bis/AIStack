@@ -9,3 +9,6 @@ cartouche:
   technical_debt: "Technical debt:"
   technical_debt_unavailable: "Technical debt: not computed — {note}"
   detail_link: "See the detail by domain →"
+groups:
+  lan_title: "Accessible from the local network"
+  public_title: "Accessible from the internet"

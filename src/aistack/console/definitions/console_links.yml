@@ -100,70 +100,126 @@
 #     lives does not depend on who reads the card. The French text is
 #     exactly what each card said before; the console adds `?lang=` to
 #     each absolute `url` itself, so none is written here.
+#
+#   - **`description.fr` rewritten 2026-09-30**, the owner's own call:
+#     "revoir le texte des cartes pour être plus explicite et plus
+#     didactique pour les utilisateurs, en bannissant le franglais" —
+#     the previous French text named `GIGABYTE`, a port number, and a
+#     `PLAN-J*` reference on every LAN-only card, useful to the owner
+#     debugging this repository but meaningless to someone just
+#     opening the console. Every description now starts with an
+#     infinitive action verb (cadré with the owner: not a mix of verbs
+#     and noun phrases across cards), names no host, no port, no
+#     `PLAN-J*`, and no raw English word in an otherwise French
+#     sentence. `name` (the product name, e.g. "Selection UI", "Time
+#     Machine") and every `description.en` are untouched — the owner
+#     asked only about the French description text. "Accessible
+#     uniquement depuis le réseau local" is kept verbatim on every
+#     LAN-only card (the owner's explicit choice, over an
+#     English-flavoured "LAN uniquement"); Architecture and Cockpit
+#     Santé carry no such mention, unchanged, since both stay public
+#     (see below).
+#
+#   - **`scope`, added 2026-09-30** (the owner: "un bandeau de couleur
+#     différent pour les cartes accessibles sur le réseau local ou
+#     depuis internet et on regroupera les cartes 'LAN' et les cartes
+#     'Internet'"). One of `lan`/`public`
+#     (`aistack.contracts.console_link.LAN`/`PUBLIC`) — an explicit
+#     declaration, not inferred from `url`'s own shape, the same
+#     "never guessed" discipline `url` itself already holds (see its
+#     own docstring). It only turns into a field what this file's own
+#     comments already narrated by hand above: five cards LAN-only
+#     (Selection UI and Priorité CPU since the 2026-09-18 reversal;
+#     Découverte réseau, Assistant de pannes and Time Machine, never
+#     public from their own first day), two cards public (Architecture
+#     and Cockpit Santé, the owner's explicit, unchanged choice to keep
+#     these two open).
 
 links:
   - name: Selection UI
     description:
       fr: >-
-        Sélection des candidats — service Docker Compose,
-        LAN uniquement (GIGABYTE:8181)
+        Choisir les morceaux de musique à préparer pour la
+        synchronisation vers le téléphone Android, et vérifier la
+        place disponible avant de lancer la copie.
       en: >-
         Candidate selection — Docker Compose service,
         LAN only (GIGABYTE:8181)
     url: http://GIGABYTE:8181
+    scope: lan
   - name:
       fr: Priorité CPU
       en: CPU priority
     description:
       fr: >-
-        Arbitrage de priorité CPU — service systemd/uvicorn,
-        LAN uniquement (GIGABYTE:8182)
+        Régler quels programmes ont la priorité sur le processeur
+        quand plusieurs tournent en même temps (par exemple,
+        privilégier la lecture vidéo sur les tâches de fond).
+        Accessible uniquement depuis le réseau local.
       en: >-
         CPU priority arbitration — systemd/uvicorn service,
         LAN only (GIGABYTE:8182)
     url: http://GIGABYTE:8182
+    scope: lan
   - name: Architecture
     description:
-      fr: Diagramme de topologie du homelab (PLAN-J2)
+      fr: >-
+        Consulter le schéma de l'infrastructure personnelle : les
+        machines, les services, et la façon dont ils sont reliés
+        entre eux.
       en: Homelab topology diagram (PLAN-J2)
     url: /architecture.html
+    scope: public
   - name:
       fr: Cockpit Santé
       en: Health cockpit
     description:
-      fr: Score de santé et findings par domaine (PLAN-J7)
+      fr: >-
+        Suivre la note de santé globale de l'infrastructure, et le
+        détail des anomalies détectées domaine par domaine (stockage,
+        sauvegardes, processeur graphique, tests de reprise après
+        incident...).
       en: Health score and findings by domain (PLAN-J7)
     url: /health.html
+    scope: public
   - name:
       fr: Découverte réseau
       en: Network discovery
     description:
       fr: >-
-        Utilisateurs SSH candidats pour le scan réseau — service
-        systemd/uvicorn, LAN uniquement (GIGABYTE:8184)
+        Gérer la liste des noms d'utilisateur SSH essayés
+        automatiquement lors de la recherche des appareils présents
+        sur le réseau local. Accessible uniquement depuis le réseau
+        local.
       en: >-
         Candidate SSH users for the network scan — systemd/uvicorn
         service, LAN only (GIGABYTE:8184)
     url: http://GIGABYTE:8184
+    scope: lan
   - name:
       fr: Assistant de pannes
       en: Troubleshooting assistant
     description:
       fr: >-
-        Guide pas à pas evaluate → reason/explain/recommend sur une
-        panne réelle — service systemd/uvicorn, LAN uniquement
-        (GIGABYTE:8185)
+        Diagnostiquer une panne réelle, pas à pas : analyser la
+        situation, comprendre la cause probable, puis recevoir une
+        recommandation d'action. Accessible uniquement depuis le
+        réseau local.
       en: >-
         Step-by-step guide through evaluate → reason/explain/recommend
         on a real fault — systemd/uvicorn service, LAN only
         (GIGABYTE:8185)
     url: http://GIGABYTE:8185
+    scope: lan
   - name: Time Machine
     description:
       fr: >-
-        Historique complet d'AIStack projeté en graphe PROV-O —
-        service systemd/uvicorn, LAN uniquement (GIGABYTE:8186)
+        Parcourir l'historique complet de l'infrastructure — commandes
+        exécutées, mises à jour de paquets, versions des images,
+        raisonnements de l'assistant IA — sous forme de graphe
+        consultable. Accessible uniquement depuis le réseau local.
       en: >-
         AIStack's complete history projected as a PROV-O graph —
         systemd/uvicorn service, LAN only (GIGABYTE:8186)
     url: http://GIGABYTE:8186
+    scope: lan

@@ -10,3 +10,6 @@ cartouche:
   technical_debt: "Dette technique :"
   technical_debt_unavailable: "Dette technique : non calculée — {note}"
   detail_link: "Voir le détail par domaine →"
+groups:
+  lan_title: "Accessible depuis le réseau local"
+  public_title: "Accessible depuis internet"

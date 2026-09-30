@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aistack.contracts.console_link import ConsoleLink
+from aistack.contracts.console_link import LAN, PUBLIC, ConsoleLink
 from aistack.contracts.health_score import ACTION_REQUIRED, EXCELLENT, TO_WATCH, HealthScore
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
@@ -12,12 +12,16 @@ def selection_ui_link() -> ConsoleLink:
         name="Selection UI",
         description="Sélection des candidats",
         url="http://GIGABYTE:8181",
+        scope=LAN,
     )
 
 
 def health_link() -> ConsoleLink:
     return ConsoleLink(
-        name="Cockpit Santé", description="Score de santé", url="/health.html"
+        name="Cockpit Santé",
+        description="Score de santé",
+        url="/health.html",
+        scope=PUBLIC,
     )
 
 
@@ -83,7 +87,7 @@ def test_every_link_becomes_one_card():
 
     document = render_html(links)
 
-    assert document.count('<a class="card"') == 2
+    assert document.count('<a class="card ') == 2
     assert "Selection UI" in document
     assert "Cockpit Santé" in document
     # ADR-0010 (2026-09-27): an absolute link — a mini-app on another
@@ -102,7 +106,7 @@ def test_a_links_description_is_shown():
 
 def test_html_special_characters_in_a_link_are_escaped():
     link = ConsoleLink(
-        name="A & B <test>", description="x & y", url="/a?b=1&c=2"
+        name="A & B <test>", description="x & y", url="/a?b=1&c=2", scope=PUBLIC
     )
 
     document = render_html((link,))
@@ -117,7 +121,74 @@ def test_no_links_renders_an_empty_grid_not_an_error():
     document = render_html(())
 
     assert document.startswith("<!doctype html>")
-    assert document.count('<a class="card"') == 0
+    assert document.count('<a class="card ') == 0
+
+
+# --------------------------------------------------------------------
+# Scope grouping (2026-09-30) — the owner: "un bandeau de couleur
+# différent pour les cartes accessibles sur le réseau local ou depuis
+# internet et on regroupera les cartes 'LAN' et les cartes 'Internet'"
+# --------------------------------------------------------------------
+
+
+def test_a_lan_and_a_public_card_are_placed_in_different_groups():
+    document = render_html((selection_ui_link(), health_link()))
+
+    assert document.count('<details class="link-group') == 2
+    assert 'class="link-group link-group-lan"' in document
+    assert 'class="link-group link-group-public"' in document
+
+
+def test_each_group_shows_its_title_and_count():
+    document = render_html((selection_ui_link(), health_link()))
+
+    assert "Accessible depuis le réseau local" in document
+    assert "Accessible depuis internet" in document
+    assert document.count('<span class="link-group-count">1</span>') == 2
+
+
+def test_a_group_with_no_cards_of_that_scope_is_not_rendered():
+    document = render_html((selection_ui_link(),))
+
+    assert "link-group-lan" in document
+    assert "link-group-public" not in document
+    assert "Accessible depuis internet" not in document
+
+
+def test_a_card_carries_its_scope_as_a_css_class():
+    document = render_html((selection_ui_link(), health_link()))
+
+    assert '<a class="card card-lan"' in document
+    assert '<a class="card card-public"' in document
+
+
+def test_several_cards_of_the_same_scope_share_one_group():
+    other_lan_link = ConsoleLink(
+        name="Priorité CPU",
+        description="Arbitrage de priorité CPU",
+        url="http://GIGABYTE:8182",
+        scope=LAN,
+    )
+
+    document = render_html((selection_ui_link(), other_lan_link, health_link()))
+
+    assert document.count('<details class="link-group') == 2
+    assert document.count('<span class="link-group-count">2</span>') == 1
+    assert document.count('<span class="link-group-count">1</span>') == 1
+
+
+def test_the_groups_are_folded_open_by_default():
+    """
+    Only 7 cards total across the two groups on the real page — the
+    owner's own Q3 answer ("Deux blocs dépliés par défaut") over the
+    Time Machine ribbon's own default-open-but-collapsible-at-scale
+    precedent, which exists for dozens of streams, not 7 cards.
+    """
+
+    document = render_html((selection_ui_link(), health_link()))
+
+    assert '<details class="link-group link-group-lan" open>' in document
+    assert '<details class="link-group link-group-public" open>' in document
 
 
 # --------------------------------------------------------------------

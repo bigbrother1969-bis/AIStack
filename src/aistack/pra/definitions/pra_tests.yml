@@ -120,6 +120,20 @@
 # re-dated: that entry is the timed restore of the other six stacks,
 # unaffected by this addition, and this paragraph is what records the
 # scope actually changing.
+#
+# **1.6 tranche 4 addendum, 2026-09-30 (OPS-0004's eighth reference
+# case).** `pra_tests_domain` (`aistack.cli.health_render`/
+# `console_render`) now also compares this file's own declared
+# `services:` names against `backup_strategy.yml`'s own declared
+# `has_state: true` services (`OPS-0010`) and flags any stateful
+# service missing here entirely — `wordpress`, `changedetection`,
+# `homepage`, `npm`, `pocketid`, `uptime-kuma`, `vaultwarden` and
+# `vikunja`, confirmed 2026-09-30 (Vikunja's own real restore test
+# above was never turned into a `services:` entry here — this check
+# is what surfaces that). Nothing in this file changed to add the
+# check; a stateful service still only ever gets an entry here by the
+# owner's own hand, after a real restore test — never `last_test`
+# invented ahead of one.
 
 max_age_days: 90
 

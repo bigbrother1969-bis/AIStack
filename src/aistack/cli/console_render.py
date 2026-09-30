@@ -42,7 +42,7 @@ from aistack.runtime.inventory_gap import (
     discovered_containers_from_network_observation,
     find_inventory_gaps,
 )
-from aistack.runtime.pra_test_gap import find_pra_test_gaps
+from aistack.runtime.pra_test_gap import find_pra_test_gaps, find_undeclared_pra_tests
 from aistack.runtime.storage_shortage import find_storage_shortage
 from aistack.runtime.uncovered_state_gap import find_uncovered_state
 
@@ -257,6 +257,26 @@ def pra_tests_domain() -> HealthDomain:
         )
 
     gaps = find_pra_test_gaps(readings, thresholds.thresholds)
+
+    try:
+        declarations = load_backup_strategy_yaml(DEFAULT_BACKUP_STRATEGY)
+        stateful_services = [d.service for d in declarations if d.has_state]
+        declared_services = [reading.service for reading in readings]
+        observed_at = readings[0].observed_at if readings else None
+
+        if observed_at is not None:
+            gaps = gaps + find_undeclared_pra_tests(
+                stateful_services,
+                declared_services,
+                thresholds.thresholds,
+                observed_at,
+            )
+    except (ValueError, OSError):
+        # `backup_strategy.yml` is optional, best-effort data for this
+        # one check — its absence or corruption narrows this render to
+        # the three reasons `find_pra_test_gaps` alone already
+        # detects, never failing the whole domain.
+        pass
 
     return HealthDomain(
         name="Tests PRA", instrumented=True, findings=evaluate_pra_tests(gaps)

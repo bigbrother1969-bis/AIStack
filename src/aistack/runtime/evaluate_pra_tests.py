@@ -31,13 +31,27 @@ was explicitly excluded by the owner and is never cited here — the
 same exclusion `evaluate_services` already makes for its own third
 reference incident, for the same case-by-case reason: examined and
 found not to apply, not assumed absent by analogy.
+
+**A fourth reason, an eighth reference case, the same three
+qualifications.** 1.6 tranche 4 (R9, 2026-09-30) reopened this
+domain once more to add `NOT_DECLARED`: a service `OPS-0010` already
+declares stateful but `OPS-0009`'s own file never names at all. Cadred
+separately (2026-09-30) rather than assumed by analogy with the first
+three reasons — the owner confirmed the same three qualifications
+apply, energy inefficiency staying excluded here too.
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 
-from aistack.contracts.pra_test_gap import FAILED_REASON, STALE, PraTestGap
+from aistack.contracts.pra_test_gap import (
+    FAILED_REASON,
+    NOT_DECLARED,
+    STALE,
+    UNTESTED,
+    PraTestGap,
+)
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.undeclared import UNDECLARED
 
@@ -138,6 +152,20 @@ def _interpretation(gap: PraTestGap) -> str:
             f"sustainability anomaly, deployment misconfiguration)."
         )
 
+    if gap.reason == NOT_DECLARED:
+        return (
+            f"{service} is declared stateful in OPS-0010's own file but "
+            f"names no entry at all in OPS-0009's own file — the "
+            f"condition OPS-0004's eighth reference case names "
+            f"(technical debt, sustainability anomaly, deployment "
+            f"misconfiguration)."
+        )
+
+    # `PraTestGap.__post_init__` restricts `reason` to `REASONS`
+    # (`FAILED_REASON`/`STALE`/`NOT_DECLARED`/`UNTESTED`); the three
+    # above are each checked, so only `UNTESTED` reaches here.
+    assert gap.reason == UNTESTED
+
     return (
         f"{service} has never had a restore test recorded — the "
         f"condition OPS-0009's restore-test freshness gap names "
@@ -163,6 +191,16 @@ def _remediation(gap: PraTestGap) -> str:
             f"outcome in OPS-0009's own declared file — the gap this "
             f"reference case names, not a one-time manual test."
         )
+
+    if gap.reason == NOT_DECLARED:
+        return (
+            f"Add {service} to OPS-0009's own declared file with "
+            f"last_test: null — never a guessed date or status — then "
+            f"perform its first real restore test and record the real "
+            f"outcome."
+        )
+
+    assert gap.reason == UNTESTED
 
     return (
         f"Perform {service}'s first real restore test and record its "

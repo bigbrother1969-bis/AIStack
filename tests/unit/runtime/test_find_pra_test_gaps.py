@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
-from aistack.contracts.pra_test_gap import FAILED_REASON, STALE, UNTESTED
+from aistack.contracts.pra_test_gap import FAILED_REASON, NOT_DECLARED, STALE, UNTESTED
 from aistack.contracts.pra_test_reading import FAILED, SUCCESS, PraTestReading
 from aistack.contracts.pra_test_threshold import PraTestThreshold
-from aistack.runtime.pra_test_gap import find_pra_test_gaps
+from aistack.runtime.pra_test_gap import find_pra_test_gaps, find_undeclared_pra_tests
 
 SERVICE = "nextcloud"
 
@@ -98,3 +98,101 @@ def test_only_the_service_crossing_its_own_threshold_is_flagged_in_a_batch():
 def test_an_empty_reading_set_flags_nothing():
 
     assert find_pra_test_gaps([], [threshold()]) == ()
+
+
+def test_a_stateful_service_not_declared_at_all_is_flagged():
+
+    gaps = find_undeclared_pra_tests(
+        stateful_services=["wordpress"],
+        declared_services=["nextcloud"],
+        thresholds=[threshold()],
+        observed_at=datetime.now(timezone.utc),
+    )
+
+    assert len(gaps) == 1
+    assert gaps[0].reason == NOT_DECLARED
+    assert gaps[0].reading.service == "wordpress"
+    assert gaps[0].reading.status is None
+
+
+def test_a_stateful_service_already_declared_is_not_flagged():
+
+    gaps = find_undeclared_pra_tests(
+        stateful_services=["nextcloud"],
+        declared_services=["nextcloud"],
+        thresholds=[threshold()],
+        observed_at=datetime.now(timezone.utc),
+    )
+
+    assert gaps == ()
+
+
+def test_a_declared_service_with_no_stateful_counterpart_is_not_flagged():
+    """
+    The owner's own choice at cadrage (2026-09-30): one sense only. A
+    host-level `pra_tests.yml` entry with no `has_state: true`
+    counterpart (`gigabyte`/`raspberry`) is never flagged — that
+    would be a false positive, not a real gap.
+    """
+
+    gaps = find_undeclared_pra_tests(
+        stateful_services=["nextcloud"],
+        declared_services=["nextcloud", "raspberry"],
+        thresholds=[threshold()],
+        observed_at=datetime.now(timezone.utc),
+    )
+
+    assert gaps == ()
+
+
+def test_undeclared_gaps_carry_the_one_flat_threshold():
+
+    gaps = find_undeclared_pra_tests(
+        stateful_services=["wordpress"],
+        declared_services=[],
+        thresholds=[threshold(max_age_days=42.0)],
+        observed_at=datetime.now(timezone.utc),
+    )
+
+    assert gaps[0].max_age_days == 42.0
+
+
+def test_undeclared_gaps_are_sorted_and_deduplicated():
+
+    gaps = find_undeclared_pra_tests(
+        stateful_services=["vikunja", "wordpress", "vikunja"],
+        declared_services=[],
+        thresholds=[threshold()],
+        observed_at=datetime.now(timezone.utc),
+    )
+
+    assert [gap.reading.service for gap in gaps] == ["vikunja", "wordpress"]
+
+
+def test_no_threshold_at_all_yields_no_undeclared_gaps():
+    """
+    Mirrors `find_pra_test_gaps`'s own "not measured is not zero"
+    convention: with no declared threshold to attribute, this check
+    reports nothing rather than inventing one.
+    """
+
+    gaps = find_undeclared_pra_tests(
+        stateful_services=["wordpress"],
+        declared_services=[],
+        thresholds=[],
+        observed_at=datetime.now(timezone.utc),
+    )
+
+    assert gaps == ()
+
+
+def test_an_empty_stateful_set_flags_nothing():
+
+    gaps = find_undeclared_pra_tests(
+        stateful_services=[],
+        declared_services=["nextcloud"],
+        thresholds=[threshold()],
+        observed_at=datetime.now(timezone.utc),
+    )
+
+    assert gaps == ()

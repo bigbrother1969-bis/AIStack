@@ -413,6 +413,65 @@ explicitly out of scope (`pra_tests.yml`, `cmdb_probe_targets.yml`,
 extending `aistack.package_manager`, widening the declared CIDR) — is in
 `OPS-0011`.
 
+## Eighth reference case — Tests PRA, service non déclaré, 2026-09-30, qualified
+
+An eighth case, the roadmap's own last remaining bullet under its own R9
+constat (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`, 1.6 tranche 4), examined
+against `OPS-0004`'s vocabulary directly with the owner, 2026-09-30.
+
+**Not an incident — a declared requirement, the same distinction the
+fourth through seventh reference cases recorded.** R9's own text: "Liste
+des services de `pra_tests.yml` proposée depuis la découverte ; résultats
+seulement issus de vrais tests." No service was found untested as an
+incident here — the requirement to detect one, before it is even declared
+for testing, is what this case qualifies.
+
+**Not a new reference case in a new domain — a fourth reason inside the
+existing `Tests PRA` domain**, the owner's own choice at cadrage
+(2026-09-30): a service `OPS-0010`'s own file (`backup_strategy.yml`)
+already declares stateful, but `OPS-0009`'s own file (`pra_tests.yml`)
+does not declare at all — one step further upstream than the domain's
+existing `UNTESTED` reason, which already requires a `services:` entry
+to exist.
+
+Examined against the vocabulary, 2026-09-30, the owner found this case to
+carry the same three qualifications the domain's first three reasons
+already cite:
+
+- **technical debt** — yes;
+- **sustainability anomaly** — yes;
+- **deployment misconfiguration** — yes;
+- **energy inefficiency** — excluded, the same exclusion the domain's
+  first three reasons already hold, not re-derived for this reason alone.
+
+**Scope, declared alongside the qualifications.** Four questions were put
+to the owner before any code, per `ARC-P-006`:
+
+- **Source of the periphery** — the owner chose **`backup_strategy.yml`
+  (`has_state: true`)**, not `service_categorization.yml`: the latter
+  carries no statefulness signal at all, while the former already
+  instruments exactly the distinction this case needs (`OPS-0010`).
+- **Direction** — **one sense only**: a stateful service missing from
+  `pra_tests.yml`. The reverse (a `pra_tests.yml` entry with no
+  `has_state: true` counterpart) is never checked — `gigabyte`/`raspberry`
+  are host-level entries tested by imaging, not services, and would be
+  false positives under a two-sense check.
+- **Exposure** — a **fourth reason inside the existing `Tests PRA`
+  domain**, not an eighth cockpit domain: no change to
+  `health_score_weights.yml`, no new `OPS-0004` weight decision.
+- **Mechanism** — **calculated at render time**, the same discipline
+  `OPS-0011` already holds: no new file, no new CLI command. The finding's
+  own text states what to add (`name` + `last_test: null`); the owner
+  edits `pra_tests.yml` by hand.
+
+Full detail — the two declared sources joined, the fourth reason's own
+shape, and the "never a fabricated `last_test`" guarantee (the roadmap's
+own words, "résultats seulement issus de vrais tests") — is in
+`aistack.contracts.pra_test_gap`/`aistack.runtime.pra_test_gap`'s own
+docstrings; unlike the sixth and seventh reference cases, this one adds no
+new governance register of its own, reusing `OPS-0009`/`OPS-0010` as
+already declared.
+
 ## What this register does not do
 
 **Updated 2026-09-11 (fourth time, for the fifth reference case)** — this
@@ -487,6 +546,15 @@ confirmed by `find_inventory_gaps` — a container declared in
 and declared nowhere, joined against `OPS-0011`'s own two sources (the
 local Docker catalog, and the last network discovery).
 
+As of 1.6 tranche 4 (Tests PRA domain, fourth reason, 2026-09-30), the
+same three qualifications the domain's first three reasons already cite
+(technical debt, sustainability anomaly, deployment misconfiguration) are
+cited a further time by `aistack.runtime.evaluate_pra_tests`, for a
+`PraTestGap` citing `NOT_DECLARED` — a service `OPS-0010`'s own file
+declares stateful but `OPS-0009`'s own file does not name at all, found
+by `find_undeclared_pra_tests`, joining `backup_strategy.yml`'s declared
+services against `pra_tests.yml`'s own.
+
 Every one of `OPS-0004`'s four qualifications is now cited by multiple
-wired `RuntimeFinding` producers, across seven reference cases — the
+wired `RuntimeFinding` producers, across eight reference cases — the
 vocabulary's coverage is no longer a gap this section needs to track.

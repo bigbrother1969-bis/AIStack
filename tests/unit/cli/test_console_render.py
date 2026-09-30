@@ -416,11 +416,56 @@ services:
         encoding="utf-8",
     )
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
 
     domain = cli.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
+
+
+def test_pra_tests_domain_reports_a_not_declared_alert(monkeypatch, tmp_path):
+    """
+    1.6 tranche 4 (R9, 2026-09-30, OPS-0004's eighth reference case):
+    a service `backup_strategy.yml` already declares stateful but
+    `pra_tests.yml` does not name at all.
+    """
+
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(
+        """
+max_age_days: 90
+services:
+  - name: nextcloud
+    last_test: null
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+
+    backup_path = tmp_path / "backup_strategy.yml"
+    backup_path.write_text(
+        """
+services:
+  - name: nextcloud
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+  - name: wordpress
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert {f.subject for f in domain.findings} == {"nextcloud", "wordpress"}
 
 
 def test_uncovered_state_domain_reports_an_alert(monkeypatch, tmp_path):

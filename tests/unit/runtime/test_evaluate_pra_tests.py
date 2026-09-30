@@ -9,7 +9,13 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from aistack.contracts.pra_test_gap import FAILED_REASON, STALE, UNTESTED, PraTestGap
+from aistack.contracts.pra_test_gap import (
+    FAILED_REASON,
+    NOT_DECLARED,
+    STALE,
+    UNTESTED,
+    PraTestGap,
+)
 from aistack.contracts.pra_test_reading import FAILED, SUCCESS, PraTestReading
 from aistack.contracts.runtime_finding import CitedReading
 from aistack.contracts.undeclared import UNDECLARED
@@ -57,6 +63,16 @@ def stale_gap(age_days: float = 200.0, service: str = SERVICE) -> PraTestGap:
         ),
         max_age_days=90.0,
         reason=STALE,
+    )
+
+
+def not_declared_gap(service: str = SERVICE) -> PraTestGap:
+    return PraTestGap(
+        reading=PraTestReading(
+            service=service, observed_at=datetime.now(timezone.utc)
+        ),
+        max_age_days=90.0,
+        reason=NOT_DECLARED,
     )
 
 
@@ -157,3 +173,33 @@ def test_one_finding_per_gap():
 
     assert {f.subject for f in findings} == {"a", "b"}
     assert all(f.qualifications == PRA_TEST_GAP_QUALIFICATIONS for f in findings)
+
+
+def test_a_not_declared_interpretation_names_both_registers():
+
+    findings = evaluate_pra_tests([not_declared_gap()])
+
+    interpretation = findings[0].interpretation
+    assert "OPS-0010" in interpretation
+    assert "OPS-0009" in interpretation
+
+
+def test_a_not_declared_finding_carries_the_same_three_qualifications():
+    """
+    The owner's own choice at cadrage (2026-09-30, second round): the
+    eighth reference case cites the same three qualifications as the
+    first three reasons in this domain — energy inefficiency stays
+    excluded.
+    """
+
+    findings = evaluate_pra_tests([not_declared_gap()])
+
+    assert findings[0].qualifications == PRA_TEST_GAP_QUALIFICATIONS
+
+
+def test_a_not_declared_remediation_never_invents_a_test_outcome():
+
+    findings = evaluate_pra_tests([not_declared_gap()])
+
+    remediation = findings[0].remediation
+    assert "last_test: null" in remediation

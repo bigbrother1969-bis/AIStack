@@ -2,7 +2,13 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from aistack.contracts.pra_test_gap import FAILED_REASON, STALE, UNTESTED, PraTestGap
+from aistack.contracts.pra_test_gap import (
+    FAILED_REASON,
+    NOT_DECLARED,
+    STALE,
+    UNTESTED,
+    PraTestGap,
+)
 from aistack.contracts.pra_test_reading import FAILED, SUCCESS, PraTestReading
 
 SERVICE = "nextcloud"
@@ -113,4 +119,23 @@ def test_stale_is_refused_exactly_at_the_threshold_boundary():
     with pytest.raises(ValueError, match="not what the threshold names"):
         PraTestGap(
             reading=successful_reading(age_days=90.0), max_age_days=90.0, reason=STALE
+        )
+
+
+def test_not_declared_is_accepted_when_the_reading_has_no_status():
+
+    gap = PraTestGap(
+        reading=untested_reading(), max_age_days=90.0, reason=NOT_DECLARED
+    )
+
+    assert gap.reason == NOT_DECLARED
+
+
+def test_not_declared_is_refused_when_the_reading_reports_a_status():
+
+    with pytest.raises(ValueError, match="cites 'not_declared'"):
+        PraTestGap(
+            reading=successful_reading(age_days=1),
+            max_age_days=90.0,
+            reason=NOT_DECLARED,
         )

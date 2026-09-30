@@ -4,33 +4,53 @@ from dataclasses import dataclass
 
 from aistack.contracts.pra_test_reading import FAILED, SUCCESS, PraTestReading
 
-# The three conditions this domain detects — closed the same way
-# `BackupGap.REASONS` is: no fourth reason without a real case naming
-# one (`GOV-P-001`). A declared service is either never tested, was
-# tested and the test itself failed, or was tested and succeeded but
-# the result is now older than `OPS-0009` allows — there is no fourth
-# state in what the owner asked this gap to reopened (2026-09-23).
+# Four conditions this domain detects — the fourth added 1.6 tranche 4
+# (R9, 2026-09-30, OPS-0004's eighth reference case), the first three
+# unchanged since the gap was reopened (2026-09-23). A declared
+# service is either never tested, was tested and the test itself
+# failed, or was tested and succeeded but the result is now older than
+# `OPS-0009` allows — and, since tranche 4, a service `OPS-0010`
+# already declares stateful (`has_state: true`,
+# `backup_strategy.yml`) may not be declared in `OPS-0009`'s own file
+# at all, one step further upstream than `UNTESTED` (which already
+# names a `services:` entry, only with `last_test: null`). No fifth
+# reason without a real case naming one (`GOV-P-001`).
 UNTESTED = "untested"
 STALE = "stale"
 FAILED_REASON = "failed"
+NOT_DECLARED = "not_declared"
 
-REASONS = (UNTESTED, STALE, FAILED_REASON)
+REASONS = (UNTESTED, STALE, FAILED_REASON, NOT_DECLARED)
 
 
 @dataclass(frozen=True)
 class PraTestGap:
     """
-    One declared service already found to have failed the check
-    `OPS-0009` declares for it: never tested, a test already recorded
-    as failed, or a successful test now older than the declared
-    threshold allows.
+    One declared (or, since tranche 4, should-be-declared) service
+    already found to have failed the check `OPS-0009` declares for it:
+    never tested, a test already recorded as failed, a successful
+    test now older than the declared threshold allows, or — the
+    eighth `OPS-0004` reference case, 1.6 tranche 4, 2026-09-30 — not
+    even declared in `pra_tests.yml` at all, despite `OPS-0010`
+    already declaring it stateful.
 
     Mirrors `BackupGap`: the reading and the reason it was already
     found to fail, enforced here rather than only in the caller —
-    `find_pra_test_gaps` (`aistack.runtime.pra_test_gap`) only ever
-    constructs a `PraTestGap` already confirmed to be one; it does not
-    re-derive "untested, failed, or stale" from a bare reading handed
-    to it from elsewhere.
+    `find_pra_test_gaps`/`find_undeclared_pra_tests`
+    (`aistack.runtime.pra_test_gap`) only ever construct a `PraTestGap`
+    already confirmed to be one; neither re-derives "untested, failed,
+    stale, or not declared" from a bare reading handed to it from
+    elsewhere.
+
+    **`NOT_DECLARED` carries a synthesized reading, not one the loader
+    itself produced.** `find_undeclared_pra_tests` builds a
+    `PraTestReading` with `status=None` for a stateful service
+    `pra_tests.yml`'s own `services:` list never names — the same
+    honest "nothing to report" shape `UNTESTED` already carries for a
+    declared service with `last_test: null`, never a fabricated status
+    or date (the roadmap's own words: "résultats seulement issus de
+    vrais tests"). The distinction between the two lives in `reason`
+    alone, not in the reading's own shape.
 
     **`FAILED_REASON` fires immediately, without a staleness check.**
     A restore already recorded as having failed is a gap the moment it
@@ -67,6 +87,14 @@ class PraTestGap:
                 f"{self.reading.service} cites 'untested' but its own "
                 f"reading reports a last test status of "
                 f"{self.reading.status!r}"
+            )
+
+        if self.reason == NOT_DECLARED and self.reading.status is not None:
+            raise ValueError(
+                f"{self.reading.service} cites 'not_declared' but its own "
+                f"reading reports a last test status of "
+                f"{self.reading.status!r} — a service with a real recorded "
+                f"outcome is already declared, that is not this reason"
             )
 
         if self.reason == FAILED_REASON:

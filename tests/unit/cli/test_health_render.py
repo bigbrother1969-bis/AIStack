@@ -499,6 +499,7 @@ def test_a_never_tested_service_is_an_alert(monkeypatch, tmp_path):
     path = tmp_path / "pra_tests.yml"
     path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
 
     domain = cli.pra_tests_domain()
 
@@ -517,6 +518,7 @@ def test_a_failed_test_is_an_alert(monkeypatch, tmp_path):
         pra_tests_yaml(status="failed", date="2026-01-01"), encoding="utf-8"
     )
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
 
     domain = cli.pra_tests_domain()
 
@@ -533,6 +535,7 @@ def test_a_stale_successful_test_is_an_alert(monkeypatch, tmp_path):
         pra_tests_yaml(status="success", date=stale_date), encoding="utf-8"
     )
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
 
     domain = cli.pra_tests_domain()
 
@@ -547,6 +550,7 @@ def test_a_fresh_successful_test_reads_as_clean(monkeypatch, tmp_path):
         pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8"
     )
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
 
     domain = cli.pra_tests_domain()
 
@@ -561,6 +565,104 @@ def test_a_missing_pra_tests_definition_is_not_instrumented(monkeypatch, tmp_pat
 
     assert domain.instrumented is False
     assert "no PRA test definition at" in domain.note
+
+
+# --------------------------------------------------------------------
+# pra_tests_domain — the fourth reason, 1.6 tranche 4 (R9,
+# 2026-09-30, OPS-0004's eighth reference case): a service
+# backup_strategy.yml already declares stateful but pra_tests.yml
+# does not declare at all.
+# --------------------------------------------------------------------
+
+
+def test_a_stateful_service_not_declared_is_an_alert(monkeypatch, tmp_path):
+    fresh_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(
+        pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+
+    backup_path = tmp_path / "backup_strategy.yml"
+    backup_path.write_text(
+        """
+services:
+  - name: nextcloud
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+  - name: wordpress
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+    assert domain.findings[0].subject == "wordpress"
+    assert domain.findings[0].qualifications == (
+        "OPS-0004/technical-debt",
+        "OPS-0004/sustainability-anomaly",
+        "OPS-0004/deployment-misconfiguration",
+    )
+
+
+def test_a_stateful_service_already_declared_is_not_flagged_twice(
+    monkeypatch, tmp_path
+):
+    fresh_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(
+        pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8"
+    )
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+
+    backup_path = tmp_path / "backup_strategy.yml"
+    backup_path.write_text(backup_strategy_yaml(has_state=True, engines=[]), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert domain.findings == ()
+
+
+def test_a_missing_backup_strategy_still_leaves_the_domain_instrumented(
+    monkeypatch, tmp_path
+):
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
+
+
+def test_a_corrupt_backup_strategy_falls_back_to_the_three_existing_reasons(
+    monkeypatch, tmp_path
+):
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+
+    backup_path = tmp_path / "backup_strategy.yml"
+    backup_path.write_text("services: [not, valid,\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+
+    domain = cli.pra_tests_domain()
+
+    assert domain.instrumented is True
+    assert len(domain.findings) == 1
 
 
 # --------------------------------------------------------------------

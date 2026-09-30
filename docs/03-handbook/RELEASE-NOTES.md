@@ -39,6 +39,49 @@ it says what the build was *for*.
 
 ---
 
+## 1.5.2 — 2026-09-30
+
+**The Time Machine ribbon rebuilt around what a real production graph showed
+it needed (`ADR-0011` § 26), and the graphic-debt catch-up the 26 September
+charte graphique had left undone everywhere outside the three static
+pages.**
+
+- **Ruban du temps v2.** A real horizontal time axis per stream, not a bare
+  chronological list — split into its own two real categories (the four
+  Docker collectors, and everything else), each foldable with its own
+  independent axis. Marks too close together to tell apart merge into a
+  counted, still-navigable cluster; a second pass also accounts for a
+  cluster's own label width, and a whole lane no individual marks can
+  honestly represent any more (one production stream alone had accumulated
+  49,125 instants) renders as a single summary badge instead. A navigation
+  cursor opens the nearest instant on click, or on releasing a drag; on a
+  touch screen, a tap does the same — deliberately short of drag-to-scrub,
+  which would fight the same horizontal gesture the ribbon's own mobile
+  scrolling needs. The ribbon and the network tree now cross-link by name
+  (`aistack:stableSubject`) in both directions — a real but partial bridge,
+  honestly labelled where it doesn't reach — and the ribbon's own stream
+  filter now survives a language switch, like the tree and node screens
+  already did.
+- **Graphic-debt catch-up.** Two audits — `console.html`/`architecture.html`/
+  `health.html`, then Time Machine's three older screens — closed every gap
+  the 26 September charte graphique had left behind: a missing viewport
+  meta tag and favicon, a residual pre-charte grey, a diagram collapsing
+  unreadably on a narrow screen, five screens each hand-copying their own
+  navigation bar instead of sharing one, and Time Machine's background,
+  card borders and section titles never having received the charte at all.
+  Every screen this project serves now shares the same background,
+  borders, typography, and adapts to the real width of the window instead
+  of a fixed column.
+- **Console cards, rewritten.** The seven console cards' descriptions are
+  now written for the person using them rather than the person building
+  them — no internal host names or plan references, every description
+  opens with what the card lets you do. Cards are now grouped by where
+  they're reachable from ("Accessible depuis le réseau local" /
+  "Accessible depuis internet"), each with its own colour band, rather
+  than left to a paragraph of prose to explain.
+
+2581 tests, 75 knowledge artifacts, `clean: True`.
+
 ## 1.5.1 — 2026-09-28
 
 **1.5's fourth and last named collector, deferred past 1.5.0, plus the

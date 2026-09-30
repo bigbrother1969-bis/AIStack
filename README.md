@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.5.1
+### Concrete capabilities, as of 1.5.2
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -112,7 +112,10 @@ AIStack transforms observations into sustainable knowledge assets.
   troubleshooting assistant, all reachable from the same page. Only the
   console itself, Architecture and Cockpit Santé are reachable from
   outside the LAN — every other screen (Selection UI, Priority CPU,
-  network discovery, the troubleshooting assistant) is LAN-only.
+  network discovery, the troubleshooting assistant) is LAN-only. As of
+  1.5.2: each card's description is written for the person using it, in
+  plain French, and the cards are grouped by whether they're reachable
+  from the local network or from the internet.
 - **French and English interface** — the console is served by AIStack
   itself, with a Settings page; every screen (console, Architecture,
   Health Cockpit and the four mini-apps) switches between French and
@@ -147,7 +150,14 @@ AIStack transforms observations into sustainable knowledge assets.
   ribbon (a chronological, per-stream-filterable, gap-aware view across
   every stream the graph holds) and an upgrade correlation that links
   the package inventory nearest before and after each detected
-  image-digest change, no bounded time window.
+  image-digest change, no bounded time window. As of 1.5.2: the ribbon
+  gained a real per-category time axis, label-aware clustering with a
+  whole-lane summary for very high-volume streams, a touch tap, a
+  by-name cross-link with the network tree in both directions, and a
+  filter that survives a language switch — and every Time Machine
+  screen, plus the console, Architecture and Health Cockpit pages, now
+  shares one adaptive full-width layout and the same charte graphique
+  (background, card borders, shared navigation).
 - **Knowledge integrity validation** — eighteen checks run against the
   governed documentation on every test suite and before every
   publication.
@@ -198,8 +208,8 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.5.1**: `pytest -q` — **2538 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **537 source files**;
+**As of 1.5.2**: `pytest -q` — **2581 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **538 source files**;
 `python3 -m aistack.cli.knowledge_integrity` — **75 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 

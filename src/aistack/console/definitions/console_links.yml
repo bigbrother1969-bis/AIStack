@@ -150,13 +150,23 @@
 #     a relative path this console serves itself, not a fact
 #     `instance_config.yml` has any port for.
 
+#   - **Selection UI's own missing mention, fixed 2026-09-30** (the
+#     owner, reading the real console: "il faut rajouter 'Accessible
+#     uniquement depuis le réseau local' pour la carte Selection UI").
+#     Every other `scope: lan` card's own `description.fr` already
+#     ends with this sentence, per the 2026-09-30 rewrite documented
+#     above — Selection UI's own entry was the one card the rewrite
+#     missed, a real omission against this file's own stated rule, not
+#     a second owner decision.
+
 links:
   - name: Selection UI
     description:
       fr: >-
         Choisir les morceaux de musique à préparer pour la
         synchronisation vers le téléphone Android, et vérifier la
-        place disponible avant de lancer la copie.
+        place disponible avant de lancer la copie. Accessible
+        uniquement depuis le réseau local.
       en: >-
         Candidate selection — Docker Compose service,
         LAN only (GIGABYTE:8181)

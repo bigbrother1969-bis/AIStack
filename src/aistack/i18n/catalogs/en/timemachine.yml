@@ -70,3 +70,6 @@ ribbon:
   list_heading: "Full list (accessible view)"
   group_docker: "Docker collectors (1.5)"
   group_observation: "Observation history"
+  pagination_prev: "◀ Previous page"
+  pagination_next: "Next page ▶"
+  pagination_summary: "Page {page} of {total_pages} ({total} events)"

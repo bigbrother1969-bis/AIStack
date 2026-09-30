@@ -147,6 +147,27 @@
         </li>
       {% endfor %}
     </ul>
+    {% if total_pages > 1 %}
+      <!--
+        ribbon-pagination, added 2026-09-30 (owner: "la page rubans...
+        c'est inutilisable en l'état pour un utilisateur", then "vraie
+        pagination + filtres") — real page links, not a silent
+        recent-N cutoff: `filter_query` carries the same
+        streams/submitted/subject state every other link on this page
+        already does, so paging never drops the filter the visitor set.
+        The SVG graphic above stays unpaginated on purpose
+        (`ribbon_view`'s own docstring) — only this flat list is sliced.
+      -->
+      <nav class="ribbon-pagination">
+        {% if page > 1 %}
+          <a class="ribbon-pagination-link" href="/ribbon?lang={{ lang }}{{ filter_query }}&amp;page={{ page - 1 }}">{{ t('timemachine.ribbon.pagination_prev') }}</a>
+        {% endif %}
+        <span class="ribbon-pagination-summary">{{ t('timemachine.ribbon.pagination_summary', page=page, total_pages=total_pages, total=total_entries) }}</span>
+        {% if page < total_pages %}
+          <a class="ribbon-pagination-link" href="/ribbon?lang={{ lang }}{{ filter_query }}&amp;page={{ page + 1 }}">{{ t('timemachine.ribbon.pagination_next') }}</a>
+        {% endif %}
+      </nav>
+    {% endif %}
   {% elif submitted or subject %}
     <p class="empty">
       {% if subject %}{{ t('timemachine.ribbon.subject_empty') }}{% else %}{{ t('timemachine.ribbon.filtered_empty') }}{% endif %}

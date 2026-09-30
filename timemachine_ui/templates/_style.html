@@ -294,9 +294,30 @@ header h1 {
   letter-spacing: .03em; padding: .1rem .5rem; border-radius: 10px;
   background: #ffe3cf; color: #a04a1a;
 }
+/*
+  Added 2026-09-30 (owner: "la page rubans... c'est inutilisable en
+  l'état", then "vraie pagination + filtres") — the flat list's own
+  page links, styled as the same small pill/text-link pair the rest of
+  this file already uses for this page (`.tree-search-clear`'s
+  `#16335c` text, `.tree-ribbon`'s `#eef3fa` pill), not a new visual
+  language. `.ribbon-pagination-link` doubles as a real focusable
+  control; a disabled edge (page 1, last page) is simply omitted by
+  the template rather than rendered greyed-out and unreachable.
+*/
+.ribbon-pagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: .8rem; margin: 1rem 0 0; font-size: .85rem;
+}
+.ribbon-pagination-link {
+  padding: .3rem .8rem; border-radius: 10px; background: #eef3fa;
+  color: #16335c; text-decoration: none;
+}
+.ribbon-pagination-link:hover { background: #dce8fa; }
+.ribbon-pagination-summary { color: #5b6b7d; }
 
 @media (max-width: 480px) {
   .ribbon-filter { gap: .5rem .8rem; }
+  .ribbon-pagination { flex-wrap: wrap; gap: .5rem .8rem; }
 }
 
 /*

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from urllib.parse import quote
 
@@ -340,6 +341,37 @@ def _build_tree() -> list[NetworkTreeNode]:
     )
 
 
+# 2026-09-30 — `/tree` was rebuilding the live Docker/Compose discovery
+# on every single request (`create_kernel()` plus two providers'
+# `.collect()`, each a real round trip to the Docker daemon), measured
+# by the owner as "très longue". `_build_tree`'s own docstring is
+# explicit that reading live state rather than the graph was a
+# deliberate choice ("never from the graph") — so this is a bounded
+# cache, not an invalidation-on-change one: the owner chose a ~30-60s
+# staleness window over instant freshness (cadrage, 2026-09-30), which
+# a plain module-level TTL gives with no new signal to keep in sync.
+# `time.monotonic()`, not wall-clock time, so a clock adjustment on the
+# host never makes the cache look older or younger than it is.
+_TREE_CACHE_TTL_SECONDS = 45.0
+_tree_cache: dict[str, tuple[float, list[NetworkTreeNode]]] = {}
+
+
+def _build_tree_cached() -> list[NetworkTreeNode]:
+    """Same result as `_build_tree`, reused across requests for up to
+    `_TREE_CACHE_TTL_SECONDS` instead of rerunning live discovery on
+    every page load. A container that started or stopped inside that
+    window can lag behind the tree by that long — the owner's own
+    trade, not a silent one (see the module comment above)."""
+
+    now = time.monotonic()
+    cached = _tree_cache.get("value")
+    if cached is not None and now - cached[0] < _TREE_CACHE_TTL_SECONDS:
+        return cached[1]
+    nodes = _build_tree()
+    _tree_cache["value"] = (now, nodes)
+    return nodes
+
+
 def _filter_tree(nodes: list[NetworkTreeNode], query: str) -> list[NetworkTreeNode]:
     """
     `nodes`, narrowed to every node whose own label matches `query`
@@ -596,11 +628,19 @@ def tree_view(request: Request, q: str = ""):
     tree to matches and their ancestors (`_filter_tree`); an empty
     result for a non-blank `q` is a real, distinct state from "no
     devices observed at all", both handled by the template.
+
+    **Tree built via `_build_tree_cached`, added 2026-09-30** — up to
+    `_TREE_CACHE_TTL_SECONDS` old rather than rebuilt on every request
+    (owner's own trade, cadrage 2026-09-30: the live discovery this
+    view is built from was measured "très longue"). `_filter_tree` and
+    the Historique lookup below still run per request against whatever
+    the cache currently holds — only the expensive discovery itself is
+    reused.
     """
 
     language = _language(request)
 
-    nodes = _build_tree()
+    nodes = _build_tree_cached()
     store = _open_store()
     historique_links = _historique_links(store, nodes)
 
@@ -665,6 +705,14 @@ _RIBBON_PALETTE: tuple[dict[str, str], ...] = (
     {"color": "#c2296b", "shape": "★"},  # magenta, étoile
     {"color": "#3f8fa8", "shape": "▶"},  # bleu-vert, flèche
 )
+
+# Added 2026-09-30 — the flat "vue accessible" list's own page size
+# (`ribbon_view`'s `page` parameter). 100 is a round number, not
+# measured against a specific rendering budget: no smaller a value
+# was shown to matter and no larger one was tested, so this is the
+# owner's own middle-of-the-range figure from the cadrage
+# ("50-100 par page"), not a figure to treat as load-bearing.
+_RIBBON_PAGE_SIZE = 100
 
 # `ADR-0011` §26 (1.5.2 graphic-debt cadrage, 2026-09-29) — the ribbon's
 # own two real categories, and the only two this graph's code actually
@@ -744,12 +792,59 @@ def _ribbon_entries(store: GraphStore) -> list[dict[str, object]]:
     return entries
 
 
+def _store_cache_key() -> float:
+    """The freshest mtime among `STORE_PATH`'s own files — changes only
+    when `aistack.cli.timemachine_rebuild` writes to the store, an
+    on-demand, manual operation (`ADR-0011`: "reconstruction complète
+    à la demande"), never on an ordinary read. Used to invalidate
+    `_ribbon_entries_cached` automatically, with no second signal to
+    keep in sync with the rebuild command. `0.0` when the store has no
+    files yet (or has been removed since `_open_store` opened it) —
+    `_ribbon_entries_cached` still recomputes in that case, it just
+    cannot tell one empty store from another by this key alone."""
+
+    try:
+        return max(
+            (path.stat().st_mtime for path in STORE_PATH.rglob("*") if path.is_file()),
+            default=0.0,
+        )
+    except FileNotFoundError:
+        return 0.0
+
+
+_ribbon_entries_cache: dict[str, tuple[float, list[dict[str, object]]]] = {}
+
+
+def _ribbon_entries_cached(store: GraphStore) -> list[dict[str, object]]:
+    """Same result as `_ribbon_entries`, computed once per graph
+    rebuild rather than once per request. The two SPARQL queries behind
+    it scan every entity the graph holds — tens of thousands of rows
+    for a stream like `docker-events` — and the Python sort after them
+    is the expensive part of `/ribbon`, measured 2026-09-30 as "très
+    longue" against real production data. The graph itself only
+    changes at an explicit rebuild (see `_store_cache_key`), so unlike
+    `/tree`'s cache this one is a correctness-preserving optimization,
+    not a freshness trade: filtering by stream/subject and pagination
+    are both applied after this point, per request, against whatever
+    this cache currently holds — a single cache entry serves every
+    filter and page combination until the next rebuild."""
+
+    key = _store_cache_key()
+    cached = _ribbon_entries_cache.get("value")
+    if cached is not None and cached[0] == key:
+        return cached[1]
+    entries = _ribbon_entries(store)
+    _ribbon_entries_cache["value"] = (key, entries)
+    return entries
+
+
 @app.get("/ribbon", response_class=HTMLResponse)
 def ribbon_view(
     request: Request,
     streams: list[str] = Query(default=[]),
     submitted: str = "",
     subject: str = "",
+    page: int = Query(default=1, ge=1),
 ):
     """
     `ADR-0011` §24 — the filter form's own hidden `submitted` field is
@@ -784,6 +879,21 @@ def ribbon_view(
     way `historique_names` itself matches a candidate name — never the
     substring search `/tree`'s own `q` uses, a different, UI-search
     concern.
+
+    **`page`, added 2026-09-30** — the flat "vue accessible" list below
+    the graphic (`entries` in the template) is now paginated at
+    `_RIBBON_PAGE_SIZE` per page rather than rendering the entire
+    filtered set in one response: measured against real production
+    data (one stream alone carried several thousand instants after
+    filtering) as "inutilisable en l'état", owner's own words,
+    2026-09-30. Pagination, not a silent recent-N cutoff: nothing is
+    hidden without a page link to reach it, keeping the flat list's own
+    reason for existing (a real, keyboard/screen-reader-navigable table
+    view, the dataviz skill's own non-negotiable) intact. **The
+    graphic view is unpaginated on purpose** — `svg_marks`, and
+    therefore the SVG's own clustering, is built from the full
+    filtered set regardless of `page`; only the flat list below it is
+    sliced.
     """
 
     language = _language(request)
@@ -791,7 +901,7 @@ def ribbon_view(
     if store is None:
         return _not_built(request, language)
 
-    entries = _ribbon_entries(store)
+    entries = _ribbon_entries_cached(store)
     all_streams = sorted({str(entry["stream"]) for entry in entries})
     badges = {
         stream: _RIBBON_PALETTE[index % len(_RIBBON_PALETTE)]
@@ -863,15 +973,35 @@ def ribbon_view(
     # header comment already named rather than left to discover, now
     # closed the same way `/tree`'s own `q` and `/node`'s own `iri`
     # already are (`_page_nav`'s `extra_query`).
-    extra_query_parts = [f"&streams={quote(stream)}" for stream in streams]
+    #
+    # `filter_query` is the same three parts alone, without `page` —
+    # the template's own pagination links append their own `&page=N`
+    # to it, so a prev/next click never carries the page it left
+    # behind.
+    filter_query_parts = [f"&streams={quote(stream)}" for stream in streams]
     if submitted:
-        extra_query_parts.append("&submitted=1")
+        filter_query_parts.append("&submitted=1")
     if subject_query:
-        extra_query_parts.append(f"&subject={quote(subject_query)}")
-    extra_query = "".join(extra_query_parts)
+        filter_query_parts.append(f"&subject={quote(subject_query)}")
+    filter_query = "".join(filter_query_parts)
+
+    # Pagination, `page` added 2026-09-30 (see docstring). `total_pages`
+    # is at least 1 even for an empty `filtered`, so an out-of-range
+    # `page` (a stale bookmark after a narrower filter, or a hand-typed
+    # query string) clamps to the last real page instead of rendering
+    # an empty slice with a broken "page N of M" line.
+    total_entries = len(filtered)
+    total_pages = max(1, -(-total_entries // _RIBBON_PAGE_SIZE))
+    current_page = min(page, total_pages)
+    start = (current_page - 1) * _RIBBON_PAGE_SIZE
+    page_entries = filtered[start : start + _RIBBON_PAGE_SIZE]
+
+    extra_query = filter_query
+    if current_page != 1:
+        extra_query += f"&page={current_page}"
 
     context: dict[str, object] = {
-        "entries": filtered,
+        "entries": page_entries,
         "ribbon_svg_docker": ribbon_svg_docker.markup,
         "ribbon_svg_docker_mark_count": ribbon_svg_docker.mark_count,
         "ribbon_svg_docker_stream_count": len(docker_streams),
@@ -884,6 +1014,11 @@ def ribbon_view(
         ],
         "submitted": bool(submitted),
         "subject": subject_query,
+        "page": current_page,
+        "total_pages": total_pages,
+        "total_entries": total_entries,
+        "page_size": _RIBBON_PAGE_SIZE,
+        "filter_query": filter_query,
     }
     context.update(language.context())
     context["page_nav"] = _page_nav(language, extra_query=extra_query)

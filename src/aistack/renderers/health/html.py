@@ -11,6 +11,7 @@ from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.labels import bucket_label, domain_label
 from aistack.i18n import Languages, Translator, default_languages, translator_for
+from aistack.renderers.assets import MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import escape_text
 
@@ -74,6 +75,12 @@ def render_html(
     (`aistack/generators/health/html_artifact.py`) is what stamps
     *when* a copy was produced, via `write_artifact_with_history`, not
     this function.
+
+    **Viewport meta and favicon, added 2026-09-30**
+    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constats
+    1/3) — this page had neither. `MARK_DATA_URI` comes from
+    `aistack.renderers.assets`, the same vendored mark `console.html`
+    already shows.
     """
 
     t = translator_for(lang)
@@ -88,7 +95,9 @@ def render_html(
 <html lang="{t.lang}">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_text(t("health.page.title"))}</title>
+<link rel="icon" href="{MARK_DATA_URI}">
 <style>
 {_STYLE}
 {PAGE_NAV_STYLE}

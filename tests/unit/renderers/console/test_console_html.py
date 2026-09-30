@@ -77,6 +77,20 @@ def test_the_mark_is_embedded_as_the_favicon():
     assert '<link rel="icon" href="data:image/png;base64,' in document
 
 
+def test_the_page_declares_a_viewport():
+    """
+    Added 2026-09-30
+    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat
+    1): without it, a phone loads this page at desktop scale and then
+    shrinks it to fit, forcing a zoom — Time Machine's own screens
+    already carried this tag.
+    """
+
+    document = render_html((selection_ui_link(),))
+
+    assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in document
+
+
 # --------------------------------------------------------------------
 # Links — every declared ConsoleLink becomes one card
 # --------------------------------------------------------------------

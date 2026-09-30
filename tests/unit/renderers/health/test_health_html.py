@@ -46,6 +46,35 @@ def test_the_document_is_a_self_contained_html_page():
     assert document.strip().endswith("</html>")
 
 
+def test_the_page_declares_a_viewport():
+    """
+    Added 2026-09-30
+    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat
+    1) — this page had none, unlike Time Machine's own screens.
+    """
+
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(cockpit)
+
+    assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in document
+
+
+def test_the_mark_is_embedded_as_the_favicon():
+    """
+    Added 2026-09-30
+    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat
+    3) — only `console.html` had one before; this page reuses the same
+    vendored mark (`aistack.renderers.assets.MARK_DATA_URI`).
+    """
+
+    cockpit = HealthCockpit(domains=(HealthDomain(name="Stockage", instrumented=True),))
+
+    document = render_html(cockpit)
+
+    assert '<link rel="icon" href="data:image/png;base64,' in document
+
+
 def test_the_meta_line_counts_instrumented_domains():
     cockpit = HealthCockpit(
         domains=(

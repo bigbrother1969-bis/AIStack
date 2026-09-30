@@ -1,14 +1,14 @@
 """
 AIStack's brand assets, vendored inline as base64 PNG data URIs — the
 console page (`PLAN-J11`, `claude/PLAN-J11-CONSOLE-2026-09-11.md`)
-is the first renderer to carry a logo, so this module is new, not a
-copy of an existing one.
+was the first renderer to carry a logo, so this module was new, not a
+copy of an existing one, when it lived at `console/assets.py`.
 
 **Vendored, not linked, the same discipline `architecture/mermaid.py`
 already holds for mermaid.js** (no CDN, no external network access —
-the console page must render standalone on a LAN with no outbound
-internet, which is the normal state of this homelab). The source
-PNGs (`aistack-mark.png`, `aistack-lockup.png`, both 1254x1254,
+every page that carries a mark must render standalone on a LAN with
+no outbound internet, which is the normal state of this homelab). The
+source PNGs (`aistack-mark.png`, `aistack-lockup.png`, both 1254x1254,
 supplied by the owner — `GOV-P-001`: the charte graphique is the
 owner's own decision, not something this renderer invents) were
 resized and stripped of metadata with ImageMagick before encoding,
@@ -20,6 +20,17 @@ to keep the generated HTML a reasonable size:
 
 Both stay square, matching the source canvas — the resize changed
 resolution only, never cropped or reflowed the artwork.
+
+**Moved here from `console/assets.py` on 2026-09-30** (audit
+`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat 3:
+`architecture.html`/`health.html` and the five `timemachine_ui`
+screens had no favicon, only `console.html` did, because `MARK_DATA_URI`
+lived one level too deep to reuse without a cross-renderer import).
+Same reasoning `nav.py` already holds for sitting directly in
+`renderers/` rather than inside one renderer's own subpackage: a mark
+every page must agree on is not any one renderer's private concern.
+`console/html.py` and `console/settings.py` still use `MARK_DATA_URI`/
+`LOCKUP_DATA_URI` exactly as before, just imported from here now.
 """
 
 from __future__ import annotations

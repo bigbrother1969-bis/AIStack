@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from aistack.i18n import Languages, default_languages, translator_for
-from aistack.renderers.console.assets import LOCKUP_DATA_URI, MARK_DATA_URI
+from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import escape_text
 
@@ -52,6 +52,7 @@ def render_settings_html(
 <html lang="{t.lang}">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_text(t("settings.page_title"))}</title>
 <link rel="icon" href="{MARK_DATA_URI}">
 <style>

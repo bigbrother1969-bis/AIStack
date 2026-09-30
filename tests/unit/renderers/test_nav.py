@@ -45,6 +45,19 @@ def test_the_settings_page_leads_back_to_the_console():
     assert '<a class="console-link" href="/console.html?lang=en">' in document
 
 
+def test_the_settings_page_declares_a_viewport():
+    """
+    Added 2026-09-30
+    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat
+    1) — `console.html`'s own audit gap, closed here too since
+    Settings is one click away from it.
+    """
+
+    document = render_settings_html("en", default_languages(), saved=False)
+
+    assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in document
+
+
 def test_each_language_is_shown_by_its_flag_named_in_its_alt_text():
     strip = render_page_nav(translator_for("fr"), default_languages(), "fr")
 

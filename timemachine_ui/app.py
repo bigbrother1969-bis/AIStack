@@ -19,6 +19,7 @@ from aistack.kernel.bootstrap import create_kernel
 from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.repository import RepositoryProvider
 from aistack.renderers.architecture.html import load_vendored_mermaid_js
+from aistack.renderers.assets import MARK_DATA_URI
 from aistack.renderers.timemachine import (
     ProvenanceNeighbor,
     RibbonMark,
@@ -130,6 +131,17 @@ STORE_PATH = GENERATED_DIR / "timemachine" / "graph"
 
 app = FastAPI(title="AIStack Time Machine")
 templates = Jinja2Templates(directory=str(repository.resolve("timemachine_ui/templates")))
+
+# `favicon`, added 2026-09-30 (`claude/AUDIT-CONSOLE-ARCHITECTURE-
+# HEALTH-2026-09-29.md`, constat 3): none of this mini-app's five
+# screens declared one, unlike `console.html`. Set once as a Jinja
+# global rather than added to every view's own context dict — every
+# template's `<head>` reads the same `{{ favicon }}`, and a sixth view
+# added later gets it for free rather than needing to remember to pass
+# it. The same vendored mark `console.html` already shows
+# (`aistack.renderers.assets`, moved out of `console/assets.py` the
+# same day so a package outside `console/` could reuse it).
+templates.env.globals["favicon"] = MARK_DATA_URI
 
 # One label, and whether its object is an IRI (linkable) or a literal
 # (displayed as-is) — the closed set `aistack.timemachine.projection`

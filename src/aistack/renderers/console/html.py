@@ -17,7 +17,7 @@ from aistack.i18n import (
     translator_for,
     with_language,
 )
-from aistack.renderers.console.assets import LOCKUP_DATA_URI, MARK_DATA_URI
+from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import escape_text
 
@@ -87,7 +87,7 @@ def render_html(
 
     **The lockup and the mark carry the branding, not this
     function.** The embedded lockup
-    (`aistack.renderers.console.assets.LOCKUP_DATA_URI`) is the header
+    (`aistack.renderers.assets.LOCKUP_DATA_URI`) is the header
     banner, the mark (`MARK_DATA_URI`) is the favicon — both the
     owner's own charte graphique, vendored inline: no CDN, no external
     network access, matching `architecture.html`'s mermaid.js and
@@ -131,6 +131,7 @@ def render_html(
 <html lang="{t.lang}">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_text(t("console.title"))}</title>
 <link rel="icon" href="{MARK_DATA_URI}">
 <style>

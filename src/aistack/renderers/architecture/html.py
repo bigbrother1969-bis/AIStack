@@ -9,6 +9,7 @@ from aistack.architecture.http_probe_reading import HttpProbeReading
 from aistack.architecture.topology_definition import InfrastructureTopologyDefinition
 from aistack.architecture.views import FULL_VIEW, ArchitectureView
 from aistack.i18n import Languages, Translator, default_languages, translator_for
+from aistack.renderers.assets import MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.architecture.dependency_mermaid import render_dependency_mermaid
 from aistack.renderers.architecture.icons import load_icon_data_uri
@@ -139,6 +140,15 @@ def render_html(
     An empty tuple (the default) renders no "CMDB temps réel" section
     at all, the same "nothing to show, so show nothing" rule
     `beszel_readings` already follows.
+
+    **Viewport meta and favicon, added 2026-09-30**
+    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constats
+    1/3) — this page had neither, unlike Time Machine's own screens
+    which already carried a viewport tag. `MARK_DATA_URI` now comes
+    from `aistack.renderers.assets`, the same vendored mark
+    `console.html` already shows, moved up from `console/assets.py` so
+    a renderer outside the console package could reuse it without a
+    cross-renderer import.
     """
 
     if not views or views[0].name != FULL_VIEW:
@@ -203,7 +213,9 @@ def render_html(
 <html lang="{t.lang}">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_text(t("architecture.title"))}</title>
+<link rel="icon" href="{MARK_DATA_URI}">
 <style>
 {_STYLE}
 {PAGE_NAV_STYLE}

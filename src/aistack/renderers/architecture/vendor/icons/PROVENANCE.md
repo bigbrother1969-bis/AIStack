@@ -20,8 +20,8 @@ Fetched at native resolution, then downscaled to 48×48 and stripped of
 metadata with ImageMagick (`convert <slug>.png -resize 48x48 -strip
 <slug>.png`) — full resolution ran 1.4 MB across 39 files for icons this
 page only ever displays at a few dozen pixels; downscaled, the same 39
-files total 176 KB. Same discipline `renderers/console/assets.py` already
-applies to the console's own two PNGs.
+files total 176 KB. Same discipline `renderers/assets.py` already
+applies to the brand's own two PNGs.
 
 `<slug>` is the source `service_categorization.yml`'s own `icon:` value
 with the `.png` extension removed — `nginx-proxy-manager`, `portainer`,

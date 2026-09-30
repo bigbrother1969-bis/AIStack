@@ -24,6 +24,23 @@
   {{ page_nav | safe }}
   <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
 
+  <!--
+    view-switch, added 2026-09-30
+    (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
+    constat 6, owner: "ajouter le view-switch") — streams.html/
+    tree.html/ribbon.html already let a visitor jump directly between
+    the three top-level views; a node reached from any of them had no
+    such shortcut, only the "back to streams" link above. Same markup,
+    no `view-current` span here since /node is not itself one of the
+    three views — none of the three links should read as "already
+    here".
+  -->
+  <nav class="view-switch">
+    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
+    <a href="/ribbon?lang={{ lang }}">{{ t('timemachine.nav.ribbon') }}</a>
+  </nav>
+
   <header>
     <h1>
       {{ t('timemachine.node_heading') }}
@@ -32,7 +49,17 @@
     <p class="node-iri">{{ t('timemachine.node_iri_label') }}: {{ iri }}</p>
   </header>
 
-  <h2>{{ t('timemachine.graph.heading') }}</h2>
+  <!--
+    class="section-heading", added 2026-09-30
+    (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
+    constat 5, owner: "reprendre le style existant") — these five
+    <h2>s had no rule at all before this (browser-default black bold),
+    the one page in the whole app with an unstyled visible title.
+    `.section-heading` is `ribbon.html`'s own pre-existing section
+    title pattern, generalized (renamed from `.ribbon-list-heading`)
+    rather than a new style invented for this page.
+  -->
+  <h2 class="section-heading">{{ t('timemachine.graph.heading') }}</h2>
   {% if provenance_graph %}
     <div id="provenance-graph">{{ t('timemachine.graph.loading') }}</div>
   {% else %}
@@ -40,7 +67,7 @@
   {% endif %}
 
   {% if instants is defined and instants %}
-    <h2>{{ t('timemachine.instants_heading') }}</h2>
+    <h2 class="section-heading">{{ t('timemachine.instants_heading') }}</h2>
     <ul class="band-list">
       {% for instant in instants %}
         <li class="band">
@@ -54,11 +81,11 @@
       {% endfor %}
     </ul>
   {% elif instants is defined %}
-    <h2>{{ t('timemachine.instants_heading') }}</h2>
+    <h2 class="section-heading">{{ t('timemachine.instants_heading') }}</h2>
     <p class="empty">{{ t('timemachine.empty_instants') }}</p>
   {% endif %}
 
-  <h2>{{ t('timemachine.facts_heading') }}</h2>
+  <h2 class="section-heading">{{ t('timemachine.facts_heading') }}</h2>
   {% if facts %}
     <ul class="band-list">
       {% for fact in facts %}
@@ -84,7 +111,7 @@
     <p class="empty">{{ t('timemachine.empty_facts') }}</p>
   {% endif %}
 
-  <h2>{{ t('timemachine.referenced_by_heading') }}</h2>
+  <h2 class="section-heading">{{ t('timemachine.referenced_by_heading') }}</h2>
   {% if referenced_by %}
     <ul class="band-list">
       {% for ref in referenced_by %}

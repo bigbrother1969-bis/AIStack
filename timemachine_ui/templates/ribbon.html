@@ -87,7 +87,7 @@
         <div class="ribbon-graphic">{{ ribbon_svg_observation | safe }}</div>
       </details>
     </div>
-    <h2 class="ribbon-list-heading">{{ t('timemachine.ribbon.list_heading') }}</h2>
+    <h2 class="section-heading">{{ t('timemachine.ribbon.list_heading') }}</h2>
     <ul class="band-list">
       {% for entry in entries %}
         <li class="band{% if entry.is_gap %} band--gap{% endif %}">

@@ -51,10 +51,25 @@
   comparing this file against `console.html`/`architecture.html`/
   `health.html`, which had no `#666` left. All eight now read
   `#5b6b7d`.
+
+  Structural charte values, fixed 2026-09-30
+  (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
+  constats 1-3, owner: "lot mécanique") — the retints above (accent,
+  headings, secondary grey) never touched the more structural values
+  `console.html`/`architecture.html`/`health.html` already carried
+  since the same 2026-09-26 charte pass: the page's own background
+  colour, `color-scheme`, and the system font stack. `body` here had
+  none of the three — plain white background (no `background`
+  declared at all), no `color-scheme`, and the bare CSS keyword
+  `sans-serif` instead of the named stack. All three copied verbatim
+  from the three static pages' own `_STYLE`, not re-derived.
 #}
+:root { color-scheme: light; }
 body {
-  font-family: sans-serif; max-width: min(96vw, 1600px); margin: 1.5rem auto 3rem;
-  padding: 0 1rem; color: #1f2933; line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  max-width: min(96vw, 1600px); margin: 1.5rem auto 3rem;
+  padding: 0 1rem; color: #1f2933; background: #f7f9fc; line-height: 1.4;
 }
 header { margin-bottom: 1.2rem; }
 header h1 {
@@ -81,10 +96,22 @@ header h1 {
 
 /* One "band" per row — a stream, an instant, a fact, a reference.
    `display: grid` with a label column and a value column above
-   700px; a single stacked column below it (R12). */
+   700px; a single stacked column below it (R12).
+
+   Border/radius aligned to the charted value 2026-09-30
+   (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
+   constat 4, owner: "aligner") — `#ddd`/6px was this page's own
+   pre-charte generic card, next to `console.html`/`architecture.
+   html`/`health.html`'s `.card`/`.link-group`/`#diagram`, which have
+   used the charted `#dde4ed`/8px since 2026-09-26. Every "card"-shaped
+   block in this file (`.band` here, `.tree-node`, `#provenance-graph`,
+   `.ribbon-group` below) gets the same two values — background
+   `#fafafa` is unchanged, it already matches how the static pages use
+   it too (`architecture.html`'s own `#diagram`), only the border
+   colour and radius were the drift. */
 .band-list { list-style: none; margin: 0; padding: 0; }
 .band {
-  border: 1px solid #ddd; border-radius: 6px; padding: .7rem .9rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: .7rem .9rem;
   margin-bottom: .6rem; background: #fafafa;
 }
 .band a.band-link { color: inherit; text-decoration: none; display: block; }
@@ -144,7 +171,7 @@ header h1 {
 .tree-search-clear:hover { text-decoration: underline; }
 
 .tree-node {
-  border: 1px solid #ddd; border-radius: 6px; background: #fafafa;
+  border: 1px solid #dde4ed; border-radius: 8px; background: #fafafa;
   margin-bottom: .5rem;
 }
 .tree-node > summary {
@@ -187,7 +214,7 @@ header h1 {
   to this page's own band palette rather than imported wholesale.
 */
 #provenance-graph {
-  border: 1px solid #ddd; border-radius: 6px; padding: 1rem;
+  border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem;
   background: #fafafa; overflow: auto; margin: 0 0 1.2rem;
 }
 /*
@@ -258,7 +285,18 @@ header h1 {
 .ribbon-mark-summary-box { fill: #eef3fa; stroke: #16335c; stroke-width: 1; }
 .ribbon-mark--summary { font-weight: 600; font-style: italic; }
 .ribbon-cursor { stroke: #16335c; stroke-width: 1.5; stroke-dasharray: 4 3; }
-.ribbon-list-heading {
+/*
+  Generalized from `.ribbon-list-heading` 2026-09-30
+  (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
+  constat 5, owner: "reprendre le style existant") — this page's one
+  existing pattern for an in-page section title (small, grey
+  uppercase, distinct from a Georgia-navy `<h1>`) had one caller
+  (`ribbon.html`'s own "Historique complet") until `node.html`'s five
+  bare `<h2>`s needed the same treatment rather than a second pattern
+  invented for them. Renamed rather than left `ribbon`-prefixed once a
+  second, unrelated page uses it.
+*/
+.section-heading {
   font-size: .85rem; font-weight: 600; color: #5b6b7d;
   text-transform: uppercase; letter-spacing: .03em; margin: 0 0 .6rem;
 }
@@ -272,7 +310,7 @@ header h1 {
 */
 .ribbon-groups { margin: 0 0 .4rem; }
 .ribbon-group {
-  border: 1px solid #ddd; border-radius: 6px; background: #fafafa;
+  border: 1px solid #dde4ed; border-radius: 8px; background: #fafafa;
   margin-bottom: .7rem; padding: 0 .9rem .9rem;
 }
 .ribbon-group > summary {

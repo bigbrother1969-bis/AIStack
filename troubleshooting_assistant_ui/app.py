@@ -17,6 +17,7 @@ from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
+from aistack.instance.yaml import load_instance_config_yaml
 from aistack.priority.definition import (
     BackgroundPriorityDefinition,
     ContainerPriorityDefinition,
@@ -88,6 +89,17 @@ templates = Jinja2Templates(
     directory=str(repository.resolve("troubleshooting_assistant_ui/templates"))
 )
 
+# R10, 2026-09-30 — the direct LAN link back to the console, resolved
+# from the declared instance config instead of hand-typed in three
+# separate templates (`index.html`, `step.html`, `applied.html`) —
+# same fix as `network_discovery_ui`'s own.
+INSTANCE_CONFIG_PATH = repository.resolve(
+    "src/aistack/instance/definitions/instance_config.yml"
+)
+CONSOLE_BASE_URL = load_instance_config_yaml(INSTANCE_CONFIG_PATH).service_url(
+    "console"
+)
+
 # One in-memory session per finding subject, keyed by subject —
 # deliberately not persisted: this screen is a LAN-only, single-owner
 # guide over answers `aistack.ai_runtime.reasoning_history` already
@@ -148,7 +160,13 @@ def _language(request: Request) -> PageLanguage:
 def _render(request: Request, name: str, context: dict[str, object]) -> HTMLResponse:
     language = _language(request)
     response = templates.TemplateResponse(
-        request=request, name=name, context={**context, **language.context()}
+        request=request,
+        name=name,
+        context={
+            **context,
+            **language.context(),
+            "console_base_url": CONSOLE_BASE_URL,
+        },
     )
 
     if language.cookie is not None:

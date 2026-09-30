@@ -4,12 +4,18 @@ import pytest
 
 from aistack.console.yaml import load_console_links_yaml
 from aistack.contracts.console_link import ConsoleLink
+from aistack.contracts.instance_config import InstanceConfig
 
 
 def write(path: Path, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     return path
+
+
+_INSTANCE = InstanceConfig(
+    lan_hostname="GIGABYTE", service_ports={"selection_ui": 8181}
+)
 
 
 def test_a_complete_definition_is_loaded(tmp_path: Path):
@@ -19,7 +25,7 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
         links:
           - name: Selection UI
             description: Sélection des candidats
-            url: http://GIGABYTE:8181
+            service: selection_ui
             scope: lan
           - name: Cockpit Santé
             description: Score de santé
@@ -28,7 +34,7 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
         """,
     )
 
-    links = load_console_links_yaml(path)
+    links = load_console_links_yaml(path, instance=_INSTANCE)
 
     assert len(links) == 2
     assert links[0] == ConsoleLink(
@@ -39,6 +45,62 @@ def test_a_complete_definition_is_loaded(tmp_path: Path):
     )
     assert links[1].name == "Cockpit Santé"
     assert links[1].scope == "public"
+
+
+def test_url_is_still_accepted_directly(tmp_path: Path):
+    """A public card keeps declaring `url` itself — the resolution
+    through `service` is only for the five LAN cards."""
+
+    path = write(
+        tmp_path / "console_links.yml",
+        "links:\n  - name: Cockpit Santé\n    description: x\n"
+        "    url: /health.html\n    scope: public\n",
+    )
+
+    links = load_console_links_yaml(path, instance=_INSTANCE)
+
+    assert links[0].url == "/health.html"
+
+
+def test_declaring_both_url_and_service_is_refused(tmp_path: Path):
+    path = write(
+        tmp_path / "bad.yml",
+        "links:\n  - name: Selection UI\n    description: x\n"
+        "    url: http://GIGABYTE:8181\n    service: selection_ui\n"
+        "    scope: lan\n",
+    )
+
+    with pytest.raises(ValueError, match="declares both url and service"):
+        load_console_links_yaml(path, instance=_INSTANCE)
+
+
+def test_a_service_the_instance_declares_no_port_for_is_refused(tmp_path: Path):
+    path = write(
+        tmp_path / "bad.yml",
+        "links:\n  - name: Time Machine\n    description: x\n"
+        "    service: timemachine_ui\n    scope: lan\n",
+    )
+
+    with pytest.raises(ValueError, match="no port for 'timemachine_ui'"):
+        load_console_links_yaml(path, instance=_INSTANCE)
+
+
+def test_service_resolves_through_the_real_instance_config_by_default(
+    tmp_path: Path,
+):
+    """No `instance` supplied — the loader falls back to the real,
+    declared `instance_config.yml`, the same convention `languages`
+    already follows for `default_languages()`."""
+
+    path = write(
+        tmp_path / "console_links.yml",
+        "links:\n  - name: Selection UI\n    description: x\n"
+        "    service: selection_ui\n    scope: lan\n",
+    )
+
+    links = load_console_links_yaml(path)
+
+    assert links[0].url == "http://GIGABYTE:8181"
 
 
 def test_a_definition_missing_the_links_key_is_refused(tmp_path: Path):
@@ -84,13 +146,13 @@ def test_an_entry_missing_description_is_refused(tmp_path: Path):
         load_console_links_yaml(path)
 
 
-def test_an_entry_missing_url_is_refused(tmp_path: Path):
+def test_an_entry_missing_both_url_and_service_is_refused(tmp_path: Path):
     path = write(
         tmp_path / "bad.yml",
         "links:\n  - name: Selection UI\n    description: x\n    scope: lan\n",
     )
 
-    with pytest.raises(ValueError, match="missing: url"):
+    with pytest.raises(ValueError, match="missing: url or service"):
         load_console_links_yaml(path)
 
 
@@ -276,6 +338,6 @@ def test_the_real_definition_carries_every_declared_language():
     for link in data["links"]:
         for field in ("name", "description"):
             assert missing_languages(link[field], default_languages()) == (), (
-                link["url"],
+                link.get("url") or link.get("service"),
                 field,
             )

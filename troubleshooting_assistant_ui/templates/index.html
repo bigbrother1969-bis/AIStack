@@ -68,13 +68,15 @@
   </div>
 
   <!--
-    Lien direct LAN (GIGABYTE:8183), jamais l'adresse publique
+    Lien direct LAN, jamais l'adresse publique
     aistack.persiaut-family.fr — même discipline que
     network_discovery_ui/templates/index.html : cet écran reste
     volontairement LAN-only (voir troubleshooting_assistant_ui/app.py).
+    `console_base_url` (R10, 2026-09-30) : résolu depuis la
+    configuration d'instance déclarée, plus jamais écrit en dur ici.
   -->
   <div class="top-links">
-    <a class="back-link" href="http://GIGABYTE:8183/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <a class="back-link" href="{{ console_base_url }}/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
     <a class="back-link" href="/aide">{{ t('troubleshooting.help_link') }}</a>
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}</nav>
   </div>

@@ -14,6 +14,7 @@ from aistack.health.score_weights import health_score_weights
 from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import default_languages
 from aistack.i18n.pages import page_file
+from aistack.instance.yaml import load_instance_config_yaml
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,
@@ -42,6 +43,19 @@ DEFAULT_CONSOLE_LINKS = (
     / "console"
     / "definitions"
     / "console_links.yml"
+)
+
+# R10, 2026-09-30 — resolves `DEFAULT_CONSOLE_LINKS`'s own `service:`
+# entries. Declared explicitly here, the same as every other default
+# above and below, rather than left to `load_console_links_yaml`'s own
+# internal fallback (which exists for a convenience caller — a
+# mini-app's `app.py`, a test — not for this CLI, which already names
+# every one of its other inputs by its own path).
+DEFAULT_INSTANCE_CONFIG = (
+    Path(__file__).resolve().parents[1]
+    / "instance"
+    / "definitions"
+    / "instance_config.yml"
 )
 
 # **Duplicated from `aistack.cli.health_render`, not imported —
@@ -344,10 +358,14 @@ def main() -> None:
 
     written: list[str] = []
     links_count = 0
+    instance = load_instance_config_yaml(DEFAULT_INSTANCE_CONFIG)
 
     for language in languages.available:
         links = load_console_links_yaml(
-            DEFAULT_CONSOLE_LINKS, lang=language.code, languages=languages
+            DEFAULT_CONSOLE_LINKS,
+            lang=language.code,
+            languages=languages,
+            instance=instance,
         )
         links_count = len(links)
         output_path = page_file(

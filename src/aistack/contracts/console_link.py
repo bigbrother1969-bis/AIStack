@@ -30,14 +30,27 @@ class ConsoleLink:
     observe, it is the owner naming what the console should point at
     and how.
 
-    **`url` travels exactly as the owner stated it, absolute LAN
-    address or relative path alike** (`http://GIGABYTE:8181` for
-    Selection UI, `/health.html` for the cockpit generated beside the
-    console itself) — this dataclass validates it is not empty and
-    starts with a scheme AIStack's own reverse-proxy story
-    (`PLAN-J11` § 4) actually reaches, never rewrites or normalizes
-    it, the same "ported, not designed" discipline
-    `ServiceDefinition.container` already holds for a name.
+    **`url` travels exactly as it arrives here, absolute LAN address
+    or relative path alike** (`http://GIGABYTE:8181` for Selection UI,
+    `/health.html` for the cockpit generated beside the console
+    itself) — this dataclass validates it is not empty and starts
+    with a scheme AIStack's own reverse-proxy story (`PLAN-J11` § 4)
+    actually reaches, never rewrites or normalizes it, the same
+    "ported, not designed" discipline `ServiceDefinition.container`
+    already holds for a name.
+
+    **Since 2026-09-30 (R10), a LAN card's `url` may be *resolved*
+    before it reaches this dataclass, never guessed once it does** —
+    `load_console_links_yaml` turns `console_links.yml`'s own
+    `service:` field into a concrete address through
+    `InstanceConfig.service_url` (the owner's own declared LAN host
+    and port, `instance_config.yml`, not this file typing
+    `http://GIGABYTE:8181` by hand six times over). The resolution
+    happens once, in the loader, from a fact the owner still declares
+    (which port a service answers on) — this dataclass itself never
+    sees `service`, never resolves anything, and still never rewrites
+    the `url` it is handed. A public card (`/health.html`) is
+    unaffected: it keeps declaring `url` directly, the same as always.
 
     **`scope`, added 2026-09-30** (the owner: "un bandeau de couleur
     différent pour les cartes accessibles sur le réseau local ou

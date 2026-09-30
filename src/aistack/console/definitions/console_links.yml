@@ -134,6 +134,21 @@
 #     public from their own first day), two cards public (Architecture
 #     and Cockpit Santé, the owner's explicit, unchanged choice to keep
 #     these two open).
+#
+#   - **`service`, replacing `url` on every LAN card, 2026-09-30**
+#     (R10, `ROADMAP-1.2-TO-2.0-2026-09-27.md`: "GIGABYTE:8181...
+#     écrits en dur : incompatible avec un AIStack qui s'adapte au
+#     réseau découvert" — cadré with the owner the same day, scoped to
+#     AIStack's own address alone). Names one of
+#     `src/aistack/instance/definitions/instance_config.yml`'s own
+#     `service_ports` keys; `load_console_links_yaml` resolves it to
+#     `http://<lan_hostname>:<port>` through `InstanceConfig.service_
+#     url`, the exact literal each of these five cards used to carry
+#     by hand. A card declares exactly one of `url`/`service`, never
+#     both, never neither — the two public cards (Architecture,
+#     Cockpit Santé) keep `url` unchanged, since their own address is
+#     a relative path this console serves itself, not a fact
+#     `instance_config.yml` has any port for.
 
 links:
   - name: Selection UI
@@ -145,7 +160,7 @@ links:
       en: >-
         Candidate selection — Docker Compose service,
         LAN only (GIGABYTE:8181)
-    url: http://GIGABYTE:8181
+    service: selection_ui
     scope: lan
   - name:
       fr: Priorité CPU
@@ -159,7 +174,7 @@ links:
       en: >-
         CPU priority arbitration — systemd/uvicorn service,
         LAN only (GIGABYTE:8182)
-    url: http://GIGABYTE:8182
+    service: priority_ui
     scope: lan
   - name: Architecture
     description:
@@ -194,7 +209,7 @@ links:
       en: >-
         Candidate SSH users for the network scan — systemd/uvicorn
         service, LAN only (GIGABYTE:8184)
-    url: http://GIGABYTE:8184
+    service: network_discovery_ui
     scope: lan
   - name:
       fr: Assistant de pannes
@@ -209,7 +224,7 @@ links:
         Step-by-step guide through evaluate → reason/explain/recommend
         on a real fault — systemd/uvicorn service, LAN only
         (GIGABYTE:8185)
-    url: http://GIGABYTE:8185
+    service: troubleshooting_assistant_ui
     scope: lan
   - name: Time Machine
     description:
@@ -221,5 +236,5 @@ links:
       en: >-
         AIStack's complete history projected as a PROV-O graph —
         systemd/uvicorn service, LAN only (GIGABYTE:8186)
-    url: http://GIGABYTE:8186
+    service: timemachine_ui
     scope: lan

@@ -22,6 +22,7 @@ from aistack.generators.filesystem.yaml import (
 )
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER, Translator
 from aistack.i18n.web import PageLanguage, page_language
+from aistack.instance.yaml import load_instance_config_yaml
 from aistack.kernel.application import ApplicationDefinition
 from aistack.kernel.bootstrap import create_kernel
 from aistack.providers.filesystem import (
@@ -55,6 +56,16 @@ APP_DEF = repository.resolve("selection_ui/definitions/music_android.yml")
 app = FastAPI(title="AIStack Selection UI")
 templates = Jinja2Templates(
     directory=str(repository.resolve("selection_ui/templates"))
+)
+
+# R10, 2026-09-30 — the direct LAN link back to the console, resolved
+# from the declared instance config instead of hand-typed in
+# `templates/index.html` (same fix as `network_discovery_ui`'s own).
+INSTANCE_CONFIG_PATH = repository.resolve(
+    "src/aistack/instance/definitions/instance_config.yml"
+)
+CONSOLE_BASE_URL = load_instance_config_yaml(INSTANCE_CONFIG_PATH).service_url(
+    "console"
 )
 
 
@@ -163,6 +174,7 @@ def _page_context(definition: ApplicationDefinition) -> dict[str, Any]:
         "last_generation": load_last_generation_yaml(
             _last_generation_path(definition)
         ),
+        "console_base_url": CONSOLE_BASE_URL,
     }
 
 

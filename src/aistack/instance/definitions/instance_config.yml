@@ -1,0 +1,36 @@
+# AIStack — instance configuration (R10, `ROADMAP-1.2-TO-2.0-
+# 2026-09-27.md`, cadré avec le owner le 2026-09-30).
+#
+# AIStack's own address on this deployment: the one LAN host every
+# service answers on, and each service's own port. Nothing here is
+# observed — every value was hand-confirmed the same way
+# `console_links.yml`'s own header comments already narrate it by
+# hand: `lan_hostname` is `infrastructure_topology.yml`'s own first
+# `hardware:` entry (GIGABYTE, the only host any AIStack process runs
+# on today); each port is the "next free port" the owner picked, in
+# order, as each mini-app was added — Selection UI first (Docker
+# Compose, :8181), then Priorité CPU ("next free port after Selection
+# UI's 8181", :8182), then the console itself (:8183), then Découverte
+# réseau (:8184), Assistant de pannes (:8185) and Time Machine (:8186)
+# — the exact history `console_links.yml` already kept before this
+# file existed.
+#
+# Read by `aistack.console.yaml.load_console_links_yaml` (resolves a
+# `service:` entry in `console_links.yml` to its LAN address) and by
+# each mini-app's own `app.py`, in place of a hand-typed
+# `http://GIGABYTE:818X` literal — never written back by anything in
+# this repository, the same "hand-edited, read-only" discipline
+# `network_discovery.yml`'s own `cidr` already holds.
+#
+# Moving AIStack to a different LAN host, or re-numbering a port,
+# changes exactly this file — never a search-and-replace across
+# `console_links.yml` and five separate mini-app processes.
+
+lan_hostname: GIGABYTE
+service_ports:
+  selection_ui: 8181
+  priority_ui: 8182
+  console: 8183
+  network_discovery_ui: 8184
+  troubleshooting_assistant_ui: 8185
+  timemachine_ui: 8186

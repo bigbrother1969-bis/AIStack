@@ -10,6 +10,7 @@ from starlette.requests import Request
 
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
+from aistack.instance.yaml import load_instance_config_yaml
 from aistack.network_discovery.definition import NetworkDiscoveryDefinition
 from aistack.network_discovery.yaml import (
     load_network_discovery_yaml,
@@ -50,6 +51,20 @@ templates = Jinja2Templates(
     directory=str(repository.resolve("network_discovery_ui/templates"))
 )
 
+# R10, 2026-09-30 — the direct LAN link back to the console
+# (`http://GIGABYTE:8183`), previously hand-typed in
+# `templates/index.html` (found not going through
+# `aistack.renderers.nav.render_page_nav`'s own `console_base_url`
+# parameter at all, unlike `timemachine_ui`). Resolved once here from
+# the declared instance config, the same convention `timemachine_ui
+# .app`'s own `_CONSOLE_BASE_URL` already follows.
+INSTANCE_CONFIG_PATH = repository.resolve(
+    "src/aistack/instance/definitions/instance_config.yml"
+)
+CONSOLE_BASE_URL = load_instance_config_yaml(INSTANCE_CONFIG_PATH).service_url(
+    "console"
+)
+
 
 def _language(request: Request) -> PageLanguage:
     """
@@ -71,6 +86,7 @@ def _page_context(definition: NetworkDiscoveryDefinition) -> dict[str, object]:
         "ssh_key_path_env": definition.ssh_key_path_env,
         "ssh_timeout_seconds": definition.ssh_timeout_seconds,
         "ssh_usernames": definition.ssh_usernames,
+        "console_base_url": CONSOLE_BASE_URL,
     }
 
 

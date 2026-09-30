@@ -16,6 +16,7 @@ from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.history.query import available_instants, observation_at
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER, default_languages
 from aistack.i18n.web import PageLanguage, page_language
+from aistack.instance.yaml import load_instance_config_yaml
 from aistack.kernel.bootstrap import create_kernel
 from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.repository import RepositoryProvider
@@ -156,16 +157,28 @@ templates.env.globals["favicon"] = MARK_DATA_URI
 # copied from.
 templates.env.globals["page_nav_style"] = PAGE_NAV_STYLE
 
-# Direct LAN link (GIGABYTE:8183), never the public address — same
-# reasoning `network_discovery_ui/templates/index.html` already holds:
-# this mini-app is deliberately LAN-only (ADR-0011 roadmap R1).
-# Moved here 2026-09-30 (constat 5) from five templates that each
-# hardcoded this same string by hand — one value now, not five copies
-# to keep in sync; `_local_host_label` above reads its own "GIGABYTE"
-# from declared data for a different purpose (the topology's first
+# Direct LAN link, never the public address — same reasoning
+# `network_discovery_ui/templates/index.html` already holds: this
+# mini-app is deliberately LAN-only (ADR-0011 roadmap R1). Moved here
+# 2026-09-30 (constat 5) from five templates that each hardcoded this
+# same string by hand — one value now, not five copies to keep in
+# sync; `_local_host_label` above reads its own "GIGABYTE" from
+# declared data for a different purpose (the topology's first
 # hardware entry) and is not reused here, since this is a URL origin
 # for a cross-port link, not a display label.
-_CONSOLE_BASE_URL = "http://GIGABYTE:8183"
+#
+# **No longer a literal, 2026-09-30 (R10)** — read from
+# `instance_config.yml` through `InstanceConfig.service_url`, the same
+# declared fact `console_links.yml`'s own five LAN cards now resolve
+# through (`aistack.console.yaml.load_console_links_yaml`). Resolved
+# once at import time, the same eager-module-level convention
+# `GENERATED_DIR`/`STORE_PATH` above already follow.
+_INSTANCE_CONFIG_PATH = repository.resolve(
+    "src/aistack/instance/definitions/instance_config.yml"
+)
+_CONSOLE_BASE_URL = load_instance_config_yaml(_INSTANCE_CONFIG_PATH).service_url(
+    "console"
+)
 
 
 def _page_nav(language: PageLanguage, *, extra_query: str = "") -> str:

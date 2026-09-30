@@ -12,6 +12,7 @@ from starlette.requests import Request
 
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
+from aistack.instance.yaml import load_instance_config_yaml
 from aistack.priority.definition import (
     BackgroundPriorityDefinition,
     ContainerPriorityDefinition,
@@ -43,6 +44,16 @@ DEFINITION_PATH = repository.resolve(
 app = FastAPI(title="AIStack Priority UI")
 templates = Jinja2Templates(
     directory=str(repository.resolve("priority_ui/templates"))
+)
+
+# R10, 2026-09-30 — the direct LAN link back to the console, resolved
+# from the declared instance config instead of hand-typed in
+# `templates/index.html` (same fix as `network_discovery_ui`'s own).
+INSTANCE_CONFIG_PATH = repository.resolve(
+    "src/aistack/instance/definitions/instance_config.yml"
+)
+CONSOLE_BASE_URL = load_instance_config_yaml(INSTANCE_CONFIG_PATH).service_url(
+    "console"
 )
 
 
@@ -146,6 +157,7 @@ def _page_context() -> dict[str, Any]:
         "unlimited_cpus": definition.unlimited_cpus,
         "grace_seconds": definition.grace_seconds,
         "default_throttled_cpus": definition.background.default_throttled_cpus,
+        "console_base_url": CONSOLE_BASE_URL,
     }
 
 

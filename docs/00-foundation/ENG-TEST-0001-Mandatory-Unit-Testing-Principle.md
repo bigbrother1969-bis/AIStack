@@ -10,8 +10,8 @@ artifact:
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 1.3
-  updated: 2026-09-23
+  version: 1.4
+  updated: 2026-10-02
 ---
 
 # Mandatory Unit Testing Principle
@@ -28,6 +28,10 @@ v1.3, 2026-09-23, `GOV-0002/OS-069`: § *Scope* added. The principle is
 unchanged for everything the governed suite covers; the section states what
 it covers, and the one exception the owner decided on 2026-08-29.
 
+v1.4, 2026-10-02, `GOV-0002/OS-084`: the exception is **revoked** by the
+owner, ahead of 1.7 (roadmap `R5`). § *Scope* states the revocation, the
+date it takes effect, and the five screens it brings into the suite.
+
 ## Principle
 
 Every AIStack software component, contract, engine, service, and
@@ -39,18 +43,39 @@ The obligation binds what the governed test suite covers: the `aistack`
 package under `src/`, and everything `pytest` imports in the environment
 `ENG-TEST-0002` declares.
 
-**A host-touching screen is outside that scope.** It is an application at
-the repository root that serves HTTP (`fastapi`, `uvicorn`, `jinja2`,
-`python-multipart`) and acts on a real host. Its web dependencies are kept
-out of the governed environment on purpose, so the suite cannot import it.
-It is verified by live execution against the host it serves, under
-`ENG-TEST-0002` § *Host-touching UI screens*. Decided 2026-08-29 by the
-owner (decision #9) and stated here on 2026-09-23, `GOV-0002/OS-069`.
-Four screens fall under it on 2026-09-23: `selection_ui`, `priority_ui`,
-`network_discovery_ui` and `troubleshooting_assistant_ui`.
+**A host-touching screen was outside that scope from 2026-08-29 to
+2026-10-02.** It is an application at the repository root that serves
+HTTP (`fastapi`, `uvicorn`, `jinja2`, `python-multipart`) and acts on a
+real host. Its web dependencies were kept out of the governed environment
+on purpose, so the suite could not import it, and it was verified by live
+execution against the host it serves. Decided 2026-08-29 by the owner
+(decision #9), stated here on 2026-09-23, `GOV-0002/OS-069`. Measured
+2026-10-02, five screens fell under it, not the four this section named:
+`selection_ui`, `priority_ui`, `network_discovery_ui`,
+`troubleshooting_assistant_ui` and `timemachine_ui` (added 2026-09-27,
+never listed here) — 3246 lines of `app.py`, none of it imported by the
+suite.
 
-What such a screen imports from `aistack` stays under this principle,
-because the suite covers it. Logic written in the screen itself does not.
+**Decision #9 is revoked for tests, 2026-10-02, by the owner**
+(`GOV-0002/OS-084`, roadmap `R5`). The 1.7 version brings login, sessions
+and admin/user rights: code that decides who may act on a host cannot be
+verified by hand. From 1.7's first tranche onwards:
+
+- the web layer's dependencies are declared in `pyproject.toml` and
+  installed into the governed environment (`ENG-TEST-0002`);
+- the console and the five screens become **one application** under
+  `src/aistack/`, and every route is exercised by the suite through an
+  in-process test client — no socket, no host;
+- the logic a screen still holds in its own `app.py` moves into `src/`
+  with its tests; a route stays a thin adapter.
+
+**Until that tranche lands, the five screens above remain as described in
+the first paragraph** — verified live, outside the suite. This is a dated
+statement, not a standing exception: `GOV-0002/OS-084` stays open until
+it is no longer true.
+
+What a screen imports from `aistack` stays under this principle, because
+the suite covers it.
 
 A feature, refactoring, or new capability cannot be considered complete
 without automated verification of its expected behavior.

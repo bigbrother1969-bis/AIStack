@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.119
+  version: 1.120
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-09-28
+  updated: 2026-10-02
 
 relations:
   references:
@@ -279,7 +279,52 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
-None open. OS-003, OS-013, OS-014, OS-015, OS-022,
+#### GOV-0002/OS-084 — Decision #9 keeps every web screen out of the governed suite, and 1.7 puts login and rights behind those screens
+
+**Nature** `decision` · **Opened** 2026-10-02 · **State** open — qualified 2026-10-02, work carried by 1.7 tranche 1
+**Observed** at the 1.7 framing, on `ce919ca`: five screens serve HTTP
+from the repository root — `selection_ui`, `priority_ui`,
+`network_discovery_ui`, `troubleshooting_assistant_ui` and
+`timemachine_ui` — 3246 lines of `app.py` in all (`wc -l */app.py`), each
+installed from its own `requirements.txt` into its own virtual
+environment, none imported by `pytest` (`grep -rln "fastapi\|TestClient"
+tests` finds no screen). `timemachine_ui/app.py` alone holds 27 private
+helpers (`grep -c '^def _'`), logic `ENG-TEST-0001` § *Scope* already
+said the suite does not cover. That section named four screens; the fifth,
+added 2026-09-27, was never listed. The roadmap's design review
+(`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`, `R5`) had already called the
+situation unacceptable for login, rights and the execution of changes,
+and set the revision of decision #9 as a prerequisite of 1.7 — which is
+the version that brings OIDC login, sessions and admin/user rights.
+**Derivable** no — what the suite must cover is a reading.
+**Qualification** decided 2026-10-02 by the owner: **revoke decision #9
+for tests.** The web layer's dependencies (`fastapi`, `jinja2`,
+`python-multipart`, `uvicorn`; an in-process HTTP client for the tests)
+are declared in `pyproject.toml` and installed into the governed
+environment; the console and the five screens become **one application**
+under `src/aistack/` — one port, one service, one session — whose every
+route the suite exercises. Decided against rewriting every screen on the
+standard-library server the console uses since 1.2, which would have kept
+the environment free of web packages at the cost of hand-written
+sessions, CSRF protection and form parsing in the most sensitive code the
+project will hold; and against keeping the screens outside the suite and
+only moving their logic to `src/`, which would have left the login and
+rights routes themselves untested. Taken with three framing decisions the
+same day, recorded where the 1.7 architecture is written rather than
+here: one application rather than separate processes sharing a cookie;
+ID tokens verified by signature against the provider's published keys
+(`PyJWT` with `cryptography`) rather than trusted on TLS alone; 1.7 cut
+into four tranches. `ENG-TEST-0001` v1.4 and `ENG-TEST-0002` v2.6 state
+the revocation and say, dated, that the five screens remain outside the
+suite until tranche 1 lands.
+**Closes when** the five screens run as one application under `src/`,
+every route is covered by the suite, and every `<screen>/requirements.txt`
+and `scripts/setup_<screen>_env.sh` is gone — `ENG-TEST-0001` § *Scope*'s
+dated paragraph then names what discharged it.
+
+---
+
+Otherwise none open. OS-003, OS-013, OS-014, OS-015, OS-022,
 OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
 OS-061, OS-062, OS-066, OS-068, OS-069, OS-070, OS-072 and OS-076 are in
 *Resolved*.

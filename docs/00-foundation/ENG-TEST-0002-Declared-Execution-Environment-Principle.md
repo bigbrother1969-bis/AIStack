@@ -10,8 +10,8 @@ artifact:
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 2.5
-  updated: 2026-09-23
+  version: 2.6
+  updated: 2026-10-02
 ---
 
 # Declared Execution Environment Principle
@@ -103,6 +103,27 @@ screen has to rediscover.
 stated in the heritage** since the same day, by `ENG-TEST-0001` § *Scope*
 (`GOV-0002/OS-069`). The note under `claude/` cited above remains its
 provenance, no longer its only statement.
+
+**Retired 2026-10-02 by the owner**, `GOV-0002/OS-084`: decision #9 is
+revoked for tests ahead of 1.7 (`ENG-TEST-0001` § *Scope*). The web
+layer's dependencies move into `pyproject.toml`, and so into this
+principle's environment; the console and the five screens (the four
+above plus `timemachine_ui`) become one application under `src/aistack/`,
+tested by the governed suite. The line this section kept bright — what
+`pytest` depends on versus what a screen needs to run — is erased on
+purpose: once a screen decides who may act on a host, they must be the
+same question. Every `<screen>/requirements.txt` and
+`scripts/setup_<screen>_env.sh` above is removed in 1.7's first tranche;
+**until then this section still describes how those five screens are
+installed**.
+
+## What Changed In v2.6
+
+§ *Host-touching UI screens* records the retirement of its own pattern,
+decided by the owner on 2026-10-02 (`GOV-0002/OS-084`), and names the
+fifth screen (`timemachine_ui`) it had never listed. The pattern still
+describes the installation of the five screens until 1.7's first tranche
+replaces it.
 
 ## What Changed In v2.5
 

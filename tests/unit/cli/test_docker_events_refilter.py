@@ -41,14 +41,15 @@ def _history(tmp_path: Path) -> Path:
 
 
 def test_parse_defaults_to_a_dated_archive_name():
-    generated_dir, archive_name, dry_run = parse([])
+    generated_dir, archive_name, dry_run, declared = parse([])
     assert generated_dir == Path("reports/generated")
     assert archive_name.startswith("unfiltered-")
     assert dry_run is False
+    assert declared == {}
 
 
 def test_usage_names_every_flag_parse_accepts():
-    for flag in ("--generated-dir", "--archive-name", "--dry-run"):
+    for flag in ("--generated-dir", "--archive-name", "--healthcheck", "--dry-run"):
         assert flag in USAGE
 
 
@@ -104,3 +105,45 @@ def test_an_existing_archive_is_never_overwritten(tmp_path: Path):
 
     with pytest.raises(SystemExit):
         refilter(tmp_path, "a", dry_run=False, noise_filter=_offline_filter())
+
+
+def test_parse_collects_declared_healthchecks_with_equals_signs_in_the_command():
+    *_, declared = parse(
+        ["--healthcheck", "shop/app=sh -c curl http://x?a=b", "--healthcheck", "shop/app=other"]
+    )
+    assert declared == {"shop/app": frozenset({"sh -c curl http://x?a=b", "other"})}
+
+
+def test_parse_rejects_a_healthcheck_without_a_subject_or_command():
+    for value in ("no-equals", "=cmd", "subject="):
+        with pytest.raises(SystemExit):
+            parse(["--healthcheck", value])
+
+
+def test_a_declared_healthcheck_of_a_removed_container_is_dropped(tmp_path: Path, monkeypatch):
+    import aistack.cli.docker_events_refilter as module
+    import aistack.providers.docker.events as events
+
+    monkeypatch.setattr(module, "current_healthchecks_by_subject", lambda: {})
+    monkeypatch.setattr(events, "_inspect_healthcheck", lambda container_id: None)
+    history = _history(tmp_path)
+    _write_batch(
+        history,
+        "2026-10-01T00-00-00Z.json",
+        [
+            _event("exec_create: sh -c curl -f http://localhost/health", exec_id="h1"),
+            _event("exec_die", exec_id="h1"),
+            _event("start", exec_id=""),
+        ],
+    )
+
+    summary = refilter(
+        tmp_path,
+        "refiltered",
+        dry_run=False,
+        declared_healthchecks={"x": frozenset({"sh -c curl -f http://localhost/health"})},
+    )
+
+    kept = json.loads((history / "2026-10-01T00-00-00Z.json").read_text())
+    assert [e["action"] for e in kept["events"]] == ["start"]
+    assert summary.events_kept == 1

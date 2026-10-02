@@ -39,7 +39,7 @@ STEM = "docker-events"
 
 USAGE = (
     "usage: python -m aistack.cli.docker_events_refilter "
-    "[--generated-dir PATH] [--archive-name NAME] [--dry-run]\n"
+    "[--generated-dir PATH] [--archive-name NAME] [--healthcheck SUBJECT=COMMAND]... [--dry-run]\n"
     "\n"
     "  Moves reports/generated/docker-events/history/docker-events/ to\n"
     "  reports/generated/docker-events/archive/<NAME>/docker-events/,\n"
@@ -51,6 +51,10 @@ USAGE = (
     "                  write nothing.\n"
     "  --archive-name  archive directory name (default:\n"
     "                  unfiltered-<today, UTC>). Refused if it exists.\n"
+    "  --healthcheck   declare SUBJECT's healthcheck COMMAND (exact, as\n"
+    "                  Docker reports it after `exec_create: `), for a\n"
+    "                  container removed since: Docker can no longer say\n"
+    "                  what it was, so the owner does. Repeatable.\n"
     "  --generated-dir root to work under (default: the real one).\n"
 )
 
@@ -64,8 +68,9 @@ class RefilterSummary:
     dropped_by_action: Counter[str] = field(default_factory=Counter)
 
 
-def parse(argv: list[str]) -> tuple[Path, str, bool]:
+def parse(argv: list[str]) -> tuple[Path, str, bool, dict[str, frozenset[str]]]:
     generated_dir = DEFAULT_GENERATED_DIR
+    declared: dict[str, set[str]] = {}
     archive_name = "unfiltered-" + datetime.now(timezone.utc).strftime("%Y-%m-%d")
     dry_run = False
     rest = list(argv)
@@ -87,13 +92,26 @@ def parse(argv: list[str]) -> tuple[Path, str, bool]:
                 raise SystemExit(2)
             archive_name = rest.pop(0)
             continue
+        if argument == "--healthcheck":
+            value = rest.pop(0) if rest else ""
+            subject, separator, command = value.partition("=")
+            if not separator or not subject or not command.strip():
+                print("--healthcheck expects SUBJECT=COMMAND")
+                raise SystemExit(2)
+            declared.setdefault(subject, set()).add(command.strip())
+            continue
         if argument == "--dry-run":
             dry_run = True
             continue
         print(f"unrecognised argument: {argument}")
         raise SystemExit(2)
 
-    return generated_dir, archive_name, dry_run
+    return (
+        generated_dir,
+        archive_name,
+        dry_run,
+        {subject: frozenset(commands) for subject, commands in declared.items()},
+    )
 
 
 def _filter_batch(
@@ -131,6 +149,7 @@ def refilter(
     dry_run: bool,
     *,
     noise_filter: ExecNoiseFilter | None = None,
+    declared_healthchecks: dict[str, frozenset[str]] | None = None,
 ) -> RefilterSummary:
     history_dir = generated_dir / STEM / "history" / STEM
     archive_dir = generated_dir / STEM / "archive" / archive_name / STEM
@@ -140,10 +159,17 @@ def refilter(
     if archive_dir.exists():
         raise SystemExit(f"archive already exists, refusing to overwrite: {archive_dir}")
 
-    noise_filter = noise_filter or ExecNoiseFilter(
-        healthchecks_by_subject=current_healthchecks_by_subject(),
-        remember_uninspectable=True,
-    )
+    if noise_filter is None:
+        # Healthchecks of the containers running now, by subject, plus
+        # those the owner declared for a subject whose container is
+        # gone — Docker can vouch for the first, only the owner for the
+        # second (`--healthcheck`).
+        by_subject = dict(current_healthchecks_by_subject())
+        for subject, commands in (declared_healthchecks or {}).items():
+            by_subject[subject] = by_subject.get(subject, frozenset()) | commands
+        noise_filter = ExecNoiseFilter(
+            healthchecks_by_subject=by_subject, remember_uninspectable=True
+        )
     summary = RefilterSummary()
 
     if dry_run:
@@ -182,8 +208,10 @@ def report(summary: RefilterSummary, dry_run: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    generated_dir, archive_name, dry_run = parse(sys.argv[1:] if argv is None else argv)
-    summary = refilter(generated_dir, archive_name, dry_run)
+    generated_dir, archive_name, dry_run, declared = parse(
+        sys.argv[1:] if argv is None else argv
+    )
+    summary = refilter(generated_dir, archive_name, dry_run, declared_healthchecks=declared)
     report(summary, dry_run)
 
 

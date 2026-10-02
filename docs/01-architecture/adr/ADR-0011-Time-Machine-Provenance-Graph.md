@@ -1996,7 +1996,13 @@ container id that no longer exists (recreated since by an image
 update), the refilter also matches a healthcheck through the
 healthchecks the *current* container of the same stable subject
 declares — a stand-in the live monitor never needs, since it only ever
-sees ids that exist. This is the one place this stream's history is
+sees ids that exist. A subject whose container was removed altogether
+leaves Docker nothing to vouch for: measured after the first refilter,
+93,274 of the 107,637 events kept were `invoiceshelf/invoiceshelf`'s own
+healthcheck (`sh -c curl … --fail http://localhost:…`), an abandoned
+trial removed from the host that same day. For that case only, the owner
+declares the command (`--healthcheck SUBJECT=COMMAND`) — the filter
+never guesses one. This is the one place this stream's history is
 rewritten rather than appended to; the archive beside it is what keeps
 that honest. Run with the monitor stopped, then `timemachine_rebuild`.
 

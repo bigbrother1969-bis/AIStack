@@ -38,6 +38,13 @@ Requires=docker.service
 
 [Service]
 Type=simple
+# Run as the repo owner, not as root. The Docker socket is the only
+# privilege this monitor needs, and big-brother already has it through
+# the `docker` group. Running as root left root:root files under
+# reports/generated/ that later non-root runs could not rewrite
+# (found 2026-10-02).
+User=big-brother
+Group=big-brother
 WorkingDirectory=/srv/aistack/AIStack
 ExecStart=/srv/aistack/AIStack/run_docker_packages_monitor.sh
 Restart=on-failure

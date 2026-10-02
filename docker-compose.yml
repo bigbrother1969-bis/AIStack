@@ -38,6 +38,26 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
+  # **1.6.0 — published 2026-10-02, current.**
+  #
+  #   bigbrother1969/aistack-core:1.6.0
+  #   @sha256:93a3d3f003f6bfaf802f3355676b3dfcc77049d234b3ca04ccf37d762bb79b74
+  #
+  # Built from fc7e645 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 2726 tests with `clean: True`.
+  # 77 artifacts, 18 checks. Before the build, 1.5.2 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.0 entry gives the
+  # full account; in short, the homelab's operational inventory
+  # declared and checked against what really runs (roadmap R9/R10:
+  # instance configuration, two new Health Cockpit domains for
+  # persistent state and inventory gaps, PRA tests proposed from
+  # discovery), every Cockpit finding linked into the troubleshooting
+  # assistant, three new read-only Time Machine views (/node in three
+  # columns, /reconstitute, /explication), and the four Docker
+  # collectors running as the repository owner instead of root.
+  #
   # **1.5.2 — published 2026-09-30, current.**
   #
   #   bigbrother1969/aistack-core:1.5.2

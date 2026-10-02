@@ -26,6 +26,7 @@ from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.timemachine import (
     ProvenanceNeighbor,
     RibbonMark,
+    RibbonSvg,
     render_provenance_mermaid,
     render_ribbon_svg,
 )
@@ -466,6 +467,24 @@ def _node_href(neighbor_iri: str, language: PageLanguage) -> str:
     return f"/node?iri={quote(neighbor_iri, safe='')}&lang={language.lang}"
 
 
+def _node_stable_subject(facts: list[dict[str, object]]) -> str | None:
+    """
+    This node's own `aistack:stableSubject`, when it asserts one as an
+    outgoing fact — only an Entity ever does (`ribbon_svg.py`'s own
+    docstring: an Explication never carries one), so an Activity/Agent
+    node, or an Entity type that doesn't, both honestly return `None`
+    here. Added 2026-10-02 (gap #1, "une première tranche contenue")
+    to filter `/node`'s own new embedded chronology by the exact same
+    value `/ribbon?subject=` already matches against — never a second,
+    looser definition of "this node's subject".
+    """
+
+    for fact in facts:
+        if fact["predicate"] == AISTACK_STABLE_SUBJECT:
+            return str(fact["object"])
+    return None
+
+
 def _provenance_neighbors(
     facts: list[dict[str, object]],
     referenced_by: list[dict[str, str]],
@@ -514,7 +533,17 @@ def _provenance_neighbors(
 
 
 @app.get("/node", response_class=HTMLResponse)
-def node(request: Request, iri: str):
+def node(request: Request, iri: str, q: str = ""):
+    """
+    `q`, added 2026-10-02 (gap #1 of `claude/AUDIT-TIMEMACHINE-
+    REALIGNEMENT-MAQUETTES-2026-10-02.md`, cadrage "une première
+    tranche contenue") — this screen's own new left column is `/tree`
+    reused as-is (`_tree_context`), filterable by the exact same `q`
+    `/tree` itself takes; the tree's own search form posts back here
+    with `iri` kept as a hidden field so searching from a node's own
+    page never loses the node being read.
+    """
+
     language = _language(request)
 
     try:
@@ -613,6 +642,17 @@ def node(request: Request, iri: str):
             "src/aistack/renderers/architecture/vendor/PROVENANCE.md"
         )
 
+    # Gap #1, 2026-10-02 — the three-column layout's own two new
+    # pieces, both reused from `/tree`/`/ribbon` exactly as they
+    # already exist (`_tree_context`/`_node_ribbon_panel`), never a
+    # second implementation: the left column is this node's own
+    # network tree (unfiltered unless `q` narrows it, same as `/tree`
+    # itself), the center column is this node's own chronology, filtered
+    # by whichever `aistack:stableSubject` it asserts, when it asserts
+    # one at all (`_node_stable_subject`).
+    tree_context = _tree_context(q)
+    ribbon_panel = _node_ribbon_panel(store, _node_stable_subject(facts), language)
+
     context: dict[str, object] = {
         "iri": iri,
         "node_type_label_key": node_type_label_key,
@@ -621,26 +661,31 @@ def node(request: Request, iri: str):
         "referenced_by": referenced_by,
         "provenance_graph": provenance_graph,
         "mermaid_js": mermaid_js,
+        "tree_root": tree_context["root"],
+        "tree_query": tree_context["query"],
+        "tree_search_empty": tree_context["search_empty"],
+        "ribbon_panel": ribbon_panel,
     }
     context.update(language.context())
-    context["page_nav"] = _page_nav(language, extra_query=f"&iri={quote(iri)}")
+    extra_query = f"&iri={quote(iri)}"
+    if q:
+        extra_query += f"&q={quote(q)}"
+    context["page_nav"] = _page_nav(language, extra_query=extra_query)
     return _finish(
         templates.TemplateResponse(request=request, name="node.html", context=context),
         language,
     )
 
 
-@app.get("/tree", response_class=HTMLResponse)
-def tree_view(request: Request, q: str = ""):
+def _tree_context(query: str) -> dict[str, object]:
     """
-    `ADR-0011` § 18 — Réseau ⊃ Hôte ⊃ Stack ⊃ Conteneur, `timemachine_
-    ui`'s second view, built from the live Docker/Compose catalogs
-    (never the graph) plus the last stored network-discovery snapshot,
-    with each node's real Historique looked up in the graph (empty,
-    honestly, when the graph has never been built). `q` narrows the
-    tree to matches and their ancestors (`_filter_tree`); an empty
-    result for a non-blank `q` is a real, distinct state from "no
-    devices observed at all", both handled by the template.
+    The filtered, nested tree context `/tree` renders, factored out
+    2026-10-02 (gap #1 of `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-
+    MAQUETTES-2026-10-02.md`, cadrage "une première tranche contenue")
+    so `/node`'s own new left column (the three-column layout the
+    maquette's "arbre et ruban côte à côte" narrows down to) builds the
+    exact same tree rather than a second, hand-kept-in-sync copy of
+    this logic. Unchanged from `tree_view`'s own original body.
 
     **Tree built via `_build_tree_cached`, added 2026-09-30** — up to
     `_TREE_CACHE_TTL_SECONDS` old rather than rebuilt on every request
@@ -651,13 +696,11 @@ def tree_view(request: Request, q: str = ""):
     reused.
     """
 
-    language = _language(request)
-
     nodes = _build_tree_cached()
     store = _open_store()
     historique_links = _historique_links(store, nodes)
 
-    filtered = _filter_tree(nodes, q)
+    filtered = _filter_tree(nodes, query)
     children_by_parent: dict[str, list[NetworkTreeNode]] = {}
     for node in filtered:
         if node.parent_id is not None:
@@ -681,11 +724,29 @@ def tree_view(request: Request, q: str = ""):
     root_node = next((node for node in filtered if node.id == "network"), None)
     root = _to_context(root_node) if root_node is not None else None
 
-    context: dict[str, object] = {
+    return {
         "root": root,
-        "query": q,
-        "search_empty": bool(q.strip()) and root is None,
+        "query": query,
+        "search_empty": bool(query.strip()) and root is None,
     }
+
+
+@app.get("/tree", response_class=HTMLResponse)
+def tree_view(request: Request, q: str = ""):
+    """
+    `ADR-0011` § 18 — Réseau ⊃ Hôte ⊃ Stack ⊃ Conteneur, `timemachine_
+    ui`'s second view, built from the live Docker/Compose catalogs
+    (never the graph) plus the last stored network-discovery snapshot,
+    with each node's real Historique looked up in the graph (empty,
+    honestly, when the graph has never been built). `q` narrows the
+    tree to matches and their ancestors (`_filter_tree`); an empty
+    result for a non-blank `q` is a real, distinct state from "no
+    devices observed at all", both handled by the template.
+    """
+
+    language = _language(request)
+
+    context: dict[str, object] = _tree_context(q)
     context.update(language.context())
     context["page_nav"] = _page_nav(language, extra_query=f"&q={quote(q)}" if q else "")
     return _finish(
@@ -741,6 +802,46 @@ _RIBBON_PAGE_SIZE = 100
 _DOCKER_COLLECTOR_STREAMS: frozenset[str] = frozenset(
     {_DOCKER_DIFF_STEM, _DOCKER_DIGEST_STEM, _DOCKER_EVENTS_STEM, _DOCKER_PACKAGES_STEM}
 )
+
+
+def _ribbon_badges(entries: list[dict[str, object]]) -> dict[str, dict[str, str]]:
+    """
+    One colour+shape badge per stream the graph holds, assigned once
+    over every stream the graph holds (`all_streams`, never only the
+    ones a later filter keeps visible) — factored out of `ribbon_view`
+    2026-10-02 (gap #1) so `/node`'s own embedded, subject-filtered
+    chronology assigns the exact same badge to a given stream that
+    `/ribbon` itself would, rather than a second, independently-ordered
+    assignment that could disagree with it.
+    """
+
+    all_streams = sorted({str(entry["stream"]) for entry in entries})
+    return {
+        stream: _RIBBON_PALETTE[index % len(_RIBBON_PALETTE)]
+        for index, stream in enumerate(all_streams)
+    }
+
+
+def _ribbon_svgs_for_marks(
+    svg_marks: list[RibbonMark], lane_streams: list[str]
+) -> tuple[RibbonSvg, RibbonSvg]:
+    """
+    The same docker/non-docker split and pair of `render_ribbon_svg`
+    calls `ribbon_view` already makes (`ADR-0011` §26's second slice),
+    factored out 2026-10-02 (gap #1) so `/node`'s own embedded
+    chronology draws it identically rather than re-deriving the split
+    a second time. Returns `(docker, observation)`, each whatever
+    `render_ribbon_svg` itself returns.
+    """
+
+    docker_streams = tuple(s for s in lane_streams if s in _DOCKER_COLLECTOR_STREAMS)
+    observation_streams = tuple(s for s in lane_streams if s not in _DOCKER_COLLECTOR_STREAMS)
+    docker_marks = tuple(m for m in svg_marks if m.stream in _DOCKER_COLLECTOR_STREAMS)
+    observation_marks = tuple(m for m in svg_marks if m.stream not in _DOCKER_COLLECTOR_STREAMS)
+    return (
+        render_ribbon_svg(docker_marks, docker_streams),
+        render_ribbon_svg(observation_marks, observation_streams),
+    )
 
 
 def _ribbon_entries(store: GraphStore) -> list[dict[str, object]]:
@@ -851,6 +952,78 @@ def _ribbon_entries_cached(store: GraphStore) -> list[dict[str, object]]:
     return entries
 
 
+def _node_ribbon_panel(
+    store: GraphStore, subject: str | None, language: PageLanguage
+) -> dict[str, object]:
+    """
+    `/node`'s own embedded chronology — gap #1 of `claude/AUDIT-
+    TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`, cadrage "une
+    première tranche contenue": the exact same entries, badges and
+    `render_ribbon_svg` call `/ribbon?subject=` already makes for one
+    subject, reused here rather than re-derived, with two real
+    narrowings the owner's own cadrage drew — asked and answered
+    2026-10-02, not assumed:
+
+    * **No filter form, no pagination, no flat list below the
+      graphic.** This is a read-only preview embedded in a third
+      column, not a second `/ribbon` — the full page, with all three,
+      is one click away (`node_ribbon_view_full`).
+    * **No cursor/cluster-popover script.** `ribbon.html`'s own
+      ~260-line hand-written script (drag cursor, cluster unfold into
+      a popover) stays on `/ribbon` alone, not duplicated onto a
+      second template. Every mark drawn here is still its own real
+      `<a href>` (`render_ribbon_svg`'s own contract — reachable by
+      click, tap, or keyboard with no script at all); a dense cluster's
+      own glyph opens its earliest member, the same honest fallback
+      `/ribbon` itself had before cluster-unfold existed (see
+      `claude/SESSION-2026-10-02-timemachine-ribbon-cluster-unfold
+      .md`) — unfolding it fully is that same one click away.
+
+    `subject=None` — no `aistack:stableSubject` on this node (an
+    Activity/Agent, or an Entity type that never carries one, such as
+    an Explication) — draws nothing at all: `has_subject=False` tells
+    the template to show an honest "nothing to filter" state rather
+    than the whole graph's unfiltered chronology, which would not
+    actually be about this node.
+    """
+
+    entries = _ribbon_entries_cached(store)
+    if subject is None:
+        return {"has_subject": False}
+
+    badges = _ribbon_badges(entries)
+    svg_marks: list[RibbonMark] = []
+    for entry in entries:
+        if entry["subject"] is None or str(entry["subject"]) != subject:
+            continue
+        badge = badges[str(entry["stream"])]
+        svg_marks.append(
+            RibbonMark(
+                href=_node_href(str(entry["iri"]), language),
+                stream=str(entry["stream"]),
+                instant=str(entry["instant"]),
+                subject=subject,
+                is_gap=bool(entry["is_gap"]),
+                is_occurred_at=bool(entry["is_occurred_at"]),
+                color=badge["color"],
+                shape=badge["shape"],
+            )
+        )
+
+    lane_streams = sorted({m.stream for m in svg_marks})
+    ribbon_docker, ribbon_observation = _ribbon_svgs_for_marks(svg_marks, lane_streams)
+
+    return {
+        "has_subject": True,
+        "subject": subject,
+        "has_marks": bool(svg_marks),
+        "ribbon_svg_docker": ribbon_docker.markup,
+        "ribbon_svg_docker_mark_count": ribbon_docker.mark_count,
+        "ribbon_svg_observation": ribbon_observation.markup,
+        "ribbon_svg_observation_mark_count": ribbon_observation.mark_count,
+    }
+
+
 @app.get("/ribbon", response_class=HTMLResponse)
 def ribbon_view(
     request: Request,
@@ -916,10 +1089,7 @@ def ribbon_view(
 
     entries = _ribbon_entries_cached(store)
     all_streams = sorted({str(entry["stream"]) for entry in entries})
-    badges = {
-        stream: _RIBBON_PALETTE[index % len(_RIBBON_PALETTE)]
-        for index, stream in enumerate(all_streams)
-    }
+    badges = _ribbon_badges(entries)
 
     visible = set(streams) if submitted else set(all_streams)
     subject_query = subject.strip()
@@ -972,13 +1142,9 @@ def ribbon_view(
     # renderer itself stays category-agnostic — this split is this
     # route's own responsibility, not `render_ribbon_svg`'s.
     lane_streams = sorted({m.stream for m in svg_marks}) if subject_query else all_streams
+    ribbon_svg_docker, ribbon_svg_observation = _ribbon_svgs_for_marks(svg_marks, lane_streams)
     docker_streams = tuple(s for s in lane_streams if s in _DOCKER_COLLECTOR_STREAMS)
     observation_streams = tuple(s for s in lane_streams if s not in _DOCKER_COLLECTOR_STREAMS)
-    docker_marks = tuple(m for m in svg_marks if m.stream in _DOCKER_COLLECTOR_STREAMS)
-    observation_marks = tuple(m for m in svg_marks if m.stream not in _DOCKER_COLLECTOR_STREAMS)
-
-    ribbon_svg_docker = render_ribbon_svg(docker_marks, docker_streams)
-    ribbon_svg_observation = render_ribbon_svg(observation_marks, observation_streams)
 
     # `page_nav`'s own language switch, extended 2026-09-30 to keep
     # this route's real filter state (streams/submitted/subject)

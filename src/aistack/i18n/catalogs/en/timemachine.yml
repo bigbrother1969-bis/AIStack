@@ -18,6 +18,16 @@ empty_instants: "No instant observed for this stream."
 empty_facts: "No known fact about this node."
 empty_referenced_by: "Nothing references this node."
 node_iri_label: "Node identifier"
+# Gap #1, added 2026-10-02 (`claude/AUDIT-TIMEMACHINE-REALIGNEMENT-
+# MAQUETTES-2026-10-02.md`, cadrage "a contained first slice") — the
+# new three-column `/node`'s own center column: this node's own
+# chronology, filtered by its own `aistack:stableSubject` when it
+# asserts one. `timemachine.ribbon.subject_empty`/`group_docker`/
+# `group_observation` are reused as-is for the rest of this panel —
+# same concept, not a duplicate key.
+node_ribbon_heading: "This subject's chronology"
+node_ribbon_no_subject: "No stable subject for this node — nothing to filter in the ribbon."
+node_ribbon_view_full: "View full ribbon"
 graph:
   heading: "Graph"
   loading: "Loading graph…"

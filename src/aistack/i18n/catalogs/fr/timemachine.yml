@@ -18,6 +18,17 @@ empty_instants: "Aucun instant observé pour ce flux."
 empty_facts: "Aucun fait connu sur ce nœud."
 empty_referenced_by: "Rien ne référence ce nœud."
 node_iri_label: "Identifiant du nœud"
+# Gap #1, ajoutés 2026-10-02 (`claude/AUDIT-TIMEMACHINE-REALIGNEMENT-
+# MAQUETTES-2026-10-02.md`, cadrage "une première tranche contenue")
+# — la colonne centrale du nouveau `/node` à trois colonnes : la
+# chronologie de ce nœud, filtrée sur son propre `aistack:
+# stableSubject` quand il en porte un. `timemachine.ribbon.
+# subject_empty`/`group_docker`/`group_observation` sont réutilisés
+# tels quels pour le reste de ce panneau — même concept, pas de
+# doublon de clé.
+node_ribbon_heading: "Chronologie de ce sujet"
+node_ribbon_no_subject: "Pas de sujet stable pour ce nœud — rien à filtrer dans le ruban."
+node_ribbon_view_full: "Voir le ruban complet"
 graph:
   heading: "Graphe"
   loading: "Chargement du graphe…"

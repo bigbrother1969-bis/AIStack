@@ -492,3 +492,30 @@ header h1 {
   letter-spacing: .03em; padding: .05rem .4rem; border-radius: 10px;
   background: #ffe3cf; color: #a04a1a;
 }
+
+/*
+  `/node`'s own three-column layout, added 2026-10-02 (gap #1 of
+  `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`,
+  cadrage "une première tranche contenue") — tree / chronology / fact
+  card, side by side above `700px` (same breakpoint every other rule
+  in this file already folds at, R12), stacked in reading order below
+  it: tree first (orientation), then the chronology, then the fact
+  card, rather than the narrow column squeezing all three into
+  illegibly thin side-by-side strips. `min-width: 0` on the flexible
+  center column is what lets `.ribbon-graphic`'s own `overflow-x: auto`
+  actually scroll inside a flex item instead of forcing the whole row
+  wider than the viewport (a well-known flexbox default-minimum-size
+  gotcha, not a value copied from anywhere else in this file).
+*/
+.node-columns {
+  display: flex; align-items: flex-start; gap: 1.5rem; margin-top: 1rem;
+}
+.node-tree-col { flex: 0 0 280px; }
+.node-ribbon-col { flex: 1 1 auto; min-width: 0; }
+.node-facts-col { flex: 1 1 360px; min-width: 0; }
+.node-tree-col .tree-search { margin-bottom: .8rem; }
+
+@media (max-width: 700px) {
+  .node-columns { flex-direction: column; gap: 0; }
+  .node-tree-col, .node-ribbon-col, .node-facts-col { flex: none; width: 100%; }
+}

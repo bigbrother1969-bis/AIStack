@@ -1,0 +1,47 @@
+{#
+  `render_node`, factored out of `tree.html` 2026-10-02 (gap #1 of
+  `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`,
+  cadrage "une première tranche contenue" — `/node` becomes a
+  three-column page reusing the tree exactly as it already renders,
+  not a second tree implementation) — `node.html`'s own left column
+  needs the exact same recursive macro `tree.html` already defined
+  inline, so it is imported (`{% import "_tree_macro.html" as
+  tree_macro %}`) by both rather than copy-pasted a second time.
+  Same `{% include "_style.html" %}` reasoning as every other shared
+  piece in this mini-app: one file so the two pages cannot drift from
+  each other by a hand-made edit to only one of them.
+
+  Unchanged from `tree.html`'s own original docstring: one recursive
+  macro over the nested tree the route already built from the flat,
+  depth-first `NetworkTreeNode` list (`aistack.timemachine.tree`'s own
+  contract, ADR-0011 §18) — nesting is a template-side concern only,
+  not a second data model. Native <details>/<summary> gives the
+  "arbre pliable" the roadmap asks for with no JavaScript: every node
+  is open except a "stack" (the one real folding boundary, containers
+  hidden behind one click) — a non-blank search forces everything
+  open, since the filtered set already holds only matches and their
+  ancestors and nothing here should stay hidden from a search result.
+#}
+{% macro render_node(node, force_open) %}
+  <details class="tree-node tree-node--{{ node.kind }}"{% if force_open or node.kind != 'stack' %} open{% endif %}>
+    <summary>
+      <span class="tree-kind">{{ t(node.kind_label_key) }}</span>
+      <span class="tree-label">{{ node.label }}</span>
+      {% if node.has_historique %}
+        {% if node.historique_iri %}
+          <a class="tree-historique" href="/node?iri={{ node.historique_iri | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.historique_link') }}</a>
+        {% else %}
+          <span class="tree-historique tree-historique--unlinked">{{ t('timemachine.tree.historique_link') }}</span>
+        {% endif %}
+        <a class="tree-ribbon" href="/ribbon?subject={{ node.label | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.ribbon_link') }}</a>
+      {% endif %}
+    </summary>
+    {% if node.children %}
+      <div class="tree-children">
+        {% for child in node.children %}
+          {{ render_node(child, force_open) }}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </details>
+{% endmacro %}

@@ -50,61 +50,21 @@
     {% endif %}
   </form>
 
-  {% if root %}
-    {#
-      One recursive macro over the nested tree the route already
-      built from the flat, depth-first `NetworkTreeNode` list
-      (`aistack.timemachine.tree`'s own contract, ADR-0011 §18) —
-      nesting is a template-side concern only, not a second data
-      model. Native <details>/<summary> gives the "arbre pliable" the
-      roadmap asks for with no JavaScript: every node is open except
-      a "stack" (the one real folding boundary, containers hidden
-      behind one click) — a non-blank search forces everything open,
-      since the filtered set already holds only matches and their
-      ancestors and nothing here should stay hidden from a search
-      result.
-    #}
-    {% macro render_node(node, force_open) %}
-      <details class="tree-node tree-node--{{ node.kind }}"{% if force_open or node.kind != 'stack' %} open{% endif %}>
-        <summary>
-          <span class="tree-kind">{{ t(node.kind_label_key) }}</span>
-          <span class="tree-label">{{ node.label }}</span>
-          {% if node.has_historique %}
-            {% if node.historique_iri %}
-              <a class="tree-historique" href="/node?iri={{ node.historique_iri | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.historique_link') }}</a>
-            {% else %}
-              <span class="tree-historique tree-historique--unlinked">{{ t('timemachine.tree.historique_link') }}</span>
-            {% endif %}
-            <!--
-              tree-ribbon, added 2026-09-30 ("on finit les points
-              ouverts avant 1.5.2", owner: "apparier par nom, couverture
-              partielle") — `/ribbon`'s own new `subject` filter
-              (`timemachine_ui/app.py`'s `ribbon_view`), reached with
-              this node's own label. Shown for every `has_historique`
-              node, not only the ones matched via `aistack:
-              stableSubject` specifically: `has_historique` also
-              covers an `aistack:explains` match (an Explication),
-              which never reaches the ribbon (`ribbon_svg.py`'s own
-              docstring) — that case lands on `/ribbon`'s own honest
-              "no instant for this subject" rather than a silently
-              wrong link. Distinguishing the two here would need a new
-              governed lookup in `tree.py` for a narrow gain; named as
-              a deliberate choice rather than left undiscussed.
-            -->
-            <a class="tree-ribbon" href="/ribbon?subject={{ node.label | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.ribbon_link') }}</a>
-          {% endif %}
-        </summary>
-        {% if node.children %}
-          <div class="tree-children">
-            {% for child in node.children %}
-              {{ render_node(child, force_open) }}
-            {% endfor %}
-          </div>
-        {% endif %}
-      </details>
-    {% endmacro %}
+  {#
+    `render_node`, factored out to `_tree_macro.html` 2026-10-02 (gap
+    #1 of `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02
+    .md`) — `/node`'s own new left column needs this exact macro too;
+    see that file's own docstring for the full "why". `with context`
+    is required, not optional: `t`/`lang` (`node.kind_label_key` is
+    looked up through `t`, every link below reads `lang`) are
+    per-request template variables (`PageLanguage.context()`), never
+    Jinja globals the way `favicon`/`page_nav_style` are — a plain
+    `{% import %}` would leave both undefined inside the macro.
+  #}
+  {% import "_tree_macro.html" as tree_macro with context %}
 
-    {{ render_node(root, query.strip() | length > 0) }}
+  {% if root %}
+    {{ tree_macro.render_node(root, query.strip() | length > 0) }}
   {% elif search_empty %}
     <p class="empty">{{ t('timemachine.tree.search_empty', query=query) }}</p>
   {% else %}

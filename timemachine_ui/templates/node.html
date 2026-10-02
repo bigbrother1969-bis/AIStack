@@ -19,7 +19,9 @@
     2026-09-30). Le retour vers l'écran des flux, propre à cet écran,
     reste un lien distinct juste en dessous : `page_nav` ne connaît
     que le retour vers la console, pas la navigation interne de
-    Time Machine elle-même.
+    Time Machine elle-même. `extra_query` porte aussi `&q=…` depuis
+    2026-10-02, quand la recherche de la colonne arbre ci-dessous est
+    active (gap #1, voir plus bas).
   -->
   {{ page_nav | safe }}
   <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
@@ -41,95 +43,179 @@
     <a href="/ribbon?lang={{ lang }}">{{ t('timemachine.nav.ribbon') }}</a>
   </nav>
 
-  <header>
-    <h1>
-      {{ t('timemachine.node_heading') }}
-      {% if node_type_label_key %}&mdash; {{ t(node_type_label_key) }}{% endif %}
-    </h1>
-    <p class="node-iri">{{ t('timemachine.node_iri_label') }}: {{ iri }}</p>
-  </header>
-
   <!--
-    class="section-heading", added 2026-09-30
-    (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
-    constat 5, owner: "reprendre le style existant") — these five
-    <h2>s had no rule at all before this (browser-default black bold),
-    the one page in the whole app with an unstyled visible title.
-    `.section-heading` is `ribbon.html`'s own pre-existing section
-    title pattern, generalized (renamed from `.ribbon-list-heading`)
-    rather than a new style invented for this page.
+    node-columns, added 2026-10-02 (gap #1 of `claude/AUDIT-
+    TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`, cadrage "une
+    première tranche contenue") — the maquette's own "arbre et ruban
+    côte à côte" (constat §19, validated 2.0 target), narrowed with the
+    owner to a three-column `/node`: this node's own network tree on
+    the left, this node's own chronology (filtered by its
+    `aistack:stableSubject`, when it has one) in the center, and this
+    node's existing fact card — unchanged, just moved into its own
+    column — on the right. No AJAX anywhere here: every link in every
+    column is a plain, full-page `<a href>`, the same navigation model
+    every other screen in this mini-app already uses.
+
+    Deliberately not built in this slice, per the owner's own cadrage
+    (`AskUserQuestion`, 2026-10-02): the four semantic history lanes
+    (Patrimoine/Observations/Opérations/Raisonnements IA — no mechanism
+    in today's graph distinguishes them, `ADR-0011`'s own real
+    two-category split is reused instead), the density histogram/zoom
+    controls, the CTAs toward Reconstitution/Evolution (both still
+    gapped, #3 and #2), the ribbon's own cursor/cluster-popover script
+    (plain accessible SVG here instead — see `_node_ribbon_panel`'s own
+    docstring in `app.py`), and highlighting the current node inside
+    the tree (no mechanism exists today for "this is the node being
+    read" inside `NetworkTreeNode`/`_to_context` — a known, named gap,
+    not a silent one).
   -->
-  <h2 class="section-heading">{{ t('timemachine.graph.heading') }}</h2>
-  {% if provenance_graph %}
-    <div id="provenance-graph">{{ t('timemachine.graph.loading') }}</div>
-  {% else %}
-    <p class="empty">{{ t('timemachine.graph.empty') }}</p>
-  {% endif %}
+  <div class="node-columns">
+    <aside class="node-tree-col">
+      <h2 class="section-heading">{{ t('timemachine.tree.heading') }}</h2>
+      {% import "_tree_macro.html" as tree_macro with context %}
+      <form class="tree-search" method="get" action="/node">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        <input type="hidden" name="iri" value="{{ iri }}">
+        <input
+          type="search" name="q" value="{{ tree_query }}"
+          placeholder="{{ t('timemachine.tree.search_placeholder') }}"
+          aria-label="{{ t('timemachine.tree.search_placeholder') }}"
+        >
+        <button type="submit">{{ t('timemachine.tree.search_button') }}</button>
+        {% if tree_query %}
+          <a class="tree-search-clear" href="/node?iri={{ iri | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.search_clear') }}</a>
+        {% endif %}
+      </form>
+      {% if tree_root %}
+        {{ tree_macro.render_node(tree_root, tree_query.strip() | length > 0) }}
+      {% elif tree_search_empty %}
+        <p class="empty">{{ t('timemachine.tree.search_empty', query=tree_query) }}</p>
+      {% else %}
+        <p class="empty">{{ t('timemachine.tree.empty') }}</p>
+      {% endif %}
+    </aside>
 
-  {% if instants is defined and instants %}
-    <h2 class="section-heading">{{ t('timemachine.instants_heading') }}</h2>
-    <ul class="band-list">
-      {% for instant in instants %}
-        <li class="band">
-          <a class="band-link" href="/node?iri={{ instant.iri | urlencode }}&amp;lang={{ lang }}">
-            <div class="band-title">{{ instant.generated_at }}</div>
-            {% if instant.subject %}
-              <div class="band-row"><span class="k">{{ t('timemachine.predicate.stable_subject') }}</span><span class="v">{{ instant.subject }}</span></div>
-            {% endif %}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% elif instants is defined %}
-    <h2 class="section-heading">{{ t('timemachine.instants_heading') }}</h2>
-    <p class="empty">{{ t('timemachine.empty_instants') }}</p>
-  {% endif %}
-
-  <h2 class="section-heading">{{ t('timemachine.facts_heading') }}</h2>
-  {% if facts %}
-    <ul class="band-list">
-      {% for fact in facts %}
-        <li class="band">
-          <div class="band-row">
-            <span class="k">
-              {% if fact.predicate_label_key %}{{ t(fact.predicate_label_key) }}{% else %}{{ fact.predicate }}{% endif %}
-            </span>
-            <span class="v">
-              {% if fact.object_type_label_key %}
-                {{ t(fact.object_type_label_key) }}
-              {% elif fact.object_iri %}
-                <a href="/node?iri={{ fact.object_iri | urlencode }}&amp;lang={{ lang }}">{{ fact.object }}</a>
-              {% else %}
-                {{ fact.object }}
-              {% endif %}
-            </span>
+    <main class="node-ribbon-col">
+      <h2 class="section-heading">{{ t('timemachine.node_ribbon_heading') }}</h2>
+      {% if ribbon_panel.has_subject %}
+        {% if ribbon_panel.has_marks %}
+          <div class="ribbon-groups">
+            <details class="ribbon-group" open>
+              <summary>
+                {{ t('timemachine.ribbon.group_docker') }}
+                <span class="ribbon-group-count">{{ ribbon_panel.ribbon_svg_docker_mark_count }}</span>
+              </summary>
+              <div class="ribbon-graphic">{{ ribbon_panel.ribbon_svg_docker | safe }}</div>
+            </details>
+            <details class="ribbon-group" open>
+              <summary>
+                {{ t('timemachine.ribbon.group_observation') }}
+                <span class="ribbon-group-count">{{ ribbon_panel.ribbon_svg_observation_mark_count }}</span>
+              </summary>
+              <div class="ribbon-graphic">{{ ribbon_panel.ribbon_svg_observation | safe }}</div>
+            </details>
           </div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="empty">{{ t('timemachine.empty_facts') }}</p>
-  {% endif %}
+        {% else %}
+          <p class="empty">{{ t('timemachine.ribbon.subject_empty') }}</p>
+        {% endif %}
+        <a class="band-tree-link" href="/ribbon?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_view_full') }}</a>
+      {% else %}
+        <p class="empty">{{ t('timemachine.node_ribbon_no_subject') }}</p>
+      {% endif %}
+    </main>
 
-  <h2 class="section-heading">{{ t('timemachine.referenced_by_heading') }}</h2>
-  {% if referenced_by %}
-    <ul class="band-list">
-      {% for ref in referenced_by %}
-        <li class="band">
-          <a class="band-link" href="/node?iri={{ ref.iri | urlencode }}&amp;lang={{ lang }}">
-            <div class="band-row">
-              <span class="k">
-                {% if ref.predicate_label_key %}{{ t(ref.predicate_label_key) }}{% else %}{{ ref.predicate }}{% endif %}
-              </span>
-              <span class="v">{{ ref.iri }}</span>
-            </div>
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="empty">{{ t('timemachine.empty_referenced_by') }}</p>
-  {% endif %}
+    <div class="node-facts-col">
+      <header>
+        <h1>
+          {{ t('timemachine.node_heading') }}
+          {% if node_type_label_key %}&mdash; {{ t(node_type_label_key) }}{% endif %}
+        </h1>
+        <p class="node-iri">{{ t('timemachine.node_iri_label') }}: {{ iri }}</p>
+      </header>
+
+      <!--
+        class="section-heading", added 2026-09-30
+        (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
+        constat 5, owner: "reprendre le style existant") — these five
+        <h2>s had no rule at all before this (browser-default black bold),
+        the one page in the whole app with an unstyled visible title.
+        `.section-heading` is `ribbon.html`'s own pre-existing section
+        title pattern, generalized (renamed from `.ribbon-list-heading`)
+        rather than a new style invented for this page.
+      -->
+      <h2 class="section-heading">{{ t('timemachine.graph.heading') }}</h2>
+      {% if provenance_graph %}
+        <div id="provenance-graph">{{ t('timemachine.graph.loading') }}</div>
+      {% else %}
+        <p class="empty">{{ t('timemachine.graph.empty') }}</p>
+      {% endif %}
+
+      {% if instants is defined and instants %}
+        <h2 class="section-heading">{{ t('timemachine.instants_heading') }}</h2>
+        <ul class="band-list">
+          {% for instant in instants %}
+            <li class="band">
+              <a class="band-link" href="/node?iri={{ instant.iri | urlencode }}&amp;lang={{ lang }}">
+                <div class="band-title">{{ instant.generated_at }}</div>
+                {% if instant.subject %}
+                  <div class="band-row"><span class="k">{{ t('timemachine.predicate.stable_subject') }}</span><span class="v">{{ instant.subject }}</span></div>
+                {% endif %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% elif instants is defined %}
+        <h2 class="section-heading">{{ t('timemachine.instants_heading') }}</h2>
+        <p class="empty">{{ t('timemachine.empty_instants') }}</p>
+      {% endif %}
+
+      <h2 class="section-heading">{{ t('timemachine.facts_heading') }}</h2>
+      {% if facts %}
+        <ul class="band-list">
+          {% for fact in facts %}
+            <li class="band">
+              <div class="band-row">
+                <span class="k">
+                  {% if fact.predicate_label_key %}{{ t(fact.predicate_label_key) }}{% else %}{{ fact.predicate }}{% endif %}
+                </span>
+                <span class="v">
+                  {% if fact.object_type_label_key %}
+                    {{ t(fact.object_type_label_key) }}
+                  {% elif fact.object_iri %}
+                    <a href="/node?iri={{ fact.object_iri | urlencode }}&amp;lang={{ lang }}">{{ fact.object }}</a>
+                  {% else %}
+                    {{ fact.object }}
+                  {% endif %}
+                </span>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">{{ t('timemachine.empty_facts') }}</p>
+      {% endif %}
+
+      <h2 class="section-heading">{{ t('timemachine.referenced_by_heading') }}</h2>
+      {% if referenced_by %}
+        <ul class="band-list">
+          {% for ref in referenced_by %}
+            <li class="band">
+              <a class="band-link" href="/node?iri={{ ref.iri | urlencode }}&amp;lang={{ lang }}">
+                <div class="band-row">
+                  <span class="k">
+                    {% if ref.predicate_label_key %}{{ t(ref.predicate_label_key) }}{% else %}{{ ref.predicate }}{% endif %}
+                  </span>
+                  <span class="v">{{ ref.iri }}</span>
+                </div>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">{{ t('timemachine.empty_referenced_by') }}</p>
+      {% endif %}
+    </div>
+  </div>
 
   {% if provenance_graph %}
     <script>{{ mermaid_js | safe }}</script>

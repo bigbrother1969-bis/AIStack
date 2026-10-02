@@ -73,3 +73,5 @@ ribbon:
   pagination_prev: "◀ Page précédente"
   pagination_next: "Page suivante ▶"
   pagination_summary: "Page {page} sur {total_pages} ({total} événements)"
+  cluster_popover_heading: "Événements de ce groupe"
+  cluster_popover_close: "Fermer"

@@ -148,8 +148,13 @@ def test_two_marks_one_second_apart_on_a_day_long_axis_merge_into_one_cluster():
     # The cluster's own glyph carries its member count.
     assert f"{close_one.shape}2" in result.markup
     # Only two cursor points: one for the two-member cluster, one for
-    # the far mark that stayed on its own.
-    assert result.markup.count('"href"') == 2
+    # the far mark that stayed on its own. Counted on `"x":`, not
+    # `"href"` — a multi-member cluster's own cursor point now also
+    # embeds one `href` per member (2026-10-02, cluster unfold), so
+    # `"href"` alone no longer tracks the number of *points* on the
+    # axis, only `"x":` (one per point, never duplicated inside a
+    # member) still does.
+    assert result.markup.count('"x":') == 2
 
 
 def test_a_clustered_mark_still_names_every_member_in_its_tooltip():
@@ -196,6 +201,90 @@ def test_a_cluster_containing_a_gap_still_gets_the_gap_css_class():
     assert "ribbon-mark--cluster" in result.markup
 
 
+# --- Cluster unfold (2026-10-02, `claude/AUDIT-TIMEMACHINE-
+# REALIGNEMENT-MAQUETTES-2026-10-02.md`, owner cadrage: "liste
+# déroulante au clic") — the page's own script needs every member's own
+# `href` to build that list, not only the earliest member's; these
+# tests check the JSON data island carries it, via `json.loads` rather
+# than a substring match, since the exact key order/spacing is no
+# longer hand-built here (`json.dumps`, not an f-string).
+
+
+def _cursor_points(markup: str) -> list[dict]:
+    import json
+    import re
+
+    match = re.search(
+        r'<script type="application/json" class="ribbon-marks-data">(.*?)</script>',
+        markup,
+        re.DOTALL,
+    )
+    assert match, "no ribbon-marks-data island found"
+    return json.loads(match.group(1))
+
+
+def test_a_multi_member_cluster_carries_every_members_own_href():
+    # Same "a day-long axis, two marks one second apart" trick the
+    # clustering tests above already use — a lone pair with nothing
+    # else on the axis would sit at the two extremes (maximally far
+    # apart in pixels, the opposite of clustered); `far` is what gives
+    # the axis a real span to be close *relative to*.
+    close_one = mark(instant="2026-09-28T09:00:00+00:00", href="/node?iri=a", subject="jellyfin")
+    close_two = mark(instant="2026-09-28T09:00:01+00:00", href="/node?iri=b", subject="arrstack")
+    far = mark(instant="2026-09-29T09:00:00+00:00", href="/node?iri=far")
+
+    result = render_ribbon_svg((close_one, close_two, far), ("docker-events",))
+
+    points = _cursor_points(result.markup)
+    clustered = [point for point in points if "members" in point]
+    assert len(clustered) == 1
+    members = clustered[0]["members"]
+    assert [member["href"] for member in members] == ["/node?iri=a", "/node?iri=b"]
+    assert [member["subject"] for member in members] == ["jellyfin", "arrstack"]
+
+
+def test_a_single_member_cluster_carries_no_members_list_at_all():
+    result = render_ribbon_svg((mark(href="/node?iri=solo"),), ("docker-events",))
+
+    points = _cursor_points(result.markup)
+    assert len(points) == 1
+    assert "members" not in points[0]
+
+
+def test_a_members_gap_and_recording_flags_travel_through_per_member_not_only_the_clusters_own_class():
+    normal = mark(instant="2026-09-28T09:00:00+00:00", href="/node?iri=a", is_gap=False, is_occurred_at=True)
+    gap_recorded = mark(
+        instant="2026-09-28T09:00:01+00:00", href="/node?iri=b",
+        is_gap=True, is_occurred_at=False,
+    )
+    far = mark(instant="2026-09-29T09:00:00+00:00", href="/node?iri=far")
+
+    result = render_ribbon_svg((normal, gap_recorded, far), ("docker-events",))
+
+    clustered = [point for point in _cursor_points(result.markup) if "members" in point]
+    members = clustered[0]["members"]
+    assert members[0]["is_gap"] is False and members[0]["is_occurred_at"] is True
+    assert members[1]["is_gap"] is True and members[1]["is_occurred_at"] is False
+
+
+def test_a_dense_lane_summary_badge_carries_no_members_list_either():
+    # Scoped out on purpose (owner cadrage, "laisser tels quels") —
+    # unfolding 60+ members individually would reproduce the illegible
+    # density the summary badge exists to replace. Same shape as
+    # `test_a_lane_with_an_abnormally_large_cluster_renders_one_honest_
+    # summary_instead` above (earliest + a 60-member burst + latest).
+    base = datetime(2026, 9, 28, 9, 0, 0, tzinfo=timezone.utc)
+    earliest = mark(instant=_iso(base, 0), href="/node?iri=earliest")
+    burst = [mark(instant=_iso(base, 700 + i), href=f"/node?iri=burst{i}") for i in range(60)]
+    latest = mark(instant=_iso(base, 1430), href="/node?iri=latest")
+
+    result = render_ribbon_svg((earliest, *burst, latest), ("docker-events",))
+
+    points = _cursor_points(result.markup)
+    assert len(points) == 1
+    assert "members" not in points[0]
+
+
 # --- Third slice (ADR-0011 §26, production found two more real gaps
 # within hours of the second slice, 2026-09-29) -----------------------
 #
@@ -236,8 +325,10 @@ def test_clusters_more_than_min_gap_apart_still_merge_once_their_own_multi_digit
     assert "●11" not in result.markup
     # Three cursor points: the lone earliest mark, the merged 22-member
     # cluster, and the lone latest mark — never four (A and B staying
-    # separate) and never two (the lone marks joining in too).
-    assert result.markup.count('"href"') == 3
+    # separate) and never two (the lone marks joining in too). Counted
+    # on `"x":` (see the comment two tests up) — the 22-member cluster's
+    # own cursor point now embeds 22 nested `href`s of its own.
+    assert result.markup.count('"x":') == 3
 
 
 def test_a_lane_with_an_abnormally_large_cluster_renders_one_honest_summary_instead():

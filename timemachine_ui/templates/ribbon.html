@@ -240,6 +240,106 @@
       // with zero marks emits no island at all and is skipped, never
       // a crash. Every svg gets its own independent nearest-instant
       // search: a cursor never jumps across categories.
+      // Cluster unfold (2026-10-02, `claude/AUDIT-TIMEMACHINE-
+      // REALIGNEMENT-MAQUETTES-2026-10-02.md`, owner cadrage: "liste
+      // déroulante au clic") — strings baked in once at render time,
+      // the same way every other page text here already is (no i18n
+      // lookup happens in this static script at request time).
+      var clusterPopoverHeading = {{ t('timemachine.ribbon.cluster_popover_heading') | tojson }};
+      var clusterPopoverClose = {{ t('timemachine.ribbon.cluster_popover_close') | tojson }};
+      var occurredAtLabel = {{ t('timemachine.ribbon.occurred_at_label') | tojson }};
+      var recordedAtLabel = {{ t('timemachine.ribbon.recorded_at_label') | tojson }};
+      var gapLabel = {{ t('timemachine.ribbon.gap_label') | tojson }};
+
+      var openPopover = null;
+
+      function closeClusterPopover() {
+        if (openPopover) {
+          openPopover.remove();
+          openPopover = null;
+        }
+      }
+
+      // A later click anywhere outside the popover closes it — capture
+      // phase, so it still fires before this same click's own mousedown
+      // handler below would otherwise reopen/relocate the cursor line
+      // right under it.
+      document.addEventListener("mousedown", function (evt) {
+        if (openPopover && !openPopover.contains(evt.target)) { closeClusterPopover(); }
+      }, true);
+      document.addEventListener("keydown", function (evt) {
+        if (evt.key === "Escape") { closeClusterPopover(); }
+      });
+
+      function openClusterPopover(mark, screenX, screenY) {
+        closeClusterPopover();
+
+        var panel = document.createElement("div");
+        panel.className = "ribbon-cluster-popover";
+
+        var header = document.createElement("div");
+        header.className = "ribbon-cluster-popover-header";
+        var heading = document.createElement("span");
+        heading.className = "ribbon-cluster-popover-heading";
+        heading.textContent = clusterPopoverHeading;
+        var close = document.createElement("button");
+        close.type = "button";
+        close.className = "ribbon-cluster-popover-close";
+        close.setAttribute("aria-label", clusterPopoverClose);
+        close.textContent = "✕";
+        close.addEventListener("click", closeClusterPopover);
+        header.appendChild(heading);
+        header.appendChild(close);
+        panel.appendChild(header);
+
+        var list = document.createElement("ul");
+        list.className = "ribbon-cluster-popover-list";
+        mark.members.forEach(function (member) {
+          var item = document.createElement("li");
+          var link = document.createElement("a");
+          link.href = member.href;
+          var label = (member.is_occurred_at ? occurredAtLabel : recordedAtLabel) + " " + member.instant;
+          if (member.subject) { label += " — " + member.subject; }
+          link.textContent = label;
+          if (member.is_gap) {
+            var gapTag = document.createElement("span");
+            gapTag.className = "ribbon-cluster-popover-gap";
+            gapTag.textContent = gapLabel;
+            link.appendChild(gapTag);
+          }
+          item.appendChild(link);
+          list.appendChild(item);
+        });
+        panel.appendChild(list);
+
+        document.body.appendChild(panel);
+        // Measured after insertion (real width/height, not the fixed
+        // max-width/max-height alone) so the panel never renders
+        // off-screen on a narrow phone near either edge.
+        var rect = panel.getBoundingClientRect();
+        var left = Math.min(Math.max(screenX, 8), window.innerWidth - rect.width - 8);
+        var top = Math.min(Math.max(screenY, 8), window.innerHeight - rect.height - 8);
+        panel.style.left = left + "px";
+        panel.style.top = top + "px";
+
+        openPopover = panel;
+      }
+
+      // Converts a mark's own SVG-space (x, y) — same `viewBox` units
+      // `svgXFromEvent` below reads the other way — into real screen
+      // coordinates, so the popover lands next to the glyph the owner
+      // actually clicked rather than at a fixed offset.
+      function markScreenPosition(svg, mark) {
+        var rect = svg.getBoundingClientRect();
+        var viewBox = svg.viewBox.baseVal;
+        var scaleX = viewBox.width > 0 ? rect.width / viewBox.width : 1;
+        var scaleY = viewBox.height > 0 ? rect.height / viewBox.height : 1;
+        return {
+          x: rect.left + mark.x * scaleX,
+          y: rect.top + mark.y * scaleY
+        };
+      }
+
       Array.prototype.forEach.call(document.querySelectorAll(".ribbon-svg"), function (svg) {
         var dataEl = svg.nextElementSibling;
         if (!dataEl || !dataEl.classList.contains("ribbon-marks-data")) { return; }
@@ -304,6 +404,11 @@
           if (!dragging) { return; }
           dragging = false;
           var mark = nearest(svgXFromEvent(evt));
+          if (mark.members && mark.members.length > 1) {
+            var pos = markScreenPosition(svg, mark);
+            openClusterPopover(mark, pos.x, pos.y);
+            return;
+          }
           window.location.href = mark.href;
         });
         // A plain click is already a mousedown immediately followed by
@@ -344,6 +449,11 @@
           }
           var mark = nearest(svgXFromEvent({ clientX: touchStartX, clientY: touchStartY }));
           touchStartX = null;
+          if (mark.members && mark.members.length > 1) {
+            var pos = markScreenPosition(svg, mark);
+            openClusterPopover(mark, pos.x, pos.y);
+            return;
+          }
           window.location.href = mark.href;
         });
       });

@@ -444,3 +444,51 @@ header h1 {
   gap: .6rem;
 }
 .ribbon-card-grid .band { margin-bottom: 0; }
+
+/*
+  Cluster unfold (2026-10-02, `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-
+  MAQUETTES-2026-10-02.md`, owner cadrage: "liste déroulante au clic",
+  never a spatial fan-out on the axis) — a small floating panel the
+  ribbon's own script positions next to a clicked multi-member cluster,
+  same card family as everything else on this page (`#dde4ed`/8px, the
+  same `#fafafa`/`#16335c` pairing `.band`/`.ribbon-group` already use)
+  rather than a new visual language. `position: fixed` + a shadow
+  (nothing else on this page floats above the page flow, so this is the
+  one place a shadow earns its keep — distinguishing "floating" from
+  "in flow"). A lane summary badge (too dense to unfold honestly, the
+  same cadrage) never triggers this — it still only ever navigates.
+*/
+.ribbon-cluster-popover {
+  position: fixed; z-index: 20; max-width: min(90vw, 20rem);
+  border: 1px solid #dde4ed; border-radius: 8px; background: #fff;
+  box-shadow: 0 4px 16px rgba(22, 51, 92, .18); padding: .5rem;
+}
+.ribbon-cluster-popover-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .6rem; margin-bottom: .3rem;
+}
+.ribbon-cluster-popover-heading {
+  font-size: .78rem; font-weight: 600; color: #5b6b7d;
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.ribbon-cluster-popover-close {
+  border: none; background: none; color: #16335c; cursor: pointer;
+  font-size: .9rem; line-height: 1; padding: .1rem .3rem;
+}
+.ribbon-cluster-popover-close:hover { text-decoration: underline; }
+.ribbon-cluster-popover-list {
+  list-style: none; margin: 0; padding: 0; max-height: 14rem;
+  overflow-y: auto;
+}
+.ribbon-cluster-popover-list li { margin-bottom: .25rem; }
+.ribbon-cluster-popover-list li:last-child { margin-bottom: 0; }
+.ribbon-cluster-popover-list a {
+  display: block; padding: .3rem .4rem; border-radius: 6px;
+  color: #1f2933; text-decoration: none; font-size: .85rem;
+}
+.ribbon-cluster-popover-list a:hover { background: #eef3fa; }
+.ribbon-cluster-popover-gap {
+  margin-left: .3rem; font-size: .68rem; text-transform: uppercase;
+  letter-spacing: .03em; padding: .05rem .4rem; border-radius: 10px;
+  background: #ffe3cf; color: #a04a1a;
+}

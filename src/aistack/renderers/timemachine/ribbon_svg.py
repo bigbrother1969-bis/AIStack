@@ -137,18 +137,21 @@ minces"). `ribbon_view` in `timemachine_ui/app.py` calls
 already renders as a flat list — kept, unremoved: the `dataviz`
 skill's own non-negotiable, "a table view exists".
 
-**Deliberately still narrower than the validated maquette.** Not
-built here, named rather than left to discover: the network tree
-shown paired alongside the ribbon (`/tree` stays a separate view —
-merging the two is real future design); the event card's own
-"panneau Pourquoi" (1.7's own concern, `ADR-0011` § 24 already named
-it); the cursor itself only ever opens the nearest instant's existing
-`/node` drill-down — it does not reconstruct anything; and a cluster
-mark does not unfold in place (above).
+**Deliberately still narrower than the validated maquette** (re-measured
+`claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`, which
+closed the fourth of four named gaps — cluster unfold, directly above
+— one at a time with the owner, the remaining three kept open on
+purpose, not forgotten): the network tree shown paired alongside the
+ribbon (`/tree` stays a separate view — merging the two is real future
+design); the event card's own "panneau Pourquoi" (1.7's own concern,
+`ADR-0011` § 24 already named it); and the cursor itself only ever
+opens the nearest instant's existing `/node` drill-down — it does not
+reconstruct anything.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -426,7 +429,19 @@ def _render_lane_summary(
         f'font-size="{_MARK_FONT_SIZE - 2}">'
         f"<title>{tooltip}</title>{escape_text(label)}</text></a>"
     )
-    cursor_point = f'{{"x":{x:.2f},"href":"{first.href}"}}'
+    # No `members` key here — deliberate, unchanged from the cadrage
+    # that created this function (2026-09-29): a summary badge already
+    # stands for a count too large to plot honestly point by point
+    # (`_lane_needs_summary`'s own docstring, "a single pixel position
+    # claiming to represent 49125 instants means nothing"); unfolding
+    # it into a clickable list would reproduce exactly the illegible
+    # density this badge exists to replace. Scoped out of the 2026-10-02
+    # cluster-unfold cadrage (`AskUserQuestion`, "laisser tels quels"),
+    # named here rather than left to discover.
+    cursor_point = json.dumps(
+        {"x": round(x, 2), "y": round(y, 2), "href": first.href},
+        separators=(",", ":"),
+    )
     return element, cursor_point
 
 
@@ -438,6 +453,20 @@ def _render_cluster(cluster: list[_Positioned], y: float) -> tuple[str, str]:
     colour/shape (every member shares it — one lane is one stream) and
     appends its own count, never averaging or dropping a member's own
     instant out of the tooltip.
+
+    **"Déplier sur place" (2026-10-02, owner cadrage, `AskUserQuestion`:
+    "liste déroulante au clic", not a spatial fan-out on the axis) —
+    the cursor point a multi-member cluster hands the page's own script
+    now carries its own `members` list, one entry per instant, each with
+    its own real `href` (never only the earliest member's, unlike the
+    glyph's own `<a>` above, kept unchanged for the no-JS case). The
+    script draws these as a small list next to the glyph instead of
+    navigating straight to the earliest member — the same "never a
+    fabricated position, never a dead link" discipline this module
+    already holds, extended to every member, not only the first. A
+    single-member cluster carries no `members` key at all — nothing to
+    unfold, the same restraint `_render_lane_summary` already applies
+    for the opposite reason (too many members to unfold honestly).
     """
 
     first = cluster[0].mark
@@ -467,7 +496,23 @@ def _render_cluster(cluster: list[_Positioned], y: float) -> tuple[str, str]:
         f'font-size="{_MARK_FONT_SIZE}">'
         f"<title>{tooltip}</title>{escape_text(glyph)}</text></a>"
     )
-    cursor_point = f'{{"x":{x:.2f},"href":"{first.href}"}}'
+    point_data: dict[str, object] = {
+        "x": round(x, 2),
+        "y": round(y, 2),
+        "href": first.href,
+    }
+    if len(cluster) > 1:
+        point_data["members"] = [
+            {
+                "href": item.mark.href,
+                "instant": item.instant.isoformat(timespec="seconds"),
+                "subject": item.mark.subject,
+                "is_occurred_at": item.mark.is_occurred_at,
+                "is_gap": item.mark.is_gap,
+            }
+            for item in cluster
+        ]
+    cursor_point = json.dumps(point_data, separators=(",", ":"))
     return element, cursor_point
 
 

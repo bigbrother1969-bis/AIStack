@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.14
+  version: 1.15
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-09-10
+  updated: 2026-10-02
 
 relations:
   references:
@@ -274,6 +274,15 @@ git pull --ff-only origin main \
   && pytest -q \
   && python3 -m aistack.cli.knowledge_integrity
 ```
+
+**Once per pulled commit, not once per publishing step — decided
+2026-10-02 by the owner.** On the reference host the suite takes about
+nine minutes, and the 1.6.0 publication ran it three times on the same
+commit: after the pull, again before `sync_mirrors.sh`, and again inside
+the image preconditions. The chain above runs once, right after the pull;
+while `HEAD` stays the commit it verified, `sync_mirrors.sh` and the image
+build (§ *Publishing an image*) follow without running it again. A new
+pull is a new commit, and runs it again.
 
 Only once that reports `clean: True` (or the one narrow exception § 1
 states — a `WARNING` an open register entry names):
@@ -661,6 +670,25 @@ nobody can check: a dirty tree makes the label a lie; a branch other than
 `origin/main` names a commit no recipient can fetch**; and a static or
 dynamic check failing — `ruff`, `mypy`, a red suite, or a blocking finding —
 publishes a state this heritage says is unsound.
+
+**On the publisher, the fourth term is the chain § 3 already ran —
+decided 2026-10-02 by the owner.** When that chain reported `clean: True`
+on the publisher after its last pull, in the same sitting, the build does
+not run it a second time: it re-checks only the three terms that can
+change without a pull — a dirty tree, another branch, a `HEAD` no longer
+equal to `origin/main` — and they are instant:
+
+```bash
+test -z "$(git status --porcelain)" \
+  && test "$(git rev-parse --abbrev-ref HEAD)" = main \
+  && git fetch origin \
+  && test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+```
+
+If `git fetch` brings a newer commit, or the § 3 chain did not run in this
+sitting, the full block above applies. The four terms are unchanged; only
+the second run of the slowest one is dropped, on a commit the workstation
+and the publisher have each already verified.
 
 **Before building a new version, every image `docker-compose.yml` still
 lists as current is re-verified against its own recorded digest** —

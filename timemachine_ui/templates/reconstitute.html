@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('timemachine.title') }}</title>
+  <link rel="icon" href="{{ favicon }}">
+  <style>{% include "_style.html" %}</style>
+</head>
+<body>
+  <!--
+    `/reconstitute` — gap #3 of `claude/AUDIT-TIMEMACHINE-
+    REALIGNEMENT-MAQUETTES-2026-10-02.md` ("le curseur du ruban
+    n'ouvre que le /node de l'instant le plus proche — il ne
+    « reconstitue » rien"), cadrage 2026-10-02: a contained, read-only
+    first slice of the validated maquette's own "reconstituer un état
+    passé en 3 clics" — see `app.py`'s own `_reconstitution` docstring
+    for the full scope line. Reached only from `/node`'s own center
+    column (`node_ribbon_reconstitute_link`), never a top-level view
+    of its own — same reasoning `node.html` already holds for its own
+    `view-switch` (no `view-current` here either, for the same reason).
+
+    Deliberately **not** built here, named rather than silently
+    missing: a then/now comparison table across domains (the
+    maquette's own "Alors et maintenant"), a causal timeline into
+    Évolution, and a "Restaurer en bac à sable" button — that last one
+    is a write, and this screen's own architecture decision forbids
+    writing outright (`ADR-0011` § *Decision* 10).
+  -->
+  {{ page_nav | safe }}
+  <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
+
+  <nav class="view-switch">
+    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
+    <a href="/ribbon?lang={{ lang }}">{{ t('timemachine.nav.ribbon') }}</a>
+  </nav>
+
+  <header>
+    <h1>{{ t('timemachine.reconstitute.heading') }}</h1>
+    <p class="meta">{{ t('timemachine.reconstitute.intro') }}</p>
+  </header>
+
+  {% if panel %}
+    <p class="ribbon-subject-filter">
+      {{ t('timemachine.reconstitute.subject_label') }} <strong>{{ panel.subject }}</strong>
+      &middot;
+      {{ t('timemachine.reconstitute.as_of_label') }} <strong>{{ panel.as_of }}</strong>
+    </p>
+
+    {% if panel.has_streams %}
+      <ul class="band-list">
+        {% for row in panel.rows %}
+          <li class="band{% if row.has_observation and row.is_gap %} band--gap{% endif %}">
+            <div class="band-title">
+              <span class="ribbon-badge" style="color: {{ row.badge.color }}">{{ row.badge.shape }}</span>
+              {{ row.stream }}
+            </div>
+            {% if not row.has_observation %}
+              <p class="empty">{{ t('timemachine.reconstitute.no_observation') }}</p>
+            {% elif row.is_gap %}
+              <div class="band-row">
+                <span class="k"><span class="ribbon-gap-tag">{{ t('timemachine.ribbon.gap_label') }}</span></span>
+                <span class="v">{{ row.instant }}</span>
+              </div>
+            {% else %}
+              <div class="band-row">
+                <span class="k">
+                  {% if row.is_occurred_at %}{{ t('timemachine.ribbon.occurred_at_label') }}{% else %}{{ t('timemachine.ribbon.recorded_at_label') }}{% endif %}
+                </span>
+                <span class="v">{{ row.instant }}</span>
+              </div>
+              <ul class="band-list">
+                {% for fact in row.facts %}
+                  <li class="band">
+                    <div class="band-row">
+                      <span class="k">
+                        {% if fact.predicate_label_key %}{{ t(fact.predicate_label_key) }}{% else %}{{ fact.predicate }}{% endif %}
+                      </span>
+                      <span class="v">
+                        {% if fact.object_type_label_key %}
+                          {{ t(fact.object_type_label_key) }}
+                        {% elif fact.object_iri %}
+                          <a href="/node?iri={{ fact.object_iri | urlencode }}&amp;lang={{ lang }}">{{ fact.object }}</a>
+                        {% else %}
+                          {{ fact.object }}
+                        {% endif %}
+                      </span>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+              <a class="band-tree-link" href="{{ row.href }}">{{ t('timemachine.reconstitute.view_node') }}</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">{{ t('timemachine.reconstitute.empty_streams') }}</p>
+    {% endif %}
+  {% else %}
+    <p class="empty">{{ t('timemachine.reconstitute.missing') }}</p>
+  {% endif %}
+</body>
+</html>

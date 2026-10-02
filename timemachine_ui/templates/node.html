@@ -119,6 +119,16 @@
           <p class="empty">{{ t('timemachine.ribbon.subject_empty') }}</p>
         {% endif %}
         <a class="band-tree-link" href="/ribbon?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_view_full') }}</a>
+        {% if node_instant %}
+          <!--
+            node_ribbon_reconstitute_link, added 2026-10-02 (gap #3,
+            cadrage "tranche contenue, lecture seule, un sujet") — this
+            node's own instant is the `as_of` point: both `subject`
+            and `node_instant` must be known for /reconstitute to mean
+            anything, so this link never appears without either.
+          -->
+          <a class="band-tree-link" href="/reconstitute?subject={{ ribbon_panel.subject | urlencode }}&amp;as_of={{ node_instant | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_reconstitute_link') }}</a>
+        {% endif %}
       {% else %}
         <p class="empty">{{ t('timemachine.node_ribbon_no_subject') }}</p>
       {% endif %}

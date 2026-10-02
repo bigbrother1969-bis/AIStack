@@ -467,6 +467,67 @@ def _node_href(neighbor_iri: str, language: PageLanguage) -> str:
     return f"/node?iri={quote(neighbor_iri, safe='')}&lang={language.lang}"
 
 
+def _node_instant(facts: list[dict[str, object]]) -> str | None:
+    """
+    This node's own recorded instant — `aistack:occurredAt` when the
+    stream states a real occurrence instant, `prov:generatedAtTime`
+    (recording time) otherwise — the exact same priority `_ribbon_
+    entries` already applies to place an entry on the ribbon. `None`
+    for a node that asserts neither (an Activity/Agent). Added
+    2026-10-02 (gap #3, "reconstituer un état passé") so `/node` can
+    pass its own instant as the `as_of` point of a reconstitution,
+    without a second definition of "this node's own instant".
+    """
+
+    occurred_at = next(
+        (str(fact["object"]) for fact in facts if fact["predicate"] == AISTACK_OCCURRED_AT),
+        None,
+    )
+    if occurred_at is not None:
+        return occurred_at
+    return next(
+        (
+            str(fact["object"])
+            for fact in facts
+            if fact["predicate"] == PROV_GENERATED_AT_TIME
+        ),
+        None,
+    )
+
+
+def _entity_facts(store: GraphStore, iri: str) -> list[dict[str, object]]:
+    """
+    The same per-node `outgoing`-facts shape `node_view` already
+    builds (`predicate`/`predicate_label_key`/`object`/`object_type_
+    label_key`/`object_iri`), factored out as its own standalone
+    helper 2026-10-02 (gap #3) so `/reconstitute` can fetch one
+    stream's own representative entity's facts without re-deriving
+    this mapping a second time. Deliberately not reused *by* `node_
+    view` itself — that route already has `outgoing` in hand for
+    `is_activity`/`node_type_label_key` too, and re-querying it through
+    this helper would cost a second, redundant SPARQL round trip for
+    no gain.
+    """
+
+    term = _iri_term(iri)
+    outgoing = list(store.query(f"SELECT ?p ?o WHERE {{ {term} ?p ?o }}"))
+    facts: list[dict[str, object]] = []
+    for row in outgoing:
+        predicate, obj = row["p"], row["o"]
+        label_key, object_is_iri = _PREDICATE_LABELS.get(predicate, (None, False))
+        object_type_label_key = _TYPE_LABELS.get(obj) if predicate == RDF_TYPE else None
+        facts.append(
+            {
+                "predicate": predicate,
+                "predicate_label_key": label_key,
+                "object": obj,
+                "object_type_label_key": object_type_label_key,
+                "object_iri": obj if object_is_iri else None,
+            }
+        )
+    return facts
+
+
 def _node_stable_subject(facts: list[dict[str, object]]) -> str | None:
     """
     This node's own `aistack:stableSubject`, when it asserts one as an
@@ -651,7 +712,13 @@ def node(request: Request, iri: str, q: str = ""):
     # by whichever `aistack:stableSubject` it asserts, when it asserts
     # one at all (`_node_stable_subject`).
     tree_context = _tree_context(q)
-    ribbon_panel = _node_ribbon_panel(store, _node_stable_subject(facts), language)
+    node_subject = _node_stable_subject(facts)
+    ribbon_panel = _node_ribbon_panel(store, node_subject, language)
+    # Gap #3, 2026-10-02 — `/reconstitute`'s own `as_of` point: this
+    # node's own instant, when it has one (an Entity always does; an
+    # Activity/Agent does not). Both `node_subject` and `node_instant`
+    # must be present for the link to mean anything (see `node.html`).
+    node_instant = _node_instant(facts)
 
     context: dict[str, object] = {
         "iri": iri,
@@ -665,6 +732,7 @@ def node(request: Request, iri: str, q: str = ""):
         "tree_query": tree_context["query"],
         "tree_search_empty": tree_context["search_empty"],
         "ribbon_panel": ribbon_panel,
+        "node_instant": node_instant,
     }
     context.update(language.context())
     extra_query = f"&iri={quote(iri)}"
@@ -1022,6 +1090,145 @@ def _node_ribbon_panel(
         "ribbon_svg_observation": ribbon_observation.markup,
         "ribbon_svg_observation_mark_count": ribbon_observation.mark_count,
     }
+
+
+def _reconstitution(
+    store: GraphStore, subject: str, as_of: str, language: PageLanguage
+) -> dict[str, object]:
+    """
+    Gap #3 of `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-
+    10-02.md` ("le curseur du ruban n'ouvre que le /node de l'instant
+    le plus proche — il ne « reconstitue » rien"), cadrage 2026-10-02:
+    a contained, **read-only** first slice of the validated maquette's
+    own "reconstituer un état passé en 3 clics" — never the full
+    maquette, which also shows a then/now comparison table across six
+    domains, a causal timeline into Évolution, and a "Restaurer en bac
+    à sable" button that would start a real, isolated sandbox
+    container. That last one is not a narrower slice of anything —
+    it is a write, and this screen's own architecture decision
+    forbids writing outright (`ADR-0011` § *Decision* 10: "read-only,
+    never a writer" — reconstruction is a full rebuild, run on demand
+    by `aistack.cli.timemachine_rebuild`, never by a screen a browser
+    reaches). Owner cadrage (`AskUserQuestion`, 2026-10-02): a
+    contained slice, read-only, one subject — this is it.
+
+    The maquette's own steps 1 ("quel sujet") and 2 ("quel instant")
+    are not rebuilt here either — they already exist, reached by
+    picking a node in the tree or a mark on the ribbon (`/tree`'s own
+    `tree-ribbon` link, `/node`'s own embedded chronology) — this
+    function is purely step 3, "reconstituer", given a `subject` and
+    an `as_of` instant both already resolved by the caller.
+
+    For `subject`, the latest entry **at or before** `as_of` on each
+    stream that carries this subject at all — the same entries `_
+    ribbon_entries_cached` already holds; instant comparison is a
+    plain string compare, the same assumption `_ribbon_entries`'s own
+    sort key already relies on (every instant here is the same
+    ISO-8601 `Z`-suffixed shape, lexicographically ordered the same
+    as chronologically). A stream that carries this subject but has
+    no entry at or before `as_of` reports that honestly (`has_
+    observation=False`) rather than silently omitting the row or
+    reaching past `as_of` for a later one — the maquette's own
+    "jamais deviné" rule for what was not observed, applied here the
+    same way. A stream whose nearest entry *is itself* a collection
+    gap (`is_gap`) is shown as that gap, not as if it were a real
+    observation — showing its own (gap) facts as if they answered
+    "what was true then" would be the same kind of guess this
+    function exists to refuse.
+    """
+
+    entries = _ribbon_entries_cached(store)
+    subject_entries = [
+        entry
+        for entry in entries
+        if entry["subject"] is not None and str(entry["subject"]) == subject
+    ]
+    streams = sorted({str(entry["stream"]) for entry in subject_entries})
+    # Same badge `/ribbon`/`/node` already assign this stream — `_ribbon_
+    # badges` is computed over every entry the graph holds, never only
+    # `subject_entries`, so a stream's own colour/shape here never
+    # disagrees with its colour/shape anywhere else (the same guarantee
+    # `ribbon_view`'s own docstring already states for badge stability).
+    badges = _ribbon_badges(entries)
+
+    rows: list[dict[str, object]] = []
+    for stream in streams:
+        candidates = [
+            entry
+            for entry in subject_entries
+            if entry["stream"] == stream and str(entry["instant"]) <= as_of
+        ]
+        badge = badges[stream]
+        if not candidates:
+            rows.append({"stream": stream, "badge": badge, "has_observation": False})
+            continue
+        latest = max(candidates, key=lambda entry: str(entry["instant"]))
+        iri = str(latest["iri"])
+        rows.append(
+            {
+                "stream": stream,
+                "badge": badge,
+                "has_observation": True,
+                "href": _node_href(iri, language),
+                "instant": str(latest["instant"]),
+                "is_occurred_at": bool(latest["is_occurred_at"]),
+                "is_gap": bool(latest["is_gap"]),
+                "facts": [] if latest["is_gap"] else _entity_facts(store, iri),
+            }
+        )
+
+    return {
+        "subject": subject,
+        "as_of": as_of,
+        "has_streams": bool(streams),
+        "rows": rows,
+    }
+
+
+@app.get("/reconstitute", response_class=HTMLResponse)
+def reconstitute(request: Request, subject: str = "", as_of: str = ""):
+    """
+    Gap #3, 2026-10-02 — see `_reconstitution`'s own docstring for the
+    full "why" and the owner-confirmed scope (read-only, one subject,
+    no then/now comparison, no sandbox restore). Reached from `/node`'s
+    own center column (`node_ribbon_reconstitute_link`, next to `node_
+    ribbon_view_full`) — never from a bare link typed without both
+    `subject` and `as_of` already known, both always already resolved
+    by the caller (`_node_stable_subject`/`_node_instant`). A request
+    missing either shows the same kind of honest "nothing chosen yet"
+    state `/ribbon` already shows without a `subject`, rather than
+    guessing one or raising.
+    """
+
+    language = _language(request)
+    store = _open_store()
+    if store is None:
+        return _not_built(request, language)
+
+    subject_query = subject.strip()
+    as_of_query = as_of.strip()
+    panel = (
+        _reconstitution(store, subject_query, as_of_query, language)
+        if subject_query and as_of_query
+        else None
+    )
+
+    context: dict[str, object] = {
+        "subject": subject_query,
+        "as_of": as_of_query,
+        "panel": panel,
+    }
+    context.update(language.context())
+    extra_query_parts = []
+    if subject_query:
+        extra_query_parts.append(f"&subject={quote(subject_query)}")
+    if as_of_query:
+        extra_query_parts.append(f"&as_of={quote(as_of_query)}")
+    context["page_nav"] = _page_nav(language, extra_query="".join(extra_query_parts))
+    return _finish(
+        templates.TemplateResponse(request=request, name="reconstitute.html", context=context),
+        language,
+    )
 
 
 @app.get("/ribbon", response_class=HTMLResponse)

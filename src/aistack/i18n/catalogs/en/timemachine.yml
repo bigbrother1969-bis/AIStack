@@ -28,6 +28,9 @@ node_iri_label: "Node identifier"
 node_ribbon_heading: "This subject's chronology"
 node_ribbon_no_subject: "No stable subject for this node — nothing to filter in the ribbon."
 node_ribbon_view_full: "View full ribbon"
+# Gap #3, added 2026-10-02 (cadrage: a contained slice, read-only, one
+# subject) — the link to `/reconstitute` from /node's center column.
+node_ribbon_reconstitute_link: "Reconstitute at this instant"
 graph:
   heading: "Graph"
   loading: "Loading graph…"
@@ -85,3 +88,16 @@ ribbon:
   pagination_summary: "Page {page} of {total_pages} ({total} events)"
   cluster_popover_heading: "Events in this group"
   cluster_popover_close: "Close"
+# Gap #3, added 2026-10-02 — a contained slice, read-only, one subject
+# (see app.py's own `_reconstitution`). Never a then/now comparison,
+# never a real restore: ADR-0011 § Decision 10 ("read-only, never a
+# writer") forbids it.
+reconstitute:
+  heading: "Reconstitution"
+  intro: "For a chosen subject and instant, what is known on each stream at or before that instant — never a comparison between two instants, never a real restore: AIStack never touches the real container from this screen."
+  subject_label: "Subject:"
+  as_of_label: "At or before:"
+  missing: "Pick a subject and an instant first, from the tree or the ribbon."
+  empty_streams: "No stream known for this subject."
+  no_observation: "No observation known at or before this instant, for this stream."
+  view_node: "View this node"

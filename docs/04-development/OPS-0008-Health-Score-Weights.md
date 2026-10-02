@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Draft
   owner: Operations
   created: 2026-09-11
-  updated: 2026-09-26
+  updated: 2026-10-02
 
 relations:
   references:
@@ -27,7 +27,9 @@ relations:
 
 This register declares the weight, in points, that each instrumented
 domain (Stockage, Services, Sauvegarde / PRA, GPU — `PLAN-J7` § 1's four,
-plus Tests PRA, added 2026-09-23) contributes to a health score of 100 for
+plus Tests PRA, added 2026-09-23, plus État persistant and Écarts
+d'inventaire, both added 2026-09-30 — see *Declared weights* below)
+contributes to a health score of 100 for
 every `RuntimeFinding` it carries — the numbers
 `aistack.health.score.compute_health_score` reads rather than invents, the
 same `GOV-P-001` discipline every prior threshold register in this family
@@ -101,6 +103,20 @@ and this register does not let the display conflate them.
 | Sauvegarde / PRA | 25 |
 | GPU | 8 |
 | Tests PRA | 25 |
+| État persistant | 25 |
+| Écarts d'inventaire | 25 |
+
+**This table had drifted from `src/aistack/health/definitions/
+health_score_weights.yml` itself since 2026-09-30, and was caught and
+corrected 2026-10-02** — État persistant (1.6 tranche 2, R9) and Écarts
+d'inventaire (1.6 tranche 3, R9) had both been declared in the real
+weights file for two days, each weighted 25 points on the owner's own
+2026-09-30 choice ("même ordre de grandeur que le domaine le plus
+proche en signification" — the same criterion Tests PRA's own weight
+was set by), while this register's own table still named only the
+original five. Nothing enforces agreement between a register and the
+file it describes; this entry is the measured instance, not a general
+claim that the two cannot drift again.
 
 Sauvegarde / PRA carries the heaviest weight of the original four — a
 missing or stale backup is the one failure among those four domains that
@@ -125,15 +141,63 @@ owner has not yet named. Widening the domain vocabulary (`PLAN-J7` § 1,
 reopened once already 2026-09-23 for Tests PRA) requires widening this
 register in the same commit, never assumed to default to zero.
 
+## Regenerating the cockpit — `console.html` and `health.html` must agree
+
+**Measured 2026-10-02.** `console.html` (`aistack.cli.console_render`)
+and `health.html` (`aistack.cli.health_render`) each build their own
+`HealthCockpit` independently — a deliberate choice, "no CLI in this
+package imports another" (both modules' own header comments) — and
+each is a **static file, regenerated only when its own command is run**:
+`console.html` at every `aistack-console` service start/restart
+(`run_console.sh`), `health.html` only when someone runs
+`python -m aistack.cli.health_render` by hand. Nothing ties the two
+together, and two of the seven domains — Services and Écarts
+d'inventaire — read live Docker state at the moment their own command
+happens to run.
+
+The owner caught the two pages disagreeing: `console.html` showed
+61/100 (dette technique 0/100), `health.html` showed 81/100 (dette
+technique 40/100), served from the same host seconds apart. Reconciled
+against this register's own formula: Tests PRA's 4 findings (declared,
+static — `OPS-0009`) were the only ones `health.html`'s render saw,
+giving 81/100 and a 40/100 debt score. `console.html`'s render,
+run at a different moment, additionally saw 1 live Services finding and
+4 live Écarts d'inventaire findings that had cleared by the time
+`health.html` was generated — giving 61/100 and a debt score clamped to
+0. Both renders computed their own cockpit correctly; what they
+disagreed on was the live Docker state at two different instants, not
+the arithmetic above.
+
+**The required procedure, until a shared snapshot exists (see below):
+regenerate both pages in the same sitting, never one without the
+other**, immediately before anyone reads either as a current figure —
+publishing a release included:
+
+```bash
+python -m aistack.cli.console_render && python -m aistack.cli.health_render
+```
+
+`aistack.console.server` reads `console.html` fresh off disk on every
+request (`Cache-Control: no-cache`, no in-memory copy), so this takes
+effect immediately — no service restart required for the console half.
+A residual drift window remains between the two commands (Docker state
+can still change in the few seconds between them); closing it fully
+would mean the two renders sharing one `HealthCockpit` computed once,
+which is a deliberate reversal of the "no CLI imports another"
+convention above and is not built here, `ARC-P-006` — this section
+exists so the two pages are at least never read as current without
+having been regenerated together.
+
 ## Out of scope for this version
 
 - **Per-finding severity within a domain** — a GPU reading 1°C over its
   threshold costs exactly as much as one 30°C over; this register does not
   yet grade how far past a threshold a finding is, only whether it exists.
   Revisit only against a real case, `ARC-P-006`.
-- **A sixth domain's weight** — Tests PRA closed this bullet 2026-09-23;
-  a further domain's weight is added only once the owner instruments it
-  and states its weight, never guessed ahead of that domain existing.
+- **A further domain's weight** — Tests PRA (2026-09-23), État persistant
+  and Écarts d'inventaire (both 2026-09-30) each closed this bullet in
+  turn; a new domain's weight is added only once the owner instruments
+  it and states its weight, never guessed ahead of that domain existing.
 - **Time decay or trend weighting** — a finding present for a week costs
   the same as one present for a minute; this register scores one snapshot,
   not a history.

@@ -53,23 +53,42 @@
 # confirmed by a real restore test the same day (34 tables restored
 # into a scratch MariaDB container).
 #
-# **`nextcloud`/`immich`** — GIGABYTE, `has_state: true`,
-# `engines: []`. A 2026-09-11 note mentions "des timers systemd pour
-# les bases Nextcloud/Immich" in passing, but this session could not
-# ground the script name, path, or exact mechanism — asked directly of
-# the owner 2026-09-30, who did not know it by heart either. Declared
-# here as a real, confirmed gap in what this session could ground
-# (`GOV-P-001`: never guessed), the same honest "not confirmed"
-# `pra_tests.yml` already gives `gigabyte.last_test`, not a placeholder
-# to quietly fill in later.
+# **`nextcloud`/`immich`** — GIGABYTE. 1.6 closure, 2026-10-02: the
+# 2026-09-11 note's "timers systemd" is real, found by the owner —
+# `backup-nextcloud-db.timer`/`.service` (daily, 02:20) and
+# `backup-immich-db.timer`/`.service` (daily, 02:40), each a `oneshot`
+# calling a dedicated script (`dump_sql`, same shape as
+# `backup-wordpress.sh`): `mariadb-dump --single-transaction --quick`
+# for Nextcloud, `pg_dump` for Immich, both gzipped into
+# `/media/BACKUP/SQL_BACKUPS/<service>/`, 30-day retention. **The
+# literal command in each script carries a live database root
+# password in clear text — not reproduced here or anywhere in this
+# repository**, this file states the command's shape, never the
+# credential (same discipline `SESSION-2026-09-26-pra-raspberry-
+# restore-test.md` § *Étape 4* already held for Raspberry's restic
+# password). Each service's own files (uploads, photo library) are
+# covered separately by Deja Dup (GUI over Duplicity) — owner-stated,
+# 2026-10-02 (`live_file_backup`); no script to grep for a GUI tool,
+# the same "owner states it, this type carries what was stated"
+# (`GOV-P-001`) `BackupStrategyDeclaration`'s own docstring already
+# names as valid grounding for a declaration like this one.
 #
 # **`gigabyte`** — the host itself, distinct from the services that
-# run on it (`wordpress`, `arrstack`): its own system-level state
-# (OS, configuration not captured by either app-level backup above).
-# `pra_tests.yml` already declares `gigabyte.last_test: null` — this
-# entry mirrors that same real, still-open gap rather than assuming
-# the restic backup or Clonezilla imaging mentioned but never
-# confirmed in this session's history actually cover it.
+# run on it (`wordpress`, `arrstack`): its own system-level state (OS,
+# configuration not captured by any app-level backup above). 1.6
+# closure, 2026-10-02: owner-stated — regular Clonezilla disk images,
+# taken with the host booted into rescue media for the duration of the
+# image (`stop_and_archive`: the host itself stopped, archived,
+# restarted, the same shape `backup-arrstack.sh` already holds at
+# service scale). Frequency and the Clonezilla version used are not
+# declared here — the owner mentioned a procedure documenting the
+# version should exist but did not locate it in this session; add it
+# here once found, never guessed meanwhile. `pra_tests.yml` still
+# declares `gigabyte.last_test: null` — a real mechanism existing is
+# not itself a passed restore test (`ARC-P-006`): the 2026-09-27
+# Clonezilla refresh mentioned in `claude/SESSION-2026-09-26-pra-
+# raspberry-restore-test.md` was never followed by a confirmed restore
+# test in this heritage's own history.
 
 services:
   - name: wordpress
@@ -91,18 +110,33 @@ services:
   - name: nextcloud
     host: GIGABYTE
     has_state: true
-    engines: []
-    mechanism: null
+    engines: [dump_sql, live_file_backup]
+    mechanism: >-
+      backup-nextcloud-db.timer (quotidien, 02:20) →
+      /usr/local/sbin/backup_nextcloud_db.sh — docker exec nc_db
+      mariadb-dump --single-transaction --quick --databases nextcloud,
+      gzippé dans /media/BACKUP/SQL_BACKUPS/nextcloud, rétention 30
+      jours (dump_sql) ; fichiers (uploads) couverts par Deja Dup,
+      déclaré par le owner (live_file_backup)
   - name: immich
     host: GIGABYTE
     has_state: true
-    engines: []
-    mechanism: null
+    engines: [dump_sql, live_file_backup]
+    mechanism: >-
+      backup-immich-db.timer (quotidien, 02:40) →
+      /usr/local/sbin/backup_immich_db.sh — docker exec immich_postgres
+      pg_dump -U postgres -d immich, gzippé dans
+      /media/BACKUP/SQL_BACKUPS/immich, rétention 30 jours (dump_sql) ;
+      fichiers (bibliothèque photo) couverts par Deja Dup, déclaré par
+      le owner (live_file_backup)
   - name: gigabyte
     host: GIGABYTE
     has_state: true
-    engines: []
-    mechanism: null
+    engines: [stop_and_archive]
+    mechanism: >-
+      Image disque Clonezilla, hôte démarré en mode secours le temps
+      de l'image puis redémarré normalement, déclaré par le owner ;
+      fréquence et version Clonezilla non précisées dans ce dépôt
   - name: changedetection
     host: raspberry
     has_state: true

@@ -183,12 +183,16 @@ def test_the_real_backup_strategy_definition_loads():
     assert by_service["changedetection"].engines == (LIVE_FILE_BACKUP,)
     assert by_service["vikunja"].engines == (DUMP_SQL, LIVE_FILE_BACKUP)
 
-    # Real, confirmed gaps — this session could not ground a script or
-    # mechanism for these, and declares that honestly rather than
-    # guessing (`OPS-0010` § *Provenance*).
-    assert by_service["nextcloud"].covered is False
-    assert by_service["immich"].covered is False
-    assert by_service["gigabyte"].covered is False
+    # 1.6 closure, 2026-10-02: the three real gaps found 2026-09-30
+    # grounded — systemd timers (dump_sql) + Deja Dup (live_file_backup,
+    # owner-stated) for nextcloud/immich, Clonezilla (stop_and_archive,
+    # owner-stated) for the gigabyte host itself.
+    assert by_service["nextcloud"].engines == (DUMP_SQL, LIVE_FILE_BACKUP)
+    assert by_service["immich"].engines == (DUMP_SQL, LIVE_FILE_BACKUP)
+    assert by_service["gigabyte"].engines == (STOP_AND_ARCHIVE,)
+    assert by_service["nextcloud"].covered is True
+    assert by_service["immich"].covered is True
+    assert by_service["gigabyte"].covered is True
 
     for declaration in declarations:
         assert declaration.has_state is True

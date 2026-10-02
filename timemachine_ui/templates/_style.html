@@ -278,6 +278,18 @@ header h1 {
 */
 .ribbon-subject-filter { font-size: .85rem; margin: 0 0 .8rem; }
 .ribbon-subject-filter strong { color: #16335c; }
+/*
+  `.explication-content`, added 2026-10-02 (gap #2, `/explication`) —
+  the only genuinely new rule this slice needs: a recorded
+  Explication's own prose (a commit message, a `pra_tests.yml`
+  comment block, a `claude/` note's full text) keeps its own line
+  breaks rather than collapsing to one run-on paragraph, the one
+  thing none of `.band-row`'s existing key/value rules already do.
+*/
+.explication-content {
+  white-space: pre-wrap; font-size: .9rem; line-height: 1.6;
+  margin-top: .6rem; color: #1f2933;
+}
 .ribbon-filter {
   display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem;
   margin: 0 0 1.2rem; font-size: .85rem;

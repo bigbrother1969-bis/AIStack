@@ -31,6 +31,9 @@ node_ribbon_view_full: "View full ribbon"
 # Gap #3, added 2026-10-02 (cadrage: a contained slice, read-only, one
 # subject) — the link to `/reconstitute` from /node's center column.
 node_ribbon_reconstitute_link: "Reconstitute at this instant"
+# Gap #2, added 2026-10-02 (cadrage: a contained slice, read-only) —
+# the link to `/explication` from /node's center column.
+node_ribbon_explication_link: "See the why"
 graph:
   heading: "Graph"
   loading: "Loading graph…"
@@ -43,6 +46,9 @@ predicate:
   stable_subject: "stable subject"
   attributed_to: "attributed to"
   used: "causal request"
+  explains: "explains"
+  confidence: "confidence"
+  explication_status: "explication status"
 type_label:
   entity: "Entity"
   activity: "Stream"
@@ -101,3 +107,20 @@ reconstitute:
   empty_streams: "No stream known for this subject."
   no_observation: "No observation known at or before this instant, for this stream."
   view_node: "View this node"
+# Gap #2, added 2026-10-02 — a contained slice, read-only (see
+# app.py's own `_explication_panel`). Never a correction, never a
+# proposed translation from this screen: ADR-0011 § Decision 10
+# ("read-only, never a writer") forbids it; a correction stays a CLI
+# act of the owner's own (`aistack.explications.record_explication`).
+explication:
+  heading: "Why"
+  intro: "What has been recorded, for a chosen subject, about why something was done — never a correction or a translation from this screen: AIStack never writes from this page."
+  subject_label: "Subject:"
+  missing: "Pick a subject first, from the tree or the ribbon."
+  empty: "No explication recorded for this subject."
+  version_label: "Version"
+  current_label: "Current version"
+  created_at_label: "Recorded at"
+  confidence_label: "Confidence"
+  status_label: "Status"
+  source_label: "Source"

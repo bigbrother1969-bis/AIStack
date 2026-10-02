@@ -129,6 +129,17 @@
           -->
           <a class="band-tree-link" href="/reconstitute?subject={{ ribbon_panel.subject | urlencode }}&amp;as_of={{ node_instant | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_reconstitute_link') }}</a>
         {% endif %}
+        <!--
+          node_ribbon_explication_link, added 2026-10-02 (gap #2,
+          cadrage "tranche contenue, lecture seule") — always shown
+          alongside the other two links whenever this node has a
+          stable subject, never gated on an Explication actually
+          existing for it (see `_explication_panel`'s own docstring:
+          most real Explications are commit-scoped, not container/host
+          names, so most real nodes honestly find nothing — the
+          destination page says so, this link does not pre-check it).
+        -->
+        <a class="band-tree-link" href="/explication?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_explication_link') }}</a>
       {% else %}
         <p class="empty">{{ t('timemachine.node_ribbon_no_subject') }}</p>
       {% endif %}

@@ -13,6 +13,7 @@ from starlette.requests import Request
 from aistack.architecture.yaml import load_infrastructure_topology_yaml
 from aistack.catalog.compose import ComposeRuntimeCatalogBuilder
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
+from aistack.explications import read_explication_history
 from aistack.history.query import available_instants, observation_at
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER, default_languages
 from aistack.i18n.web import PageLanguage, page_language
@@ -49,6 +50,9 @@ from aistack.timemachine.projection.docker_events import STEM as _DOCKER_EVENTS_
 from aistack.timemachine.projection.docker_packages import STEM as _DOCKER_PACKAGES_STEM
 from aistack.timemachine.vocabulary import (
     AISTACK_COLLECTION_GAP,
+    AISTACK_CONFIDENCE,
+    AISTACK_EXPLAINS,
+    AISTACK_EXPLICATION_STATUS,
     AISTACK_OCCURRED_AT,
     AISTACK_STABLE_SUBJECT,
     PROV_ACTIVITY,
@@ -132,6 +136,15 @@ repository = RepositoryProvider(REPO_ROOT)
 
 GENERATED_DIR = repository.resolve(DEFAULT_GENERATED_DIR)
 STORE_PATH = GENERATED_DIR / "timemachine" / "graph"
+# Gap #2, 2026-10-02 — the same `<generated_dir>/explications` path
+# `aistack.timemachine.projection.explications.project_explications`
+# itself derives from `generated_dir` (`aistack.cli.timemachine_rebuild`
+# calls it with this exact `GENERATED_DIR`), resolved once here the
+# same eager, `repository`-anchored way `STORE_PATH` already is —
+# never `aistack.explications.store.DEFAULT_OUTPUT_DIR`, which is
+# cwd-relative and would silently drift from the real location this
+# screen's own `GENERATED_DIR` already points at.
+EXPLICATIONS_DIR = GENERATED_DIR / "explications"
 
 app = FastAPI(title="AIStack Time Machine")
 templates = Jinja2Templates(directory=str(repository.resolve("timemachine_ui/templates")))
@@ -213,6 +226,16 @@ _PREDICATE_LABELS: dict[str, tuple[str, bool]] = {
     AISTACK_STABLE_SUBJECT: ("timemachine.predicate.stable_subject", False),
     PROV_WAS_ATTRIBUTED_TO: ("timemachine.predicate.attributed_to", True),
     PROV_USED: ("timemachine.predicate.used", True),
+    # Gap #2, 2026-10-02 — these three were already real, projected
+    # graph facts on every Explication entity (patch 0054), but never
+    # had a label here: visiting one directly (`/tree`'s own
+    # "Historique" link, when a tree node matches by `aistack:explains`
+    # rather than `aistack:stableSubject`) showed three raw, unlabeled
+    # predicate IRIs. A small, honest fix alongside the new
+    # `/explication` panel below, not a scope expansion of it.
+    AISTACK_EXPLAINS: ("timemachine.predicate.explains", True),
+    AISTACK_CONFIDENCE: ("timemachine.predicate.confidence", False),
+    AISTACK_EXPLICATION_STATUS: ("timemachine.predicate.explication_status", False),
 }
 
 _TYPE_LABELS = {
@@ -1227,6 +1250,122 @@ def reconstitute(request: Request, subject: str = "", as_of: str = ""):
     context["page_nav"] = _page_nav(language, extra_query="".join(extra_query_parts))
     return _finish(
         templates.TemplateResponse(request=request, name="reconstitute.html", context=context),
+        language,
+    )
+
+
+def _explication_panel(subject: str) -> dict[str, object]:
+    """
+    Gap #2 of `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-
+    10-02.md` ("le panneau « Pourquoi » de la maquette n'existe pas —
+    explicitement renvoyé à la 1.7", `ADR-0011` §24), cadrage 2026-10-
+    02: a contained, **read-only** first slice — owner choice
+    (`AskUserQuestion`) among a reported, grounded set of options, not
+    the full maquette (`Explication.dc.html`).
+
+    **Grounded against real production data, not invented.** The
+    Explications backend already exists and already runs in
+    production (patches 0054-0058): a persisted, per-subject,
+    versioned store (`aistack.explications.store`), four real
+    importers (git commits — 240+ recorded, `pra_tests.yml`, `claude/`
+    notes, the AI Runtime's own `explain` answers), and a graph
+    projection already wired into every rebuild
+    (`aistack.timemachine.projection.explications.project_explications`,
+    called from `aistack.cli.timemachine_rebuild`). Measured directly,
+    not assumed: every one of those real, already-imported
+    Explications carries `metadata["explication_status"] ==
+    "Proposed"` — no real validation action exists anywhere in this
+    codebase — and none carries any language metadata at all.
+
+    **Reads the Explications file store directly
+    (`read_explication_history`, `EXPLICATIONS_DIR`) — not the
+    graph.** `project_explications` never projects an Explication's
+    own text as a graph fact (only that it exists, what it explains,
+    its confidence, and, when set, its workflow status) — the prose
+    itself lives only on disk. This is the first `timemachine_ui`
+    route that reads a second real data source rather than the
+    Oxigraph store every other route reads exclusively.
+
+    `subject` is matched exactly against an Explication's own subject
+    key — the free-form string `aistack.explications.from_*`
+    importers each chose (a commit's conventional-commit scope, a
+    `pra_tests.yml` block's backtick-quoted subject, a `claude/`
+    note's own stem) — not necessarily the same string as a Docker-
+    catalog node's `aistack:stableSubject`. Most real Explications
+    today are commit-scoped ("timemachine", "kernel", ...), not
+    container/host names, so most real nodes honestly find nothing
+    here — the same "genuinely partial, not silently so" name-
+    matching gap `ribbon_view` already documents (2026-09-29) for the
+    tree/ribbon pairing, not a new one.
+
+    **Deliberately not built, named rather than left to discover**
+    (same restraint `_reconstitution` already exercised for gap #3):
+    a "Corriger" action (would create a new version — a real write;
+    `ADR-0011` § *Decision* 10 forbids it from this screen, a
+    correction stays a CLI act, `aistack.explications.record_
+    explication`, run by the owner); a "Proposer une version anglaise"
+    action (also a write, and no real language metadata exists on any
+    Explication recorded so far); a coloured diff between versions
+    (every real subject recorded so far has exactly one version,
+    except the handful `from_pra_tests` merges same-day — nothing
+    real to diff against yet); the maquette's own cataloguing fiche
+    (Transport/Rayon/Registre — internal storage layout, not a real
+    feature); and a per-version "voir dans le graphe" link (the
+    graph's own entity IRI is keyed by the file's own write-instant,
+    not `KnowledgeArtifact.created_at` — a second lookup this
+    contained slice does not attempt).
+    """
+
+    history = read_explication_history(subject, output_dir=EXPLICATIONS_DIR)
+    if not history:
+        return {"subject": subject, "has_explication": False}
+
+    versions: list[dict[str, object]] = []
+    for index, artifact in enumerate(history):
+        versions.append(
+            {
+                "content": artifact.content,
+                "confidence": artifact.confidence,
+                "explication_status": artifact.metadata.get("explication_status"),
+                "source": artifact.source,
+                "created_at": artifact.created_at.isoformat(),
+                "is_current": index == len(history) - 1,
+            }
+        )
+
+    return {"subject": subject, "has_explication": True, "versions": versions}
+
+
+@app.get("/explication", response_class=HTMLResponse)
+def explication_view(request: Request, subject: str = ""):
+    """
+    Gap #2, 2026-10-02 — see `_explication_panel`'s own docstring for
+    the full "why" and the owner-confirmed scope (read-only, a
+    subject's real recorded Explications and nothing invented around
+    them). Reached from `/node`'s own center column
+    (`node_ribbon_explication_link`, next to `node_ribbon_view_full`
+    and `node_ribbon_reconstitute_link`) whenever that node carries a
+    stable subject — never gated on an Explication actually existing
+    for it first (that would need the same lookup twice): a subject
+    with nothing recorded gets the same honest empty state `/ribbon`
+    and `/reconstitute` already show for their own "nothing here"
+    cases, not a silently missing link.
+    """
+
+    language = _language(request)
+    store = _open_store()
+    if store is None:
+        return _not_built(request, language)
+
+    subject_query = subject.strip()
+    panel = _explication_panel(subject_query) if subject_query else None
+
+    context: dict[str, object] = {"subject": subject_query, "panel": panel}
+    context.update(language.context())
+    extra_query = f"&subject={quote(subject_query)}" if subject_query else ""
+    context["page_nav"] = _page_nav(language, extra_query=extra_query)
+    return _finish(
+        templates.TemplateResponse(request=request, name="explication.html", context=context),
         language,
     )
 

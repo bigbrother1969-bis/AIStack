@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('timemachine.title') }}</title>
+  <link rel="icon" href="{{ favicon }}">
+  <style>{% include "_style.html" %}</style>
+</head>
+<body>
+  <!--
+    `/explication` — gap #2 of `claude/AUDIT-TIMEMACHINE-
+    REALIGNEMENT-MAQUETTES-2026-10-02.md` ("le panneau « Pourquoi » de
+    la maquette n'existe pas — explicitement renvoyé à la 1.7",
+    `ADR-0011` §24), cadrage 2026-10-02: a contained, read-only first
+    slice — see `app.py`'s own `_explication_panel` docstring for the
+    full scope line (what's real in production today, what's
+    deliberately not built: Corriger, Proposer une traduction, diff
+    coloré, fiche de catalogage, lien "voir dans le graphe").
+
+    Reached only from `/node`'s own center column
+    (`node_ribbon_explication_link`), never a top-level view of its
+    own — same reasoning `reconstitute.html` already holds for its own
+    `view-switch` (no `view-current` here either, for the same
+    reason).
+  -->
+  {{ page_nav | safe }}
+  <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
+
+  <nav class="view-switch">
+    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
+    <a href="/ribbon?lang={{ lang }}">{{ t('timemachine.nav.ribbon') }}</a>
+  </nav>
+
+  <header>
+    <h1>{{ t('timemachine.explication.heading') }}</h1>
+    <p class="meta">{{ t('timemachine.explication.intro') }}</p>
+  </header>
+
+  {% if panel %}
+    <p class="ribbon-subject-filter">
+      {{ t('timemachine.explication.subject_label') }} <strong>{{ panel.subject }}</strong>
+    </p>
+
+    {% if panel.has_explication %}
+      <ul class="band-list">
+        {% for version in panel.versions %}
+          <li class="band">
+            <div class="band-title">
+              {% if version.is_current %}{{ t('timemachine.explication.current_label') }}{% else %}{{ t('timemachine.explication.version_label') }}{% endif %}
+              <span class="ribbon-group-count">{{ loop.index }}/{{ panel.versions | length }}</span>
+            </div>
+            <div class="band-row">
+              <span class="k">{{ t('timemachine.explication.created_at_label') }}</span>
+              <span class="v">{{ version.created_at }}</span>
+            </div>
+            <div class="band-row">
+              <span class="k">{{ t('timemachine.explication.confidence_label') }}</span>
+              <span class="v">{{ version.confidence }}</span>
+            </div>
+            {% if version.explication_status %}
+              <div class="band-row">
+                <span class="k">{{ t('timemachine.explication.status_label') }}</span>
+                <span class="v">{{ version.explication_status }}</span>
+              </div>
+            {% endif %}
+            <div class="band-row">
+              <span class="k">{{ t('timemachine.explication.source_label') }}</span>
+              <span class="v">{{ version.source }}</span>
+            </div>
+            <div class="explication-content">{{ version.content }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">{{ t('timemachine.explication.empty') }}</p>
+    {% endif %}
+  {% else %}
+    <p class="empty">{{ t('timemachine.explication.missing') }}</p>
+  {% endif %}
+</body>
+</html>

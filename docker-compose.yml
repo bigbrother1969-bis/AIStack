@@ -38,6 +38,26 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
+  # **1.6.1 — published 2026-10-02, current.**
+  #
+  #   bigbrother1969/aistack-core:1.6.1
+  #   @sha256:5de4a68497a0967f8c0938223b9a15d991b87efb2ee85a4adcc5cbd08448f86f
+  #
+  # Built from b2e764d on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 2762 tests with `clean: True`
+  # (run once, right after the pull, per OPS-0002 v1.15). 77
+  # artifacts, 18 checks. Before the build, 1.6.0 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.1 entry gives the
+  # full account; in short, the Docker event stream keeps only human
+  # `exec`s (probes and declared healthchecks dropped, history
+  # refiltered and archived out of the stream), the package inventory
+  # re-read only when an image digest changes, the Time Machine
+  # rebuild back to about a minute, restart loops counted over the
+  # last hour in the Health Cockpit's Services domain, and every
+  # AIStack unit running as the repository owner instead of root.
+  #
   # **1.6.0 — published 2026-10-02, current.**
   #
   #   bigbrother1969/aistack-core:1.6.0

@@ -51,7 +51,7 @@ from aistack.explications.store import (
     read_explication_history,
     record_explication,
 )
-from aistack.history import available_instants, available_stems, format_instant, observation_at
+from aistack.history import available_stems, format_instant, latest_observations
 
 DEFAULT_AI_REASONING_DIR = Path("reports/generated/ai-reasoning")
 
@@ -90,10 +90,8 @@ def import_explain_answers(
             if artifact.metadata.get("source_stream") == "ai-reasoning"
         }
 
-        for instant in available_instants(ai_reasoning_dir, subject):
-            observation = observation_at(ai_reasoning_dir, subject, instant)
-            if observation is None:
-                continue
+        for observation in latest_observations(ai_reasoning_dir, subject):
+            instant = observation.observed_at
 
             data = json.loads(observation.read())
             instant_label = format_instant(instant)

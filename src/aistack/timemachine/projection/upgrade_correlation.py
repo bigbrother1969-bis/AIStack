@@ -57,7 +57,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
-from aistack.history import available_instants, format_instant, observation_at
+from aistack.history import format_instant, latest_observations
 from aistack.timemachine.graph import GraphStore, Literal
 from aistack.timemachine.iri import docker_packages_iri
 from aistack.timemachine.projection.filter import filter_fact
@@ -122,10 +122,8 @@ def _valid_digest_instants(subject_root: Path) -> list[datetime]:
     """
 
     instants: list[datetime] = []
-    for instant in available_instants(subject_root, DIGEST_STEM):
-        observation = observation_at(subject_root, DIGEST_STEM, instant)
-        if observation is None:
-            continue
+    for observation in latest_observations(subject_root, DIGEST_STEM):
+        instant = observation.observed_at
         try:
             parsed = json.loads(observation.read())
         except (json.JSONDecodeError, UnicodeDecodeError):
@@ -150,10 +148,8 @@ def _valid_packages_instants(subject_root: Path) -> list[datetime]:
     """
 
     instants: list[datetime] = []
-    for instant in available_instants(subject_root, PACKAGES_STEM):
-        observation = observation_at(subject_root, PACKAGES_STEM, instant)
-        if observation is None:
-            continue
+    for observation in latest_observations(subject_root, PACKAGES_STEM):
+        instant = observation.observed_at
         try:
             parsed = json.loads(observation.read())
         except (json.JSONDecodeError, UnicodeDecodeError):

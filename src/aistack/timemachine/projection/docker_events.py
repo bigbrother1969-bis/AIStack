@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from aistack.history import available_instants, format_instant, observation_at
+from aistack.history import format_instant, latest_observations
 from aistack.timemachine.graph import GraphStore, Literal
 from aistack.timemachine.iri import docker_event_iri, stream_iri
 from aistack.timemachine.projection.filter import filter_fact
@@ -127,10 +127,8 @@ def project_docker_events(
         else:
             facts_dropped += 1
 
-    for instant in available_instants(docker_events_dir, STEM):
-        observation = observation_at(docker_events_dir, STEM, instant)
-        if observation is None:
-            continue
+    for observation in latest_observations(docker_events_dir, STEM):
+        instant = observation.observed_at
 
         if batches_seen == 0:
             # Emitted once, lazily, the first time this stream is

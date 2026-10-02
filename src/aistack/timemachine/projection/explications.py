@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Iterable
 
 from aistack.explications import deserialize_explication
-from aistack.history import available_instants, available_stems, format_instant, observation_at
+from aistack.history import available_stems, format_instant, latest_observations
 from aistack.timemachine.graph import GraphStore, Literal
 from aistack.timemachine.iri import agent_iri, explication_iri, subject_iri
 from aistack.timemachine.projection.filter import filter_fact
@@ -111,10 +111,8 @@ def project_explications(
         subjects_seen += 1
         explained = subject_iri(subject)
 
-        for instant in available_instants(explications_dir, subject):
-            observation = observation_at(explications_dir, subject, instant)
-            if observation is None:
-                continue
+        for observation in latest_observations(explications_dir, subject):
+            instant = observation.observed_at
 
             explications_seen += 1
             artifact = deserialize_explication(json.loads(observation.read()))

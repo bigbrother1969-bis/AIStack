@@ -62,7 +62,7 @@ from typing import Any
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.generators.history import write_artifact_with_history
-from aistack.history import available_instants, observation_at
+from aistack.history import latest_observations
 
 # **Corrected before any real data ever existed at the old path** —
 # patch 0054 declared this as `reports/generated/history/explications`,
@@ -213,9 +213,7 @@ def read_explication_history(
     """
 
     history: list[KnowledgeArtifact] = []
-    for instant in available_instants(output_dir, subject):
-        observation = observation_at(output_dir, subject, instant)
-        if observation is not None:
-            history.append(deserialize_explication(json.loads(observation.read())))
+    for observation in latest_observations(output_dir, subject):
+        history.append(deserialize_explication(json.loads(observation.read())))
 
     return history

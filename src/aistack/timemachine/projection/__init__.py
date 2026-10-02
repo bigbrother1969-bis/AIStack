@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from aistack.history import available_instants, available_stems, format_instant, observation_at
+from aistack.history import available_stems, format_instant, latest_observations
 from aistack.timemachine.graph import GraphStore, Literal
 from aistack.timemachine.iri import (
     agent_iri as _agent_iri,
@@ -195,11 +195,7 @@ def project_observation_history(
         activity = _activity_iri(stem)
         emit(activity, RDF_TYPE, PROV_ACTIVITY)
 
-        for instant in available_instants(generated_dir, stem):
-            observation = observation_at(generated_dir, stem, instant)
-            if observation is None:
-                continue
-
+        for observation in latest_observations(generated_dir, stem):
             observations_seen += 1
             entity = _entity_iri(stem, format_instant(observation.observed_at))
 

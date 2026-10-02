@@ -59,6 +59,39 @@ def parse_instant(text: str) -> datetime:
         ) from exc
 
 
+def latest_observations(generated_dir: Path, stem: str) -> list[HistoricalObservation]:
+    """
+    Every instant `stem` was observed at, oldest first, each with the
+    observation that was current at that instant — exactly
+    `[observation_at(generated_dir, stem, i) for i in
+    available_instants(generated_dir, stem)]`, in one directory scan
+    instead of one per instant.
+
+    **Why it exists — measured 2026-10-02.** Every projection walked a
+    stream as `available_instants` + `observation_at` per instant, and
+    `observation_at` scans the whole directory each time: quadratic in
+    the number of files. Harmless at a few hundred; at the 33,790
+    batches the docker-events stream held, `timemachine_rebuild` ran
+    for over an hour on the reference host, one core at 95 %, without
+    writing a single triple.
+    """
+
+    best: dict[datetime, tuple[int, Path]] = {}
+    for path in _history_dir(generated_dir, stem).glob("*"):
+        parsed = _parse_history_filename(path)
+        if parsed is None:
+            continue
+        instant, rank = parsed
+        current = best.get(instant)
+        if current is None or rank > current[0]:
+            best[instant] = (rank, path)
+
+    return [
+        HistoricalObservation(stem=stem, observed_at=instant, path=best[instant][1])
+        for instant in sorted(best)
+    ]
+
+
 def _history_dir(generated_dir: Path, stem: str) -> Path:
     return generated_dir / "history" / stem
 

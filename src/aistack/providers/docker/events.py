@@ -281,10 +281,29 @@ class ExecNoiseFilter:
     line; the cost of a wrong drop is a lost trace of a human action.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        healthchecks_by_subject: Mapping[str, frozenset[str]] | None = None,
+        remember_uninspectable: bool = False,
+    ) -> None:
+        """
+        The two keyword arguments exist for refiltering history after
+        the fact (`aistack.cli.docker_events_refilter`), never for the
+        live monitor: an old event names a container id that may no
+        longer exist — recreated since by an image update — so
+        `healthchecks_by_subject` (the healthchecks of the containers
+        running now, by stable subject) stands in for an id Docker can
+        no longer inspect, and `remember_uninspectable` stops the
+        filter asking Docker again about an id it already could not
+        resolve, across tens of thousands of archived events.
+        """
+
         self._probe_commands = _aistack_probe_commands()
         self._dropped_exec_ids: dict[str, None] = {}
         self._healthchecks: dict[str, frozenset[str]] = {}
+        self._healthchecks_by_subject = healthchecks_by_subject or {}
+        self._remember_uninspectable = remember_uninspectable
 
     def _healthcheck_commands(self, container_id: str) -> frozenset[str]:
         cached = self._healthchecks.get(container_id)
@@ -292,7 +311,9 @@ class ExecNoiseFilter:
             return cached
         commands = _inspect_healthcheck(container_id)
         if commands is None:
-            return frozenset()
+            if not self._remember_uninspectable:
+                return frozenset()
+            commands = frozenset()
         if len(self._healthchecks) >= _MAX_CACHED_CONTAINERS:
             self._healthchecks.clear()
         self._healthchecks[container_id] = commands
@@ -328,6 +349,42 @@ class ExecNoiseFilter:
             noisy = bool(container_id) and command in self._healthcheck_commands(
                 container_id
             )
+        if not noisy and self._healthchecks_by_subject:
+            noisy = command in self._healthchecks_by_subject.get(
+                stable_subject_of(event), frozenset()
+            )
         if noisy:
             self._remember(exec_id)
         return not noisy
+
+
+def current_healthchecks_by_subject() -> dict[str, frozenset[str]]:
+    """
+    The declared healthcheck command(s) of every container running now,
+    by stable subject — `ExecNoiseFilter(healthchecks_by_subject=...)`'s
+    stand-in for a container id an archived event names but Docker can
+    no longer inspect. `{}` when Docker cannot be reached.
+    """
+
+    from aistack.providers.docker.identity import (
+        inspect_containers,
+        list_running_container_names,
+    )
+
+    by_subject: dict[str, frozenset[str]] = {}
+    for entry in inspect_containers(list_running_container_names()):
+        if not isinstance(entry, dict):
+            continue
+        config = entry.get("Config")
+        labels = config.get("Labels") if isinstance(config, dict) else None
+        labels = labels if isinstance(labels, dict) else {}
+        raw_name = entry.get("Name")
+        subject = stable_subject_from_labels(
+            labels,
+            name=str(raw_name).lstrip("/") if raw_name else "",
+            container_id=str(entry.get("Id") or ""),
+        )
+        commands = healthcheck_commands_of(entry)
+        if commands:
+            by_subject[subject] = commands
+    return by_subject

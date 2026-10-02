@@ -1981,9 +1981,24 @@ seconds, its SQLite database on NFS — was 432 lines among 18,074.
    running container is not seen until its image changes or the
    monitor restarts.
 
-**Not decided here:** what happens to the history already accumulated
-(kept, or archived out of the stream and the graph rebuilt) — a
-separate decision, after this one has run in production.
+**The history already accumulated — owner's decision, the same day,
+once the filter was confirmed in production** (no new batch in the two
+minutes after the restart, against one every 10 seconds before):
+archived out of the stream and refiltered, never deleted.
+`aistack.cli.docker_events_refilter` moves
+`docker-events/history/docker-events/` whole into
+`docker-events/archive/<name>/docker-events/` — every original byte
+kept — then writes back, under each batch's own original filename, only
+the events `ExecNoiseFilter` keeps, so the graph rebuilt afterwards
+keeps each surviving event's real recording instant. A batch left with
+no event is not written back. Because an archived event can name a
+container id that no longer exists (recreated since by an image
+update), the refilter also matches a healthcheck through the
+healthchecks the *current* container of the same stable subject
+declares — a stand-in the live monitor never needs, since it only ever
+sees ids that exist. This is the one place this stream's history is
+rewritten rather than appended to; the archive beside it is what keeps
+that honest. Run with the monitor stopped, then `timemachine_rebuild`.
 
 ## Consequences
 

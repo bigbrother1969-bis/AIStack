@@ -1,0 +1,52 @@
+# AIStack — Web (the console, and every screen as it moves in)
+#
+# Replaced `aistack-console.service` on 2026-10-03 (ADR-0012): AIStack's
+# single web application, one process serving two ports read from
+# `instance_config.yml` — 8183, the public listener the Nginx Proxy
+# Manager entry for `aistack.persiaut-family.fr` already points at, and
+# `web_lan`, the LAN listener no Proxy Host ever names. Which routes
+# answer on which port is decided in `aistack.web.exposure`, by the
+# port a request arrived on (roadmap R1, until 1.7's login exists).
+#
+# Runs on the host, not in a container: it serves pages generated on
+# this filesystem (`reports/generated/`).
+#
+# Install (as root, on GIGABYTE), replacing the console unit:
+#
+#   systemctl disable --now aistack-console
+#   rm /etc/systemd/system/aistack-console.service
+#   cp deploy/systemd/aistack-web.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-web
+#
+# Before enabling it, confirm nothing else holds either port:
+#
+#   ss -ltnp | grep -E ':8183|:8187'
+#
+# Watch it with:
+#
+#   journalctl -u aistack-web -f
+
+[Unit]
+Description=AIStack Web (console and screens, ADR-0012)
+After=network.target
+
+[Service]
+Type=simple
+# Run as the repo owner, not as root (2026-10-02, after the four 1.5
+# Docker monitors moved the same way). Nothing here needs root: the
+# Docker socket comes with the `docker` group big-brother is in, every
+# port is above 1024, and every file read or written is under the
+# repository, which big-brother owns.
+User=big-brother
+Group=big-brother
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_web.sh
+Restart=on-failure
+RestartSec=5
+
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

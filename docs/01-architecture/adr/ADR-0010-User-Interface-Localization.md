@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Proposed
   owner: Architecture
   created: 2026-09-27
-  updated: 2026-09-27
+  updated: 2026-10-03
 
 relations:
   references:
@@ -126,6 +126,14 @@ the language is chosen. The static pages stay generated, one file per
 language: the reference language keeps each page's historical name
 (`console.html`, `architecture.html`, `health.html`) and its history
 stream, and every other language adds `<page>.<code>.html` beside it.
+
+**Revised 2026-10-03 by `ADR-0012`.** The standard-library server is
+gone: the console is one router (`aistack.web.console`) of AIStack's
+single FastAPI application, after decision #9 was revoked for tests
+(`GOV-0002/OS-084`). What this section decided about languages is
+unchanged — the same paths, the same negotiation, the same generated
+pages — because the router only adapts `aistack.console.routing
+.respond`, the pure function the server was built around.
 
 ## Consequences
 

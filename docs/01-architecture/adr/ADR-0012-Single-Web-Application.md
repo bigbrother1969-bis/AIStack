@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Proposed
   owner: Architecture
   created: 2026-10-02
-  updated: 2026-10-02
+  updated: 2026-10-03
 
 relations:
   references:
@@ -103,8 +103,10 @@ behind the proxy: one address and one session is what the roadmap asks of
 `pyoxigraph` in `pyproject.toml`'s `dependencies` — not an optional
 extra, because the inventory imports `aistack.web` wherever it runs, the
 published image included, and the owner's requirement of 2026-09-27 is
-that the image be self-sufficient once pulled. `httpx`, needed only by
-the test client, joins the `dev` extra. Every `<screen>/requirements.txt`,
+that the image be self-sufficient once pulled. An HTTP client, needed
+only by the test client, joins the `dev` extra — `httpx2` (revised
+2026-10-03: Starlette 1.7 deprecates its test client's use of `httpx`).
+Every `<screen>/requirements.txt`,
 `scripts/setup_<screen>_env.sh`, `run_<screen>.sh`, `.venv-<screen>/` and
 `.env.<screen>` pattern is removed when its screen has moved.
 
@@ -118,12 +120,20 @@ the owner, 2026-10-02:
   application on **two ports**;
 - **8183, the public port**, answers only the console pages, Settings and
   — from tranche 2 — the login routes; any other path is a 404 there;
-- **8186, the LAN port**, never a Proxy Host, answers everything;
+- **the LAN port**, never a Proxy Host, answers everything. It is
+  `instance_config.yml`'s `service_ports.web_lan`: **8187 while
+  `timemachine_ui` still holds 8186**, moved to 8186 by the patch that
+  brings the Time Machine into the application, so that bookmark keeps
+  answering;
 - the refusal is decided by **the port the request arrived on**
   (`request.scope["server"]`), never by a header the proxy sets or a
   client could forge;
-- the scope of every route is declared once, beside the route, and a test
-  walks every registered route on both ports.
+- exposure is declared **once per router**, as a dependency
+  (`PUBLIC` or `LAN_ONLY`, `aistack.web.exposure`); `include`, the only
+  way the factory adds routes, refuses a router that declares none or
+  two, and a test asks every registered route, with every method it
+  accepts, on an undeclared port and on the public port, proving the
+  guard runs. A refused route answers exactly like a missing one.
 
 The LAN listener is removed only when the owner lifts `R1`, after
 tranche 2. Decided against filtering on the `Host` header (a protection
@@ -161,7 +171,7 @@ follow each move. `GOV-0002/OS-084` closes with the last one.
   stop answering; `GIGABYTE:8186` keeps answering, with the Time Machine
   under `/timemachine` instead of `/`.
 - The governed `.venv` on both hosts must install the four web packages
-  and `httpx` before the first patch of tranche 1 is applied, or the
+  and `httpx2` before the first patch of tranche 1 is applied, or the
   suite cannot import `aistack.web`.
 - The published image grows by the web packages it now declares.
 - The console loses its standard-library server: `ADR-0010` § 5 described

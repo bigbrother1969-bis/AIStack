@@ -25,6 +25,13 @@
 # Moving AIStack to a different LAN host, or re-numbering a port,
 # changes exactly this file — never a search-and-replace across
 # `console_links.yml` and five separate mini-app processes.
+#
+# `web_lan`, added 2026-10-03 (`ADR-0012` § 3): the LAN listener of
+# AIStack's single web process, which also serves `console`'s port as
+# its public listener. 8187 while `timemachine_ui` still holds 8186;
+# the patch that moves the Time Machine into the application moves
+# this entry to 8186, so that bookmark keeps answering. Never a Proxy
+# Host in Nginx Proxy Manager.
 
 lan_hostname: GIGABYTE
 service_ports:
@@ -34,3 +41,4 @@ service_ports:
   network_discovery_ui: 8184
   troubleshooting_assistant_ui: 8185
   timemachine_ui: 8186
+  web_lan: 8187

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import argparse
 from dataclasses import dataclass, field
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
@@ -19,13 +17,14 @@ from aistack.i18n.pages import page_file
 from aistack.renderers.console.settings import render_settings_html
 from aistack.renderers.text import escape_text
 
-# ADR-0010 § 5. The console was a directory served by the standard
-# library's `http.server` (`run_console.sh`, `PLAN-J11` § 4) — a static
-# file server cannot carry a language, so it is replaced by this one,
-# still standard library only: the console never needed FastAPI and
-# still does not, so it keeps running on the governed interpreter with
-# no dedicated environment, unlike the four mini-apps (decision #9,
-# 2026-08-29).
+# ADR-0010 § 5, revised by ADR-0012 (2026-10-02). The console was a
+# directory served by the standard library's `http.server`
+# (`run_console.sh`, `PLAN-J11` § 4), then, from 2026-09-27, a
+# standard-library server of its own so a page could carry a language.
+# Since ADR-0012 it is one router of AIStack's single web application
+# (`aistack.web.console`), and this module keeps what was always the
+# whole of it: `respond`, a pure function of the request line, its
+# cookie and the generated directory. The router only adapts it.
 #
 # **Three generated pages and Settings, nothing else.** The same
 # closed list `PUBLIC_DIR` used to expose (`aistack.cli.console_render`
@@ -34,8 +33,6 @@ from aistack.renderers.text import escape_text
 # list is ever mapped to a file — a request cannot name one.
 PAGES = ("console.html", "architecture.html", "health.html")
 SETTINGS_PATH = "/settings"
-
-DEFAULT_PORT = 8183
 
 
 @dataclass(frozen=True)
@@ -160,74 +157,3 @@ def _message_page(lang: str, title_key: str, message_key: str, page: str) -> str
 </body>
 </html>
 """
-
-
-def make_handler(
-    generated_dir: Path, languages: Languages | None = None
-) -> type[BaseHTTPRequestHandler]:
-    """A request handler class bound to one generated directory."""
-
-    class ConsoleRequestHandler(BaseHTTPRequestHandler):
-        server_version = "AIStackConsole"
-
-        def do_GET(self) -> None:
-            self._answer("GET")
-
-        def do_HEAD(self) -> None:
-            self._answer("HEAD")
-
-        def _answer(self, method: str) -> None:
-            response = respond(
-                method,
-                self.path,
-                self.headers.get("Cookie"),
-                generated_dir,
-                languages,
-            )
-
-            self.send_response(response.status)
-
-            for name, value in response.headers:
-                self.send_header(name, value)
-
-            self.end_headers()
-
-            if response.body:
-                self.wfile.write(response.body)
-
-    return ConsoleRequestHandler
-
-
-def main(argv: list[str] | None = None) -> None:
-    """
-    Serve the console on `--port` (8183, the port `http.server` held
-    since `PLAN-J11` § 4, so the owner's reverse proxy entry for
-    `aistack.persiaut-family.fr` needs no change) from
-    `--generated-dir`.
-    """
-
-    parser = argparse.ArgumentParser(prog="python -m aistack.console.server")
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
-    parser.add_argument("--generated-dir", type=Path, default=Path("reports/generated"))
-    arguments = parser.parse_args(argv)
-
-    handler = make_handler(arguments.generated_dir.resolve())
-    server = ThreadingHTTPServer((arguments.host, arguments.port), handler)
-
-    print(
-        f"AIStack console serving {arguments.generated_dir} on "
-        f"http://{arguments.host}:{arguments.port}/",
-        flush=True,
-    )
-
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
-
-
-if __name__ == "__main__":
-    main()

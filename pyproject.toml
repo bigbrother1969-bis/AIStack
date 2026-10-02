@@ -42,6 +42,22 @@ dependencies = [
     # dependency existed anywhere, not assumed from the library's own
     # claims.
     "pyoxigraph>=0.5.11",
+    # AIStack's single web application (ADR-0012, 2026-10-02). Declared
+    # here rather than in an optional extra because
+    # `aistack.conformance.inventory` imports every module of the
+    # package, `aistack.web` included, wherever it runs — the governed
+    # environment on both hosts and the published image. Decision #9
+    # kept these out of the governed environment until the owner
+    # revoked it for tests ahead of 1.7 (GOV-0002/OS-084). Lower
+    # bounds are the versions the suite was first run against on
+    # 2026-10-03; FastAPI 0.142 is also where `include_router` stopped
+    # copying routes into the application, which
+    # `tests/unit/web/test_every_route_declares_its_exposure.py`
+    # relies on.
+    "fastapi>=0.142",
+    "uvicorn>=0.54",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.32",
 ]
 
 authors = [
@@ -85,6 +101,10 @@ dev = [
     "ruff>=0.15",
     "mypy>=1.20",
     "types-PyYAML>=6.0",
+    # The in-process client FastAPI's TestClient drives every route
+    # with (ADR-0012 § 4). `httpx2`, not `httpx`: Starlette 1.7 warns
+    # that its test client's use of `httpx` is deprecated.
+    "httpx2>=2.13",
 ]
 
 [project.urls]

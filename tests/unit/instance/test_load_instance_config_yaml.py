@@ -99,5 +99,6 @@ def test_the_real_instance_config_definition_loads():
         "network_discovery_ui": 8184,
         "troubleshooting_assistant_ui": 8185,
         "timemachine_ui": 8186,
+        "web_lan": 8187,
     }
     assert config.service_url("console") == "http://GIGABYTE:8183"

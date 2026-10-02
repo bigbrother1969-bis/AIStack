@@ -473,10 +473,10 @@ def main() -> None:
     of the other two commands regenerates its own file; a symlink
     cannot.
 
-    **Serving `PUBLIC_DIR` itself is the owner's own next step, not
-    this command's** — `deploy/systemd/aistack-console.service`
-    (`PLAN-J11` § 4) runs a plain static file server against it, and
-    pointing a reverse-proxy Host at that server is a manual Nginx
+    **Serving the pages is not this command's job** —
+    `deploy/systemd/aistack-web.service` runs AIStack's single web
+    application (`ADR-0012`; `aistack-console.service` and its static
+    file server before 2026-10-03, `PLAN-J11` § 4), and pointing a reverse-proxy Host at that server is a manual Nginx
     Proxy Manager step this codebase has no way to reach
     (`GOV-P-001`: NPM here is GUI-configured only).
 
@@ -499,7 +499,7 @@ def main() -> None:
     the same whatever language the page is read in — and the page is
     written once per language: the reference keeps `console.html` and
     its history stream, every other language adds
-    `console.<code>.html` beside it. `aistack.console.server` picks one
+    `console.<code>.html` beside it. `aistack.web.console` picks one
     per request. `PUBLIC_DIR` keeps its reference-language symlinks: the
     new server does not read it, but a host that has to fall back to the
     old `http.server` launcher still finds the three pages there.
@@ -550,7 +550,7 @@ def main() -> None:
     print(
         f"Console written to {GENERATED_DIR / 'console.html'} "
         f"({links_count} link(s); {', '.join(written)}); served from "
-        f"{GENERATED_DIR} by aistack.console.server"
+        f"{GENERATED_DIR} by aistack.web.server"
     )
 
 

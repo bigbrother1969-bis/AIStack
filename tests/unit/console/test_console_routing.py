@@ -1,26 +1,19 @@
 """
-`aistack.console.server` — ADR-0010 § 5.
+`aistack.console.routing` — ADR-0010 § 5, revised by ADR-0012.
 
-The console's server replaced the standard library's `http.server`,
-and stays standard library itself so the governed suite can test it
-(roadmap R5, 2026-09-27: logic in `src/`, tested; web layers thin).
-Every route is exercised through `respond`, a pure function of the
-request line, the cookie and the generated directory; one test at the
-end opens a real socket, so the handler that wraps `respond` is proven
-wired too.
+Every console route is exercised through `respond`, a pure function of
+the request line, the cookie and the generated directory. The router
+that adapts it inside AIStack's single web application is tested in
+`tests/unit/web/test_console_router.py`.
 """
 
 from __future__ import annotations
 
-import threading
-import urllib.error
-import urllib.request
-from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
 
-from aistack.console.server import PAGES, make_handler, respond
+from aistack.console.routing import PAGES, respond
 from aistack.i18n.pages import page_file
 from aistack.i18n import LANGUAGE_COOKIE, Language, Languages
 
@@ -188,30 +181,3 @@ def test_an_unknown_route_is_a_localized_404(generated: Path):
 
     assert response.status == 404
     assert b"Page not found" in response.body
-
-
-# --------------------------------------------------------------------
-# The real handler, over a real socket
-# --------------------------------------------------------------------
-
-
-def test_the_handler_serves_respond_over_http(generated: Path):
-    server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(generated, LANGUAGES))
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-
-    try:
-        port = server.server_address[1]
-
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/console.html?lang=en") as reply:
-            assert reply.status == 200
-            assert reply.read() == b"<p>console en</p>"
-            assert reply.headers["Set-Cookie"].startswith(f"{LANGUAGE_COOKIE}=en;")
-
-        with pytest.raises(urllib.error.HTTPError) as refused:
-            urllib.request.urlopen(f"http://127.0.0.1:{port}/docker-observation.json")
-
-        assert refused.value.code == 404
-    finally:
-        server.shutdown()
-        server.server_close()

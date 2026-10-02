@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Draft
   owner: Operations
   created: 2026-09-11
-  updated: 2026-10-02
+  updated: 2026-10-03
 
 relations:
   references:
@@ -149,7 +149,7 @@ and `health.html` (`aistack.cli.health_render`) each build their own
 package imports another" (both modules' own header comments) — and
 each is a **static file, regenerated only when its own command is run**:
 `console.html` at every `aistack-console` service start/restart
-(`run_console.sh`), `health.html` only when someone runs
+(`run_console.sh`; `aistack-web`/`run_web.sh` since 2026-10-03, `ADR-0012`), `health.html` only when someone runs
 `python -m aistack.cli.health_render` by hand. Nothing ties the two
 together, and two of the seven domains — Services and Écarts
 d'inventaire — read live Docker state at the moment their own command
@@ -177,7 +177,8 @@ publishing a release included:
 python -m aistack.cli.console_render && python -m aistack.cli.health_render
 ```
 
-`aistack.console.server` reads `console.html` fresh off disk on every
+`aistack.console.server` (`aistack.web.console` since 2026-10-03,
+`ADR-0012`) reads `console.html` fresh off disk on every
 request (`Cache-Control: no-cache`, no in-memory copy), so this takes
 effect immediately — no service restart required for the console half.
 A residual drift window remains between the two commands (Docker state

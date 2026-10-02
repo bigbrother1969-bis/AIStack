@@ -33,6 +33,13 @@ with the `.png` extension removed — `nginx-proxy-manager`, `portainer`,
 `readarr`, `mylar`, `bazarr`, `qbittorrent`, `autobrr`, `vscode`, `gitea`,
 `cyberchef`, `it-tools`.
 
+**2 more PNGs, same pack, fetched 2026-10-02** (1.6 closure — `Homepage`
+and `Pocket ID`, two real Raspberry services found running but never
+declared in `service_categorization.yml`): `homepage`, `pocket-id` — the
+source repo's own slug for Pocket ID is `pocket-id`, not `pocketid`
+(checked: `pocketid.png` and `pocket_id.png` both `404`). Same fetch,
+same `convert -resize 48x48 -strip` step.
+
 **6 SVGs — Material Design Icons, `Templarian/MaterialDesign`** (`master`
 branch, fetched 2026-09-12), for services the source declared with an
 `mdi-*` icon rather than a dashboard-icons PNG:

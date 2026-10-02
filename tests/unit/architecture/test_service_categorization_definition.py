@@ -366,7 +366,7 @@ def test_the_real_service_categorization_loads():
         for category in definition.categories
         for service in category.services
     ]
-    assert len(all_services) == 47
+    assert len(all_services) == 69
 
     by_name = {service.name: service for service in all_services}
 
@@ -375,7 +375,10 @@ def test_the_real_service_categorization_loads():
     assert by_name["FreeboxOS"].container is None
     assert by_name["Jellyfin"].container == "jellyfin"
     assert by_name["Music Sync"].container is None
-    assert by_name["Architecture Homelab"].container is None
+    # 1.6 closure, 2026-10-02: the real catalog showed this runs as a
+    # container after all — the 2026-09-10 "no container" porting
+    # assumption was wrong, not a provider AIStack still lacks.
+    assert by_name["Architecture Homelab"].container == "archi"
     assert by_name["IT-Tools"].container == "it-tools"
 
     aistack_category = next(
@@ -383,11 +386,49 @@ def test_the_real_service_categorization_loads():
     )
     assert [s.name for s in aistack_category.services] == ["Music Sync"]
 
-    # `icon`/`href`/`description` joined 2026-09-12 (§10) — every one
-    # of the 47 services carries all three, unlike `container` (which
+    # 1.6 closure, 2026-10-02: 22 technical/infra entries added to
+    # resolve real `discovered_undeclared` inventory gaps — sidecars
+    # of an already-declared service, plus two infra tools with no
+    # page of their own. Owner's explicit choice: `name`/`container`
+    # only, no `icon`/`href` — there is nothing to click on a
+    # database or a VPN gateway. Every other, user-facing service
+    # keeps the universal icon/href/description invariant this test
+    # already held before this closure.
+    _NO_ICON_OR_HREF = {
+        "Nextcloud — Base de données",
+        "Nextcloud — Redis",
+        "Nextcloud — Cron",
+        "Nextcloud — Collabora",
+        "Vikunja — Base de données",
+        "Watchtower",
+        "Beszel — Agent distant",
+        "Scrutiny — Collecteur distant",
+        "Immich — Base de données",
+        "Immich — Redis",
+        "Immich — Machine Learning",
+        "Booklore — Base de données",
+        "Komf",
+        "Paperless — Base de données",
+        "Paperless — Redis",
+        "Boostack — Base de données",
+        "Wordpress — Base de données",
+        "EmulatorJS / ROMM — Base de données",
+        "Gluetun",
+        "Unpackerr",
+    }
+    assert len(_NO_ICON_OR_HREF) == 20
+
+    # `icon`/`href`/`description` joined 2026-09-12 (§10) — every
+    # user-facing service carries all three, unlike `container` (which
     # several legitimately lack). A missing one here is the real file
     # regressing, not a case this loader should tolerate silently.
     for service in all_services:
+        if service.name in _NO_ICON_OR_HREF:
+            assert service.icon is None, f"{service.name} unexpectedly has an icon"
+            assert service.href is None, f"{service.name} unexpectedly has an href"
+            assert service.description, f"{service.name} has no description"
+            continue
+
         assert service.icon, f"{service.name} has no icon"
         assert service.href, f"{service.name} has no href"
         assert service.description, f"{service.name} has no description"

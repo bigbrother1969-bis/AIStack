@@ -308,7 +308,7 @@ def test_an_empty_categorization_produces_an_empty_graph():
 def test_the_real_categorization_joins_against_a_live_shaped_catalog_pair():
     """
     Not a fixture round-trip — a sanity check that the real, shipped
-    categorization (47 services, `test_the_real_service_categorization_
+    categorization (69 services, `test_the_real_service_categorization_
     loads`) still joins cleanly against catalog shapes matching
     `DockerRuntimeCatalogBuilder`/`ComposeRuntimeCatalogBuilder`'s own
     output, so a future field rename in either builder is caught here
@@ -339,7 +339,7 @@ def test_the_real_categorization_joins_against_a_live_shaped_catalog_pair():
     all_services = [
         service for cat in graph.categories for service in cat.services
     ]
-    assert len(all_services) == 47
+    assert len(all_services) == 69
 
     by_name = {service.name: service for service in all_services}
 

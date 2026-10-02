@@ -40,10 +40,58 @@
 #
 # This file is edited by hand — no UI writes it back the way
 # `priority_ui` writes `resource_priority.yml`.
+#
+# **1.6 closure, 2026-10-02 — 22 `discovered_undeclared` gaps resolved**
+# (`OPS-0004`'s inventory-gap check, 29 found 2026-09-30 against the
+# real GIGABYTE catalog and `network-docker-observation.json`):
+#
+# - **18 technical sidecars of a service already declared above**
+#   (`nc_db`/`nc_redis`/`nc_cron`/`nc_collabora` for Nextcloud,
+#   `immich_postgres`/`immich_redis`/`immich_machine_learning` for
+#   Immich, `paperless_db`/`paperless_redis` for Paperless,
+#   `wordpress_db`, `booklore_db`, `bookstack_db`, `romm-db`,
+#   `vikunja-db`, `beszel-agent`, `scrutiny-collector`, `gluetun`,
+#   `unpackerr`) — owner's explicit choice: declared individually
+#   (`name`/`container` only, no `icon`/`href` — there is nothing a
+#   person clicks on a database or a VPN gateway), not left open and
+#   not merged into their parent's single `container:` field.
+#   `beszel-agent`/`scrutiny-collector` run on `192.168.1.99`, the VM
+#   on the Freebox Ultra that also hosts Pi-hole and PiVPN
+#   (owner-stated) — `server` still does not travel in this file
+#   (see above), so that host is named in the service's own
+#   `description` instead.
+# - **2 corrections to an existing entry's wrong "no container"
+#   assumption**: `Architecture Homelab` and `LibreSpeed` were both
+#   ported 2026-09-10 assuming no container of their own — the real
+#   catalog shows both do run as one (`archi`, `librespeed`).
+# - **2 real services never declared here at all**: `Homepage` and
+#   `Pocket ID`, both already cited in `pra_tests.yml`/
+#   `backup_strategy.yml` as real Raspberry stacks. Two new icons
+#   vendored 2026-10-02 from `walkxcode/dashboard-icons`
+#   (`vendor/icons/PROVENANCE.md`) the same way the 2026-09-12 batch
+#   was — `pocket-id`, not `pocketid` (the source repo's own slug).
+# - **2 infra tools declared with no `href`**: `Watchtower` (Docker
+#   auto-update) and `Komf` (Komga metadata scraper) — neither has a
+#   page of its own to link to.
+# - **3 deliberately left undeclared**: `invoiceshelf`,
+#   `invoiceshelf-db`, `solidinvoice-db` — three parallel self-hosted
+#   invoicing experiments found running alongside the already-declared
+#   `Indy` (external SaaS). Owner's call: these are to be stopped and
+#   removed from GIGABYTE entirely, not declared — the gap is expected
+#   to close itself once that happens, never by adding a YAML entry
+#   for a container meant to disappear.
+# - **2 still open**: `minio` and `slr-site` — not yet identified as of
+#   2026-10-02, pending the owner's own investigation on GIGABYTE.
+#   Left as real, honest gaps rather than guessed at.
 
 categories:
   - name: Administration, Cloud & Utilitaires
     services:
+      - name: Homepage
+        container: homepage
+        icon: homepage
+        href: https://homepage.persiaut-family.fr
+        description: Tableau de bord d'accueil du homelab
       - name: Nginx Proxy Manager
         container: npm
         icon: nginx-proxy-manager
@@ -67,16 +115,36 @@ categories:
         icon: nextcloud
         href: https://cloud.persiaut-family.fr
         description: Cloud familial et sauvegarde des photos des smartphones
+      - name: Nextcloud — Base de données
+        container: nc_db
+        description: Conteneur technique de Nextcloud (MariaDB)
+      - name: Nextcloud — Redis
+        container: nc_redis
+        description: Conteneur technique de Nextcloud (cache)
+      - name: Nextcloud — Cron
+        container: nc_cron
+        description: Conteneur technique de Nextcloud (tâches planifiées)
+      - name: Nextcloud — Collabora
+        container: nc_collabora
+        description: Conteneur technique de Nextcloud (suite bureautique en ligne)
       - name: Vaultwarden
         container: vaultwarden
         icon: vaultwarden
         href: https://vault.persiaut-family.fr
         description: Gestionnaire de mots de passe familial
+      - name: Pocket ID
+        container: pocketid
+        icon: pocket-id
+        href: https://pocketid.persiaut-family.fr
+        description: Fournisseur d'identité (SSO / passkeys)
       - name: Vikunja
         container: vikunja-app
         icon: vikunja
         href: https://tasks.persiaut-family.fr
         description: Gestionnaire de tâches et listes collaboratif
+      - name: Vikunja — Base de données
+        container: vikunja-db
+        description: Conteneur technique de Vikunja (MariaDB)
       - name: Stirling-PDF
         container: stirling-pdf
         icon: stirling-pdf
@@ -92,6 +160,9 @@ categories:
         icon: syncthing
         href: https://syncthing.persiaut-family.fr
         description: Synchronisation d'appareils
+      - name: Watchtower
+        container: watchtower
+        description: Mise à jour automatique des containers Docker
 
   - name: Supervision
     services:
@@ -105,17 +176,28 @@ categories:
         icon: monitor-dashboard
         href: https://beszel.persiaut-family.fr
         description: Supervision légère du Gigabyte et du Raspberry Pi
+      - name: Beszel — Agent distant
+        container: beszel-agent
+        description: >-
+          Agent Beszel sur la VM Freebox Ultra qui héberge Pi-hole et
+          PiVPN (192.168.1.99)
       - name: Scrutiny
         container: scrutiny
         icon: scrutiny
         href: https://scrutiny.persiaut-family.fr
         description: Monitoring S.M.A.R.T. des disques durs
+      - name: Scrutiny — Collecteur distant
+        container: scrutiny-collector
+        description: >-
+          Collecteur Scrutiny sur la VM Freebox Ultra qui héberge
+          Pi-hole et PiVPN (192.168.1.99)
       - name: Gotify
         container: gotify
         icon: gotify
         href: https://gotify.persiaut-family.fr
         description: Serveur de notifications push
       - name: LibreSpeed
+        container: librespeed
         icon: librespeed
         href: https://speed.persiaut-family.fr
         description: Test de vitesse réseau
@@ -130,6 +212,7 @@ categories:
         href: https://frigate.persiaut-family.fr
         description: Videosurveillance
       - name: Architecture Homelab
+        container: archi
         icon: sitemap
         href: https://archi.persiaut-family.fr
         description: Schéma d'architecture complet du homelab
@@ -146,6 +229,17 @@ categories:
         icon: immich
         href: https://immich.persiaut-family.fr
         description: Gestionnaire photos simple et facile
+      - name: Immich — Base de données
+        container: immich_postgres
+        description: Conteneur technique d'Immich (PostgreSQL)
+      - name: Immich — Redis
+        container: immich_redis
+        description: Conteneur technique d'Immich (cache)
+      - name: Immich — Machine Learning
+        container: immich_machine_learning
+        description: >-
+          Conteneur technique d'Immich (reconnaissance faciale et
+          d'objets)
       - name: Jellyfin
         container: jellyfin
         icon: jellyfin
@@ -156,6 +250,9 @@ categories:
         icon: booklore
         href: https://booklore.persiaut-family.fr
         description: Gestionnaire de livres + eBook reader
+      - name: Booklore — Base de données
+        container: booklore_db
+        description: Conteneur technique de Booklore
       - name: Legal to Read
         icon: book-open-page-variant
         href: https://books.persiaut-family.fr/
@@ -165,21 +262,36 @@ categories:
         icon: komga
         href: https://komga.persiaut-family.fr
         description: Gestionnaire et lecteur de BD, comics et mangas
+      - name: Komf
+        container: komf
+        description: Scraper de métadonnées pour Komga
       - name: Paperless
         container: paperless
         icon: paperless-ngx
         href: https://paperless.persiaut-family.fr
         description: Digitalisation des documents de la famille
+      - name: Paperless — Base de données
+        container: paperless_db
+        description: Conteneur technique de Paperless (PostgreSQL)
+      - name: Paperless — Redis
+        container: paperless_redis
+        description: Conteneur technique de Paperless (cache)
       - name: Boostack
         container: bookstack
         icon: bookstack
         href: https://bookstack.persiaut-family.fr
         description: Wiki familial
+      - name: Boostack — Base de données
+        container: bookstack_db
+        description: Conteneur technique de Boostack
       - name: Wordpress
         container: wp_app
         icon: wordpress
         href: https://wp.persiaut-family.fr/
         description: WordPress de la famille
+      - name: Wordpress — Base de données
+        container: wordpress_db
+        description: Conteneur technique de Wordpress
       - name: Actual Budget
         container: actual-budget
         icon: actual-budget
@@ -199,6 +311,9 @@ categories:
         icon: romm
         href: https://games.persiaut-family.fr
         description: Jeux ROM
+      - name: EmulatorJS / ROMM — Base de données
+        container: romm-db
+        description: Conteneur technique de ROMM
 
   - name: Téléchargements
     services:
@@ -247,6 +362,9 @@ categories:
         icon: qbittorrent
         href: https://qbittorrent.persiaut-family.fr
         description: Client de téléchargement Torrent
+      - name: Gluetun
+        container: gluetun
+        description: Passerelle VPN pour qBittorrent
       - name: Autobrr
         container: autobrr
         icon: autobrr
@@ -257,6 +375,9 @@ categories:
         icon: download-network
         href: https://mularr.persiaut-family.fr
         description: Client eMule
+      - name: Unpackerr
+        container: unpackerr
+        description: Décompression automatique pour le groupe arrstack
 
   - name: AIStack
     services:

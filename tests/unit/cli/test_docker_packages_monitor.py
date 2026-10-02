@@ -242,3 +242,20 @@ def test_main_dry_run_records_no_gap_even_after_a_checkpoint(tmp_path: Path):
         main(_main_args(tmp_path) + ["--dry-run"])
 
     assert not (tmp_path / "collection-gaps").exists()
+
+
+def test_run_cycle_with_seen_digests_probes_a_container_only_once_per_image(tmp_path: Path):
+    entry = dict(INSPECT_ENTRY, Image="sha256:aaa")
+    checkpoint_path = tmp_path / "checkpoint.json"
+    now = datetime(2026, 10, 2, 17, 0, 0, tzinfo=timezone.utc)
+    seen: dict[str, str] = {}
+
+    with _docker(ps_stdout="frigate\n", inspect_stdout=json.dumps([entry])) as mocked:
+        first = run_cycle(tmp_path, checkpoint_path, dry_run=False, now=now, seen_digests=seen)
+        second = run_cycle(tmp_path, checkpoint_path, dry_run=False, now=now, seen_digests=seen)
+
+    exec_calls = [c for c in mocked.call_args_list if c.args[0][:2] == ["docker", "exec"]]
+    assert first == [{"subject": "frigate", "mechanism": "dpkg", "package_count": 1}]
+    assert second == []
+    assert len(exec_calls) == 1
+    assert load_checkpoint(checkpoint_path) == now.isoformat()

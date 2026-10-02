@@ -9,7 +9,10 @@ from pathlib import Path
 from typing import Any
 
 from aistack.generators.collection_gap import record_collection_gap
-from aistack.providers.docker.packages import collect_running_container_packages
+from aistack.providers.docker.packages import (
+    collect_packages_on_image_change,
+    collect_running_container_packages,
+)
 from aistack.providers.docker.packages_history import (
     DEFAULT_GENERATED_DIR,
     has_changed,
@@ -34,8 +37,9 @@ USAGE = (
     "usage: python -m aistack.cli.docker_packages_monitor "
     "[--checkpoint PATH] [--generated-dir PATH] [--once] [--dry-run]\n"
     "\n"
-    "  Polls every running container's own current package inventory\n"
-    "  each cycle (`docker exec` + `dpkg-query`, falling back to\n"
+    "  Takes every running container's own package inventory once at\n"
+    "  startup, then again only when its image digest changes\n"
+    "  (`docker exec` + `dpkg-query`, falling back to\n"
     "  `/lib/apk/db/installed` — `aistack.providers.docker.packages`'s\n"
     "  own comment explains the cadrage behind both) and records a\n"
     "  subject's own observation to Observation History only when it\n"
@@ -141,6 +145,7 @@ def run_cycle(
     dry_run: bool,
     *,
     now: datetime | None = None,
+    seen_digests: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """
     One poll: every running container's current package inventory
@@ -166,7 +171,17 @@ def run_cycle(
     """
 
     when = now if now is not None else datetime.now(timezone.utc)
-    inventories = collect_running_container_packages()
+    # Cadrage 2026-10-02: a caller looping over cycles passes the
+    # digests it has already inventoried, and only containers whose
+    # image changed since are probed again
+    # (`collect_packages_on_image_change`). With no mapping — a single
+    # `--once` cycle, or a test — every running container is probed,
+    # exactly as before.
+    inventories = (
+        collect_packages_on_image_change(seen_digests)
+        if seen_digests is not None
+        else collect_running_container_packages()
+    )
 
     changed: list[dict[str, Any]] = []
     for entry in inventories:
@@ -249,9 +264,16 @@ def main(argv: list[str] | None = None) -> None:
     if not once:
         signal.signal(signal.SIGTERM, handle_sigterm)
 
+    # Empty at start: this process's first cycle inventories every
+    # running container once (the startup pass), later cycles only the
+    # ones whose image digest changed.
+    seen_digests: dict[str, str] = {}
+
     try:
         while True:
-            changed = run_cycle(generated_dir, checkpoint_path, dry_run)
+            changed = run_cycle(
+                generated_dir, checkpoint_path, dry_run, seen_digests=seen_digests
+            )
 
             # `--once` always prints — the same incident every other
             # 1.5 monitor's own comment names: a manual check that

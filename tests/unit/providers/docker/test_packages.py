@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aistack.providers.docker.packages import (
     collect_package_inventory,
+    collect_packages_on_image_change,
     collect_running_container_packages,
 )
 
@@ -182,3 +183,81 @@ def test_two_running_containers_each_get_their_own_entry():
         {"subject": "arrstack/gluetun", "mechanism": "none", "packages": []},
         {"subject": "frigate", "mechanism": "none", "packages": []},
     ]
+
+
+# --- collect_packages_on_image_change -------------------------------------
+
+
+def _exec_counter():
+    calls: list[list[str]] = []
+
+    def exec_handler(args):
+        calls.append(args)
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout=DPKG_STDOUT, stderr="")
+
+    return calls, exec_handler
+
+
+def test_an_empty_mapping_inventories_every_container_and_remembers_its_digest():
+    entry = dict(INSPECT_ENTRY, Image="sha256:aaa")
+    calls, exec_handler = _exec_counter()
+    seen: dict[str, str] = {}
+
+    with _run(
+        ps_stdout="arrstack-gluetun-1\n",
+        inspect_stdout=json.dumps([entry]),
+        exec_handler=exec_handler,
+    ):
+        results = collect_packages_on_image_change(seen)
+
+    assert [r["subject"] for r in results] == ["arrstack/gluetun"]
+    assert seen == {"arrstack/gluetun": "sha256:aaa"}
+    assert len(calls) == 1
+
+
+def test_an_unchanged_digest_is_not_probed_again():
+    entry = dict(INSPECT_ENTRY, Image="sha256:aaa")
+    calls, exec_handler = _exec_counter()
+    seen = {"arrstack/gluetun": "sha256:aaa"}
+
+    with _run(
+        ps_stdout="arrstack-gluetun-1\n",
+        inspect_stdout=json.dumps([entry]),
+        exec_handler=exec_handler,
+    ):
+        assert collect_packages_on_image_change(seen) == []
+
+    assert calls == []
+
+
+def test_a_changed_digest_is_probed_and_remembered():
+    entry = dict(INSPECT_ENTRY, Image="sha256:bbb")
+    calls, exec_handler = _exec_counter()
+    seen = {"arrstack/gluetun": "sha256:aaa"}
+
+    with _run(
+        ps_stdout="arrstack-gluetun-1\n",
+        inspect_stdout=json.dumps([entry]),
+        exec_handler=exec_handler,
+    ):
+        results = collect_packages_on_image_change(seen)
+
+    assert len(results) == 1
+    assert seen == {"arrstack/gluetun": "sha256:bbb"}
+    assert len(calls) == 1
+
+
+def test_a_container_with_no_reported_digest_is_probed_every_time():
+    calls, exec_handler = _exec_counter()
+    seen: dict[str, str] = {}
+
+    with _run(
+        ps_stdout="arrstack-gluetun-1\n",
+        inspect_stdout=json.dumps([INSPECT_ENTRY]),
+        exec_handler=exec_handler,
+    ):
+        collect_packages_on_image_change(seen)
+        collect_packages_on_image_change(seen)
+
+    assert seen == {}
+    assert len(calls) == 2

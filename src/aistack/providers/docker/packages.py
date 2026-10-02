@@ -1,9 +1,18 @@
 from __future__ import annotations
 
 import subprocess
-from typing import Any
+from typing import Any, MutableMapping
 
 from aistack.providers.docker.identity import identities_of, list_running_container_names
+
+# The two commands this collector runs inside every container it
+# inventories, declared once so `aistack.providers.docker.events` can
+# recognise its own probes in the `docker events` stream and leave them
+# out (cadrage 2026-10-02: AIStack's own `docker exec` probes made up
+# 38 % of the stream's exec events, healthchecks the rest — neither is
+# a trace of anything a person did).
+DPKG_QUERY_COMMAND: tuple[str, ...] = ("dpkg-query", "-W", "-f=${Package}\t${Version}\n")
+APK_DB_COMMAND: tuple[str, ...] = ("cat", "/lib/apk/db/installed")
 
 # 1.5's fourth and last named collector (inventaire des paquets),
 # explicitly deferred past 1.5.0 (`ADR-0011` § 22's own closing note)
@@ -65,7 +74,7 @@ def _dpkg_packages(name: str) -> list[dict[str, str]] | None:
 
     try:
         result = subprocess.run(
-            ["docker", "exec", name, "dpkg-query", "-W", "-f=${Package}\t${Version}\n"],
+            ["docker", "exec", name, *DPKG_QUERY_COMMAND],
             capture_output=True,
             text=True,
         )
@@ -138,7 +147,7 @@ def _apk_packages(name: str) -> list[dict[str, str]] | None:
 
     try:
         result = subprocess.run(
-            ["docker", "exec", name, "cat", "/lib/apk/db/installed"],
+            ["docker", "exec", name, *APK_DB_COMMAND],
             capture_output=True,
             text=True,
         )
@@ -195,5 +204,57 @@ def collect_running_container_packages() -> list[dict[str, Any]]:
                 "packages": inventory["packages"],
             }
         )
+
+    return results
+
+
+def collect_packages_on_image_change(
+    seen_digests: MutableMapping[str, str],
+) -> list[dict[str, Any]]:
+    """
+    `collect_running_container_packages`, restricted to the containers
+    whose image changed since this caller last inventoried them —
+    owner's cadrage, 2026-10-02: a container's packages come from its
+    image, so an inventory is taken once per (subject, image digest)
+    rather than every poll. `seen_digests` maps a stable subject to
+    the image digest it was last inventoried at, and is updated in
+    place; a caller passing an empty mapping (a monitor that just
+    started) gets every running container inventoried once — the
+    startup pass.
+
+    Before this, every running container got a `docker exec` per
+    collector cycle (every 10 s), which the docker-events collector
+    then dutifully recorded: about 2,300 `exec_create` per hour on the
+    reference host, three events each, and the heaviest of the four
+    1.5 monitors by CPU.
+
+    A container whose `docker inspect` reported no image digest at all
+    is inventoried every time, as before — nothing proves its image
+    did not change, so it is never skipped on an assumption.
+
+    **What this gives up, stated rather than discovered later:** a
+    package installed by hand inside a running container, without an
+    image change, is no longer seen until that container's image
+    changes or the monitor restarts.
+    """
+
+    names = list_running_container_names()
+    identities = identities_of(names)
+    results: list[dict[str, Any]] = []
+
+    for identity in identities:
+        digest = identity.image_digest
+        if digest and seen_digests.get(identity.stable_subject) == digest:
+            continue
+        inventory = collect_package_inventory(identity.name)
+        results.append(
+            {
+                "subject": identity.stable_subject,
+                "mechanism": inventory["mechanism"],
+                "packages": inventory["packages"],
+            }
+        )
+        if digest:
+            seen_digests[identity.stable_subject] = digest
 
     return results

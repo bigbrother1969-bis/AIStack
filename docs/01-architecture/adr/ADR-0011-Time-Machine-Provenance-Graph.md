@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.13
+  version: 1.14
   status: Proposed
   owner: Architecture
   created: 2026-09-27
-  updated: 2026-09-29
+  updated: 2026-10-02
 
 relations:
   references:
@@ -1944,6 +1944,46 @@ clean `"5000 événements"` pill rather than an illegible number, the
 400-instant lane the same via the member-count path, and the page's
 own content area now spans nearly the full browser window instead of
 sitting in a narrow fixed column.
+
+### 27. Exec noise left out of `docker-events`, package inventory taken once per image (2026-10-02)
+
+**Measured before any code, on the reference host.** Four days after
+§ 20 shipped, the `docker-events` stream held 34,488 history files
+(4.7 GB). One hour of it: 18,074 events, 97 % of them `exec_create`/
+`exec_start`/`exec_die` — about 3,800 runs of containers' own declared
+healthchecks (gluetun, MariaDB, frigate, curl/wget probes) and 2,338 of
+AIStack's own `docker exec` package probes (§ 23's `dpkg-query` and
+`/lib/apk/db/installed`, run in every container every 10 seconds). The
+one real fault that hour held — `arrstack/mularr` restarting every 17
+seconds, its SQLite database on NFS — was 432 lines among 18,074.
+
+**Owner's cadrage, two decisions:**
+
+1. **`docker-events` keeps a human or external `docker exec` and drops
+   the two automatic kinds** — not every exec (which would lose exactly
+   the manual action § 20 exists to trace), and not merely two of its
+   three events. `ExecNoiseFilter` (`aistack.providers.docker.events`)
+   drops an exec whose command is one of the package collector's own
+   (`DPKG_QUERY_COMMAND`/`APK_DB_COMMAND`, imported from
+   `aistack.providers.docker.packages`, never copied) or the
+   container's own declared healthcheck (`Config.Healthcheck.Test`,
+   read once per container through `docker inspect` and cached:
+   `CMD-SHELL x` appears as `<shell> x`, `CMD a b` as `a b`).
+   `exec_die` names no command, so the filter remembers the `execID`s
+   it dropped, for the whole monitor run. It never drops what it cannot
+   prove is noise: a container Docker could not inspect, or an
+   `exec_die` whose creation this process never saw, is kept.
+2. **`docker-packages` inventories a container once per image** —
+   once at startup, then only when its image digest changes
+   (`collect_packages_on_image_change`), since its packages come from
+   its image. A container reporting no digest is still probed every
+   cycle. Given up, and said so: a package installed by hand inside a
+   running container is not seen until its image changes or the
+   monitor restarts.
+
+**Not decided here:** what happens to the history already accumulated
+(kept, or archived out of the stream and the graph rebuilt) — a
+separate decision, after this one has run in production.
 
 ## Consequences
 

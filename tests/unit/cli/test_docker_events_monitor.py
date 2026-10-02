@@ -262,3 +262,22 @@ def test_main_dry_run_records_no_gap_even_after_a_checkpoint(tmp_path: Path):
         main(_main_args(tmp_path) + ["--dry-run"])
 
     assert not (tmp_path / "collection-gaps").exists()
+
+
+def test_run_cycle_leaves_aistack_s_own_package_probe_out_of_history(tmp_path: Path):
+    from aistack.providers.docker.packages import DPKG_QUERY_COMMAND
+
+    probe = {
+        "Type": "container",
+        "Action": "exec_create: " + " ".join(DPKG_QUERY_COMMAND),
+        "Actor": {"ID": "abc123", "Attributes": {"execID": "e1", "name": "some-container"}},
+        "time": 1790000001,
+    }
+    output_path = tmp_path / "docker-events" / "docker-events.json"
+    checkpoint_path = tmp_path / "checkpoint.json"
+    now = datetime(2026, 10, 2, 17, 0, 0, tzinfo=timezone.utc)
+
+    with _docker_events(stdout=ONE_EVENT_LINE + json.dumps(probe) + "\n"):
+        events = run_cycle(output_path, checkpoint_path, dry_run=False, now=now)
+
+    assert [event["action"] for event in events] == ["start"]

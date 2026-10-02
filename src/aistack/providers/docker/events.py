@@ -188,3 +188,146 @@ def enrich(event: Mapping[str, Any]) -> dict[str, Any]:
         "action": docker_action_of(event),
         "raw": dict(event),
     }
+
+
+# --- Exec noise: AIStack's own probes and declared healthchecks ------------
+#
+# Cadrage 2026-10-02, measured on the reference host before any code:
+# one hour of this stream held 18,074 events, 97 % of them `exec_*` —
+# about 3,800 healthcheck runs (gluetun, MariaDB, frigate, curl/wget
+# probes) and 2,338 of AIStack's own `docker exec` package probes
+# (`aistack.providers.docker.packages`), three events each. Neither is
+# a trace of anything a person did, and together they buried the one
+# real fault the stream held that hour: a container restarting every
+# 17 seconds. Owner's choice: keep a human or external `docker exec`,
+# drop the two automatic kinds — never every exec, which would lose
+# exactly the manual action this collector exists to trace.
+
+_MAX_REMEMBERED_EXEC_IDS = 4096
+_MAX_CACHED_CONTAINERS = 1024
+
+
+def _aistack_probe_commands() -> frozenset[str]:
+    # Imported here, not at module top: `packages` is this collector's
+    # sibling, and naming its commands from it — rather than copying
+    # them — is what keeps the two from drifting apart.
+    from aistack.providers.docker.packages import APK_DB_COMMAND, DPKG_QUERY_COMMAND
+
+    return frozenset(
+        " ".join(command).strip() for command in (DPKG_QUERY_COMMAND, APK_DB_COMMAND)
+    )
+
+
+def healthcheck_commands_of(inspect_entry: Mapping[str, Any]) -> frozenset[str]:
+    """
+    The exec command line(s) Docker reports when it runs this
+    container's own declared healthcheck — the same string Docker puts
+    after `exec_create: ` / `exec_start: ` in the event's `Action`.
+
+    `CMD-SHELL x` runs through the container's own shell (its
+    `Config.Shell`, `/bin/sh -c` when none is set) and so appears as
+    `/bin/sh -c x`; `CMD a b` appears as `a b`. `NONE`, or no
+    healthcheck at all, yields nothing.
+    """
+
+    config = inspect_entry.get("Config")
+    config = config if isinstance(config, dict) else {}
+    healthcheck = config.get("Healthcheck")
+    test = healthcheck.get("Test") if isinstance(healthcheck, dict) else None
+    if not isinstance(test, list) or len(test) < 2:
+        return frozenset()
+
+    kind, rest = str(test[0]), [str(part) for part in test[1:]]
+    if kind == "CMD-SHELL":
+        shell = config.get("Shell")
+        shell_parts = (
+            [str(part) for part in shell]
+            if isinstance(shell, list) and shell
+            else ["/bin/sh", "-c"]
+        )
+        return frozenset({" ".join([*shell_parts, *rest]).strip()})
+    if kind == "CMD":
+        return frozenset({" ".join(rest).strip()})
+    return frozenset()
+
+
+def _inspect_healthcheck(container_id: str) -> frozenset[str] | None:
+    """`None` when Docker could not say — never cached, never read as "no healthcheck"."""
+
+    from aistack.providers.docker.identity import inspect_containers
+
+    entries = inspect_containers([container_id])
+    if not entries or not isinstance(entries[0], dict):
+        return None
+    return healthcheck_commands_of(entries[0])
+
+
+class ExecNoiseFilter:
+    """
+    Decides, event by event, whether a raw Docker event is exec noise —
+    AIStack's own package probe, or a container's own declared
+    healthcheck — and should be left out of Observation History.
+
+    Only `exec_create` and `exec_start` name the command they ran;
+    `exec_die` carries only its `execID`. So the filter remembers the
+    `execID`s it dropped (bounded) and drops their `exec_die` too — it
+    must live as long as the monitor's loop, not one cycle, since a
+    probe's `exec_die` can land in the next poll window.
+
+    **Never drops what it cannot prove is noise.** A non-exec event is
+    always kept; an exec whose container Docker could not inspect is
+    kept; an `exec_die` whose `exec_create` this process never saw (it
+    started in between) is kept. The cost of a wrong keep is one noisy
+    line; the cost of a wrong drop is a lost trace of a human action.
+    """
+
+    def __init__(self) -> None:
+        self._probe_commands = _aistack_probe_commands()
+        self._dropped_exec_ids: dict[str, None] = {}
+        self._healthchecks: dict[str, frozenset[str]] = {}
+
+    def _healthcheck_commands(self, container_id: str) -> frozenset[str]:
+        cached = self._healthchecks.get(container_id)
+        if cached is not None:
+            return cached
+        commands = _inspect_healthcheck(container_id)
+        if commands is None:
+            return frozenset()
+        if len(self._healthchecks) >= _MAX_CACHED_CONTAINERS:
+            self._healthchecks.clear()
+        self._healthchecks[container_id] = commands
+        return commands
+
+    def _remember(self, exec_id: str) -> None:
+        if not exec_id:
+            return
+        self._dropped_exec_ids[exec_id] = None
+        while len(self._dropped_exec_ids) > _MAX_REMEMBERED_EXEC_IDS:
+            self._dropped_exec_ids.pop(next(iter(self._dropped_exec_ids)))
+
+    def keep(self, event: Mapping[str, Any]) -> bool:
+        action = docker_action_of(event)
+        if not action.startswith("exec_"):
+            return True
+
+        actor = event.get("Actor")
+        actor = actor if isinstance(actor, dict) else {}
+        attributes = actor.get("Attributes")
+        attributes = attributes if isinstance(attributes, dict) else {}
+        exec_id = str(attributes.get("execID") or "")
+
+        verb, separator, command = action.partition(":")
+        if not separator:
+            # `exec_die` and the like: no command, only the execID.
+            return not (exec_id and exec_id in self._dropped_exec_ids)
+
+        command = command.strip()
+        noisy = command in self._probe_commands
+        if not noisy:
+            container_id = str(actor.get("ID") or "")
+            noisy = bool(container_id) and command in self._healthcheck_commands(
+                container_id
+            )
+        if noisy:
+            self._remember(exec_id)
+        return not noisy

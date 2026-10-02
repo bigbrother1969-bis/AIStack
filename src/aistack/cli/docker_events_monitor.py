@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from aistack.generators.collection_gap import record_collection_gap
-from aistack.providers.docker.events import collect_docker_events, enrich
+from aistack.providers.docker.events import ExecNoiseFilter, collect_docker_events, enrich
 from aistack.providers.docker.events_history import (
     DEFAULT_OUTPUT_PATH,
     record_docker_events,
@@ -188,6 +188,7 @@ def run_cycle(
     dry_run: bool,
     *,
     now: datetime | None = None,
+    noise_filter: ExecNoiseFilter | None = None,
 ) -> list[dict[str, Any]]:
     """
     One poll: read the checkpoint (or, on a first run, default to
@@ -219,7 +220,13 @@ def run_cycle(
     until = when.isoformat()
 
     raw_events = collect_docker_events(since, until)
-    events = [enrich(event) for event in raw_events]
+    # Exec noise (AIStack's own package probes, declared healthchecks)
+    # left out before anything is recorded — `ExecNoiseFilter`'s own
+    # docstring. A caller looping over cycles passes one filter for its
+    # whole run, so a dropped exec's `exec_die` is recognised in the
+    # next window too; a single cycle gets a fresh one.
+    noise_filter = noise_filter if noise_filter is not None else ExecNoiseFilter()
+    events = [enrich(event) for event in raw_events if noise_filter.keep(event)]
 
     if not dry_run:
         record_docker_events(events, since=since, until=until, output_path=output_path)
@@ -281,9 +288,13 @@ def main(argv: list[str] | None = None) -> None:
     if not once:
         signal.signal(signal.SIGTERM, handle_sigterm)
 
+    noise_filter = ExecNoiseFilter()
+
     try:
         while True:
-            events = run_cycle(output_path, checkpoint_path, dry_run)
+            events = run_cycle(
+                output_path, checkpoint_path, dry_run, noise_filter=noise_filter
+            )
 
             # `--once` always prints — the same incident
             # `FIRST_RUN_LOOKBACK_SECONDS`'s own comment names: a manual

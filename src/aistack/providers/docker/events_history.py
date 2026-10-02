@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from aistack.generators.history import write_artifact_with_history
+from aistack.history import latest_observations
 
 # A dedicated root, not `reports/generated/`'s own flat `history/` —
 # on purpose, mirroring `aistack.timemachine.projection.explications`'
@@ -73,3 +75,31 @@ def record_docker_events(
     latest_path, _ = write_artifact_with_history(content, output_path)
 
     return latest_path
+
+
+def read_recent_docker_events(
+    since: datetime,
+    output_path: Path = DEFAULT_OUTPUT_PATH,
+) -> list[dict[str, Any]]:
+    """
+    Every recorded event in the batches written at or after `since` —
+    what the Services domain's restart-loop check reads
+    (`aistack.runtime.restart_loop`). Only the recent batches are
+    opened; the directory itself is scanned once
+    (`latest_observations`). An unreadable batch is skipped, never
+    raised: a health page must not fail on one bad file.
+    """
+
+    stem = output_path.stem
+    events: list[dict[str, Any]] = []
+    for observation in latest_observations(output_path.parent, stem):
+        if observation.observed_at < since:
+            continue
+        try:
+            payload = json.loads(observation.read())
+        except (OSError, ValueError):
+            continue
+        batch = payload.get("events") if isinstance(payload, dict) else None
+        if isinstance(batch, list):
+            events.extend(event for event in batch if isinstance(event, dict))
+    return events

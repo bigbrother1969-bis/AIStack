@@ -34,6 +34,7 @@ from aistack.runtime.evaluate_gpu import evaluate_gpu
 from aistack.runtime.evaluate_inventory_gap import evaluate_inventory_gap
 from aistack.runtime.evaluate_pra_tests import evaluate_pra_tests
 from aistack.runtime.evaluate_services import evaluate_services
+from aistack.runtime.restart_loop import restart_loop_findings
 from aistack.runtime.evaluate_storage import evaluate_storage
 from aistack.runtime.evaluate_uncovered_state import evaluate_uncovered_state
 from aistack.runtime.gpu_anomaly import find_gpu_anomalies
@@ -241,7 +242,13 @@ def services_domain() -> HealthDomain:
     distress = find_container_distress(readings)
 
     return HealthDomain(
-        name="Services", instrumented=True, findings=evaluate_services(distress)
+        name="Services",
+        instrumented=True,
+        # Instantaneous state (restarting/unhealthy), plus restart loops
+        # counted from the docker-events history — the second catches a
+        # container that reads `running` between two crashes (mularr,
+        # 2026-10-02, `aistack.runtime.restart_loop`).
+        findings=evaluate_services(distress) + restart_loop_findings(),
     )
 
 

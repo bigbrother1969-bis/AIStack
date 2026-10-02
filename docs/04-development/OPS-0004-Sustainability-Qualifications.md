@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Draft
   owner: Operations
   created: 2026-09-04
-  updated: 2026-09-11
+  updated: 2026-10-02
 
 relations:
   references:
@@ -165,6 +165,19 @@ first):
   remotely. GIGABYTE is instrumented with existing infrastructure; the
   Raspberry stays explicitly out of scope for this lot, a named absence
   (`FDN-0003` Article 12), not a silent one — see `PLAN-J7` § 8.3.
+
+**Detection scope widened, 2026-10-02 — restart loops counted over time.**
+The instantaneous-only v1 missed a real loop for three weeks:
+`arrstack/mularr` died at startup every ~17 seconds (its SQLite database
+on NFS, 1,537 restarts), and read `running` at every instant the Cockpit
+looked, between two crashes. The docker-events collector (`ADR-0011` § 20)
+had recorded every `die` all along. The owner's choice, from three options
+examined (recent restarts from that history, Docker's cumulative
+`RestartCount`, or both): **count `die` events per subject over the last
+60 minutes, threshold 5** (`aistack.runtime.restart_loop`,
+`RestartLoop`). Same incident, same signature, same three
+qualifications — the Services domain now cites both checks, instantaneous
+and over time. Still GIGABYTE only, for the same reason as above.
 
 ## Fourth reference case — Sauvegarde/PRA, 2026-09-11, qualified
 

@@ -1256,3 +1256,30 @@ def test_the_default_pra_tests_definition_exists():
     """
 
     assert cli.DEFAULT_PRA_TESTS.exists()
+
+
+def test_a_container_running_between_two_crashes_is_still_a_restart_loop(monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    deaths = [
+        {"subject": "arrstack/mularr", "action": "die",
+         "occurred_at": (now - timedelta(minutes=minute)).isoformat()}
+        for minute in range(1, 7)
+    ]
+    monkeypatch.setattr(
+        "aistack.runtime.restart_loop.read_recent_docker_events",
+        lambda since, output_path=None: deaths,
+    )
+    monkeypatch.setattr(
+        cli,
+        "DockerProvider",
+        lambda: FakeDockerProvider(
+            states=[{"Names": "mularr", "State": "running", "Status": "Up 5 seconds"}]
+        ),
+    )
+
+    domain = cli.services_domain()
+
+    assert [finding.subject for finding in domain.findings] == ["arrstack/mularr"]
+    assert "restarted 6 times" in domain.findings[0].interpretation

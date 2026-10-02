@@ -203,6 +203,14 @@ def test_the_real_pra_tests_definition_loads():
         "nextcloud",
         "immich",
         "arrstack",
+        "wordpress",
+        "changedetection",
+        "homepage",
+        "npm",
+        "pocketid",
+        "uptime-kuma",
+        "vaultwarden",
+        "vikunja",
     }
 
     # The owner's own real restore-test history, found 2026-09-23 in
@@ -233,6 +241,36 @@ def test_the_real_pra_tests_definition_loads():
     # (3m10.7s), rounded down to a whole minute, not a fabricated one.
     assert by_service["arrstack"].status == "success"
     assert by_service["arrstack"].rto_minutes == 3
+
+    # 1.6 closure, 2026-10-02: the eight `not_declared` findings
+    # tranche 4 surfaced resolved to real `services:` entries. Six
+    # Raspberry stacks cite the same 2026-09-26 restore test
+    # `raspberry` itself already cited (owner's choice: one entry per
+    # service, `raspberry` kept dedicated to the host's own untested
+    # system state) — not a second test invented to justify a
+    # separate entry.
+    for service in (
+        "changedetection",
+        "homepage",
+        "npm",
+        "pocketid",
+        "uptime-kuma",
+        "vaultwarden",
+    ):
+        assert by_service[service].status == "success"
+        assert by_service[service].rto_minutes == 1
+
+    # Vikunja's own real restore the same day (mariadb-dump + restic
+    # snapshot, 34 tables reloaded) was never separately chronometered
+    # — no fabricated `rto_minutes` stands in for one never measured.
+    assert by_service["vikunja"].status == "success"
+    assert by_service["vikunja"].rto_minutes is None
+
+    # Wordpress has a real, confirmed backup mechanism but has never
+    # had an actual restore test performed — `UNTESTED`, not a
+    # fabricated success, the same honest gap `gigabyte` already
+    # carries.
+    assert by_service["wordpress"].status is None
 
     for service in by_service:
         assert thresholds.for_service(service).max_age_days == 90.0

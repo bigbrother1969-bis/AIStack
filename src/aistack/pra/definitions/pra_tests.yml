@@ -134,6 +134,31 @@
 # check; a stateful service still only ever gets an entry here by the
 # owner's own hand, after a real restore test — never `last_test`
 # invented ahead of one.
+#
+# **1.6 closure, 2026-10-02 — the eight `not_declared` findings above
+# resolved to `services:` entries, each citing a test already real and
+# already recorded in this file's own history, nothing invented for
+# this closure.** `changedetection`/`homepage`/`npm`/`pocketid`/
+# `uptime-kuma`/`vaultwarden` each get their own entry rather than
+# relying on the single `raspberry` entry above (owner's choice,
+# 2026-09-30 cadrage): `raspberry` itself stays dedicated to the host's
+# own system state (SD card/OS), never itself tested, the same role
+# `gigabyte`'s own entry already holds for its host — not the six
+# stacks' files, which the 2026-09-26 restore test above actually
+# covered. Each of the six cites that same real test (restic restore
+# to `/media/BACKUP`, diffed clean against the live tree) rather than a
+# second one invented to justify a separate entry. `vikunja` cites its
+# own real restore the same day (`mariadb-dump` + restic snapshot, 34
+# tables reloaded, files diffed empty) — never chronometered
+# separately from the six above, so no `rto_minutes` is declared for
+# it (`ARC-P-006`: no figure stands in for one never measured).
+# `wordpress` has a real, confirmed backup mechanism
+# (`backup_strategy.yml`) but has never had an actual restore test
+# performed — `last_test: null` states that honestly, the same
+# `UNTESTED` vocabulary `gigabyte` already carries, moving its gap one
+# step back from `not_declared` rather than closing it outright. A
+# real Wordpress restore test remains a separate, still-open action
+# for the owner to perform whenever convenient.
 
 max_age_days: 90
 
@@ -160,3 +185,39 @@ services:
       status: success
       date: "2026-09-26"
       rto_minutes: 3
+  - name: wordpress
+    last_test: null
+  - name: changedetection
+    last_test:
+      status: success
+      date: "2026-09-26"
+      rto_minutes: 1
+  - name: homepage
+    last_test:
+      status: success
+      date: "2026-09-26"
+      rto_minutes: 1
+  - name: npm
+    last_test:
+      status: success
+      date: "2026-09-26"
+      rto_minutes: 1
+  - name: pocketid
+    last_test:
+      status: success
+      date: "2026-09-26"
+      rto_minutes: 1
+  - name: uptime-kuma
+    last_test:
+      status: success
+      date: "2026-09-26"
+      rto_minutes: 1
+  - name: vaultwarden
+    last_test:
+      status: success
+      date: "2026-09-26"
+      rto_minutes: 1
+  - name: vikunja
+    last_test:
+      status: success
+      date: "2026-09-26"

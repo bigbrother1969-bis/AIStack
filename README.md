@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.6.0
+### Concrete capabilities, as of 1.6.1
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -97,7 +97,10 @@ AIStack transforms observations into sustainable knowledge assets.
   discovered on the network, and a PRA-test list proposed from that
   discovery, where a stateful service with no restore test on record is
   flagged and a result only ever comes from a real test. Every finding
-  in red is now a link into the troubleshooting assistant.
+  in red is now a link into the troubleshooting assistant. As of 1.6.1:
+  the Services domain also counts restarts over the last hour from the
+  Docker event history, so a container crash-looping while reading
+  "running" between two crashes is flagged, not missed.
 - **Runtime diagnosis** — a sweep of the Docker host, no container
   named, qualifies log lines against declared signatures, correlates
   unexplained CPU consumption against host temperature and against the
@@ -182,7 +185,15 @@ AIStack transforms observations into sustainable knowledge assets.
   read-only panel; a cluster on the ribbon unfolds into a list of its
   own members; the ribbon's full list is paginated and grouped by
   stream; and the four Docker collectors run as the repository owner,
-  not as root. Every Time Machine screen stays read-only.
+  not as root. Every Time Machine screen stays read-only. As of 1.6.1:
+  the Docker event stream keeps what a person or a real state change
+  caused and leaves out AIStack's own package probes and containers'
+  declared healthchecks (99 % of it on the reference host); package
+  inventories are taken once per image and filesystem drift every 15
+  minutes; history recorded before that can be archived and refiltered
+  with one command; and the graph rebuilds in about a minute instead of
+  scanning its history quadratically. Every AIStack service now runs as
+  the repository owner, none as root.
 - **Knowledge integrity validation** — eighteen checks run against the
   governed documentation on every test suite and before every
   publication.
@@ -233,8 +244,8 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.6.0**: `pytest -q` — **2726 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **552 source files**;
+**As of 1.6.1**: `pytest -q` — **2762 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **555 source files**;
 `python3 -m aistack.cli.knowledge_integrity` — **77 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 

@@ -39,6 +39,39 @@ it says what the build was *for*.
 
 ---
 
+## 1.6.1 — 2026-10-02
+
+**The same evening as 1.6.0: what a real look at the reference host showed
+the 1.5 collectors were doing to it, fixed — and a restart loop the Health
+Cockpit had missed for three weeks, now caught.**
+
+- **A Docker event stream that says what happened.** Four days of
+  docker-events held 1.9 million events, 97 % of them `exec`: containers'
+  own declared healthchecks, and AIStack's own package probes running in
+  every container every 10 seconds. The collector now leaves out both —
+  a `docker exec` a person runs is still recorded — and the history
+  recorded before can be archived and refiltered in one command
+  (`docker_events_refilter`, with `--healthcheck` to declare the probe of
+  a container removed since). On the reference host: 1,942,964 events
+  down to 14,379.
+- **Collectors that leave the host alone.** Package inventories are taken
+  once per image instead of every 10 seconds, and filesystem drift
+  (`docker diff`) every 15 minutes; `dockerd` had sat above 100 % CPU
+  permanently.
+- **A graph that rebuilds in a minute.** Every projection re-scanned a
+  stream's whole history directory once per instant; at tens of thousands
+  of batches the rebuild ran for over an hour without writing anything.
+  One scan per stream now (`latest_observations`).
+- **Restart loops, caught.** A container dying at startup every 17 seconds
+  (a SQLite database on NFS) read `running` at every instant the Services
+  domain looked. It now also counts restarts over the last hour from the
+  event history, threshold 5 (`OPS-0004`).
+- **Nothing runs as root.** Every AIStack service unit now runs as the
+  repository owner; none needed root. The publisher runs the governed
+  chain once per pulled commit, not once per publishing step (`OPS-0002`).
+
+2762 tests, 77 knowledge artifacts, `clean: True`.
+
 ## 1.6.0 — 2026-10-02
 
 **The homelab's operational inventory declared and checked against what

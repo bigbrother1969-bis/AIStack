@@ -44,6 +44,13 @@ After=network.target
 
 [Service]
 Type=simple
+# Run as the repo owner, not as root (2026-10-02, after the four 1.5
+# Docker monitors moved the same way). Nothing here needs root: the
+# Docker socket comes with the `docker` group big-brother is in, every
+# port is above 1024, and every file read or written is under the
+# repository, which big-brother owns.
+User=big-brother
+Group=big-brother
 WorkingDirectory=/srv/aistack/AIStack
 ExecStart=/srv/aistack/AIStack/run_timemachine_ui.sh
 Restart=on-failure

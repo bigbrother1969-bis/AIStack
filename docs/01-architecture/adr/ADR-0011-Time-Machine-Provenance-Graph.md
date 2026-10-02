@@ -2006,6 +2006,15 @@ never guesses one. This is the one place this stream's history is
 rewritten rather than appended to; the archive beside it is what keeps
 that honest. Run with the monitor stopped, then `timemachine_rebuild`.
 
+**`docker diff` every 15 minutes, not every 10 seconds — owner's
+cadrage, the same evening.** With the exec noise gone, `dockerd` still
+sat above 100 % CPU: § 21's collector ran one `docker diff` per running
+container (~59) every 10 seconds, for a stream that had recorded 1,760
+changed snapshots in five days. Unlike packages, a container's
+filesystem does drift during its life, so § 23's "once per image" does
+not apply; the poll interval goes to 900 seconds instead. A monitor
+restart still takes a first pass immediately.
+
 ## Consequences
 
 - **`pyoxigraph>=0.5.11` is now a declared runtime dependency of the

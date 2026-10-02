@@ -33,7 +33,14 @@ STREAM_STEM = "docker-diff"
 # `docker_events_monitor.POLL_SECONDS`'s own comment already states:
 # a container's filesystem drifting under active use is not more
 # time-sensitive than a Docker event.
-POLL_SECONDS = 10.0
+#
+# **Tuned 2026-10-02, against a real measurement this time.** At 10 s,
+# one `docker diff` per running container (~59 on the reference host)
+# kept `dockerd` above 100 % CPU permanently, for a stream that
+# recorded 1,760 changed snapshots in five days. Owner's cadrage: every
+# 15 minutes — a filesystem drifting under use is not urgent to the
+# second. A monitor restart still takes a first pass immediately.
+POLL_SECONDS = 900.0
 
 DEFAULT_CHECKPOINT_PATH = Path("reports/generated/docker-diff/checkpoint.json")
 
@@ -41,7 +48,7 @@ USAGE = (
     "usage: python -m aistack.cli.docker_diff_monitor "
     "[--checkpoint PATH] [--generated-dir PATH] [--once] [--dry-run]\n"
     "\n"
-    "  Polls every running container's own `docker diff` each cycle\n"
+    "  Polls every running container's own `docker diff` every 15 min\n"
     "  (filtered against that container's own declared mounts) and\n"
     "  records a subject's own snapshot to Observation History only\n"
     "  when it differs from what was last recorded for it.\n"

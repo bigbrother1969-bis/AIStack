@@ -69,7 +69,7 @@ AIStack helps organizations to:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.5.2
+### Concrete capabilities, as of 1.6.0
 
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
@@ -85,9 +85,19 @@ AIStack transforms observations into sustainable knowledge assets.
   over SSH, that reports Docker containers running on machines other
   than the one AIStack itself runs on, with a LAN-only screen to manage
   the candidate SSH usernames it tries.
-- **Health Cockpit** — a scored dashboard across five domains (Storage,
-  Services, Backup/DR, GPU, Dette technique), each instrumented against
-  a real incident or a real declared threshold.
+- **Health Cockpit** — a scored dashboard across seven domains (Storage,
+  Services, Backup/DR, GPU, PRA tests, persistent state, inventory gaps),
+  plus a separate technical-debt card, each instrumented against a real
+  incident or a real declared threshold. As of 1.6.0: the homelab's
+  operational inventory is declared and checked against what actually
+  runs — a per-service backup strategy (SQL dump, stop-and-archive, or
+  live file backup, each grounded in a real script or tool, a missing
+  one flagged rather than guessed), an inventory reconciliation in both
+  directions between declared services and the containers really
+  discovered on the network, and a PRA-test list proposed from that
+  discovery, where a stateful service with no restore test on record is
+  flagged and a result only ever comes from a real test. Every finding
+  in red is now a link into the troubleshooting assistant.
 - **Runtime diagnosis** — a sweep of the Docker host, no container
   named, qualifies log lines against declared signatures, correlates
   unexplained CPU consumption against host temperature and against the
@@ -106,7 +116,10 @@ AIStack transforms observations into sustainable knowledge assets.
   (declaring a container "background" in the resource-priority
   definition), always re-verified against a fresh diagnostic afterward
   rather than assumed to have worked. Every reasoning call is kept in a
-  durable, per-subject history.
+  durable, per-subject history. As of 1.6.0: the assistant reads every
+  finding the Health Cockpit raises, not only CPU and temperature —
+  still applying a fix by itself only for the one CPU-priority action it
+  was built for.
 - **Console** — one entry point linking Selection UI, Priority CPU,
   Architecture, Health Cockpit, the network discovery screen and the
   troubleshooting assistant, all reachable from the same page. Only the
@@ -115,7 +128,11 @@ AIStack transforms observations into sustainable knowledge assets.
   network discovery, the troubleshooting assistant) is LAN-only. As of
   1.5.2: each card's description is written for the person using it, in
   plain French, and the cards are grouped by whether they're reachable
-  from the local network or from the internet.
+  from the local network or from the internet. As of 1.6.0: a domain's
+  alert badge on the console opens the matching section of the Health
+  Cockpit, and every LAN address AIStack links to is read from one
+  declared instance configuration instead of being typed into each
+  screen.
 - **French and English interface** — the console is served by AIStack
   itself, with a Settings page; every screen (console, Architecture,
   Health Cockpit and the four mini-apps) switches between French and
@@ -157,7 +174,15 @@ AIStack transforms observations into sustainable knowledge assets.
   filter that survives a language switch — and every Time Machine
   screen, plus the console, Architecture and Health Cockpit pages, now
   shares one adaptive full-width layout and the same charte graphique
-  (background, card borders, shared navigation).
+  (background, card borders, shared navigation). As of 1.6.0: a node's
+  page shows the network tree, that subject's own chronology and its
+  facts side by side; a subject can be reconstituted as it stood at a
+  past instant, stream by stream, saying so honestly where nothing was
+  observed yet; its recorded Explications — the "why" — get their own
+  read-only panel; a cluster on the ribbon unfolds into a list of its
+  own members; the ribbon's full list is paginated and grouped by
+  stream; and the four Docker collectors run as the repository owner,
+  not as root. Every Time Machine screen stays read-only.
 - **Knowledge integrity validation** — eighteen checks run against the
   governed documentation on every test suite and before every
   publication.
@@ -208,9 +233,9 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.5.2**: `pytest -q` — **2581 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **538 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **75 knowledge artifacts**,
+**As of 1.6.0**: `pytest -q` — **2726 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **552 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **77 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

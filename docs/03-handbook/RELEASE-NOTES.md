@@ -39,6 +39,56 @@ it says what the build was *for*.
 
 ---
 
+## 1.6.0 — 2026-10-02
+
+**The homelab's operational inventory declared and checked against what
+really runs (roadmap R9/R10), the Health Cockpit's findings made actionable,
+and three new read-only Time Machine views drawn from the validated
+maquettes.**
+
+- **Declared operational inventory.** AIStack's own LAN address and each
+  of its services' ports are declared once, in a hand-written instance
+  configuration, instead of typed into a dozen screens and links. Two new
+  Health Cockpit domains, weighted 25 points each: *État persistant*,
+  which checks that every service holding state has a declared backup
+  strategy — SQL dump, stop-and-archive or live file backup, each grounded
+  in a script or tool that really exists, a missing one declared as a gap
+  rather than guessed — and *Écarts d'inventaire*, which reconciles, in
+  both directions, the services declared for the homelab against the
+  containers really discovered on the network. The *Tests PRA* domain now
+  also flags a stateful service with no restore test on record, and never
+  invents a result for one. Closed against the real homelab in the same
+  release: 22 of the 29 inventory gaps found resolved, the last two
+  unidentified containers identified and declared, three abandoned
+  invoicing trials removed from the host rather than declared, the backup
+  mechanisms of three services traced to their real timers and scripts,
+  and eight services given a PRA-test entry — WordPress declared honestly
+  as never restore-tested.
+- **Findings you can act on.** The troubleshooting assistant now reads
+  every finding the Health Cockpit raises, not only CPU and temperature;
+  each red finding on the Cockpit links straight into it, and a console
+  alert badge opens the matching Cockpit section. The one-click fix stays
+  reserved to the CPU-priority action it was built for.
+- **Time Machine: three new views.** A node's page now shows the network
+  tree, that subject's own chronology and its facts side by side.
+  *Reconstituer* shows a subject as it stood at a chosen instant, stream by
+  stream — the latest observation at or before it, or an honest "nothing
+  observed yet". *Pourquoi* lists a subject's recorded Explications,
+  version by version. All three are read-only: the maquettes' writing
+  actions (restore to a sandbox, correct or translate an Explication) are
+  deliberately not built. On the ribbon, a cluster now unfolds into a list
+  of its own members, the full list is grouped by stream as cards, and the
+  tree and ribbon pages are cached and paginated so they stay usable on a
+  production-sized graph.
+- **Operations.** The four Docker collectors now run as the repository
+  owner instead of root, so the observations they write stay rewritable by
+  the rest of the stack. The Cockpit's weights register is brought back in
+  line with its seven domains, and the console/Cockpit score drift seen
+  while preparing this release is explained and given a procedure:
+  regenerate both pages in the same sitting.
+
+2726 tests, 77 knowledge artifacts, `clean: True`.
+
 ## 1.5.2 — 2026-09-30
 
 **The Time Machine ribbon rebuilt around what a real production graph showed

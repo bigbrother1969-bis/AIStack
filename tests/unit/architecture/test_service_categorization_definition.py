@@ -366,7 +366,7 @@ def test_the_real_service_categorization_loads():
         for category in definition.categories
         for service in category.services
     ]
-    assert len(all_services) == 69
+    assert len(all_services) == 70
 
     by_name = {service.name: service for service in all_services}
 
@@ -415,8 +415,9 @@ def test_the_real_service_categorization_loads():
         "EmulatorJS / ROMM — Base de données",
         "Gluetun",
         "Unpackerr",
+        "MinIO",
     }
-    assert len(_NO_ICON_OR_HREF) == 20
+    assert len(_NO_ICON_OR_HREF) == 21
 
     # `icon`/`href`/`description` joined 2026-09-12 (§10) — every
     # user-facing service carries all three, unlike `container` (which

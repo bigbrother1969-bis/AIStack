@@ -80,9 +80,18 @@
 #   removed from GIGABYTE entirely, not declared — the gap is expected
 #   to close itself once that happens, never by adding a YAML entry
 #   for a container meant to disappear.
-# - **2 still open**: `minio` and `slr-site` — not yet identified as of
-#   2026-10-02, pending the owner's own investigation on GIGABYTE.
-#   Left as real, honest gaps rather than guessed at.
+# - **1 still open**: `slr-site` — `docker inspect` on GIGABYTE
+#   returned "No such object", 2026-10-02: the container the inventory
+#   check saw 2026-09-30 no longer exists there. Left open pending the
+#   owner confirming it against a freshly regenerated `health.html`,
+#   rather than assumed resolved.
+#
+# **1.6 closure, addendum 2026-10-02 — `minio` identified and
+# declared.** `docker inspect` on GIGABYTE: `minio/minio:RELEASE.2022-
+# 10-24T18-35-07Z`, Compose project `minio`
+# (`/srv/minio/docker-compose.yml`), Watchtower-managed. Declared the
+# same minimal way as `Watchtower`/`Komf` (owner's choice): its actual
+# use was not stated, so none is invented here.
 
 categories:
   - name: Administration, Cloud & Utilitaires
@@ -163,6 +172,11 @@ categories:
       - name: Watchtower
         container: watchtower
         description: Mise à jour automatique des containers Docker
+      - name: MinIO
+        container: minio
+        description: >-
+          Stockage objet compatible S3 (/srv/minio, image minio/minio) —
+          usage précis non déclaré
 
   - name: Supervision
     services:

@@ -37,7 +37,7 @@
 </head>
 <body>
   <div class="top">
-    <a href="{{ console_base_url }}/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <a href="/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
       {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
     </nav>
@@ -53,7 +53,7 @@
     <div class="status">{{ status }}</div>
   {% endif %}
 
-  <form method="post" action="/save">
+  <form method="post" action="{{ base }}/save">
     <div class="footer-actions">
       <button class="primary" type="submit">{{ t('priority.save') }}</button>
     </div>

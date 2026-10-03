@@ -19,7 +19,8 @@ from fastapi import FastAPI, Request, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from aistack.i18n import Languages, default_languages
-from aistack.web import console, network_discovery
+from aistack.priority.screen import Discover, discover_containers
+from aistack.web import console, network_discovery, priority
 from aistack.web.exposure import Listeners, include
 
 
@@ -33,6 +34,7 @@ class WebPaths:
     network_discovery: Path = (
         PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml"
     )
+    resource_priority: Path = PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml"
 
 
 def create_app(
@@ -40,6 +42,7 @@ def create_app(
     listeners: Listeners,
     languages: Languages | None = None,
     paths: WebPaths | None = None,
+    discover: Discover = discover_containers,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -56,10 +59,13 @@ def create_app(
     app.state.listeners = listeners
     app.state.languages = languages if languages is not None else default_languages()
     app.state.paths = paths if paths is not None else WebPaths()
+    # Host-touching collaborators (ADR-0012 § 4): what Docker reports.
+    app.state.discover_containers = discover
     app.state.routers = []
 
     include(app, console.router)
     include(app, network_discovery.router, network_discovery.PREFIX)
+    include(app, priority.router, priority.PREFIX)
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:

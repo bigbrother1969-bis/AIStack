@@ -35,12 +35,12 @@
 #
 # Each screen that moves into that application leaves this list — its
 # port stops answering — and its console card names `web_lan` plus its
-# path instead: `network_discovery_ui` (8184) on 2026-10-03.
+# path instead: `network_discovery_ui` (8184) and `priority_ui` (8182)
+# on 2026-10-03.
 
 lan_hostname: GIGABYTE
 service_ports:
   selection_ui: 8181
-  priority_ui: 8182
   console: 8183
   troubleshooting_assistant_ui: 8185
   timemachine_ui: 8186

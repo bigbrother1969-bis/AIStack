@@ -254,7 +254,7 @@ def test_the_real_console_links_definition_loads():
     # `console_links.yml`'s own header comment keeps the record of
     # the reversal.
     assert by_name["Selection UI"].url == "http://GIGABYTE:8181"
-    assert by_name["Priorité CPU"].url == "http://GIGABYTE:8182"
+    assert by_name["Priorité CPU"].url == "http://GIGABYTE:8187/priority/"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"
     # LAN-only, deliberately: never a `https://...persiaut-family.fr`

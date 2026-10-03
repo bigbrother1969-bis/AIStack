@@ -242,7 +242,7 @@ def save_resource_priority_yaml(
 ) -> Path:
     """
     Save a governed resource-priority definition to YAML — the write
-    side `priority_ui/app.py`'s own `/save` uses, symmetric to
+    side `aistack.web.priority`'s own `/save` uses, symmetric to
     `load_resource_priority_yaml`.
 
     **Built explicitly, not `dataclasses.asdict` on the whole

@@ -34,7 +34,6 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 # `src/aistack/web/templates/` and found with the package below.
 _UI_DIRECTORIES = (
     "selection_ui",
-    "priority_ui",
     "troubleshooting_assistant_ui",
     "timemachine_ui",
 )

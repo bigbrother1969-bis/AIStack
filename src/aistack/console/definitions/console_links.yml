@@ -185,9 +185,10 @@ links:
         privilégier la lecture vidéo sur les tâches de fond).
         Accessible uniquement depuis le réseau local.
       en: >-
-        CPU priority arbitration — systemd/uvicorn service,
-        LAN only (GIGABYTE:8182)
-    service: priority_ui
+        CPU priority arbitration — AIStack web application, LAN
+        listener only (ADR-0012)
+    service: web_lan
+    path: /priority/
     scope: lan
   - name: Architecture
     description:

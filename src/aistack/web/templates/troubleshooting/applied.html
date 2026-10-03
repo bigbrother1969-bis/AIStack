@@ -35,6 +35,7 @@
   <div class="top-links">
     <a class="back-link" href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
     <a class="back-link" href="{{ base }}/" title="{{ t('troubleshooting.tooltip.back_list') }}">{{ t('troubleshooting.list_link') }}</a>
+    <!--aistack:session-->
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}</nav>
   </div>
 

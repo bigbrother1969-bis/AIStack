@@ -58,6 +58,12 @@ dependencies = [
     "uvicorn>=0.54",
     "jinja2>=3.1",
     "python-multipart>=0.0.32",
+    # Signing in (ADR-0013, 2026-10-03): the ID token Pocket ID sends is
+    # believed only once its RS256 signature has been verified against
+    # the provider's published keys — PyJWT with `cryptography` for the
+    # RSA, decided 2026-10-02. Lower bound: the version the suite was
+    # first run against.
+    "PyJWT[crypto]>=2.15.1",
 ]
 
 authors = [

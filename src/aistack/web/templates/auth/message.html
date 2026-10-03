@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('auth.title') }}</title>
+  <style>{% include "auth/_style.html" %}</style>
+</head>
+<body>
+  <h1>{{ heading }}</h1>
+  <p class="message{% if error %} error{% endif %}">{{ message }}</p>
+  <a class="back" href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+</body>
+</html>

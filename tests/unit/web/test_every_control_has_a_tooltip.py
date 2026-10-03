@@ -266,3 +266,30 @@ def test_every_control_of_a_screen_has_a_tooltip(web: TestClient, path: str):
 
     assert reply.status_code == 200
     assert untitled(reply.text) == []
+
+
+def test_the_sign_in_pages_have_no_untitled_control(tmp_path: Path):
+    from aistack.authentication.local_admin import hash_password
+    from aistack.authentication.oidc import OidcClient
+    from aistack.authentication.sessions import LOCAL, SessionStore
+    from aistack.web.authentication import SESSION_COOKIE, Authentication
+    from tests.unit.authentication_fake import CREDENTIALS, DEFINITION, FakeProvider
+
+    credentials = type(CREDENTIALS)(
+        client_id=CREDENTIALS.client_id,
+        client_secret=CREDENTIALS.client_secret,
+        local_admin_hash=hash_password("a fallback password"),
+    )
+    sessions = SessionStore(tmp_path / "s.sqlite3", 3600, 86400)
+    auth = Authentication(DEFINITION, credentials, sessions, OidcClient(DEFINITION, credentials, FakeProvider()))
+    (tmp_path / "console.html").write_text(generated_pages()["console"], encoding="utf-8")
+    app = create_app(tmp_path, Listeners(public_port=8183, lan_port=8186), LANGUAGES, auth=auth)
+    lan = TestClient(app, base_url="http://testserver:8186", follow_redirects=False)
+
+    assert untitled(lan.get("/login/local").text) == []
+    assert untitled(lan.get("/console.html").text) == []
+
+    lan.cookies.set(SESSION_COOKIE, sessions.open(subject="x", name="x", method=LOCAL))
+    signed_in = lan.get("/console.html").text
+    assert 'action="/logout"' in signed_in
+    assert untitled(signed_in) == []

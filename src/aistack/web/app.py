@@ -29,7 +29,16 @@ from aistack.troubleshooting.findings import CollectFindings, qualified_findings
 from aistack.troubleshooting.guide import AskAI, ask_ollama
 from aistack.timemachine.screen import ExpiringValue, live_network_tree
 from aistack.timemachine.tree import NetworkTreeNode
-from aistack.web import console, network_discovery, priority, selection, timemachine, troubleshooting
+from aistack.web import (
+    authentication,
+    console,
+    network_discovery,
+    priority,
+    selection,
+    timemachine,
+    troubleshooting,
+)
+from aistack.web.authentication import Authentication, build_authentication, fill_session_marker
 from aistack.web.exposure import Listeners, include
 
 
@@ -65,6 +74,7 @@ def create_app(
     ask_ai: AskAI = ask_ollama,
     run_in_background: Callable[[Callable[[], None]], Any] | None = None,
     network_tree: Callable[[], list[NetworkTreeNode]] | None = None,
+    auth: Authentication | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -111,14 +121,42 @@ def create_app(
             )
         ).get
     )
+    # Who is signed in (ADR-0013): Pocket ID, the sessions on disk
+    # under the generated directory, the fallback administrator.
+    app.state.authentication = auth if auth is not None else build_authentication(generated_dir)
     app.state.routers = []
 
     include(app, console.router)
+    include(app, authentication.router)
+    include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)
     include(app, priority.router, priority.PREFIX)
     include(app, selection.router, selection.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)
     include(app, timemachine.router, timemachine.PREFIX)
+
+    @app.middleware("http")
+    async def _who_is_signed_in(request: Request, call_next: Any) -> Response:
+        # Every HTML page carries the navigation's session marker;
+        # this writes the signed-in person — or the way to sign in —
+        # into it, generated pages and screens alike (ADR-0013 § 7).
+        response: Response = await call_next(request)
+        # A HEAD answer has no body to fill: its headers stay those of
+        # the page as generated.
+        if request.method == "HEAD" or not response.headers.get("content-type", "").startswith(
+            "text/html"
+        ):
+            return response
+
+        body = b"".join([chunk async for chunk in response.body_iterator])  # type: ignore[attr-defined]
+        filled = fill_session_marker(request, body)
+        rebuilt = Response(content=filled, status_code=response.status_code)
+        # Every header as it was — each `set-cookie` on its own — but the
+        # length, which the filled body changes.
+        rebuilt.raw_headers = [
+            (name, value) for name, value in response.raw_headers if name.lower() != b"content-length"
+        ] + [(b"content-length", str(len(filled)).encode("ascii"))]
+        return rebuilt
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:

@@ -1,0 +1,19 @@
+# AIStack — how a person signs in to the web application (ADR-0013).
+#
+# Declared by the owner, 2026-10-03. Pocket ID's address and transport
+# were measured from GIGABYTE the same day (its discovery document's
+# `issuer` is exactly this value). The client ID and secret are not
+# here: they live in `.env.web`, read from the two variables named
+# below, and the fallback administrator's scrypt hash with them.
+
+issuer: "https://id.persiaut-family.fr"
+# The address the public listener is reached at, through Nginx Proxy
+# Manager and Cloudflare — the redirect URI is built from it, never
+# from a request header.
+public_base_url: "https://aistack.persiaut-family.fr"
+scopes: [openid, profile, email, groups]
+client_id_env: AISTACK_OIDC_CLIENT_ID
+client_secret_env: AISTACK_OIDC_CLIENT_SECRET
+local_admin_env: AISTACK_WEB_ADMIN_SCRYPT
+session_idle_hours: 8
+session_absolute_days: 7

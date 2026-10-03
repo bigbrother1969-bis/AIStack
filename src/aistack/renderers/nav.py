@@ -18,6 +18,12 @@ from aistack.renderers.text import escape_text
 # (`PAGE_NAV_STYLE`), appended by each page to its own `_STYLE`.
 
 
+# Where the web application writes who is signed in (`ADR-0013` § 7):
+# a comment, so a page served without it — a generated file opened
+# straight from disk — shows nothing in its place.
+SESSION_MARKER = "<!--aistack:session-->"
+
+
 def render_page_nav(
     t: Translator,
     languages: Languages,
@@ -99,6 +105,7 @@ def render_page_nav(
     return (
         f'<nav class="page-nav" aria-label="{escape_text(t("common.language.switch_label"))}">'
         f"{back}"
+        f"{SESSION_MARKER}"
         f'<span class="lang-switch">{"".join(switches)}</span>'
         f'<a class="settings-link" href="{console_base_url}/settings" '
         f'title="{escape_text(t("common.settings.tooltip"))}">{escape_text(t("common.settings.link"))}</a>'

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Proposed
   owner: Architecture
   created: 2026-10-03
@@ -78,13 +78,17 @@ current one is corrected (the form starts from the current text):
   one.
 
 The text is required, at most 20 000 characters, kept exactly as typed.
+Recording the current version's text again is refused — it says nothing
+new (measured on GIGABYTE, 2026-10-03: two identical versions in a row);
+after a discard, the same text may be written again, as a new claim.
 
 ### 3. Validating — a second author
 
 - Only the current version, when it is neither `Validated` nor
   `Discarded`.
 - **Never by its own author**: validating is a second person
-  confirming; a person who wrote the text has nothing to confirm. An
+  confirming; a person who wrote the text has nothing to confirm. The
+  page does not offer its author the button; it says why instead. An
   imported version (a commit, a model, a note) has no human author, so
   any administrator may validate it.
 - A new version with the same text, the same author and confidence,

@@ -92,6 +92,18 @@ def test_validating_one_s_own_text_is_refused_with_the_reason(generated: Path):
     assert len(versions("immich", generated / "explications")) == 1
 
 
+def test_the_author_is_not_offered_the_validation_of_their_own_text(generated: Path):
+    web = signed_in(client(generated), name="Self")
+    web.post("/timemachine/explication/write", data={"subject": "bazarr", "text": "My reason.", "expected": "0"})
+
+    text = web.get(page("bazarr")).text
+
+    assert 'action="/timemachine/explication/validate"' not in text
+    assert "its validation belongs to someone else" in text
+    # Someone else is offered it.
+    assert 'action="/timemachine/explication/validate"' in signed_in(client(generated), name="Other").get(page("bazarr")).text
+
+
 def test_another_administrator_validates_and_the_page_says_by_whom(generated: Path):
     signed_in(client(generated), name="Writer").post(
         "/timemachine/explication/write", data={"subject": "nextcloud", "text": "Theirs.", "expected": "0"}

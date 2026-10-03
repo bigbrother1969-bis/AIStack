@@ -268,6 +268,12 @@ def explication(request: Request, subject: str = "", done: str = "", refused: st
 
     subject = subject.strip()
     panel = explication_panel(subject, request.app.state.generated_dir) if subject else None
+    is_admin = current_profile(request) == ADMIN
+    if panel and is_admin and panel.get("current_author") == _person(request).source:
+        # Nobody validates their own text (ADR-0015 § 3): the button is
+        # not offered, the reason is said instead.
+        panel["can_validate"] = False
+        panel["own_text"] = True
 
     return _render(
         request,
@@ -276,7 +282,7 @@ def explication(request: Request, subject: str = "", done: str = "", refused: st
         {
             "subject": subject,
             "panel": panel,
-            "is_admin": current_profile(request) == ADMIN,
+            "is_admin": is_admin,
             "done": _DONE.get(done, ""),
             "refused": refused if refused.startswith("timemachine.explication.refused.") else "",
         },

@@ -119,6 +119,11 @@
           </form>
         {% endif %}
 
+        {% if panel.own_text %}
+          <h2>{{ t('timemachine.explication.validate_heading') }}</h2>
+          <p class="meta">{{ t('timemachine.explication.refused.own_text') }}</p>
+        {% endif %}
+
         {% if panel.has_explication and panel.can_discard %}
           <h2>{{ t('timemachine.explication.discard_heading') }}</h2>
           <p class="meta">{{ t('timemachine.explication.discard_intro') }}</p>

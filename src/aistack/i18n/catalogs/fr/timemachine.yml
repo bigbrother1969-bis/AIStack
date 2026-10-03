@@ -147,6 +147,7 @@ explication:
     subject: "Le sujet est vide ou trop long."
     empty: "Le texte est vide."
     too_long: "Le texte est trop long."
+    unchanged: "Le texte est identique à la version actuelle : rien de nouveau à enregistrer."
     no_reason: "Donne une raison pour écarter cette version."
     nothing: "Il n'y a encore aucune version pour ce sujet."
     own_text: "Tu as écrit cette version : sa validation revient à une autre personne."

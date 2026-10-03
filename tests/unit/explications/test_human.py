@@ -194,3 +194,18 @@ def test_validating_or_discarding_nothing_is_refused(tmp_path: Path):
         validate(SUBJECT, ALICE, tmp_path, expected=0)
     with pytest.raises(ExplicationRefused):
         discard(SUBJECT, "why", ALICE, tmp_path, expected=0)
+
+
+def test_recording_the_current_text_again_is_refused(tmp_path: Path):
+    """Measured on GIGABYTE, 2026-10-03: two identical versions in a row."""
+
+    write(SUBJECT, "Same.", ALICE, tmp_path, expected=0)
+
+    with pytest.raises(ExplicationRefused) as refused:
+        write(SUBJECT, "Same.", ALICE, tmp_path, expected=1)
+    assert refused.value.reason.endswith("unchanged")
+
+    # Once discarded, the same text may be written again: it is a new claim.
+    discard(SUBJECT, "Premature.", BOB, tmp_path, expected=1)
+    write(SUBJECT, "Same.", ALICE, tmp_path, expected=2)
+    assert len(versions(SUBJECT, tmp_path)) == 3

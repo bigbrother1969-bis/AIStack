@@ -720,6 +720,7 @@ def explication_panel(subject: str, generated_dir: Path) -> dict[str, Any]:
         "expected": len(history),
         "current_text": "" if current_status == DISCARDED else current.content,
         "can_validate": current_status not in (VALIDATED, DISCARDED),
+        "current_author": current.source,
         "can_discard": current_status != DISCARDED,
         "versions": [
             {

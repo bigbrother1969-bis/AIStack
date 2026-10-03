@@ -176,6 +176,10 @@ def write(
         raise ExplicationRefused("timemachine.explication.refused.too_long")
 
     history = _current(subject, output_dir, expected)
+    if history and status_of(history[-1].artifact) != DISCARDED and history[-1].artifact.content == text:
+        # Recording the same text again says nothing new (measured on
+        # GIGABYTE, 2026-10-03: two identical versions in a row).
+        raise ExplicationRefused("timemachine.explication.refused.unchanged")
     _record(
         history[-1] if history else None,
         subject,

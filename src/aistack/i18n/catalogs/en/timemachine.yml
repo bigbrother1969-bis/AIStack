@@ -144,6 +144,7 @@ explication:
     subject: "The subject is empty or too long."
     empty: "The text is empty."
     too_long: "The text is too long."
+    unchanged: "The text is the same as the current version: nothing new to record."
     no_reason: "Give a reason to discard this version."
     nothing: "There is no version for this subject yet."
     own_text: "You wrote this version: its validation belongs to someone else."

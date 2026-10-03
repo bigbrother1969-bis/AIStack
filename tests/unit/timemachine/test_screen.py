@@ -218,4 +218,9 @@ def test_the_explications_of_a_subject_are_read_from_their_store(generated: Path
     (version,) = panel["versions"]
     assert version["is_current"] is True
     assert "nightly scan" in version["content"]
-    assert explication_panel("unknown", generated) == {"subject": "unknown", "has_explication": False}
+    assert explication_panel("unknown", generated) == {
+        "subject": "unknown",
+        "has_explication": False,
+        "expected": 0,
+        "current_text": "",
+    }

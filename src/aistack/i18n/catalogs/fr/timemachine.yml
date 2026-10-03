@@ -110,15 +110,12 @@ reconstitute:
   empty_streams: "Aucun flux connu pour ce sujet."
   no_observation: "Aucune observation connue à cet instant ou avant, pour ce flux."
   view_node: "Voir ce nœud"
-# Gap #2, ajoutée 2026-10-02 — tranche contenue, lecture seule (voir
-# `app.py`'s own `_explication_panel`). Jamais de correction, jamais
-# de traduction proposée depuis cet écran : `ADR-0011` § Décision 10
-# (« read-only, jamais un writer ») l'interdit ; une correction reste
-# un acte CLI du propriétaire (`aistack.explications.record_
-# explication`).
+# Gap #2 (2026-10-02), puis 1.7 tranche 4 (ADR-0015) : un
+# administrateur rédige, valide ou écarte ; le graphe le voit au
+# prochain `timemachine_rebuild`.
 explication:
   heading: "Pourquoi"
-  intro: "Ce qui a été enregistré, pour un sujet choisi, sur pourquoi une chose a été faite — jamais une correction ni une traduction depuis cet écran : AIStack n'écrit jamais depuis cette page."
+  intro: "Ce qui a été enregistré, pour un sujet, sur pourquoi une chose a été faite — chaque version gardée. Un administrateur peut rédiger, valider ou écarter ; le graphe le voit au prochain rebuild."
   subject_label: "Sujet :"
   missing: "Choisis d'abord un sujet depuis l'arbre ou le ruban."
   empty: "Aucune explication enregistrée pour ce sujet."
@@ -127,8 +124,38 @@ explication:
   created_at_label: "Enregistrée le"
   confidence_label: "Confiance"
   status_label: "Statut"
-  source_label: "Source"
+  source_label: "Auteur"
+  validated_by_label: "Validée par"
+  discarded_by_label: "Écartée par"
+  discard_reason_label: "Raison"
+  write_heading: "Rédiger"
+  write_intro: "Une nouvelle version, au niveau Declared, en attente de validation par une autre personne. Le texte part de la version actuelle."
+  write_button: "Enregistrer cette version"
+  validate_heading: "Valider"
+  validate_intro: "Confirmer la version actuelle, en second auteur. Jamais un texte qu'on a écrit soi-même."
+  validate_button: "Valider la version actuelle"
+  discard_heading: "Écarter"
+  discard_intro: "La version actuelle est mise de côté, jamais effacée. Une raison est obligatoire."
+  discard_reason_placeholder: "Pourquoi l'écarter, en une phrase"
+  discard_button: "Écarter la version actuelle"
+  done:
+    written: "Version enregistrée. Le graphe la verra au prochain timemachine_rebuild."
+    validated: "Version validée. Le graphe la verra au prochain timemachine_rebuild."
+    discarded: "Version écartée. Le graphe la verra au prochain timemachine_rebuild."
+  refused:
+    changed: "Cette explication a changé depuis l'ouverture de la page : relis la version actuelle, puis recommence."
+    subject: "Le sujet est vide ou trop long."
+    empty: "Le texte est vide."
+    too_long: "Le texte est trop long."
+    no_reason: "Donne une raison pour écarter cette version."
+    nothing: "Il n'y a encore aucune version pour ce sujet."
+    own_text: "Tu as écrit cette version : sa validation revient à une autre personne."
+    already_validated: "La version actuelle est déjà validée."
+    already_discarded: "La version actuelle est déjà écartée."
 tooltip:
+  explication_write: "Enregistrer ce texte comme nouvelle version de l'explication"
+  explication_validate: "Confirmer la version actuelle en tant que second auteur"
+  explication_discard: "Mettre la version actuelle de côté, avec la raison donnée"
   nav_streams: "Tous les flux projetés dans le graphe"
   nav_tree: "L'arbre réseau ⊃ hôte ⊃ stack ⊃ conteneur, tel que Docker le voit maintenant"
   nav_ribbon: "Chaque instant enregistré, sur un axe du temps"

@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from aistack.explications import read_explication_history
+from aistack.explications.human import DISCARDED, VALIDATED, status_of, versions
 from aistack.history.query import available_instants, observation_at
 from aistack.renderers.architecture.html import load_vendored_mermaid_js
 from aistack.renderers.timemachine import (
@@ -702,27 +702,38 @@ def explication_panel(subject: str, generated_dir: Path) -> dict[str, Any]:
     """
     Every recorded version of `subject`'s Explication, oldest first,
     read from the Explications store (the graph holds only that one
-    exists, not its text). Read-only (owner's cadrage, 2026-10-02):
-    correcting or translating one stays a CLI act.
+    exists, not its text), with what an administrator may do next
+    (`ADR-0015`): `expected` is the number of versions the forms are
+    drawn from.
     """
 
-    history = read_explication_history(subject, output_dir=generated_dir / EXPLICATIONS_DIR)
+    history = versions(subject, generated_dir / EXPLICATIONS_DIR)
     if not history:
-        return {"subject": subject, "has_explication": False}
+        return {"subject": subject, "has_explication": False, "expected": 0, "current_text": ""}
+
+    current = history[-1].artifact
+    current_status = status_of(current)
 
     return {
         "subject": subject,
         "has_explication": True,
+        "expected": len(history),
+        "current_text": "" if current_status == DISCARDED else current.content,
+        "can_validate": current_status not in (VALIDATED, DISCARDED),
+        "can_discard": current_status != DISCARDED,
         "versions": [
             {
-                "content": artifact.content,
-                "confidence": artifact.confidence,
-                "explication_status": artifact.metadata.get("explication_status"),
-                "source": artifact.source,
-                "created_at": artifact.created_at.isoformat(),
+                "content": version.artifact.content,
+                "confidence": version.artifact.confidence,
+                "explication_status": version.artifact.metadata.get("explication_status"),
+                "source": version.artifact.metadata.get("author_name") or version.artifact.source,
+                "validated_by": version.artifact.metadata.get("validated_by_name"),
+                "discarded_by": version.artifact.metadata.get("discarded_by_name"),
+                "discard_reason": version.artifact.metadata.get("discard_reason"),
+                "created_at": version.artifact.created_at.isoformat(),
                 "is_current": index == len(history) - 1,
             }
-            for index, artifact in enumerate(history)
+            for index, version in enumerate(history)
         ],
     }
 

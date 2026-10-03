@@ -45,6 +45,7 @@ from aistack.timemachine.vocabulary import (
     PROV_ENTITY,
     PROV_GENERATED_AT_TIME,
     PROV_WAS_ATTRIBUTED_TO,
+    PROV_WAS_REVISION_OF,
     RDF_TYPE,
     XSD_DATE_TIME,
 )
@@ -136,6 +137,18 @@ def project_explications(
             agent = agent_iri(artifact.source)
             emit(agent, RDF_TYPE, PROV_AGENT)
             emit(entity, PROV_WAS_ATTRIBUTED_TO, agent)
+
+            # A person's act revises the version it was drawn from, and
+            # a validation names a second, confirming author (ADR-0015
+            # § 5, ADR-0011 § 7).
+            revision_of = artifact.metadata.get("revision_of")
+            if revision_of:
+                emit(entity, PROV_WAS_REVISION_OF, explication_iri(subject, str(revision_of)))
+            validated_by = artifact.metadata.get("validated_by")
+            if validated_by:
+                validator = agent_iri(str(validated_by))
+                emit(validator, RDF_TYPE, PROV_AGENT)
+                emit(entity, PROV_WAS_ATTRIBUTED_TO, validator)
 
     return ExplicationProjectionSummary(
         subjects_seen=subjects_seen,

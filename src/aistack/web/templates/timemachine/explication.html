@@ -10,13 +10,11 @@
 <body>
   <!--
     `/explication` — gap #2 of `claude/AUDIT-TIMEMACHINE-
-    REALIGNEMENT-MAQUETTES-2026-10-02.md` ("le panneau « Pourquoi » de
-    la maquette n'existe pas — explicitement renvoyé à la 1.7",
-    `ADR-0011` §24), cadrage 2026-10-02: a contained, read-only first
-    slice — see `app.py`'s own `_explication_panel` docstring for the
-    full scope line (what's real in production today, what's
-    deliberately not built: Corriger, Proposer une traduction, diff
-    coloré, fiche de catalogage, lien "voir dans le graphe").
+    REALIGNEMENT-MAQUETTES-2026-10-02.md`, read-only until 1.7's fourth
+    tranche (`ADR-0015`): an administrator now writes, validates or
+    discards; every act is one more version, seen by the graph at the
+    next rebuild. Still not built: proposing a translation, a coloured
+    diff, a link "see in the graph".
 
     Reached only from `/node`'s own center column
     (`node_ribbon_explication_link`), never a top-level view of its
@@ -37,6 +35,13 @@
     <h1>{{ t('timemachine.explication.heading') }}</h1>
     <p class="meta">{{ t('timemachine.explication.intro') }}</p>
   </header>
+
+  {% if done %}
+    <div class="notice">{{ t(done) }}</div>
+  {% endif %}
+  {% if refused %}
+    <div class="warning">{{ t(refused) }}</div>
+  {% endif %}
 
   {% if panel %}
     <p class="ribbon-subject-filter">
@@ -69,12 +74,62 @@
               <span class="k">{{ t('timemachine.explication.source_label') }}</span>
               <span class="v">{{ version.source }}</span>
             </div>
+            {% if version.validated_by %}
+              <div class="band-row">
+                <span class="k">{{ t('timemachine.explication.validated_by_label') }}</span>
+                <span class="v">{{ version.validated_by }}</span>
+              </div>
+            {% endif %}
+            {% if version.discarded_by %}
+              <div class="band-row">
+                <span class="k">{{ t('timemachine.explication.discarded_by_label') }}</span>
+                <span class="v">{{ version.discarded_by }}</span>
+              </div>
+              <div class="band-row">
+                <span class="k">{{ t('timemachine.explication.discard_reason_label') }}</span>
+                <span class="v">{{ version.discard_reason }}</span>
+              </div>
+            {% endif %}
             <div class="explication-content">{{ version.content }}</div>
           </li>
         {% endfor %}
       </ul>
     {% else %}
       <p class="empty">{{ t('timemachine.explication.empty') }}</p>
+    {% endif %}
+
+    {% if is_admin %}
+      <section class="explication-actions">
+        <h2>{{ t('timemachine.explication.write_heading') }}</h2>
+        <p class="meta">{{ t('timemachine.explication.write_intro') }}</p>
+        <form method="post" action="{{ base }}/explication/write"><!--aistack:csrf-->
+          <input type="hidden" name="subject" value="{{ panel.subject }}">
+          <input type="hidden" name="expected" value="{{ panel.expected }}">
+          <textarea name="text" rows="8" maxlength="20000" required title="{{ t('timemachine.tooltip.explication_write') }}">{{ panel.current_text }}</textarea>
+          <button type="submit" title="{{ t('timemachine.tooltip.explication_write') }}">{{ t('timemachine.explication.write_button') }}</button>
+        </form>
+
+        {% if panel.has_explication and panel.can_validate %}
+          <h2>{{ t('timemachine.explication.validate_heading') }}</h2>
+          <p class="meta">{{ t('timemachine.explication.validate_intro') }}</p>
+          <form method="post" action="{{ base }}/explication/validate"><!--aistack:csrf-->
+            <input type="hidden" name="subject" value="{{ panel.subject }}">
+            <input type="hidden" name="expected" value="{{ panel.expected }}">
+            <button type="submit" title="{{ t('timemachine.tooltip.explication_validate') }}">{{ t('timemachine.explication.validate_button') }}</button>
+          </form>
+        {% endif %}
+
+        {% if panel.has_explication and panel.can_discard %}
+          <h2>{{ t('timemachine.explication.discard_heading') }}</h2>
+          <p class="meta">{{ t('timemachine.explication.discard_intro') }}</p>
+          <form method="post" action="{{ base }}/explication/discard"><!--aistack:csrf-->
+            <input type="hidden" name="subject" value="{{ panel.subject }}">
+            <input type="hidden" name="expected" value="{{ panel.expected }}">
+            <input type="text" name="reason" maxlength="1000" required placeholder="{{ t('timemachine.explication.discard_reason_placeholder') }}" title="{{ t('timemachine.explication.discard_reason_placeholder') }}">
+            <button type="submit" title="{{ t('timemachine.tooltip.explication_discard') }}">{{ t('timemachine.explication.discard_button') }}</button>
+          </form>
+        {% endif %}
+      </section>
     {% endif %}
   {% else %}
     <p class="empty">{{ t('timemachine.explication.missing') }}</p>

@@ -531,3 +531,21 @@ header h1 {
   .node-columns { flex-direction: column; gap: 0; }
   .node-tree-col, .node-ribbon-col, .node-facts-col { flex: none; width: 100%; }
 }
+
+/* ADR-0015 — writing, validating and discarding the why. */
+.notice {
+  padding: .8rem 1rem; border-radius: 6px; background: #e6f4ea;
+  border: 1px solid #8cc79b; margin: 1rem 0; font-size: .88rem;
+}
+.explication-actions { margin-top: 2rem; border-top: 1px solid #dde4ed; padding-top: 1rem; }
+.explication-actions h2 { font-size: 1.05rem; color: #16335c; margin: 1.2rem 0 .3rem; }
+.explication-actions form { display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; }
+.explication-actions textarea, .explication-actions input[type="text"] {
+  width: 100%; box-sizing: border-box; padding: .5rem .6rem; border: 1px solid #ccc;
+  border-radius: 4px; font: inherit; font-size: .9rem;
+}
+.explication-actions button {
+  padding: .4rem .9rem; border: 1px solid #16335c; border-radius: 4px;
+  background: #16335c; color: #fff; font-size: .88rem; cursor: pointer;
+}
+.explication-actions button:hover { filter: brightness(.85); }

@@ -170,3 +170,43 @@ def test_no_explications_recorded_produces_nothing(tmp_path: Path):
     assert summary.subjects_seen == 0
     assert summary.explications_seen == 0
     assert summary.facts_written == 0
+
+
+def test_a_person_s_acts_revise_their_predecessor_and_a_validation_adds_a_second_author(tmp_path: Path, monkeypatch):
+    """ADR-0015 § 5: `prov:wasRevisionOf` and the validator's agent."""
+
+    from datetime import timedelta
+
+    readings = (datetime(2026, 10, 3, 21, 0, 0, tzinfo=UTC) + timedelta(seconds=i) for i in range(100))
+    monkeypatch.setattr("aistack.generators.history.wall_clock", lambda: next(readings))
+
+    from aistack.explications.human import Person, validate, versions, write
+    from aistack.timemachine.iri import explication_iri
+    from aistack.timemachine.vocabulary import PROV_WAS_REVISION_OF
+
+    generated_dir = tmp_path / "reports" / "generated"
+    out = generated_dir / "explications"
+    record_explication(_artifact(), output_dir=out)
+    write("booklore_db", "Corrected.", Person("person:alice", "Alice"), out, expected=1)
+    validate("booklore_db", Person("person:bob", "Bob"), out, expected=2)
+    first, second, third = versions("booklore_db", out)
+
+    store = OxigraphGraphStore(tmp_path / "graph")
+    project_explications(store, generated_dir=generated_dir)
+
+    revisions = {
+        (row["s"], row["o"])
+        for row in store.query(f"SELECT ?s ?o WHERE {{ ?s <{PROV_WAS_REVISION_OF}> ?o }}")
+    }
+    assert revisions == {
+        (explication_iri("booklore_db", second.instant), explication_iri("booklore_db", first.instant)),
+        (explication_iri("booklore_db", third.instant), explication_iri("booklore_db", second.instant)),
+    }
+    authors = {
+        row["o"]
+        for row in store.query(
+            "SELECT ?o WHERE { "
+            f"<{explication_iri('booklore_db', third.instant)}> <{PROV_WAS_ATTRIBUTED_TO}> ?o }}"
+        )
+    }
+    assert authors == {agent_iri("person:alice"), agent_iri("person:bob")}

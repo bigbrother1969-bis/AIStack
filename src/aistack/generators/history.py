@@ -4,6 +4,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+def wall_clock() -> datetime:
+    """The instant a history copy is stamped with — one function, so a
+    writer that must land in a second of its own (`aistack.explications
+    .human`) reads the same clock, and a test can replace it."""
+
+    return datetime.now(timezone.utc)
+
+
 def write_artifact_with_history(content: str, latest_path: Path) -> tuple[Path, Path]:
     """
     Write a generated artifact both to its stable path and to a
@@ -55,7 +63,7 @@ def write_artifact_with_history(content: str, latest_path: Path) -> tuple[Path, 
     history_dir = latest_path.parent / "history" / latest_path.stem
     history_dir.mkdir(parents=True, exist_ok=True)
 
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    stamp = wall_clock().strftime("%Y-%m-%dT%H-%M-%SZ")
     history_path = history_dir / f"{stamp}{latest_path.suffix}"
     suffix = 1
     while history_path.exists():

@@ -2,6 +2,7 @@
 <html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
+  {% if pending %}<meta http-equiv="refresh" content="15">{% endif %}
   <title>{{ t('troubleshooting.title_subject', subject=subject) }}</title>
   <style>
     body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; color: #1f2933; }
@@ -12,6 +13,7 @@
       color: #1f6feb; text-decoration: none;
     }
     .back-link:hover { text-decoration: underline; }
+    .pending { padding: .8rem 1rem; border-radius: 6px; background: #eef4ff; border: 1px solid #b9cdf3; }
     .progress { display: flex; gap: .4rem; margin: 0 0 1.5rem; }
     .progress span {
       width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 1px solid #bbb;
@@ -97,11 +99,13 @@
       <div class="warning">{{ t('troubleshooting.step.recommend_warning') }}</div>
     {% endif %}
 
-    {% if answer.reachable %}
+    {% if pending %}
+      <p class="pending">{{ t('troubleshooting.step.pending') }}</p>
+    {% elif answer.reachable %}
       <p class="model">{{ t('troubleshooting.step.model', model=answer.model) }}</p>
       <p class="response" lang="{{ answer.language }}">{{ answer.response }}</p>
     {% else %}
-      <p class="unreachable">{{ t('troubleshooting.step.unreachable', reason=answer.unreachable_reason) }}</p>
+      <p class="unreachable">{{ t('troubleshooting.step.unreachable', reason=unreachable) }}</p>
     {% endif %}
 
     {% if step == total_steps %}

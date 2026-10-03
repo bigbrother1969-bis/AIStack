@@ -12,6 +12,8 @@ they would describe every LAN route on the public port.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -56,6 +58,7 @@ def create_app(
     kernel: Any = None,
     collect_findings: CollectFindings = qualified_findings,
     ask_ai: AskAI = ask_ollama,
+    run_in_background: Callable[[Callable[[], None]], Any] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -81,6 +84,13 @@ def create_app(
     app.state.collect_findings = collect_findings
     app.state.ask_ai = ask_ai
     app.state.troubleshooting_sessions = {}
+    # One worker: the model answers one call at a time on this host,
+    # and a diagnosis must not hold a request open for minutes.
+    app.state.run_in_background = (
+        run_in_background
+        if run_in_background is not None
+        else ThreadPoolExecutor(max_workers=1, thread_name_prefix="aistack-ai").submit
+    )
     app.state.routers = []
 
     include(app, console.router)

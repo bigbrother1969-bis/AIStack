@@ -50,18 +50,15 @@ def finding(subject: str) -> RuntimeFinding:
     )
 
 
-def answers(found: RuntimeFinding, language: str) -> tuple[AIRuntimeAnswer, ...]:
-    return tuple(
-        AIRuntimeAnswer(
-            operation=operation,
-            subject=found.subject,
-            model="fake",
-            prompt=f"{operation} in {language}",
-            response=f"{operation} answer for {found.subject}",
-            reachable=True,
-            unreachable_reason="",
-        )
-        for operation in ("reason", "explain", "recommend")
+def answer(found: RuntimeFinding, operation: str, language: str) -> AIRuntimeAnswer:
+    return AIRuntimeAnswer(
+        operation=operation,
+        subject=found.subject,
+        model="fake",
+        prompt=f"{operation} in {language}",
+        response=f"{operation} answer for {found.subject}",
+        reachable=True,
+        unreachable_reason="",
     )
 
 
@@ -70,7 +67,8 @@ class Host:
 
     def __init__(self, definition: Path) -> None:
         self.definition = definition
-        self.asked: list[tuple[str, str]] = []
+        self.asked: list[tuple[str, str, str]] = []
+        self.queued: list[object] = []
 
     def collect(self):
         background = {
@@ -83,9 +81,9 @@ class Host:
 
         return qualify(tagged), ""
 
-    def ask(self, found: RuntimeFinding, language: str):
-        self.asked.append((found.subject, language))
-        return answers(found, language)
+    def ask(self, found: RuntimeFinding, operation: str, language: str):
+        self.asked.append((found.subject, operation, language))
+        return answer(found, operation, language)
 
 
 @pytest.fixture
@@ -96,7 +94,11 @@ def host(tmp_path: Path) -> Host:
     return Host(path)
 
 
-def client(tmp_path: Path, host: Host, port: int = LAN_PORT) -> TestClient:
+def client(
+    tmp_path: Path, host: Host, port: int = LAN_PORT, background: bool = False
+) -> TestClient:
+    """`background=True` keeps the diagnosis queued instead of running it at once."""
+
     app = create_app(
         tmp_path,
         LISTENERS,
@@ -104,6 +106,7 @@ def client(tmp_path: Path, host: Host, port: int = LAN_PORT) -> TestClient:
         WebPaths(resource_priority=host.definition),
         collect_findings=host.collect,
         ask_ai=host.ask,
+        run_in_background=host.queued.append if background else (lambda job: job()),
     )
 
     return TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False)
@@ -131,7 +134,11 @@ def test_starting_asks_once_records_and_opens_step_one(tmp_path: Path, host: Hos
 
     assert reply.status_code == 303
     assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/1"
-    assert host.asked == [("newcomer", "en")]
+    assert host.asked == [
+        ("newcomer", "reason", "en"),
+        ("newcomer", "explain", "en"),
+        ("newcomer", "recommend", "en"),
+    ]
     assert list((tmp_path / "ai-reasoning").glob("newcomer*"))
 
     for step in (1, 2, 3, 4):
@@ -204,3 +211,65 @@ def test_nothing_answers_asks_or_writes_on_the_public_port(
     assert reply.status_code == 404
     assert host.asked == []
     assert host.definition.read_bytes() == before
+
+
+def test_the_steps_wait_for_an_answer_still_being_computed(tmp_path: Path, host: Host):
+    web = client(tmp_path, host, background=True)
+
+    reply = web.post("/troubleshooting/finding/newcomer/start?lang=en")
+
+    assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/1"
+    assert len(host.queued) == 1 and host.asked == []
+
+    first = web.get("/troubleshooting/finding/newcomer/step/1")
+    pending = web.get("/troubleshooting/finding/newcomer/step/2?lang=en")
+
+    assert first.status_code == 200 and 'http-equiv="refresh"' not in first.text
+    assert 'http-equiv="refresh"' in pending.text
+    assert "working on this answer" in pending.text
+
+    host.queued[0]()  # the background worker runs the diagnosis
+
+    done = web.get("/troubleshooting/finding/newcomer/step/2")
+    assert "reason answer for newcomer" in done.text
+    assert 'http-equiv="refresh"' not in done.text
+    assert list((tmp_path / "ai-reasoning").glob("newcomer*"))
+
+
+def test_a_running_diagnosis_is_joined_not_started_twice(tmp_path: Path, host: Host):
+    web = client(tmp_path, host, background=True)
+
+    web.post("/troubleshooting/finding/newcomer/start")
+    web.post("/troubleshooting/finding/newcomer/start")
+
+    assert len(host.queued) == 1
+
+
+def test_an_engine_that_gave_no_answer_is_said_in_the_reader_s_language(tmp_path: Path, host: Host):
+    def silent(found: RuntimeFinding, operation: str, language: str) -> AIRuntimeAnswer:
+        return AIRuntimeAnswer(
+            operation=operation,
+            subject=found.subject,
+            model="deepseek-r1:1.5b",
+            prompt="p",
+            response="",
+            reachable=False,
+            unreachable_reason="Ollama at 127.0.0.1:11434 did not answer within 900.0 seconds",
+        )
+
+    app = create_app(
+        tmp_path,
+        LISTENERS,
+        LANGUAGES,
+        WebPaths(resource_priority=host.definition),
+        collect_findings=host.collect,
+        ask_ai=silent,
+        run_in_background=lambda job: job(),
+    )
+    web = TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False)
+    web.post("/troubleshooting/finding/newcomer/start?lang=fr")
+
+    page = web.get("/troubleshooting/finding/newcomer/step/2?lang=fr").text
+
+    assert "pas de réponse dans le délai déclaré (900 s)" in page
+    assert "did not answer" not in page

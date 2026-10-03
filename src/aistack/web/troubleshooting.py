@@ -11,9 +11,10 @@ nothing else — the definition and the reasoning history are written
 under paths the application was given.
 
 **One in-memory session per finding key, deliberately not persisted**:
-the answers are already persisted the moment `/start` computes them
+the answers are persisted together the moment the last one arrives
 (`reports/generated/ai-reasoning/`), so a restart only means a fresh
-Ollama round-trip, never a lost fact.
+Ollama round-trip — or, during a diagnosis, losing the answers already
+received for it, which were never recorded on their own.
 """
 
 from __future__ import annotations
@@ -30,7 +31,13 @@ from aistack.i18n.web import PageLanguage, page_language
 from aistack.priority.yaml import save_resource_priority_yaml
 from aistack.troubleshooting.apply import BackgroundChange, class_as_background
 from aistack.troubleshooting.findings import CONSUMPTION_DOMAIN, resource_priority_definition
-from aistack.troubleshooting.guide import OPERATION_BY_STEP, STEP_COUNT
+from aistack.troubleshooting.guide import (
+    OPERATION_BY_STEP,
+    OPERATIONS,
+    STEP_COUNT,
+    describe_unreachable,
+    run_diagnosis,
+)
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
@@ -97,31 +104,51 @@ def index(request: Request) -> Response:
 @router.post("/finding/{key}/start", include_in_schema=False)
 def start(request: Request, key: str) -> RedirectResponse:
     """
-    The three AI answers over the finding routed by `key`, freshly
-    re-collected, recorded at once under the finding's real subject —
-    never the routing key.
+    Start the diagnosis of the finding routed by `key`, freshly
+    re-collected, in the background, and open its first step at once.
+
+    The three answers arrive one by one into the session; the steps
+    show each as soon as it exists. A diagnosis already running for
+    this key is joined, never started twice — the model works on one
+    call at a time on this host.
     """
 
     language = _language(request)
+    sessions = _sessions(request)
+    first_step = RedirectResponse(f"{PREFIX}/finding/{quote(key)}/step/1", status_code=303)
+
+    running = sessions.get(key)
+    if running is not None and len(running["answers"]) < len(OPERATIONS):  # type: ignore[arg-type]
+        return first_step
+
     findings, _ = request.app.state.collect_findings()
     entry = next((f for f in findings if f.key == key), None)
 
     if entry is None:
         return _back_to_list(language.t("troubleshooting.status.not_found", subject=key))
 
-    answers = request.app.state.ask_ai(entry.finding, language.lang)
-    record_ai_reasoning(
-        entry.finding, answers, request.app.state.generated_dir / "ai-reasoning"
-    )
-
-    _sessions(request)[key] = {
+    answers: dict[str, object] = {}
+    sessions[key] = {
         "finding": entry.finding,
         "domain": entry.domain,
         "applyable": entry.applyable,
-        "answers": {"reason": answers[0], "explain": answers[1], "recommend": answers[2]},
+        "answers": answers,
     }
 
-    return RedirectResponse(f"{PREFIX}/finding/{quote(key)}/step/1", status_code=303)
+    history = request.app.state.generated_dir / "ai-reasoning"
+    ask = request.app.state.ask_ai
+
+    request.app.state.run_in_background(
+        lambda: run_diagnosis(
+            entry.finding,
+            language.lang,
+            answers,  # type: ignore[arg-type]
+            ask,
+            lambda finding, done: record_ai_reasoning(finding, done, history),
+        )
+    )
+
+    return first_step
 
 
 @router.get("/finding/{key}/step/{step}", response_class=HTMLResponse, include_in_schema=False)
@@ -137,6 +164,13 @@ def step(request: Request, key: str, step: int) -> Response:
     finding = session["finding"]
     assert isinstance(finding, RuntimeFinding)
 
+    answer = answers.get(operation) if operation else None
+    unreachable = ""
+
+    if answer is not None and not answer.reachable:
+        message_key, parameters = describe_unreachable(answer.unreachable_reason)
+        unreachable = _language(request).t(message_key, **parameters)
+
     return _render(
         request,
         "step.html",
@@ -148,7 +182,11 @@ def step(request: Request, key: str, step: int) -> Response:
             "step": step,
             "total_steps": STEP_COUNT,
             "finding": finding,
-            "answer": answers[operation] if operation else None,
+            "answer": answer,
+            # An AI step whose answer has not arrived yet: the page
+            # says so and refreshes itself.
+            "pending": operation is not None and answer is None,
+            "unreachable": unreachable,
         },
     )
 

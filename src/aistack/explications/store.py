@@ -59,6 +59,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from aistack.history.subject_names import stem_for_subject
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.generators.history import write_artifact_with_history
@@ -99,7 +100,7 @@ def explication_history_path(
     History already use.
     """
 
-    return output_dir / f"{subject}.json"
+    return output_dir / f"{stem_for_subject(subject)}.json"
 
 
 def serialize_explication(artifact: KnowledgeArtifact) -> dict[str, Any]:
@@ -213,7 +214,7 @@ def read_explication_history(
     """
 
     history: list[KnowledgeArtifact] = []
-    for observation in latest_observations(output_dir, subject):
+    for observation in latest_observations(output_dir, stem_for_subject(subject)):
         history.append(deserialize_explication(json.loads(observation.read())))
 
     return history

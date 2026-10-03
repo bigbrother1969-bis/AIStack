@@ -170,3 +170,26 @@ def test_import_on_an_empty_ai_reasoning_dir_does_nothing(tmp_path: Path):
 
     assert summary.subjects_seen == 0
     assert summary.explications_recorded == 0
+
+
+def test_a_path_subject_is_imported_under_its_own_name_and_stays_inside(tmp_path: Path):
+    """Found 2026-10-03: a backup finding's subject is a path (`/media/BACKUP/…`)."""
+
+    ai_reasoning_dir = tmp_path / "ai-reasoning"
+    output_dir = tmp_path / "explications"
+    subject = "/media/BACKUP/nextcloud"
+
+    record_ai_reasoning(_finding(subject=subject), _answers(), output_dir=ai_reasoning_dir)
+
+    summary = import_explain_answers(ai_reasoning_dir, output_dir)
+
+    assert summary.explications_recorded == 1
+    (artifact,) = read_explication_history(subject, output_dir)
+    assert artifact.id == subject
+    assert all(
+        ai_reasoning_dir in path.parents or output_dir in path.parents
+        for path in tmp_path.rglob("*.json")
+    )
+
+    again = import_explain_answers(ai_reasoning_dir, output_dir)
+    assert again.explications_already_imported == 1

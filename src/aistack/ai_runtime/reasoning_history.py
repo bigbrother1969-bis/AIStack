@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from aistack.history.subject_names import stem_for_subject
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.generators.history import write_artifact_with_history
@@ -65,7 +66,7 @@ def reasoning_history_path(
     per provider.
     """
 
-    return output_dir / f"{subject}.json"
+    return output_dir / f"{stem_for_subject(subject)}.json"
 
 
 def serialize_ai_reasoning(

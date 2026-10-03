@@ -209,3 +209,20 @@ def test_record_ai_reasoning_keeps_history_like_every_other_historicised_artifac
 
 def test_default_output_dir_is_under_reports_generated():
     assert DEFAULT_OUTPUT_DIR == Path("reports/generated/ai-reasoning")
+
+
+def test_a_path_subject_is_written_inside_the_output_dir(tmp_path: Path):
+    """Found 2026-10-03: `/media/BACKUP/nextcloud` was written to the backup disk."""
+
+    output_dir = tmp_path / "ai-reasoning"
+
+    written = record_ai_reasoning(
+        _finding(subject="/media/BACKUP/nextcloud"), _answers(), output_dir=output_dir
+    )
+
+    assert written.parent == output_dir
+    assert written == reasoning_history_path("/media/BACKUP/nextcloud", output_dir)
+    assert json.loads(written.read_text(encoding="utf-8"))["finding"]["subject"] == (
+        "/media/BACKUP/nextcloud"
+    )
+    assert [path for path in tmp_path.rglob("*") if output_dir not in path.parents and path != output_dir] == []

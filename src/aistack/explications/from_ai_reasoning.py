@@ -44,6 +44,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from aistack.history.subject_names import subject_for_stem
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.explications.store import (
@@ -82,7 +83,8 @@ def import_explain_answers(
     explications_recorded = 0
     explications_already_imported = 0
 
-    for subject in available_stems(ai_reasoning_dir):
+    for stem in available_stems(ai_reasoning_dir):
+        subject = subject_for_stem(stem)
         subjects_seen += 1
         already_imported = {
             artifact.metadata.get("source_instant")
@@ -90,7 +92,7 @@ def import_explain_answers(
             if artifact.metadata.get("source_stream") == "ai-reasoning"
         }
 
-        for observation in latest_observations(ai_reasoning_dir, subject):
+        for observation in latest_observations(ai_reasoning_dir, stem):
             instant = observation.observed_at
 
             data = json.loads(observation.read())

@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from aistack.history.subject_names import subject_for_stem
 from aistack.explications import deserialize_explication
 from aistack.history import available_stems, format_instant, latest_observations
 from aistack.timemachine.graph import GraphStore, Literal
@@ -107,11 +108,12 @@ def project_explications(
         else:
             facts_dropped += 1
 
-    for subject in available_stems(explications_dir):
+    for stem in available_stems(explications_dir):
+        subject = subject_for_stem(stem)
         subjects_seen += 1
         explained = subject_iri(subject)
 
-        for observation in latest_observations(explications_dir, subject):
+        for observation in latest_observations(explications_dir, stem):
             instant = observation.observed_at
 
             explications_seen += 1

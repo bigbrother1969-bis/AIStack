@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
-  status: Proposed
+  version: 1.2
+  status: Accepted
   owner: Architecture
   created: 2026-10-03
   updated: 2026-10-03
@@ -23,11 +23,14 @@ relations:
 
 ## Status
 
-Proposed, 2026-10-03.
+Accepted, 2026-10-03, by the owner.
 
-The decisions below were taken by the owner on 2026-10-03, at the start
-of 1.7's second tranche, and are recorded here the same day; under the
-rule adopted on 2026-08-21, this record is accepted the day after.
+Proposed the same day: the decisions below were taken by the owner on
+2026-10-03, at the start of 1.7's second tranche, and recorded at once.
+The rule adopted on 2026-08-21 accepts a record the day after it is
+proposed; **the owner accepted this one the same evening, by his explicit
+decision** (2026-10-03, 20:39), once signing in had been verified for
+real on both listeners (§ Implementation state).
 
 ## Context
 
@@ -84,7 +87,8 @@ profiles and rights in tranche 3. The LAN listener is unchanged.
   and the userinfo endpoint is not used.
 - The redirect URI is fixed, built from the public address in the
   configuration — `https://aistack.persiaut-family.fr/auth/callback` —
-  never from a request header.
+  never from a request header (on the LAN listener, from
+  `instance_config.yml`: `ADR-0014` § 4).
 - The discovery document is read from the configured issuer and its
   `issuer` must equal it exactly; it and the keys are cached for an hour,
   and an unknown signing key forces one refresh.
@@ -157,6 +161,21 @@ a marker; the web layer fills it on every page it serves — generated
 pages included — with the person's name and a sign-out button, or a
 sign-in link.
 
+## Implementation state
+
+**As of 2026-10-03**, tranche 2 and the parts tranche 3 completed
+(`ADR-0014`) are done and verified for real by the owner.
+
+| Step | State |
+|---|---|
+| § 2 — OIDC Authorization Code + PKCE `S256`, confidential client, ID token verified against the JWKS | done — 2026-10-03, verified on the public address 18:53 |
+| § 2 — a `User-Agent` of its own towards Pocket ID (Cloudflare refuses `Python-urllib`) | done — 2026-10-03 |
+| § 3 — sessions in SQLite, SHA-256 of the cookie, 8 h / 7 days | done — 2026-10-03 |
+| § 4 — the `groups` claim stored with the session | done — 2026-10-03; profiles read from it by `ADR-0014` |
+| § 5 — fallback administrator, `scrypt`, LAN only, locked after 5 failures | done — 2026-10-03, verified on the LAN |
+| § 6 — CSRF on `POST /logout` and `POST /login/local` | done — 2026-10-03; every other action by `ADR-0014` § 3 |
+| § 7 — the signed-in person in the shared navigation | done — 2026-10-03 |
+
 ## Consequences
 
 - `PyJWT[crypto]` joins `pyproject.toml`'s `dependencies`; both governed
@@ -171,6 +190,6 @@ sign-in link.
 ## Open Points
 
 - Profiles and rights, and refusing what a profile may not do, are
-  tranche 3's.
+  tranche 3's — decided in `ADR-0014`.
 - Lifting `R1` — serving the LAN screens on the public address, behind
   sign-in — is the owner's separate decision, after tranche 3.

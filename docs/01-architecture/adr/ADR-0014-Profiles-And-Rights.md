@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
-  status: Proposed
+  version: 1.1
+  status: Accepted
   owner: Architecture
   created: 2026-10-03
   updated: 2026-10-03
@@ -23,9 +23,14 @@ relations:
 
 ## Status
 
-Proposed, 2026-10-03. The decisions below were taken by the owner on
-2026-10-03, at the start of 1.7's third tranche; under the rule adopted
-on 2026-08-21, this record is accepted the day after.
+Accepted, 2026-10-03, by the owner.
+
+Proposed the same day: the decisions below were taken by the owner on
+2026-10-03, at the start of 1.7's third tranche. The rule adopted on
+2026-08-21 accepts a record the day after it is proposed; **the owner
+accepted this one the same evening, by his explicit decision**
+(2026-10-03, 20:39), once every right below had been verified for real
+(§ Implementation state).
 
 ## Context
 
@@ -74,8 +79,8 @@ in Pocket ID takes effect at their next sign-in.
   same `303` to sign in.
 - The rule is the same on both listeners; the port still decides only
   where a route answers (`ADR-0012` § 3).
-- Every route declares what it needs — `ANYONE`, `SIGNED_IN` or `ADMIN`
-  — next to its exposure; a test asks every route, anonymously and as a
+- Every route declares what it needs next to its exposure — nothing
+  (anyone), `SIGNED_IN_ONLY` or `ADMIN_ACTION` (`aistack.web.authentication`); a test asks every route, anonymously and as a
   user, and checks the answer.
 
 ### 3. Every action carries the session's CSRF token
@@ -121,6 +126,23 @@ Decided by the owner, 2026-10-03:
 Both lists are read from the sessions database (`ADR-0013` § 3), whose
 schema is versioned; a database of an earlier version is rebuilt empty,
 which signs everyone out once.
+
+## Implementation state
+
+**As of 2026-10-03**, every decision is carried out (patches 0142 to 0144,
+published at `6ae7679`) and verified for real by the owner the
+same evening, after the two LAN addresses were added to the client in
+Pocket ID — without them Pocket ID answers "Invalid callback URL": it
+compares redirect URIs letter for letter.
+
+| Step | State |
+|---|---|
+| § 1 — two profiles from the session, `admin_group` in `authentication.yml` | done — 2026-10-03 |
+| § 2 — `303` to sign in, `403` refused, asked of every route by `tests/unit/web/test_rights.py` | done — 2026-10-03 |
+| § 3 — the session's CSRF token in every action; "Diagnostiquer" a link | done — 2026-10-03, verified (Priority saved, Troubleshooting opened at its finding) |
+| § 4 — Pocket ID on the LAN, redirect URI kept with the attempt | done — 2026-10-03, verified 20:02 |
+| § 5 — public address signed out: console and legal pages only | done — 2026-10-03, verified |
+| § 6 — My profile, open sessions, sign-in journal; sessions schema v2 | done — 2026-10-03, verified |
 
 ## Consequences
 

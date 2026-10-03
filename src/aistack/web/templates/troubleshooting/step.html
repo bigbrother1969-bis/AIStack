@@ -111,7 +111,7 @@
 
     {% if step == total_steps %}
       {% if applyable %}
-        <form method="post" action="{{ base }}/finding/{{ key | urlencode }}/apply">
+        <form method="post" action="{{ base }}/finding/{{ key | urlencode }}/apply"><!--aistack:csrf-->
           <button class="apply" type="submit" title="{{ t('troubleshooting.tooltip.apply', subject=subject) }}">{{ t('troubleshooting.step.apply') }}</button>
         </form>
         <p class="apply-note">

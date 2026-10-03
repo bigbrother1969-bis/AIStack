@@ -60,7 +60,7 @@ def test_a_good_sign_in_gives_the_person_and_their_groups():
 
     assert identity.subject == "user-123"
     assert identity.name == "Fabrice Persiaut"
-    assert identity.groups == ("aistack-admins",)
+    assert identity.groups == ("aistack_admins",)
 
 
 @pytest.mark.parametrize(

@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.web_signed_in import signed_in
+
 from aistack.i18n import Language, Languages
 from aistack.network_discovery.definition import NetworkDiscoveryDefinition
 from aistack.network_discovery.yaml import (
@@ -50,7 +52,7 @@ def definition(tmp_path: Path) -> Path:
 def client(tmp_path: Path, definition: Path, port: int = LAN_PORT) -> TestClient:
     app = create_app(tmp_path, LISTENERS, LANGUAGES, WebPaths(network_discovery=definition))
 
-    return TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False)
+    return signed_in(TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False))
 
 
 @pytest.mark.parametrize("path", ["/network-discovery", "/network-discovery/"])

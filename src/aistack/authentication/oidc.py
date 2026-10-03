@@ -171,9 +171,13 @@ class OidcClient:
 
     # -- the flow ------------------------------------------------------
 
-    def start(self, next_path: str) -> tuple[str, str, Pending]:
+    def start(
+        self, next_path: str, redirect_uri: str | None = None, listener: str = "public"
+    ) -> tuple[str, str, Pending]:
         """The authorization URL, the `state` naming this attempt, and
-        what must be kept server-side until the callback."""
+        what must be kept server-side until the callback — the redirect
+        URI of the listener the attempt started on included, so the code
+        is exchanged with the same one (ADR-0014 § 4)."""
 
         endpoint = str(self.discovery()["authorization_endpoint"])
         state = secrets.token_urlsafe(32)
@@ -181,12 +185,14 @@ class OidcClient:
             nonce=secrets.token_urlsafe(32),
             verifier=secrets.token_urlsafe(64),
             next=next_path,
+            redirect_uri=redirect_uri or self.definition.redirect_uri,
+            listener=listener,
         )
         query = urllib.parse.urlencode(
             {
                 "response_type": "code",
                 "client_id": self.credentials.client_id,
-                "redirect_uri": self.definition.redirect_uri,
+                "redirect_uri": pending.redirect_uri,
                 "scope": " ".join(self.definition.scopes),
                 "state": state,
                 "nonce": pending.nonce,
@@ -217,7 +223,7 @@ class OidcClient:
                 {
                     "grant_type": "authorization_code",
                     "code": code,
-                    "redirect_uri": self.definition.redirect_uri,
+                    "redirect_uri": pending.redirect_uri or self.definition.redirect_uri,
                     "code_verifier": pending.verifier,
                 },
                 (self.credentials.client_id, self.credentials.client_secret),
@@ -284,7 +290,7 @@ class OidcClient:
 
         return claims
 
-    def logout_url(self, id_token: str) -> str | None:
+    def logout_url(self, id_token: str, after_logout_uri: str | None = None) -> str | None:
         """Where to send the browser to end the provider's session too;
         `None` when the provider cannot be reached or names no endpoint."""
 
@@ -298,7 +304,7 @@ class OidcClient:
 
         query = {
             "client_id": self.credentials.client_id,
-            "post_logout_redirect_uri": self.definition.after_logout_uri,
+            "post_logout_redirect_uri": after_logout_uri or self.definition.after_logout_uri,
         }
         if id_token:
             query["id_token_hint"] = id_token

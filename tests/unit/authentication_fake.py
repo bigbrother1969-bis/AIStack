@@ -31,6 +31,7 @@ DEFINITION = AuthenticationDefinition(
     client_id_env="AISTACK_OIDC_CLIENT_ID",
     client_secret_env="AISTACK_OIDC_CLIENT_SECRET",
     local_admin_env="AISTACK_WEB_ADMIN_SCRYPT",
+    admin_group="aistack_admins",
     session_idle_hours=8,
     session_absolute_days=7,
 )
@@ -68,7 +69,7 @@ def claims_for(nonce: str, **overrides: Any) -> dict[str, Any]:
         "sub": "user-123",
         "name": "Fabrice Persiaut",
         "email": "fabrice@example.org",
-        "groups": ["aistack-admins"],
+        "groups": ["aistack_admins"],
         "iat": now,
         "exp": now + 300,
         "nonce": nonce,
@@ -90,6 +91,7 @@ class FakeProvider:
     kid: str = "k1"
     issued_code: str = "the-code"
     challenge: str = ""
+    redirect_uri: str = ""
     requests: list[str] = field(default_factory=list)
     down: bool = False
 
@@ -112,6 +114,9 @@ class FakeProvider:
             return {"error": "invalid_grant"}
         if pkce_challenge(form.get("code_verifier", "")) != self.challenge:
             return {"error": "invalid_grant"}
+        # The code is exchanged with the redirect URI it was issued for.
+        if form.get("redirect_uri") != self.redirect_uri:
+            return {"error": "invalid_grant"}
         return {"id_token": sign(self.issued_claims, self.signer, self.kid), "token_type": "Bearer"}
 
     def authorize(self, url: str) -> dict[str, str]:
@@ -119,5 +124,6 @@ class FakeProvider:
 
         query = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(url).query))
         self.challenge = query["code_challenge"]
+        self.redirect_uri = query["redirect_uri"]
         self.issued_claims = {**claims_for(query["nonce"]), **self.token_claims}
         return query

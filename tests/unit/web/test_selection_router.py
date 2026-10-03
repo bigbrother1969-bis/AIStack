@@ -16,6 +16,8 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.web_signed_in import signed_in
+
 from aistack.i18n import Language, Languages
 from aistack.web.app import WebPaths, create_app
 from aistack.web.exposure import Listeners
@@ -61,7 +63,7 @@ def client(workspace: Path, port: int = LAN_PORT, syncthing: Any = None) -> Test
         syncthing=syncthing or (lambda definition: SYNCTHING),
     )
 
-    return TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False)
+    return signed_in(TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False))
 
 
 def ids_on(page: str) -> list[str]:

@@ -14,6 +14,8 @@ from urllib.parse import unquote
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.web_signed_in import signed_in
+
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
@@ -109,7 +111,7 @@ def client(
         run_in_background=host.queued.append if background else (lambda job: job()),
     )
 
-    return TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False)
+    return signed_in(TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False))
 
 
 @pytest.mark.parametrize("path", ["/troubleshooting", "/troubleshooting/"])
@@ -266,7 +268,7 @@ def test_an_engine_that_gave_no_answer_is_said_in_the_reader_s_language(tmp_path
         ask_ai=silent,
         run_in_background=lambda job: job(),
     )
-    web = TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False)
+    web = signed_in(TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False))
     web.post("/troubleshooting/finding/newcomer/start?lang=fr")
 
     page = web.get("/troubleshooting/finding/newcomer/step/2?lang=fr").text
@@ -302,7 +304,7 @@ def test_a_finding_is_shown_in_the_reader_s_language(tmp_path: Path, host: Host)
         ask_ai=host.ask,
         run_in_background=lambda job: job(),
     )
-    web = TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False)
+    web = signed_in(TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False))
 
     listing = web.get("/troubleshooting/?lang=fr").text
     web.post("/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fnextcloud/start")

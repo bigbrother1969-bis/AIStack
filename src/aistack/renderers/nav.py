@@ -22,6 +22,11 @@ from aistack.renderers.text import escape_text
 # a comment, so a page served without it — a generated file opened
 # straight from disk — shows nothing in its place.
 SESSION_MARKER = "<!--aistack:session-->"
+# Inside every form that changes something: the session's CSRF token
+# (ADR-0014 § 3). And where Settings shows the profile, the open
+# sessions and the sign-in journal (ADR-0014 § 6).
+CSRF_MARKER = "<!--aistack:csrf-->"
+SETTINGS_MARKER = "<!--aistack:settings-->"
 
 
 def render_page_nav(

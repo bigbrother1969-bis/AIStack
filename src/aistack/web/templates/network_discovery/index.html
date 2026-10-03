@@ -97,7 +97,7 @@
       {% for username in ssh_usernames %}
         <li>
           <span>{{ username }}</span>
-          <form class="inline" method="post" action="{{ base }}/remove">
+          <form class="inline" method="post" action="{{ base }}/remove"><!--aistack:csrf-->
             <input type="hidden" name="username" value="{{ username }}">
             <button class="remove" type="submit" title="{{ t('network_discovery.tooltip.remove', username=username) }}">{{ t('network_discovery.remove') }}</button>
           </form>
@@ -108,7 +108,7 @@
     <p class="empty">{{ t('network_discovery.empty') }}</p>
   {% endif %}
 
-  <form class="add-form" method="post" action="{{ base }}/add">
+  <form class="add-form" method="post" action="{{ base }}/add"><!--aistack:csrf-->
     <input type="text" name="username" placeholder="{{ t('network_discovery.placeholder') }}" aria-label="{{ t('network_discovery.placeholder') }}" autocomplete="off" title="{{ t('network_discovery.tooltip.input') }}">
     <button class="primary" type="submit" title="{{ t('network_discovery.tooltip.add') }}">{{ t('network_discovery.add') }}</button>
   </form>

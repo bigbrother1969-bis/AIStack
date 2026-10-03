@@ -37,12 +37,13 @@ from aistack.network_discovery.yaml import (
     load_network_discovery_yaml,
     save_network_discovery_yaml,
 )
+from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
 PREFIX = "/network-discovery"
 
-router = APIRouter(dependencies=[LAN_ONLY])
+router = APIRouter(dependencies=[LAN_ONLY, SIGNED_IN_ONLY])
 
 # Spelled out, not built from the enum's value, so the suite's catalog
 # check finds every key this screen asks for.
@@ -106,11 +107,11 @@ async def _apply(request: Request, change: Change) -> RedirectResponse:
     return RedirectResponse(f"{PREFIX}/?status={quote(status)}", status_code=303)
 
 
-@router.post("/add", include_in_schema=False)
+@router.post("/add", include_in_schema=False, dependencies=[ADMIN_ACTION])
 async def add(request: Request) -> RedirectResponse:
     return await _apply(request, add_username)
 
 
-@router.post("/remove", include_in_schema=False)
+@router.post("/remove", include_in_schema=False, dependencies=[ADMIN_ACTION])
 async def remove(request: Request) -> RedirectResponse:
     return await _apply(request, remove_username)

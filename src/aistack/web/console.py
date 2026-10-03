@@ -19,6 +19,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request, Response
 
 from aistack.console.routing import PAGES, READING_PATHS, SETTINGS_PATH, respond
+from aistack.web.authentication import SIGNED_IN_ONLY
 from aistack.web.exposure import PUBLIC
 
 router = APIRouter(dependencies=[PUBLIC])
@@ -68,10 +69,15 @@ def _console_route(request: Request) -> Response:
     return answer(request)
 
 
+# The two pages that describe the infrastructure need a session
+# (ADR-0014 § 5); the console, Settings and the reading pages do not.
+SIGNED_IN_PATHS = ("/architecture.html", "/health.html")
+
 for _path in CONSOLE_PATHS:
     router.add_api_route(
         _path,
         _console_route,
         methods=["GET", "HEAD"],
         include_in_schema=False,
+        dependencies=[SIGNED_IN_ONLY] if _path in SIGNED_IN_PATHS else [],
     )

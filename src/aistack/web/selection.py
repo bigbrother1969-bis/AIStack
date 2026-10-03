@@ -23,12 +23,13 @@ from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
 from aistack.kernel.application import ApplicationDefinition
 from aistack.selection.screen import page_context, save_and_materialise, status_message
+from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
 PREFIX = "/selection"
 
-router = APIRouter(dependencies=[LAN_ONLY])
+router = APIRouter(dependencies=[LAN_ONLY, SIGNED_IN_ONLY])
 
 
 def _language(request: Request) -> PageLanguage:
@@ -83,7 +84,7 @@ def syncthing_status(request: Request) -> dict[str, Any] | None:
     return status
 
 
-@router.post("/save", include_in_schema=False)
+@router.post("/save", include_in_schema=False, dependencies=[ADMIN_ACTION])
 async def save(request: Request) -> RedirectResponse:
     form = await request.form()
     selected_ids = [str(value) for value in form.getlist("selected_ids")]

@@ -25,6 +25,7 @@ class AuthenticationDefinition:
     client_id_env: str
     client_secret_env: str
     local_admin_env: str
+    admin_group: str
     session_idle_hours: float
     session_absolute_days: float
 
@@ -35,6 +36,14 @@ class AuthenticationDefinition:
     @property
     def after_logout_uri(self) -> str:
         return self.public_base_url + AFTER_LOGOUT_PATH
+
+    def redirect_uri_for(self, base_url: str) -> str:
+        """The callback on another listener (ADR-0014 § 4)."""
+
+        return base_url + CALLBACK_PATH
+
+    def after_logout_uri_for(self, base_url: str) -> str:
+        return base_url + AFTER_LOGOUT_PATH
 
 
 @dataclass(frozen=True)
@@ -73,6 +82,7 @@ def load_authentication_yaml(path: Path = DEFAULT_DEFINITION) -> AuthenticationD
         client_id_env=str(data["client_id_env"]),
         client_secret_env=str(data["client_secret_env"]),
         local_admin_env=str(data["local_admin_env"]),
+        admin_group=str(data["admin_group"]),
         session_idle_hours=float(data["session_idle_hours"]),
         session_absolute_days=float(data["session_absolute_days"]),
     )

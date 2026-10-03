@@ -38,11 +38,21 @@ from aistack.web import (
     timemachine,
     troubleshooting,
 )
-from aistack.web.authentication import Authentication, build_authentication, fill_session_marker
+from aistack.instance.yaml.store import load_instance_config_yaml
+from aistack.web.authentication import (
+    Authentication,
+    Refused,
+    SignInRequired,
+    answer_refused,
+    answer_sign_in_required,
+    build_authentication,
+    fill_markers,
+)
 from aistack.web.exposure import Listeners, include
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+INSTANCE_CONFIG = PACKAGE_ROOT / "instance" / "definitions" / "instance_config.yml"
 
 
 @dataclass(frozen=True)
@@ -123,7 +133,14 @@ def create_app(
     )
     # Who is signed in (ADR-0013): Pocket ID, the sessions on disk
     # under the generated directory, the fallback administrator.
-    app.state.authentication = auth if auth is not None else build_authentication(generated_dir)
+    app.state.authentication = (
+        auth
+        if auth is not None
+        else build_authentication(
+            generated_dir,
+            load_instance_config_yaml(INSTANCE_CONFIG).service_url("web_lan"),
+        )
+    )
     app.state.routers = []
 
     include(app, console.router)
@@ -149,7 +166,7 @@ def create_app(
             return response
 
         body = b"".join([chunk async for chunk in response.body_iterator])  # type: ignore[attr-defined]
-        filled = fill_session_marker(request, body)
+        filled = fill_markers(request, body)
         rebuilt = Response(content=filled, status_code=response.status_code)
         # Every header as it was — each `set-cookie` on its own — but the
         # length, which the filled body changes.
@@ -157,6 +174,10 @@ def create_app(
             (name, value) for name, value in response.raw_headers if name.lower() != b"content-length"
         ] + [(b"content-length", str(len(filled)).encode("ascii"))]
         return rebuilt
+
+    # Rights (ADR-0014 § 2): no session, sign in; no right, a 403.
+    app.add_exception_handler(SignInRequired, answer_sign_in_required)  # type: ignore[arg-type]
+    app.add_exception_handler(Refused, answer_refused)  # type: ignore[arg-type]
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:

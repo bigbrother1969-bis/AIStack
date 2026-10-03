@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from aistack.i18n import Languages, default_languages, translator_for
 from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
-from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
+from aistack.renderers.nav import PAGE_NAV_STYLE, SETTINGS_MARKER, render_page_nav
 from aistack.renderers.text import escape_text
 
 
@@ -79,6 +79,7 @@ def render_settings_html(
     </form>
     <p class="hint">{escape_text(t("settings.language.hint"))}</p>
   </section>
+  {SETTINGS_MARKER}
   <a class="back" href="/console.html" title="{escape_text(t("common.tooltip.back_to_console"))}">{escape_text(t("settings.back"))}</a>
 </main>
 </body>
@@ -139,5 +140,19 @@ button {
 }
 .hint { color: #5b6b7d; font-size: .85rem; margin: .8rem 0 0; }
 .back { color: #16335c; text-decoration: none; font-size: .9rem; }
-.back:hover { text-decoration: underline; }\
+.back:hover { text-decoration: underline; }
+.auth-settings {
+  background: #ffffff; border: 1px solid #dde4ed; border-radius: 8px;
+  padding: 1rem 1.2rem; margin-bottom: 1.2rem; overflow-x: auto;
+}
+.auth-settings h2 {
+  font-family: Georgia, "Times New Roman", Times, serif; color: #16335c;
+  font-size: 1.05rem; font-weight: normal; margin: 0 0 .6rem;
+}
+.auth-settings table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+.auth-settings th, .auth-settings td {
+  text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eef1f5; vertical-align: top;
+}
+.auth-settings th { color: #5b6b7d; font-weight: 600; }
+.auth-settings button { min-height: 32px; padding: 0 .7rem; font-size: .8rem; }\
 """

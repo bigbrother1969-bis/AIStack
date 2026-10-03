@@ -100,14 +100,14 @@
   {% if findings %}
     <ul class="findings">
       {% for entry in findings %}
-        <li>
+        <li id="finding-{{ entry.key | urlencode | replace('/', '%2F') }}">
           <div>
             <span class="domain">{{ t('troubleshooting.index.domain', domain=entry.domain) }}</span>
             <span class="subject">{{ entry.finding.subject }}</span>
             <span class="signature">{{ entry.finding.signature }}</span>
             <p class="interpretation">{{ interpretation_of(entry.finding) }}</p>
           </div>
-          <form class="start-form" method="post" action="{{ base }}/finding/{{ entry.key | urlencode }}/start">
+          <form class="start-form" method="post" action="{{ base }}/finding/{{ entry.key | urlencode }}/start"><!--aistack:csrf-->
             <button class="primary" type="submit" title="{{ t('troubleshooting.tooltip.start') }}">{{ t('troubleshooting.index.start') }}</button>
           </form>
         </li>

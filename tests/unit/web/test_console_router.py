@@ -10,9 +10,12 @@ onto the wire unchanged, on both listeners.
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import quote
 
 import pytest
 from fastapi.testclient import TestClient
+
+from tests.unit.web_signed_in import signed_in
 
 from aistack.i18n import LANGUAGE_COOKIE, Language, Languages
 from aistack.web.exposure import Listeners
@@ -45,7 +48,7 @@ def test_a_page_is_served_on_both_listeners(generated: Path, port: int):
 
 
 def test_a_requested_language_is_served_and_remembered(generated: Path):
-    reply = client(generated, PUBLIC_PORT).get("/architecture.html?lang=en")
+    reply = signed_in(client(generated, PUBLIC_PORT)).get("/architecture.html?lang=en")
 
     assert reply.status_code == 200
     assert reply.content == b"<p>architecture en</p>"
@@ -53,10 +56,21 @@ def test_a_requested_language_is_served_and_remembered(generated: Path):
 
 
 def test_the_cookie_reaches_respond(generated: Path):
-    web = client(generated, PUBLIC_PORT)
+    web = signed_in(client(generated, PUBLIC_PORT))
     web.cookies.set(LANGUAGE_COOKIE, "en")
 
     assert web.get("/health.html").content == b"<p>health en</p>"
+
+
+@pytest.mark.parametrize("page", ["/architecture.html", "/health.html"])
+def test_the_pages_describing_the_infrastructure_need_a_session(generated: Path, page: str):
+    """ADR-0014 § 5: signed out, they lead to sign-in, and back."""
+
+    reply = client(generated, PUBLIC_PORT).get(f"{page}?lang=en")
+
+    assert reply.status_code == 303
+    assert reply.headers["location"] == f"/login?next={quote(page + '?lang=en', safe='')}"
+    assert client(generated, PUBLIC_PORT).get("/console.html").status_code == 200
 
 
 def test_the_root_redirects_to_the_console(generated: Path):

@@ -152,7 +152,7 @@
     <button type="button" onclick="setAllFolds(false)" title="{{ t('selection.tooltip.expand_all') }}">{{ t('selection.toolbar.expand_all') }}</button>
   </div>
 
-  <form method="post" action="{{ base }}/save" onsubmit="onSynchronise()">
+  <form method="post" action="{{ base }}/save" onsubmit="onSynchronise()"><!--aistack:csrf-->
     <div class="footer-actions">
       <button class="primary" type="submit" data-role="sync-button" title="{{ t('selection.tooltip.sync') }}">{{ t('selection.sync_button') }}</button>
     </div>

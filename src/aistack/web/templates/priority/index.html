@@ -54,7 +54,7 @@
     <div class="status">{{ status }}</div>
   {% endif %}
 
-  <form method="post" action="{{ base }}/save">
+  <form method="post" action="{{ base }}/save"><!--aistack:csrf-->
     <div class="footer-actions">
       <button class="primary" type="submit" title="{{ t('priority.tooltip.save') }}">{{ t('priority.save') }}</button>
     </div>

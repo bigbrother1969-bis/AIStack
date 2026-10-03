@@ -507,13 +507,10 @@ def test_diagnose_button_links_to_the_troubleshooting_assistant_by_bare_subject(
 
     document = render_html(cockpit, troubleshooting_base_url="http://GIGABYTE:8185")
 
-    # The subject is written into the form action as-is, not
-    # URL-encoded by this renderer — the browser's own form
-    # submission takes care of that when the button is clicked.
-    assert (
-        '<form class="diagnose" method="post" '
-        'action="http://GIGABYTE:8185/finding//data/start">' in document
-    )
+    # A link to the finding on the Troubleshooting screen, never a form
+    # posting across sites (ADR-0014 § 3); the key is encoded whole.
+    assert 'class="diagnose" href="http://GIGABYTE:8185/#finding-%2Fdata"' in document
+    assert "<form" not in document
 
 
 def test_diagnose_button_uses_a_domain_qualified_key_on_a_real_subject_collision():
@@ -552,10 +549,10 @@ def test_diagnose_button_uses_a_domain_qualified_key_on_a_real_subject_collision
 
     document = render_html(cockpit, troubleshooting_base_url="http://GIGABYTE:8185")
 
-    assert "http://GIGABYTE:8185/finding/Tests PRA::gigabyte/start" in document
-    assert "http://GIGABYTE:8185/finding/État persistant::gigabyte/start" in document
+    assert "http://GIGABYTE:8185/#finding-Tests%20PRA%3A%3Agigabyte" in document
+    assert "http://GIGABYTE:8185/#finding-%C3%89tat%20persistant%3A%3Agigabyte" in document
     # Never the bare, ambiguous subject on its own.
-    assert "/finding/gigabyte/start" not in document
+    assert '#finding-gigabyte"' not in document
 
 
 def test_diagnose_button_keeps_the_bare_subject_when_it_is_unique():
@@ -582,7 +579,7 @@ def test_diagnose_button_keeps_the_bare_subject_when_it_is_unique():
 
     document = render_html(cockpit, troubleshooting_base_url="http://GIGABYTE:8185")
 
-    assert "http://GIGABYTE:8185/finding/raspberry/start" in document
+    assert "http://GIGABYTE:8185/#finding-raspberry\"" in document
 
 
 # --------------------------------------------------------------------

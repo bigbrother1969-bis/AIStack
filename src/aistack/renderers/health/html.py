@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from aistack.contracts.health_score import (
     ACTION_REQUIRED,
     EXCELLENT,
@@ -286,12 +288,14 @@ def _render_finding(
             if subject_counts.get(finding.subject, 0) <= 1
             else f"{domain_name}::{finding.subject}"
         )
+        # A link, not a form (ADR-0014 § 3): starting a diagnosis is an
+        # administrator's action of the Troubleshooting screen itself,
+        # on the LAN listener, with that screen's own session and token.
         diagnose = (
-            f'<form class="diagnose" method="post" '
-            f'action="{escape_text(troubleshooting_base_url)}/finding/{escape_text(key)}/start">'
-            f'<button type="submit" title="{escape_text(t("health.tooltip.diagnose"))}">'
-            f'{escape_text(t("health.page.diagnose"))}</button>'
-            f"</form>"
+            f'<a class="diagnose" '
+            f'href="{escape_text(troubleshooting_base_url)}/#finding-{quote(key, safe="")}" '
+            f'title="{escape_text(t("health.tooltip.diagnose"))}">'
+            f'{escape_text(t("health.page.diagnose"))}</a>'
         )
 
     return f"""  <article class="finding">
@@ -385,10 +389,9 @@ header { margin-bottom: 1.4rem; }
 .finding p { margin: .25rem 0; }
 .remediation { color: #1f6d43; }
 .qualifications, .confidence, .evidence { color: #5b6b7d; font-size: .85rem; }
-.diagnose { margin: .5rem 0 0; }
-.diagnose button {
-  padding: .35rem .8rem; font-size: .82rem; cursor: pointer; font-weight: 600;
-  border: 1px solid #1f6feb; border-radius: 6px; background: #eef4fe; color: #1f6feb;
+.diagnose {
+  display: inline-block; margin: .5rem 0 0; padding: .3rem .8rem; font-size: .85rem;
+  border: 1px solid #1f6feb; border-radius: 6px; color: #1f6feb; text-decoration: none;
 }
-.diagnose button:hover { background: #1f6feb; color: white; }\
+.diagnose:hover { background: #1f6feb; color: white; }\
 """

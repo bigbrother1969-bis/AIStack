@@ -15,5 +15,8 @@ scopes: [openid, profile, email, groups]
 client_id_env: AISTACK_OIDC_CLIENT_ID
 client_secret_env: AISTACK_OIDC_CLIENT_SECRET
 local_admin_env: AISTACK_WEB_ADMIN_SCRYPT
+# The Pocket ID group whose members are administrators (ADR-0014 § 1):
+# its name — what the `groups` claim carries — not its display name.
+admin_group: aistack_admins
 session_idle_hours: 8
 session_absolute_days: 7

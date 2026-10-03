@@ -46,6 +46,7 @@ from aistack.troubleshooting.findings import CONSUMPTION_DOMAIN, qualify
 from aistack.web.app import PACKAGE_ROOT, WebPaths, create_app
 from aistack.web.exposure import Listeners
 from tests.unit.timemachine_sample import build_sample_graph, sample_tree
+from tests.unit.web_signed_in import signed_in
 
 CONTROLS = {"a", "button", "select", "input", "textarea", "summary"}
 
@@ -221,7 +222,7 @@ def web(tmp_path: Path) -> TestClient:
         network_tree=sample_tree,
     )
     build_sample_graph(tmp_path)
-    client = TestClient(app, base_url="http://testserver:8186", follow_redirects=False)
+    client = signed_in(TestClient(app, base_url="http://testserver:8186", follow_redirects=False))
     key = "%2Fmedia%2FBACKUP%2Fx"
     client.post(f"/troubleshooting/finding/{key}/start")
     client.post(f"/troubleshooting/finding/{key}/apply")
@@ -254,7 +255,7 @@ def test_without_a_graph_the_time_machine_page_has_no_untitled_control(tmp_path:
     app = create_app(
         tmp_path, Listeners(public_port=8183, lan_port=8186), LANGUAGES, network_tree=sample_tree
     )
-    reply = TestClient(app, base_url="http://testserver:8186").get("/timemachine/")
+    reply = signed_in(TestClient(app, base_url="http://testserver:8186")).get("/timemachine/")
 
     assert reply.status_code == 200
     assert untitled(reply.text) == []

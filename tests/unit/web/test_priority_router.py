@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.web_signed_in import signed_in
+
 from aistack.i18n import Language, Languages
 from aistack.priority.discovery import DiscoveredContainer
 from aistack.priority.yaml import load_resource_priority_yaml
@@ -50,7 +52,7 @@ def client(tmp_path: Path, definition: Path, port: int = LAN_PORT) -> TestClient
         discover=lambda: DISCOVERED,
     )
 
-    return TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False)
+    return signed_in(TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False))
 
 
 @pytest.mark.parametrize("path", ["/priority", "/priority/"])
@@ -109,7 +111,7 @@ def test_a_docker_that_reports_nothing_still_shows_the_definition(tmp_path: Path
         tmp_path, LISTENERS, LANGUAGES, WebPaths(resource_priority=definition), discover=lambda: ()
     )
 
-    reply = TestClient(app, base_url=f"http://testserver:{LAN_PORT}").get("/priority/")
+    reply = signed_in(TestClient(app, base_url=f"http://testserver:{LAN_PORT}")).get("/priority/")
 
     assert reply.status_code == 200
     assert "jellyfin" in reply.text

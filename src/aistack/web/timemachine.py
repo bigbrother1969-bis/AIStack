@@ -45,12 +45,13 @@ from aistack.timemachine.screen import (
     stream_list,
     tree_context,
 )
+from aistack.web.authentication import SIGNED_IN_ONLY
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
 PREFIX = "/timemachine"
 
-router = APIRouter(dependencies=[LAN_ONLY])
+router = APIRouter(dependencies=[LAN_ONLY, SIGNED_IN_ONLY])
 
 
 def _language(request: Request) -> PageLanguage:

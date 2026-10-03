@@ -14,6 +14,8 @@ from urllib.parse import quote
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.web_signed_in import signed_in
+
 from aistack.i18n import Language, Languages
 from aistack.web.app import create_app
 from aistack.web.exposure import Listeners
@@ -39,7 +41,7 @@ def generated(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def client(generated: Path, port: int = LAN_PORT) -> TestClient:
     app = create_app(generated, LISTENERS, LANGUAGES, network_tree=sample_tree)
 
-    return TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False)
+    return signed_in(TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False))
 
 
 def node(iri: str) -> str:

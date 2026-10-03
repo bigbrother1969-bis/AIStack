@@ -43,12 +43,13 @@ from aistack.troubleshooting.guide import (
     describe_unreachable,
     run_diagnosis,
 )
+from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
 PREFIX = "/troubleshooting"
 
-router = APIRouter(dependencies=[LAN_ONLY])
+router = APIRouter(dependencies=[LAN_ONLY, SIGNED_IN_ONLY])
 
 
 def _language(request: Request) -> PageLanguage:
@@ -115,7 +116,7 @@ def index(request: Request) -> Response:
     )
 
 
-@router.post("/finding/{key:path}/start", include_in_schema=False)
+@router.post("/finding/{key:path}/start", include_in_schema=False, dependencies=[ADMIN_ACTION])
 def start(request: Request, key: str) -> RedirectResponse:
     """
     Start the diagnosis of the finding routed by `key`, freshly
@@ -205,7 +206,7 @@ def step(request: Request, key: str, step: int) -> Response:
     )
 
 
-@router.post("/finding/{key:path}/apply", include_in_schema=False)
+@router.post("/finding/{key:path}/apply", include_in_schema=False, dependencies=[ADMIN_ACTION])
 def apply(request: Request, key: str) -> RedirectResponse:
     """
     The one fix, guarded twice: `step.html` hides the button unless the

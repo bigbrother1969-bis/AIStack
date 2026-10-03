@@ -99,7 +99,8 @@ def render_page_nav(
         f'<nav class="page-nav" aria-label="{escape_text(t("common.language.switch_label"))}">'
         f"{back}"
         f'<span class="lang-switch">{"".join(switches)}</span>'
-        f'<a class="settings-link" href="{console_base_url}/settings">{escape_text(t("common.settings.link"))}</a>'
+        f'<a class="settings-link" href="{console_base_url}/settings" '
+        f'title="{escape_text(t("common.settings.tooltip"))}">{escape_text(t("common.settings.link"))}</a>'
         f"</nav>"
     )
 

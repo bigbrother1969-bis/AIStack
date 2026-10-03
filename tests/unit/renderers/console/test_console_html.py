@@ -282,7 +282,7 @@ def test_a_domain_with_findings_links_to_its_health_html_anchor():
 
     document = render_html((selection_ui_link(),), cockpit=cockpit)
 
-    assert '<a class="domain-badge badge-alert" href="/health.html#domain-tests-pra">' in document
+    assert '<a class="domain-badge badge-alert" href="/health.html#domain-tests-pra" title=' in document
 
 
 def test_a_clean_domain_is_not_a_link():

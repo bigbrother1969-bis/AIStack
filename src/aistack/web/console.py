@@ -18,12 +18,18 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request, Response
 
-from aistack.console.routing import PAGES, SETTINGS_PATH, respond
+from aistack.console.routing import PAGES, READING_PATHS, SETTINGS_PATH, respond
 from aistack.web.exposure import PUBLIC
 
 router = APIRouter(dependencies=[PUBLIC])
 
-CONSOLE_PATHS = ("/", "/index.html", SETTINGS_PATH, *(f"/{page}" for page in PAGES))
+CONSOLE_PATHS = (
+    "/",
+    "/index.html",
+    SETTINGS_PATH,
+    *READING_PATHS,
+    *(f"/{page}" for page in PAGES),
+)
 
 
 NOT_FOUND_PATH = "/.not-found"

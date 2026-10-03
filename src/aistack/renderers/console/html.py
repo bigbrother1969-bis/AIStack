@@ -17,7 +17,9 @@ from aistack.i18n import (
     translator_for,
     with_language,
 )
+from aistack.console.identity import ConsoleIdentity
 from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
+from aistack.renderers.console.pages import HELP_PATH, LEGAL_PATH, LICENSE_PATH
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import domain_slug, escape_text
 
@@ -42,6 +44,7 @@ def render_html(
     technical_debt_note: str = "",
     lang: str | None = None,
     languages: Languages | None = None,
+    identity: ConsoleIdentity | None = None,
 ) -> str:
     """
     Wrap the owner's declared `ConsoleLink`s into one self-contained
@@ -139,10 +142,11 @@ def render_html(
 {PAGE_NAV_STYLE}
 </style>
 </head>
-<body>
+<body id="top">
 <div class="console-layout">
 <aside class="console-aside">
-  <img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}">
+  <a href="#top" title="{escape_text(t("console.tooltip.lockup"))}"><img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}"></a>
+{_render_aside_text(t, identity)}
   {render_page_nav(t, declared, t.lang, back_to_console=False)}
 </aside>
 <div class="console-content">
@@ -156,6 +160,38 @@ def render_html(
 </body>
 </html>
 """
+
+
+def _render_aside_text(t: Translator, identity: ConsoleIdentity | None) -> str:
+    """
+    What the left column says between the lockup and the language
+    switch (the owner, 2026-10-03: "du texte explicatif et des liens
+    (copyright, mentions légales, aide...) [...] pour meubler et
+    améliorer l'appropriation"): two sentences on what AIStack and this
+    page are, the help, legal-notice and licence pages, and the
+    copyright line when the publisher is declared.
+    """
+
+    copyright_line = (
+        f'  <p class="aside-copyright">'
+        f'{escape_text(t("console.aside.copyright", year=identity.copyright_year, publisher=identity.publisher))}'
+        f"</p>\n"
+        if identity is not None
+        else ""
+    )
+
+    links = "\n".join(
+        f'    <a href="{path}" title="{escape_text(t(f"console.tooltip.{key}"))}">'
+        f'{escape_text(t(f"console.aside.{key}"))}</a>'
+        for key, path in (("help", HELP_PATH), ("legal", LEGAL_PATH), ("license", LICENSE_PATH))
+    )
+
+    return (
+        f'  <p class="aside-intro">{escape_text(t("console.aside.intro"))}</p>\n'
+        f'  <p class="aside-guide">{escape_text(t("console.aside.guide"))}</p>\n'
+        f'  <nav class="aside-links">\n{links}\n  </nav>\n'
+        f"{copyright_line}"
+    )
 
 
 def _render_health_cartouche(
@@ -175,7 +211,7 @@ def _render_health_cartouche(
     )
     badges = "\n".join(_render_domain_badge(domain, t) for domain in cockpit.domains)
 
-    return f"""<section class="health-cartouche">
+    return f"""<section class="health-cartouche" title="{escape_text(t("console.tooltip.cartouche"))}">
   <div class="cartouche-header">
     <h2>{escape_text(t("console.cartouche.title"))}</h2>
     {score_html}
@@ -184,7 +220,7 @@ def _render_health_cartouche(
   <div class="cartouche-badges">
 {badges}
   </div>
-  <a class="cartouche-link" href="/health.html">{escape_text(t("console.cartouche.detail_link"))}</a>
+  <a class="cartouche-link" href="/health.html" title="{escape_text(t("console.tooltip.detail_link"))}">{escape_text(t("console.cartouche.detail_link"))}</a>
 </section>"""
 
 
@@ -195,7 +231,8 @@ def _render_cartouche_score(
         badge_class = _BUCKET_BADGE_CLASS[score.bucket]
 
         return (
-            f'<span class="cartouche-score">{escape_text(t("console.cartouche.score"))} '
+            f'<span class="cartouche-score" title="{escape_text(t("console.tooltip.score"))}">'
+            f'{escape_text(t("console.cartouche.score"))} '
             f'<strong>{score.value}/100</strong> '
             f'<span class="badge {badge_class}">'
             f"{escape_text(bucket_label(t, score.bucket))}</span></span>"
@@ -218,7 +255,8 @@ def _render_cartouche_technical_debt(
         badge_class = _BUCKET_BADGE_CLASS[score.bucket]
 
         return (
-            f'<div class="cartouche-technical-debt">'
+            f'<div class="cartouche-technical-debt" '
+            f'title="{escape_text(t("console.tooltip.technical_debt"))}">'
             f'{escape_text(t("console.cartouche.technical_debt"))} '
             f'<strong>{score.value}/100</strong> '
             f'<span class="badge {badge_class}">'
@@ -241,13 +279,15 @@ def _render_domain_badge(domain: HealthDomain, t: Translator) -> str:
 
     if not domain.instrumented:
         return (
-            f'  <span class="domain-badge badge-not-instrumented">'
+            f'  <span class="domain-badge badge-not-instrumented" '
+            f'title="{escape_text(t("console.tooltip.badge_not_instrumented", domain=name))}">'
             f'{escape_text(t("health.domain_state.not_instrumented", domain=name))}</span>'
         )
 
     if not domain.findings:
         return (
-            f'  <span class="domain-badge badge-clean">'
+            f'  <span class="domain-badge badge-clean" '
+            f'title="{escape_text(t("console.tooltip.badge_clean", domain=name))}">'
             f'{escape_text(t("health.domain_state.clean", domain=name))}</span>'
         )
 
@@ -262,7 +302,8 @@ def _render_domain_badge(domain: HealthDomain, t: Translator) -> str:
     # not-instrumented domain has nothing further to read there that
     # this badge does not already say.
     return (
-        f'  <a class="domain-badge badge-alert" href="/health.html#domain-{domain_slug(domain.name)}">'
+        f'  <a class="domain-badge badge-alert" href="/health.html#domain-{domain_slug(domain.name)}" '
+        f'title="{escape_text(t("console.tooltip.badge_alert", domain=name))}">'
         f'{escape_text(t("health.domain_state.findings", domain=name, count=len(domain.findings)))}'
         f"</a>"
     )
@@ -323,7 +364,7 @@ def _render_link_group(
     cards = "\n".join(_render_link(link, t) for link in links)
 
     return f"""  <details class="link-group link-group-{scope}" open>
-    <summary>{escape_text(title)} <span class="link-group-count">{len(links)}</span></summary>
+    <summary title="{escape_text(t("console.tooltip.group"))}">{escape_text(title)} <span class="link-group-count">{len(links)}</span></summary>
     <div class="link-group-grid">
 {cards}
     </div>
@@ -347,7 +388,12 @@ def _render_link(link: ConsoleLink, t: Translator) -> str:
     would misuse a meaning it already carries.
     """
 
-    return f"""    <a class="card card-{link.scope}" href="{escape_text(_link_href(link.url, t.lang))}">
+    tooltip = t(
+        "console.tooltip.card_lan" if link.scope == LAN else "console.tooltip.card_public",
+        name=link.name,
+    )
+
+    return f"""    <a class="card card-{link.scope}" href="{escape_text(_link_href(link.url, t.lang))}" title="{escape_text(tooltip)}">
       <h2>{escape_text(link.name)}</h2>
       <p>{escape_text(link.description)}</p>
     </a>"""
@@ -418,6 +464,17 @@ body {
   gap: .6rem; margin: 0;
 }
 .console-content { min-width: 0; }
+.aside-intro, .aside-guide {
+  margin: 0; font-size: .85rem; line-height: 1.45; color: #5b6b7d; text-align: left;
+}
+.aside-intro { color: #1f2933; }
+.aside-links {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .35rem;
+  width: 100%; font-size: .88rem;
+}
+.aside-links a { color: #16335c; text-decoration: none; }
+.aside-links a:hover { text-decoration: underline; }
+.aside-copyright { margin: 0; font-size: .75rem; color: #5b6b7d; text-align: left; width: 100%; }
 @media (max-width: 900px) {
   .console-layout { grid-template-columns: 1fr; gap: 1rem; }
   .console-aside {
@@ -425,6 +482,9 @@ body {
   }
   .console-aside .lockup { max-width: 140px; }
   .console-aside .page-nav { flex-direction: row; }
+  .console-aside { flex-wrap: wrap; }
+  .aside-guide { display: none; }
+  .aside-links { flex-direction: row; flex-wrap: wrap; gap: .8rem; }
 }
 .links { margin: 0; }
 .link-group {

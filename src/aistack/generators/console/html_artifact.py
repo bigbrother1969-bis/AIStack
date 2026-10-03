@@ -7,6 +7,7 @@ from aistack.contracts.health_score import HealthScore
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.history import write_artifact_with_history
 from aistack.health.cockpit import HealthCockpit
+from aistack.console.identity import ConsoleIdentity
 from aistack.renderers.console.html import render_html
 
 
@@ -48,6 +49,7 @@ class ConsoleHtmlArtifactGenerator:
         technical_debt_score: TechnicalDebtScore | None = None,
         technical_debt_note: str = "",
         lang: str | None = None,
+        identity: ConsoleIdentity | None = None,
     ) -> Path:
         content = render_html(
             links,
@@ -57,6 +59,7 @@ class ConsoleHtmlArtifactGenerator:
             technical_debt_score=technical_debt_score,
             technical_debt_note=technical_debt_note,
             lang=lang,
+            identity=identity,
         )
         write_artifact_with_history(content, output_path)
 

@@ -14,6 +14,15 @@ from aistack.i18n import (
     translator_for,
 )
 from aistack.i18n.pages import page_file
+from aistack.console.identity import load_console_identity
+from aistack.renderers.console.pages import (
+    HELP_PATH,
+    LEGAL_PATH,
+    LICENSE_PATH,
+    render_help_html,
+    render_legal_html,
+    render_license_html,
+)
 from aistack.renderers.console.settings import render_settings_html
 from aistack.renderers.text import escape_text
 
@@ -33,6 +42,11 @@ from aistack.renderers.text import escape_text
 # list is ever mapped to a file — a request cannot name one.
 PAGES = ("console.html", "architecture.html", "health.html")
 SETTINGS_PATH = "/settings"
+
+# The three reading pages the console's left column links to
+# (2026-10-03), rendered per request like Settings: help, legal
+# notice, licence and sources.
+READING_PATHS = (HELP_PATH, LEGAL_PATH, LICENSE_PATH)
 
 
 @dataclass(frozen=True)
@@ -90,6 +104,14 @@ def respond(
     if path == SETTINGS_PATH:
         html = render_settings_html(choice.lang, declared, saved=choice.remember)
         return _html(200, html, remember, method)
+
+    if path == HELP_PATH:
+        return _html(200, render_help_html(choice.lang, declared), remember, method)
+
+    if path in (LEGAL_PATH, LICENSE_PATH):
+        identity = load_console_identity(lang=choice.lang, languages=declared)
+        render = render_legal_html if path == LEGAL_PATH else render_license_html
+        return _html(200, render(identity, choice.lang, declared), remember, method)
 
     page = path.lstrip("/")
 

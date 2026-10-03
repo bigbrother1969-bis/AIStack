@@ -1,0 +1,25 @@
+# AIStack — who publishes this console (2026-10-03).
+#
+# Declared by the owner, never discovered: the console is public on
+# aistack.persiaut-family.fr, and its left column, its legal notice and
+# its licence page read these values. Chosen with the owner the same
+# day: PERSIAUT – Data & Regulatory Advisory as publisher, the city
+# only — no street address on a public page — and contact through the
+# professional site rather than an e-mail address shown here.
+
+publisher: "PERSIAUT – Data & Regulatory Advisory"
+legal_form:
+  fr: "Entreprise individuelle"
+  en: "Sole proprietorship (entreprise individuelle)"
+siren: "925343014"
+city: "Paris (75020)"
+publication_director: "Fabrice Persiaut"
+contact_url: "https://persiaut-consulting.eu"
+copyright_year: 2026
+license: "AGPL-3.0-or-later"
+license_url: "https://www.gnu.org/licenses/agpl-3.0.html"
+repositories:
+  - name: GitHub
+    url: "https://github.com/bigbrother1969-bis/AIStack"
+  - name: Codeberg
+    url: "https://codeberg.org/bigbrother1969/AIStack"

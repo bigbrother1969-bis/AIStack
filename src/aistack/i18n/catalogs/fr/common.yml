@@ -6,5 +6,6 @@ language:
   switch_label: "Langue de l'interface"
 settings:
   link: "Paramètres"
+  tooltip: "Choisir la langue de l'interface"
 console:
   back: "← Retour à la console"

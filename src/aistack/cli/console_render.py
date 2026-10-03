@@ -11,6 +11,7 @@ from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.console.yaml import load_console_links_yaml
 from aistack.contracts.health_score import HealthScoreWeights
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
+from aistack.console.identity import load_console_identity
 from aistack.generators.console import ConsoleHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.score import compute_health_score
@@ -537,6 +538,7 @@ def main() -> None:
             technical_debt_score=debt_score,
             technical_debt_note=debt_score_note,
             lang=language.code,
+            identity=load_console_identity(lang=language.code, languages=languages),
         )
         written.append(output_path.name)
 

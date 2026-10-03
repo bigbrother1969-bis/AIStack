@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.10
+  version: 1.11
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-09-28
+  updated: 2026-10-03
 
 relations:
   references:
@@ -38,6 +38,62 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.7.0 — 2026-10-03
+
+**Users, profiles and the written "why": AIStack becomes one web
+application people sign in to, where an administrator acts and a user
+reads, and where the reasons behind things are written, confirmed or set
+aside by people — not only imported.**
+
+- **One web application.** The console and the five screens that each
+  ran as their own process and virtual environment (Priority CPU, music
+  selection, network discovery, the troubleshooting assistant, the Time
+  Machine) are now one application, every route of it in the test suite
+  (`ADR-0012`). It answers on two addresses: the public one, and the
+  local network's (port 8186). The separate Selection UI image is
+  retired. Every button, link and field now says what it does when
+  hovered, and the licence page gives the Docker Hub image to pull.
+- **Sign in with Pocket ID.** OpenID Connect against the owner's identity
+  provider, its tokens verified by their signature; sessions kept on the
+  server, ending after 8 hours idle or 7 days. A fallback administrator,
+  protected by a password hash and locked after five failures, exists on
+  the local network only — for when Pocket ID or Cloudflare is down
+  (`ADR-0013`).
+- **Profiles and rights.** Members of the Pocket ID group
+  `aistack_admins` (and the fallback administrator) read and act; any
+  other account reads only. Signed out, only the console, help and legal
+  pages are public; Architecture and the Health Cockpit need a session.
+  Every action requires the administrator profile and a token bound to
+  the session. Pocket ID signs people in on the local network too.
+  Settings show each person their profile; an administrator also sees
+  every open session — and can close one — and a 30-day sign-in journal
+  (`ADR-0014`).
+- **Writing the why.** On a subject's *Pourquoi* page, an administrator
+  writes an Explication (recorded as `Declared`, waiting for someone
+  else's confirmation), validates one written by someone else or
+  imported (becoming its second author), or discards one with a stated
+  reason. Each act is one more version — nothing is ever deleted — and
+  the graph links each version to the one it revises, and to its
+  validator, at its next rebuild. A new *Explications* view lists the
+  subjects that have one (81 on the reference host), filtered by status
+  and by name (`ADR-0015`, proposed).
+- **Fixed.** A subject named like an absolute path
+  (`/media/BACKUP/nextcloud`) made its history file land outside the
+  history directory; subject names are now always one file name.
+
+**Upgrading.** `pyproject.toml` gains `PyJWT[crypto]`; install it in the
+governed environment before restarting. Create the AIStack client in
+Pocket ID with four addresses — the callback and after-logout URLs of
+both the public address and `http://GIGABYTE:8186` (Pocket ID compares
+them letter for letter) — and a group named `aistack_admins` allowed on
+it; write its client ID and secret into `.env.web`
+(`AISTACK_OIDC_CLIENT_ID`, `AISTACK_OIDC_CLIENT_SECRET`), and the
+fallback administrator's hash from `python -m
+aistack.cli.web_admin_password` (`AISTACK_WEB_ADMIN_SCRYPT`). The five
+old screen services and their virtual environments can be removed.
+
+3059 tests, 81 knowledge artifacts, `clean: True`.
 
 ## 1.6.1 — 2026-10-02
 

@@ -56,21 +56,47 @@ The objective is to **understand**, **preserve**, and **transmit** them.
 
 ## What AIStack Does
 
-AIStack helps organizations to:
+AIStack watches a self-hosted infrastructure, keeps what it observes as
+governed, dated knowledge, and helps the person who runs it understand,
+explain and act on it:
 
-- Observe infrastructures.
-- Collect operational evidence.
-- Build governed knowledge.
-- Explain architectures and decisions.
-- Maintain operational understanding.
-- Preserve knowledge over time.
-- Assist administrators with explainable recommendations.
-- Facilitate infrastructure evolution and migration.
+- **Observe** — discover what really runs (Docker hosts, Compose stacks,
+  the machines of the local network) and collect evidence about it
+  continuously.
+- **Check** — score the infrastructure's health against declared,
+  grounded expectations, and say plainly where it falls short.
+- **Remember** — keep every observation, decision and explanation with
+  its date and its origin, never overwritten, in a provenance graph.
+- **Explain** — record *why* things are the way they are, whether a
+  commit, a model or a person said so, and let people confirm or set
+  aside each explanation.
+- **Assist** — reason about a real finding with a local AI model, never
+  as a source of truth, and apply only the fixes this project trusts a
+  button to make.
+- **Govern** — every rule, decision and figure lives in versioned,
+  integrity-checked documentation, so the infrastructure's knowledge
+  outlives any one person or session.
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.6.1
+### Concrete capabilities, as of 1.7.0
 
+- **One web application, signed in — new as of 1.7.0** — the console and
+  every screen (Architecture, Health Cockpit, Priority CPU, music
+  selection, network discovery, the troubleshooting assistant, the Time
+  Machine) are one application, every route of it in the test suite. It
+  answers on two addresses: the public one, reachable from the internet,
+  and the local network's. People sign in with the owner's identity
+  provider (Pocket ID, OpenID Connect); a fallback administrator account
+  exists on the local network only, for when the provider is down.
+  Signed out, only the console, help and legal pages are public;
+  Architecture and the Health Cockpit need a session, and the screens
+  that change something stay on the local network. Two profiles, from the
+  provider's groups: an **administrator** reads and acts, a **user** reads
+  only; every action carries a token bound to the session. Settings show
+  each person their profile and session, and show an administrator every
+  open session (and can close it) and a 30-day sign-in journal. Every
+  control on every page says what it does when hovered.
 - **Docker infrastructure discovery** — a governed catalog of a live
   Docker host: identity, image, state, ports, mounts, and the real
   `depends_on:` relationships between containers, regenerated from the
@@ -97,7 +123,7 @@ AIStack transforms observations into sustainable knowledge assets.
   discovered on the network, and a PRA-test list proposed from that
   discovery, where a stateful service with no restore test on record is
   flagged and a result only ever comes from a real test. Every finding
-  in red is now a link into the troubleshooting assistant. As of 1.6.1:
+  in red is a link into the troubleshooting assistant. As of 1.6.1:
   the Services domain also counts restarts over the last hour from the
   Docker event history, so a container crash-looping while reading
   "running" between two crashes is flagged, not missed.
@@ -123,77 +149,72 @@ AIStack transforms observations into sustainable knowledge assets.
   finding the Health Cockpit raises, not only CPU and temperature —
   still applying a fix by itself only for the one CPU-priority action it
   was built for.
-- **Console** — one entry point linking Selection UI, Priority CPU,
-  Architecture, Health Cockpit, the network discovery screen and the
-  troubleshooting assistant, all reachable from the same page. Only the
-  console itself, Architecture and Cockpit Santé are reachable from
-  outside the LAN — every other screen (Selection UI, Priority CPU,
-  network discovery, the troubleshooting assistant) is LAN-only. As of
-  1.5.2: each card's description is written for the person using it, in
-  plain French, and the cards are grouped by whether they're reachable
-  from the local network or from the internet. As of 1.6.0: a domain's
-  alert badge on the console opens the matching section of the Health
-  Cockpit, and every LAN address AIStack links to is read from one
-  declared instance configuration instead of being typed into each
-  screen.
-- **French and English interface** — the console is served by AIStack
-  itself, with a Settings page; every screen (console, Architecture,
-  Health Cockpit and the four mini-apps) switches between French and
-  English, the choice following the visitor from the console into each
-  screen. The AI Runtime's own answers now follow it too: enforced by a
-  second, fast model's translation pass whenever the display language
-  is not English.
-- **Context Bundle self-onboarding** — a portable, integrity-checked
-  archive of the whole governed knowledge base, so a new AI session or
-  contributor can get up to speed without reading the repository's
-  entire history.
-- **Time Machine and Explications — new as of 1.3.0, two more views as of
-  1.4.0** — AIStack's own five histories, projected as a real PROV-O graph
-  (Oxigraph), rebuilt in full on demand, browsable through a new LAN-only
-  screen — streams, the instants each one recorded, and every fact known
-  about one instant, including the provenance edges back to whoever or
-  whatever caused it. The "why" itself, Explications, is read for the
-  first time from four real sources: the AI Runtime's own answers,
-  `pra_tests.yml`'s dated comments, this project's `claude/` session
-  notes, and its own commit history. As of 1.4.0: a foldable network tree
-  (Réseau → Hôte → Stack → Conteneur, with search) read from the live
-  Docker/Compose catalogs, and a Mermaid provenance-graph diagram on every
-  node page, centred on the node being viewed. As of 1.5.0: three passive
-  collectors feed the same graph in real time — Docker events (exec,
-  pull, create, recreate, destroy), periodic `docker diff` (filesystem
-  drift since creation, mount noise filtered out), and image-digest drift
-  (a purely local upgrade signal, no registry call) — each its own
-  governed systemd poll, with a stream's own collection gaps recorded as
-  a fact when one stops and restarts. As of 1.5.1: a fourth collector,
-  package inventory (`dpkg`/`apk`, falling back to `"none"` rather than
-  a silent empty list), plus two new GUI/interpretation pieces — a time
-  ribbon (a chronological, per-stream-filterable, gap-aware view across
-  every stream the graph holds) and an upgrade correlation that links
-  the package inventory nearest before and after each detected
-  image-digest change, no bounded time window. As of 1.5.2: the ribbon
-  gained a real per-category time axis, label-aware clustering with a
-  whole-lane summary for very high-volume streams, a touch tap, a
-  by-name cross-link with the network tree in both directions, and a
-  filter that survives a language switch — and every Time Machine
-  screen, plus the console, Architecture and Health Cockpit pages, now
-  shares one adaptive full-width layout and the same charte graphique
-  (background, card borders, shared navigation). As of 1.6.0: a node's
-  page shows the network tree, that subject's own chronology and its
-  facts side by side; a subject can be reconstituted as it stood at a
-  past instant, stream by stream, saying so honestly where nothing was
-  observed yet; its recorded Explications — the "why" — get their own
-  read-only panel; a cluster on the ribbon unfolds into a list of its
-  own members; the ribbon's full list is paginated and grouped by
-  stream; and the four Docker collectors run as the repository owner,
-  not as root. Every Time Machine screen stays read-only. As of 1.6.1:
-  the Docker event stream keeps what a person or a real state change
-  caused and leaves out AIStack's own package probes and containers'
-  declared healthchecks (99 % of it on the reference host); package
-  inventories are taken once per image and filesystem drift every 15
-  minutes; history recorded before that can be archived and refiltered
-  with one command; and the graph rebuilds in about a minute instead of
-  scanning its history quadratically. Every AIStack service now runs as
-  the repository owner, none as root.
+- **Console** — one entry point to every screen, each card described for
+  the person using it, in plain French, and grouped by whether it is
+  reachable from the local network or from the internet; a domain's
+  alert badge opens the matching section of the Health Cockpit, and every
+  address AIStack links to is read from one declared instance
+  configuration. As of 1.7.0: it shows who is signed in, and its licence
+  page gives the published Docker image and the command to pull it.
+- **French and English interface** — every page (console, Settings,
+  Architecture, Health Cockpit and every screen) switches between French
+  and English, the choice following the visitor from page to page. The
+  AI Runtime's own answers follow it too: enforced by a second, fast
+  model's translation pass whenever the display language is not English.
+- **Time Machine and Explications** — AIStack's own histories projected
+  as a PROV-O provenance graph (Oxigraph), rebuilt in full on demand and
+  browsed on the local network; and Explications, the recorded *why* of
+  each subject. What each version brought:
+  - **1.3.0** — the graph itself: five histories projected as a real
+    PROV-O graph, browsable by stream, by the instants each one
+    recorded, and by every fact known about one instant, with the
+    provenance edges back to whoever or whatever caused it.
+    Explications are read for the first time from four real sources:
+    the AI Runtime's own answers, `pra_tests.yml`'s dated comments, this
+    project's `claude/` session notes, and its commit history.
+  - **1.4.0** — a foldable network tree (Réseau → Hôte → Stack →
+    Conteneur, with search) read from the live Docker/Compose catalogs,
+    and a Mermaid provenance diagram on every node page, centred on the
+    node being viewed.
+  - **1.5.0** — three passive collectors feed the graph in real time:
+    Docker events (exec, pull, create, recreate, destroy), periodic
+    `docker diff` (filesystem drift since creation, mount noise filtered
+    out) and image-digest drift (a purely local upgrade signal, no
+    registry call) — each its own governed systemd poll, a stream's
+    collection gaps recorded as a fact when it stops and restarts.
+  - **1.5.1** — a fourth collector, package inventory (`dpkg`/`apk`,
+    `"none"` rather than a silent empty list); the time ribbon, a
+    chronological, per-stream-filterable, gap-aware view across every
+    stream; and an upgrade correlation linking the package inventories
+    nearest before and after each image-digest change.
+  - **1.5.2** — the ribbon gains a real per-category time axis,
+    label-aware clustering with a whole-lane summary for very
+    high-volume streams, touch support, a by-name cross-link with the
+    network tree in both directions, and a filter that survives a
+    language switch; every page shares one adaptive layout and one
+    charte graphique.
+  - **1.6.0** — a node's page shows the network tree, that subject's
+    chronology and its facts side by side; *Reconstituer* shows a
+    subject as it stood at a past instant, stream by stream, saying so
+    honestly where nothing was observed yet; *Pourquoi* lists a
+    subject's Explications, version by version, read-only; a ribbon
+    cluster unfolds into its members, and the full list is paginated and
+    grouped by stream.
+  - **1.6.1** — the Docker event stream keeps what a person or a real
+    state change caused, leaving out AIStack's own probes and declared
+    healthchecks (99 % of it on the reference host); package inventories
+    once per image, filesystem drift every 15 minutes; earlier history
+    archived and refiltered in one command; and the graph rebuilds in
+    about a minute instead of scanning its history quadratically.
+  - **1.7.0** — the Time Machine moves into the one web application,
+    behind sign-in. The *why* is no longer only imported: an
+    administrator **writes** an Explication (recorded as `Declared`,
+    waiting for a second person), **validates** one written by someone
+    else or imported (the validator becomes a second author), or
+    **discards** one with a stated reason — every act one more version,
+    nothing ever deleted, and the graph links each version to the one it
+    revises at its next rebuild. A new **Explications** view lists every
+    subject that has one, filtered by status and by name.
 - **Knowledge integrity validation** — eighteen checks run against the
   governed documentation on every test suite and before every
   publication.
@@ -244,9 +265,9 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.6.1**: `pytest -q` — **2762 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **555 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **77 knowledge artifacts**,
+**As of 1.7.0**: `pytest -q` — **3059 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **587 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **81 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

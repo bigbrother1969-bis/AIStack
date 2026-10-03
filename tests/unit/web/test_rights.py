@@ -228,6 +228,15 @@ def test_a_user_sees_their_profile_and_nothing_of_the_others(tmp_path: Path):
     assert "Someone Else" not in page
 
 
+def test_the_profile_says_where_the_session_was_opened_in_good_french(tmp_path: Path):
+    web = signed_in(client(build(tmp_path), PUBLIC_PORT))
+
+    page = web.get("/settings?lang=fr").text
+
+    assert "sur l&#x27;adresse publique" in page or "sur l'adresse publique" in page
+    assert "sur le adresse" not in page
+
+
 def test_signed_out_settings_only_offers_the_language(tmp_path: Path):
     page = client(build(tmp_path)).get("/settings?lang=en").text
 

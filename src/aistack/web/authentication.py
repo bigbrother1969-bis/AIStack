@@ -503,6 +503,13 @@ _LISTENER_LABELS = {
     LAN_LISTENER: "auth.listener.lan",
     "": "auth.listener.none",
 }
+# "on the public address" needs its own article in French ("sur
+# l'adresse publique"), so the whole phrase is translated, not the noun.
+_WHERE_LABELS = {
+    PUBLIC_LISTENER: "auth.settings.where.public",
+    LAN_LISTENER: "auth.settings.where.lan",
+    "": "auth.settings.where.none",
+}
 _PROFILE_LABELS = {ADMIN: "auth.profile.admin", USER: "auth.profile.user"}
 
 
@@ -547,7 +554,7 @@ def settings_sections(request: Request) -> str:
                     "auth.settings.opened_value",
                     when=_when(session.created),
                     method=t(_METHOD_LABELS[session.method]),
-                    listener=t(_LISTENER_LABELS[session.listener]),
+                    where=t(_WHERE_LABELS.get(session.listener, "auth.settings.where.none")),
                 )
             ),
         ),

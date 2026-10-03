@@ -49,7 +49,11 @@ settings:
   groups: "Groupes"
   no_group: "aucun"
   opened: "Session ouverte"
-  opened_value: "le {when}, par {method}, sur le {listener}"
+  opened_value: "le {when}, par {method}, {where}"
+  where:
+    public: "sur l'adresse publique"
+    lan: "sur le réseau local"
+    none: "—"
   ends: "Se termine au plus tard"
   sessions_heading: "Sessions ouvertes"
   journal_heading: "Journal des connexions (30 derniers jours)"

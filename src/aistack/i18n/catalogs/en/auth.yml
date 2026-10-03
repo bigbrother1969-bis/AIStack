@@ -49,7 +49,11 @@ settings:
   groups: "Groups"
   no_group: "none"
   opened: "Session opened"
-  opened_value: "on {when}, through {method}, on the {listener}"
+  opened_value: "on {when}, through {method}, {where}"
+  where:
+    public: "on the public address"
+    lan: "on the local network"
+    none: "—"
   ends: "Ends at the latest"
   sessions_heading: "Open sessions"
   journal_heading: "Sign-in journal (last 30 days)"

@@ -92,7 +92,7 @@ def render_html(
     "Diagnostiquer" button — the same "absent parameter changes
     nothing" idiom `score`/`technical_debt_score` already hold. A
     real base URL (`aistack.cli.health_render.main` resolves it via
-    `service_url("troubleshooting_assistant_ui")`, the R10 pattern
+    `service_url("web_lan")` plus `/troubleshooting` since 2026-10-03, the R10 pattern
     `console_render.py` already uses for its own links) adds one
     small `<form method="post" action="{base_url}/finding/{key}
     /start">` per finding, pointing at that LAN-only assistant —
@@ -100,7 +100,7 @@ def render_html(
 
     **The routing `key` a finding's button submits to is not always
     `finding.subject`** — the same collision-safe composite key
-    `troubleshooting_assistant_ui.app.QualifiedFinding` computes for
+    `aistack.troubleshooting.findings.QualifiedFinding` computes for
     its own routing (see that module's docstring for the full
     reasoning and the confirmed real collision — "gigabyte",
     "nextcloud", "immich" each named today by both Tests PRA and État

@@ -73,16 +73,13 @@
   </div>
 
   <!--
-    Lien direct LAN, jamais l'adresse publique
-    aistack.persiaut-family.fr — même discipline que
-    network_discovery_ui/templates/index.html : cet écran reste
-    volontairement LAN-only (voir troubleshooting_assistant_ui/app.py).
-    `console_base_url` (R10, 2026-09-30) : résolu depuis la
-    configuration d'instance déclarée, plus jamais écrit en dur ici.
+    Retour à la console servie par la même application, sur le même
+    port LAN (ADR-0012) — jamais l'adresse publique : cet écran reste
+    LAN-only (roadmap R1).
   -->
   <div class="top-links">
-    <a class="back-link" href="{{ console_base_url }}/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
-    <a class="back-link" href="/aide">{{ t('troubleshooting.help_link') }}</a>
+    <a class="back-link" href="/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <a class="back-link" href="{{ base }}/aide">{{ t('troubleshooting.help_link') }}</a>
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}</nav>
   </div>
 
@@ -109,7 +106,7 @@
             <span class="signature">{{ entry.finding.signature }}</span>
             <p class="interpretation">{{ entry.finding.interpretation }}</p>
           </div>
-          <form class="start-form" method="post" action="/finding/{{ entry.key | urlencode }}/start">
+          <form class="start-form" method="post" action="{{ base }}/finding/{{ entry.key | urlencode }}/start">
             <button class="primary" type="submit">{{ t('troubleshooting.index.start') }}</button>
           </form>
         </li>

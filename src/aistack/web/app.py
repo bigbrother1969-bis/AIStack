@@ -23,7 +23,9 @@ from aistack.i18n import Languages, default_languages
 from aistack.priority.screen import Discover, discover_containers
 from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
-from aistack.web import console, network_discovery, priority, selection
+from aistack.troubleshooting.findings import CollectFindings, qualified_findings
+from aistack.troubleshooting.guide import AskAI, ask_ollama
+from aistack.web import console, network_discovery, priority, selection, troubleshooting
 from aistack.web.exposure import Listeners, include
 
 
@@ -52,6 +54,8 @@ def create_app(
     discover: Discover = discover_containers,
     syncthing: SyncthingStatus = read_syncthing,
     kernel: Any = None,
+    collect_findings: CollectFindings = qualified_findings,
+    ask_ai: AskAI = ask_ollama,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -73,12 +77,17 @@ def create_app(
     # ... and what Syncthing reports for the Selection UI's folder.
     app.state.syncthing = syncthing
     app.state.kernel = kernel if kernel is not None else create_kernel()
+    # ... the host's findings, and the AI Runtime, for the assistant.
+    app.state.collect_findings = collect_findings
+    app.state.ask_ai = ask_ai
+    app.state.troubleshooting_sessions = {}
     app.state.routers = []
 
     include(app, console.router)
     include(app, network_discovery.router, network_discovery.PREFIX)
     include(app, priority.router, priority.PREFIX)
     include(app, selection.router, selection.PREFIX)
+    include(app, troubleshooting.router, troubleshooting.PREFIX)
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:

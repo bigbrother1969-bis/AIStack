@@ -265,7 +265,7 @@ def test_the_real_console_links_definition_loads():
     assert by_name["Découverte réseau"].url == "http://GIGABYTE:8187/network-discovery/"
     # LAN-only, deliberately — v1 choice, not a security necessity
     # (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`).
-    assert by_name["Assistant de pannes"].url == "http://GIGABYTE:8185"
+    assert by_name["Assistant de pannes"].url == "http://GIGABYTE:8187/troubleshooting/"
     # `scope`, added 2026-09-30: the same LAN/public split this file's
     # own header comments already narrated by hand above, now a field
     # `console/html.py` groups cards by.

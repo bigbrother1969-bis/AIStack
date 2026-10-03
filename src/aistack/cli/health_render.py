@@ -164,6 +164,10 @@ DEFAULT_INSTANCE_CONFIG = (
     / "instance_config.yml"
 )
 
+# Where the assistant sits on the web application's LAN listener since
+# 2026-10-03 (`ADR-0012`, `aistack.web.troubleshooting.PREFIX`).
+TROUBLESHOOTING_PATH = "/troubleshooting"
+
 # `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
 # domain vocabulary the owner named before any code — "stockage,
 # services, backup/PRA, GPU" — not this module's own invention, closed
@@ -644,9 +648,13 @@ def main() -> None:
     debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
     try:
-        troubleshooting_base_url: str | None = load_instance_config_yaml(
-            DEFAULT_INSTANCE_CONFIG
-        ).service_url("troubleshooting_assistant_ui")
+        # The assistant lives under a prefix of the web application's
+        # LAN listener since 2026-10-03 (ADR-0012), no longer on a port
+        # of its own.
+        troubleshooting_base_url: str | None = (
+            load_instance_config_yaml(DEFAULT_INSTANCE_CONFIG).service_url("web_lan")
+            + TROUBLESHOOTING_PATH
+        )
     except (ValueError, OSError):
         # Optional, best-effort — the same tolerant absence every
         # other `DEFAULT_*` definition in this module already holds

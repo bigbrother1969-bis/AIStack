@@ -43,7 +43,7 @@ from aistack.contracts.runtime_finding import RuntimeFinding
 # original French-for-the-whole-patrimoine default (it has no
 # "display" of its own to follow), and the guided UI now passes
 # whatever language the visitor is reading the page in
-# (`troubleshooting_assistant_ui/app.py`'s own `_language(request)`),
+# (`aistack.web.troubleshooting`'s own `_language(request)`),
 # not a language hardcoded here.
 #
 # Deliberately not extended to the finding's own `interpretation`/

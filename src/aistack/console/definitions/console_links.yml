@@ -238,9 +238,10 @@ links:
         réseau local.
       en: >-
         Step-by-step guide through evaluate → reason/explain/recommend
-        on a real fault — systemd/uvicorn service, LAN only
-        (GIGABYTE:8185)
-    service: troubleshooting_assistant_ui
+        on a real fault — AIStack web application, LAN listener only
+        (ADR-0012)
+    service: web_lan
+    path: /troubleshooting/
     scope: lan
   - name: Time Machine
     description:

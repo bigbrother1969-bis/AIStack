@@ -35,7 +35,7 @@
 </head>
 <body>
   <div style="display: flex; gap: 1rem; align-items: baseline;">
-    <a class="back-link" href="/">{{ t('troubleshooting.help.back') }}</a>
+    <a class="back-link" href="{{ base }}/">{{ t('troubleshooting.help.back') }}</a>
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}</nav>
   </div>
 
@@ -83,6 +83,6 @@
     </p>
   </section>
 
-  <a class="back-link" href="/">{{ t('troubleshooting.help.back') }}</a>
+  <a class="back-link" href="{{ base }}/">{{ t('troubleshooting.help.back') }}</a>
 </body>
 </html>

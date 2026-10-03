@@ -960,8 +960,9 @@ def test_main_links_a_real_finding_to_the_troubleshooting_assistant(
 ):
     """
     `DEFAULT_INSTANCE_CONFIG` is left unpatched here — the real,
-    shipped `instance_config.yml` already declares
-    `troubleshooting_assistant_ui: 8185` — so `main()`'s own
+    shipped `instance_config.yml` already declares `web_lan`, under
+    which the assistant answers at `/troubleshooting` (ADR-0012) — so
+    `main()`'s own
     resolution should reach a real finding's "Diagnostiquer" button,
     not only `render_html`'s own unit tests (which hand the base URL
     in directly, never exercising `main()`'s own resolution step).
@@ -979,7 +980,7 @@ def test_main_links_a_real_finding_to_the_troubleshooting_assistant(
         encoding="utf-8"
     )
 
-    assert 'action="http://GIGABYTE:8185/finding/nextcloud/start"' in document
+    assert 'action="http://GIGABYTE:8187/troubleshooting/finding/nextcloud/start"' in document
 
 
 def test_main_renders_no_diagnose_button_when_the_instance_config_is_unreadable(

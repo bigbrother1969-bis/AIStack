@@ -28,13 +28,13 @@ from aistack.i18n import DEFAULT_CATALOGS, load_catalogs, load_languages_yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
-# The four mini-apps live beside `src/`, not in it (decision #9,
-# 2026-08-29: fastapi stays out of the governed venv). Their `app.py`
-# cannot be imported by this suite, but their text can be read.
+# The screens not yet moved into AIStack's single web application
+# (ADR-0012) still live beside `src/`; their text is read from there
+# until they move. Moved screens' templates are under
+# `src/aistack/web/templates/` and found with the package below.
 _UI_DIRECTORIES = (
     "selection_ui",
     "priority_ui",
-    "network_discovery_ui",
     "troubleshooting_assistant_ui",
     "timemachine_ui",
 )
@@ -59,6 +59,7 @@ def placeholders(message: str) -> set[str]:
 
 def used_keys() -> dict[str, set[Path]]:
     files = list((REPO_ROOT / "src" / "aistack").rglob("*.py"))
+    files.extend((REPO_ROOT / "src" / "aistack").rglob("*.html"))
 
     for directory in _UI_DIRECTORIES:
         root = REPO_ROOT / directory

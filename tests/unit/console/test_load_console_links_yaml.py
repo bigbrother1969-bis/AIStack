@@ -74,6 +74,40 @@ def test_declaring_both_url_and_service_is_refused(tmp_path: Path):
         load_console_links_yaml(path, instance=_INSTANCE)
 
 
+def test_a_path_is_appended_to_the_service_s_address(tmp_path: Path):
+    path = write(
+        tmp_path / "console_links.yml",
+        "links:\n  - name: Découverte réseau\n    description: x\n"
+        "    service: selection_ui\n    path: /network-discovery/\n    scope: lan\n",
+    )
+
+    links = load_console_links_yaml(path, instance=_INSTANCE)
+
+    assert links[0].url == "http://GIGABYTE:8181/network-discovery/"
+
+
+def test_a_path_must_start_with_a_slash(tmp_path: Path):
+    path = write(
+        tmp_path / "bad.yml",
+        "links:\n  - name: Découverte réseau\n    description: x\n"
+        "    service: selection_ui\n    path: network-discovery/\n    scope: lan\n",
+    )
+
+    with pytest.raises(ValueError, match="path must start with /"):
+        load_console_links_yaml(path, instance=_INSTANCE)
+
+
+def test_a_path_without_a_service_is_refused(tmp_path: Path):
+    path = write(
+        tmp_path / "bad.yml",
+        "links:\n  - name: Cockpit Santé\n    description: x\n"
+        "    url: /health.html\n    path: /x/\n    scope: public\n",
+    )
+
+    with pytest.raises(ValueError, match="path without a service"):
+        load_console_links_yaml(path, instance=_INSTANCE)
+
+
 def test_a_service_the_instance_declares_no_port_for_is_refused(tmp_path: Path):
     path = write(
         tmp_path / "bad.yml",
@@ -226,7 +260,9 @@ def test_the_real_console_links_definition_loads():
     # LAN-only, deliberately: never a `https://...persiaut-family.fr`
     # subdomain — this screen writes which SSH usernames get tried
     # against the owner's own LAN (`PLAN-J11` § 11).
-    assert by_name["Découverte réseau"].url == "http://GIGABYTE:8184"
+    # Inside AIStack's single web application since 2026-10-03
+    # (ADR-0012): the LAN listener, under its own prefix.
+    assert by_name["Découverte réseau"].url == "http://GIGABYTE:8187/network-discovery/"
     # LAN-only, deliberately — v1 choice, not a security necessity
     # (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`).
     assert by_name["Assistant de pannes"].url == "http://GIGABYTE:8185"

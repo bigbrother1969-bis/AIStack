@@ -64,7 +64,10 @@
 #     unattended, against every host a network scan finds on the
 #     owner's own LAN — decided with the owner 2026-09-12 that this
 #     stays unreachable from the public internet, unlike every other
-#     card on this page.
+#     card on this page. **Moved 2026-10-03 into AIStack's single web
+#     application** (`ADR-0012`): `service: web_lan` plus
+#     `path: /network-discovery/`, still LAN-only — its router answers
+#     only on the LAN listener, whatever NPM forwards.
 #   - Assistant de pannes — added 2026-09-18
 #     (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`), a
 #     separate systemd/uvicorn process on GIGABYTE:8185 ("next free
@@ -217,9 +220,10 @@ links:
         sur le réseau local. Accessible uniquement depuis le réseau
         local.
       en: >-
-        Candidate SSH users for the network scan — systemd/uvicorn
-        service, LAN only (GIGABYTE:8184)
-    service: network_discovery_ui
+        Candidate SSH users for the network scan — AIStack web
+        application, LAN listener only (ADR-0012)
+    service: web_lan
+    path: /network-discovery/
     scope: lan
   - name:
       fr: Assistant de pannes

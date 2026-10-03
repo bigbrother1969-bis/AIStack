@@ -16,7 +16,7 @@ _HEADER_COMMENT = """\
 # one it runs on itself, and how it authenticates to them. Read by
 # `aistack.cli.network_docker_discover`; `ssh_usernames` is also
 # written back by the network-discovery-ui screen (LAN-only,
-# `network_discovery_ui/app.py`) when the owner adds or removes a
+# `aistack.web.network_discovery`) when the owner adds or removes a
 # candidate username there — everything else in this file stays
 # hand-edited, the same discipline `infrastructure_topology.yml`
 # already holds for facts nothing in this repository writes back.
@@ -78,7 +78,7 @@ def save_network_discovery_yaml(
 ) -> Path:
     """
     Save a governed network-discovery definition to YAML — the write
-    side `network_discovery_ui/app.py`'s own add/remove-username
+    side `aistack.web.network_discovery`'s own add/remove-username
     action uses, symmetric to `load_network_discovery_yaml`.
 
     **Only `ssh_usernames` is ever expected to change through this

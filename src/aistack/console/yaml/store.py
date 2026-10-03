@@ -123,11 +123,25 @@ def _load_link(
     if not has_url and not has_service:
         raise ValueError(f"{label} is missing: url or service")
 
+    if "path" in data and not has_service:
+        raise ValueError(f"{label} declares a path without a service")
+
     if has_service:
         try:
             url = instance.service_url(str(data["service"]))
         except ValueError as error:
             raise ValueError(f"{label}: {error}") from error
+
+        # ADR-0012: a screen inside AIStack's single web application
+        # lives under a prefix of the LAN listener (`service: web_lan`,
+        # `path: /network-discovery/`) rather than on a port of its own.
+        if "path" in data:
+            path_part = str(data["path"])
+
+            if not path_part.startswith("/"):
+                raise ValueError(f"{label}: path must start with /, got {path_part!r}")
+
+            url += path_part
     else:
         url = data["url"]
 

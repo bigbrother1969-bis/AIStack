@@ -96,7 +96,6 @@ def test_the_real_instance_config_definition_loads():
         "selection_ui": 8181,
         "priority_ui": 8182,
         "console": 8183,
-        "network_discovery_ui": 8184,
         "troubleshooting_assistant_ui": 8185,
         "timemachine_ui": 8186,
         "web_lan": 8187,

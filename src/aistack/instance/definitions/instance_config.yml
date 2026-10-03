@@ -32,13 +32,16 @@
 # the patch that moves the Time Machine into the application moves
 # this entry to 8186, so that bookmark keeps answering. Never a Proxy
 # Host in Nginx Proxy Manager.
+#
+# Each screen that moves into that application leaves this list — its
+# port stops answering — and its console card names `web_lan` plus its
+# path instead: `network_discovery_ui` (8184) on 2026-10-03.
 
 lan_hostname: GIGABYTE
 service_ports:
   selection_ui: 8181
   priority_ui: 8182
   console: 8183
-  network_discovery_ui: 8184
   troubleshooting_assistant_ui: 8185
   timemachine_ui: 8186
   web_lan: 8187

@@ -12,20 +12,34 @@ they would describe every LAN route on the public port.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from aistack.i18n import Languages, default_languages
-from aistack.web import console
+from aistack.web import console, network_discovery
 from aistack.web.exposure import Listeners, include
+
+
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+
+
+@dataclass(frozen=True)
+class WebPaths:
+    """The declaration files the screens read and write, one per screen."""
+
+    network_discovery: Path = (
+        PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml"
+    )
 
 
 def create_app(
     generated_dir: Path,
     listeners: Listeners,
     languages: Languages | None = None,
+    paths: WebPaths | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -33,12 +47,19 @@ def create_app(
         redoc_url=None,
         openapi_url=None,
     )
+    # No automatic `/screen` → `/screen/` redirect: the router answers
+    # it before any route — and so before any exposure guard — runs,
+    # and a redirect on the public port would tell apart a LAN screen
+    # from a path that does not exist. Each screen declares both forms.
+    app.router.redirect_slashes = False
     app.state.generated_dir = generated_dir
     app.state.listeners = listeners
     app.state.languages = languages if languages is not None else default_languages()
+    app.state.paths = paths if paths is not None else WebPaths()
     app.state.routers = []
 
     include(app, console.router)
+    include(app, network_discovery.router, network_discovery.PREFIX)
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:

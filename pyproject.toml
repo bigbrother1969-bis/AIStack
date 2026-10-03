@@ -263,5 +263,8 @@ files = ["src/aistack"]
 # 2026-09-11.md` §10) — the exact defect this table exists to prevent
 # would otherwise repeat itself for every vendored icon the same way
 # it once did for `resource_priority.yml` and `mermaid.min.js`.
+#
+# `**/*.html` added 2026-10-03 with the first screen whose templates
+# moved under `src/aistack/web/templates/` (ADR-0012).
 [tool.setuptools.package-data]
-aistack = ["**/*.yml", "**/*.js", "**/*.png", "**/*.svg"]
+aistack = ["**/*.yml", "**/*.js", "**/*.png", "**/*.svg", "**/*.html"]

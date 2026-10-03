@@ -68,7 +68,7 @@
     (décidé avec le owner 2026-09-12, roadmap R1).
   -->
   <div class="top">
-    <a class="back-link" href="/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
+    <a class="back-link" href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
       {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
     </nav>
@@ -98,7 +98,7 @@
           <span>{{ username }}</span>
           <form class="inline" method="post" action="{{ base }}/remove">
             <input type="hidden" name="username" value="{{ username }}">
-            <button class="remove" type="submit">{{ t('network_discovery.remove') }}</button>
+            <button class="remove" type="submit" title="{{ t('network_discovery.tooltip.remove', username=username) }}">{{ t('network_discovery.remove') }}</button>
           </form>
         </li>
       {% endfor %}
@@ -108,8 +108,8 @@
   {% endif %}
 
   <form class="add-form" method="post" action="{{ base }}/add">
-    <input type="text" name="username" placeholder="{{ t('network_discovery.placeholder') }}" aria-label="{{ t('network_discovery.placeholder') }}" autocomplete="off">
-    <button class="primary" type="submit">{{ t('network_discovery.add') }}</button>
+    <input type="text" name="username" placeholder="{{ t('network_discovery.placeholder') }}" aria-label="{{ t('network_discovery.placeholder') }}" autocomplete="off" title="{{ t('network_discovery.tooltip.input') }}">
+    <button class="primary" type="submit" title="{{ t('network_discovery.tooltip.add') }}">{{ t('network_discovery.add') }}</button>
   </form>
 </body>
 </html>

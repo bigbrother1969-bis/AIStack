@@ -46,3 +46,12 @@ item_meta: "{path} — {size} GB, {files} files"
 status:
   up_to_date: "{count} selected folders, already up to date."
   changed: "{count} selected folders — {linked} created, {relinked} updated, {removed} removed, {pruned} folders emptied."
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  filter: "Filter the tree by directory name"
+  collapse_all: "Fold every directory"
+  expand_all: "Unfold every directory"
+  sync: "Save the selection and create or remove the files to sync to the phone"
+  fold: "Fold or unfold this directory"
+  select: "Include {label} (and everything in it) in the sync"

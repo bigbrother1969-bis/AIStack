@@ -15,3 +15,9 @@ status:
   empty: "Empty user name, nothing added."
   removed: "Removed: {username}"
   not_found: "Not found: {username}"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  remove: "Remove {username} from the list: this name will no longer be tried"
+  input: "SSH user name to try on every host the scan finds"
+  add: "Add this name at the end of the list of names tried"

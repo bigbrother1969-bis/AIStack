@@ -37,7 +37,8 @@ def render_settings_html(
     options = "\n".join(
         f'      <label class="choice" lang="{language.code}">'
         f'<input type="radio" name="lang" value="{language.code}"'
-        f'{" checked" if language.code == t.lang else ""}> '
+        f'{" checked" if language.code == t.lang else ""} '
+        f'title="{escape_text(t("settings.tooltip.language", name=language.name))}"> '
         f"{_flag(language.flag)}{escape_text(language.name)}</label>"
         for language in declared.available
     )
@@ -63,7 +64,7 @@ def render_settings_html(
 <body>
 {render_page_nav(t, declared, t.lang)}
 <header>
-  <a href="/console.html"><img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}"></a>
+  <a href="/console.html" title="{escape_text(t("settings.tooltip.lockup"))}"><img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}"></a>
 </header>
 <main class="settings">
   <h1>{escape_text(t("settings.title"))}</h1>
@@ -74,11 +75,11 @@ def render_settings_html(
       <legend>{escape_text(t("settings.language.heading"))}</legend>
 {options}
     </fieldset>
-    <button type="submit">{escape_text(t("settings.language.save"))}</button>
+    <button type="submit" title="{escape_text(t("settings.tooltip.save"))}">{escape_text(t("settings.language.save"))}</button>
     </form>
     <p class="hint">{escape_text(t("settings.language.hint"))}</p>
   </section>
-  <a class="back" href="/console.html">{escape_text(t("settings.back"))}</a>
+  <a class="back" href="/console.html" title="{escape_text(t("common.tooltip.back_to_console"))}">{escape_text(t("settings.back"))}</a>
 </main>
 </body>
 </html>

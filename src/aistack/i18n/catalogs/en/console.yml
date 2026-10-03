@@ -22,6 +22,9 @@ aside:
   license: "Licence and sources"
   copyright: "© {year} {publisher}"
 tooltip:
+  contact: "Contact the publisher through its professional website"
+  license_text: "Read the official licence text"
+  repository: "Open the {name} source code repository"
   lockup: "AIStack — back to the top of the console"
   help: "How to read this console and what each screen is for"
   legal: "Publisher, hosting, personal data and cookies"

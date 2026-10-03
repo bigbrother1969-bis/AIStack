@@ -15,3 +15,9 @@ status:
   empty: "Nom d'utilisateur vide, rien d'ajouté."
   removed: "Retiré : {username}"
   not_found: "Introuvable : {username}"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  remove: "Retirer {username} de la liste : ce nom ne sera plus essayé"
+  input: "Nom d'utilisateur SSH à essayer sur chaque hôte que le scan trouve"
+  add: "Ajouter ce nom à la fin de la liste des noms essayés"

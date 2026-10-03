@@ -86,3 +86,13 @@ unreachable:
   unreachable: "Ollama est injoignable ({detail})"
   no_model: "aucun modèle n'est déclaré dans ai_runtime.yml"
   other: "{detail}"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  help: "Comment ouvrir un terminal et se connecter à GIGABYTE pour appliquer une commande"
+  start: "Lancer l'analyse de ce constat par le modèle IA, en trois étapes"
+  next: "Étape suivante"
+  previous: "Étape précédente"
+  back_list: "Revenir à la liste des pannes détectées"
+  apply: "Classer {subject} « au ralenti » dans resource_priority.yml, puis vérifier que la\
+  \ panne a disparu"

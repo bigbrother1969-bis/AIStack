@@ -231,7 +231,7 @@ def render_html(
 </header>
 
 <label for="view-select">{escape_text(t("architecture.view_label"))}</label>
-<select id="view-select">
+<select id="view-select" title="{escape_text(t("architecture.tooltip.view_select"))}">
 {options}
 </select>
 
@@ -305,7 +305,9 @@ def _render_service_index(full: ArchitectureView, t: Translator) -> str:
             name = escape_text(service.name)
             name_html = (
                 f'<a href="{escape_text(service.href)}" target="_blank" '
-                f'rel="noopener">{name}</a>'
+                f'rel="noopener" '
+                f'title="{escape_text(t("architecture.tooltip.service_link", name=service.name))}">'
+                f"{name}</a>"
                 if service.href
                 else f"<span>{name}</span>"
             )

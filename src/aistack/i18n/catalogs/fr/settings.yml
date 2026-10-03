@@ -9,3 +9,9 @@ language:
   saved: "Langue enregistrée pour ce navigateur."
   hint: "Ce choix est mémorisé dans ce navigateur. Il s'applique à la console, à Architecture, au Cockpit Santé et aux mini-apps ouvertes depuis la console."
 back: "← Retour à la console"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  lockup: "Revenir à la console"
+  language: "Afficher l'interface en {name}"
+  save: "Enregistrer cette langue pour ce navigateur"

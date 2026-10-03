@@ -9,3 +9,9 @@ language:
   saved: "Language saved for this browser."
   hint: "This choice is remembered in this browser. It applies to the console, Architecture, the Health cockpit and the mini-apps opened from the console."
 back: "← Back to the console"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  lockup: "Back to the console"
+  language: "Show the interface in {name}"
+  save: "Save this language for this browser"

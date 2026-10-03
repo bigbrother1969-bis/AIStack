@@ -38,3 +38,8 @@ page:
   log_lines: "{count} ligne(s) de log citée(s)"
   evidence: "{count} élément(s) de preuve"
   diagnose: "Diagnostiquer avec l'assistant IA →"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  diagnose: "Ouvrir ce constat dans l'assistant de pannes, qui le fait analyser pas à pas par\
+  \ le modèle IA (réseau local uniquement)"

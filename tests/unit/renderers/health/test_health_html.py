@@ -448,7 +448,8 @@ def test_the_reference_page_carries_the_navigation_strip():
     assert '<html lang="fr">' in document
     assert 'href="/settings"' in document
     assert 'href="?lang=en"' in document
-    assert 'href="/console.html?lang=fr">← Retour à la console<' in document
+    assert 'href="/console.html?lang=fr" title="Revenir à la console' in document
+    assert '>← Retour à la console<' in document
 
 
 # --------------------------------------------------------------------

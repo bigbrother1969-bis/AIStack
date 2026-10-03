@@ -26,3 +26,21 @@ field:
   cpu_sustained_seconds: "Durée soutenue (s)"
 status:
   saved: "{priority} appli(s) prioritaire(s), {throttled} conteneur(s) au ralenti."
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  save: "Enregistrer le classement de tous les conteneurs de la page dans resource_priority.yml"
+  ignored: "Laisser {name} tel quel : aucune limite, aucune priorité"
+  throttled: "Ralentir {name} en le limitant à peu de CPU"
+  priority: "Donner la priorité à {name} quand il est actif"
+  throttled_normal_cpus: "Nombre de cœurs alloués à {name} au ralenti ; vide = la valeur par défaut de la page"
+  normal_cpus: "Nombre de cœurs de {name} en temps normal"
+  boosted_cpus: "Nombre de cœurs de {name} quand il est actif"
+  detector: "Comment savoir que {name} est actif : lecture Jellyfin en cours, ou consommation\
+  \ CPU soutenue"
+  jellyfin_url: "Adresse du serveur Jellyfin interrogé"
+  jellyfin_api_key_env: "Nom de la variable d'environnement qui contient la clé d'API Jellyfin (jamais la\
+  \ clé elle-même)"
+  jellyfin_timeout: "Délai maximal de réponse de Jellyfin, en secondes"
+  cpu_threshold_percent: "Pourcentage de CPU au-delà duquel {name} est considéré actif"
+  cpu_sustained_seconds: "Durée pendant laquelle ce seuil doit être dépassé, en secondes"

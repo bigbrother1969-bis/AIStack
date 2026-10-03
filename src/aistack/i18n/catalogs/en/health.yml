@@ -37,3 +37,8 @@ page:
   log_lines: "{count} cited log line(s)"
   evidence: "{count} piece(s) of evidence"
   diagnose: "Diagnose with the AI assistant →"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  diagnose: "Open this finding in the troubleshooting assistant, which has the AI model analyse\
+  \ it step by step (local network only)"

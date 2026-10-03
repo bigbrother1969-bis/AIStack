@@ -59,8 +59,8 @@
 </head>
 <body>
   <div class="top-links">
-    <a class="back-link" href="/console.html?lang={{ lang }}">{{ t('common.console.back') }}</a>
-    <a class="back-link" href="{{ base }}/aide">{{ t('troubleshooting.help_link') }}</a>
+    <a class="back-link" href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <a class="back-link" href="{{ base }}/aide" title="{{ t('troubleshooting.tooltip.help') }}">{{ t('troubleshooting.help_link') }}</a>
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}</nav>
   </div>
 
@@ -111,7 +111,7 @@
     {% if step == total_steps %}
       {% if applyable %}
         <form method="post" action="{{ base }}/finding/{{ key | urlencode }}/apply">
-          <button class="apply" type="submit">{{ t('troubleshooting.step.apply') }}</button>
+          <button class="apply" type="submit" title="{{ t('troubleshooting.tooltip.apply', subject=subject) }}">{{ t('troubleshooting.step.apply') }}</button>
         </form>
         <p class="apply-note">
           {{ t('troubleshooting.step.apply_note_before') }} <strong>{{ subject }}</strong>
@@ -127,14 +127,14 @@
   <nav class="steps">
     <div>
       {% if step > 1 %}
-        <a href="{{ base }}/finding/{{ key | urlencode }}/step/{{ step - 1 }}">{{ t('troubleshooting.step.previous') }}</a>
+        <a href="{{ base }}/finding/{{ key | urlencode }}/step/{{ step - 1 }}" title="{{ t('troubleshooting.tooltip.previous') }}">{{ t('troubleshooting.step.previous') }}</a>
       {% endif %}
     </div>
     <div>
       {% if step < total_steps %}
-        <a class="primary" href="{{ base }}/finding/{{ key | urlencode }}/step/{{ step + 1 }}">{{ t('troubleshooting.step.next') }}</a>
+        <a class="primary" href="{{ base }}/finding/{{ key | urlencode }}/step/{{ step + 1 }}" title="{{ t('troubleshooting.tooltip.next') }}">{{ t('troubleshooting.step.next') }}</a>
       {% else %}
-        <a href="{{ base }}/">{{ t('troubleshooting.back_list') }}</a>
+        <a href="{{ base }}/" title="{{ t('troubleshooting.tooltip.back_list') }}">{{ t('troubleshooting.back_list') }}</a>
       {% endif %}
     </div>
   </nav>

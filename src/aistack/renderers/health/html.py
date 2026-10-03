@@ -289,7 +289,8 @@ def _render_finding(
         diagnose = (
             f'<form class="diagnose" method="post" '
             f'action="{escape_text(troubleshooting_base_url)}/finding/{escape_text(key)}/start">'
-            f'<button type="submit">{escape_text(t("health.page.diagnose"))}</button>'
+            f'<button type="submit" title="{escape_text(t("health.tooltip.diagnose"))}">'
+            f'{escape_text(t("health.page.diagnose"))}</button>'
             f"</form>"
         )
 

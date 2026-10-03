@@ -54,11 +54,11 @@ def _page(t: Translator, declared: Languages, title_key: str, body: str) -> str:
 <body>
 {render_page_nav(t, declared, t.lang)}
 <header>
-  <a href="/console.html" title="{escape_text(t("common.console.back"))}"><img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}"></a>
+  <a href="/console.html" title="{escape_text(t("common.tooltip.back_to_console"))}"><img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}"></a>
 </header>
 <main class="reading">
 {body}
-  <a class="back" href="/console.html">{escape_text(t("common.console.back"))}</a>
+  <a class="back" href="/console.html" title="{escape_text(t("common.tooltip.back_to_console"))}">{escape_text(t("common.console.back"))}</a>
 </main>
 </body>
 </html>
@@ -95,7 +95,8 @@ def render_legal_html(
     t = translator_for(lang)
     declared = languages if languages is not None else default_languages()
     contact = (
-        f'<a href="{escape_text(identity.contact_url)}" rel="noopener">'
+        f'<a href="{escape_text(identity.contact_url)}" rel="noopener" '
+        f'title="{escape_text(t("console.tooltip.contact"))}">'
         f"{escape_text(identity.contact_url.removeprefix('https://'))}</a>"
     )
 
@@ -135,7 +136,8 @@ def render_license_html(
     declared = languages if languages is not None else default_languages()
 
     repositories = "".join(
-        f'<br><a href="{escape_text(repository.url)}" rel="noopener">'
+        f'<br><a href="{escape_text(repository.url)}" rel="noopener" '
+        f'title="{escape_text(t("console.tooltip.repository", name=repository.name))}">'
         f"{escape_text(repository.name)} — {escape_text(repository.url.removeprefix('https://'))}</a>"
         for repository in identity.repositories
     )
@@ -145,7 +147,8 @@ def render_license_html(
             f'  <h1>{escape_text(t("console.license.title"))}</h1>',
             "  <section>",
             f'    <p>{escape_text(t("console.license.text", license=identity.license))}</p>',
-            f'    <p><a href="{escape_text(identity.license_url)}" rel="noopener">'
+            f'    <p><a href="{escape_text(identity.license_url)}" rel="noopener" '
+            f'title="{escape_text(t("console.tooltip.license_text"))}">'
             f'{escape_text(t("console.license.license_link", license=identity.license))}</a></p>',
             "  </section>",
             _section(

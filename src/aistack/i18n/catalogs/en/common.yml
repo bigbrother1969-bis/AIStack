@@ -8,3 +8,8 @@ settings:
   tooltip: "Choose the interface language"
 console:
   back: "← Back to the console"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  back_to_console: "Back to the console, AIStack's home page"
+  external: "Opens an external site: {url}"

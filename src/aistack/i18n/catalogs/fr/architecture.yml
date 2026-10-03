@@ -44,3 +44,8 @@ uptime:
 cmdb:
   heading: "CMDB temps réel"
   unreachable: "Injoignable"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  view_select: "Choisir la vue du schéma à afficher"
+  service_link: "Ouvrir {name} dans un nouvel onglet"

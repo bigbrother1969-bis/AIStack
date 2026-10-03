@@ -43,3 +43,8 @@ uptime:
 cmdb:
   heading: "Real-time CMDB"
   unreachable: "Unreachable"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  view_select: "Choose which view of the diagram to show"
+  service_link: "Open {name} in a new tab"

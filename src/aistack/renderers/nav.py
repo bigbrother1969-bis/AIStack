@@ -89,7 +89,8 @@ def render_page_nav(
             )
 
     back = (
-        f'<a class="console-link" href="{console_base_url}/console.html?lang={current}">'
+        f'<a class="console-link" href="{console_base_url}/console.html?lang={current}" '
+        f'title="{escape_text(t("common.tooltip.back_to_console"))}">'
         f'{escape_text(t("common.console.back"))}</a>'
         if back_to_console
         else ""

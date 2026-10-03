@@ -26,3 +26,19 @@ field:
   cpu_sustained_seconds: "Sustained duration (s)"
 status:
   saved: "{priority} priority app(s), {throttled} throttled container(s)."
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  save: "Save the classification of every container on the page to resource_priority.yml"
+  ignored: "Leave {name} as it is: no cap, no priority"
+  throttled: "Slow {name} down by capping it to little CPU"
+  priority: "Give {name} priority when it is active"
+  throttled_normal_cpus: "CPU cores given to {name} when throttled; empty = the page's default"
+  normal_cpus: "CPU cores of {name} in normal times"
+  boosted_cpus: "CPU cores of {name} when it is active"
+  detector: "How to tell {name} is active: a Jellyfin playback, or sustained CPU use"
+  jellyfin_url: "Address of the Jellyfin server asked"
+  jellyfin_api_key_env: "Name of the environment variable holding the Jellyfin API key (never the key itself)"
+  jellyfin_timeout: "Longest Jellyfin may take to answer, in seconds"
+  cpu_threshold_percent: "CPU percentage above which {name} counts as active"
+  cpu_sustained_seconds: "How long that threshold must be exceeded, in seconds"

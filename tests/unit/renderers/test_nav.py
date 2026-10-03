@@ -18,7 +18,7 @@ from aistack.renderers.nav import render_page_nav
 def test_the_strip_leads_back_to_the_console_in_the_page_language():
     strip = render_page_nav(translator_for("en"), default_languages(), "en")
 
-    assert '<a class="console-link" href="/console.html?lang=en">' in strip
+    assert '<a class="console-link" href="/console.html?lang=en" ' in strip
     assert "← Back to the console" in strip
     assert 'href="/settings"' in strip
 
@@ -42,7 +42,7 @@ def test_the_console_itself_offers_no_way_back_to_itself():
 def test_the_settings_page_leads_back_to_the_console():
     document = render_settings_html("en", default_languages(), saved=False)
 
-    assert '<a class="console-link" href="/console.html?lang=en">' in document
+    assert '<a class="console-link" href="/console.html?lang=en" ' in document
 
 
 def test_the_settings_page_declares_a_viewport():
@@ -94,7 +94,7 @@ def test_an_empty_console_base_url_keeps_the_links_relative():
 
     strip = render_page_nav(translator_for("en"), default_languages(), "en")
 
-    assert '<a class="console-link" href="/console.html?lang=en">' in strip
+    assert '<a class="console-link" href="/console.html?lang=en" ' in strip
     assert 'href="/settings"' in strip
 
 
@@ -107,7 +107,7 @@ def test_a_console_base_url_makes_both_links_absolute():
     )
 
     assert (
-        '<a class="console-link" href="http://GIGABYTE:8183/console.html?lang=en">'
+        '<a class="console-link" href="http://GIGABYTE:8183/console.html?lang=en" '
         in strip
     )
     assert 'href="http://GIGABYTE:8183/settings"' in strip

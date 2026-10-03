@@ -84,3 +84,12 @@ unreachable:
   unreachable: "Ollama cannot be reached ({detail})"
   no_model: "no model is declared in ai_runtime.yml"
   other: "{detail}"
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  help: "How to open a terminal and connect to GIGABYTE to apply a command"
+  start: "Have the AI model analyse this finding, in three steps"
+  next: "Next step"
+  previous: "Previous step"
+  back_list: "Back to the list of detected faults"
+  apply: "Class {subject} as background in resource_priority.yml, then check the fault is gone"

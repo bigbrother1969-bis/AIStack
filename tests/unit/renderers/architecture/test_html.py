@@ -235,7 +235,7 @@ def test_a_service_with_an_href_is_a_link():
 
     assert (
         '<a href="https://pihole.persiaut-family.fr/admin" target="_blank" '
-        'rel="noopener">Pi-hole</a>' in document
+        'rel="noopener" title="Ouvrir Pi-hole dans un nouvel onglet">Pi-hole</a>' in document
     )
     assert "Gestionnaire de DNS + Blocage de publicités" in document
 
@@ -1037,7 +1037,8 @@ def test_the_reference_page_keeps_its_french_labels_and_carries_the_nav():
     assert '<option value="all">Toutes les catégories</option>' in document
     assert 'href="/settings"' in document
     assert 'href="?lang=en"' in document
-    assert 'href="/console.html?lang=fr">← Retour à la console<' in document
+    assert 'href="/console.html?lang=fr" title="Revenir à la console' in document
+    assert '>← Retour à la console<' in document
 
 
 def test_the_unknown_view_message_is_never_injected_as_markup():

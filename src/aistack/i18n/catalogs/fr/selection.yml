@@ -46,3 +46,13 @@ item_meta: "{path} — {size} Go, {files} fichiers"
 status:
   up_to_date: "{count} répertoires sélectionnés, déjà à jour."
   changed: "{count} répertoires sélectionnés — {linked} créés, {relinked} mis à jour, {removed} retirés, {pruned} répertoires vidés."
+
+# Info-bulles / tooltips — 2026-10-03.
+tooltip:
+  filter: "Filtrer l'arborescence par nom de répertoire"
+  collapse_all: "Replier tous les répertoires"
+  expand_all: "Déplier tous les répertoires"
+  sync: "Enregistrer la sélection et créer ou retirer les fichiers à synchroniser vers le\
+  \ téléphone"
+  fold: "Replier ou déplier ce répertoire"
+  select: "Inclure {label} (et tout son contenu) dans la synchronisation"

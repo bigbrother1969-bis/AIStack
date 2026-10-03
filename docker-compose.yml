@@ -38,6 +38,25 @@ services:
   # act; this is where it is recorded.
   # ---------------------------------------------------------------
   #
+  # **1.7.0 — published 2026-10-03, current.**
+  #
+  #   bigbrother1969/aistack-core:1.7.0
+  #   @sha256:d5942c4c5eb5c070a104c413601d33a2e1c73af40c76907130f1873ac216fa7e
+  #
+  # Built from 3e72a70 on the reference host, behind the four terms
+  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+  # HEAD equal to origin/main, and 3059 tests with `clean: True`
+  # (run once, right after the pull, per OPS-0002 v1.15). 81
+  # artifacts, 18 checks. Before the build, 1.6.1 was re-verified
+  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.7.0 entry gives the
+  # full account; in short, the console and the five screens are one
+  # web application on two listeners (ADR-0012), people sign in with
+  # Pocket ID or, on the local network only, a fallback administrator
+  # (ADR-0013), administrators act and users read (ADR-0014), and an
+  # administrator writes, validates or discards an Explication, with
+  # a list of every subject that has one (ADR-0015).
+  #
   # **1.6.1 — published 2026-10-02, current.**
   #
   #   bigbrother1969/aistack-core:1.6.1

@@ -11,7 +11,8 @@ class CpuReductionMeasurement:
     measures a CPU reduction ≥ 95 %." The reference incident is
     `aistack-selection-ui`'s permanent `--reload` (§ VS-4's own
     reference incident): 48-58 % of one core while idle, before;
-    `docker-compose.selection-ui.yml`'s own comment records 0.32 %,
+    `docker-compose.selection-ui.yml`'s own comment (retired 2026-10-03,
+    kept at tag `v1.6.1`) records 0.32 %,
     measured after two minutes of inactivity, after — a reduction
     this class can verify rather than take on faith.
 

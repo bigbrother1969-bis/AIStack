@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.26
+  version: 1.27
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-09-26
+  updated: 2026-10-03
 
 relations:
   references:
@@ -487,7 +487,7 @@ the image.
 
 **Measured result** — before: 48–58 % of one CPU core; after: 0.32 % of one
 core, measured after two minutes of inactivity
-(`docker-compose.selection-ui.yml`'s own comment) — a reduction of 99.4 %
+(`docker-compose.selection-ui.yml`'s own comment, retired 2026-10-03 with the image it deployed, kept at tag `v1.6.1`) — a reduction of 99.4 %
 from the upper bound.
 
 The incident was diagnosed and remediated by a human. That satisfies no criterion
@@ -587,14 +587,18 @@ per container that 4.1 or 4.3 already flagged — never a fresh sweep, since
 of whether anything was found would answer a question nobody asked.
 `DockerProvider.collect_process` reads the container's own live PID
 namespace (`docker top`), independent of `collect_commands`'s configured
-read; `deployment_definitions()` reads the two Dockerfiles this repository
-actually builds and extracts their `CMD`. `test_a_named_container_is_
+read; `deployment_definitions()` reads the Dockerfiles this repository
+actually builds and extracts their `CMD` — two until 2026-10-03, one since:
+`Dockerfile.selection-ui` retired with the screen it built, which moved into
+AIStack's single web application (`ADR-0012`). `test_a_named_container_is_
 correlated_from_all_three_maps` proves the stitch; `runtime_diagnose` reports
 each of the three with its own reference, `deployment` printing `undeclared`
 rather than a guess when none exists.
 
 **The scope, decided with the owner 2026-09-04:** a deployment definition is
-readable only for `aistack-core` and `aistack-selection-ui`. The other ~60
+readable only for `aistack-core` and `aistack-selection-ui` — for
+`aistack-core` alone since 2026-10-03, when `aistack-selection-ui`'s image
+was retired (`ADR-0012`, `GOV-0002/OS-084`). The other ~60
 containers on the reference deployment are deployed and managed entirely
 outside this repository — `frigate`, `gluetun`, the *arr suite — and no path
 exists here to read one for them. `CorrelatedFinding` declares that state
@@ -769,7 +773,7 @@ holds each of its three readings to — and exposes the reduction as a
 computed percentage against a declared threshold, defaulting to the 95 %
 this criterion names. `test_the_reference_incidents_upper_bound_meets_
 the_threshold` proved the arithmetic first against
-`docker-compose.selection-ui.yml`'s own comment (58 % to 0.32 %, 99.4 %) —
+`docker-compose.selection-ui.yml`'s own comment (retired 2026-10-03 with the image it deployed, kept at tag `v1.6.1`; 58 % to 0.32 %, 99.4 %) —
 correct, but a figure written once by a human, not a reading `aistack`
 had taken itself.
 

@@ -10,8 +10,8 @@ artifact:
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 2.6
-  updated: 2026-10-02
+  version: 2.7
+  updated: 2026-10-03
 ---
 
 # Declared Execution Environment Principle
@@ -116,6 +116,18 @@ same question. Every `<screen>/requirements.txt` and
 `scripts/setup_<screen>_env.sh` above is removed in 1.7's first tranche;
 **until then this section still describes how those five screens are
 installed**.
+
+**Removed, 2026-10-03.** 1.7's first tranche has landed: the five screens
+are routers of `aistack.web`, installed with the governed environment like
+everything else, and no `requirements.txt` or setup script of a screen
+remains. This section now describes a pattern no screen follows; it is
+kept as the record of what was decided and why. A `.venv-<screen>/` left
+on a host is unused and may be deleted.
+
+## What Changed In v2.7
+
+§ *Host-touching UI screens* records that its pattern is no longer
+followed by any screen (`GOV-0002/OS-084`, resolved 2026-10-03).
 
 ## What Changed In v2.6
 

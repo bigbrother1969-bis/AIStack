@@ -270,8 +270,12 @@ DEFAULT_GPU_THRESHOLDS = (
 )
 
 
-# The two containers this repository actually builds, and the
-# Dockerfile each one's `CMD` is read from.
+# The container this repository actually builds, and the Dockerfile
+# its `CMD` is read from. Two until 2026-10-03: `aistack-selection-ui`
+# and `Dockerfile.selection-ui` retired with the screen they built,
+# now part of AIStack's single web application (`ADR-0012`,
+# `GOV-0002/OS-084`); the 2026-09-04 incident they deployed stays
+# recorded in `STD-0300` § VS-4.
 #
 # **This is all of it, and it is not a coincidence.** `STD-0300` §
 # VS-4 criterion 4.2's "deployment definition" needs an artifact
@@ -282,9 +286,6 @@ DEFAULT_GPU_THRESHOLDS = (
 # definition lives, per `GOV-P-001` — not by guessing a path that
 # looks plausible.
 KNOWN_DEPLOYMENT_DEFINITIONS = {
-    "aistack-selection-ui": (
-        Path(__file__).resolve().parents[3] / "Dockerfile.selection-ui"
-    ),
     "aistack-core": Path(__file__).resolve().parents[3] / "Dockerfile",
 }
 

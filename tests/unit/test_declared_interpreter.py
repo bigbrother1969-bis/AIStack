@@ -6,7 +6,7 @@ import tomllib
 
 ROOT = Path(__file__).parents[2]
 
-IMAGES = ("Dockerfile", "Dockerfile.selection-ui")
+IMAGES = ("Dockerfile",)
 
 BASE = re.compile(r"^FROM\s+python:(\d+\.\d+)", re.M)
 

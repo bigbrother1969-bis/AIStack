@@ -10,8 +10,8 @@ artifact:
   type: Foundation Principle
   confidence: Declared
   created: 2026-07-24
-  version: 1.4
-  updated: 2026-10-02
+  version: 1.5
+  updated: 2026-10-03
 ---
 
 # Mandatory Unit Testing Principle
@@ -31,6 +31,9 @@ it covers, and the one exception the owner decided on 2026-08-29.
 v1.4, 2026-10-02, `GOV-0002/OS-084`: the exception is **revoked** by the
 owner, ahead of 1.7 (roadmap `R5`). § *Scope* states the revocation, the
 date it takes effect, and the five screens it brings into the suite.
+
+v1.5, 2026-10-03, `GOV-0002/OS-084`: the dated paragraph of § *Scope* is
+discharged — the five screens are in the suite; the section says by what.
 
 ## Principle
 
@@ -69,10 +72,15 @@ verified by hand. From 1.7's first tranche onwards:
 - the logic a screen still holds in its own `app.py` moves into `src/`
   with its tests; a route stays a thin adapter.
 
-**Until that tranche lands, the five screens above remain as described in
-the first paragraph** — verified live, outside the suite. This is a dated
-statement, not a standing exception: `GOV-0002/OS-084` stays open until
-it is no longer true.
+**Discharged 2026-10-03.** The five screens no longer exist at the
+repository root: each is a router of the single web application
+`aistack.web` (`ADR-0012`), its logic in the package it belongs to —
+`aistack.network_discovery`, `aistack.priority`, `aistack.selection`,
+`aistack.troubleshooting`, `aistack.timemachine` — and every route is
+exercised by `tests/unit/web/`, on both listeners. No `<screen>/
+requirements.txt` or `scripts/setup_<screen>_env.sh` remains;
+`GOV-0002/OS-084` is resolved. No screen is verified only by live
+execution any more.
 
 What a screen imports from `aistack` stays under this principle, because
 the suite covers it.

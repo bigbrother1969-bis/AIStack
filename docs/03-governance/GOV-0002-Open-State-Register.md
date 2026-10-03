@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.121
+  version: 1.122
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -279,9 +279,53 @@ again — resolved the day after it was opened.*
 
 # Decisions
 
+None open. OS-003, OS-013, OS-014, OS-015, OS-022,
+OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
+OS-061, OS-062, OS-066, OS-068, OS-069, OS-070, OS-072, OS-076 and OS-084 are
+in *Resolved*.
+
+**Every section of this register reads "None open" on 2026-09-25** — the
+first time since the register was written on 2026-08-22 that every
+section, this one included, is empty at once. `OS-068`, the last decision
+left open, closed the same day as `OS-072`, in the same sitting that
+closed the fourteen points of `claude/VS2-2.4-SYNTHESE-POINTS-2026-09-23.md`.
+What this register's own § *Purpose* says about an empty register still
+holds: it states that every **known** condition has been qualified, not
+that none exists.
+
+**Every section of this register was empty on 2026-08-27**, for the first time
+since it was written on 2026-08-22 — *and it lasted about forty minutes.*
+
+That paragraph read *every section of this register is empty*, in the present,
+and OS-039 was opened the same evening by the first of the eight measurements
+STD-0100 v2.6 had just made obligatory. It is corrected here rather than
+quietly, because it is the fourth time in one day that a sentence true when
+written stopped being true — § *What a closure must carry* was written that
+afternoon for exactly this.
+
+*What was said then still holds, and is why the emptiness was worth so little.*
+A register with nothing open means every known condition has been qualified,
+not that none exists. The projection kept counting through it, and the first
+ADR anyone re-measured produced an entry.
+
+**All five were measured 2026-08-29, named in that day's boot docs as
+"proposed for a register entry, not opened", and stayed that way for five
+days** (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4) until opened here —
+the residual this register's own § *Purpose* names: *"observed, and quietly
+forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
+`OS-051` and `OS-054`.
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
 #### GOV-0002/OS-084 — Decision #9 keeps every web screen out of the governed suite, and 1.7 puts login and rights behind those screens
 
-**Nature** `decision` · **Opened** 2026-10-02 · **State** open — qualified 2026-10-02, work carried by 1.7 tranche 1
+**Nature** `decision` · **Opened** 2026-10-02 · **State** resolved 2026-10-03 — 1.7 tranche 1 landed
 **Observed** at the 1.7 framing, on `ce919ca`: five screens serve HTTP
 from the repository root — `selection_ui`, `priority_ui`,
 `network_discovery_ui`, `troubleshooting_assistant_ui` and
@@ -325,52 +369,34 @@ dated paragraph then names what discharged it. Added 2026-10-03, when
 `docker-compose.selection-ui.yml`, which build and deploy the old
 screen as a container, retire with the last screen, together with what
 still reads them (`aistack.cli.runtime_diagnose`, three tests).
+**Resolved 2026-10-03**, by 1.7's first tranche, one screen per patch:
+the console first, then `network_discovery_ui`, `priority_ui`,
+`selection_ui`, `troubleshooting_assistant_ui` and `timemachine_ui`. Each
+is a router of `aistack.web` (`ADR-0012`), LAN only, its logic moved into
+`aistack.network_discovery`, `aistack.priority`, `aistack.selection`,
+`aistack.troubleshooting` and `aistack.timemachine`, every route exercised
+by `tests/unit/web/` on both listeners — `test_every_route_declares_its_
+exposure.py` asks each one on the public port and on an undeclared one.
+No `<screen>/` directory, `requirements.txt`, `scripts/setup_<screen>_
+env.sh`, `run_<screen>.sh` or screen unit remains in the repository;
+`Dockerfile.selection-ui` and `docker-compose.selection-ui.yml` are
+retired with what read them (`aistack.cli.runtime_diagnose`'s
+`KNOWN_DEPLOYMENT_DEFINITIONS`, `test_runtime_diagnose`,
+`test_declared_interpreter`) and kept at tag `v1.6.1`, where `STD-0300`
+§ VS-4 now points for the incident figures they carried.
+**What still asserted the condition**, corrected the same day:
+`ENG-TEST-0001` v1.5 (§ *Scope*'s dated paragraph discharged),
+`ENG-TEST-0002` v2.7 (the screen pattern recorded as no longer followed),
+`OPS-0002` v1.16 (one image left to build), `STD-0300` v1.27 (the
+deployment definitions and the incident's reference). `ADR-0012` itself
+stays *Proposed* until the owner accepts it.
+**Outside the repository**, nothing here can measure it: the units
+`aistack-selection-ui`, `aistack-priority-ui`,
+`aistack-network-discovery-ui`, `aistack-troubleshooting-assistant-ui` and
+`aistack-timemachine-ui` were stopped and disabled on GIGABYTE by the owner
+as each patch was applied; the `.venv-<screen>/` directories left on the
+hosts are unused (`ENG-TEST-0002`).
 
----
-
-Otherwise none open. OS-003, OS-013, OS-014, OS-015, OS-022,
-OS-034, OS-038, OS-043, OS-046, OS-048, OS-049, OS-050, OS-051, OS-054, OS-055,
-OS-061, OS-062, OS-066, OS-068, OS-069, OS-070, OS-072 and OS-076 are in
-*Resolved*.
-
-**Every section of this register reads "None open" on 2026-09-25** — the
-first time since the register was written on 2026-08-22 that every
-section, this one included, is empty at once. `OS-068`, the last decision
-left open, closed the same day as `OS-072`, in the same sitting that
-closed the fourteen points of `claude/VS2-2.4-SYNTHESE-POINTS-2026-09-23.md`.
-What this register's own § *Purpose* says about an empty register still
-holds: it states that every **known** condition has been qualified, not
-that none exists.
-
-**Every section of this register was empty on 2026-08-27**, for the first time
-since it was written on 2026-08-22 — *and it lasted about forty minutes.*
-
-That paragraph read *every section of this register is empty*, in the present,
-and OS-039 was opened the same evening by the first of the eight measurements
-STD-0100 v2.6 had just made obligatory. It is corrected here rather than
-quietly, because it is the fourth time in one day that a sentence true when
-written stopped being true — § *What a closure must carry* was written that
-afternoon for exactly this.
-
-*What was said then still holds, and is why the emptiness was worth so little.*
-A register with nothing open means every known condition has been qualified,
-not that none exists. The projection kept counting through it, and the first
-ADR anyone re-measured produced an entry.
-
-**All five were measured 2026-08-29, named in that day's boot docs as
-"proposed for a register entry, not opened", and stayed that way for five
-days** (`claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 4) until opened here —
-the residual this register's own § *Purpose* names: *"observed, and quietly
-forgotten."* All five are in *Resolved*: `OS-048`, `OS-049`, `OS-050`,
-`OS-051` and `OS-054`.
-
----
-
-# Resolved
-
-An entry moves here with the date and what discharged it, and is never
-deleted. A register that erased what it had closed could not show that a
-rule ever bound anything.
 
 #### GOV-0002/OS-083 — Two of the five real `claude/*.md` files declare frontmatter that `parse_artifact_frontmatter` has never actually been able to read
 

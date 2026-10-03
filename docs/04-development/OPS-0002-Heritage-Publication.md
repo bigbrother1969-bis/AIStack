@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.15
+  version: 1.16
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-10-02
+  updated: 2026-10-03
 
 relations:
   references:
@@ -645,6 +645,12 @@ but that the image now carries what it takes to check it.
 `python-multipart`, none of which `pyproject.toml` declares — **the image
 declares dependencies the heritage does not** — and the Selection UI is entering
 redevelopment, so a *stable* tag would name a version already being replaced.
+
+*2026-10-03.* `Dockerfile.selection-ui` and `docker-compose.selection-ui.yml`
+are retired: the Selection UI is now a screen of AIStack's single web
+application (`ADR-0012`), whose web packages `pyproject.toml` declares, so
+`aistack-core` carries it like every other screen. There is one image left to
+build, and it is the one published.
 
 ### The order
 

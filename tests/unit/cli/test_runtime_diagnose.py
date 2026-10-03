@@ -1527,17 +1527,15 @@ def test_an_unexplained_consumption_finding_is_also_correlated(
     assert "correlated: 1" in out
 
 
-def test_the_known_deployment_definitions_are_the_two_aistack_services():
+def test_the_known_deployment_definition_is_the_one_image_this_repository_builds():
     """
-    Exactly the two containers this repository builds — the other
-    ~60 are deployed outside it, and no path exists here to read
-    for them (confirmed by the owner, 2026-09-04).
+    Exactly the container this repository builds — the other ~60 are
+    deployed outside it, and no path exists here to read for them
+    (confirmed by the owner, 2026-09-04). `aistack-selection-ui` left
+    on 2026-10-03, with the image it ran (`ADR-0012`).
     """
 
-    assert set(cli.KNOWN_DEPLOYMENT_DEFINITIONS) == {
-        "aistack-core",
-        "aistack-selection-ui",
-    }
+    assert set(cli.KNOWN_DEPLOYMENT_DEFINITIONS) == {"aistack-core"}
 
     for path in cli.KNOWN_DEPLOYMENT_DEFINITIONS.values():
         assert path.exists()

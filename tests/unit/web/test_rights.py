@@ -58,7 +58,18 @@ def build(tmp_path: Path, provider: FakeProvider | None = None):
         oidc=OidcClient(DEFINITION, CREDENTIALS, provider or FakeProvider()),
         lan_base_url="http://GIGABYTE:8186",
     )
-    return create_app(tmp_path, LISTENERS, LANGUAGES, auth=auth, network_tree=lambda: [])
+    # Every host-touching collaborator replaced: these tests ask the
+    # rights, never Docker (measured 2026-10-03 on a laptop without it).
+    return create_app(
+        tmp_path,
+        LISTENERS,
+        LANGUAGES,
+        auth=auth,
+        network_tree=lambda: [],
+        discover=lambda: (),
+        syncthing=lambda definition: None,
+        collect_findings=lambda: ((), ""),
+    )
 
 
 def client(app, port: int = LAN_PORT) -> TestClient:

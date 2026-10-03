@@ -77,6 +77,8 @@ stated as neither — the same "absent is not a negative answer"
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Mapping, Sequence
 
 from aistack.contracts.resource_reading import ContainerCpuReading
@@ -187,6 +189,7 @@ def evaluate(
                 signature=SIGNATURE,
                 interpretation=_interpretation(item, hot, quiet),
                 remediation=_remediation(item, hot),
+                message=_message(item, hot, quiet),
                 confidence="Measured",
                 grounding=UNDECLARED,
                 evidence=tuple(evidence),
@@ -259,3 +262,48 @@ def _remediation(
         f"unclassified consumption adds to the heat "
         f"{hot[0].sensor} is already reporting."
     )
+
+
+def _message(
+    item: UnexplainedConsumption,
+    hot: tuple[TemperatureReading, ...],
+    quiet: bool | None,
+) -> FindingMessage:
+    """
+    The same two sentences as `_interpretation`/`_remediation`, as
+    catalog keys — a statement, then each clause the readings add.
+    """
+
+    interpretation = [
+        part(
+            "findings.consumption.statement.interpretation",
+            container=item.container,
+            cpu=f"{item.cpu_percent:.1f}",
+            threshold=f"{item.threshold_percent:.1f}",
+            qualification=ENERGY_INEFFICIENCY,
+        )
+    ]
+
+    if quiet is True:
+        interpretation.append(part("findings.consumption.quiet.interpretation"))
+    elif quiet is False:
+        interpretation.append(part("findings.consumption.busy.interpretation"))
+
+    remediation = [part("findings.consumption.statement.remediation", container=item.container)]
+
+    if hot:
+        lead = hot[0]
+        remainder = len(hot) - 1
+        values = dict(
+            celsius=f"{lead.celsius:.1f}",
+            sensor=lead.sensor,
+            qualification=SUSTAINABILITY_ANOMALY,
+        )
+        interpretation.append(
+            part("findings.consumption.hot_others.interpretation", others=remainder, **values)
+            if remainder
+            else part("findings.consumption.hot.interpretation", **values)
+        )
+        remediation.append(part("findings.consumption.hot.remediation", sensor=lead.sensor))
+
+    return FindingMessage(interpretation=tuple(interpretation), remediation=tuple(remediation))

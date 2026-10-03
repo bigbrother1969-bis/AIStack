@@ -29,6 +29,8 @@ qualifies.
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Sequence
 
 from aistack.contracts.inventory_gap import (
@@ -86,6 +88,7 @@ def evaluate_inventory_gap(gaps: Sequence[InventoryGap]) -> tuple[RuntimeFinding
             signature=SIGNATURE,
             interpretation=_interpretation(gap),
             remediation=_remediation(gap),
+            message=_message(gap),
             confidence="Measured",
             grounding=UNDECLARED,
             evidence=(CitedReading(provider=INVENTORY_GAP_SOURCE, reading=gap),),
@@ -144,4 +147,40 @@ def _remediation(gap: InventoryGap) -> str:
         f"Confirm whether {gap.service} still exists — restore it if "
         f"it should be running, or remove its declaration from "
         f"service_categorization.yml if it no longer applies."
+    )
+
+
+def _message(gap: InventoryGap) -> FindingMessage:
+    """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
+
+    if gap.kind == DISCOVERED_UNDECLARED:
+        interpretation = (
+            part(
+                "findings.inventory_gap.undeclared_on_host.interpretation",
+                container=gap.container,
+                host=gap.host,
+            )
+            if gap.host
+            else part(
+                "findings.inventory_gap.undeclared_here.interpretation",
+                container=gap.container,
+            )
+        )
+
+        return FindingMessage(
+            interpretation=(interpretation,),
+            remediation=(
+                part("findings.inventory_gap.undeclared.remediation", container=gap.container),
+            ),
+        )
+
+    return FindingMessage(
+        interpretation=(
+            part(
+                "findings.inventory_gap.missing.interpretation",
+                service=gap.service,
+                container=gap.container,
+            ),
+        ),
+        remediation=(part("findings.inventory_gap.missing.remediation", service=gap.service),),
     )

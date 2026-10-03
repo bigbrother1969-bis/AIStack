@@ -273,3 +273,42 @@ def test_an_engine_that_gave_no_answer_is_said_in_the_reader_s_language(tmp_path
 
     assert "pas de réponse dans le délai déclaré (900 s)" in page
     assert "did not answer" not in page
+
+
+def test_a_finding_is_shown_in_the_reader_s_language(tmp_path: Path, host: Host):
+    from datetime import datetime, timezone
+
+    from aistack.contracts.backup_gap import MISSING, BackupGap
+    from aistack.contracts.backup_reading import BackupReading
+    from aistack.runtime.evaluate_backup import evaluate_backup
+
+    (backup,) = evaluate_backup(
+        [
+            BackupGap(
+                reading=BackupReading(
+                    path="/media/BACKUP/nextcloud", observed_at=datetime.now(timezone.utc)
+                ),
+                max_age_hours=36.0,
+                reason=MISSING,
+            )
+        ]
+    )
+    app = create_app(
+        tmp_path,
+        LISTENERS,
+        LANGUAGES,
+        WebPaths(resource_priority=host.definition),
+        collect_findings=lambda: (qualify([("Sauvegarde / PRA", backup)]), ""),
+        ask_ai=host.ask,
+        run_in_background=lambda job: job(),
+    )
+    web = TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False)
+
+    listing = web.get("/troubleshooting/?lang=fr").text
+    web.post("/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fnextcloud/start")
+    step = web.get("/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fnextcloud/step/1?lang=fr")
+
+    assert "ne contient aucun fichier de sauvegarde" in listing
+    assert "holds no backup file" not in listing
+    assert step.status_code == 200
+    assert "Mesuré" in step.text and "Vérifier que la tâche de sauvegarde" in step.text

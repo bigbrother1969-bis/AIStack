@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Proposed
   owner: Architecture
   created: 2026-09-27
@@ -106,7 +106,7 @@ browser's setup would serve English to a French-speaking owner with no
 visible cause, where the reference until someone chooses surprises
 nobody.
 
-### 4. The interface is translated, what it displays is not
+### 4. The interface is translated, what it displays is not — findings excepted since 2026-10-03
 
 Headings, labels, buttons and the sentences a screen writes around its
 data are translated. What the screen displays is not: a container's name,
@@ -114,6 +114,28 @@ a finding's own interpretation, a declared note, an AI answer, the name a
 language gives itself. Those stay in the language they were produced in.
 Translating them would put words in the mouth of whoever — or whatever —
 produced them.
+
+**Revised 2026-10-03 by the owner, for findings.** Reading the
+Troubleshooting Assistant in French, the owner found every finding in
+English ("certains messages restent en anglais, alors que la langue
+d'affichage devrait être en français") and chose catalog translation
+over translation by the AI model or keeping English. A finding's
+interpretation and remediation are not words someone else wrote: they
+are sentences AIStack's own evaluators compose from a measurement — the
+interface's own words, with values in them. So an evaluator now
+declares them as catalog keys and values (`aistack.contracts
+.finding_message.FindingMessage`, carried by `RuntimeFinding.message`),
+and the Health cockpit and the assistant render them in the reader's
+language (`aistack.i18n.findings`). The English entries render to
+exactly the evaluator's own English text, which `RuntimeFinding` keeps
+— it is what the AI Runtime is prompted with and what the reasoning
+history records — and the suite holds the two to the same words
+(`tests/unit/runtime/conftest.py`). The confidence word follows.
+
+Everything else in the first paragraph stands: a container's name, a
+declared note, an AI answer, the codes a finding cites (`OPS-0004/...`)
+stay as they were produced. A finding whose evaluator has declared no
+message yet is shown in English, as before.
 
 ### 5. The console becomes an application
 

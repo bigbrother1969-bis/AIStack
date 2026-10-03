@@ -10,6 +10,11 @@ from aistack.contracts.runtime_finding import CitedReading, MatchedLine, Runtime
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.labels import bucket_label, domain_label
+from aistack.i18n.findings import (
+    finding_confidence,
+    finding_interpretation,
+    finding_remediation,
+)
 from aistack.i18n import Languages, Translator, default_languages, translator_for
 from aistack.renderers.assets import MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
@@ -290,9 +295,9 @@ def _render_finding(
 
     return f"""  <article class="finding">
     <h3>{escape_text(finding.subject)} — {escape_text(finding.signature)}</h3>
-    <p class="interpretation">{escape_text(finding.interpretation)}</p>
-    <p class="remediation">→ {escape_text(finding.remediation)}</p>
-    <p class="confidence">{escape_text(t("health.page.confidence"))} {escape_text(finding.confidence)} —
+    <p class="interpretation">{escape_text(finding_interpretation(finding, t))}</p>
+    <p class="remediation">→ {escape_text(finding_remediation(finding, t))}</p>
+    <p class="confidence">{escape_text(t("health.page.confidence"))} {escape_text(finding_confidence(finding, t))} —
       {escape_text(t("health.page.grounding"))} {escape_text(finding.grounding)}</p>
     {qualifications}
     <p class="evidence">{_evidence_summary(finding.evidence, t)}</p>

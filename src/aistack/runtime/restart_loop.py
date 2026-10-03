@@ -7,6 +7,8 @@ docstring for why, 2026-10-02).
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta, timezone
@@ -99,6 +101,23 @@ def evaluate_restart_loops(loops: Iterable[RestartLoop]) -> tuple[RuntimeFinding
                 f"error it dies on at startup and fix that cause (storage, "
                 f"configuration, a dependency) rather than restarting it — its "
                 f"restart policy is already restarting it."
+            ),
+            message=FindingMessage(
+                interpretation=(
+                    part(
+                        "findings.restart_loop.interpretation",
+                        container=loop.container,
+                        restarts=loop.restarts,
+                        window=loop.window_minutes,
+                        threshold=loop.threshold,
+                    ),
+                ),
+                remediation=(
+                    part(
+                        "findings.restart_loop.remediation",
+                        name=loop.container.split("/")[-1],
+                    ),
+                ),
             ),
             confidence="Measured",
             grounding=UNDECLARED,

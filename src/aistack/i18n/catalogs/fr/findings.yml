@@ -1,0 +1,91 @@
+# Ce que dit un constat (ADR-0010 § 4, révisé le 2026-10-03). Le
+# catalogue anglais reproduit mot pour mot le texte de chaque
+# évaluateur ; celui-ci en est la traduction de référence. Les valeurs
+# arrivent déjà formatées par l'évaluateur.
+
+confidence:
+  measured: "Mesuré"
+
+storage:
+  free:
+    interpretation: "{mount} n'a plus que {free} Go libres, au niveau ou en dessous de son seuil déclaré de {threshold} Go — aucune rotation ni limite de taille ne s'interposait entre ce volume et la saturation ({qualification})."
+  percent:
+    interpretation: "{mount} est occupé à {used} %, au niveau ou au-dessus de son seuil déclaré de {threshold} % — aucune rotation ni limite de taille ne s'interposait entre ce volume et la saturation ({qualification})."
+  remediation: "Libérer de l'espace sur {mount}, puis déclarer une rotation ou une limite de taille pour ce qui y grossit sans fin — la lacune que nomme le deuxième incident de référence d'OPS-0004, pas un nettoyage ponctuel."
+
+services:
+  restarting:
+    interpretation: "{container} est actuellement en train de redémarrer (état={state}, santé={health}) — la situation que nomme le troisième incident de référence d'OPS-0004 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+  unhealthy:
+    interpretation: "{container} est actuellement en mauvaise santé (état={state}, santé={health}) — la situation que nomme le troisième incident de référence d'OPS-0004 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+  restarting_unhealthy:
+    interpretation: "{container} est actuellement en train de redémarrer et en mauvaise santé (état={state}, santé={health}) — la situation que nomme le troisième incident de référence d'OPS-0004 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+  remediation: "Chercher pourquoi {container} n'a pas redémarré proprement au retour de son hôte et corriger ce qui manque dans son ordre de démarrage ou sa politique de redémarrage — la lacune qu'a révélée l'incident de coupure de courant, pas un redémarrage ponctuel de ce conteneur."
+
+restart_loop:
+  interpretation: "{container} s'est arrêté et a redémarré {restarts} fois au cours des {window} dernières minutes (seuil : {threshold}) — une boucle de redémarrage, la situation que nomme le troisième incident de référence d'OPS-0004, même si Docker peut l'afficher « running » entre deux plantages."
+  remediation: "Lire `docker logs {name}` pour trouver l'erreur sur laquelle il s'arrête au démarrage et corriger cette cause (stockage, configuration, dépendance) plutôt que de le redémarrer — sa politique de redémarrage le relance déjà."
+
+backup:
+  missing:
+    interpretation: "{path} ne contient aucun fichier de sauvegarde — la situation que nomme le quatrième cas de référence d'OPS-0004 (dette technique, mauvaise configuration du déploiement)."
+    remediation: "Vérifier que la tâche de sauvegarde censée écrire dans {path} tourne réellement, et corriger ce qui l'empêche de produire un fichier — la lacune que nomme le quatrième cas de référence d'OPS-0004, pas une sauvegarde manuelle ponctuelle."
+  stale:
+    interpretation: "La sauvegarde la plus récente de {path} date de {age} heures, au-delà de son seuil déclaré de {threshold} heures — la situation que nomme le quatrième cas de référence d'OPS-0004 (dette technique, mauvaise configuration du déploiement)."
+    remediation: "Chercher pourquoi la tâche de sauvegarde de {path} n'a pas tourné récemment et rétablir sa planification — la lacune que nomme le quatrième cas de référence d'OPS-0004, pas une sauvegarde manuelle ponctuelle."
+
+gpu:
+  temperature:
+    interpretation: "La température de {name} est de {observed} °C, au niveau ou au-dessus de son seuil déclaré de {threshold} °C — la situation que nomme le cinquième cas de référence d'OPS-0004 (dette technique, inefficacité énergétique, anomalie de durabilité, mauvaise configuration du déploiement)."
+    remediation: "Vérifier le refroidissement et identifier ce qui fait monter la température de {name} — la situation que nomme le cinquième cas de référence d'OPS-0004, pas une mesure isolée."
+  utilization:
+    interpretation: "L'utilisation de {name} est de {observed} %, au niveau ou au-dessus de son seuil déclaré de {threshold} % — la situation que nomme le cinquième cas de référence d'OPS-0004 (dette technique, inefficacité énergétique, anomalie de durabilité, mauvaise configuration du déploiement)."
+    remediation: "Identifier quel processus fait monter l'utilisation de {name}, et s'il s'agit d'un service qui délègue à bon droit ses calculs au GPU ou d'un service qui sollicite le duo CPU/GPU sans raison — la situation que nomme le cinquième cas de référence d'OPS-0004, pas une mesure isolée."
+  memory:
+    interpretation: "L'occupation mémoire de {name} est de {observed} %, au niveau ou au-dessus de son seuil déclaré de {threshold} % — la situation que nomme le cinquième cas de référence d'OPS-0004 (dette technique, inefficacité énergétique, anomalie de durabilité, mauvaise configuration du déploiement)."
+    remediation: "Identifier quel processus fait monter l'occupation mémoire de {name}, et s'il s'agit d'un service qui délègue à bon droit ses calculs au GPU ou d'un service qui sollicite le duo CPU/GPU sans raison — la situation que nomme le cinquième cas de référence d'OPS-0004, pas une mesure isolée."
+
+pra_tests:
+  failed:
+    interpretation: "Le dernier test de restauration enregistré pour {service} a échoué — la situation que nomme l'écart de fraîcheur des tests de restauration d'OPS-0009 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+    remediation: "Chercher pourquoi la restauration de {service} a échoué et corriger ce qui l'a bloquée, puis enregistrer une nouvelle tentative dans le fichier déclaré d'OPS-0009 — la lacune que nomme ce cas de référence, pas une correction ponctuelle."
+  stale_unknown_age:
+    interpretation: "Le dernier test de restauration réussi de {service} dépasse son seuil déclaré de {threshold} jours — la situation que nomme l'écart de fraîcheur des tests de restauration d'OPS-0009 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+  stale:
+    interpretation: "Le dernier test de restauration réussi de {service} date de {age} jours, au-delà de son seuil déclaré de {threshold} jours — la situation que nomme l'écart de fraîcheur des tests de restauration d'OPS-0009 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+    remediation: "Faire un vrai test de restauration de {service} et enregistrer son résultat dans le fichier déclaré d'OPS-0009 — la lacune que nomme ce cas de référence, pas un test manuel ponctuel."
+  not_declared:
+    interpretation: "{service} est déclaré avec un état persistant dans le fichier d'OPS-0010, mais n'a aucune entrée dans celui d'OPS-0009 — la situation que nomme le huitième cas de référence d'OPS-0004 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+    remediation: "Ajouter {service} au fichier déclaré d'OPS-0009 avec last_test: null — jamais une date ou un statut deviné —, puis faire son premier vrai test de restauration et enregistrer le résultat réel."
+  untested:
+    interpretation: "{service} n'a jamais eu de test de restauration enregistré — la situation que nomme l'écart de fraîcheur des tests de restauration d'OPS-0009 (dette technique, anomalie de durabilité, mauvaise configuration du déploiement)."
+    remediation: "Faire le premier vrai test de restauration de {service} et enregistrer son résultat dans le fichier déclaré d'OPS-0009 — la lacune que nomme ce cas de référence."
+
+uncovered_state:
+  interpretation: "{service} conserve un état persistant qu'aucun moteur de sauvegarde connu ne couvre — la situation que nomme le constat « état persistant » d'OPS-0010 (dette technique, mauvaise configuration du déploiement, inefficacité énergétique, anomalie de durabilité)."
+  remediation: "Confirmer ou mettre en place un vrai mécanisme de sauvegarde pour l'état persistant de {service}, puis déclarer son moteur dans le fichier d'OPS-0010 — la lacune que nomme ce cas de référence, pas une sauvegarde manuelle ponctuelle."
+
+inventory_gap:
+  undeclared_on_host:
+    interpretation: "{container} tourne sur {host}, mais service_categorization.yml ne lui associe aucun service — la situation que nomme le septième cas de référence d'OPS-0004 (dette technique, mauvaise configuration du déploiement, inefficacité énergétique, anomalie de durabilité)."
+  undeclared_here:
+    interpretation: "{container} tourne sur cet hôte, mais service_categorization.yml ne lui associe aucun service — la situation que nomme le septième cas de référence d'OPS-0004 (dette technique, mauvaise configuration du déploiement, inefficacité énergétique, anomalie de durabilité)."
+  undeclared:
+    remediation: "Vérifier ce qu'est {container}, puis le déclarer dans service_categorization.yml, ou le supprimer s'il ne devrait pas tourner — la lacune que nomme ce cas de référence, jamais présumée sans conséquence."
+  missing:
+    interpretation: "{service} ({container}) est déclaré dans service_categorization.yml mais ne tourne nulle part, ni sur cet hôte ni dans la dernière découverte réseau — la situation que nomme le septième cas de référence d'OPS-0004 (dette technique, mauvaise configuration du déploiement, inefficacité énergétique, anomalie de durabilité)."
+    remediation: "Vérifier si {service} existe toujours — le relancer s'il devrait tourner, ou retirer sa déclaration de service_categorization.yml s'il n'a plus lieu d'être."
+
+consumption:
+  statement:
+    interpretation: "{container} a consommé {cpu} % de CPU, au niveau ou au-dessus du seuil de {threshold} %, sans aucune attente de ressources déclarée dans resource_priority.yml — une ressource consommée sans bénéfice fonctionnel déclaré ({qualification})."
+    remediation: "Classer {container} dans resource_priority.yml (prioritaire ou au ralenti) pour que cette consommation soit attendue ou plafonnée ; chercher pourquoi il tourne sans explication."
+  quiet:
+    interpretation: "Ses propres journaux, lus au même moment, ne montrent aucune requête HTTP entrante — ce qui va dans le sens d'une ressource consommée au repos, même si une session active et toute forme de travail hors HTTP restent non vérifiées (STD-0300 § VS-4, critère 4.1)."
+  busy:
+    interpretation: "Ses propres journaux, lus au même moment, montrent bien des requêtes HTTP entrantes sur cette période — cette consommation peut refléter un vrai travail plutôt qu'une activité à vide ; c'est toujours son classement dans resource_priority.yml qui manque."
+  hot:
+    interpretation: "L'hôte a aussi relevé {celsius} °C sur {sensor}, au niveau ou au-dessus de son propre seuil déclaré — une conséquence physique corrélée à cette même consommation ({qualification})."
+    remediation: "Vérifier le refroidissement et la ventilation avant qu'une consommation non classée n'ajoute encore à la chaleur que {sensor} signale déjà."
+  hot_others:
+    interpretation: "L'hôte a aussi relevé {celsius} °C sur {sensor} et {others} autre(s) capteur(s), au niveau ou au-dessus de son propre seuil déclaré — une conséquence physique corrélée à cette même consommation ({qualification})."

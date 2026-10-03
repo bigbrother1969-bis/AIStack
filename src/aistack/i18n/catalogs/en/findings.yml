@@ -1,0 +1,92 @@
+# What a finding says (ADR-0010 § 4, revised 2026-10-03). Each entry
+# renders to exactly the English text its evaluator writes into
+# `RuntimeFinding.interpretation` / `.remediation` —
+# `tests/unit/i18n/test_finding_messages.py` holds them to the same
+# words. Values arrive already formatted by the evaluator.
+
+confidence:
+  measured: "Measured"
+
+storage:
+  free:
+    interpretation: "{mount} has {free} GB free, at or below its declared threshold of {threshold} GB — no rotation or size limit stood between this volume and running out ({qualification})."
+  percent:
+    interpretation: "{mount} is {used}% occupied, at or above its declared threshold of {threshold}% — no rotation or size limit stood between this volume and running out ({qualification})."
+  remediation: "Free space on {mount}, then declare a rotation or size cap for whatever grows there unbounded — the gap OPS-0004's second reference incident names, not a one-time cleanup."
+
+services:
+  restarting:
+    interpretation: "{container} is currently restarting (state={state}, health={health}) — the condition OPS-0004's third reference incident names (technical debt, sustainability anomaly, deployment misconfiguration)."
+  unhealthy:
+    interpretation: "{container} is currently unhealthy (state={state}, health={health}) — the condition OPS-0004's third reference incident names (technical debt, sustainability anomaly, deployment misconfiguration)."
+  restarting_unhealthy:
+    interpretation: "{container} is currently restarting and unhealthy (state={state}, health={health}) — the condition OPS-0004's third reference incident names (technical debt, sustainability anomaly, deployment misconfiguration)."
+  remediation: "Investigate why {container} did not restart cleanly after its host came back and correct what is missing from its boot order or restart policy — the gap the power-outage incident named, not a one-time restart of this container."
+
+restart_loop:
+  interpretation: "{container} died and restarted {restarts} times in the last {window} minutes (threshold {threshold}) — a restart loop, the condition OPS-0004's third reference incident names, even though Docker may report it 'running' between two crashes."
+  remediation: "Read `docker logs {name}` for the error it dies on at startup and fix that cause (storage, configuration, a dependency) rather than restarting it — its restart policy is already restarting it."
+
+backup:
+  missing:
+    interpretation: "{path} holds no backup file at all — the condition OPS-0004's fourth reference case names (technical debt, deployment misconfiguration)."
+    remediation: "Verify the backup job that should write to {path} is actually running, and correct why it has not produced a file — the gap OPS-0004's fourth reference case names, not a one-time manual backup."
+  stale:
+    interpretation: "{path}'s newest backup is {age} hours old, above its declared threshold of {threshold} hours — the condition OPS-0004's fourth reference case names (technical debt, deployment misconfiguration)."
+    remediation: "Investigate why {path}'s backup job has not run recently and restore its schedule — the gap OPS-0004's fourth reference case names, not a one-time manual backup."
+
+gpu:
+  temperature:
+    interpretation: "{name}'s temperature is {observed}°C, at or above its declared threshold of {threshold}°C — the condition OPS-0004's fifth reference case names (technical debt, energy inefficiency, sustainability anomaly, deployment misconfiguration)."
+    remediation: "Check cooling and identify what is driving {name}'s temperature — the condition OPS-0004's fifth reference case names, not a one-time reading."
+  utilization:
+    interpretation: "{name}'s utilization is {observed}%, at or above its declared threshold of {threshold}% — the condition OPS-0004's fifth reference case names (technical debt, energy inefficiency, sustainability anomaly, deployment misconfiguration)."
+    remediation: "Identify which process is driving {name}'s utilization and whether it is a service correctly delegating compute to the GPU or one running on the CPU/GPU duo without cause — the condition OPS-0004's fifth reference case names, not a one-time reading."
+  memory:
+    interpretation: "{name}'s memory occupancy is {observed}%, at or above its declared threshold of {threshold}% — the condition OPS-0004's fifth reference case names (technical debt, energy inefficiency, sustainability anomaly, deployment misconfiguration)."
+    remediation: "Identify which process is driving {name}'s memory occupancy and whether it is a service correctly delegating compute to the GPU or one running on the CPU/GPU duo without cause — the condition OPS-0004's fifth reference case names, not a one-time reading."
+
+pra_tests:
+  failed:
+    interpretation: "{service}'s last recorded restore test failed — the condition OPS-0009's restore-test freshness gap names (technical debt, sustainability anomaly, deployment misconfiguration)."
+    remediation: "Investigate why {service}'s restore failed and correct what blocked it, then record a new attempt in OPS-0009's own declared file — the gap this reference case names, not a one-time fix."
+  stale_unknown_age:
+    interpretation: "{service}'s last successful restore test is older than its declared threshold of {threshold} days — the condition OPS-0009's restore-test freshness gap names (technical debt, sustainability anomaly, deployment misconfiguration)."
+  stale:
+    interpretation: "{service}'s last successful restore test is {age} days old, above its declared threshold of {threshold} days — the condition OPS-0009's restore-test freshness gap names (technical debt, sustainability anomaly, deployment misconfiguration)."
+    remediation: "Perform a real restore test for {service} and record its outcome in OPS-0009's own declared file — the gap this reference case names, not a one-time manual test."
+  not_declared:
+    interpretation: "{service} is declared stateful in OPS-0010's own file but names no entry at all in OPS-0009's own file — the condition OPS-0004's eighth reference case names (technical debt, sustainability anomaly, deployment misconfiguration)."
+    remediation: "Add {service} to OPS-0009's own declared file with last_test: null — never a guessed date or status — then perform its first real restore test and record the real outcome."
+  untested:
+    interpretation: "{service} has never had a restore test recorded — the condition OPS-0009's restore-test freshness gap names (technical debt, sustainability anomaly, deployment misconfiguration)."
+    remediation: "Perform {service}'s first real restore test and record its outcome in OPS-0009's own declared file — the gap this reference case names."
+
+uncovered_state:
+  interpretation: "{service} holds persistent state with no known backup engine covering it — the condition OPS-0010's état-persistant constat names (technical debt, deployment misconfiguration, energy inefficiency, sustainability anomaly)."
+  remediation: "Confirm or put in place a real backup mechanism for {service}'s persistent state, then record its engine in OPS-0010's own declared file — the gap this reference case names, not a one-time manual backup."
+
+inventory_gap:
+  undeclared_on_host:
+    interpretation: "{container} is running on {host} but service_categorization.yml declares no service for it — the condition OPS-0004's seventh reference case names (technical debt, deployment misconfiguration, energy inefficiency, sustainability anomaly)."
+  undeclared_here:
+    interpretation: "{container} is running on this host but service_categorization.yml declares no service for it — the condition OPS-0004's seventh reference case names (technical debt, deployment misconfiguration, energy inefficiency, sustainability anomaly)."
+  undeclared:
+    remediation: "Confirm what {container} is, then either declare it in service_categorization.yml or remove it if it should not be running — the gap this reference case names, never assumed harmless."
+  missing:
+    interpretation: "{service} ({container}) is declared in service_categorization.yml but was not found running, neither locally nor in the last network discovery — the condition OPS-0004's seventh reference case names (technical debt, deployment misconfiguration, energy inefficiency, sustainability anomaly)."
+    remediation: "Confirm whether {service} still exists — restore it if it should be running, or remove its declaration from service_categorization.yml if it no longer applies."
+
+consumption:
+  statement:
+    interpretation: "{container} used {cpu}% CPU, at or above the {threshold}% threshold, with no declared resource expectation in resource_priority.yml — resource consumed for no declared functional benefit ({qualification})."
+    remediation: "Classify {container} in resource_priority.yml (priority or background) so this consumption is either expected or capped; investigate why it runs unexplained."
+  quiet:
+    interpretation: "Its own logs, read in the same run, show no incoming HTTP requests — consistent with resource used at rest, though an active session and every non-HTTP shape of work remain unchecked (STD-0300 § VS-4 criterion 4.1)."
+  busy:
+    interpretation: "Its own logs, read in the same run, do show incoming HTTP requests in this window — this consumption may reflect real work rather than idling; classification in resource_priority.yml is still what is missing."
+  hot:
+    interpretation: "The host also read {celsius}°C on {sensor}, at or above its own declared threshold — a physical consequence correlated with the same consumption ({qualification})."
+    remediation: "Check cooling and airflow before further unclassified consumption adds to the heat {sensor} is already reporting."
+  hot_others:
+    interpretation: "The host also read {celsius}°C on {sensor} and {others} other sensor(s), at or above its own declared threshold — a physical consequence correlated with the same consumption ({qualification})."

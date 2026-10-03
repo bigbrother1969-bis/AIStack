@@ -33,6 +33,8 @@ excluded by the owner and are never cited here.
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Sequence
 
 from aistack.contracts.backup_gap import MISSING, BackupGap
@@ -74,6 +76,7 @@ def evaluate_backup(gaps: Sequence[BackupGap]) -> tuple[RuntimeFinding, ...]:
             signature=SIGNATURE,
             interpretation=_interpretation(gap),
             remediation=_remediation(gap),
+            message=_message(gap),
             confidence="Measured",
             grounding=UNDECLARED,
             evidence=(
@@ -126,4 +129,35 @@ def _remediation(gap: BackupGap) -> str:
         f"Investigate why {gap.reading.path}'s backup job has not run "
         f"recently and restore its schedule — the gap OPS-0004's fourth "
         f"reference case names, not a one-time manual backup."
+    )
+
+
+def _message(gap: BackupGap) -> FindingMessage:
+    """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
+
+    reading = gap.reading
+
+    if gap.reason == MISSING:
+        remediation = (part("findings.backup.missing.remediation", path=reading.path),)
+    else:
+        remediation = (part("findings.backup.stale.remediation", path=reading.path),)
+
+    if gap.reason == MISSING or reading.newest_file_mtime is None:
+        return FindingMessage(
+            interpretation=(part("findings.backup.missing.interpretation", path=reading.path),),
+            remediation=remediation,
+        )
+
+    age_hours = (reading.observed_at - reading.newest_file_mtime).total_seconds() / 3600
+
+    return FindingMessage(
+        interpretation=(
+            part(
+                "findings.backup.stale.interpretation",
+                path=reading.path,
+                age=f"{age_hours:.1f}",
+                threshold=f"{gap.max_age_hours:.1f}",
+            ),
+        ),
+        remediation=remediation,
     )

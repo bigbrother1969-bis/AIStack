@@ -43,6 +43,8 @@ apply, energy inefficiency staying excluded here too.
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Sequence
 
 from aistack.contracts.pra_test_gap import (
@@ -101,6 +103,7 @@ def evaluate_pra_tests(gaps: Sequence[PraTestGap]) -> tuple[RuntimeFinding, ...]
             signature=SIGNATURE,
             interpretation=_interpretation(gap),
             remediation=_remediation(gap),
+            message=_message(gap),
             confidence="Measured",
             grounding=UNDECLARED,
             evidence=(
@@ -206,4 +209,58 @@ def _remediation(gap: PraTestGap) -> str:
         f"Perform {service}'s first real restore test and record its "
         f"outcome in OPS-0009's own declared file — the gap this "
         f"reference case names."
+    )
+
+
+def _message(gap: PraTestGap) -> FindingMessage:
+    """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
+
+    service = gap.reading.service
+
+    if gap.reason == FAILED_REASON:
+        return FindingMessage(
+            interpretation=(part("findings.pra_tests.failed.interpretation", service=service),),
+            remediation=(part("findings.pra_tests.failed.remediation", service=service),),
+        )
+
+    if gap.reason == STALE:
+        reading = gap.reading
+        threshold = f"{gap.max_age_days:.1f}"
+        remediation = (part("findings.pra_tests.stale.remediation", service=service),)
+
+        if reading.tested_at is None:
+            return FindingMessage(
+                interpretation=(
+                    part(
+                        "findings.pra_tests.stale_unknown_age.interpretation",
+                        service=service,
+                        threshold=threshold,
+                    ),
+                ),
+                remediation=remediation,
+            )
+
+        age_days = (reading.observed_at - reading.tested_at).total_seconds() / 86400
+
+        return FindingMessage(
+            interpretation=(
+                part(
+                    "findings.pra_tests.stale.interpretation",
+                    service=service,
+                    age=f"{age_days:.1f}",
+                    threshold=threshold,
+                ),
+            ),
+            remediation=remediation,
+        )
+
+    if gap.reason == NOT_DECLARED:
+        return FindingMessage(
+            interpretation=(part("findings.pra_tests.not_declared.interpretation", service=service),),
+            remediation=(part("findings.pra_tests.not_declared.remediation", service=service),),
+        )
+
+    return FindingMessage(
+        interpretation=(part("findings.pra_tests.untested.interpretation", service=service),),
+        remediation=(part("findings.pra_tests.untested.remediation", service=service),),
     )

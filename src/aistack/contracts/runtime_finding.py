@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from aistack.contracts.finding_message import FindingMessage
+
 from aistack.contracts.backup_reading import BackupReading
 from aistack.contracts.backup_strategy_declaration import BackupStrategyDeclaration
 from aistack.contracts.container_state_reading import ContainerStateReading
@@ -224,6 +226,11 @@ class RuntimeFinding:
     grounding: str
     evidence: tuple[MatchedLine | CitedReading, ...]
     qualifications: tuple[str, ...] = ()
+    # The same two sentences as catalog keys, for a page that renders
+    # them in its reader's language (`aistack.contracts.finding_message`,
+    # 2026-10-03). `None` where an evaluator has not declared its
+    # sentences yet: the English text is shown as it is.
+    message: FindingMessage | None = None
 
     def __post_init__(self) -> None:
         if not self.subject.strip():

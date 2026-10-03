@@ -33,6 +33,8 @@ alone (the original CPU/temperature correlation) had ever cited.
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Sequence
 
 from aistack.contracts.gpu_anomaly import GpuAnomaly
@@ -97,6 +99,7 @@ def evaluate_gpu(anomalies: Sequence[GpuAnomaly]) -> tuple[RuntimeFinding, ...]:
             signature=SIGNATURE,
             interpretation=_interpretation(anomaly),
             remediation=_remediation(anomaly),
+            message=_message(anomaly),
             confidence="Measured",
             grounding=UNDECLARED,
             evidence=(
@@ -150,4 +153,32 @@ def _remediation(anomaly: GpuAnomaly) -> str:
         f"running on the CPU/GPU duo without cause — the condition "
         f"OPS-0004's fifth reference case names, not a one-time "
         f"reading."
+    )
+
+
+# One sentence per measured kind: the label and its unit are words the
+# reader's language has to choose, never values slotted into English.
+_KIND_KEYS = {
+    TEMPERATURE_CELSIUS: "findings.gpu.temperature",
+    UTILIZATION_PERCENT: "findings.gpu.utilization",
+    MEMORY_PERCENT: "findings.gpu.memory",
+}
+
+
+def _message(anomaly: GpuAnomaly) -> FindingMessage:
+    """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
+
+    key = _KIND_KEYS[anomaly.threshold_kind]
+    name = anomaly.reading.name
+
+    return FindingMessage(
+        interpretation=(
+            part(
+                f"{key}.interpretation",
+                name=name,
+                observed=f"{_observed_value(anomaly):.1f}",
+                threshold=f"{anomaly.threshold_value:.1f}",
+            ),
+        ),
+        remediation=(part(f"{key}.remediation", name=name),),
     )

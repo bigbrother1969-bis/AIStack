@@ -27,6 +27,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from aistack.ai_runtime.reasoning_history import record_ai_reasoning
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
+from aistack.i18n.findings import (
+    finding_confidence,
+    finding_interpretation,
+    finding_remediation,
+)
 from aistack.i18n.web import PageLanguage, page_language
 from aistack.priority.yaml import save_resource_priority_yaml
 from aistack.troubleshooting.apply import BackgroundChange, class_as_background
@@ -65,7 +70,16 @@ def _render(request: Request, name: str, context: dict[str, object]) -> Response
     response = templates.TemplateResponse(
         request=request,
         name=f"troubleshooting/{name}",
-        context={**context, "base": PREFIX, **language.context()},
+        context={
+            **context,
+            "base": PREFIX,
+            # A finding's sentences in the reader's language (ADR-0010
+            # § 4, revised 2026-10-03).
+            "interpretation_of": lambda finding: finding_interpretation(finding, language.t),
+            "remediation_of": lambda finding: finding_remediation(finding, language.t),
+            "confidence_of": lambda finding: finding_confidence(finding, language.t),
+            **language.context(),
+        },
     )
 
     if language.cookie is not None:
@@ -101,7 +115,7 @@ def index(request: Request) -> Response:
     )
 
 
-@router.post("/finding/{key}/start", include_in_schema=False)
+@router.post("/finding/{key:path}/start", include_in_schema=False)
 def start(request: Request, key: str) -> RedirectResponse:
     """
     Start the diagnosis of the finding routed by `key`, freshly
@@ -151,7 +165,7 @@ def start(request: Request, key: str) -> RedirectResponse:
     return first_step
 
 
-@router.get("/finding/{key}/step/{step}", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/finding/{key:path}/step/{step}", response_class=HTMLResponse, include_in_schema=False)
 def step(request: Request, key: str, step: int) -> Response:
     session = _sessions(request).get(key)
 
@@ -191,7 +205,7 @@ def step(request: Request, key: str, step: int) -> Response:
     )
 
 
-@router.post("/finding/{key}/apply", include_in_schema=False)
+@router.post("/finding/{key:path}/apply", include_in_schema=False)
 def apply(request: Request, key: str) -> RedirectResponse:
     """
     The one fix, guarded twice: `step.html` hides the button unless the
@@ -256,7 +270,7 @@ def apply(request: Request, key: str) -> RedirectResponse:
     return applied
 
 
-@router.get("/finding/{key}/applied", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/finding/{key:path}/applied", response_class=HTMLResponse, include_in_schema=False)
 def applied(request: Request, key: str) -> Response:
     session = _sessions(request).get(key) or {}
     result = session.get("applied")

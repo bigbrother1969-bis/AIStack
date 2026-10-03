@@ -29,6 +29,8 @@ alias is a separate, larger claim this change does not make.
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Sequence
 
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
@@ -68,6 +70,7 @@ def evaluate_storage(
             signature=SIGNATURE,
             interpretation=_interpretation(shortage),
             remediation=_remediation(shortage),
+            message=_message(shortage),
             confidence="Measured",
             grounding=UNDECLARED,
             evidence=(
@@ -110,4 +113,38 @@ def _remediation(shortage: StorageShortage) -> str:
         f"rotation or size cap for whatever grows there unbounded — "
         f"the gap OPS-0004's second reference incident names, not a "
         f"one-time cleanup."
+    )
+
+
+def _message(shortage: StorageShortage) -> FindingMessage:
+    """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
+
+    reading = shortage.reading
+    remediation = (part("findings.storage.remediation", mount=reading.mount),)
+
+    if shortage.threshold_kind == FREE_BYTES:
+        return FindingMessage(
+            interpretation=(
+                part(
+                    "findings.storage.free.interpretation",
+                    mount=reading.mount,
+                    free=f"{reading.free_bytes / _BYTES_PER_GB:.1f}",
+                    threshold=f"{shortage.threshold_value / _BYTES_PER_GB:.1f}",
+                    qualification=DEPLOYMENT_MISCONFIGURATION,
+                ),
+            ),
+            remediation=remediation,
+        )
+
+    return FindingMessage(
+        interpretation=(
+            part(
+                "findings.storage.percent.interpretation",
+                mount=reading.mount,
+                used=f"{reading.percent_used:.1f}",
+                threshold=f"{shortage.threshold_value:.1f}",
+                qualification=DEPLOYMENT_MISCONFIGURATION,
+            ),
+        ),
+        remediation=remediation,
     )

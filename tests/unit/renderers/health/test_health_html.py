@@ -582,3 +582,37 @@ def test_diagnose_button_keeps_the_bare_subject_when_it_is_unique():
     document = render_html(cockpit, troubleshooting_base_url="http://GIGABYTE:8185")
 
     assert "http://GIGABYTE:8185/finding/raspberry/start" in document
+
+
+# --------------------------------------------------------------------
+# A finding speaks the page's language (ADR-0010 § 4, revised 2026-10-03)
+# --------------------------------------------------------------------
+
+
+def test_an_evaluator_s_finding_is_shown_in_the_page_s_language():
+    from aistack.contracts.backup_gap import MISSING, BackupGap
+    from aistack.contracts.backup_reading import BackupReading
+    from aistack.runtime.evaluate_backup import evaluate_backup
+    from datetime import datetime, timezone
+
+    gap = BackupGap(
+        reading=BackupReading(
+            path="/media/BACKUP/SQL_BACKUPS/nextcloud",
+            observed_at=datetime.now(timezone.utc),
+            newest_file_mtime=None,
+        ),
+        max_age_hours=36.0,
+        reason=MISSING,
+    )
+    (finding,) = evaluate_backup([gap])
+    cockpit = HealthCockpit(
+        domains=(HealthDomain(name="Sauvegarde / PRA", instrumented=True, findings=(finding,)),)
+    )
+
+    french = render_html(cockpit, lang="fr")
+    english = render_html(cockpit, lang="en")
+
+    assert "ne contient aucun fichier de sauvegarde" in french
+    assert "Mesuré" in french
+    assert "holds no backup file at all" not in french
+    assert "holds no backup file at all" in english

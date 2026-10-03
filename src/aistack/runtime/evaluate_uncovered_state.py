@@ -29,6 +29,8 @@ says whether it qualifies (`find_uncovered_state`, against
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Sequence
 
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
@@ -84,6 +86,7 @@ def evaluate_uncovered_state(
             signature=SIGNATURE,
             interpretation=_interpretation(gap),
             remediation=_remediation(gap),
+            message=_message(gap),
             confidence="Measured",
             grounding=UNDECLARED,
             evidence=(
@@ -116,4 +119,15 @@ def _remediation(gap: UncoveredStateGap) -> str:
         f"persistent state, then record its engine in OPS-0010's own "
         f"declared file — the gap this reference case names, not a "
         f"one-time manual backup."
+    )
+
+
+def _message(gap: UncoveredStateGap) -> FindingMessage:
+    """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
+
+    service = gap.declaration.service
+
+    return FindingMessage(
+        interpretation=(part("findings.uncovered_state.interpretation", service=service),),
+        remediation=(part("findings.uncovered_state.remediation", service=service),),
     )

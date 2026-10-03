@@ -80,14 +80,14 @@
 
   {% if step == 1 %}
     <h2>{{ t('troubleshooting.step.detected') }}</h2>
-    <p>{{ finding.interpretation }}</p>
+    <p>{{ interpretation_of(finding) }}</p>
     <dl class="config">
       <dt>{{ t('troubleshooting.step.confidence') }}</dt>
-      <dd>{{ finding.confidence }}</dd>
+      <dd>{{ confidence_of(finding) }}</dd>
       <dt>{{ t('troubleshooting.step.qualifications') }}</dt>
       <dd>{{ finding.qualifications | join(', ') if finding.qualifications else '—' }}</dd>
       <dt>{{ t('troubleshooting.step.remediation') }}</dt>
-      <dd>{{ finding.remediation }}</dd>
+      <dd>{{ remediation_of(finding) }}</dd>
     </dl>
   {% else %}
     {% if step == 2 %}

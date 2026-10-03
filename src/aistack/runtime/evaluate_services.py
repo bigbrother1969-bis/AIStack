@@ -28,6 +28,8 @@ never cited here.
 
 from __future__ import annotations
 
+from aistack.contracts.finding_message import FindingMessage, part
+
 from collections.abc import Sequence
 
 from aistack.contracts.container_distress import ContainerDistress
@@ -77,6 +79,7 @@ def evaluate_services(
             subject=one.reading.container,
             signature=SIGNATURE,
             interpretation=_interpretation(one),
+            message=_message(one),
             remediation=_remediation(one),
             confidence="Measured",
             grounding=UNDECLARED,
@@ -109,4 +112,30 @@ def _remediation(one: ContainerDistress) -> str:
         f"missing from its boot order or restart policy — the gap the "
         f"power-outage incident named, not a one-time restart of this "
         f"container."
+    )
+
+
+# Which sentence a distressed container gets, by its reasons in order.
+_REASON_KEYS = {
+    ("restarting",): "findings.services.restarting.interpretation",
+    ("unhealthy",): "findings.services.unhealthy.interpretation",
+    ("restarting", "unhealthy"): "findings.services.restarting_unhealthy.interpretation",
+}
+
+
+def _message(one: ContainerDistress) -> FindingMessage:
+    """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
+
+    reading = one.reading
+
+    return FindingMessage(
+        interpretation=(
+            part(
+                _REASON_KEYS[tuple(one.reasons)],
+                container=reading.container,
+                state=repr(reading.state),
+                health=repr(reading.health.value),
+            ),
+        ),
+        remediation=(part("findings.services.remediation", container=reading.container),),
     )

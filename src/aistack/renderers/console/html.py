@@ -140,16 +140,19 @@ def render_html(
 </style>
 </head>
 <body>
-{render_page_nav(t, declared, t.lang, back_to_console=False)}
-<header>
+<div class="console-layout">
+<aside class="console-aside">
   <img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}">
-</header>
-
+  {render_page_nav(t, declared, t.lang, back_to_console=False)}
+</aside>
+<div class="console-content">
 {cartouche_html}
 
 <main class="links">
 {link_groups_html}
 </main>
+</div>
+</div>
 </body>
 </html>
 """
@@ -393,11 +396,36 @@ _STYLE = """\
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
-  max-width: min(96vw, 1600px); margin: 2rem auto;
+  max-width: min(96vw, 1600px); margin: 1.5rem auto;
   color: #1f2933; background: #f7f9fc; padding: 0 1rem;
 }
-header { text-align: center; margin-bottom: 2rem; }
-.lockup { max-width: 340px; width: 100%; height: auto; }
+/* Two columns, 2026-10-03 (the owner: "le logo en haut prend trop de
+   place : je préférerais le mettre à gauche et réorganiser la page à
+   droite"). The lockup, the language switch and Settings sit in a left
+   column that stays in view while the right one scrolls; under 900px
+   the column becomes a compact band above the content. */
+.console-layout {
+  display: grid; grid-template-columns: 220px minmax(0, 1fr);
+  gap: 2rem; align-items: start;
+}
+.console-aside {
+  position: sticky; top: 1.5rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+.console-aside .lockup { width: 100%; max-width: 220px; height: auto; }
+.console-aside .page-nav {
+  flex-direction: column; align-items: center; justify-content: flex-start;
+  gap: .6rem; margin: 0;
+}
+.console-content { min-width: 0; }
+@media (max-width: 900px) {
+  .console-layout { grid-template-columns: 1fr; gap: 1rem; }
+  .console-aside {
+    position: static; flex-direction: row; justify-content: space-between;
+  }
+  .console-aside .lockup { max-width: 140px; }
+  .console-aside .page-nav { flex-direction: row; }
+}
 .links { margin: 0; }
 .link-group {
   border: 1px solid #dde4ed; border-radius: 8px; background: #fafbfc;

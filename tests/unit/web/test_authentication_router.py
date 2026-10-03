@@ -160,10 +160,15 @@ def test_without_a_client_sign_in_says_it_is_not_configured(tmp_path: Path):
     assert web.get("/console.html").status_code == 200
 
 
-def test_an_unreachable_provider_is_said_so(tmp_path: Path):
+def test_an_unreachable_provider_is_said_so_and_logged(tmp_path: Path, caplog):
     web = client(build(tmp_path, FakeProvider(down=True)))
 
-    assert web.get("/login?lang=en").status_code == 502
+    reply = web.get("/login?lang=en")
+
+    # Never 502: Cloudflare would put its own page in place of this one.
+    assert reply.status_code == 503
+    assert "Pocket ID is not answering" in reply.text
+    assert "network unreachable" in caplog.text
 
 
 # -- the fallback administrator --------------------------------------

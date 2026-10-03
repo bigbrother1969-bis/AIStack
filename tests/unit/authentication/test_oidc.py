@@ -183,3 +183,29 @@ def test_every_refusal_reason_is_written_in_every_language():
     assert reasons
     for language, catalog in catalogs.items():
         assert reasons <= set(catalog), (language, reasons - set(catalog))
+
+
+def test_the_real_client_names_itself_never_as_python_urllib(monkeypatch):
+    """Cloudflare refuses `Python-urllib/3.x` as a robot (2026-10-03)."""
+
+    import io
+    import json as json_module
+    import urllib.request
+
+    from aistack.authentication.oidc import UrllibHttp
+
+    sent = []
+
+    def fake_urlopen(request, timeout):
+        sent.append(request)
+        return io.BytesIO(json_module.dumps({"ok": True}).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    http = UrllibHttp()
+
+    http.get_json("https://id.example/doc")
+    http.post_form("https://id.example/token", {"a": "b"}, ("id", "secret"))
+
+    for request in sent:
+        agent = request.get_header("User-agent")
+        assert agent.startswith("AIStack/") and "urllib" not in agent.lower()

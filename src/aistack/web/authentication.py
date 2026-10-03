@@ -17,6 +17,7 @@ application serves, generated ones included (§ 7).
 
 from __future__ import annotations
 
+import logging
 import os
 import secrets
 from collections.abc import Mapping
@@ -47,6 +48,14 @@ SESSION_COOKIE = "aistack_session"
 CSRF_COOKIE = "aistack_csrf"
 DEFAULT_NEXT = "/console.html"
 LOCAL_SUBJECT = "local-admin"
+
+# Why a sign-in was refused goes to the service's journal
+# (`journalctl -u aistack-web`); the page says it in the reader's words.
+log = logging.getLogger("aistack.web.authentication")
+
+# Never 502 or 504: Cloudflare, in front of the public address, replaces
+# those answers with its own page and the reader never sees why.
+UNAVAILABLE = 503
 
 router = APIRouter(dependencies=[PUBLIC])
 lan_router = APIRouter(dependencies=[LAN_ONLY])
@@ -154,12 +163,13 @@ def login(request: Request) -> Response:
     t = _language(request).t
 
     if not authentication.credentials.oidc_configured:
-        return _message(request, t("auth.heading"), t("auth.error.not_configured"), 503, error=True)
+        return _message(request, t("auth.heading"), t("auth.error.not_configured"), UNAVAILABLE, error=True)
 
     try:
         url, state, pending = authentication.oidc.start(_safe_next(request.query_params.get("next")))
     except SignInError as error:
-        return _message(request, t("auth.heading"), t(error.reason), 502, error=True)
+        log.warning("sign-in could not start: %s", error)
+        return _message(request, t("auth.heading"), t(error.reason), UNAVAILABLE, error=True)
 
     authentication.sessions.remember(state, pending)
     return RedirectResponse(url, status_code=303)
@@ -173,14 +183,17 @@ def callback(request: Request) -> Response:
 
     pending = authentication.sessions.take(parameters.get("state"))
     if pending is None:
+        log.warning("sign-in callback for an unknown or expired attempt")
         return _message(request, t("auth.heading"), t("auth.error.unknown_attempt"), 400, error=True)
 
     if parameters.get("error"):
+        log.warning("sign-in denied by the provider: %s", parameters.get("error"))
         return _message(request, t("auth.heading"), t("auth.error.denied"), 403, error=True)
 
     try:
         identity = authentication.oidc.finish(parameters.get("code", ""), parameters.get("iss"), pending)
     except SignInError as error:
+        log.warning("sign-in refused: %s", error)
         return _message(request, t("auth.heading"), t(error.reason), 403, error=True)
 
     identifier = authentication.sessions.open(

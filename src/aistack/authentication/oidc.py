@@ -11,6 +11,7 @@ against a fake provider whose keys it generates.
 from __future__ import annotations
 
 import base64
+import importlib.metadata
 import hashlib
 import json
 import secrets
@@ -47,12 +48,29 @@ class Http(Protocol):
     def post_form(self, url: str, form: dict[str, str], basic_auth: tuple[str, str]) -> dict[str, Any]: ...
 
 
+def user_agent() -> str:
+    """How AIStack names itself to the provider.
+
+    Never Python's default `Python-urllib/3.x`: Cloudflare, in front of
+    Pocket ID, refuses that one as a robot — measured 2026-10-03, when
+    `/login` failed on GIGABYTE while `curl` from the same host read
+    the same document."""
+
+    try:
+        version = importlib.metadata.version("aistack")
+    except importlib.metadata.PackageNotFoundError:
+        version = "dev"
+    return f"AIStack/{version} (sign-in; +https://github.com/bigbrother1969-bis/AIStack)"
+
+
 class UrllibHttp:
     """The real network, with the standard library — no other HTTP
     client is a dependency of the heritage."""
 
     def get_json(self, url: str) -> dict[str, Any]:
-        request = urllib.request.Request(url, headers={"Accept": "application/json"})
+        request = urllib.request.Request(
+            url, headers={"Accept": "application/json", "User-Agent": user_agent()}
+        )
         with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:  # noqa: S310
             return dict(json.loads(response.read()))
 
@@ -64,6 +82,7 @@ class UrllibHttp:
             data=urllib.parse.urlencode(form).encode("ascii"),
             headers={
                 "Accept": "application/json",
+                "User-Agent": user_agent(),
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Authorization": f"Basic {token}",
             },

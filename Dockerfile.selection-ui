@@ -1,3 +1,10 @@
+# **Cannot be built since 2026-10-03.** `selection_ui/` moved into
+# AIStack's single web application (`ADR-0012`, `aistack.web.selection`)
+# and the `COPY selection_ui` below names a directory that no longer
+# exists. Kept until 1.7's first tranche closes `GOV-0002/OS-084`:
+# `aistack.cli.runtime_diagnose` and three tests still read this file's
+# `FROM` and `CMD` as the record of the image that ran, and retiring
+# them is one change with retiring the image itself.
 FROM python:3.13-slim
 
 WORKDIR /app

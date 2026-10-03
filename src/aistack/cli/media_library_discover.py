@@ -10,13 +10,13 @@ from aistack.providers.filesystem import MediaLibraryProvider
 
 # The one governed place a Selection UI instance's media-library
 # root is already declared — its own ApplicationDefinition, the
-# same file `selection_ui/app.py` reads on every page view
-# (`selection_ui/definitions/music_android.yml` today). This
+# same file the Selection UI (`aistack.web.selection`) reads on every page view
+# (`src/aistack/selection/definitions/music_android.yml` today). This
 # command reads the same file rather than opening a second
 # configuration surface for a fact that already has a governed home.
 DEFAULT_DEFINITION = (
-    Path(__file__).resolve().parents[3]
-    / "selection_ui"
+    Path(__file__).resolve().parents[1]
+    / "selection"
     / "definitions"
     / "music_android.yml"
 )

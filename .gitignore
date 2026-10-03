@@ -38,6 +38,7 @@ __pycache__/
 # Local environment and secrets. Never committed: these carry
 # per-machine values, and one of them carries credentials.
 .env
+.env.web
 .env.selection-ui
 .env.priority-ui
 .env.resource-priority

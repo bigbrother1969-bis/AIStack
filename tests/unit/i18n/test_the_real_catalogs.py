@@ -33,7 +33,6 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 # until they move. Moved screens' templates are under
 # `src/aistack/web/templates/` and found with the package below.
 _UI_DIRECTORIES = (
-    "selection_ui",
     "troubleshooting_assistant_ui",
     "timemachine_ui",
 )

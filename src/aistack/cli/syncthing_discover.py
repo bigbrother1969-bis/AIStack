@@ -12,15 +12,15 @@ from aistack.providers.syncthing import SyncthingProvider
 
 # The one governed place a Selection UI instance's Syncthing folder
 # and API-key env var name are already declared — its own
-# ApplicationDefinition, the same file `selection_ui/app.py` reads
-# on every page view (`selection_ui/definitions/music_android.yml`
+# ApplicationDefinition, the same file the Selection UI reads
+# on every page view (`src/aistack/selection/definitions/music_android.yml`
 # today; "a second instance of the family should differ only by
 # which YAML it is handed", per that definition's own docstring).
 # This command reads the same file rather than opening a second
 # configuration surface for facts that already have a governed home.
 DEFAULT_DEFINITION = (
-    Path(__file__).resolve().parents[3]
-    / "selection_ui"
+    Path(__file__).resolve().parents[1]
+    / "selection"
     / "definitions"
     / "music_android.yml"
 )
@@ -84,7 +84,7 @@ def main(
 
     syncthing = definition.syncthing
 
-    # GOV-P-001, same handling as `selection_ui.app._syncthing_status`:
+    # GOV-P-001, same handling as `aistack.selection.screen.read_syncthing`:
     # the env var name is read from the governed definition, never
     # the key itself.
     api_key = environ.get(syncthing.api_key_env, "") if syncthing.api_key_env else ""
@@ -98,8 +98,8 @@ def main(
     )
     observation = provider.collect()
 
-    # Prefixed with `app_id`, matching `selection_ui.app.
-    # _last_generation_path`'s own convention — this family is
+    # Prefixed with `app_id`, matching `aistack.selection.screen.
+    # last_generation_path`'s own convention — this family is
     # explicitly meant to run more than one instance from different
     # definitions, and their artifacts must not collide.
     output_path = SyncthingObservationArtifactGenerator().generate(

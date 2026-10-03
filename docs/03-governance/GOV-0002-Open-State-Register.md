@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.120
+  version: 1.121
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-10-02
+  updated: 2026-10-03
 
 relations:
   references:
@@ -320,7 +320,11 @@ suite until tranche 1 lands.
 **Closes when** the five screens run as one application under `src/`,
 every route is covered by the suite, and every `<screen>/requirements.txt`
 and `scripts/setup_<screen>_env.sh` is gone — `ENG-TEST-0001` § *Scope*'s
-dated paragraph then names what discharged it.
+dated paragraph then names what discharged it. Added 2026-10-03, when
+`selection_ui` moved: `Dockerfile.selection-ui` and
+`docker-compose.selection-ui.yml`, which build and deploy the old
+screen as a container, retire with the last screen, together with what
+still reads them (`aistack.cli.runtime_diagnose`, three tests).
 
 ---
 

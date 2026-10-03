@@ -93,7 +93,6 @@ def test_the_real_instance_config_definition_loads():
 
     assert config.lan_hostname == "GIGABYTE"
     assert config.service_ports == {
-        "selection_ui": 8181,
         "console": 8183,
         "troubleshooting_assistant_ui": 8185,
         "timemachine_ui": 8186,

@@ -129,12 +129,12 @@ def test_service_resolves_through_the_real_instance_config_by_default(
     path = write(
         tmp_path / "console_links.yml",
         "links:\n  - name: Selection UI\n    description: x\n"
-        "    service: selection_ui\n    scope: lan\n",
+        "    service: web_lan\n    path: /selection/\n    scope: lan\n",
     )
 
     links = load_console_links_yaml(path)
 
-    assert links[0].url == "http://GIGABYTE:8181"
+    assert links[0].url == "http://GIGABYTE:8187/selection/"
 
 
 def test_a_definition_missing_the_links_key_is_refused(tmp_path: Path):
@@ -253,7 +253,7 @@ def test_the_real_console_links_definition_loads():
     # public over HTTPS (Cloudflare + NPM subdomains) until then.
     # `console_links.yml`'s own header comment keeps the record of
     # the reversal.
-    assert by_name["Selection UI"].url == "http://GIGABYTE:8181"
+    assert by_name["Selection UI"].url == "http://GIGABYTE:8187/selection/"
     assert by_name["Priorité CPU"].url == "http://GIGABYTE:8187/priority/"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"

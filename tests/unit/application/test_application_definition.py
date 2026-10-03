@@ -162,9 +162,9 @@ def test_a_definition_that_is_not_a_mapping_is_refused(tmp_path: Path):
 
 def test_the_real_music_android_definition_loads():
     """
-    `selection_ui/definitions/music_android.yml` is not a fixture —
-    it is the artefact `selection_ui/app.py` reads once the screen
-    is rewired onto it (step 8). Loading it here means a typo in
+    `src/aistack/selection/definitions/music_android.yml` is not a
+    fixture — it is the artefact the Selection UI reads
+    (`aistack.web.selection`, `ADR-0012`). Loading it here means a typo in
     the real file is caught by the test suite rather than by the
     owner opening the screen.
     """
@@ -172,7 +172,7 @@ def test_the_real_music_android_definition_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     definition = load_application_definition_yaml(
-        repo_root / "selection_ui" / "definitions" / "music_android.yml"
+        repo_root / "src" / "aistack" / "selection" / "definitions" / "music_android.yml"
     )
 
     assert definition.app_id == "music_android"

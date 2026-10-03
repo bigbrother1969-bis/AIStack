@@ -23,6 +23,15 @@ source "$(cd "$(dirname "$0")" && pwd)/bin/aistack_env.sh"
 #     It answers every route, including each screen as it moves into
 #     the application through 1.7's first tranche.
 #
+# Secrets the screens read from the environment (the Selection UI's
+# `SYNCTHING_API_KEY` since 2026-10-03), in one file never committed,
+# replacing each screen's own `.env.<screen>`.
+if [ -f "$AISTACK_REPO_ROOT/.env.web" ]; then
+    set -a
+    source "$AISTACK_REPO_ROOT/.env.web"
+    set +a
+fi
+
 # The governed venv, no dedicated one: the web packages are this
 # heritage's own dependencies since decision #9 was revoked for tests
 # (GOV-0002/OS-084).

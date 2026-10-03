@@ -14,13 +14,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from aistack.i18n import Languages, default_languages
 from aistack.priority.screen import Discover, discover_containers
-from aistack.web import console, network_discovery, priority
+from aistack.kernel.bootstrap import create_kernel
+from aistack.selection.screen import SyncthingStatus, read_syncthing
+from aistack.web import console, network_discovery, priority, selection
 from aistack.web.exposure import Listeners, include
 
 
@@ -35,6 +38,10 @@ class WebPaths:
         PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml"
     )
     resource_priority: Path = PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml"
+    selection: Path = PACKAGE_ROOT / "selection" / "definitions" / "music_android.yml"
+    # What a definition's repository-relative paths (`selection_file`)
+    # resolve against: the checkout the application runs from.
+    repository_root: Path = PACKAGE_ROOT.parents[1]
 
 
 def create_app(
@@ -43,6 +50,8 @@ def create_app(
     languages: Languages | None = None,
     paths: WebPaths | None = None,
     discover: Discover = discover_containers,
+    syncthing: SyncthingStatus = read_syncthing,
+    kernel: Any = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -61,11 +70,15 @@ def create_app(
     app.state.paths = paths if paths is not None else WebPaths()
     # Host-touching collaborators (ADR-0012 § 4): what Docker reports.
     app.state.discover_containers = discover
+    # ... and what Syncthing reports for the Selection UI's folder.
+    app.state.syncthing = syncthing
+    app.state.kernel = kernel if kernel is not None else create_kernel()
     app.state.routers = []
 
     include(app, console.router)
     include(app, network_discovery.router, network_discovery.PREFIX)
     include(app, priority.router, priority.PREFIX)
+    include(app, selection.router, selection.PREFIX)
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:

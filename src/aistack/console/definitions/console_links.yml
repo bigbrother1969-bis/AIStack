@@ -171,9 +171,10 @@ links:
         place disponible avant de lancer la copie. Accessible
         uniquement depuis le réseau local.
       en: >-
-        Candidate selection — Docker Compose service,
-        LAN only (GIGABYTE:8181)
-    service: selection_ui
+        Candidate selection — AIStack web application, LAN listener
+        only (ADR-0012)
+    service: web_lan
+    path: /selection/
     scope: lan
   - name:
       fr: Priorité CPU

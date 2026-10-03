@@ -139,3 +139,49 @@ def test_an_act_on_a_page_that_is_out_of_date_answers_409(generated: Path):
     assert stale.status_code == 409
     assert "changed since the page was opened" in stale.text or "a changé depuis" in stale.text
     assert len(versions("jellyfin", generated / "explications")) == 1
+
+
+# --------------------------------------------------------------------
+# The list of every subject with a why (asked by the owner 2026-10-03)
+# --------------------------------------------------------------------
+
+
+def test_the_list_shows_every_subject_with_an_explication_and_filters_by_status(tmp_path: Path):
+    from tests.unit.explications.test_human import _import
+
+    out = tmp_path / "explications"
+    _import(out)  # booklore_db, an imported Proposed
+    web = signed_in(client(tmp_path), name="Lister")
+    web.post("/timemachine/explication/write", data={"subject": "gitea", "text": "Mine.", "expected": "0"})
+    signed_in(client(tmp_path), name="Second").post(
+        "/timemachine/explication/validate", data={"subject": "gitea", "expected": "1"}
+    )
+
+    everything = web.get("/timemachine/explications?lang=en").text
+    assert 'href="/timemachine/explication?subject=booklore_db&amp;lang=en"' in everything
+    assert 'href="/timemachine/explication?subject=gitea&amp;lang=en"' in everything
+    assert "All (2)" in everything and "Proposed (1)" in everything and "Validated (1)" in everything
+    assert '<span class="view-current">Explications</span>' in everything
+
+    validated = web.get("/timemachine/explications?status=Validated&lang=en").text
+    assert "subject=gitea" in validated and "subject=booklore_db" not in validated
+    assert "Second" in validated  # validated by
+
+    searched = web.get("/timemachine/explications?q=BOOK&lang=en").text
+    assert "subject=booklore_db" in searched and "subject=gitea" not in searched
+
+    assert "No subject matches this filter." in web.get("/timemachine/explications?q=nothing&lang=en").text
+
+
+def test_the_list_answers_without_any_explication_and_without_a_graph(tmp_path: Path):
+    reply = as_user(client(tmp_path)).get("/timemachine/explications?lang=en")
+
+    assert reply.status_code == 200
+    assert "No explication recorded." in reply.text
+
+
+def test_every_time_machine_view_links_to_the_list(generated: Path):
+    web = signed_in(client(generated))
+
+    for path in ("/timemachine/", "/timemachine/tree", "/timemachine/ribbon", page("booklore_db")):
+        assert 'href="/timemachine/explications?lang=' in web.get(path).text, path

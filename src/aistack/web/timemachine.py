@@ -37,6 +37,7 @@ from aistack.timemachine.screen import (
     EXPLICATIONS_DIR,
     GRAPH_DIR,
     RibbonEntries,
+    explication_list,
     explication_panel,
     mermaid_script,
     node_instant,
@@ -253,6 +254,23 @@ def reconstitute(request: Request, subject: str = "", as_of: str = "") -> Respon
         "reconstitute.html",
         {"subject": subject, "as_of": as_of, "panel": panel},
         extra_query=_query(subject=subject, as_of=as_of),
+    )
+
+
+@router.get("/explications", response_class=HTMLResponse, include_in_schema=False)
+def explications(request: Request, status: str = "", q: str = "") -> Response:
+    """Every subject with an Explication, filtered by the status of its
+    current version and by a word of its name (`ADR-0015`)."""
+
+    language = _language(request)
+    listing = explication_list(request.app.state.generated_dir, status, q)
+
+    return _render(
+        request,
+        language,
+        "explications.html",
+        {"list": listing},
+        extra_query=_query(status=listing["status"], q=listing["query"]),
     )
 
 

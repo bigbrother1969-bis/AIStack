@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Proposed
   owner: Architecture
   created: 2026-10-03
@@ -126,6 +126,19 @@ it writes is the Explications store, one of the graph's sources —
 `ADR-0011` § 13's "never a writer" is narrowed to the graph, for this
 one store.
 
+### 5 bis. The list of every subject with a why
+
+Asked by the owner, 2026-10-03, after the first real trials — the 80
+imported subjects are repository topics (`pra`, `timemachine`,
+`1.0.0`…), none in the network tree, so no page led to them:
+`/timemachine/explications`, a fourth view beside Streams, Tree and
+Ribbon, lists every subject that has an Explication with its current
+version's status, confidence, author, validator, date and number of
+versions, filtered by status and by a word of the subject; each line
+opens that subject's page. It reads the Explications store, so it
+answers before any graph is built. Signed in to read, like every
+Time Machine page.
+
 ### 6. Two administrators acting at once
 
 Every form carries the number of versions it was drawn from; an action
@@ -149,5 +162,3 @@ author has not seen.
 - The fallback administrator (`person:local-admin`) and the owner's
   Pocket ID account are two sources for one person: one can validate
   what the other wrote. Not prevented — recorded.
-- A list of every `Proposed` Explication waiting for a decision was
-  offered and not chosen; it can come later.

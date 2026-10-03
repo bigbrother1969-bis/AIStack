@@ -549,3 +549,24 @@ header h1 {
   background: #16335c; color: #fff; font-size: .88rem; cursor: pointer;
 }
 .explication-actions button:hover { filter: brightness(.85); }
+
+/* `/explications` — the list of every subject with a why. */
+.ribbon-filter select, .ribbon-filter input[type="search"] {
+  padding: .35rem .5rem; border: 1px solid #ccc; border-radius: 4px; font-size: .88rem;
+}
+.explications-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: .6rem; }
+.explications-table th {
+  text-align: left; color: #5b6b7d; font-weight: 600; border-bottom: 2px solid #dde4ed; padding: .4rem .5rem;
+}
+.explications-table td { border-bottom: 1px solid #edf1f6; padding: .4rem .5rem; vertical-align: top; }
+.explications-table td a { color: #16335c; text-decoration: none; font-weight: 600; }
+.explications-table td a:hover { text-decoration: underline; }
+.explications-table td.author { word-break: break-all; max-width: 18rem; }
+.explications-table tr.status-validated td:nth-child(2) { color: #1e7a3a; font-weight: 600; }
+.explications-table tr.status-discarded td { color: #8a94a3; }
+.explications-table tr.status-proposed td:nth-child(2) { color: #9a6700; font-weight: 600; }
+.band-row .k { word-break: break-word; }
+@media (max-width: 700px) {
+  .explications-table th:nth-child(3), .explications-table td:nth-child(3),
+  .explications-table th:nth-child(5), .explications-table td:nth-child(5) { display: none; }
+}

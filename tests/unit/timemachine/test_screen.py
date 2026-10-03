@@ -224,3 +224,10 @@ def test_the_explications_of_a_subject_are_read_from_their_store(generated: Path
         "expected": 0,
         "current_text": "",
     }
+
+
+def test_a_revision_link_is_shown_with_a_label_of_its_own():
+    from aistack.timemachine.screen import PREDICATE_LABELS
+    from aistack.timemachine.vocabulary import PROV_WAS_REVISION_OF
+
+    assert PREDICATE_LABELS[PROV_WAS_REVISION_OF] == ("timemachine.predicate.revision_of", True)

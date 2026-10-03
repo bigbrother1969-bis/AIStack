@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('timemachine.title') }}</title>
+  <link rel="icon" href="{{ favicon }}">
+  <style>{% include "timemachine/_style.html" %}</style>
+</head>
+<body>
+  <!--
+    `/explications` — the way in to the "why" (1.7 tranche 4,
+    ADR-0015, asked by the owner 2026-10-03): every subject that has an
+    Explication, filtered by its current version's status, each line
+    leading to that subject's `/explication` page. Read from the
+    Explications store, so it answers before any graph is built.
+  -->
+  {{ page_nav | safe }}
+
+  <header>
+    <h1>{{ t('timemachine.explications.heading') }}</h1>
+    <p class="meta">{{ t('timemachine.explications.intro') }}</p>
+  </header>
+
+  <nav class="view-switch">
+    <a href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_streams') }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="{{ base }}/tree?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_tree') }}">{{ t('timemachine.nav.tree') }}</a>
+    <a href="{{ base }}/ribbon?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_ribbon') }}">{{ t('timemachine.nav.ribbon') }}</a>
+    <span class="view-current">{{ t('timemachine.nav.explications') }}</span>
+  </nav>
+
+  <form class="ribbon-filter" method="get" action="{{ base }}/explications">
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <label class="ribbon-filter-item">{{ t('timemachine.explications.filter_label') }}
+      <select name="status" title="{{ t('timemachine.tooltip.explications_filter') }}">
+        <option value=""{% if not list.status %} selected{% endif %}>{{ t('timemachine.explications.filter_all', count=list.total) }}</option>
+        <option value="Proposed"{% if list.status == 'Proposed' %} selected{% endif %}>{{ t('timemachine.explications.filter_proposed', count=list.counts['Proposed']) }}</option>
+        <option value="Validated"{% if list.status == 'Validated' %} selected{% endif %}>{{ t('timemachine.explications.filter_validated', count=list.counts['Validated']) }}</option>
+        <option value="Discarded"{% if list.status == 'Discarded' %} selected{% endif %}>{{ t('timemachine.explications.filter_discarded', count=list.counts['Discarded']) }}</option>
+      </select>
+    </label>
+    <input type="search" name="q" value="{{ list.query }}" placeholder="{{ t('timemachine.explications.search_placeholder') }}" title="{{ t('timemachine.tooltip.explications_search') }}">
+    <button type="submit" title="{{ t('timemachine.tooltip.explications_apply') }}">{{ t('timemachine.explications.apply') }}</button>
+  </form>
+
+  {% if list.total == 0 %}
+    <p class="empty">{{ t('timemachine.explications.empty') }}</p>
+  {% elif not list.rows %}
+    <p class="empty">{{ t('timemachine.explications.filtered_empty') }}</p>
+  {% else %}
+    <p class="meta">{{ t('timemachine.explications.shown', shown=list.rows | length, total=list.total) }}</p>
+    <table class="explications-table">
+      <thead>
+        <tr>
+          <th>{{ t('timemachine.explications.column.subject') }}</th>
+          <th>{{ t('timemachine.explications.column.status') }}</th>
+          <th>{{ t('timemachine.explications.column.confidence') }}</th>
+          <th>{{ t('timemachine.explications.column.author') }}</th>
+          <th>{{ t('timemachine.explications.column.validated_by') }}</th>
+          <th>{{ t('timemachine.explications.column.recorded') }}</th>
+          <th>{{ t('timemachine.explications.column.versions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in list.rows %}
+          <tr class="status-{{ row.status | lower }}">
+            <td><a href="{{ base }}/explication?subject={{ row.subject | urlencode | replace('/', '%2F') }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.explications_open') }}">{{ row.subject }}</a></td>
+            <td>{{ row.status }}</td>
+            <td>{{ row.confidence }}</td>
+            <td class="author">{{ row.author }}</td>
+            <td>{{ row.validated_by or '' }}</td>
+            <td>{{ row.recorded }}</td>
+            <td>{{ row.versions }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</body>
+</html>

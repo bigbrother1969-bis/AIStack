@@ -23,7 +23,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from aistack.explications.human import DISCARDED, VALIDATED, status_of, versions
+from aistack.explications.human import DISCARDED, PROPOSED, VALIDATED, status_of, versions
+from aistack.history import available_stems
+from aistack.history.subject_names import subject_for_stem
 from aistack.history.query import available_instants, observation_at
 from aistack.renderers.architecture.html import load_vendored_mermaid_js
 from aistack.renderers.timemachine import (
@@ -60,6 +62,7 @@ from aistack.timemachine.vocabulary import (
     PROV_USED,
     PROV_WAS_ATTRIBUTED_TO,
     PROV_WAS_GENERATED_BY,
+    PROV_WAS_REVISION_OF,
     RDF_TYPE,
 )
 
@@ -88,6 +91,7 @@ PREDICATE_LABELS: dict[str, tuple[str, bool]] = {
     AISTACK_EXPLAINS: ("timemachine.predicate.explains", True),
     AISTACK_CONFIDENCE: ("timemachine.predicate.confidence", False),
     AISTACK_EXPLICATION_STATUS: ("timemachine.predicate.explication_status", False),
+    PROV_WAS_REVISION_OF: ("timemachine.predicate.revision_of", True),
 }
 
 TYPE_LABELS: dict[str, str] = {
@@ -736,6 +740,58 @@ def explication_panel(subject: str, generated_dir: Path) -> dict[str, Any]:
             }
             for index, version in enumerate(history)
         ],
+    }
+
+
+EXPLICATION_STATUSES = (PROPOSED, VALIDATED, DISCARDED)
+
+
+def explication_list(generated_dir: Path, status: str = "", query: str = "") -> dict[str, Any]:
+    """
+    Every subject that has an Explication, with its current version's
+    status, confidence, author and date (`ADR-0015`): the way in to the
+    Explication pages, filtered by status and by a word of the subject.
+    Read from the Explications store, so it answers without a graph.
+    """
+
+    explications_dir = generated_dir / EXPLICATIONS_DIR
+    status = status if status in EXPLICATION_STATUSES else ""
+    query = query.strip()
+
+    rows: list[dict[str, Any]] = []
+    counts = {name: 0 for name in EXPLICATION_STATUSES}
+    for stem in available_stems(explications_dir):
+        subject = subject_for_stem(stem)
+        history = versions(subject, explications_dir)
+        if not history:
+            continue
+        current = history[-1].artifact
+        current_status = status_of(current)
+        if current_status in counts:
+            counts[current_status] += 1
+        if status and current_status != status:
+            continue
+        if query and query.lower() not in subject.lower():
+            continue
+        rows.append(
+            {
+                "subject": subject,
+                "status": current_status,
+                "confidence": current.confidence,
+                "author": current.metadata.get("author_name") or current.source,
+                "validated_by": current.metadata.get("validated_by_name"),
+                "recorded": current.created_at.strftime("%Y-%m-%d %H:%M"),
+                "versions": len(history),
+            }
+        )
+
+    rows.sort(key=lambda row: row["subject"].lower())
+    return {
+        "rows": rows,
+        "status": status,
+        "query": query,
+        "counts": counts,
+        "total": sum(counts.values()),
     }
 
 

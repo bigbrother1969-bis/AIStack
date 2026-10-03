@@ -12,36 +12,23 @@ __pycache__/
 *.egg-info/
 .venv/
 
-# selection_ui's own environment, deliberately separate from
-# .venv (decision #9, 2026-08-29 — see
-# selection_ui/requirements.txt and scripts/setup_selection_ui_env.sh).
-.venv-selection-ui/
-
-# priority_ui's own environment, same reasoning, 2026-09-03 — see
-# priority_ui/requirements.txt and scripts/setup_priority_ui_env.sh.
-.venv-priority-ui/
-
-# network_discovery_ui's and troubleshooting_assistant_ui's own
-# environments, same reasoning — added 2026-09-27, found missing
-# here while adding timemachine_ui's own entry below: both mini-apps
-# have carried a `run_*.sh`/`setup_*_env.sh` pair naming these exact
-# paths since 2026-09-12 and 2026-09-18 respectively, and neither was
-# ever added to this file (`GOV-0002/OS-081`).
-.venv-network-discovery-ui/
-.venv-troubleshooting-assistant-ui/
-
-# timemachine_ui's own environment, same reasoning, 2026-09-27 — see
-# timemachine_ui/requirements.txt and
-# scripts/setup_timemachine_ui_env.sh.
-.venv-timemachine-ui/
+# The five screens' own environments (`.venv-selection-ui/`,
+# `.venv-priority-ui/`, `.venv-network-discovery-ui/`,
+# `.venv-troubleshooting-assistant-ui/`, `.venv-timemachine-ui/`) left
+# with decision #9, 2026-10-03: every screen is part of the single web
+# application and runs from `.venv` (ADR-0012 § 2). Their patterns go
+# with them — a directory of that name reappearing is a fact to see.
 
 # Local environment and secrets. Never committed: these carry
 # per-machine values, and one of them carries credentials.
 .env
 .env.web
+.env.resource-priority
+# The five screens' own environment files: kept ignored while a host may
+# still hold one — they carried credentials (ADR-0012 § 2 retires the
+# venv patterns, not these).
 .env.selection-ui
 .env.priority-ui
-.env.resource-priority
 .env.network-discovery-ui
 .env.troubleshooting-assistant-ui
 .env.timemachine-ui

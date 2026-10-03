@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
-  status: Proposed
+  version: 1.3
+  status: Accepted
   owner: Architecture
   created: 2026-10-02
   updated: 2026-10-03
@@ -26,12 +26,14 @@ relations:
 
 ## Status
 
-Proposed, 2026-10-02.
+Accepted, 2026-10-03, by the owner.
 
-The decisions below were taken by the owner on 2026-10-02, at the framing
-of 1.7, and are recorded here the same day. Under the rule adopted on
-2026-08-21 (an act binding the heritage is proposed one day and accepted
-the next), what awaits acceptance is this record, not the decisions.
+Proposed 2026-10-02: the decisions below were taken by the owner that day,
+at the framing of 1.7, and recorded the same day. Under the rule adopted
+on 2026-08-21 (an act binding the heritage is proposed one day and
+accepted the next), the record was accepted the following day — after
+1.7's first tranche had carried every decision of § 1 to § 5 out
+(`GOV-0002/OS-084`, resolved 2026-10-03).
 
 ## Context
 
@@ -108,7 +110,10 @@ only by the test client, joins the `dev` extra — `httpx2` (revised
 2026-10-03: Starlette 1.7 deprecates its test client's use of `httpx`).
 Every `<screen>/requirements.txt`,
 `scripts/setup_<screen>_env.sh`, `run_<screen>.sh`, `.venv-<screen>/` and
-`.env.<screen>` pattern is removed when its screen has moved.
+`.env.<screen>` pattern is removed when its screen has moved. Revised
+2026-10-03: the `.env.<screen>` patterns stay in `.gitignore` while a host
+may still hold such a file — they carried credentials, and an unignored
+one is one `git add -A` away from the forges.
 
 ### 3. One process, two listeners, until login exists
 
@@ -164,6 +169,22 @@ the owner stops and disables the running unit on GIGABYTE when applying
 it. `instance_config.yml`'s `service_ports` and the console's links
 follow each move. `GOV-0002/OS-084` closes with the last one.
 
+## Implementation state
+
+**As of 2026-10-03**, 1.7's first tranche has carried out § 1 to § 5: the
+console and the five screens are routers of one application, every route
+in the suite (`GOV-0002/OS-084`, resolved).
+
+| Step | State |
+|---|---|
+| § 1 — `aistack.web.create_app`, the console first | done — 2026-10-03 |
+| § 2 — web packages in `pyproject.toml`, `httpx2` in `dev` | done — 2026-10-03 |
+| § 3 — one process, two listeners, exposure declared per router | done — 2026-10-03 |
+| § 4 — every route tested in process, logic moved into the packages | done — 2026-10-03 |
+| § 5 — `network_discovery_ui`, `priority_ui`, `selection_ui`, `troubleshooting_assistant_ui`, `timemachine_ui` moved | done — 2026-10-03 |
+| `web_lan` moved from 8187 to 8186 | done — 2026-10-03 |
+| Removal of the LAN listener | not started — waits for the owner to lift `R1`, after tranche 2 |
+
 ## Consequences
 
 - Six systemd units and six ports become one unit and two ports. The
@@ -187,5 +208,9 @@ follow each move. `GOV-0002/OS-084` closes with the last one.
   `cryptography`, decided 2026-10-02), the local fallback admin
   (`hashlib.scrypt`), and protection of every `POST` route once a session
   can authorise it.
-- **Pocket ID's address and transport** (HTTPS or not) are not measured
-  yet; tranche 2 cannot start without them.
+- **Pocket ID's address and transport** were declared by the owner on
+  2026-10-03: `https://id.persiaut-family.fr`, over HTTPS. Its discovery
+  document (`/.well-known/openid-configuration`: issuer, endpoints, signing
+  algorithms, PKCE methods) and whether GIGABYTE reaches that address from
+  the LAN are not measured yet; tranche 2 records them before relying on
+  them.

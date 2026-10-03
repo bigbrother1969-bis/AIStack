@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 1.122
+  version: 1.123
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -389,7 +389,7 @@ retired with what read them (`aistack.cli.runtime_diagnose`'s
 `ENG-TEST-0002` v2.7 (the screen pattern recorded as no longer followed),
 `OPS-0002` v1.16 (one image left to build), `STD-0300` v1.27 (the
 deployment definitions and the incident's reference). `ADR-0012` itself
-stays *Proposed* until the owner accepts it.
+was accepted by the owner the same day (v1.3).
 **Outside the repository**, nothing here can measure it: the units
 `aistack-selection-ui`, `aistack-priority-ui`,
 `aistack-network-discovery-ui`, `aistack-troubleshooting-assistant-ui` and

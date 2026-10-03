@@ -9,7 +9,7 @@ The provenance graph — 1.4's second contribution to the Time Machine
 one.** `aistack.renderers.architecture.dependency_mermaid` already
 draws a real, arrowed Mermaid `flowchart` from observed edges
 (`ARC-P-012` — an arrow here is never guessed, only an edge the graph
-itself carries); `timemachine_ui`'s own `node` route already computes
+itself carries); the Time Machine's `node` route (`aistack.web.timemachine`) already computes
 exactly the two neighbour lists a centred graph needs — `facts`
 (outgoing) and `referenced_by` (incoming) — for its existing text
 view. This module turns that same, already-computed data into a

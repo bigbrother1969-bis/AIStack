@@ -8,10 +8,9 @@ generated pages through their renderers, every screen through the web
 application with its host collaborators replaced — and every link,
 button, field, list and foldable summary in it must carry a `title`.
 Controls a page's own script builds after loading are not in this HTML
-and are held to the same rule in their templates by review.
-
-`timemachine_ui` joins this check when it moves into the application
-(the last patch of 1.7's first tranche).
+and are held to the same rule in their templates by review. A link
+inside an SVG drawing carries its tooltip the SVG way, as a `<title>`
+element it contains.
 """
 
 from __future__ import annotations
@@ -46,6 +45,7 @@ from aistack.runtime.evaluate_backup import evaluate_backup
 from aistack.troubleshooting.findings import CONSUMPTION_DOMAIN, qualify
 from aistack.web.app import PACKAGE_ROOT, WebPaths, create_app
 from aistack.web.exposure import Listeners
+from tests.unit.timemachine_sample import build_sample_graph, sample_tree
 
 CONTROLS = {"a", "button", "select", "input", "textarea", "summary"}
 
@@ -59,9 +59,21 @@ class Untitled(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self.missing: list[str] = []
+        self.svg_depth = 0
+        self.svg_link: str | None = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         names = dict(attrs)
+
+        if tag == "svg":
+            self.svg_depth += 1
+
+        if self.svg_depth:
+            if tag == "a":
+                self.svg_link = self.get_starttag_text() or tag
+            elif tag == "title":
+                self.svg_link = None
+            return
 
         if tag not in CONTROLS:
             return
@@ -74,6 +86,14 @@ class Untitled(HTMLParser):
 
         if not (names.get("title") or "").strip():
             self.missing.append(self.get_starttag_text() or tag)
+
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.svg_depth and tag == "a" and self.svg_link is not None:
+            self.missing.append(self.svg_link)
+            self.svg_link = None
+        if tag == "svg":
+            self.svg_depth -= 1
 
 
 def untitled(html: str) -> list[str]:
@@ -139,7 +159,7 @@ def generated_pages() -> dict[str, str]:
         "help": render_help_html("fr"),
         "legal": render_legal_html(identity, "fr"),
         "license": render_license_html(identity, "fr"),
-        "health": render_health(cockpit, lang="fr", troubleshooting_base_url="http://GIGABYTE:8187/troubleshooting"),
+        "health": render_health(cockpit, lang="fr", troubleshooting_base_url="http://GIGABYTE:8186/troubleshooting"),
         "architecture": render_architecture(build_all_views(graph), lang="fr"),
     }
 
@@ -185,7 +205,7 @@ def web(tmp_path: Path) -> TestClient:
 
     app = create_app(
         tmp_path,
-        Listeners(public_port=8183, lan_port=8187),
+        Listeners(public_port=8183, lan_port=8186),
         LANGUAGES,
         WebPaths(
             network_discovery=discovery,
@@ -198,8 +218,10 @@ def web(tmp_path: Path) -> TestClient:
         collect_findings=lambda: (qualify([(CONSUMPTION_DOMAIN, consumption)]), ""),
         ask_ai=answer,
         run_in_background=lambda job: job(),
+        network_tree=sample_tree,
     )
-    client = TestClient(app, base_url="http://testserver:8187", follow_redirects=False)
+    build_sample_graph(tmp_path)
+    client = TestClient(app, base_url="http://testserver:8186", follow_redirects=False)
     key = "%2Fmedia%2FBACKUP%2Fx"
     client.post(f"/troubleshooting/finding/{key}/start")
     client.post(f"/troubleshooting/finding/{key}/apply")
@@ -216,7 +238,26 @@ SCREENS = [
     "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/step/1",
     "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/step/4",
     "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/applied",
+    "/timemachine/",
+    "/timemachine/tree",
+    "/timemachine/tree?q=booklore",
+    "/timemachine/ribbon",
+    "/timemachine/ribbon?subject=booklore_db",
+    "/timemachine/node?iri=urn%3Aaistack%3Astream%3Apriority-decision",
+    "/timemachine/node?iri=urn%3Aaistack%3Aobservation%3Apriority-decision%3A2026-10-01T10-00-00Z",
+    "/timemachine/reconstitute?subject=booklore_db&as_of=2026-10-02T23:00:00Z",
+    "/timemachine/explication?subject=booklore_db",
 ]
+
+
+def test_without_a_graph_the_time_machine_page_has_no_untitled_control(tmp_path: Path):
+    app = create_app(
+        tmp_path, Listeners(public_port=8183, lan_port=8186), LANGUAGES, network_tree=sample_tree
+    )
+    reply = TestClient(app, base_url="http://testserver:8186").get("/timemachine/")
+
+    assert reply.status_code == 200
+    assert untitled(reply.text) == []
 
 
 @pytest.mark.parametrize("path", SCREENS)

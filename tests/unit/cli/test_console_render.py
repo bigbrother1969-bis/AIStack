@@ -117,8 +117,8 @@ def test_main_writes_one_console_per_declared_language(workspace):
     assert '<html lang="en">' in english
     assert "Homelab health" in english
     assert "Health cockpit" in english
-    assert "http://GIGABYTE:8187/selection/?lang=en" in english
-    assert "http://GIGABYTE:8187/selection/?lang=fr" in french
+    assert "http://GIGABYTE:8186/selection/?lang=en" in english
+    assert "http://GIGABYTE:8186/selection/?lang=fr" in french
     assert (generated_dir / "history" / "console").is_dir()
     assert (generated_dir / "history" / "console.en").is_dir()
 

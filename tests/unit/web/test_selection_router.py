@@ -21,7 +21,7 @@ from aistack.web.app import WebPaths, create_app
 from aistack.web.exposure import Listeners
 
 PUBLIC_PORT = 8183
-LAN_PORT = 8187
+LAN_PORT = 8186
 LISTENERS = Listeners(public_port=PUBLIC_PORT, lan_port=LAN_PORT)
 LANGUAGES = Languages(
     reference="fr",

@@ -27,7 +27,9 @@ from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
 from aistack.troubleshooting.findings import CollectFindings, qualified_findings
 from aistack.troubleshooting.guide import AskAI, ask_ollama
-from aistack.web import console, network_discovery, priority, selection, troubleshooting
+from aistack.timemachine.screen import ExpiringValue, live_network_tree
+from aistack.timemachine.tree import NetworkTreeNode
+from aistack.web import console, network_discovery, priority, selection, timemachine, troubleshooting
 from aistack.web.exposure import Listeners, include
 
 
@@ -43,6 +45,9 @@ class WebPaths:
     )
     resource_priority: Path = PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml"
     selection: Path = PACKAGE_ROOT / "selection" / "definitions" / "music_android.yml"
+    topology: Path = (
+        PACKAGE_ROOT / "architecture" / "definitions" / "infrastructure_topology.yml"
+    )
     # What a definition's repository-relative paths (`selection_file`)
     # resolve against: the checkout the application runs from.
     repository_root: Path = PACKAGE_ROOT.parents[1]
@@ -59,6 +64,7 @@ def create_app(
     collect_findings: CollectFindings = qualified_findings,
     ask_ai: AskAI = ask_ollama,
     run_in_background: Callable[[Callable[[], None]], Any] | None = None,
+    network_tree: Callable[[], list[NetworkTreeNode]] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -91,6 +97,20 @@ def create_app(
         if run_in_background is not None
         else ThreadPoolExecutor(max_workers=1, thread_name_prefix="aistack-ai").submit
     )
+    # ... and the live network tree the Time Machine draws, rebuilt at
+    # most every 45 s: live Docker discovery is slow per request.
+    app.state.network_tree = (
+        network_tree
+        if network_tree is not None
+        else ExpiringValue(
+            lambda: live_network_tree(
+                app.state.kernel,
+                generated_dir,
+                app.state.paths.topology,
+                app.state.paths.network_discovery,
+            )
+        ).get
+    )
     app.state.routers = []
 
     include(app, console.router)
@@ -98,6 +118,7 @@ def create_app(
     include(app, priority.router, priority.PREFIX)
     include(app, selection.router, selection.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)
+    include(app, timemachine.router, timemachine.PREFIX)
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:

@@ -25,7 +25,7 @@ from aistack.i18n import Language, Languages
 from aistack.web.server import INSTANCE_CONFIG, bind, listeners_from
 
 PUBLIC_PORT = 8183
-LAN_PORT = 8187
+LAN_PORT = 8186
 LISTENERS = Listeners(public_port=PUBLIC_PORT, lan_port=LAN_PORT)
 LANGUAGES = Languages(
     reference="fr",
@@ -38,7 +38,7 @@ def test_the_listeners_are_the_instance_s_declared_ports():
     listeners = listeners_from(INSTANCE_CONFIG)
 
     assert listeners.public_port == 8183
-    assert listeners.lan_port == 8187
+    assert listeners.lan_port == 8186
 
 
 def test_an_instance_without_a_lan_port_is_refused(tmp_path: Path):

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ t('timemachine.title') }}</title>
   <link rel="icon" href="{{ favicon }}">
-  <style>{% include "_style.html" %}</style>
+  <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
   <!--
@@ -27,8 +27,8 @@
   </header>
 
   <nav class="view-switch">
-    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
-    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
+    <a href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_streams') }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="{{ base }}/tree?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_tree') }}">{{ t('timemachine.nav.tree') }}</a>
     <span class="view-current">{{ t('timemachine.nav.ribbon') }}</span>
   </nav>
 
@@ -46,25 +46,25 @@
     -->
     <p class="ribbon-subject-filter">
       {{ t('timemachine.ribbon.subject_filter_label') }} <strong>{{ subject }}</strong>
-      <a class="tree-search-clear" href="/ribbon?lang={{ lang }}">{{ t('timemachine.ribbon.filter_all') }}</a>
+      <a class="tree-search-clear" href="{{ base }}/ribbon?lang={{ lang }}" title="{{ t('timemachine.tooltip.filter_all') }}">{{ t('timemachine.ribbon.filter_all') }}</a>
     </p>
   {% endif %}
 
   {% if filter_streams %}
-    <form class="ribbon-filter" method="get" action="/ribbon">
+    <form class="ribbon-filter" method="get" action="{{ base }}/ribbon">
       <input type="hidden" name="lang" value="{{ lang }}">
       <input type="hidden" name="submitted" value="1">
       <input type="hidden" name="subject" value="{{ subject }}">
       {% for row in filter_streams %}
         <label class="ribbon-filter-item">
-          <input type="checkbox" name="streams" value="{{ row.stream }}"{% if row.checked %} checked{% endif %}>
+          <input type="checkbox" name="streams" value="{{ row.stream }}" title="{{ t('timemachine.tooltip.filter_stream', name=row.stream) }}"{% if row.checked %} checked{% endif %}>
           <span class="ribbon-badge" style="color: {{ row.badge.color }}">{{ row.badge.shape }}</span>
           {{ row.stream }}
         </label>
       {% endfor %}
-      <button type="submit">{{ t('timemachine.ribbon.filter_apply') }}</button>
+      <button type="submit" title="{{ t('timemachine.tooltip.filter_apply') }}">{{ t('timemachine.ribbon.filter_apply') }}</button>
       {% if submitted %}
-        <a class="tree-search-clear" href="/ribbon?lang={{ lang }}">{{ t('timemachine.ribbon.filter_all') }}</a>
+        <a class="tree-search-clear" href="{{ base }}/ribbon?lang={{ lang }}" title="{{ t('timemachine.tooltip.filter_all') }}">{{ t('timemachine.ribbon.filter_all') }}</a>
       {% endif %}
     </form>
   {% endif %}
@@ -92,14 +92,14 @@
     -->
     <div class="ribbon-groups">
       <details class="ribbon-group" open>
-        <summary>
+        <summary title="{{ t('timemachine.tooltip.group_fold') }}">
           {{ t('timemachine.ribbon.group_docker') }}
           <span class="ribbon-group-count">{{ ribbon_svg_docker_mark_count }}</span>
         </summary>
         <div class="ribbon-graphic">{{ ribbon_svg_docker | safe }}</div>
       </details>
       <details class="ribbon-group" open>
-        <summary>
+        <summary title="{{ t('timemachine.tooltip.group_fold') }}">
           {{ t('timemachine.ribbon.group_observation') }}
           <span class="ribbon-group-count">{{ ribbon_svg_observation_mark_count }}</span>
         </summary>
@@ -122,7 +122,7 @@
     <div class="ribbon-entry-groups">
       {% for stream, group_entries in entries | groupby('stream') %}
         <details class="ribbon-group" open>
-          <summary>
+          <summary title="{{ t('timemachine.tooltip.group_fold') }}">
             <span class="ribbon-badge" style="color: {{ group_entries[0].badge.color }}">{{ group_entries[0].badge.shape }}</span>
             {{ stream }}
             <span class="ribbon-group-count">{{ group_entries | length }}</span>
@@ -130,7 +130,7 @@
           <ul class="band-list ribbon-card-grid">
             {% for entry in group_entries %}
               <li class="band{% if entry.is_gap %} band--gap{% endif %}">
-                <a class="band-link" href="{{ entry.href }}">
+                <a class="band-link" href="{{ entry.href }}" title="{{ t('timemachine.tooltip.instant') }}">
                   {% if entry.is_gap %}
                     <div class="band-title"><span class="ribbon-gap-tag">{{ t('timemachine.ribbon.gap_label') }}</span></div>
                   {% endif %}
@@ -161,7 +161,7 @@
                     `search_empty` state already says so honestly — no
                     new plumbing needed on that side.
                   -->
-                  <a class="band-tree-link" href="/tree?q={{ entry.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.ribbon.view_in_tree') }}</a>
+                  <a class="band-tree-link" href="{{ base }}/tree?q={{ entry.subject | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.view_in_tree') }}">{{ t('timemachine.ribbon.view_in_tree') }}</a>
                 {% endif %}
               </li>
             {% endfor %}
@@ -182,11 +182,11 @@
       -->
       <nav class="ribbon-pagination">
         {% if page > 1 %}
-          <a class="ribbon-pagination-link" href="/ribbon?lang={{ lang }}{{ filter_query }}&amp;page={{ page - 1 }}">{{ t('timemachine.ribbon.pagination_prev') }}</a>
+          <a class="ribbon-pagination-link" href="{{ base }}/ribbon?lang={{ lang }}{{ filter_query }}&amp;page={{ page - 1 }}" title="{{ t('timemachine.tooltip.pagination_prev') }}">{{ t('timemachine.ribbon.pagination_prev') }}</a>
         {% endif %}
         <span class="ribbon-pagination-summary">{{ t('timemachine.ribbon.pagination_summary', page=page, total_pages=total_pages, total=total_entries) }}</span>
         {% if page < total_pages %}
-          <a class="ribbon-pagination-link" href="/ribbon?lang={{ lang }}{{ filter_query }}&amp;page={{ page + 1 }}">{{ t('timemachine.ribbon.pagination_next') }}</a>
+          <a class="ribbon-pagination-link" href="{{ base }}/ribbon?lang={{ lang }}{{ filter_query }}&amp;page={{ page + 1 }}" title="{{ t('timemachine.tooltip.pagination_next') }}">{{ t('timemachine.ribbon.pagination_next') }}</a>
         {% endif %}
       </nav>
     {% endif %}
@@ -286,6 +286,7 @@
         close.type = "button";
         close.className = "ribbon-cluster-popover-close";
         close.setAttribute("aria-label", clusterPopoverClose);
+        close.title = clusterPopoverClose;
         close.textContent = "✕";
         close.addEventListener("click", closeClusterPopover);
         header.appendChild(heading);
@@ -301,6 +302,7 @@
           var label = (member.is_occurred_at ? occurredAtLabel : recordedAtLabel) + " " + member.instant;
           if (member.subject) { label += " — " + member.subject; }
           link.textContent = label;
+          link.title = label;
           if (member.is_gap) {
             var gapTag = document.createElement("span");
             gapTag.className = "ribbon-cluster-popover-gap";

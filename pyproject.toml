@@ -194,8 +194,8 @@ ignore = ["B011", "B024"]
 # safe in that position — not a blanket disabling of B008 itself,
 # which stays selected and catches every other case.
 #
-# `fastapi.Query`, added 2026-09-28 alongside `timemachine_ui/app.py`'s
-# own `ribbon_view` (`ADR-0011` §24): the same reasoning as `Form`
+# `fastapi.Query`, added 2026-09-28 alongside the Time Machine's
+# ribbon route (`ADR-0011` §24, `aistack.web.timemachine` since 2026-10-03): the same reasoning as `Form`
 # above, applied to the marker FastAPI uses to bind a repeated query
 # parameter (`streams: list[str] = Query(default=[])`) — a fresh,
 # framework-owned object each call, not a mutable default a caller

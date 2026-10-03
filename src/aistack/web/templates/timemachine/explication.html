@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ t('timemachine.title') }}</title>
   <link rel="icon" href="{{ favicon }}">
-  <style>{% include "_style.html" %}</style>
+  <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
   <!--
@@ -25,12 +25,12 @@
     reason).
   -->
   {{ page_nav | safe }}
-  <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
+  <a class="back-link" href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.back_to_streams') }}">{{ t('timemachine.back_to_streams') }}</a>
 
   <nav class="view-switch">
-    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
-    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
-    <a href="/ribbon?lang={{ lang }}">{{ t('timemachine.nav.ribbon') }}</a>
+    <a href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_streams') }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="{{ base }}/tree?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_tree') }}">{{ t('timemachine.nav.tree') }}</a>
+    <a href="{{ base }}/ribbon?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_ribbon') }}">{{ t('timemachine.nav.ribbon') }}</a>
   </nav>
 
   <header>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ t('timemachine.title') }}</title>
   <link rel="icon" href="{{ favicon }}">
-  <style>{% include "_style.html" %}</style>
+  <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
   <!--
@@ -25,9 +25,9 @@
   </header>
 
   <nav class="view-switch">
-    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_streams') }}">{{ t('timemachine.nav.streams') }}</a>
     <span class="view-current">{{ t('timemachine.nav.tree') }}</span>
-    <a href="/ribbon?lang={{ lang }}">{{ t('timemachine.nav.ribbon') }}</a>
+    <a href="{{ base }}/ribbon?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_ribbon') }}">{{ t('timemachine.nav.ribbon') }}</a>
   </nav>
 
   <!--
@@ -37,16 +37,16 @@
   -->
   <div class="warning">{{ t('timemachine.tree.historique_notice') }}</div>
 
-  <form class="tree-search" method="get" action="/tree">
+  <form class="tree-search" method="get" action="{{ base }}/tree">
     <input type="hidden" name="lang" value="{{ lang }}">
     <input
-      type="search" name="q" value="{{ query }}"
+      type="search" name="q" title="{{ t('timemachine.tooltip.search_input') }}" value="{{ query }}"
       placeholder="{{ t('timemachine.tree.search_placeholder') }}"
       aria-label="{{ t('timemachine.tree.search_placeholder') }}"
     >
-    <button type="submit">{{ t('timemachine.tree.search_button') }}</button>
+    <button type="submit" title="{{ t('timemachine.tooltip.search_button') }}">{{ t('timemachine.tree.search_button') }}</button>
     {% if query %}
-      <a class="tree-search-clear" href="/tree?lang={{ lang }}">{{ t('timemachine.tree.search_clear') }}</a>
+      <a class="tree-search-clear" href="{{ base }}/tree?lang={{ lang }}" title="{{ t('timemachine.tooltip.search_clear') }}">{{ t('timemachine.tree.search_clear') }}</a>
     {% endif %}
   </form>
 
@@ -61,7 +61,7 @@
     Jinja globals the way `favicon`/`page_nav_style` are — a plain
     `{% import %}` would leave both undefined inside the macro.
   #}
-  {% import "_tree_macro.html" as tree_macro with context %}
+  {% import "timemachine/_tree_macro.html" as tree_macro with context %}
 
   {% if root %}
     {{ tree_macro.render_node(root, query.strip() | length > 0) }}

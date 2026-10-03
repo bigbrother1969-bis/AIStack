@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ t('timemachine.title') }}</title>
   <link rel="icon" href="{{ favicon }}">
-  <style>{% include "_style.html" %}</style>
+  <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
   <!--
@@ -24,7 +24,7 @@
     active (gap #1, voir plus bas).
   -->
   {{ page_nav | safe }}
-  <a class="back-link" href="/?lang={{ lang }}">{{ t('timemachine.back_to_streams') }}</a>
+  <a class="back-link" href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.back_to_streams') }}">{{ t('timemachine.back_to_streams') }}</a>
 
   <!--
     view-switch, added 2026-09-30
@@ -38,9 +38,9 @@
     here".
   -->
   <nav class="view-switch">
-    <a href="/?lang={{ lang }}">{{ t('timemachine.nav.streams') }}</a>
-    <a href="/tree?lang={{ lang }}">{{ t('timemachine.nav.tree') }}</a>
-    <a href="/ribbon?lang={{ lang }}">{{ t('timemachine.nav.ribbon') }}</a>
+    <a href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_streams') }}">{{ t('timemachine.nav.streams') }}</a>
+    <a href="{{ base }}/tree?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_tree') }}">{{ t('timemachine.nav.tree') }}</a>
+    <a href="{{ base }}/ribbon?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_ribbon') }}">{{ t('timemachine.nav.ribbon') }}</a>
   </nav>
 
   <!--
@@ -72,18 +72,18 @@
   <div class="node-columns">
     <aside class="node-tree-col">
       <h2 class="section-heading">{{ t('timemachine.tree.heading') }}</h2>
-      {% import "_tree_macro.html" as tree_macro with context %}
-      <form class="tree-search" method="get" action="/node">
+      {% import "timemachine/_tree_macro.html" as tree_macro with context %}
+      <form class="tree-search" method="get" action="{{ base }}/node">
         <input type="hidden" name="lang" value="{{ lang }}">
         <input type="hidden" name="iri" value="{{ iri }}">
         <input
-          type="search" name="q" value="{{ tree_query }}"
+          type="search" name="q" title="{{ t('timemachine.tooltip.search_input') }}" value="{{ tree_query }}"
           placeholder="{{ t('timemachine.tree.search_placeholder') }}"
           aria-label="{{ t('timemachine.tree.search_placeholder') }}"
         >
-        <button type="submit">{{ t('timemachine.tree.search_button') }}</button>
+        <button type="submit" title="{{ t('timemachine.tooltip.search_button') }}">{{ t('timemachine.tree.search_button') }}</button>
         {% if tree_query %}
-          <a class="tree-search-clear" href="/node?iri={{ iri | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.tree.search_clear') }}</a>
+          <a class="tree-search-clear" href="{{ base }}/node?iri={{ iri | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.search_clear') }}">{{ t('timemachine.tree.search_clear') }}</a>
         {% endif %}
       </form>
       {% if tree_root %}
@@ -101,14 +101,14 @@
         {% if ribbon_panel.has_marks %}
           <div class="ribbon-groups">
             <details class="ribbon-group" open>
-              <summary>
+              <summary title="{{ t('timemachine.tooltip.group_fold') }}">
                 {{ t('timemachine.ribbon.group_docker') }}
                 <span class="ribbon-group-count">{{ ribbon_panel.ribbon_svg_docker_mark_count }}</span>
               </summary>
               <div class="ribbon-graphic">{{ ribbon_panel.ribbon_svg_docker | safe }}</div>
             </details>
             <details class="ribbon-group" open>
-              <summary>
+              <summary title="{{ t('timemachine.tooltip.group_fold') }}">
                 {{ t('timemachine.ribbon.group_observation') }}
                 <span class="ribbon-group-count">{{ ribbon_panel.ribbon_svg_observation_mark_count }}</span>
               </summary>
@@ -118,7 +118,7 @@
         {% else %}
           <p class="empty">{{ t('timemachine.ribbon.subject_empty') }}</p>
         {% endif %}
-        <a class="band-tree-link" href="/ribbon?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_view_full') }}</a>
+        <a class="band-tree-link" href="{{ base }}/ribbon?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.ribbon_full') }}">{{ t('timemachine.node_ribbon_view_full') }}</a>
         {% if node_instant %}
           <!--
             node_ribbon_reconstitute_link, added 2026-10-02 (gap #3,
@@ -127,7 +127,7 @@
             and `node_instant` must be known for /reconstitute to mean
             anything, so this link never appears without either.
           -->
-          <a class="band-tree-link" href="/reconstitute?subject={{ ribbon_panel.subject | urlencode }}&amp;as_of={{ node_instant | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_reconstitute_link') }}</a>
+          <a class="band-tree-link" href="{{ base }}/reconstitute?subject={{ ribbon_panel.subject | urlencode }}&amp;as_of={{ node_instant | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.reconstitute') }}">{{ t('timemachine.node_ribbon_reconstitute_link') }}</a>
         {% endif %}
         <!--
           node_ribbon_explication_link, added 2026-10-02 (gap #2,
@@ -139,7 +139,7 @@
           names, so most real nodes honestly find nothing — the
           destination page says so, this link does not pre-check it).
         -->
-        <a class="band-tree-link" href="/explication?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}">{{ t('timemachine.node_ribbon_explication_link') }}</a>
+        <a class="band-tree-link" href="{{ base }}/explication?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.explication') }}">{{ t('timemachine.node_ribbon_explication_link') }}</a>
       {% else %}
         <p class="empty">{{ t('timemachine.node_ribbon_no_subject') }}</p>
       {% endif %}
@@ -176,7 +176,7 @@
         <ul class="band-list">
           {% for instant in instants %}
             <li class="band">
-              <a class="band-link" href="/node?iri={{ instant.iri | urlencode }}&amp;lang={{ lang }}">
+              <a class="band-link" href="{{ base }}/node?iri={{ instant.iri | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.instant') }}">
                 <div class="band-title">{{ instant.generated_at }}</div>
                 {% if instant.subject %}
                   <div class="band-row"><span class="k">{{ t('timemachine.predicate.stable_subject') }}</span><span class="v">{{ instant.subject }}</span></div>
@@ -203,7 +203,7 @@
                   {% if fact.object_type_label_key %}
                     {{ t(fact.object_type_label_key) }}
                   {% elif fact.object_iri %}
-                    <a href="/node?iri={{ fact.object_iri | urlencode }}&amp;lang={{ lang }}">{{ fact.object }}</a>
+                    <a href="{{ base }}/node?iri={{ fact.object_iri | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.node') }}">{{ fact.object }}</a>
                   {% else %}
                     {{ fact.object }}
                   {% endif %}
@@ -221,7 +221,7 @@
         <ul class="band-list">
           {% for ref in referenced_by %}
             <li class="band">
-              <a class="band-link" href="/node?iri={{ ref.iri | urlencode }}&amp;lang={{ lang }}">
+              <a class="band-link" href="{{ base }}/node?iri={{ ref.iri | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.node') }}">
                 <div class="band-row">
                   <span class="k">
                     {% if ref.predicate_label_key %}{{ t(ref.predicate_label_key) }}{% else %}{{ ref.predicate }}{% endif %}

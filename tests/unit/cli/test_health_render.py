@@ -980,7 +980,7 @@ def test_main_links_a_real_finding_to_the_troubleshooting_assistant(
         encoding="utf-8"
     )
 
-    assert 'action="http://GIGABYTE:8187/troubleshooting/finding/nextcloud/start"' in document
+    assert 'action="http://GIGABYTE:8186/troubleshooting/finding/nextcloud/start"' in document
 
 
 def test_main_renders_no_diagnose_button_when_the_instance_config_is_unreadable(

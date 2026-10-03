@@ -1,4 +1,4 @@
-# Time Machine mini-app (timemachine_ui) — ADR-0010, ADR-0011.
+# Time Machine (aistack.web.timemachine, /timemachine) — ADR-0010, ADR-0011, ADR-0012.
 
 title: "AIStack — Time Machine"
 heading: "Time Machine"
@@ -124,3 +124,27 @@ explication:
   confidence_label: "Confidence"
   status_label: "Status"
   source_label: "Source"
+tooltip:
+  nav_streams: "Every stream projected into the graph"
+  nav_tree: "The network ⊃ host ⊃ stack ⊃ container tree, as Docker sees it now"
+  nav_ribbon: "Every recorded instant, on a time axis"
+  back_to_streams: "Back to the list of every stream"
+  stream: "Open this stream and the instants it recorded"
+  node: "Open this node of the graph"
+  instant: "Open what the graph knows about this instant"
+  tree_fold: "Click to fold or unfold this node of the tree"
+  group_fold: "Click to fold or unfold this group"
+  historique: "Open {name}'s history in the graph"
+  tree_ribbon: "See {name}'s instants on the time ribbon"
+  search_input: "A word from the name of a host, a stack or a container"
+  search_button: "Keep only the nodes whose name contains this word, and their parents"
+  search_clear: "Show the whole tree again"
+  ribbon_full: "Open this subject's full ribbon, with its filters and its list"
+  reconstitute: "What was known about this subject at this node's instant, stream by stream"
+  explication: "The explanations recorded for this subject, version by version"
+  filter_stream: "Show or hide the {name} stream"
+  filter_apply: "Apply the choice of streams"
+  filter_all: "Remove the filters and show every stream"
+  view_in_tree: "Find this subject in the network tree"
+  pagination_prev: "Previous page of the list"
+  pagination_next: "Next page of the list"

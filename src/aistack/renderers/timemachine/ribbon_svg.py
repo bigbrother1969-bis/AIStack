@@ -50,7 +50,7 @@ settled two decisions before any code:
    scheme (`aistack.timemachine.iri.stream_iri`), so there is no real,
    already-existing distinction to subdivide it further without
    inventing a taxonomy nothing in this graph states
-   (`ARC-P-006`). `timemachine_ui.app`'s `ribbon_view` builds one
+   (`ARC-P-006`). `aistack.timemachine.screen.ribbon_page` builds one
    `RibbonSvg` per category by calling `render_ribbon_svg` twice —
    this module itself stays generic, with no notion of "Docker" or
    "observation" anywhere in it, the same reasoning `iri.py`'s own
@@ -132,7 +132,7 @@ label-footprint fix does not by itself reach).
 `aistack.renderers.timemachine.provenance_mermaid.ProvenanceNeighbor`
 already holds), so it is testable by the governed suite without a
 browser (`R5`: "toute la logique dans `src/`, testée ; couches web
-minces"). `ribbon_view` in `timemachine_ui/app.py` calls
+minces"). `aistack.timemachine.screen.ribbon_svgs` calls
 `render_ribbon_svg` with the same already-built `filtered` entries it
 already renders as a flat list — kept, unremoved: the `dataviz`
 skill's own non-negotiable, "a table view exists".

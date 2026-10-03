@@ -94,7 +94,6 @@ def test_the_real_instance_config_definition_loads():
     assert config.lan_hostname == "GIGABYTE"
     assert config.service_ports == {
         "console": 8183,
-        "timemachine_ui": 8186,
-        "web_lan": 8187,
+        "web_lan": 8186,
     }
     assert config.service_url("console") == "http://GIGABYTE:8183"

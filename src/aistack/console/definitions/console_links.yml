@@ -252,6 +252,7 @@ links:
         consultable. Accessible uniquement depuis le réseau local.
       en: >-
         AIStack's complete history projected as a PROV-O graph —
-        systemd/uvicorn service, LAN only (GIGABYTE:8186)
-    service: timemachine_ui
+        AIStack web application, LAN listener only (ADR-0012)
+    service: web_lan
+    path: /timemachine/
     scope: lan

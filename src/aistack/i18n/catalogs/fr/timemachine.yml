@@ -1,4 +1,4 @@
-# Mini-app Time Machine (timemachine_ui) — ADR-0010, ADR-0011.
+# Time Machine (aistack.web.timemachine, /timemachine) — ADR-0010, ADR-0011, ADR-0012.
 
 title: "AIStack — Time Machine"
 heading: "Time Machine"
@@ -128,3 +128,27 @@ explication:
   confidence_label: "Confiance"
   status_label: "Statut"
   source_label: "Source"
+tooltip:
+  nav_streams: "Tous les flux projetés dans le graphe"
+  nav_tree: "L'arbre réseau ⊃ hôte ⊃ stack ⊃ conteneur, tel que Docker le voit maintenant"
+  nav_ribbon: "Chaque instant enregistré, sur un axe du temps"
+  back_to_streams: "Revenir à la liste de tous les flux"
+  stream: "Ouvrir ce flux et les instants qu'il a enregistrés"
+  node: "Ouvrir ce nœud du graphe"
+  instant: "Ouvrir ce que le graphe sait de cet instant"
+  tree_fold: "Cliquer pour replier ou déplier ce nœud de l'arbre"
+  group_fold: "Cliquer pour replier ou déplier ce groupe"
+  historique: "Ouvrir l'historique de {name} dans le graphe"
+  tree_ribbon: "Voir les instants de {name} sur le ruban du temps"
+  search_input: "Un mot du nom d'un hôte, d'une stack ou d'un conteneur"
+  search_button: "Ne garder que les nœuds dont le nom contient ce mot, et leurs parents"
+  search_clear: "Afficher de nouveau l'arbre entier"
+  ribbon_full: "Ouvrir le ruban complet de ce sujet, avec ses filtres et sa liste"
+  reconstitute: "Ce qui était connu de ce sujet à l'instant de ce nœud, flux par flux"
+  explication: "Les explications enregistrées pour ce sujet, version par version"
+  filter_stream: "Afficher ou masquer le flux {name}"
+  filter_apply: "Appliquer le choix des flux"
+  filter_all: "Retirer les filtres et afficher tous les flux"
+  view_in_tree: "Retrouver ce sujet dans l'arbre réseau"
+  pagination_prev: "Page précédente de la liste"
+  pagination_next: "Page suivante de la liste"

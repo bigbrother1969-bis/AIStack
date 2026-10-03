@@ -134,7 +134,7 @@ def test_service_resolves_through_the_real_instance_config_by_default(
 
     links = load_console_links_yaml(path)
 
-    assert links[0].url == "http://GIGABYTE:8187/selection/"
+    assert links[0].url == "http://GIGABYTE:8186/selection/"
 
 
 def test_a_definition_missing_the_links_key_is_refused(tmp_path: Path):
@@ -253,8 +253,8 @@ def test_the_real_console_links_definition_loads():
     # public over HTTPS (Cloudflare + NPM subdomains) until then.
     # `console_links.yml`'s own header comment keeps the record of
     # the reversal.
-    assert by_name["Selection UI"].url == "http://GIGABYTE:8187/selection/"
-    assert by_name["Priorité CPU"].url == "http://GIGABYTE:8187/priority/"
+    assert by_name["Selection UI"].url == "http://GIGABYTE:8186/selection/"
+    assert by_name["Priorité CPU"].url == "http://GIGABYTE:8186/priority/"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"
     # LAN-only, deliberately: never a `https://...persiaut-family.fr`
@@ -262,10 +262,12 @@ def test_the_real_console_links_definition_loads():
     # against the owner's own LAN (`PLAN-J11` § 11).
     # Inside AIStack's single web application since 2026-10-03
     # (ADR-0012): the LAN listener, under its own prefix.
-    assert by_name["Découverte réseau"].url == "http://GIGABYTE:8187/network-discovery/"
+    assert by_name["Découverte réseau"].url == "http://GIGABYTE:8186/network-discovery/"
     # LAN-only, deliberately — v1 choice, not a security necessity
     # (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`).
-    assert by_name["Assistant de pannes"].url == "http://GIGABYTE:8187/troubleshooting/"
+    assert by_name["Assistant de pannes"].url == "http://GIGABYTE:8186/troubleshooting/"
+    # The last screen in (ADR-0012), on the port it held alone before.
+    assert by_name["Time Machine"].url == "http://GIGABYTE:8186/timemachine/"
     # `scope`, added 2026-09-30: the same LAN/public split this file's
     # own header comments already narrated by hand above, now a field
     # `console/html.py` groups cards by.

@@ -28,13 +28,6 @@ from aistack.i18n import DEFAULT_CATALOGS, load_catalogs, load_languages_yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
-# The screens not yet moved into AIStack's single web application
-# (ADR-0012) still live beside `src/`; their text is read from there
-# until they move. Moved screens' templates are under
-# `src/aistack/web/templates/` and found with the package below.
-_UI_DIRECTORIES = (
-    "timemachine_ui",
-)
 
 # `t("a.b")` / `t('a.b')` — or `t.raw(...)`, the unfilled form a
 # page's own script completes — in Python and in Jinja alike. Screens name
@@ -57,11 +50,6 @@ def placeholders(message: str) -> set[str]:
 def used_keys() -> dict[str, set[Path]]:
     files = list((REPO_ROOT / "src" / "aistack").rglob("*.py"))
     files.extend((REPO_ROOT / "src" / "aistack").rglob("*.html"))
-
-    for directory in _UI_DIRECTORIES:
-        root = REPO_ROOT / directory
-        files.extend(root.glob("*.py"))
-        files.extend((root / "templates").glob("*.html"))
 
     found: dict[str, set[Path]] = {}
 

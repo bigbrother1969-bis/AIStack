@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Proposed
   owner: Architecture
   created: 2026-10-02
@@ -121,10 +121,10 @@ the owner, 2026-10-02:
 - **8183, the public port**, answers only the console pages, Settings and
   — from tranche 2 — the login routes; any other path is a 404 there;
 - **the LAN port**, never a Proxy Host, answers everything. It is
-  `instance_config.yml`'s `service_ports.web_lan`: **8187 while
-  `timemachine_ui` still holds 8186**, moved to 8186 by the patch that
-  brings the Time Machine into the application, so that bookmark keeps
-  answering;
+  `instance_config.yml`'s `service_ports.web_lan`: **8186** — 8187
+  while `timemachine_ui` still held 8186, moved on 2026-10-03 by the
+  patch that brought the Time Machine into the application, so that
+  bookmark keeps answering;
 - the refusal is decided by **the port the request arrived on**
   (`request.scope["server"]`), never by a header the proxy sets or a
   client could forge;

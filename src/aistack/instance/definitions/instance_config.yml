@@ -28,19 +28,18 @@
 #
 # `web_lan`, added 2026-10-03 (`ADR-0012` § 3): the LAN listener of
 # AIStack's single web process, which also serves `console`'s port as
-# its public listener. 8187 while `timemachine_ui` still holds 8186;
-# the patch that moves the Time Machine into the application moves
-# this entry to 8186, so that bookmark keeps answering. Never a Proxy
-# Host in Nginx Proxy Manager.
+# its public listener. 8186 since 2026-10-03, when the Time Machine —
+# the last screen — moved into the application and gave up that port
+# (8187 before), so that bookmark keeps answering. Never a Proxy Host
+# in Nginx Proxy Manager.
 #
 # Each screen that moves into that application leaves this list — its
 # port stops answering — and its console card names `web_lan` plus its
 # path instead: `network_discovery_ui` (8184), `priority_ui` (8182),
-# `selection_ui` (8181) and `troubleshooting_assistant_ui` (8185) on
-# 2026-10-03.
+# `selection_ui` (8181), `troubleshooting_assistant_ui` (8185) and
+# `timemachine_ui` (8186, now `web_lan` itself) on 2026-10-03.
 
 lan_hostname: GIGABYTE
 service_ports:
   console: 8183
-  timemachine_ui: 8186
-  web_lan: 8187
+  web_lan: 8186

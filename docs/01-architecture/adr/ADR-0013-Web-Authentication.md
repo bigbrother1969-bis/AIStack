@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Proposed
   owner: Architecture
   created: 2026-10-03
@@ -120,7 +120,9 @@ on one is not seen on the other.
 ### 4. Profiles come from Pocket ID's groups
 
 Decided by the owner, 2026-10-03: tranche 3 reads the profile from the
-ID token's `groups` claim (a Pocket ID group such as `aistack-admins`).
+ID token's `groups` claim — the group's name, `aistack_admins`, which
+the claim carries; its display name in Pocket ID is `aistack-admins`
+(corrected 2026-10-03, measured on the first real sign-in; `ADR-0014`).
 Tranche 2 already requests the `groups` scope and stores the groups with
 the session; it decides nothing from them.
 

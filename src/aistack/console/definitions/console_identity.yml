@@ -23,3 +23,9 @@ repositories:
     url: "https://github.com/bigbrother1969-bis/AIStack"
   - name: Codeberg
     url: "https://codeberg.org/bigbrother1969/AIStack"
+# The image each release publishes (OPS-0002 § Publishing an image),
+# added to the licence page at the owner's request, 2026-10-03.
+images:
+  - name: "bigbrother1969/aistack-core"
+    registry: Docker Hub
+    url: "https://hub.docker.com/r/bigbrother1969/aistack-core"

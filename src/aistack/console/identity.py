@@ -38,6 +38,16 @@ class Repository:
 
 
 @dataclass(frozen=True)
+class ContainerImage:
+    """A published container image: its name, the registry that serves
+    it and that registry's page for it."""
+
+    name: str
+    registry: str
+    url: str
+
+
+@dataclass(frozen=True)
 class ConsoleIdentity:
     publisher: str
     legal_form: str
@@ -49,6 +59,7 @@ class ConsoleIdentity:
     license: str
     license_url: str
     repositories: tuple[Repository, ...]
+    images: tuple[ContainerImage, ...] = ()
 
 
 def load_console_identity(
@@ -77,6 +88,17 @@ def load_console_identity(
         Repository(name=str(entry["name"]), url=str(entry["url"])) for entry in data["repositories"]
     )
 
+    images = tuple(
+        ContainerImage(
+            name=str(entry["name"]), registry=str(entry["registry"]), url=str(entry["url"])
+        )
+        for entry in data.get("images") or ()
+    )
+
+    for image in images:
+        if not image.url.startswith("https://"):
+            raise ValueError(f"console identity {path}: image {image.name} must have an https:// address")
+
     return ConsoleIdentity(
         publisher=str(data["publisher"]),
         legal_form=pick_localized(data["legal_form"], lang, declared, f"{path}: legal_form"),
@@ -88,4 +110,5 @@ def load_console_identity(
         license=str(data["license"]),
         license_url=str(data["license_url"]),
         repositories=repositories,
+        images=images,
     )

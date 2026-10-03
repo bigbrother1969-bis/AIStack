@@ -8,7 +8,7 @@ catalogs and every publisher detail from the declared
 
 from __future__ import annotations
 
-from aistack.console.identity import ConsoleIdentity
+from aistack.console.identity import ConsoleIdentity, ContainerImage
 from aistack.i18n import Languages, Translator, default_languages, translator_for
 from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
 from aistack.renderers.console.settings import _STYLE as SETTINGS_STYLE
@@ -129,6 +129,23 @@ def render_legal_html(
     return _page(t, declared, "console.legal.page_title", body)
 
 
+def _image_section(t: Translator, image: ContainerImage) -> str:
+    link = (
+        f'<br><a href="{escape_text(image.url)}" rel="noopener" '
+        f'title="{escape_text(t("console.tooltip.image", registry=image.registry, name=image.name))}">'
+        f"{escape_text(image.registry)} — {escape_text(image.url.removeprefix('https://'))}</a>"
+    )
+    pull = escape_text(t("console.license.image_pull")) + (
+        f"<br><code>docker pull {escape_text(image.name)}:&lt;version&gt;</code>"
+    )
+
+    return _section(
+        t("console.license.image_heading"),
+        escape_text(t("console.license.image_text", registry=image.registry)) + link,
+        pull,
+    )
+
+
 def render_license_html(
     identity: ConsoleIdentity, lang: str | None = None, languages: Languages | None = None
 ) -> str:
@@ -155,6 +172,7 @@ def render_license_html(
                 t("console.license.sources_heading"),
                 escape_text(t("console.license.sources_text")) + repositories,
             ),
+            *(_image_section(t, image) for image in identity.images),
         ]
     )
 

@@ -54,6 +54,28 @@ def test_the_licence_page_links_the_licence_and_both_repositories():
     assert "https://codeberg.org/bigbrother1969/AIStack" in page
 
 
+@pytest.mark.parametrize(("lang", "heading"), [("fr", "Image Docker"), ("en", "Docker image")])
+def test_the_licence_page_has_a_block_for_the_docker_hub_image(lang: str, heading: str):
+    page = render_license_html(load_console_identity(lang=lang), lang)
+
+    assert f"<h2>{heading}</h2>" in page
+    assert 'href="https://hub.docker.com/r/bigbrother1969/aistack-core"' in page
+    assert "<code>docker pull bigbrother1969/aistack-core:&lt;version&gt;</code>" in page
+
+
+def test_an_image_without_an_https_address_is_refused(tmp_path: Path):
+    from aistack.console.identity import DEFAULT_IDENTITY
+
+    declared = DEFAULT_IDENTITY.read_text(encoding="utf-8").replace(
+        "https://hub.docker.com/", "http://hub.docker.com/"
+    )
+    path = tmp_path / "console_identity.yml"
+    path.write_text(declared, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="https://"):
+        load_console_identity(path)
+
+
 @pytest.mark.parametrize("lang", ["fr", "en"])
 def test_the_help_page_exists_in_each_language(lang: str):
     page = render_help_html(lang)

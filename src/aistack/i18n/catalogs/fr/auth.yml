@@ -115,7 +115,7 @@ storage:
     chosen: "Emplacement choisi"
     chosen_by: "choisi par {name}, le {when}"
     option_free: " — {free} libres"
-    folder: "Les données iront dans le dossier {folder} à la racine du disque choisi. Ne sont proposés que les disques locaux accessibles en écriture, hors celui où sont déjà les données (un partage réseau ne garde pas sûrement la base des sessions)."
+    folder: "Les données iront dans {folder} : un dossier AIStack réservé, à la racine du disque choisi. Ne sont proposés que les disques locaux accessibles en écriture, hors celui où sont déjà les données (un partage réseau ne garde pas sûrement la base des sessions)."
     no_disk: "Aucun autre disque local accessible en écriture : rien à proposer."
     save: "Enregistrer"
     clear: "Annuler ce choix"

@@ -99,7 +99,8 @@ Ouverts depuis le bouton **Paramètres** en haut de chaque page.
   dans la liste : n'y figurent que les disques locaux accessibles en
   écriture, avec leur espace libre, hors celui où sont déjà les données
   (pas de partage réseau : la base des sessions n'y est pas en sûreté).
-  Les données iront dans `aistack-data`, à la racine du disque. AIStack
+  Les données iront dans `AIStack/data` : un dossier `AIStack` réservé,
+  à la racine du disque. AIStack
   refuse un disque sans assez de place, puis enregistre le choix et
   affiche **les commandes à lancer**, dans l'ordre. Il ne déplace jamais rien lui-même. En installation git, les
   services sont arrêtés, les données copiées, `reports/generated` devient

@@ -43,13 +43,13 @@ def test_an_administrator_records_a_disk_and_sees_the_commands(tmp_path: Path):
     assert answer.headers["location"] == "/settings?storage=saved#data-location"
 
     recorded = dl.load(tmp_path / dl.FILE_NAME)
-    assert recorded is not None and recorded.target == "/media/BD/aistack-data" and recorded.chosen_by == "Admin"
+    assert recorded is not None and recorded.target == "/media/BD/AIStack/data" and recorded.chosen_by == "Admin"
 
     page = web.get("/settings?lang=en&storage=saved").text
     assert "Location saved." in page
     assert "move planned, not done yet" in page
     assert '<option value="/media/BD" selected>' in page
-    assert "sudo mkdir -p /media/BD/aistack-data" in page and "ln -s /media/BD/aistack-data" in page
+    assert "sudo mkdir -p /media/BD/AIStack/data" in page and "ln -s /media/BD/AIStack/data" in page
 
 
 def test_a_disk_not_offered_is_refused_and_nothing_recorded(tmp_path: Path):
@@ -74,7 +74,7 @@ def test_a_disk_without_room_is_refused(tmp_path: Path):
 
 def test_cancelling_forgets_the_choice(tmp_path: Path):
     app = app_with(tmp_path)
-    dl.save(tmp_path / dl.FILE_NAME, dl.DataLocation("/media/BD/aistack-data"))
+    dl.save(tmp_path / dl.FILE_NAME, dl.DataLocation("/media/BD/AIStack/data"))
     web = signed_in(client(app))
 
     web.post("/settings/storage/location", data={"action": "clear"})

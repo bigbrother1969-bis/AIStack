@@ -115,7 +115,7 @@ storage:
     chosen: "Chosen location"
     chosen_by: "chosen by {name}, on {when}"
     option_free: " — {free} free"
-    folder: "The data will go to the {folder} directory at the root of the disk chosen. Only local disks open for writing are offered, except the one the data is already on (a network share does not keep the sessions database safely)."
+    folder: "The data will go to {folder}: a dedicated AIStack directory at the root of the disk chosen. Only local disks open for writing are offered, except the one the data is already on (a network share does not keep the sessions database safely)."
     no_disk: "No other local disk open for writing: nothing to offer."
     save: "Save"
     clear: "Cancel this choice"

@@ -31,8 +31,10 @@ import yaml
 from aistack.host.mounts import MountRow
 
 FILE_NAME = "data_location.yml"
-# The directory the data goes to, at the root of the disk chosen.
-DATA_FOLDER = "aistack-data"
+# Where the data goes on the disk chosen: AIStack's own directory at
+# its root, the data in it (the owner's choice, 2026-10-04), so the
+# directory can hold more of AIStack's later.
+DATA_FOLDER = "AIStack/data"
 # A container's own mounts, never offered.
 CONTAINER_OWN = ("/config", "/app", "/var/run", "/etc")
 DATA_DIR_ENV = "AISTACK_DATA_DIR"
@@ -213,8 +215,10 @@ def commands(
         source = environment.get(DATA_DIR_ENV, "").rstrip("/") or "./data"
         return [
             "docker compose down",
-        f"sudo mkdir -p {target}",
+            f"sudo mkdir -p {target}",
             f"sudo rsync -aH --info=progress2 {source}/ {target}/",
+            # AIStack's own directory too, for what it holds later.
+            f"sudo chown {owner} {Path(target).parent}",
             f"sudo chown -R {owner} {target}",
             f"grep -q '^{DATA_DIR_ENV}=' .env && sed -i 's|^{DATA_DIR_ENV}=.*|{DATA_DIR_ENV}={target}|' .env"
             f" || echo '{DATA_DIR_ENV}={target}' >> .env",
@@ -229,6 +233,8 @@ def commands(
         f"git -C {generated_dir.parent.parent} update-index --skip-worktree reports/generated/repository-debt-report.md",
         f"sudo mkdir -p {target}",
         f"sudo rsync -aH --info=progress2 {current}/ {target}/",
+        # AIStack's own directory too, for what it holds later.
+        f"sudo chown {owner} {Path(target).parent}",
         f"sudo chown -R {owner} {target}",
         f"mv {current} {current}.avant-deplacement",
         f"ln -s {target} {current}",

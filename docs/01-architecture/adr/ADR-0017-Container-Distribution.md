@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Proposed
   owner: Architecture
   created: 2026-10-04
@@ -121,8 +121,9 @@ never moves anything itself**.
   first trial, 2026-10-04): the local mounts the process can write to —
   in the container, the host directories it mounts — with their free
   space, except the disk the data is already on and any network share
-  (the sessions are a SQLite file). The data goes to `aistack-data` at
-  the root of that disk. Refused: a disk not in the list, a disk with
+  (the sessions are a SQLite file). The data goes to `AIStack/data` — a
+  dedicated `AIStack` directory at the root of that disk (the owner's
+  choice at the second trial, 2026-10-04). Refused: a disk not in the list, a disk with
   less free space than the data's size plus 10 % (measured within 5 s,
   else not checked). The choice — directory, who, when — is
   `data_location.yml`, in the configuration directory, else at the

@@ -53,8 +53,8 @@ def test_in_a_container_the_read_only_host_mounts_are_offered_but_not_its_own():
 def test_the_data_goes_to_one_folder_at_the_root_of_the_disk_chosen():
     offered = dl.candidates(rows(), Path("/srv/x/reports/generated"), in_container=False)
 
-    assert dl.checked("/media/BD", offered, size=100) == "/media/BD/aistack-data"
-    assert dl.target_on("/") == "/aistack-data"
+    assert dl.checked("/media/BD", offered, size=100) == "/media/BD/AIStack/data"
+    assert dl.target_on("/") == "/AIStack/data"
 
 
 def test_a_disk_not_offered_or_without_room_is_refused():
@@ -129,5 +129,5 @@ def test_the_commands_copy_and_declare_the_directory_in_a_container():
     assert lines[0] == "docker compose down"
     assert lines[1] == "sudo mkdir -p /media/BD/aistack"
     assert "rsync -aH --info=progress2 ./data/ /media/BD/aistack/" in lines[2]
-    assert "AISTACK_DATA_DIR=/media/BD/aistack" in lines[4]
+    assert "AISTACK_DATA_DIR=/media/BD/aistack" in lines[5]
     assert lines[-1] == "docker compose up -d"

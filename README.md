@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 7
+  version: 8
   created: 2026-07-04
-  updated: 2026-09-23
+  updated: 2026-10-04
 ---
 
 # AIStack
@@ -79,9 +79,22 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.7.0
+### Concrete capabilities, as of 1.8.0
 
-- **One web application, signed in — new as of 1.7.0** — the console and
+- **Ready to run from Docker Hub — new as of 1.8.0** — one image,
+  `bigbrother1969/aistack-core`, runs the whole of AIStack: the web
+  application and the five collectors are six services of one
+  `docker-compose.yml`, on the host's network, reading their
+  declarations from `./config` (copied at first start, never
+  overwritten) and keeping their data in one directory. A new
+  installation starts on the reference host's values and says, on every
+  page, what is still to declare — host, identity provider, client
+  secrets — until it is. From Settings, an administrator sees every disk
+  and mount the server has and picks the disk AIStack's data should move
+  to; AIStack shows the commands and never moves anything itself. A user
+  manual, reached from Help, describes every screen and the setup. The
+  reference host runs this way since 2026-10-04.
+- **One web application, signed in — as of 1.7.0** — the console and
   every screen (Architecture, Health Cockpit, Priority CPU, music
   selection, network discovery, the troubleshooting assistant, the Time
   Machine) are one application, every route of it in the test suite. It
@@ -126,7 +139,10 @@ AIStack transforms observations into sustainable knowledge assets.
   in red is a link into the troubleshooting assistant. As of 1.6.1:
   the Services domain also counts restarts over the last hour from the
   Docker event history, so a container crash-looping while reading
-  "running" between two crashes is flagged, not missed.
+  "running" between two crashes is flagged, not missed. As of 1.8.0:
+  the technical-debt card costs a domain's weight once per domain
+  carrying debt, so it moves when a domain is cleared; a service started
+  only on demand is no inventory gap when stopped.
 - **Runtime diagnosis** — a sweep of the Docker host, no container
   named, qualifies log lines against declared signatures, correlates
   unexplained CPU consumption against host temperature and against the
@@ -215,6 +231,11 @@ AIStack transforms observations into sustainable knowledge assets.
     nothing ever deleted, and the graph links each version to the one it
     revises at its next rebuild. A new **Explications** view lists every
     subject that has one, filtered by status and by name.
+  - **1.8.0** — while an instance is in its development phase, what an
+    administrator writes is validated as written and test entries can
+    be purged; the strict two-person rule returns in production
+    (`ADR-0016`). AIStack's own containers appear in the tree and the
+    streams like any other Compose project.
 - **Knowledge integrity validation** — eighteen checks run against the
   governed documentation on every test suite and before every
   publication.
@@ -479,7 +500,7 @@ above are the same; the services replace step 4.
 mkdir -p /srv/aistack && cd /srv/aistack
 curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/main/docker-compose.yml
 curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/main/.env.example
-cp .env.example .env               # AISTACK_VERSION, your user and group ids, the socket's group
+cp .env.example .env               # AISTACK_VERSION (1.8.0 or later), your user and group ids, the socket's group
 mkdir -p config data               # created by you, so your account owns them
 touch .env.web && chmod 600 .env.web
 docker compose pull && docker compose up -d
@@ -505,6 +526,12 @@ docker compose run --rm validate                                     # the knowl
 
 Never run the compose services and the systemd units on one host.
 `docker-compose.yml` also records every published image by digest.
+
+**Upgrading** to a newer version: set it in `.env`
+(`AISTACK_VERSION=…`), then `docker compose pull && docker compose up -d`.
+Your `./config` and data are kept; a declaration a new version brings is
+added at the next start. A declaration a new version *changes* is not:
+compare it with the image's own copy before taking it.
 
 **Moving a git + systemd installation to compose** (`ADR-0017` § 5),
 from the checkout, which stays and keeps the data where it is:

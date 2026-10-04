@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.11
+  version: 1.12
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-10-03
+  updated: 2026-10-04
 
 relations:
   references:
@@ -36,6 +36,55 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 1.8.0 — 2026-10-04
+
+**Pull the image, run AIStack: the Docker image is no longer only the
+validator but the whole application, started by one compose file, and
+a new installation says what it still needs before it is used. The
+reference host itself now runs that way.**
+
+- **One image, six services.** `bigbrother1969/aistack-core` runs the
+  web application and the five collectors, each a service of
+  `docker-compose.yml` on the host's network, with the Docker socket and
+  the host's directories mounted at the same path, read-only. Set
+  `AISTACK_VERSION` in `.env`, then `docker compose pull && docker
+  compose up -d`. The knowledge-integrity validator is still in the
+  image, as `docker compose run --rm validate` (`ADR-0017`, accepted).
+- **The configuration outside the code.** Every declaration lives in
+  `./config`, file by file: the first start copies those it lacks and
+  never overwrites one, so an upgrade keeps yours and a screen's save
+  (CPU priorities, SSH user names) is kept across restarts.
+- **A guided first start.** Until the host, the identity provider and
+  the OpenID Connect client are declared, every page shows **⚠ To
+  configure**, leading to a public `/setup` page: what is left, in which
+  file, the values in use today, and the manual's section — never a
+  secret's value.
+- **Choose where the data lives.** In Settings, under the new *Disks and
+  mounts* section (every disk and mount the server sees, its free space,
+  and what AIStack keeps on it), an administrator picks a disk from a
+  list; AIStack records the choice and shows the commands that move the
+  data to `<disk>/AIStack/data`, and the way back — it never moves
+  anything itself.
+- **A user manual**, from Help, French and English: every screen in
+  detail, the initial setup, and troubleshooting. The README gains a
+  *How to install* chapter: prerequisites (Pocket ID included),
+  precautions, the steps, and Docker.
+- **Development and production phases.** While an instance is set up
+  (`phase: development`), what an administrator writes is validated as
+  written, a session's test entries can be purged, and an ADR is
+  accepted the day it is proposed; production brings back the second
+  person and the day's wait (`ADR-0016`).
+- **A fairer health picture.** The technical-debt score costs 15 points
+  per domain carrying debt, once, instead of 15 per finding, so it
+  moves when a domain is cleared (`OPS-0008`); a service started only
+  when needed is declared `on_demand` and is no inventory gap when
+  stopped; AIStack's own containers are declared services.
+- **The reference host moved.** GIGABYTE runs the six compose services
+  since 2026-10-04 — a preflight script, a host override file, and a
+  documented way back; the git + systemd installation stays supported.
 
 ---
 

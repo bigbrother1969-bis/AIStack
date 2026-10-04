@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.16
+  version: 1.17
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-10-03
+  updated: 2026-10-04
 
 relations:
   references:
@@ -730,11 +730,22 @@ docker build -f Dockerfile \
   --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
   --label org.opencontainers.image.version="$VERSION" \
   --label org.opencontainers.image.licenses="AGPL-3.0-or-later" \
-  --label org.opencontainers.image.description="AIStack Knowledge Integrity validator" \
-  -t "bigbrother1969/aistack-core:$VERSION" .
+  --label org.opencontainers.image.description="AIStack — Infrastructure Knowledge Platform" \
+  -t "bigbrother1969/aistack-core:$VERSION" \
+  -t "bigbrother1969/aistack-core:latest" .
 
 docker push "bigbrother1969/aistack-core:$VERSION"
+docker push "bigbrother1969/aistack-core:latest"
 ```
+
+**From 1.8.0, the image runs AIStack, and `latest` names the version
+just published** (`ADR-0017` § 2): the owner's goal was that a plain
+`docker pull bigbrother1969/aistack-core` gives a working AIStack, which
+an untagged pull only does if `latest` exists. Until 1.7.0 the image ran
+the validator alone and was published under its version only. `latest`
+moves with every publication; the version tag never does, and
+`docker-compose.yml` names a version, never `latest`. The validator is
+still in the image: `docker compose run --rm validate`.
 
 **The version is read, not typed.** `pyproject.toml` declares it once and
 `src/aistack/__main__.py` reads it from the installed metadata; a number typed

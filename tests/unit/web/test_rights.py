@@ -310,3 +310,22 @@ def test_the_manual_is_public_in_both_languages_and_help_leads_to_it(tmp_path: P
         text = page.text.replace("'", "&#x27;")
         assert heading in text and setup in text
         assert 'class="toc"' in page.text
+
+
+def test_an_administrator_sees_the_disks_and_mounts_and_a_user_does_not(tmp_path: Path):
+    from aistack.host.mounts import Mount, MountRow, Usage
+
+    rows = [
+        MountRow(Mount("/dev/sda2", "/", "ext4", False), Usage(100 * 2**30, 25 * 2**30), ("code", "generated")),
+        MountRow(Mount("nas:/music", "/mnt/music", "nfs4", True), None, ()),
+    ]
+    app = build(tmp_path)
+    app.state.storage = lambda generated_dir: rows
+
+    page = signed_in(client(app), name="Admin").get("/settings?lang=en").text
+    assert "Disks and mounts" in page
+    assert "<code>/mnt/music</code>" in page and "not answering" in page and "read-only · network" in page
+    assert "100.0 Gio" in page and "25.0 Gio (25 %)" in page
+    assert "the code and its environment, the histories and generated pages" in page
+
+    assert "Disks and mounts" not in as_user(client(app)).get("/settings?lang=en").text

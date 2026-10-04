@@ -39,6 +39,7 @@ from aistack.web import (
     troubleshooting,
 )
 from aistack.instance.yaml.store import load_instance_config_yaml
+from aistack.web.storage import live_storage
 from aistack.web.authentication import (
     Authentication,
     Refused,
@@ -86,6 +87,7 @@ def create_app(
     network_tree: Callable[[], list[NetworkTreeNode]] | None = None,
     auth: Authentication | None = None,
     phase: str | None = None,
+    storage: Callable[[Path], Any] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -100,6 +102,8 @@ def create_app(
     app.router.redirect_slashes = False
     app.state.generated_dir = generated_dir
     app.state.listeners = listeners
+    # The host's disks and mounts, for Settings (2026-10-04).
+    app.state.storage = storage if storage is not None else live_storage
     # Development or production (ADR-0016): which Explication rules apply.
     app.state.phase = phase if phase is not None else load_instance_config_yaml(INSTANCE_CONFIG).phase
     app.state.languages = languages if languages is not None else default_languages()

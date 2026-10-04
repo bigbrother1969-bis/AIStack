@@ -40,74 +40,69 @@ def test_no_findings_scores_100_excellent():
 
 
 def test_findings_not_qualified_technical_debt_are_excluded():
-    findings = (a_finding("a", qualified=False), a_finding("b", qualified=False))
+    domains = ((a_finding("a", qualified=False), a_finding("b", qualified=False)),)
 
-    score = compute_technical_debt_score(findings, weight=15)
+    score = compute_technical_debt_score(domains, weight=15)
 
     assert score.value == 100
     assert score.findings == ()
 
 
-def test_one_qualified_finding_subtracts_the_weight():
-    findings = (a_finding("a"),)
+def test_one_domain_with_debt_subtracts_the_weight_once():
+    domains = ((a_finding("a"), a_finding("b"), a_finding("c")),)
 
-    score = compute_technical_debt_score(findings, weight=15)
+    score = compute_technical_debt_score(domains, weight=15)
 
-    assert score.value == 85  # 100 - 15
-    assert score.findings == findings
-
-
-def test_qualified_findings_are_cumulative():
-    findings = (a_finding("a"), a_finding("b"), a_finding("c"))
-
-    score = compute_technical_debt_score(findings, weight=15)
-
-    assert score.value == 55  # 100 - 3*15
+    assert score.value == 85  # 100 - 15, however many findings
     assert len(score.findings) == 3
 
 
-def test_a_mix_of_qualified_and_unqualified_counts_only_the_qualified():
-    findings = (a_finding("a"), a_finding("b", qualified=False))
+def test_each_domain_with_debt_costs_the_weight():
+    domains = ((a_finding("a"),), (), (a_finding("b"), a_finding("c")))
 
-    score = compute_technical_debt_score(findings, weight=15)
+    score = compute_technical_debt_score(domains, weight=15)
+
+    assert score.value == 70  # 100 - 2*15
+    assert len(score.findings) == 3
+
+
+def test_gigabyte_2026_10_04_four_restore_tests_and_seven_gaps_score_70():
+    """Measured on GIGABYTE: 11 debt findings in two domains clamped the
+    old per-finding score to 0; per domain it reads 70."""
+
+    pra = tuple(a_finding(f"pra{i}") for i in range(4))
+    gaps = tuple(a_finding(f"gap{i}") for i in range(7))
+
+    score = compute_technical_debt_score(((), (), (), (), pra, (), gaps), weight=15)
+
+    assert score.value == 70
+    assert score.bucket == ACTION_REQUIRED
+    assert len(score.findings) == 11
+
+
+def test_a_domain_of_unqualified_findings_costs_nothing():
+    domains = ((a_finding("a"),), (a_finding("b", qualified=False),))
+
+    score = compute_technical_debt_score(domains, weight=15)
 
     assert score.value == 85
-    assert score.findings == (findings[0],)
+    assert score.findings == (domains[0][0],)
 
 
 def test_the_score_never_drops_below_zero():
-    findings = tuple(a_finding(str(i)) for i in range(10))
+    domains = tuple((a_finding(str(i)),) for i in range(10))
 
-    score = compute_technical_debt_score(findings, weight=15)
+    score = compute_technical_debt_score(domains, weight=15)
 
     assert score.value == 0
     assert score.bucket == ACTION_REQUIRED
 
 
 def test_bucket_boundaries_match_the_health_score():
-    # >= 90 excellent
-    assert compute_technical_debt_score(
-        tuple(a_finding(str(i)) for i in range(10)), weight=1
-    ).value == 90
-    assert compute_technical_debt_score(
-        tuple(a_finding(str(i)) for i in range(10)), weight=1
-    ).bucket == EXCELLENT
+    def score(domains: int):
+        return compute_technical_debt_score(tuple((a_finding(str(i)),) for i in range(domains)), weight=1)
 
-    # 75 <= score < 90 is à surveiller
-    assert compute_technical_debt_score(
-        tuple(a_finding(str(i)) for i in range(11)), weight=1
-    ).bucket == TO_WATCH  # 89
-    assert compute_technical_debt_score(
-        tuple(a_finding(str(i)) for i in range(25)), weight=1
-    ).value == 75
-    assert compute_technical_debt_score(
-        tuple(a_finding(str(i)) for i in range(25)), weight=1
-    ).bucket == TO_WATCH
-
-    # < 75 is action requise
-    assert compute_technical_debt_score(
-        tuple(a_finding(str(i)) for i in range(26)), weight=1
-    ).value == 74
-    assert compute_technical_debt_score(
-        tuple(a_finding(str(i)) for i in range(26)), weight=1
-    ).bucket == ACTION_REQUIRED
+    assert score(10).value == 90 and score(10).bucket == EXCELLENT
+    assert score(11).bucket == TO_WATCH  # 89
+    assert score(25).value == 75 and score(25).bucket == TO_WATCH
+    assert score(26).value == 74 and score(26).bucket == ACTION_REQUIRED

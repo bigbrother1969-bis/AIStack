@@ -63,7 +63,7 @@ Every button, link and field says what it does when hovered.
 The home page. It gathers:
 
 - **the health frame**: the score out of 100 from the Health Cockpit's last
-  run, the technical-debt mark (the lower it is, the more findings remain)
+  run, the technical-debt mark (the lower it is, the more domains carry debt)
   and one badge per domain — green without findings, red with at least one
   (a click opens its detail in the Cockpit), grey when the domain is not
   measured on this host;
@@ -124,7 +124,9 @@ The score out of 100 combines seven domains, each weighted per `OPS-0008`:
 storage, services, backups and disaster recovery, GPU, restore tests,
 persistent state (does every service that keeps data have a real backup
 strategy?) and inventory gaps (declared services against containers really
-discovered). A separate card gives the technical debt.
+discovered). A separate card gives the technical debt: each domain
+with at least one debt finding takes 15 points off, once (`OPS-0008`),
+and its findings are listed.
 
 Each finding gives its subject, its interpretation, the proposed fix and its
 confidence. The **Diagnose with the AI assistant** link opens that finding in the troubleshooting

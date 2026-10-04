@@ -611,11 +611,9 @@ def technical_debt_score(
             "without it"
         )
 
-    findings = tuple(
-        finding for domain in cockpit.domains for finding in domain.findings
-    )
-
-    return compute_technical_debt_score(findings, points), ""
+    return compute_technical_debt_score(
+        tuple(tuple(domain.findings) for domain in cockpit.domains), points
+    ), ""
 
 
 def main() -> None:

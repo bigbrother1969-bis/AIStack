@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Draft
   owner: Operations
   created: 2026-09-11
-  updated: 2026-10-03
+  updated: 2026-10-04
 
 relations:
   references:
@@ -93,6 +93,23 @@ its score alongside how many it actually measured
 (`measured_domains`/`total_domains`) — a 100 computed from one clean
 domain out of five is not the same claim as a 100 computed from all five,
 and this register does not let the display conflate them.
+
+## Technical debt score
+
+The "Dette technique" card (added 2026-09-23) counts the findings any
+domain qualifies `OPS-0004/technical-debt` and reuses the Services
+weight (15), the owner's choice that day ("même poids que le domaine
+Services actuel"), with the same three bands as the health score.
+
+**Since 2026-10-04, each domain carrying debt costs that weight once:**
+`value = max(0, 100 − 15 × domains)`, where `domains` counts the
+domains with at least one finding qualified technical debt; the
+findings themselves stay listed on the card. Decided by the owner the
+same day, surprised by a 0/100 on GIGABYTE: the 2026-09-23 rule cost
+15 per *finding*, so 4 restore-test findings and 7 inventory gaps (11 ×
+15) clamped it to 0 from the seventh finding on, and no single
+correction could ever move it. Per domain, the same cockpit reads
+70/100: it moves when a domain is cleared.
 
 ## Declared weights
 

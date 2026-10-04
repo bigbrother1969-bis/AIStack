@@ -67,7 +67,7 @@ C'est la page d'accueil. Elle réunit :
 
 - **le cadre de santé** : le score sur 100 du dernier passage du Cockpit
   Santé, la note de dette technique (plus elle est basse, plus il reste de
-  constats à traiter) et une pastille par domaine — verte sans constat, rouge
+  domaines avec de la dette à traiter) et une pastille par domaine — verte sans constat, rouge
   avec au moins un constat (un clic ouvre son détail dans le Cockpit), grise
   si le domaine n'est pas mesuré sur cet hôte ;
 - **les cartes des écrans**, regroupées par adresse (réseau local ou
@@ -130,7 +130,8 @@ stockage, services, sauvegardes et PRA, GPU, tests de restauration, état
 persistant (chaque service qui garde des données a-t-il une stratégie de
 sauvegarde réelle ?) et écarts d'inventaire (services déclarés contre
 conteneurs réellement découverts). Une carte séparée donne la dette
-technique.
+technique : chaque domaine qui porte au moins un constat de dette retire
+15 points une seule fois (`OPS-0008`), et ses constats sont listés.
 
 Chaque constat indique son sujet, son interprétation, la correction proposée
 et sa confiance. Le lien **Diagnostiquer avec l'assistant IA** ouvre ce constat dans l'assistant

@@ -36,6 +36,7 @@ ANYONE = {
     "/console.html",
     "/settings",
     "/help",
+    "/help/manual",
     "/legal",
     "/license",
     "/login",
@@ -291,3 +292,21 @@ def test_a_database_of_the_first_schema_is_rebuilt(tmp_path: Path):
 @pytest.mark.parametrize("port", [PUBLIC_PORT, LAN_PORT])
 def test_the_console_stays_public(tmp_path: Path, port: int):
     assert client(build(tmp_path), port).get("/console.html").status_code == 200
+
+
+@pytest.mark.parametrize("port", [PUBLIC_PORT, LAN_PORT])
+def test_the_manual_is_public_in_both_languages_and_help_leads_to_it(tmp_path: Path, port: int):
+    web = client(build(tmp_path), port)
+
+    help_page = web.get("/help?lang=en").text
+    assert 'href="/help/manual?lang=en"' in help_page
+
+    for lang, heading, setup in (
+        ("fr", "Manuel utilisateur d&#x27;AIStack", "Mise en route d&#x27;une nouvelle installation"),
+        ("en", "AIStack user manual", "Setting up a new installation"),
+    ):
+        page = web.get(f"/help/manual?lang={lang}")
+        assert page.status_code == 200
+        text = page.text.replace("'", "&#x27;")
+        assert heading in text and setup in text
+        assert 'class="toc"' in page.text

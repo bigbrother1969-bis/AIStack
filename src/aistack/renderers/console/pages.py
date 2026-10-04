@@ -18,6 +18,7 @@ from aistack.renderers.text import escape_text
 HELP_PATH = "/help"
 LEGAL_PATH = "/legal"
 LICENSE_PATH = "/license"
+MANUAL_PATH = "/help/manual"
 
 _STYLE = """\
 .reading h1 {
@@ -34,6 +35,23 @@ _STYLE = """\
   padding: .4rem 1.2rem .8rem; margin-bottom: 1rem;
 }
 .reading a { color: #16335c; }
+.reading .manual-link {
+  display: inline-block; margin: .2rem 0 1rem; padding: .5rem 1rem; border-radius: 6px;
+  background: #16335c; color: #fff; text-decoration: none;
+}
+.reading .manual-link:hover { filter: brightness(1.15); }
+.manual h1 { margin-top: 0; }
+.manual h2 { border-top: 1px solid #dde4ed; padding-top: 1rem; margin-top: 2rem; }
+.manual h3 { font-size: 1rem; color: #16335c; margin: 1.2rem 0 .3rem; }
+.manual ul, .manual ol { line-height: 1.55; padding-left: 1.4rem; }
+.manual table { border-collapse: collapse; margin: .6rem 0 1rem; font-size: .92rem; width: 100%; }
+.manual th, .manual td { border: 1px solid #dde4ed; padding: .35rem .6rem; text-align: left; vertical-align: top; }
+.manual th { background: #f3f6fa; }
+.manual pre { background: #f3f6fa; border: 1px solid #dde4ed; border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; }
+.manual code { font-size: .88em; }
+.manual nav.toc { background: #fff; border: 1px solid #dde4ed; border-radius: 8px; padding: .4rem 1.2rem; margin: 1rem 0 1.5rem; }
+.manual nav.toc ul { margin: .3rem 0; }
+.manual nav.toc li.sub { margin-left: 1.2rem; font-size: .92rem; }
 """
 
 
@@ -79,6 +97,8 @@ def render_help_html(lang: str | None = None, languages: Languages | None = None
         [
             f'  <h1>{escape_text(t("console.help.title"))}</h1>',
             f'  <p>{escape_text(t("console.help.intro"))}</p>',
+            f'  <a class="manual-link" href="{MANUAL_PATH}?lang={t.lang}" '
+            f'title="{escape_text(t("console.tooltip.manual"))}">{escape_text(t("console.help.manual_link"))}</a>',
             *(
                 _section(t(f"console.help.{topic}_heading"), escape_text(t(f"console.help.{topic}_text")))
                 for topic in ("health", "badges", "screens", "language")
@@ -87,6 +107,34 @@ def render_help_html(lang: str | None = None, languages: Languages | None = None
     )
 
     return _page(t, declared, "console.help.page_title", body)
+
+
+def render_manual_html(lang: str | None = None, languages: Languages | None = None) -> str:
+    """The user manual, in the reader's language (the reference
+    language's text when a language has none), with its contents."""
+
+    from aistack.manual import manual_source
+    from aistack.renderers.markdown import render
+
+    t = translator_for(lang)
+    declared = languages if languages is not None else default_languages()
+    html, headings = render(manual_source(t.lang, declared.reference))
+
+    entries = "".join(
+        f'<li class="{"sub" if heading.level == 3 else ""}"><a href="#{heading.anchor}" '
+        f'title="{escape_text(t("console.tooltip.manual_section"))}">{escape_text(heading.text)}</a></li>'
+        for heading in headings
+        if heading.level in (2, 3)
+    )
+    toc = f'<nav class="toc"><h2>{escape_text(t("console.help.manual_contents"))}</h2><ul>{entries}</ul></nav>'
+    first_heading_end = html.find("</h1>") + len("</h1>")
+    body = (
+        f'<div class="manual">{html[:first_heading_end]}{toc}{html[first_heading_end:]}</div>\n'
+        f'  <a class="back" href="{HELP_PATH}?lang={t.lang}" title="{escape_text(t("console.tooltip.back_to_help"))}">'
+        f'{escape_text(t("console.help.back_to_help"))}</a>'
+    )
+
+    return _page(t, declared, "console.help.manual_page_title", body)
 
 
 def render_legal_html(

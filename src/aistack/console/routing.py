@@ -19,7 +19,9 @@ from aistack.renderers.console.pages import (
     HELP_PATH,
     LEGAL_PATH,
     LICENSE_PATH,
+    MANUAL_PATH,
     render_help_html,
+    render_manual_html,
     render_legal_html,
     render_license_html,
 )
@@ -46,7 +48,7 @@ SETTINGS_PATH = "/settings"
 # The three reading pages the console's left column links to
 # (2026-10-03), rendered per request like Settings: help, legal
 # notice, licence and sources.
-READING_PATHS = (HELP_PATH, LEGAL_PATH, LICENSE_PATH)
+READING_PATHS = (HELP_PATH, MANUAL_PATH, LEGAL_PATH, LICENSE_PATH)
 
 
 @dataclass(frozen=True)
@@ -107,6 +109,9 @@ def respond(
 
     if path == HELP_PATH:
         return _html(200, render_help_html(choice.lang, declared), remember, method)
+
+    if path == MANUAL_PATH:
+        return _html(200, render_manual_html(choice.lang, declared), remember, method)
 
     if path in (LEGAL_PATH, LICENSE_PATH):
         identity = load_console_identity(lang=choice.lang, languages=declared)

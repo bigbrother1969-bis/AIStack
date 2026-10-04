@@ -26,6 +26,9 @@ aside:
   license: "Licence et sources"
   copyright: "© {year} {publisher}"
 tooltip:
+  manual: "Ouvrir le manuel utilisateur : chaque écran en détail et la mise en route d'une installation"
+  manual_section: "Aller à cette partie du manuel"
+  back_to_help: "Revenir à la page d'aide"
   contact: "Contacter l'éditeur par son site professionnel"
   license_text: "Lire le texte officiel de la licence"
   repository: "Ouvrir le dépôt {name} du code source"
@@ -45,6 +48,10 @@ tooltip:
   card_lan: "Ouvrir {name} — accessible uniquement depuis le réseau local"
   card_public: "Ouvrir {name} — accessible depuis internet"
 help:
+  manual_link: "Ouvrir le manuel utilisateur →"
+  manual_page_title: "AIStack — Manuel utilisateur"
+  manual_contents: "Sommaire"
+  back_to_help: "← Retour à l'aide"
   page_title: "AIStack — Aide"
   title: "Aide"
   intro: "Cette page explique comment lire la console et à quoi sert chacun des écrans qu'elle relie."

@@ -22,6 +22,9 @@ aside:
   license: "Licence and sources"
   copyright: "© {year} {publisher}"
 tooltip:
+  manual: "Open the user manual: every screen in detail, and how to set up an installation"
+  manual_section: "Go to this part of the manual"
+  back_to_help: "Back to the help page"
   contact: "Contact the publisher through its professional website"
   license_text: "Read the official licence text"
   repository: "Open the {name} source code repository"
@@ -41,6 +44,10 @@ tooltip:
   card_lan: "Open {name} — reachable from the local network only"
   card_public: "Open {name} — reachable from the internet"
 help:
+  manual_link: "Open the user manual →"
+  manual_page_title: "AIStack — User manual"
+  manual_contents: "Contents"
+  back_to_help: "← Back to help"
   page_title: "AIStack — Help"
   title: "Help"
   intro: "This page explains how to read the console and what each screen it links to is for."

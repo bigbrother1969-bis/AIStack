@@ -273,4 +273,4 @@ files = ["src/aistack"]
 # `**/*.html` added 2026-10-03 with the first screen whose templates
 # moved under `src/aistack/web/templates/` (ADR-0012).
 [tool.setuptools.package-data]
-aistack = ["**/*.yml", "**/*.js", "**/*.png", "**/*.svg", "**/*.html"]
+aistack = ["**/*.yml", "**/*.js", "**/*.png", "**/*.svg", "**/*.html", "**/*.md"]

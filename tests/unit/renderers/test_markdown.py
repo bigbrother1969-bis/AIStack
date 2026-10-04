@@ -44,3 +44,12 @@ def test_nothing_in_a_source_becomes_markup():
     html, _ = render('<script>alert(1)</script> and **<b>x</b>**')
 
     assert "<script>" not in html and "<b>" not in html
+
+
+def test_the_manual_names_no_real_domain():
+    """The owner, 2026-10-04: a placeholder, never this deployment's own domain."""
+
+    from aistack.manual import MANUAL_DIR
+
+    for source in MANUAL_DIR.glob("manual.*.md"):
+        assert "persiaut-family" not in source.read_text(encoding="utf-8"), source.name

@@ -11,7 +11,7 @@ every screen and how to set up a new installation.
 
 AIStack answers on two addresses:
 
-- **the public address** (for example `https://aistack.persiaut-family.fr`),
+- **the public address** (for example `https://aistack.<domain_name>`),
   reachable from the internet: the console, help, legal notice, licence,
   Settings and — once signed in — Architecture and the Health Cockpit;
 - **the local-network address** (for example `http://GIGABYTE:8186`):

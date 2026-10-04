@@ -11,7 +11,7 @@ décrit chaque écran et la mise en route d'une nouvelle installation.
 
 AIStack répond sur deux adresses :
 
-- **l'adresse publique** (par exemple `https://aistack.persiaut-family.fr`),
+- **l'adresse publique** (par exemple `https://aistack.<nom_de_domaine>`),
   joignable depuis internet : la console, l'aide, les mentions légales, la
   licence, les Paramètres, et — une fois connecté — Architecture et le
   Cockpit Santé ;

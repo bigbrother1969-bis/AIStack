@@ -506,6 +506,27 @@ docker compose run --rm validate                                     # the knowl
 Never run the compose services and the systemd units on one host.
 `docker-compose.yml` also records every published image by digest.
 
+**Moving a git + systemd installation to compose** (`ADR-0017` § 5),
+from the checkout, which stays and keeps the data where it is:
+
+```bash
+./scripts/compose_preflight.sh                       # reads, changes nothing
+mkdir -p config/examples/selections
+cp src/aistack/*/definitions/*.yml config/           # your declarations, placed before the first start
+cp -a examples/selections/. config/examples/selections/
+printf 'AISTACK_VERSION=dev\nAISTACK_UID=%s\nAISTACK_GID=%s\nDOCKER_GID=%s\nAISTACK_DATA_DIR=%s\n' \
+  "$(id -u)" "$(id -g)" "$(stat -c %g /var/run/docker.sock)" "$PWD/reports/generated" > .env
+cp docker-compose.override.example.yml docker-compose.override.yml   # then adapt it
+docker compose build && docker compose config --quiet
+sudo systemctl disable --now aistack-web aistack-docker-events-monitor aistack-docker-diff-monitor \
+  aistack-docker-digest-monitor aistack-docker-packages-monitor aistack-resource-priority-monitor
+docker compose up -d
+```
+
+The way back: `docker compose down`, then `sudo systemctl enable --now`
+the same six units; copy back from `./config` what a screen saved
+meanwhile.
+
 ---
 
 ## Getting Started (development)

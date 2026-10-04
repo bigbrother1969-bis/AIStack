@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
-  status: Proposed
+  version: 1.5
+  status: Accepted
   owner: Architecture
   created: 2026-10-04
   updated: 2026-10-04
@@ -25,8 +25,10 @@ relations:
 
 ## Status
 
-Proposed, 2026-10-04 — 1.8's framing. Under `ADR-0016` § 3 (development
-phase), accepted the day the owner accepts it.
+Accepted, 2026-10-04, by the owner — the day it was proposed, as
+`ADR-0016` § 3 allows in the development phase.
+
+Proposed 2026-10-04 as 1.8's framing.
 
 ## Context
 
@@ -146,6 +148,39 @@ The last tranche replaces GIGABYTE's six systemd units by the compose
 file, with a documented way back. The git + systemd installation stays
 supported.
 
+Prepared 2026-10-04; decided by the owner the same day: **the data
+stays where it is** (`reports/generated` on `/`), moved later from
+Settings if wanted (§ 4 bis).
+
+- **The checkout stays** — it builds the image (`AISTACK_VERSION=dev`
+  until 1.8.0 is published) and holds `docker-compose.yml`, `.env.web`
+  and `.env.resource-priority`, which compose reads from the same
+  place.
+- **The declarations are placed, not copied**: GIGABYTE's own files
+  (`src/aistack/*/definitions/*.yml`) and its selections
+  (`examples/selections/`) go into `./config` before the first start,
+  so `config_init` keeps them and the first-start page reports none of
+  them (§ 4).
+- **The data is mounted where it is**: `AISTACK_DATA_DIR` in `.env`
+  names `reports/generated`.
+- **What only this host needs** is `docker-compose.override.yml`, never
+  committed, from `docker-compose.override.example.yml`: the one host
+  directory the application writes to (the Selection screen's
+  `target_root`), and the GPU for the troubleshooting assistant
+  (NVIDIA container runtime).
+- `scripts/compose_preflight.sh` reads, without changing anything,
+  what the move depends on: account and socket group, NVIDIA runtime,
+  units, ports, secrets files, an existing `.env` or `./config`, a
+  planned data move, host crontab entries and timers that run AIStack.
+- **The way back**: `docker compose down`, then
+  `systemctl enable --now` the six units. What a screen saved meanwhile
+  is in `./config`; the files that differ from the checkout's are
+  listed and copied back by hand.
+- After the move, one-off commands run in the image
+  (`docker compose exec web python -m aistack.cli.…`), which reads
+  `./config`; the checkout's virtual environment reads the shipped
+  declarations and stays for development only.
+
 ## Implementation state
 
 | Step | State |
@@ -155,7 +190,7 @@ supported.
 | § 3 — host network, socket, same-path mounts | done — 2026-10-04; tried on GIGABYTE the same day: both ports listening on the host, `docker ps` answers inside the container |
 | § 4 — guided first start | done — 2026-10-04 |
 | § 4 bis — where the data lives, chosen from Settings | done — 2026-10-04 |
-| § 5 — GIGABYTE on the compose file | not started |
+| § 5 — GIGABYTE on the compose file | prepared — 2026-10-04 (preflight, override, procedure); the move itself is the owner's |
 
 ## Consequences
 

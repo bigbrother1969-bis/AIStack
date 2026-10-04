@@ -73,3 +73,25 @@ def test_secrets_never_enter_the_build_context():
     ignored = (ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines()
 
     assert ".env.*" in ignored and "config" in ignored and "data" in ignored
+
+
+def test_the_host_s_additions_are_an_example_never_committed():
+    import yaml
+
+    root = Path(__file__).resolve().parents[2]
+    example = yaml.safe_load((root / "docker-compose.override.example.yml").read_text(encoding="utf-8"))
+
+    web = example["services"]["web"]
+    assert any(volume.count(":") == 1 for volume in web["volumes"])  # the one read-write host path
+    assert web["deploy"]["resources"]["reservations"]["devices"][0]["driver"] == "nvidia"
+    assert "/docker-compose.override.yml" in (root / ".gitignore").read_text(encoding="utf-8").splitlines()
+
+
+def test_the_preflight_reads_and_changes_nothing():
+    root = Path(__file__).resolve().parents[2]
+    script = root / "scripts" / "compose_preflight.sh"
+    text = script.read_text(encoding="utf-8")
+
+    assert script.stat().st_mode & 0o111
+    for changing in (" rm ", " mv ", " cp ", "systemctl stop", "systemctl disable", "docker compose up", "> .env", "sudo "):
+        assert changing not in text

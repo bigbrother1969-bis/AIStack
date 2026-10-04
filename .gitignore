@@ -106,3 +106,5 @@ patches-*.tar.gz
 /config/
 /data/
 /.env
+# This host's additions to docker-compose.yml (ADR-0017 § 5).
+/docker-compose.override.yml

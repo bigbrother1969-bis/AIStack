@@ -1,0 +1,27 @@
+# AIStack — what this host adds to docker-compose.yml (ADR-0017 § 5).
+#
+# Copy to `docker-compose.override.yml` (never committed): `docker
+# compose` reads it after docker-compose.yml, merging service by
+# service. The values below are the reference host's (GIGABYTE); adapt
+# them to yours.
+
+services:
+
+  web:
+    volumes:
+      # The Selection screen writes the music copied to the phone into
+      # `target_root` (music_android.yml): the one host directory the
+      # application writes to, so read-write here — every other host
+      # path stays read-only.
+      - /media/TechData/Storage/Music-Android:/media/TechData/Storage/Music-Android
+    # The troubleshooting assistant reads the GPU with nvidia-smi, which
+    # the NVIDIA container runtime brings into the container. Without
+    # that runtime (scripts/compose_preflight.sh says so), remove this
+    # block: the GPU is then simply not measured.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, utility]

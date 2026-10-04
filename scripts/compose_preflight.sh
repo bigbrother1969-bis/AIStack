@@ -61,7 +61,14 @@ main() {
     fi
     [ -f .env.resource-priority ] && info ".env.resource-priority présent" || info ".env.resource-priority absent"
     [ -e .env ] && look ".env existe déjà : il sera remplacé" || ok ".env absent"
-    [ -e config ] && look "config/ existe déjà : vérifie son contenu avant de copier" || ok "config/ absent"
+    # config/ is also where the checkout keeps its tracked
+    # context_bundle_transfer.yml.example (ADR-0007): only declarations
+    # already there matter.
+    if ls config/*.yml >/dev/null 2>&1; then
+        look "config/ contient déjà des déclarations : vérifie-les avant de copier"
+    else
+        ok "aucune déclaration dans config/"
+    fi
     [ -e docker-compose.override.yml ] && look "docker-compose.override.yml existe déjà" || ok "docker-compose.override.yml absent"
     [ -f data_location.yml ] && look "data_location.yml (choix d'emplacement) présent : annule-le dans Paramètres ou supprime-le" || ok "aucun déplacement de données prévu"
     if [ -d examples/selections ]; then

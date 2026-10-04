@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Accepted
   owner: Architecture
   created: 2026-10-04
@@ -177,8 +177,15 @@ Settings if wanted (§ 4 bis).
   is in `./config`; the files that differ from the checkout's are
   listed and copied back by hand.
 - **Done 2026-10-04, 14:49.** The preflight found an earlier trial's
-  `.env` and `./config` (set aside in `~/aistack-avant-compose/`, not
-  deleted) and, in the crontab, only the nightly mirror publication.
+  `.env` and an existing `./config` (both set aside in
+  `~/aistack-avant-compose/`, not deleted) and, in the crontab, only
+  the nightly mirror publication. That `./config` held only
+  `context_bundle_transfer.yml.example`, which the checkout tracks
+  (`ADR-0007`): set aside, it left the working tree unclean and
+  `sync_mirrors.sh` refused to publish, the same evening. It stays in
+  `./config`, beside the declarations — neither `configured()` nor
+  `config_init` reads a file that is not `.yml` — and the preflight now
+  looks only for declarations there.
   Three declarations live one level deeper
   (`src/aistack/providers/*/definitions/`): the copy is a `find`, not a
   one-level glob. From the first minute the collectors observed

@@ -127,6 +127,9 @@ strategy?) and inventory gaps (declared services against containers really
 discovered). A separate card gives the technical debt: each domain
 with at least one debt finding takes 15 points off, once (`OPS-0008`),
 and its findings are listed.
+A service started only when needed is declared with `on_demand: true` in
+`service_categorization.yml`: stopped, it is not counted as an inventory
+gap.
 
 Each finding gives its subject, its interpretation, the proposed fix and its
 confidence. The **Diagnose with the AI assistant** link opens that finding in the troubleshooting

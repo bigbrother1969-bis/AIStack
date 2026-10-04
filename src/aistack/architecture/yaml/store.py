@@ -97,7 +97,14 @@ def _load_service(
         icon=data.get("icon") or None,
         href=data.get("href") or None,
         description=data.get("description") or None,
+        on_demand=_on_demand(data.get("on_demand", False), label),
     )
+
+
+def _on_demand(value: object, label: str) -> bool:
+    if not isinstance(value, bool):
+        raise ValueError(f"{label}: on_demand must be true or false")
+    return value
 
 
 def _require(data: dict, fields: tuple[str, ...], label: str) -> None:

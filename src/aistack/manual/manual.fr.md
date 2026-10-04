@@ -132,6 +132,9 @@ sauvegarde réelle ?) et écarts d'inventaire (services déclarés contre
 conteneurs réellement découverts). Une carte séparée donne la dette
 technique : chaque domaine qui porte au moins un constat de dette retire
 15 points une seule fois (`OPS-0008`), et ses constats sont listés.
+Un service qu'on ne lance qu'à la demande se déclare avec
+`on_demand: true` dans `service_categorization.yml` : arrêté, il n'est pas
+compté comme un écart d'inventaire.
 
 Chaque constat indique son sujet, son interprétation, la correction proposée
 et sa confiance. Le lien **Diagnostiquer avec l'assistant IA** ouvre ce constat dans l'assistant

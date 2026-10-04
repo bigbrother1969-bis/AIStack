@@ -238,6 +238,9 @@ categories:
         icon: frigate
         href: https://frigate.persiaut-family.fr
         description: Videosurveillance
+        # Started only when needed — too heavy to keep running (the
+        # owner, 2026-10-04): never an inventory gap when stopped.
+        on_demand: true
       - name: Architecture Homelab
         container: archi
         icon: sitemap

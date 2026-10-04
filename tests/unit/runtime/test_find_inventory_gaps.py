@@ -82,3 +82,12 @@ def test_gaps_are_sorted_by_container_name_within_each_direction():
     )
 
     assert [gap.container for gap in gaps] == ["alpha", "zeta"]
+
+
+def test_an_on_demand_service_stopped_is_not_a_gap_and_running_is_still_declared():
+    """Frigate, 2026-10-04: started only when needed."""
+
+    frigate = ServiceDefinition(name="Frigate", container="frigate", on_demand=True)
+
+    assert find_inventory_gaps(categorization(frigate), discovered={}) == ()
+    assert find_inventory_gaps(categorization(frigate), discovered={"frigate": None}) == ()

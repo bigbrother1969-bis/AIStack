@@ -29,6 +29,12 @@ class ServiceDefinition:
     original `nginx-proxy-manager.png`/`mdi-router-wireless`/
     `fa-user-tie` — the loader tries the vendored file conventions
     directly rather than a caller re-deriving one from the other.
+
+    **`on_demand`, added 2026-10-04** — a service the owner starts only
+    when needed (Frigate, too heavy to keep running): its container
+    being absent is its normal state, so the inventory-gap check never
+    reports it as declared but undiscovered. It is still declared: a
+    running instance is never an undeclared gap either.
     """
 
     name: str
@@ -36,6 +42,7 @@ class ServiceDefinition:
     icon: str | None = None
     href: str | None = None
     description: str | None = None
+    on_demand: bool = False
 
 
 @dataclass(frozen=True)

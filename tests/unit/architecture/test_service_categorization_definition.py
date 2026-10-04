@@ -379,6 +379,8 @@ def test_the_real_service_categorization_loads():
     # container after all — the 2026-09-10 "no container" porting
     # assumption was wrong, not a provider AIStack still lacks.
     assert by_name["Architecture Homelab"].container == "archi"
+    # The one service started only when needed (2026-10-04).
+    assert [s.name for s in all_services if s.on_demand] == ["Frigate"]
     assert by_name["IT-Tools"].container == "it-tools"
 
     aistack_category = next(

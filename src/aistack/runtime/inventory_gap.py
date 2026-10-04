@@ -41,14 +41,21 @@ def find_inventory_gaps(
     UNDISCOVERED` gap. Sorted by container name in each pass, for a
     stable, reviewable order independent of dict iteration or which
     host answered first.
+
+    **A service declared `on_demand` is never reported undiscovered**
+    (2026-10-04, Frigate): absent is its normal state. It still counts
+    as declared, so a running instance is no undeclared gap either.
     """
 
     declared: dict[str, str] = {}
+    on_demand: set[str] = set()
 
     for category in categorization.categories:
         for service in category.services:
             if service.container is not None:
                 declared[service.container] = service.name
+                if service.on_demand:
+                    on_demand.add(service.container)
 
     gaps: list[InventoryGap] = []
 
@@ -63,7 +70,7 @@ def find_inventory_gaps(
             )
 
     for container in sorted(declared):
-        if container not in discovered:
+        if container not in discovered and container not in on_demand:
             gaps.append(
                 InventoryGap(
                     kind=DECLARED_UNDISCOVERED,

@@ -409,6 +409,29 @@ categories:
 
   - name: AIStack
     services:
+      # AIStack's own six containers since GIGABYTE moved to
+      # docker-compose.yml (ADR-0017 § 5, 2026-10-04): the collectors
+      # then saw them as undeclared inventory gaps.
+      - name: AIStack
+        container: aistack-web
+        icon: sitemap
+        href: https://aistack.persiaut-family.fr
+        description: Console, écrans et Time Machine d'AIStack
+      - name: AIStack — Événements Docker
+        container: aistack-docker-events
+        description: Collecteur technique d'AIStack (événements Docker)
+      - name: AIStack — Différences de fichiers
+        container: aistack-docker-diff
+        description: Collecteur technique d'AIStack (fichiers modifiés dans les conteneurs)
+      - name: AIStack — Empreintes d'images
+        container: aistack-docker-digest
+        description: Collecteur technique d'AIStack (versions des images)
+      - name: AIStack — Paquets
+        container: aistack-docker-packages
+        description: Collecteur technique d'AIStack (paquets installés)
+      - name: AIStack — Priorité CPU
+        container: aistack-resource-priority
+        description: Collecteur technique d'AIStack (limites CPU appliquées)
       - name: Music Sync
         icon: music
         href: https://music-sync.persiaut-family.fr

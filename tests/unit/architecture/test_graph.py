@@ -339,7 +339,7 @@ def test_the_real_categorization_joins_against_a_live_shaped_catalog_pair():
     all_services = [
         service for cat in graph.categories for service in cat.services
     ]
-    assert len(all_services) == 70
+    assert len(all_services) == 76  # + AIStack's own six, 2026-10-04
 
     by_name = {service.name: service for service in all_services}
 

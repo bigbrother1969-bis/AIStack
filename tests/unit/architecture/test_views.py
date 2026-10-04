@@ -169,6 +169,13 @@ def test_the_real_categorization_produces_seven_views():
     ]
 
     aistack_view = build_view(real_graph, "AIStack")
+    # AIStack's own six containers, declared 2026-10-04 (ADR-0017 § 5).
     assert [s.name for s in aistack_view.graph.categories[0].services] == [
-        "Music Sync"
+        "AIStack",
+        "AIStack — Événements Docker",
+        "AIStack — Différences de fichiers",
+        "AIStack — Empreintes d'images",
+        "AIStack — Paquets",
+        "AIStack — Priorité CPU",
+        "Music Sync",
     ]

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Accepted
   owner: Architecture
   created: 2026-10-04
@@ -215,6 +215,14 @@ Settings if wanted (§ 4 bis).
   an image* is revised with § 2.
 
 ## Open Points
+
+- A declaration changed in the repository no longer reaches a host
+  whose `./config` already holds that file (measured 2026-10-04, the
+  evening of the move: AIStack's six containers declared in
+  `service_categorization.yml` had to be copied into GIGABYTE's
+  `./config` by hand). `config_init` never overwrites, by design; a way
+  to see, per file, how the shipped one differs from the one in use is
+  still to decide.
 
 - The Selection screen's `selection_file`, a relative path, resolves
   against the configuration directory when there is one (decided in

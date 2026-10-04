@@ -285,8 +285,9 @@ confidence, author and validator, filtered by status and by name.
 
 ![Explications](docs/assets/screenshots/explications.png)
 
-**Troubleshooting assistant** — a real finding, walked through step by
-step, before the local AI model is asked anything.
+**Troubleshooting assistant** — a real finding walked through step by
+step; here the local AI model's reasoning about it, an explanation never
+taken as a source of truth.
 
 ![The troubleshooting assistant](docs/assets/screenshots/troubleshooting.png)
 

@@ -115,6 +115,23 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
+# **1.8.0 — published 2026-10-04, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:1.8.0
+#   @sha256:2faa48f0798b39ff979698322277ee879d7c0c49b8364586687abb1324da73e1
+#
+# Built from 9f39d89 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 3126 tests with `clean: True` (run
+# once, right after the pull). 83 artifacts. Before the build, 1.7.0
+# was re-verified against its recorded digest (`GOV-0002/OS-047`) —
+# pull matched. The first image that runs AIStack itself rather than
+# the validator alone (`ADR-0017`), and the first also pushed as
+# `latest` (OPS-0002 1.17), so a plain `docker pull` gives it. The
+# reference host runs it through this file since the same evening.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.8.0 entry gives the full
+# account.
+#
 # **1.7.0 — published 2026-10-03, current.**
 #
 #   bigbrother1969/aistack-core:1.7.0

@@ -250,6 +250,58 @@ AIStack transforms observations into sustainable knowledge assets.
 
 ---
 
+## Screenshots
+
+*Taken on the reference host, 1.8.0, in English; names and addresses
+masked.*
+
+**The console** — the health frame on top (score, technical debt, one
+badge per domain), the screens below, grouped by whether they are
+reachable from the local network or from the internet.
+
+![The console](docs/assets/screenshots/console.png)
+
+**The Health Cockpit** — seven domains, the technical-debt card, and
+every finding with its interpretation, its remediation, its
+qualifications and the reading it cites; each one opens in the
+troubleshooting assistant.
+
+![The Health Cockpit](docs/assets/screenshots/health-cockpit.png)
+
+**Architecture** — the homelab's services by category, observed in
+Docker or Compose, declared but not observed, or with no container of
+their own.
+
+![Architecture](docs/assets/screenshots/architecture.png)
+
+**Time Machine — a node** — the network tree, the subject's chronology,
+and the node's facts with its provenance graph (here, an Explication
+attributed to the commit that wrote it).
+
+![A Time Machine node](docs/assets/screenshots/timemachine-node.png)
+
+**Explications** — every subject that has a recorded *why*, its status,
+confidence, author and validator, filtered by status and by name.
+
+![Explications](docs/assets/screenshots/explications.png)
+
+**Troubleshooting assistant** — a real finding, walked through step by
+step, before the local AI model is asked anything.
+
+![The troubleshooting assistant](docs/assets/screenshots/troubleshooting.png)
+
+**CPU priority** — every container classified as left alone, throttled
+or priority, AIStack's own six among them.
+
+![CPU priority](docs/assets/screenshots/cpu-priority.png)
+
+**Settings — disks and mounts** — what the server sees from inside the
+container, its free space, and what AIStack keeps where.
+
+![Disks and mounts](docs/assets/screenshots/settings-disks.png)
+
+---
+
 ## Quality Approach
 
 Nothing ships on the strength of one look. Three governed gates run before

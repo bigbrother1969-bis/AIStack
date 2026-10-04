@@ -85,6 +85,7 @@ def create_app(
     run_in_background: Callable[[Callable[[], None]], Any] | None = None,
     network_tree: Callable[[], list[NetworkTreeNode]] | None = None,
     auth: Authentication | None = None,
+    phase: str | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -99,6 +100,8 @@ def create_app(
     app.router.redirect_slashes = False
     app.state.generated_dir = generated_dir
     app.state.listeners = listeners
+    # Development or production (ADR-0016): which Explication rules apply.
+    app.state.phase = phase if phase is not None else load_instance_config_yaml(INSTANCE_CONFIG).phase
     app.state.languages = languages if languages is not None else default_languages()
     app.state.paths = paths if paths is not None else WebPaths()
     # Host-touching collaborators (ADR-0012 § 4): what Docker reports.

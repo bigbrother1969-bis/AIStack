@@ -58,3 +58,14 @@ def test_service_url_for_an_undeclared_service_is_refused():
 
     with pytest.raises(ValueError, match="no port for 'timemachine_ui'"):
         config.service_url("timemachine_ui")
+
+
+def test_the_phase_is_production_unless_said_and_nothing_else_is_accepted():
+    import pytest as _pytest
+
+    from aistack.contracts.instance_config import InstanceConfig as Config
+
+    assert Config(lan_hostname="G", service_ports={"console": 8183}).in_development is False
+    assert Config(lan_hostname="G", service_ports={"console": 8183}, phase="development").in_development
+    with _pytest.raises(ValueError):
+        Config(lan_hostname="G", service_ports={"console": 8183}, phase="staging")

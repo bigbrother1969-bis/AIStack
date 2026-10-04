@@ -3,6 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
+DEVELOPMENT = "development"
+PRODUCTION = "production"
+PHASES = (DEVELOPMENT, PRODUCTION)
+
 
 @dataclass(frozen=True)
 class InstanceConfig:
@@ -50,8 +54,20 @@ class InstanceConfig:
 
     lan_hostname: str
     service_ports: Mapping[str, int]
+    # `ADR-0016`: `development` while the owner is setting AIStack up
+    # and refining it, `production` once it is used for real. The
+    # strict rules are the default: a config that says nothing is in
+    # production.
+    phase: str = "production"
+
+    @property
+    def in_development(self) -> bool:
+        return self.phase == DEVELOPMENT
 
     def __post_init__(self) -> None:
+        if self.phase not in PHASES:
+            raise ValueError(f"an instance config's phase must be one of {', '.join(PHASES)}: {self.phase!r}")
+
         if not self.lan_hostname.strip():
             raise ValueError("an instance config names no LAN hostname")
 

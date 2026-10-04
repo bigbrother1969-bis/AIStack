@@ -287,7 +287,8 @@ def explication(request: Request, subject: str = "", done: str = "", refused: st
     subject = subject.strip()
     panel = explication_panel(subject, request.app.state.generated_dir) if subject else None
     is_admin = current_profile(request) == ADMIN
-    if panel and is_admin and panel.get("current_author") == _person(request).source:
+    development = _development(request)
+    if panel and is_admin and not development and panel.get("current_author") == _person(request).source:
         # Nobody validates their own text (ADR-0015 § 3): the button is
         # not offered, the reason is said instead.
         panel["can_validate"] = False
@@ -301,6 +302,7 @@ def explication(request: Request, subject: str = "", done: str = "", refused: st
             "subject": subject,
             "panel": panel,
             "is_admin": is_admin,
+            "development": development,
             "done": _DONE.get(done, ""),
             "refused": refused if refused.startswith("timemachine.explication.refused.") else "",
         },
@@ -317,6 +319,12 @@ _DONE = {
     "validated": "timemachine.explication.done.validated",
     "discarded": "timemachine.explication.done.discarded",
 }
+
+
+def _development(request: Request) -> bool:
+    """The development phase's rules (ADR-0016)?"""
+
+    return bool(request.app.state.phase == "development")
 
 
 def _person(request: Request) -> human.Person:
@@ -343,6 +351,7 @@ def _act(request: Request, subject: str, done: str, act: Any) -> Response:
                 "subject": subject,
                 "panel": explication_panel(subject.strip(), request.app.state.generated_dir) if subject.strip() else None,
                 "is_admin": True,
+                "development": _development(request),
                 "done": "",
                 "refused": error.reason,
             },
@@ -363,13 +372,13 @@ def explication_write(
     expected: int = Form(-1),
 ) -> Response:
     person = _person(request)
-    return _act(request, subject, "written", lambda out: human.write(subject, text, person, out, expected))
+    return _act(request, subject, "written", lambda out: human.write(subject, text, person, out, expected, development=_development(request)))
 
 
 @router.post("/explication/validate", include_in_schema=False, dependencies=[ADMIN_ACTION])
 def explication_validate(request: Request, subject: str = Form(""), expected: int = Form(-1)) -> Response:
     person = _person(request)
-    return _act(request, subject, "validated", lambda out: human.validate(subject, person, out, expected))
+    return _act(request, subject, "validated", lambda out: human.validate(subject, person, out, expected, development=_development(request)))
 
 
 @router.post("/explication/discard", include_in_schema=False, dependencies=[ADMIN_ACTION])

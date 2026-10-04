@@ -23,6 +23,8 @@ from aistack.explications.human import (
     ExplicationRefused,
     Person,
     discard,
+    purge,
+    validate_declared,
     validate,
     versions,
     write,
@@ -209,3 +211,42 @@ def test_recording_the_current_text_again_is_refused(tmp_path: Path):
     discard(SUBJECT, "Premature.", BOB, tmp_path, expected=1)
     write(SUBJECT, "Same.", ALICE, tmp_path, expected=2)
     assert len(versions(SUBJECT, tmp_path)) == 3
+
+
+
+# --------------------------------------------------------------------
+# The development phase (ADR-0016)
+# --------------------------------------------------------------------
+
+
+def test_in_development_an_author_may_validate_their_own_text(tmp_path: Path):
+    write(SUBJECT, "Mine.", ALICE, tmp_path, expected=0)
+
+    validate(SUBJECT, ALICE, tmp_path, expected=1, development=True)
+
+    assert versions(SUBJECT, tmp_path)[-1].artifact.metadata["validated_in"] == "development"
+
+
+def test_validate_declared_validates_people_s_waiting_texts_and_leaves_imports(tmp_path: Path):
+    _import(tmp_path)  # booklore_db, an import
+    write("gitea", "Waiting.", ALICE, tmp_path, expected=0)
+    write("frigate", "Also.", BOB, tmp_path, expected=0)
+    discard("frigate", "No.", ALICE, tmp_path, expected=1)
+
+    done = validate_declared(Person("host:owner", "owner"), tmp_path)
+
+    assert done == ["gitea"]
+    assert versions("gitea", tmp_path)[-1].artifact.metadata["explication_status"] == VALIDATED
+    assert versions(SUBJECT, tmp_path)[-1].artifact.metadata["explication_status"] == PROPOSED
+
+
+def test_purge_deletes_every_version_of_one_subject_only(tmp_path: Path):
+    _import(tmp_path)
+    write("wordpress", "Test de développement", ALICE, tmp_path, expected=0)
+    write("wordpress", "Again", ALICE, tmp_path, expected=1)
+
+    assert purge("wordpress", tmp_path) == 2
+
+    assert versions("wordpress", tmp_path) == []
+    assert not (tmp_path / "wordpress.json").exists()
+    assert len(versions(SUBJECT, tmp_path)) == 1

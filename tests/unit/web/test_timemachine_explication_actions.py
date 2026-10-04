@@ -37,8 +37,8 @@ def wall_clock(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("aistack.generators.history.wall_clock", lambda: next(readings))
 
 
-def client(generated: Path) -> TestClient:
-    app = create_app(generated, LISTENERS, LANGUAGES, network_tree=sample_tree)
+def client(generated: Path, phase: str = "production") -> TestClient:
+    app = create_app(generated, LISTENERS, LANGUAGES, network_tree=sample_tree, phase=phase)
     return TestClient(app, base_url="http://testserver:8186", follow_redirects=False)
 
 
@@ -185,3 +185,35 @@ def test_every_time_machine_view_links_to_the_list(generated: Path):
 
     for path in ("/timemachine/", "/timemachine/tree", "/timemachine/ribbon", page("booklore_db")):
         assert 'href="/timemachine/explications?lang=' in web.get(path).text, path
+
+
+# --------------------------------------------------------------------
+# The development phase (ADR-0016)
+# --------------------------------------------------------------------
+
+
+def test_in_development_a_written_text_is_validated_by_its_author(generated: Path):
+    web = signed_in(client(generated, phase="development"), name="Dev")
+
+    text = web.get(page("sonarr")).text
+    assert "Development phase" in text
+
+    web.post("/timemachine/explication/write", data={"subject": "sonarr", "text": "Because.", "expected": "0"})
+
+    (only,) = versions("sonarr", generated / "explications")
+    assert only.artifact.metadata["explication_status"] == "Validated"
+    assert only.artifact.metadata["validated_by"] == "person:sub-Dev"
+    assert only.artifact.metadata["validated_in"] == "development"
+
+
+def test_in_development_an_author_validates_their_own_imported_correction(generated: Path):
+    production = signed_in(client(generated), name="Author2")
+    production.post("/timemachine/explication/write", data={"subject": "radarr", "text": "Mine.", "expected": "0"})
+
+    development = signed_in(client(generated, phase="development"), name="Author2")
+    text = development.get(page("radarr")).text
+    assert 'action="/timemachine/explication/validate"' in text
+
+    assert development.post(
+        "/timemachine/explication/validate", data={"subject": "radarr", "expected": "1"}
+    ).headers["location"].endswith("done=validated")

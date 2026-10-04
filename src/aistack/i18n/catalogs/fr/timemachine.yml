@@ -132,6 +132,7 @@ explication:
   discard_reason_label: "Raison"
   write_heading: "Rédiger"
   write_intro: "Une nouvelle version, au niveau Declared, en attente de validation par une autre personne. Le texte part de la version actuelle."
+  write_intro_development: "Phase de développement : la nouvelle version est validée dès son enregistrement, en ton nom. En production, elle attendra la validation d'une autre personne."
   write_button: "Enregistrer cette version"
   validate_heading: "Valider"
   validate_intro: "Confirmer la version actuelle, en second auteur. Jamais un texte qu'on a écrit soi-même."

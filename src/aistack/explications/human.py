@@ -6,11 +6,17 @@ written is edited or removed (`ADR-0011` § 7). The three acts check the
 history they were drawn from (`expected`, the number of versions the
 form saw) so two administrators never stack a version on one they have
 not read (`ADR-0015` § 6).
+
+In the development phase (`ADR-0016`), an administrator's text is
+validated as written, an author may validate their own text, and a
+subject's whole history can be purged — the one exception to "nothing
+is ever deleted", for test entries made while AIStack is set up.
 """
 
 from __future__ import annotations
 
 import json
+import shutil
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -166,8 +172,11 @@ def write(
     person: Person,
     output_dir: Path,
     expected: int,
+    development: bool = False,
 ) -> None:
-    """A new `Declared` version written by `person` (`ADR-0015` § 2)."""
+    """A new `Declared` version written by `person` (`ADR-0015` § 2) —
+    in the development phase, validated by its author as written
+    (`ADR-0016`)."""
 
     subject = _checked_subject(subject)
     if not text.strip():
@@ -190,6 +199,15 @@ def write(
             "source_stream": "person",
             "author_name": person.name,
             "explication_status": PROPOSED,
+        }
+        if not development
+        else {
+            "source_stream": "person",
+            "author_name": person.name,
+            "explication_status": VALIDATED,
+            "validated_by": person.source,
+            "validated_by_name": person.name,
+            "validated_in": "development",
         },
         output_dir=output_dir,
         now=_a_second_of_its_own(history),
@@ -201,9 +219,11 @@ def validate(
     person: Person,
     output_dir: Path,
     expected: int,
+    development: bool = False,
 ) -> None:
     """`person` confirms the current version, written by someone else
-    (`ADR-0015` § 3)."""
+    (`ADR-0015` § 3) — or by themselves, in the development phase
+    (`ADR-0016`)."""
 
     subject = _checked_subject(subject)
     history = _current(subject, output_dir, expected)
@@ -214,7 +234,7 @@ def validate(
     status = status_of(current.artifact)
     if status in (VALIDATED, DISCARDED):
         raise ExplicationRefused(f"timemachine.explication.refused.already_{status.lower()}")
-    if author_of(current.artifact) == person.source:
+    if author_of(current.artifact) == person.source and not development:
         raise ExplicationRefused("timemachine.explication.refused.own_text")
 
     _record(
@@ -228,10 +248,54 @@ def validate(
             "explication_status": VALIDATED,
             "validated_by": person.source,
             "validated_by_name": person.name,
+            **({"validated_in": "development"} if development else {}),
         },
         output_dir=output_dir,
         now=_a_second_of_its_own(history),
     )
+
+
+def validate_declared(person: Person, output_dir: Path) -> list[str]:
+    """
+    Validate every subject whose current version is a person's text
+    still waiting (`Declared`, `Proposed`) — the owner's decision of
+    2026-10-04 for the development phase (`ADR-0016`). Returns the
+    subjects validated. Imported versions (`Proposed` confidence) are
+    left to be read one by one.
+    """
+
+    from aistack.history import available_stems
+    from aistack.history.subject_names import subject_for_stem
+
+    validated = []
+    for stem in available_stems(output_dir):
+        subject = subject_for_stem(stem)
+        history = versions(subject, output_dir)
+        if not history:
+            continue
+        current = history[-1].artifact
+        if current.confidence == DECLARED and status_of(current) == PROPOSED:
+            validate(subject, person, output_dir, expected=len(history), development=True)
+            validated.append(subject)
+    return validated
+
+
+def purge(subject: str, output_dir: Path) -> int:
+    """
+    Delete every version of `subject`'s Explication — the development
+    phase's one exception to "nothing is ever deleted" (`ADR-0016`),
+    for entries made while testing. Returns the number of versions
+    removed; the graph forgets them at its next rebuild.
+    """
+
+    subject = _checked_subject(subject)
+    stem = stem_for_subject(subject)
+    count = len(versions(subject, output_dir))
+    (output_dir / f"{stem}.json").unlink(missing_ok=True)
+    history_dir = output_dir / "history" / stem
+    if history_dir.is_dir():
+        shutil.rmtree(history_dir)
+    return count
 
 
 def discard(

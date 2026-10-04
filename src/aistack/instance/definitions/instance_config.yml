@@ -43,3 +43,11 @@ lan_hostname: GIGABYTE
 service_ports:
   console: 8183
   web_lan: 8186
+
+# `phase`, added 2026-10-04 (`ADR-0016`): `development` while the owner
+# sets AIStack up and refines it — an administrator's Explication is
+# validated as written, a session's test entries can be purged, and an
+# ADR is accepted the day it is proposed; `production` brings back the
+# strict rules (a second person validates, nothing is ever deleted, an
+# ADR waits a day). Absent means `production`.
+phase: development

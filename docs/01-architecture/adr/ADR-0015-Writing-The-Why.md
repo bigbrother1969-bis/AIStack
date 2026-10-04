@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
-  status: Proposed
+  version: 1.3
+  status: Accepted
   owner: Architecture
   created: 2026-10-03
-  updated: 2026-10-03
+  updated: 2026-10-04
 
 relations:
   references:
@@ -19,15 +19,20 @@ relations:
     - ADR-0012
     - ADR-0014
     - STD-0100
+    - ADR-0016
 ---
 
 # ADR-0015 — Writing, Validating and Discarding the Why
 
 ## Status
 
-Proposed, 2026-10-03. The decisions below were taken by the owner on
-2026-10-03, at the start of 1.7's fourth tranche; under the rule adopted
-on 2026-08-21, this record is accepted the day after.
+Accepted, 2026-10-04, by the owner.
+
+Proposed 2026-10-03: the decisions below were taken by the owner that
+day, at the start of 1.7's fourth tranche, verified for real the same
+evening and published in 1.7.0. In the development phase, `ADR-0016`
+§ 2 lightens § 3 and § 4 below: a text is validated as written, its
+author may validate it, and a subject's history can be purged.
 
 ## Context
 
@@ -145,6 +150,20 @@ Every form carries the number of versions it was drawn from; an action
 on a subject whose history has changed since answers `409`, saying the
 page must be reloaded — never a second version on top of one its
 author has not seen.
+
+## Implementation state
+
+**As of 2026-10-04** — published in 1.7.0, verified for real on
+GIGABYTE on 2026-10-03.
+
+| Step | State |
+|---|---|
+| § 2 — writing, `Declared`, the same text refused | done — 2026-10-03 |
+| § 3 — validating, never one's own text (production) | done — 2026-10-03 |
+| § 4 — discarding with a reason | done — 2026-10-03 |
+| § 5 — the forms, the graph at the next rebuild | done — 2026-10-03 |
+| § 5 bis — the Explications list | done — 2026-10-03 |
+| § 6 — 409 on an out-of-date page | done — 2026-10-03 |
 
 ## Consequences
 

@@ -102,7 +102,7 @@
     {% if is_admin %}
       <section class="explication-actions">
         <h2>{{ t('timemachine.explication.write_heading') }}</h2>
-        <p class="meta">{{ t('timemachine.explication.write_intro') }}</p>
+        <p class="meta">{% if development %}{{ t('timemachine.explication.write_intro_development') }}{% else %}{{ t('timemachine.explication.write_intro') }}{% endif %}</p>
         <form method="post" action="{{ base }}/explication/write"><!--aistack:csrf-->
           <input type="hidden" name="subject" value="{{ panel.subject }}">
           <input type="hidden" name="expected" value="{{ panel.expected }}">

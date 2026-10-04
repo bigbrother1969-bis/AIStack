@@ -129,6 +129,7 @@ explication:
   discard_reason_label: "Reason"
   write_heading: "Write"
   write_intro: "A new version, at Declared, waiting for another person's validation. The text starts from the current version."
+  write_intro_development: "Development phase: the new version is validated as soon as it is recorded, in your name. In production, it will wait for another person's validation."
   write_button: "Record this version"
   validate_heading: "Validate"
   validate_intro: "Confirm the current version, as a second author. Never a text you wrote yourself."

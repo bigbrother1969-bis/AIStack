@@ -43,4 +43,6 @@ def load_instance_config_yaml(path: Path) -> InstanceConfig:
         service_ports={
             str(service): int(port) for service, port in ports.items()
         },
+        # Optional: absent means production, the strict rules (ADR-0016).
+        phase=str(data.get("phase", "production")),
     )

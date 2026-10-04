@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Proposed
   owner: Architecture
   created: 2026-10-04
@@ -116,11 +116,15 @@ all of `reports/generated`** (histories, explications, graph, sessions,
 generated pages), and **AIStack records it and shows the commands — it
 never moves anything itself**.
 
-- An administrator names an existing directory in Settings, under the
-  disks and mounts. Refused: a relative path, a directory the process
-  cannot see, the current one or one inside it, a disk with less free
-  space than the data's size plus 10 % (measured within 5 s, else not
-  checked). The choice — directory, who, when — is
+- An administrator picks a **disk from a list** in Settings, under the
+  disks and mounts (the owner's preference over a typed path, at the
+  first trial, 2026-10-04): the local mounts the process can write to —
+  in the container, the host directories it mounts — with their free
+  space, except the disk the data is already on and any network share
+  (the sessions are a SQLite file). The data goes to `aistack-data` at
+  the root of that disk. Refused: a disk not in the list, a disk with
+  less free space than the data's size plus 10 % (measured within 5 s,
+  else not checked). The choice — directory, who, when — is
   `data_location.yml`, in the configuration directory, else at the
   checkout's root, ignored by git.
 - **A git installation** reads `reports/generated` relative to its

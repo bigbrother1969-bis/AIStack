@@ -92,10 +92,12 @@ Opened from the **Settings** button at the top of every page.
   on them.
 - **Where AIStack's data lives** — administrators: where all of
   AIStack's data (histories, explications, graph, sessions, generated
-  pages) lives, as one block. Choose another directory, already created:
-  AIStack refuses a relative path, a directory it cannot see, the
-  current location or a disk without enough room, then records the
-  choice and shows **the commands to run**, in order. It never moves
+  pages) lives, as one block. Choose another disk from the list: it
+  holds only the local disks open for writing, with their free space,
+  except the one the data is already on (no network share: the
+  sessions database is not safe there). The data goes to `aistack-data`,
+  at the root of the disk. AIStack refuses a disk without enough room,
+  then records the choice and shows **the commands to run**, in order. It never moves
   anything itself. On a git installation the services are stopped, the
   data copied, `reports/generated` becomes a link to the new directory
   and the old one is kept as `reports/generated.avant-deplacement`;

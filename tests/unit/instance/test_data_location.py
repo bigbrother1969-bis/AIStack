@@ -24,37 +24,51 @@ def test_the_file_lives_in_the_configuration_directory_when_there_is_one(tmp_pat
     assert dl.location_file(None, tmp_path) == tmp_path / dl.FILE_NAME
 
 
-@pytest.mark.parametrize(
-    ("target", "reason"),
-    [
-        ("relative/dir", "relative"),
-        ("/does/not/exist", "missing"),
-    ],
-)
-def test_a_choice_that_cannot_be_is_refused(tmp_path: Path, target: str, reason: str):
-    with pytest.raises(dl.LocationRefused) as refused:
-        dl.checked(target, tmp_path / "generated", size=None, free_space=None)
-    assert refused.value.reason.endswith(reason)
+def rows():
+    from aistack.host.mounts import Mount, MountRow, Usage
+
+    return [
+        MountRow(Mount("/dev/sdc1", "/", "ext4", False), Usage(200, 50), ("code", "generated")),
+        MountRow(Mount("nas:/backup", "/media/BACKUP", "nfs", False), Usage(9000, 4000), ()),
+        MountRow(Mount("/dev/sda1", "/media/BD", "ext4", False), Usage(1800, 680), ()),
+        MountRow(Mount("/dev/sdg1", "/media/ro", "ext4", True), Usage(100, 90), ()),
+        MountRow(Mount("/dev/sdh1", "/config", "ext4", False), Usage(100, 90), ()),
+    ]
 
 
-def test_neither_the_same_directory_nor_one_inside_it(tmp_path: Path):
-    current = tmp_path / "generated"
-    (current / "inner").mkdir(parents=True)
+def test_only_local_writable_disks_other_than_the_data_s_own_are_offered(tmp_path: Path):
+    generated = Path("/srv/aistack/AIStack/reports/generated")
 
-    for target, reason in ((str(current), "same"), (str(current / "inner"), "inside")):
+    offered = [row.mount.point for row in dl.candidates(rows(), generated, in_container=False)]
+
+    assert offered == ["/media/BD"]
+
+
+def test_in_a_container_the_read_only_host_mounts_are_offered_but_not_its_own():
+    offered = [row.mount.point for row in dl.candidates(rows(), Path("/app/reports/generated"), in_container=True)]
+
+    assert offered == ["/", "/media/BD", "/media/ro"]
+
+
+def test_the_data_goes_to_one_folder_at_the_root_of_the_disk_chosen():
+    offered = dl.candidates(rows(), Path("/srv/x/reports/generated"), in_container=False)
+
+    assert dl.checked("/media/BD", offered, size=100) == "/media/BD/aistack-data"
+    assert dl.target_on("/") == "/aistack-data"
+
+
+def test_a_disk_not_offered_or_without_room_is_refused():
+    offered = dl.candidates(rows(), Path("/srv/x/reports/generated"), in_container=False)
+
+    for mount, size, reason in (("/media/BACKUP", 1, "unknown"), ("/elsewhere", 1, "unknown"), ("/media/BD", 650, "space")):
         with pytest.raises(dl.LocationRefused) as refused:
-            dl.checked(target, current, size=None, free_space=None)
+            dl.checked(mount, offered, size=size)
         assert refused.value.reason.endswith(reason)
 
 
-def test_a_disk_without_room_for_the_data_is_refused(tmp_path: Path):
-    (tmp_path / "target").mkdir()
-    with pytest.raises(dl.LocationRefused):
-        dl.checked(str(tmp_path / "target"), tmp_path / "generated", size=1000, free_space=1050)
-
-    assert dl.checked(str(tmp_path / "target") + "/", tmp_path / "generated", size=1000, free_space=2000) == str(
-        tmp_path / "target"
-    )
+def test_the_mount_of_a_path_is_the_longest_containing_it():
+    assert dl.mount_of(Path("/media/BD/x"), ["/", "/media", "/media/BD"]) == "/media/BD"
+    assert dl.mount_of(Path("/media/BDX"), ["/", "/media/BD"]) == "/"
 
 
 def test_the_size_walk_gives_up_past_its_budget(tmp_path: Path):
@@ -95,7 +109,8 @@ def test_the_commands_stop_copy_link_and_start_on_a_git_installation():
     )
 
     assert lines[0].startswith("sudo systemctl stop aistack-web")
-    assert "rsync -aH --info=progress2 /srv/aistack/AIStack/reports/generated/ /media/BD/aistack/" in lines[2]
+    assert "sudo mkdir -p /media/BD/aistack" in lines
+    assert "rsync -aH --info=progress2 /srv/aistack/AIStack/reports/generated/ /media/BD/aistack/" in lines[3]
     assert "mv /srv/aistack/AIStack/reports/generated /srv/aistack/AIStack/reports/generated.avant-deplacement" in lines
     assert "ln -s /media/BD/aistack /srv/aistack/AIStack/reports/generated" in lines
     assert lines[-1].startswith("sudo systemctl start aistack-web")
@@ -112,6 +127,7 @@ def test_the_commands_copy_and_declare_the_directory_in_a_container():
     )
 
     assert lines[0] == "docker compose down"
-    assert "rsync -aH --info=progress2 ./data/ /media/BD/aistack/" in lines[1]
-    assert "AISTACK_DATA_DIR=/media/BD/aistack" in lines[3]
+    assert lines[1] == "sudo mkdir -p /media/BD/aistack"
+    assert "rsync -aH --info=progress2 ./data/ /media/BD/aistack/" in lines[2]
+    assert "AISTACK_DATA_DIR=/media/BD/aistack" in lines[4]
     assert lines[-1] == "docker compose up -d"

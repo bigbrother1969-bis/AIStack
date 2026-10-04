@@ -21,7 +21,6 @@ mounts and passes in: the move is done when it names the chosen one.
 from __future__ import annotations
 
 import os
-import shutil
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -29,7 +28,13 @@ from pathlib import Path
 
 import yaml
 
+from aistack.host.mounts import MountRow
+
 FILE_NAME = "data_location.yml"
+# The directory the data goes to, at the root of the disk chosen.
+DATA_FOLDER = "aistack-data"
+# A container's own mounts, never offered.
+CONTAINER_OWN = ("/config", "/app", "/var/run", "/etc")
 DATA_DIR_ENV = "AISTACK_DATA_DIR"
 
 NONE = "none"
@@ -111,37 +116,60 @@ def measured_size(directory: Path, budget: float = SIZE_BUDGET_SECONDS) -> int |
     return total
 
 
+def target_on(mount: str) -> str:
+    """The directory the data goes to on the disk mounted at `mount`."""
+
+    return mount.rstrip("/") + "/" + DATA_FOLDER
+
+
+def mount_of(path: Path, points: list[str]) -> str | None:
+    """The mount point `path` lives under: the longest one containing it."""
+
+    text = str(path)
+    found = [point for point in points if point == "/" or text == point or text.startswith(point.rstrip("/") + "/")]
+    return max(found, key=len) if found else None
+
+
+def candidates(rows: list[MountRow], generated_dir: Path, in_container: bool) -> list[MountRow]:
+    """
+    The disks the data may be moved to, as the list Settings offers:
+    every real mount the process can write to — in the container, every
+    host directory it mounts, read-only there but not on the host —
+    except a network share (the sessions are a SQLite file, which a
+    network share does not keep safely), the disk the data is already
+    on, and the container's own mounts.
+    """
+
+    points = [row.mount.point for row in rows]
+    try:
+        current = None if in_container else mount_of(generated_dir.resolve(), points)
+    except OSError:
+        current = None
+    return [
+        row
+        for row in rows
+        if not row.mount.network
+        and (in_container or not row.mount.read_only)
+        and row.mount.point != current
+        and not any(row.mount.point == own or row.mount.point.startswith(own + "/") for own in CONTAINER_OWN)
+    ]
+
+
 def checked(
-    target: str,
-    current: Path,
+    mount: str,
+    offered: list[MountRow],
     *,
     size: int | None,
-    free_space: int | None,
 ) -> str:
-    """`target`, cleaned, when it can be chosen; else `LocationRefused`."""
+    """The directory the data goes to on `mount`, when `mount` is one of
+    the disks offered and has room for it; else `LocationRefused`."""
 
-    target = target.strip().rstrip("/") or target.strip()
-    if not target.startswith("/"):
-        raise LocationRefused("auth.storage.location.refused.relative")
-    candidate = Path(target)
-    if not candidate.is_dir():
-        raise LocationRefused("auth.storage.location.refused.missing")
-    resolved_current = current.resolve()
-    resolved = candidate.resolve()
-    if resolved == resolved_current:
-        raise LocationRefused("auth.storage.location.refused.same")
-    if resolved_current in resolved.parents:
-        raise LocationRefused("auth.storage.location.refused.inside")
-    if size is not None and free_space is not None and free_space < size * MARGIN:
+    row = next((row for row in offered if row.mount.point == mount), None)
+    if row is None:
+        raise LocationRefused("auth.storage.location.refused.unknown")
+    if size is not None and row.usage is not None and row.usage.free < size * MARGIN:
         raise LocationRefused("auth.storage.location.refused.space")
-    return target
-
-
-def free_space(directory: str) -> int | None:
-    try:
-        return shutil.disk_usage(directory).free
-    except OSError:
-        return None
+    return target_on(mount)
 
 
 def now() -> str:
@@ -185,6 +213,7 @@ def commands(
         source = environment.get(DATA_DIR_ENV, "").rstrip("/") or "./data"
         return [
             "docker compose down",
+        f"sudo mkdir -p {target}",
             f"sudo rsync -aH --info=progress2 {source}/ {target}/",
             f"sudo chown -R {owner} {target}",
             f"grep -q '^{DATA_DIR_ENV}=' .env && sed -i 's|^{DATA_DIR_ENV}=.*|{DATA_DIR_ENV}={target}|' .env"
@@ -198,6 +227,7 @@ def commands(
         # The one tracked file under it (GH-0002's debt report): git
         # stops reporting it deleted once its directory is a link.
         f"git -C {generated_dir.parent.parent} update-index --skip-worktree reports/generated/repository-debt-report.md",
+        f"sudo mkdir -p {target}",
         f"sudo rsync -aH --info=progress2 {current}/ {target}/",
         f"sudo chown -R {owner} {target}",
         f"mv {current} {current}.avant-deplacement",

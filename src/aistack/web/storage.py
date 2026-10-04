@@ -34,10 +34,7 @@ LOCATION_ANCHOR = "data-location"
 LOCATION_NOTICES = {
     "saved": "auth.storage.location.saved",
     "cleared": "auth.storage.location.cleared",
-    "relative": "auth.storage.location.refused.relative",
-    "missing": "auth.storage.location.refused.missing",
-    "same": "auth.storage.location.refused.same",
-    "inside": "auth.storage.location.refused.inside",
+    "unknown": "auth.storage.location.refused.unknown",
     "space": "auth.storage.location.refused.space",
 }
 STATE_LABELS = {
@@ -183,20 +180,32 @@ def location_section(request: Request, t: Translator, rows: list[MountRow]) -> s
         )
     parts.append("</table>")
 
-    writable = [row.mount.point for row in rows if not row.mount.read_only or in_container]
-    options = "".join(f'<option value="{escape_text(point)}">' for point in writable)
-    parts.append(
-        f'<form method="post" action="{LOCATION_PATH}" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">'
-        f'<input type="hidden" name="csrf" value="{token}">'
-        f'<input type="text" name="target" list="aistack-mounts" size="40" required '
-        f'value="{escape_text(location.target if location else "")}" '
-        f'placeholder="{escape_text(t("auth.storage.location.placeholder"))}" '
-        f'title="{escape_text(t("auth.storage.location.tooltip.target"))}">'
-        f'<datalist id="aistack-mounts">{options}</datalist>'
-        f'<button type="submit" name="action" value="save" '
-        f'title="{escape_text(t("auth.storage.location.tooltip.save"))}">{escape_text(t("auth.storage.location.save"))}</button>'
-        "</form>"
-    )
+    offered = data_location.candidates(rows, generated_dir, in_container)
+    if not offered:
+        parts.append(f'<p>{escape_text(t("auth.storage.location.no_disk"))}</p>')
+    else:
+        chosen = location.target if location else ""
+        options = "".join(
+            f'<option value="{escape_text(row.mount.point)}"'
+            f'{" selected" if data_location.target_on(row.mount.point) == chosen else ""}>'
+            f"{escape_text(row.mount.point)}"
+            + (
+                escape_text(t("auth.storage.location.option_free", free=_size(row.usage.free)))
+                if row.usage is not None
+                else ""
+            )
+            + "</option>"
+            for row in offered
+        )
+        parts.append(
+            f'<form method="post" action="{LOCATION_PATH}" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">'
+            f'<input type="hidden" name="csrf" value="{token}">'
+            f'<select name="mount" required title="{escape_text(t("auth.storage.location.tooltip.mount"))}">{options}</select>'
+            f'<button type="submit" name="action" value="save" '
+            f'title="{escape_text(t("auth.storage.location.tooltip.save"))}">{escape_text(t("auth.storage.location.save"))}</button>'
+            "</form>"
+            f'<p class="note">{escape_text(t("auth.storage.location.folder", folder=data_location.DATA_FOLDER))}</p>'
+        )
     if location is not None:
         parts.append(
             f'<form method="post" action="{LOCATION_PATH}" style="margin-top:.5rem">'
@@ -222,7 +231,7 @@ def location_section(request: Request, t: Translator, rows: list[MountRow]) -> s
 
 
 @router.post(LOCATION_PATH, include_in_schema=False, dependencies=[ADMIN_ACTION])
-def choose_location(request: Request, target: str = Form(""), action: str = Form("save")) -> Response:
+def choose_location(request: Request, mount: str = Form(""), action: str = Form("save")) -> Response:
     """Record where the data is to go — or forget the choice."""
 
     path: Path = request.app.state.paths.data_location
@@ -233,10 +242,9 @@ def choose_location(request: Request, target: str = Form(""), action: str = Form
     generated_dir: Path = request.app.state.generated_dir
     try:
         cleaned = data_location.checked(
-            target,
-            generated_dir,
+            mount,
+            data_location.candidates(request.app.state.storage(generated_dir), generated_dir, _in_container()),
             size=data_location.measured_size(generated_dir),
-            free_space=data_location.free_space(target.strip()) if target.strip().startswith("/") else None,
         )
     except data_location.LocationRefused as refused:
         return _back(refused.reason.rsplit(".", 1)[-1])

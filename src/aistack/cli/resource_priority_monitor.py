@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import signal
 import sys
 import time
@@ -32,10 +34,10 @@ from aistack.priority.yaml import load_resource_priority_yaml
 POLL_SECONDS = 5.0
 
 DEFAULT_DEFINITION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "priority"
     / "definitions"
-    / "resource_priority.yml"
+    / "resource_priority.yml")
 )
 
 USAGE = (

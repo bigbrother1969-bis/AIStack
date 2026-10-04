@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 from pathlib import Path
 from typing import Any
 
@@ -88,10 +90,10 @@ def _default_instance() -> InstanceConfig:
     from aistack.instance.yaml import load_instance_config_yaml
 
     default_path = (
-        Path(__file__).resolve().parents[2]
+        configured(Path(__file__).resolve().parents[2]
         / "instance"
         / "definitions"
-        / "instance_config.yml"
+        / "instance_config.yml")
     )
     return load_instance_config_yaml(default_path)
 

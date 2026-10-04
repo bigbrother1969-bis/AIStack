@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,7 +13,7 @@ from typing import Any
 
 import yaml
 
-DEFAULT_DEFINITION = Path(__file__).resolve().parent / "definitions" / "authentication.yml"
+DEFAULT_DEFINITION = configured(Path(__file__).resolve().parent / "definitions" / "authentication.yml")
 
 CALLBACK_PATH = "/auth/callback"
 AFTER_LOGOUT_PATH = "/console.html"

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import os
 import sys
 from collections.abc import Mapping
@@ -19,10 +21,10 @@ from aistack.providers.syncthing import SyncthingProvider
 # This command reads the same file rather than opening a second
 # configuration surface for facts that already have a governed home.
 DEFAULT_DEFINITION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "selection"
     / "definitions"
-    / "music_android.yml"
+    / "music_android.yml")
 )
 
 USAGE = (

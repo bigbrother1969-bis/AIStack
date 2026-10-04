@@ -15,6 +15,8 @@ used.
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 import argparse
 import socket
 from pathlib import Path
@@ -26,7 +28,7 @@ from aistack.web.app import create_app
 from aistack.web.exposure import Listeners
 
 INSTANCE_CONFIG = (
-    Path(__file__).resolve().parents[1] / "instance" / "definitions" / "instance_config.yml"
+    configured(Path(__file__).resolve().parents[1] / "instance" / "definitions" / "instance_config.yml")
 )
 
 PUBLIC_SERVICE = "console"

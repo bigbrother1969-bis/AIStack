@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import os
 import sys
 from collections.abc import Mapping
@@ -22,10 +24,10 @@ from aistack.providers.jellyfin import JellyfinProvider
 # one fact that already has a governed home — same default path the
 # monitor uses.
 DEFAULT_DEFINITION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "priority"
     / "definitions"
-    / "resource_priority.yml"
+    / "resource_priority.yml")
 )
 
 USAGE = (

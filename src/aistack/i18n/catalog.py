@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import base64
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,7 +16,7 @@ import yaml
 # non-editable install carries them through
 # `[tool.setuptools.package-data]`'s `**/*.yml` without anything new
 # being declared.
-DEFAULT_LANGUAGES = Path(__file__).resolve().parent / "definitions" / "languages.yml"
+DEFAULT_LANGUAGES = configured(Path(__file__).resolve().parent / "definitions" / "languages.yml")
 DEFAULT_CATALOGS = Path(__file__).resolve().parent / "catalogs"
 
 

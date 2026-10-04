@@ -12,6 +12,8 @@ they would describe every LAN route on the public port.
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -53,7 +55,7 @@ from aistack.web.exposure import Listeners, include
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-INSTANCE_CONFIG = PACKAGE_ROOT / "instance" / "definitions" / "instance_config.yml"
+INSTANCE_CONFIG = configured(PACKAGE_ROOT / "instance" / "definitions" / "instance_config.yml")
 
 
 @dataclass(frozen=True)
@@ -61,12 +63,12 @@ class WebPaths:
     """The declaration files the screens read and write, one per screen."""
 
     network_discovery: Path = (
-        PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml"
+        configured(PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml")
     )
-    resource_priority: Path = PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml"
-    selection: Path = PACKAGE_ROOT / "selection" / "definitions" / "music_android.yml"
+    resource_priority: Path = configured(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml")
+    selection: Path = configured(PACKAGE_ROOT / "selection" / "definitions" / "music_android.yml")
     topology: Path = (
-        PACKAGE_ROOT / "architecture" / "definitions" / "infrastructure_topology.yml"
+        configured(PACKAGE_ROOT / "architecture" / "definitions" / "infrastructure_topology.yml")
     )
     # What a definition's repository-relative paths (`selection_file`)
     # resolve against: the checkout the application runs from.

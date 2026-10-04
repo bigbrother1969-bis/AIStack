@@ -62,6 +62,8 @@ not "by content", the same choice `from_ai_reasoning` already made for
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -76,7 +78,7 @@ from aistack.explications.store import (
 )
 
 DEFAULT_PRA_TESTS_PATH = (
-    Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml"
+    configured(Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml")
 )
 
 _LEDE_PATTERN = re.compile(r"^\*\*(?P<lede>.+?)\*\*\s*(?P<rest>.*)$")

@@ -14,6 +14,8 @@ both are seen by the graph at the next `timemachine_rebuild`.
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 import argparse
 import getpass
 import sys
@@ -23,7 +25,7 @@ from aistack.explications.human import ExplicationRefused, Person, purge, valida
 from aistack.instance.yaml.store import load_instance_config_yaml
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-INSTANCE_CONFIG = PACKAGE_ROOT / "instance" / "definitions" / "instance_config.yml"
+INSTANCE_CONFIG = configured(PACKAGE_ROOT / "instance" / "definitions" / "instance_config.yml")
 EXPLICATIONS_DIR = Path("reports/generated/explications")
 
 

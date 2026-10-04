@@ -31,6 +31,8 @@ de façon accompagnée par les modules d'IA"): every domain
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 import json
 import socket
 import subprocess
@@ -85,20 +87,20 @@ REPOSITORY_ROOT = PACKAGE_ROOT.parents[1]
 class FindingSources:
     """Every declaration file the collection reads, one field each."""
 
-    resource_priority: Path = PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml"
+    resource_priority: Path = configured(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml")
     storage_thresholds: Path = (
-        PACKAGE_ROOT / "providers" / "filesystem" / "definitions" / "storage_thresholds.yml"
+        configured(PACKAGE_ROOT / "providers" / "filesystem" / "definitions" / "storage_thresholds.yml")
     )
     backup_thresholds: Path = (
-        PACKAGE_ROOT / "providers" / "filesystem" / "definitions" / "backup_thresholds.yml"
+        configured(PACKAGE_ROOT / "providers" / "filesystem" / "definitions" / "backup_thresholds.yml")
     )
-    gpu_thresholds: Path = PACKAGE_ROOT / "providers" / "gpu" / "definitions" / "gpu_thresholds.yml"
-    pra_tests: Path = PACKAGE_ROOT / "pra" / "definitions" / "pra_tests.yml"
+    gpu_thresholds: Path = configured(PACKAGE_ROOT / "providers" / "gpu" / "definitions" / "gpu_thresholds.yml")
+    pra_tests: Path = configured(PACKAGE_ROOT / "pra" / "definitions" / "pra_tests.yml")
     backup_strategy: Path = (
-        PACKAGE_ROOT / "backup_strategy" / "definitions" / "backup_strategy.yml"
+        configured(PACKAGE_ROOT / "backup_strategy" / "definitions" / "backup_strategy.yml")
     )
     categorization: Path = (
-        PACKAGE_ROOT / "architecture" / "definitions" / "service_categorization.yml"
+        configured(PACKAGE_ROOT / "architecture" / "definitions" / "service_categorization.yml")
     )
     # Anchored on the checkout, not the working directory: a systemd
     # service's working directory is not guaranteed to be the

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import json
 import socket
 import subprocess
@@ -56,11 +58,11 @@ from aistack.runtime.uncovered_state_gap import find_uncovered_state
 # `Path(__file__).resolve()`-relative convention every other
 # `DEFAULT_*` constant in this package already uses.
 DEFAULT_STORAGE_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "filesystem"
     / "definitions"
-    / "storage_thresholds.yml"
+    / "storage_thresholds.yml")
 )
 
 # `OPS-0006`'s own declared thresholds — the same file
@@ -74,11 +76,11 @@ DEFAULT_STORAGE_THRESHOLDS = (
 # _for_host` (`aistack.providers.filesystem.thresholds`) has been the
 # only implementation from the start, imported by both CLIs alike.
 DEFAULT_BACKUP_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "filesystem"
     / "definitions"
-    / "backup_thresholds.yml"
+    / "backup_thresholds.yml")
 )
 
 # `OPS-0007`'s own declared thresholds — the same file
@@ -86,11 +88,11 @@ DEFAULT_BACKUP_THRESHOLDS = (
 # again here for the same reason `DEFAULT_BACKUP_THRESHOLDS` is: no CLI
 # in this package imports another.
 DEFAULT_GPU_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "gpu"
     / "definitions"
-    / "gpu_thresholds.yml"
+    / "gpu_thresholds.yml")
 )
 
 # `OPS-0008`'s own declared health-score weights. Not scoped by host,
@@ -98,10 +100,10 @@ DEFAULT_GPU_THRESHOLDS = (
 # whichever domains this host's own cockpit instruments, but the
 # weight a domain costs is the same wherever this runs.
 DEFAULT_HEALTH_SCORE_WEIGHTS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "health"
     / "definitions"
-    / "health_score_weights.yml"
+    / "health_score_weights.yml")
 )
 
 # `OPS-0009`'s own declared PRA test records — not scoped by host, the
@@ -109,7 +111,7 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
 # a fleet-wide fact the owner records by hand, not a threshold that
 # varies by which host renders the page.
 DEFAULT_PRA_TESTS = (
-    Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml"
+    configured(Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml")
 )
 
 # `OPS-0010`'s own declared backup-strategy records — not scoped by
@@ -118,10 +120,10 @@ DEFAULT_PRA_TESTS = (
 # owner records by hand, not a threshold that varies by which host
 # renders the page.
 DEFAULT_BACKUP_STRATEGY = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "backup_strategy"
     / "definitions"
-    / "backup_strategy.yml"
+    / "backup_strategy.yml")
 )
 
 # The same file `aistack.cli.architecture_render.DEFAULT_CATEGORIZATION`
@@ -129,10 +131,10 @@ DEFAULT_BACKUP_STRATEGY = (
 # in this package imports another" convention every other `DEFAULT_*`
 # constant in this module already holds.
 DEFAULT_CATEGORIZATION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "architecture"
     / "definitions"
-    / "service_categorization.yml"
+    / "service_categorization.yml")
 )
 
 # `network_docker_discover.py`'s own output path — the last observation
@@ -158,10 +160,10 @@ DEFAULT_NETWORK_DOCKER_OBSERVATION = Path(
 # declared explicitly here rather than left to a loader's own internal
 # fallback, the same reasoning that module's own comment gives.
 DEFAULT_INSTANCE_CONFIG = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "instance"
     / "definitions"
-    / "instance_config.yml"
+    / "instance_config.yml")
 )
 
 # Where the assistant sits on the web application's LAN listener since

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import json
 import socket
 import subprocess
@@ -52,10 +54,10 @@ from aistack.runtime.uncovered_state_gap import find_uncovered_state
 # `DEFAULT_CATEGORIZATION` — a `Path(__file__).resolve()`-relative
 # default, not `importlib.resources`.
 DEFAULT_CONSOLE_LINKS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "console"
     / "definitions"
-    / "console_links.yml"
+    / "console_links.yml")
 )
 
 # R10, 2026-09-30 — resolves `DEFAULT_CONSOLE_LINKS`'s own `service:`
@@ -65,10 +67,10 @@ DEFAULT_CONSOLE_LINKS = (
 # mini-app's `app.py`, a test — not for this CLI, which already names
 # every one of its other inputs by its own path).
 DEFAULT_INSTANCE_CONFIG = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "instance"
     / "definitions"
-    / "instance_config.yml"
+    / "instance_config.yml")
 )
 
 # **Duplicated from `aistack.cli.health_render`, not imported —
@@ -88,34 +90,34 @@ DEFAULT_INSTANCE_CONFIG = (
 # four threshold paths and its weights path against
 # `aistack.cli.health_render`'s own.
 DEFAULT_STORAGE_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "filesystem"
     / "definitions"
-    / "storage_thresholds.yml"
+    / "storage_thresholds.yml")
 )
 
 DEFAULT_BACKUP_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "filesystem"
     / "definitions"
-    / "backup_thresholds.yml"
+    / "backup_thresholds.yml")
 )
 
 DEFAULT_GPU_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "gpu"
     / "definitions"
-    / "gpu_thresholds.yml"
+    / "gpu_thresholds.yml")
 )
 
 DEFAULT_HEALTH_SCORE_WEIGHTS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "health"
     / "definitions"
-    / "health_score_weights.yml"
+    / "health_score_weights.yml")
 )
 
 # `OPS-0009`'s own declared PRA test records — not scoped by host, the
@@ -124,24 +126,24 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
 # never imports the other, per this file's own "no CLI in this
 # package imports another" convention (see the comment above).
 DEFAULT_PRA_TESTS = (
-    Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml"
+    configured(Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml")
 )
 
 DEFAULT_BACKUP_STRATEGY = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "backup_strategy"
     / "definitions"
-    / "backup_strategy.yml"
+    / "backup_strategy.yml")
 )
 
 # Mirrors `aistack.cli.health_render.DEFAULT_CATEGORIZATION` exactly —
 # this module never imports the other, per this file's own "no CLI in
 # this package imports another" convention (see the comment above).
 DEFAULT_CATEGORIZATION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "architecture"
     / "definitions"
-    / "service_categorization.yml"
+    / "service_categorization.yml")
 )
 
 # Mirrors `aistack.cli.health_render.DEFAULT_NETWORK_DOCKER_OBSERVATION`

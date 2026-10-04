@@ -7,6 +7,8 @@ A missing field is an error, not a blank on a public legal page.
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -15,7 +17,7 @@ import yaml
 
 from aistack.i18n import Languages, default_languages, pick_localized
 
-DEFAULT_IDENTITY = Path(__file__).resolve().parent / "definitions" / "console_identity.yml"
+DEFAULT_IDENTITY = configured(Path(__file__).resolve().parent / "definitions" / "console_identity.yml")
 
 _REQUIRED = (
     "publisher",

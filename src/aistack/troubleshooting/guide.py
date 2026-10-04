@@ -19,6 +19,8 @@ engine's 120 s and reported a slow model as an unreachable one.
 
 from __future__ import annotations
 
+from aistack.config import configured
+
 import re
 from collections.abc import Callable, MutableMapping
 from pathlib import Path
@@ -30,7 +32,7 @@ from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
 
-AI_RUNTIME = Path(__file__).resolve().parents[1] / "ai_runtime" / "definitions" / "ai_runtime.yml"
+AI_RUNTIME = configured(Path(__file__).resolve().parents[1] / "ai_runtime" / "definitions" / "ai_runtime.yml")
 
 OPERATIONS = ("reason", "explain", "recommend")
 STEP_COUNT = 4

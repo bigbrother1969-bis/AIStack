@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import os
 from collections.abc import Mapping
 from pathlib import Path
@@ -31,28 +33,28 @@ from aistack.providers.http_probe import HttpProbeProvider
 # to rely on from a real, installed distribution and not only an
 # editable one.
 DEFAULT_CATEGORIZATION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "architecture"
     / "definitions"
-    / "service_categorization.yml"
+    / "service_categorization.yml")
 )
 
 # Added 2026-09-12 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10) — same
 # convention, alongside `service_categorization.yml`.
 DEFAULT_TOPOLOGY = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "architecture"
     / "definitions"
-    / "infrastructure_topology.yml"
+    / "infrastructure_topology.yml")
 )
 
 # Added 2026-09-23 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1,
 # first of the three gaps named 2026-09-13) — same convention again.
 DEFAULT_CMDB_TARGETS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "architecture"
     / "definitions"
-    / "cmdb_probe_targets.yml"
+    / "cmdb_probe_targets.yml")
 )
 
 

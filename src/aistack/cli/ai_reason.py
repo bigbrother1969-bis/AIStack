@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import subprocess
 from pathlib import Path
 
@@ -29,19 +31,19 @@ from aistack.runtime.idle_consumption import find_unexplained_consumption
 # and nothing else `runtime_diagnose.py` also collects. A drift-guard
 # test compares this path against `runtime_diagnose`'s own.
 DEFAULT_RESOURCE_PRIORITY = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "priority"
     / "definitions"
-    / "resource_priority.yml"
+    / "resource_priority.yml")
 )
 
 # Same convention as every other CLI's own `DEFAULT_*` constant in
 # this package — a `Path(__file__).resolve()`-relative default.
 DEFAULT_AI_RUNTIME = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "ai_runtime"
     / "definitions"
-    / "ai_runtime.yml"
+    / "ai_runtime.yml")
 )
 
 

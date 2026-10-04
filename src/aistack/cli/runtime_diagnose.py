@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import socket
 import subprocess
 import sys
@@ -127,10 +129,10 @@ def lifecycle_register(path: Path) -> tuple[LifecycleRegister, str]:
 # at all, which is a fact worth reporting, not a reason to refuse
 # the rest of the diagnosis.
 DEFAULT_RESOURCE_PRIORITY = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "priority"
     / "definitions"
-    / "resource_priority.yml"
+    / "resource_priority.yml")
 )
 
 
@@ -173,11 +175,11 @@ def resource_priority_definition(
 # still diagnoses — storage capacity is simply not checked, reported
 # rather than assumed clean (`FDN-0003` Article 12).
 DEFAULT_STORAGE_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "filesystem"
     / "definitions"
-    / "storage_thresholds.yml"
+    / "storage_thresholds.yml")
 )
 
 
@@ -242,11 +244,11 @@ def storage_thresholds(
 # backup freshness is simply not checked, reported rather than assumed
 # clean (`FDN-0003` Article 12).
 DEFAULT_BACKUP_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "filesystem"
     / "definitions"
-    / "backup_thresholds.yml"
+    / "backup_thresholds.yml")
 )
 
 
@@ -262,11 +264,11 @@ DEFAULT_BACKUP_THRESHOLDS = (
 # tooling), still diagnoses — GPU consumption is simply not checked,
 # reported rather than assumed clean (`FDN-0003` Article 12).
 DEFAULT_GPU_THRESHOLDS = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "providers"
     / "gpu"
     / "definitions"
-    / "gpu_thresholds.yml"
+    / "gpu_thresholds.yml")
 )
 
 

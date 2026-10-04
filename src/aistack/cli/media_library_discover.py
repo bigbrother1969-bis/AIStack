@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import sys
 from pathlib import Path
 
@@ -15,10 +17,10 @@ from aistack.providers.filesystem import MediaLibraryProvider
 # command reads the same file rather than opening a second
 # configuration surface for a fact that already has a governed home.
 DEFAULT_DEFINITION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "selection"
     / "definitions"
-    / "music_android.yml"
+    / "music_android.yml")
 )
 
 USAGE = (

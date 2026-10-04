@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from aistack.config import configured
+
 import os
 from collections.abc import Mapping
 from pathlib import Path
@@ -12,10 +14,10 @@ from aistack.providers.network_docker import NetworkDockerDiscoveryProvider
 # `architecture_render.py` — a `Path(__file__).resolve()`-relative
 # default, not `importlib.resources`.
 DEFAULT_DEFINITION = (
-    Path(__file__).resolve().parents[1]
+    configured(Path(__file__).resolve().parents[1]
     / "network_discovery"
     / "definitions"
-    / "network_discovery.yml"
+    / "network_discovery.yml")
 )
 
 

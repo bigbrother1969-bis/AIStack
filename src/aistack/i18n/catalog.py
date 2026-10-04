@@ -176,6 +176,9 @@ def _flatten(
             )
 
 
+_SHIPPED_FLAGS = Path(__file__).resolve().parent / "definitions" / "flags"
+
+
 def _flag_uri(definition: Path, flag: Any, label: str) -> str:
     """
     The declared flag file, beside the definition under `flags/`, as a
@@ -191,7 +194,11 @@ def _flag_uri(definition: Path, flag: Any, label: str) -> str:
     if "/" in name or "\\" in name or not name.endswith(".svg"):
         raise ValueError(f"{label}: flag must be an .svg file name, not {name!r}")
 
+    # Beside the definition first; a definition copied into a
+    # configuration directory (ADR-0017 § 1) keeps the shipped flags.
     file = definition.parent / "flags" / name
+    if not file.is_file():
+        file = _SHIPPED_FLAGS / name
 
     if not file.is_file():
         raise ValueError(f"{label}: flag file not found: {file}")

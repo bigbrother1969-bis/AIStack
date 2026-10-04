@@ -171,8 +171,13 @@ def test_a_language_without_a_flag_has_none(tmp_path: Path):
 
 
 def test_a_declared_flag_that_does_not_exist_is_refused(tmp_path: Path):
+    # Neither beside the declaration nor among the shipped flags.
     with pytest.raises(ValueError, match="flag file not found"):
-        load_languages_yaml(with_flag(tmp_path, "fr.svg"))
+        load_languages_yaml(with_flag(tmp_path, "xx.svg"))
+
+
+def test_a_declaration_copied_elsewhere_keeps_the_shipped_flags(tmp_path: Path):
+    assert load_languages_yaml(with_flag(tmp_path, "fr.svg")).available[0].flag.startswith("data:image/svg+xml")
 
 
 @pytest.mark.parametrize("flag", ["../secret.svg", "fr.png", "sub/fr.svg"])

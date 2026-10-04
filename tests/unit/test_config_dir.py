@@ -63,3 +63,28 @@ def test_a_process_started_with_the_directory_reads_its_declarations(tmp_path: P
 
     assert out.stdout.strip() == "ELSEWHERE"
     importlib.invalidate_caches()
+
+
+def test_a_process_started_on_a_filled_directory_loads_every_page_s_declarations(tmp_path: Path):
+    """Measured on GIGABYTE, 2026-10-04: languages.yml copied to /config
+    lost its flags, and the web application stopped at start."""
+
+    init(tmp_path)
+    code = (
+        "from aistack.i18n.translator import default_languages;"
+        "from aistack.renderers.console.pages import render_help_html, render_manual_html;"
+        "from aistack.console.identity import load_console_identity;"
+        "from aistack.authentication.definition import load_authentication_yaml;"
+        "from aistack.web.app import INSTANCE_CONFIG, WebPaths;"
+        "from aistack.instance.yaml.store import load_instance_config_yaml;"
+        "languages = default_languages();"
+        "assert all(language.flag.startswith('data:image/svg+xml') for language in languages.available);"
+        "render_help_html('fr'); render_manual_html('en'); load_console_identity();"
+        "load_authentication_yaml(); load_instance_config_yaml(INSTANCE_CONFIG);"
+        "print(WebPaths().repository_root)"
+    )
+    env = {**__import__("os").environ, CONFIG_DIR_ENV: str(tmp_path)}
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True)
+
+    assert out.returncode == 0, out.stderr
+    assert out.stdout.strip() == str(tmp_path)  # selection files resolve in the directory

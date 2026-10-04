@@ -512,7 +512,7 @@ from the checkout, which stays and keeps the data where it is:
 ```bash
 ./scripts/compose_preflight.sh                       # reads, changes nothing
 mkdir -p config/examples/selections
-cp src/aistack/*/definitions/*.yml config/           # your declarations, placed before the first start
+find src/aistack -path '*/definitions/*.yml' -exec cp {} config/ \;   # your 18 declarations, placed before the first start
 cp -a examples/selections/. config/examples/selections/
 printf 'AISTACK_VERSION=dev\nAISTACK_UID=%s\nAISTACK_GID=%s\nDOCKER_GID=%s\nAISTACK_DATA_DIR=%s\n' \
   "$(id -u)" "$(id -g)" "$(stat -c %g /var/run/docker.sock)" "$PWD/reports/generated" > .env

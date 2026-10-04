@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Accepted
   owner: Architecture
   created: 2026-10-04
@@ -176,6 +176,14 @@ Settings if wanted (§ 4 bis).
   `systemctl enable --now` the six units. What a screen saved meanwhile
   is in `./config`; the files that differ from the checkout's are
   listed and copied back by hand.
+- **Done 2026-10-04, 14:49.** The preflight found an earlier trial's
+  `.env` and `./config` (set aside in `~/aistack-avant-compose/`, not
+  deleted) and, in the crontab, only the nightly mirror publication.
+  Three declarations live one level deeper
+  (`src/aistack/providers/*/definitions/`): the copy is a `find`, not a
+  one-level glob. From the first minute the collectors observed
+  AIStack's own containers — the Compose project `aistack` — like any
+  other project.
 - After the move, one-off commands run in the image
   (`docker compose exec web python -m aistack.cli.…`), which reads
   `./config`; the checkout's virtual environment reads the shipped
@@ -190,7 +198,7 @@ Settings if wanted (§ 4 bis).
 | § 3 — host network, socket, same-path mounts | done — 2026-10-04; tried on GIGABYTE the same day: both ports listening on the host, `docker ps` answers inside the container |
 | § 4 — guided first start | done — 2026-10-04 |
 | § 4 bis — where the data lives, chosen from Settings | done — 2026-10-04 |
-| § 5 — GIGABYTE on the compose file | prepared — 2026-10-04 (preflight, override, procedure); the move itself is the owner's |
+| § 5 — GIGABYTE on the compose file | done — 2026-10-04, 14:49: six containers of the `dev` image, console 200 after 21 s, no first-start notice; sign-in, Settings, CPU priority, Selection and the Time Machine checked by the owner |
 
 ## Consequences
 

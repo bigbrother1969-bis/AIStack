@@ -43,6 +43,8 @@ from aistack.web import (
 )
 from aistack.instance.yaml.store import load_instance_config_yaml
 from aistack.web.storage import live_storage
+from aistack.web import storage as storage_screen
+from aistack.instance.data_location import location_file
 from aistack.web.authentication import (
     Authentication,
     Refused,
@@ -76,6 +78,8 @@ class WebPaths:
     # against: the configuration directory when there is one (the
     # container, ADR-0017), else the checkout the application runs from.
     repository_root: Path = config_dir() or PACKAGE_ROOT.parents[1]
+    # Where the data is to be moved (1.8): chosen from Settings.
+    data_location: Path = location_file(config_dir(), PACKAGE_ROOT.parents[1])
 
 
 def create_app(
@@ -162,6 +166,7 @@ def create_app(
 
     include(app, console.router)
     include(app, first_start.router)
+    include(app, storage_screen.router)
     include(app, authentication.router)
     include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)

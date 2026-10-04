@@ -49,6 +49,12 @@ build/
 dist/
 context/bundles/
 reports/generated/
+# Moved from Settings (1.8): `reports/generated` becomes a link to the
+# chosen directory, and the old one is kept beside it; the choice
+# itself is this host's, not the repository's.
+/reports/generated
+/reports/generated.avant-deplacement/
+/data_location.yml
 examples/catalog_engine/music-library-catalog.yml
 examples/render_engine/*.html
 

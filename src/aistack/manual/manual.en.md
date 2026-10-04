@@ -90,6 +90,17 @@ Opened from the **Settings** button at the top of every page.
 - **Disks and mounts** — administrators: the disks and mount points the
   server sees, their size, their free space, and what AIStack already keeps
   on them.
+- **Where AIStack's data lives** — administrators: where all of
+  AIStack's data (histories, explications, graph, sessions, generated
+  pages) lives, as one block. Choose another directory, already created:
+  AIStack refuses a relative path, a directory it cannot see, the
+  current location or a disk without enough room, then records the
+  choice and shows **the commands to run**, in order. It never moves
+  anything itself. On a git installation the services are stopped, the
+  data copied, `reports/generated` becomes a link to the new directory
+  and the old one is kept as `reports/generated.avant-deplacement`;
+  with Docker, the data is copied and `AISTACK_DATA_DIR` is declared in
+  `.env`. The state turns to **done** once the services are restarted.
 
 ## Architecture
 

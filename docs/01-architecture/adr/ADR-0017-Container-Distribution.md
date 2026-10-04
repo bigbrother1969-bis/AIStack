@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Proposed
   owner: Architecture
   created: 2026-10-04
@@ -109,6 +109,32 @@ Implemented 2026-10-04:
   **⚠ To configure** link to it. Measured once, when the application
   starts: nothing it reads changes before a restart.
 
+### 4 bis. Where the data lives, chosen from Settings
+
+Asked by the owner, 2026-10-04; decided the same day: **one choice for
+all of `reports/generated`** (histories, explications, graph, sessions,
+generated pages), and **AIStack records it and shows the commands — it
+never moves anything itself**.
+
+- An administrator names an existing directory in Settings, under the
+  disks and mounts. Refused: a relative path, a directory the process
+  cannot see, the current one or one inside it, a disk with less free
+  space than the data's size plus 10 % (measured within 5 s, else not
+  checked). The choice — directory, who, when — is
+  `data_location.yml`, in the configuration directory, else at the
+  checkout's root, ignored by git.
+- **A git installation** reads `reports/generated` relative to its
+  working directory, in 22 places: the move makes that path a link to
+  the chosen directory (stop the six units, mark the one tracked file
+  under it `skip-worktree`, copy, link, start), the old directory kept
+  as `reports/generated.avant-deplacement`. Done when the path resolves
+  to the chosen directory.
+- **The container** sees `/app/reports/generated` whatever the host
+  directory behind it: `docker-compose.yml` mounts
+  `${AISTACK_DATA_DIR:-./data}` there and passes the same value in, so
+  the move is declaring `AISTACK_DATA_DIR` in `.env` after the copy.
+  Done when the value names the chosen directory.
+
 ### 5. GIGABYTE moves to it at the end of 1.8
 
 The last tranche replaces GIGABYTE's six systemd units by the compose
@@ -123,7 +149,7 @@ supported.
 | § 2 — the image runs AIStack; `docker-compose.yml` with six services, `.env.example` | done — 2026-10-04; tried on GIGABYTE the same day (`dev` image, ports 9183/9186): console and manual answer 200, ready ≈ 12 s after start |
 | § 3 — host network, socket, same-path mounts | done — 2026-10-04; tried on GIGABYTE the same day: both ports listening on the host, `docker ps` answers inside the container |
 | § 4 — guided first start | done — 2026-10-04 |
-| Choosing where each component lives, from Settings (asked 2026-10-04) | not started |
+| § 4 bis — where the data lives, chosen from Settings | done — 2026-10-04 |
 | § 5 — GIGABYTE on the compose file | not started |
 
 ## Consequences

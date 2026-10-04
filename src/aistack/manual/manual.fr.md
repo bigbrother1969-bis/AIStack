@@ -93,6 +93,18 @@ Ouverts depuis le bouton **Paramètres** en haut de chaque page.
 - **Disques et montages** — administrateurs : les disques et points de
   montage que voit le serveur, leur taille, leur espace libre, et ce
   qu'AIStack y stocke déjà.
+- **Emplacement des données d'AIStack** — administrateurs : où vivent
+  toutes les données d'AIStack (historiques, explications, graphe,
+  sessions, pages générées), en un seul bloc. Choisis un autre dossier,
+  déjà créé : AIStack refuse un chemin relatif, un dossier qu'il ne voit
+  pas, l'emplacement actuel ou un disque sans assez de place, puis
+  enregistre le choix et affiche **les commandes à lancer**, dans
+  l'ordre. Il ne déplace jamais rien lui-même. En installation git, les
+  services sont arrêtés, les données copiées, `reports/generated` devient
+  un lien vers le nouveau dossier et l'ancien est gardé sous
+  `reports/generated.avant-deplacement` ; avec Docker, les données sont
+  copiées et `AISTACK_DATA_DIR` est déclaré dans `.env`. L'état passe à
+  **fait** une fois les services redémarrés.
 
 ## Architecture
 

@@ -42,6 +42,9 @@ x-aistack: &aistack
   user: "${AISTACK_UID:-1000}:${AISTACK_GID:-1000}"
   group_add:
     - "${DOCKER_GID:-999}"
+  environment:
+    # The host directory behind /app/reports/generated, for Settings.
+    AISTACK_DATA_DIR: ${AISTACK_DATA_DIR:-./data}
   env_file:
     - path: .env.web
       required: false
@@ -49,7 +52,9 @@ x-aistack: &aistack
       required: false
   volumes:
     - ./config:/config
-    - ./data:/app/reports/generated
+    # AIStack's data: ./data unless Settings moved it (AISTACK_DATA_DIR
+    # in .env, 1.8).
+    - ${AISTACK_DATA_DIR:-./data}:/app/reports/generated
     - /var/run/docker.sock:/var/run/docker.sock
     # The host directories your declarations name, at the same path,
     # read-only. The reference host keeps its disks under /media and

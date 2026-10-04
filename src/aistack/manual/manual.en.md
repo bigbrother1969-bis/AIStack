@@ -274,7 +274,8 @@ section of the repository's README. In order:
    environment (`python3.13 -m venv .venv`, then
    `.venv/bin/python -m pip install -e ".[dev]"`), and check that `pytest -q`
    and `python -m aistack.cli.knowledge_integrity` pass.
-3. **The declarations**: under `src/aistack/*/definitions/`, at least the
+3. **The declarations**: under `src/aistack/*/definitions/` (with Docker,
+   in `./config`, see below), at least the
    host name and the two ports (`instance_config.yml`), the provider's
    address and the public address (`authentication.yml`), the topology, the
    network to scan and the console's links. Keep `phase: development` while
@@ -300,6 +301,46 @@ section of the repository's README. In order:
 10. **Move to production** once other people use AIStack:
     `phase: production` in `instance_config.yml`, then restart
     `aistack-web`.
+
+### With Docker
+
+From 1.8 on, the Docker image runs AIStack itself: the repository's
+`docker-compose.yml` starts the web application and the five
+collectors, six services of one image. The prerequisites, the identity
+provider and the reverse proxy are the same; Python, git and the
+systemd units are no longer needed.
+
+```
+mkdir -p /srv/aistack && cd /srv/aistack
+# copy docker-compose.yml and .env.example here from the repository
+cp .env.example .env        # AISTACK_VERSION, your user and group ids, the Docker socket's group
+mkdir -p config data
+touch .env.web && chmod 600 .env.web
+docker compose pull && docker compose up -d
+```
+
+At first start, `./config` receives every declaration AIStack ships,
+with the reference host's values. AIStack starts anyway, and **every
+page shows "⚠ To configure"** at the top: that link opens the **First
+start** page (`/setup`), which says what is still to declare, in which
+file, and the values in use today:
+
+1. **the host and its ports** — `./config/instance_config.yml`;
+2. **the identity provider and the public address** —
+   `./config/authentication.yml`;
+3. **the OpenID Connect client** — its ID and secret in `.env.web`;
+4. *recommended*: **the fallback account** —
+   `docker compose exec web python -m aistack.cli.web_admin_password`,
+   then paste the line into `.env.web`.
+
+After each change, `docker compose restart`. A declaration counts as
+done once its file has been edited; a file you put in `./config`
+yourself before the first start is never reported. Once everything
+required is declared, the link disappears.
+
+Every host directory your declarations name (backup disks, music) is
+added at the end of `x-aistack`'s `volumes:`, at the same path,
+read-only.
 
 ## Troubleshooting
 

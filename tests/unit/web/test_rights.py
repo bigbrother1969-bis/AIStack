@@ -37,6 +37,7 @@ ANYONE = {
     "/settings",
     "/help",
     "/help/manual",
+    "/setup",
     "/legal",
     "/license",
     "/login",

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Proposed
   owner: Architecture
   created: 2026-10-04
@@ -86,6 +86,29 @@ With a fresh configuration directory, AIStack starts and says what to
 declare first (instance, identity provider) and where the manual is —
 it never fails on the reference host's values.
 
+Implemented 2026-10-04:
+
+- **What is still the reference host's.** `config_init` keeps the
+  fingerprint of every file it copies (`.shipped.json`, in the
+  configuration directory). `instance_config.yml` and
+  `authentication.yml` are still to declare while their file has that
+  fingerprint — edited once, they are declared. A file the owner put
+  in the directory himself was never copied and is never reported:
+  comparing with the shipped values instead would report GIGABYTE —
+  whose values are the shipped ones — as unconfigured at its move
+  (§ 5).
+- **What secret is missing.** The OpenID Connect client's ID and
+  secret (required) and the fallback administrator's hash
+  (recommended), read from the web process's environment. Checked
+  with or without a configuration directory; the names only, never a
+  value.
+- **Where it is said.** `/setup`, public like the console — on a new
+  installation nobody can sign in yet: each item, its file, the values
+  in use, the restart command and the manual's *With Docker* section.
+  While a required item is missing, every page's navigation carries a
+  **⚠ To configure** link to it. Measured once, when the application
+  starts: nothing it reads changes before a restart.
+
 ### 5. GIGABYTE moves to it at the end of 1.8
 
 The last tranche replaces GIGABYTE's six systemd units by the compose
@@ -97,9 +120,9 @@ supported.
 | Step | State |
 |---|---|
 | § 1 — `aistack.config`, `config_init`, every declaration path through `configured()` | done — 2026-10-04 |
-| § 2 — the image runs AIStack; `docker-compose.yml` with six services, `.env.example` | done — 2026-10-04, not yet run on a host |
-| § 3 — host network, socket, same-path mounts | done — 2026-10-04, not yet run on a host |
-| § 4 — guided first start | not started |
+| § 2 — the image runs AIStack; `docker-compose.yml` with six services, `.env.example` | done — 2026-10-04; tried on GIGABYTE the same day (`dev` image, ports 9183/9186): console and manual answer 200, ready ≈ 12 s after start |
+| § 3 — host network, socket, same-path mounts | done — 2026-10-04; tried on GIGABYTE the same day: both ports listening on the host, `docker ps` answers inside the container |
+| § 4 — guided first start | done — 2026-10-04 |
 | Choosing where each component lives, from Settings (asked 2026-10-04) | not started |
 | § 5 — GIGABYTE on the compose file | not started |
 

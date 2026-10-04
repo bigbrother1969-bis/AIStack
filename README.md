@@ -485,8 +485,13 @@ touch .env.web && chmod 600 .env.web
 docker compose pull && docker compose up -d
 ```
 
-At first start `./config` receives every declaration AIStack ships;
-edit them there (step 2 above), then `docker compose restart`. Add, at
+At first start `./config` receives every declaration AIStack ships,
+with the reference host's values. AIStack starts on them, and every
+page shows **⚠ To configure** until the host, the identity provider and
+the OpenID Connect client are declared: the link opens `/setup`, which
+says what is left, in which file, and the values in use today. Edit
+them in `./config` and `.env.web` (step 2 above), then
+`docker compose restart`. Add, at
 the end of `x-aistack`'s `volumes:`, every host directory your
 declarations name, at the same path, read-only. One-off commands run in
 the image:

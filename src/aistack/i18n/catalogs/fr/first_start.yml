@@ -1,0 +1,34 @@
+# Premier démarrage guidé — ADR-0017 § 4.
+
+title: "AIStack — Premier démarrage"
+heading: "Premier démarrage"
+badge: "⚠ À configurer"
+intro: "AIStack tourne, mais avec les valeurs de l'hôte de référence. Avant de t'en servir, déclare ce qui suit — dans cet ordre."
+intro_optional: "Tout ce qui est indispensable est déclaré. Il reste une recommandation."
+all_declared: "Tout ce qu'il faut pour démarrer est déclaré."
+required: "indispensable"
+recommended: "recommandé"
+where: "Où :"
+column:
+  name: "Réglage"
+  in_use: "Aujourd'hui"
+missing: "absent"
+then: "Puis redémarre AIStack pour qu'il relise ses déclarations :"
+manual: "Le manuel : mise en route d'une nouvelle installation"
+manual_anchor: "avec-docker"
+item:
+  instance:
+    heading: "L'hôte et ses ports"
+    text: "Le nom de cet hôte sur le réseau local, le port public (derrière ton reverse proxy) et le port du réseau local. Laisse « phase: development » pendant la mise au point."
+  authentication:
+    heading: "Le fournisseur d'identité et l'adresse publique"
+    text: "L'adresse de ton Pocket ID (issuer), l'adresse publique d'AIStack et le nom du groupe des administrateurs."
+  sign_in_secrets:
+    heading: "Le client OpenID Connect"
+    text: "L'identifiant et le secret du client créé dans Pocket ID. Sans eux, personne ne peut se connecter. Ajoute-les à .env.web sans les afficher, puis chmod 600 .env.web."
+  fallback_secret:
+    heading: "Le compte de secours"
+    text: "Le mot de passe de l'administrateur de secours, qui permet d'entrer sur le réseau local quand Pocket ID ne répond pas : python -m aistack.cli.web_admin_password (avec Docker : docker compose exec web python -m aistack.cli.web_admin_password), puis ajoute la ligne affichée à .env.web."
+tooltip:
+  badge: "Ce qu'il reste à déclarer pour que cette installation soit utilisable"
+  manual: "Ouvrir la section du manuel qui décrit la mise en route"

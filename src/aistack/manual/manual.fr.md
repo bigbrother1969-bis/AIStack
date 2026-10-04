@@ -285,7 +285,8 @@ install* du README du dépôt. Dans l'ordre :
    Python (`python3.13 -m venv .venv`, puis
    `.venv/bin/python -m pip install -e ".[dev]"`), et vérifier que
    `pytest -q` et `python -m aistack.cli.knowledge_integrity` passent.
-3. **Les déclarations** : sous `src/aistack/*/definitions/`, au minimum le
+3. **Les déclarations** : sous `src/aistack/*/definitions/` (avec Docker,
+   dans `./config`, voir plus bas), au minimum le
    nom de l'hôte et les deux ports (`instance_config.yml`), l'adresse du
    fournisseur et l'adresse publique (`authentication.yml`), la topologie,
    le réseau à scanner et les liens de la console. Laisse
@@ -313,6 +314,49 @@ install* du README du dépôt. Dans l'ordre :
 10. **Passer en production** quand d'autres personnes utilisent AIStack :
     `phase: production` dans `instance_config.yml`, puis redémarrer
     `aistack-web`.
+
+### Avec Docker
+
+À partir de la 1.8, l'image Docker fait tourner AIStack lui-même : le
+fichier `docker-compose.yml` du dépôt démarre l'application web et les
+cinq collecteurs, six services d'une même image. Les prérequis, le
+fournisseur d'identité et le reverse proxy sont les mêmes ; Python, git
+et les unités systemd ne servent plus.
+
+```
+mkdir -p /srv/aistack && cd /srv/aistack
+# y copier docker-compose.yml et .env.example depuis le dépôt
+cp .env.example .env        # AISTACK_VERSION, tes identifiants d'utilisateur et de groupe, le groupe du socket Docker
+mkdir -p config data
+touch .env.web && chmod 600 .env.web
+docker compose pull && docker compose up -d
+```
+
+Au premier démarrage, `./config` reçoit toutes les déclarations
+qu'AIStack livre, avec les valeurs de l'hôte de référence. AIStack
+démarre quand même, et **chaque page affiche « ⚠ À configurer »** en
+haut : ce lien ouvre la page **Premier démarrage** (`/setup`), qui dit ce
+qu'il reste à déclarer, dans quel fichier, et les valeurs utilisées
+aujourd'hui :
+
+1. **l'hôte et ses ports** — `./config/instance_config.yml` ;
+2. **le fournisseur d'identité et l'adresse publique** —
+   `./config/authentication.yml` ;
+3. **le client OpenID Connect** — son identifiant et son secret dans
+   `.env.web` ;
+4. *recommandé* : **le compte de secours** —
+   `docker compose exec web python -m aistack.cli.web_admin_password`,
+   puis colle la ligne dans `.env.web`.
+
+Après chaque modification, `docker compose restart`. Une déclaration
+compte comme faite dès que son fichier a été modifié ; un fichier que tu
+as déposé toi-même dans `./config` avant le premier démarrage n'est
+jamais signalé. Quand tout l'indispensable est déclaré, le lien
+disparaît.
+
+Chaque dossier de l'hôte que nomment tes déclarations (disques de
+sauvegarde, musique) s'ajoute à la fin des `volumes:` de `x-aistack`,
+au même chemin, en lecture seule.
 
 ## En cas de problème
 

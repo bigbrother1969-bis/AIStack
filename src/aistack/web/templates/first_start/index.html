@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('first_start.title') }}</title>
+  <style>
+    {% include "auth/_style.html" %}
+    body { max-width: 760px; }
+    {{ page_nav_style | safe }}
+    .item { border: 1px solid #dde4ed; border-radius: 8px; padding: .9rem 1.1rem; margin: 1rem 0; background: #fafbfc; }
+    .item.required { border-left: 4px solid #e8b100; }
+    .item h2 { font-size: 1.05rem; margin: 0 0 .4rem; color: #16335c; }
+    .item table { border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+    .item td { padding: .15rem .8rem .15rem 0; vertical-align: top; }
+    .tag { font-size: .75rem; color: #7d4e00; background: #fff1cc; border-radius: 999px; padding: .05rem .5rem; margin-left: .4rem; }
+    .tag.optional { color: #3f4a57; background: #eef1f5; }
+    pre { background: #f4f6f9; border: 1px solid #dde4ed; border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; }
+    code { word-break: break-all; }
+  </style>
+</head>
+<body>
+  {{ page_nav | safe }}
+  <h1>{{ t('first_start.heading') }}</h1>
+  {% if not items %}
+  <p class="message">{{ t('first_start.all_declared') }}</p>
+  {% else %}
+  <p class="message">{% if needs_setup %}{{ t('first_start.intro') }}{% else %}{{ t('first_start.intro_optional') }}{% endif %}</p>
+  {% for item in items %}
+  <section class="item{% if item.required %} required{% endif %}">
+    <h2>{{ item.heading }}<span class="tag{% if not item.required %} optional{% endif %}">{% if item.required %}{{ t('first_start.required') }}{% else %}{{ t('first_start.recommended') }}{% endif %}</span></h2>
+    <p>{{ item.text }}</p>
+    <p class="note">{{ t('first_start.where') }} <code>{{ item.file }}</code></p>
+    <table>
+      <tr><td><strong>{{ t('first_start.column.name') }}</strong></td><td><strong>{{ t('first_start.column.in_use') }}</strong></td></tr>
+      {% for name, value in item.in_use %}<tr><td><code>{{ name }}</code></td><td>{{ value }}</td></tr>{% endfor %}
+    </table>
+  </section>
+  {% endfor %}
+  <p>{{ t('first_start.then') }}</p>
+  <pre>{% if in_container %}docker compose restart{% else %}sudo systemctl restart aistack-web{% endif %}</pre>
+  {% endif %}
+  <p><a href="{{ manual }}" title="{{ t('first_start.tooltip.manual') }}">{{ t('first_start.manual') }}</a></p>
+  <a class="back" href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+</body>
+</html>

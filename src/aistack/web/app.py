@@ -34,6 +34,7 @@ from aistack.timemachine.tree import NetworkTreeNode
 from aistack.web import (
     authentication,
     console,
+    first_start,
     network_discovery,
     priority,
     selection,
@@ -52,6 +53,7 @@ from aistack.web.authentication import (
     fill_markers,
 )
 from aistack.web.exposure import Listeners, include
+from aistack.renderers.nav import SESSION_MARKER
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -91,6 +93,7 @@ def create_app(
     auth: Authentication | None = None,
     phase: str | None = None,
     storage: Callable[[Path], Any] | None = None,
+    pending: list[Any] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -107,8 +110,9 @@ def create_app(
     app.state.listeners = listeners
     # The host's disks and mounts, for Settings (2026-10-04).
     app.state.storage = storage if storage is not None else live_storage
+    app.state.instance_config = load_instance_config_yaml(INSTANCE_CONFIG)
     # Development or production (ADR-0016): which Explication rules apply.
-    app.state.phase = phase if phase is not None else load_instance_config_yaml(INSTANCE_CONFIG).phase
+    app.state.phase = phase if phase is not None else app.state.instance_config.phase
     app.state.languages = languages if languages is not None else default_languages()
     app.state.paths = paths if paths is not None else WebPaths()
     # Host-touching collaborators (ADR-0012 § 4): what Docker reports.
@@ -148,12 +152,16 @@ def create_app(
         if auth is not None
         else build_authentication(
             generated_dir,
-            load_instance_config_yaml(INSTANCE_CONFIG).service_url("web_lan"),
+            app.state.instance_config.service_url("web_lan"),
         )
     )
+    # What a new installation still has to declare (ADR-0017 § 4),
+    # measured once: nothing it reads changes before a restart.
+    app.state.first_start = pending if pending is not None else first_start.measured(app.state.authentication)
     app.state.routers = []
 
     include(app, console.router)
+    include(app, first_start.router)
     include(app, authentication.router)
     include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)
@@ -176,6 +184,11 @@ def create_app(
             return response
 
         body = b"".join([chunk async for chunk in response.body_iterator])  # type: ignore[attr-defined]
+        # While something required is undeclared, every page leads to
+        # what (ADR-0017 § 4), just before the way to sign in.
+        marker = SESSION_MARKER.encode("ascii")
+        if marker in body:
+            body = body.replace(marker, first_start.badge(request).encode("utf-8") + marker, 1)
         filled = fill_markers(request, body)
         rebuilt = Response(content=filled, status_code=response.status_code)
         # Every header as it was — each `set-cookie` on its own — but the

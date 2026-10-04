@@ -6,6 +6,10 @@ The directory is `AISTACK_CONFIG_DIR` unless one is given. A file
 already there is never overwritten: running it again after an upgrade
 only adds the declarations a new version brought. The container runs it
 at every start.
+
+Each copy's fingerprint is kept in the directory's `.shipped.json`, so
+the web application can tell a declaration still holding the reference
+host's values from one the owner wrote (`ADR-0017` § 4).
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ import sys
 from pathlib import Path
 
 from aistack.config import CONFIG_DIR_ENV, config_dir, shipped_definitions
+from aistack.instance.first_start import remember_copies
 
 
 def init(directory: Path) -> tuple[list[str], list[str]]:
@@ -30,6 +35,7 @@ def init(directory: Path) -> tuple[list[str], list[str]]:
         else:
             shutil.copy2(shipped, target)
             copied.append(shipped.name)
+    remember_copies(directory, copied)
     return copied, kept
 
 

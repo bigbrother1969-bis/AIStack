@@ -1,0 +1,34 @@
+# Guided first start — ADR-0017 § 4.
+
+title: "AIStack — First start"
+heading: "First start"
+badge: "⚠ To configure"
+intro: "AIStack is running, but with the reference host's values. Before using it, declare what follows — in this order."
+intro_optional: "Everything required is declared. One recommendation is left."
+all_declared: "Everything needed to start is declared."
+required: "required"
+recommended: "recommended"
+where: "Where:"
+column:
+  name: "Setting"
+  in_use: "Today"
+missing: "missing"
+then: "Then restart AIStack so that it reads its declarations again:"
+manual: "The manual: setting up a new installation"
+manual_anchor: "with-docker"
+item:
+  instance:
+    heading: "The host and its ports"
+    text: "This host's name on the local network, the public port (behind your reverse proxy) and the local-network port. Keep \"phase: development\" while setting up."
+  authentication:
+    heading: "The identity provider and the public address"
+    text: "Your Pocket ID's address (issuer), AIStack's public address and the name of the administrators' group."
+  sign_in_secrets:
+    heading: "The OpenID Connect client"
+    text: "The ID and secret of the client created in Pocket ID. Without them nobody can sign in. Append them to .env.web without displaying them, then chmod 600 .env.web."
+  fallback_secret:
+    heading: "The fallback account"
+    text: "The fallback administrator's password, which lets you in on the local network when Pocket ID does not answer: python -m aistack.cli.web_admin_password (with Docker: docker compose exec web python -m aistack.cli.web_admin_password), then append the printed line to .env.web."
+tooltip:
+  badge: "What is still to declare for this installation to be usable"
+  manual: "Open the manual's section on setting up"

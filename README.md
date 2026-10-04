@@ -339,9 +339,22 @@ got past its absence.
   design, not caution: the owner authenticates to the registry personally,
   for this step as for every other.
 
-**As of 1.7.0**: `pytest -q` — **3059 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **587 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **81 knowledge artifacts**,
+- **Verified twice, on two machines.** The same chain — `ruff`, `mypy`,
+  `pytest`, the knowledge-integrity validator — runs on the workstation
+  before a change reaches the SPOT, and again on the publisher right
+  after it pulls, before `sync_mirrors.sh` may publish to GitHub and
+  Codeberg. A commit no machine has verified never reaches a mirror, and
+  the publisher's run is the one the image build relies on (OPS-0002).
+- **The image is the product, from 1.8.0.** It now runs the whole
+  application, so the published tag is what people actually run: it is
+  built only from a commit both machines verified, labelled with that
+  commit (`org.opencontainers.image.revision`), pushed under its version
+  and as `latest`, and the reference host itself runs that exact image
+  through `docker-compose.yml` — the first user of every release.
+
+**As of 1.8.0**: `pytest -q` — **3126 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **598 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **83 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

@@ -56,3 +56,9 @@ def test_a_mount_that_does_not_answer_is_not_waited_on():
     started = time.monotonic()
     assert usage("/mnt/music", hung, timeout=0.1) is None
     assert time.monotonic() - started < 0.5
+
+
+def test_the_name_service_files_docker_binds_are_not_mounts_to_show():
+    text = "/dev/sda2 /etc/hosts ext4 rw 0 0\n/dev/sda2 /etc/resolv.conf ext4 rw 0 0\n/dev/sdb1 /media ext4 ro 0 0\n"
+
+    assert [m.point for m in parse_mounts(text)] == ["/media"]

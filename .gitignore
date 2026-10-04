@@ -94,3 +94,9 @@ logs/*.log
 # same kind had been cleaned out of `docs/`.
 *.patch
 patches-*.tar.gz
+
+# docker compose (ADR-0017): the configuration and data volumes, and the
+# compose settings copied from .env.example.
+/config/
+/data/
+/.env

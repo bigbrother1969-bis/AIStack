@@ -466,19 +466,40 @@ pytest -q && python -m aistack.cli.knowledge_integrity
 sudo systemctl restart aistack-web
 ```
 
-### With Docker (validator only, today)
+### With Docker (from 1.8)
 
-The image validates a Context Bundle exported from a clone; mount it:
+From 1.8 on, the image runs AIStack itself (`ADR-0017`): the web
+application and the five collectors are six services of
+`docker-compose.yml`, one image, on the host's network, with the Docker
+socket, a configuration directory and a data directory. The
+prerequisites, precautions, declarations and identity-provider steps
+above are the same; the services replace step 4.
 
 ```bash
-docker pull bigbrother1969/aistack-core:1.7.0
-python3 scripts/export_project_sources.py                 # in a clone: writes context/bundles/
-docker run --rm -v "$PWD/context/bundles:/app/context/bundles:ro" \
-  bigbrother1969/aistack-core:1.7.0                        # knowledge-integrity report
+mkdir -p /srv/aistack && cd /srv/aistack
+curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/main/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/main/.env.example
+cp .env.example .env               # AISTACK_VERSION, your user and group ids, the socket's group
+mkdir -p config data               # created by you, so your account owns them
+touch .env.web && chmod 600 .env.web
+docker compose pull && docker compose up -d
 ```
 
-`docker-compose.yml` records every published image by digest, and its
-`aistack-core` service runs the same image built locally.
+At first start `./config` receives every declaration AIStack ships;
+edit them there (step 2 above), then `docker compose restart`. Add, at
+the end of `x-aistack`'s `volumes:`, every host directory your
+declarations name, at the same path, read-only. One-off commands run in
+the image:
+
+```bash
+docker compose exec web python -m aistack.cli.web_admin_password   # then paste the line into .env.web
+docker compose exec web python -m aistack.cli.health_render
+docker compose exec web python -m aistack.cli.timemachine_rebuild
+docker compose run --rm validate                                     # the knowledge-integrity validator
+```
+
+Never run the compose services and the systemd units on one host.
+`docker-compose.yml` also records every published image by digest.
 
 ---
 

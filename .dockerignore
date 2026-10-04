@@ -35,3 +35,11 @@ dist
 exports
 reports/generated
 context/bundles/*.zip
+
+# docker compose (ADR-0017): secrets and the configuration and data
+# volumes never enter the build context.
+.env
+.env.*
+!.env.example
+config
+data

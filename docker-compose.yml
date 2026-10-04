@@ -1,484 +1,536 @@
+# AIStack — run AIStack from its published image (ADR-0017, 1.8).
+#
+#   cp .env.example .env              # version, user and group ids — edit it
+#   mkdir -p config data              # owned by that user, before Docker creates them as root
+#   touch .env.web && chmod 600 .env.web   # secrets (README, How to install)
+#   docker compose up -d
+#
+# One image, one service per process: the web application and the
+# five collectors, restarted and logged by Docker as systemd does on a
+# git installation. Every service:
+#
+#   - runs on the host's network (`network_mode: host`): the public
+#     listener (8183) and the local-network listener (8186) answer on
+#     the host's own ports, and the network scan sees the LAN;
+#   - talks to the host's Docker through its socket — the account it
+#     runs as must be in the socket's group (`DOCKER_GID`);
+#   - reads its declarations from `./config` (filled with the shipped
+#     ones at first start, never overwritten) and keeps everything it
+#     records in `./data`;
+#   - sees each host directory a declaration names AT THE SAME PATH,
+#     read-only: backup disks, media libraries, the folders holding the
+#     Compose projects AIStack reads. Add yours at the end of the
+#     `volumes:` list of `x-aistack` below.
+#
+# One-off commands run in the same image:
+#
+#   docker compose exec web python -m aistack.cli.health_render
+#   docker compose exec web python -m aistack.cli.timemachine_rebuild
+#   docker compose run --rm validate
+#
+# The six services replace the six systemd units of a git
+# installation; never run both on one host (the ports and the
+# collectors would collide).
+
+x-aistack: &aistack
+  image: bigbrother1969/aistack-core:${AISTACK_VERSION:?set AISTACK_VERSION in .env}
+  build:
+    context: .
+    dockerfile: Dockerfile
+  network_mode: host
+  restart: unless-stopped
+  user: "${AISTACK_UID:-1000}:${AISTACK_GID:-1000}"
+  group_add:
+    - "${DOCKER_GID:-999}"
+  env_file:
+    - path: .env.web
+      required: false
+    - path: .env.resource-priority
+      required: false
+  volumes:
+    - ./config:/config
+    - ./data:/app/reports/generated
+    - /var/run/docker.sock:/var/run/docker.sock
+    # The host directories your declarations name, at the same path,
+    # read-only. The reference host keeps its disks under /media and
+    # its Compose projects under /srv and /opt.
+    - /media:/media:ro
+    - /srv:/srv:ro
+    - /opt:/opt:ro
+
 services:
 
-  # The core image is a one-shot tool, not a service.
-  #
-  # Its command validates a published Context Bundle and exits:
-  # 0 when the projection is sound, 1 on a blocking finding,
-  # 2 when the bundle cannot be found.
-  #
-  # Until 2026-08-21 the command printed a line and slept for a
-  # hundred hours, which is what `restart: unless-stopped` and a
-  # healthcheck were written for. Replacing the command with the
-  # validator made both wrong: a container that exits at once and
-  # is restarted for ever is a loop, not a service.
-  #
-  # The image carries no bundle. Mount the one to validate:
-  #
-  #   docker compose run --rm aistack-core
-  #
-  # or point it at another projection:
-  #
-  #   docker run --rm -v "$PWD/context/bundles:/app/bundles:ro" \
-  #     aistack/core:local \
-  #     python -m aistack.cli.knowledge_integrity \
-  #     /app/bundles/AIStack-Context-Bundle.zip
-  #
-  # The same image also carries the Time Machine's rebuild command
-  # (`ADR-0011`) — overriding the default CMD the same way, against
-  # the `reports/generated` volume below rather than a second mount,
-  # since the graph it writes to `<generated_dir>/timemachine/graph`
-  # lives inside the one tree the four source streams already occupy:
-  #
-  #   docker compose run --rm aistack-core \
-  #     python -m aistack.cli.timemachine_rebuild
-  #
-  # ---------------------------------------------------------------
-  # Published images, pinned by digest so a record is not a label
-  # someone can move. OPS-0002 § *Publishing an image* governs the
-  # act; this is where it is recorded.
-  # ---------------------------------------------------------------
-  #
-  # **1.7.0 — published 2026-10-03, current.**
-  #
-  #   bigbrother1969/aistack-core:1.7.0
-  #   @sha256:d5942c4c5eb5c070a104c413601d33a2e1c73af40c76907130f1873ac216fa7e
-  #
-  # Built from 3e72a70 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 3059 tests with `clean: True`
-  # (run once, right after the pull, per OPS-0002 v1.15). 81
-  # artifacts, 18 checks. Before the build, 1.6.1 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.7.0 entry gives the
-  # full account; in short, the console and the five screens are one
-  # web application on two listeners (ADR-0012), people sign in with
-  # Pocket ID or, on the local network only, a fallback administrator
-  # (ADR-0013), administrators act and users read (ADR-0014), and an
-  # administrator writes, validates or discards an Explication, with
-  # a list of every subject that has one (ADR-0015).
-  #
-  # **1.6.1 — published 2026-10-02, current.**
-  #
-  #   bigbrother1969/aistack-core:1.6.1
-  #   @sha256:5de4a68497a0967f8c0938223b9a15d991b87efb2ee85a4adcc5cbd08448f86f
-  #
-  # Built from b2e764d on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2762 tests with `clean: True`
-  # (run once, right after the pull, per OPS-0002 v1.15). 77
-  # artifacts, 18 checks. Before the build, 1.6.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.1 entry gives the
-  # full account; in short, the Docker event stream keeps only human
-  # `exec`s (probes and declared healthchecks dropped, history
-  # refiltered and archived out of the stream), the package inventory
-  # re-read only when an image digest changes, the Time Machine
-  # rebuild back to about a minute, restart loops counted over the
-  # last hour in the Health Cockpit's Services domain, and every
-  # AIStack unit running as the repository owner instead of root.
-  #
-  # **1.6.0 — published 2026-10-02, current.**
-  #
-  #   bigbrother1969/aistack-core:1.6.0
-  #   @sha256:93a3d3f003f6bfaf802f3355676b3dfcc77049d234b3ca04ccf37d762bb79b74
-  #
-  # Built from fc7e645 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2726 tests with `clean: True`.
-  # 77 artifacts, 18 checks. Before the build, 1.5.2 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.0 entry gives the
-  # full account; in short, the homelab's operational inventory
-  # declared and checked against what really runs (roadmap R9/R10:
-  # instance configuration, two new Health Cockpit domains for
-  # persistent state and inventory gaps, PRA tests proposed from
-  # discovery), every Cockpit finding linked into the troubleshooting
-  # assistant, three new read-only Time Machine views (/node in three
-  # columns, /reconstitute, /explication), and the four Docker
-  # collectors running as the repository owner instead of root.
-  #
-  # **1.5.2 — published 2026-09-30, current.**
-  #
-  #   bigbrother1969/aistack-core:1.5.2
-  #   @sha256:816181143b936508d3d319ca45a1ed42b911e2e09c6e60b38216a31c61598f26
-  #
-  # Built from 4dc58d7 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2581 tests with `clean: True`.
-  # 75 artifacts, 18 checks. Before the build, 1.5.1 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.2 entry gives the
-  # full account; in short, the Time Machine ribbon rebuilt around
-  # what a real production graph showed it needed (`ADR-0011` § 26)
-  # — a real per-category time axis, label-aware clustering with a
-  # whole-lane summary, ribbon/tree cross-links by name, a touch tap,
-  # mobile-adaptive width, and a filter surviving a language switch —
-  # plus the graphic-debt catch-up the 26 September charte graphique
-  # had left undone across console/architecture/health and every
-  # Time Machine screen, and the console's seven cards rewritten in
-  # plain, didactic French and grouped by network scope.
-  #
-  # **1.5.1 — published 2026-09-28, current.**
-  #
-  #   bigbrother1969/aistack-core:1.5.1
-  #   @sha256:332fad1cd66589002e9e60e1689f9495ea2e4342fb251569c03d17f674e5455a
-  #
-  # Built from ff0c523 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2538 tests with `clean: True`.
-  # 75 artifacts, 18 checks. Before the build, 1.5.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.1 entry gives the
-  # full account; in short, 1.5's fourth and last named collector
-  # (`ADR-0011` § 23: package inventory, `dpkg`/`apk` fallback, never
-  # a silent empty list), plus the roadmap's first two GUI/
-  # interpretation pieces (§ 24-25): a time ribbon, chronological and
-  # per-stream across every stream the graph holds, and an upgrade
-  # correlation linking the package inventory nearest before and
-  # after a detected image-digest change, no bounded time window.
-  #
-  # **1.5.0 — published 2026-09-28, current.**
-  #
-  #   bigbrother1969/aistack-core:1.5.0
-  #   @sha256:7a81a42dbc0030fad27ead3a1d1d9f74f32096a5b3b85419e6f2392257ff1314
-  #
-  # Built from 1faad79 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2473 tests with `clean: True`.
-  # 75 artifacts, 18 checks. Before the build, 1.4.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.0 entry gives the
-  # full account; in short, the roadmap's third Time Machine step
-  # (`ADR-0011` § 20-22): three passive collectors — Docker events,
-  # periodic `docker diff`, and image-digest drift — feeding the same
-  # graph in real time, each its own governed systemd poll with
-  # collection gaps recorded as their own fact. Package inventory, the
-  # fourth named collector, is explicitly deferred past this release.
-  #
-  # **1.4.0 — published 2026-09-28, current.**
-  #
-  #   bigbrother1969/aistack-core:1.4.0
-  #   @sha256:afa0098bfcae644623e8555dbfd92d2ae58782a010dfe96a65a65b8e88160b68
-  #
-  # Built from c33f8dd on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2294 tests with `clean: True`.
-  # 75 artifacts, 18 checks. Before the build, 1.3.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.4.0 entry gives the
-  # full account; in short, the roadmap's second Time Machine step
-  # (`ADR-0011` § 18-19): a foldable network tree read from the live
-  # Docker/Compose catalogs, and a Mermaid provenance-graph diagram on
-  # every node page, centred on the node being viewed.
-  #
-  # **1.3.0 — published 2026-09-28, current.**
-  #
-  #   bigbrother1969/aistack-core:1.3.0
-  #   @sha256:72a477a914d86bd3798fa9c5fa8e2f668afaa4dc5d7efb6608834e3c74f6dfd3
-  #
-  # Built from a856006 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2270 tests with `clean: True`.
-  # 75 artifacts, 17 checks. Before the build, 1.2.1 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.3.0 entry gives the
-  # full account; in short, the Time Machine's first delivered step
-  # (`ADR-0011`): AIStack's own five histories projected as a real
-  # PROV-O graph (Oxigraph), browsable through a new LAN-only screen,
-  # plus Explications read for the first time from four real sources
-  # — explain answers, `pra_tests.yml`, `claude/` notes, and this
-  # repository's own commit history.
-  #
-  # **1.2.1 — published 2026-09-27, current.**
-  #
-  #   bigbrother1969/aistack-core:1.2.1
-  #   @sha256:f3310341240def1190a7c55360d7308813bca138b53625ab63be399a845f76fe
-  #
-  # Built from 1843a62 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2195 tests with `clean: True`.
-  # 74 artifacts, 17 checks. Before the build, 1.2.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.2.1 entry gives the
-  # full account; in short, a same-day fix: the AI Runtime's answers
-  # now follow the display language (a second, fast model translates
-  # whenever the target is not English), correcting what 1.2.0's own
-  # README and ADR-0010 claimed the day they were published.
-  #
-  # **1.2.0 — published 2026-09-27, current.**
-  #
-  #   bigbrother1969/aistack-core:1.2.0
-  #   @sha256:098f6dd0957e24a2a966e03b06ed0d2b5b793de3f6903d791682e4a7e224972c
-  #
-  # Built from eb4905c on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2183 tests with `clean: True`.
-  # 74 artifacts, 17 checks. Before the build, 1.1.1 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.2.0 entry gives the
-  # full account; in short, the first version of the roadmap toward
-  # 2.0 (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`) — the console is
-  # served by AIStack itself, with a Settings page and a language
-  # switch, and every screen (console, Architecture, Health Cockpit,
-  # the four mini-apps) is available in French and in English.
-  #
-  # **1.1.1 — published 2026-09-26, current.**
-  #
-  #   bigbrother1969/aistack-core:1.1.1
-  #   @sha256:63a4727b8af21303a82d6217b45dd2769726288cb761f062344034ed0c1a3d8f
-  #
-  # Built from fa2b73d on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2081 tests with `clean: True`.
-  # 73 artifacts, 17 checks. Before the build, 1.1.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.1 entry gives the
-  # full account; in short, no new capability — `OPS-0009`'s own PRA
-  # restore-test records catching up with real tests the owner ran the
-  # same day: a real Arrstack backup gap found and closed, Raspberry's
-  # real restic backup found and proven with a genuine restore (after a
-  # first attempt failed on disk space, honestly recorded as a
-  # failure), and the Vikunja MariaDB backup gap closed and verified
-  # with a schema-level restore into a scratch database.
-  #
-  # **1.1.0 — published 2026-09-26.**
-  #
-  #   bigbrother1969/aistack-core:1.1.0
-  #   @sha256:1e1433da6056d940ab2ddf02537f8df264e80eada524d5868b125cde19185e10
-  #
-  # Built from 3ef455b on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 2078 tests with `clean: True`.
-  # 73 artifacts, 17 checks. Before the build, 1.0.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.0 entry gives the
-  # full account; in short, eight days of work that never bumped the
-  # version, caught up in one pass — the AI Runtime's model/timeout
-  # change, STD-0300 § VS-4 criteria 4.1 and 4.3 advanced, a corrected
-  # stale claim in OPS-0001, the CMDB HTTP probe, Health Cockpit's
-  # fifth domain ("Dette technique"), two real defects fixed, and the
-  # not-yet-wired NextcloudProvider/verify_uploads foundation work.
-  #
-  # **1.0.0 — published 2026-09-18.**
-  #
-  #   bigbrother1969/aistack-core:1.0.0
-  #   @sha256:d65c768584def01e8905630dd25da75bc45f8b2948b7eefb4ee7af89872c1776
-  #
-  # Built from 2d1bf58 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 1815 tests with `clean: True`.
-  # 73 artifacts, 16 checks. Before the build, 0.7.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.0.0 entry gives the
-  # full account; in short, this is the point where the two halves
-  # `PLAN-TRAJECTOIRE` (J1 through J8) was building toward are both
-  # real and connected — the governed infrastructure knowledge base
-  # and the AI Runtime that can reason about it, explain a finding,
-  # and, for the one case safe enough to automate without guessing at
-  # a judgement call, apply and verify a fix (the Assistant de
-  # pannes's propose→apply→verify mechanism) — plus Selection UI and
-  # Priorité CPU closed to LAN-only, the last two console cards still
-  # reachable from the public internet.
-  #
-  # **A second, unrelated `1.0.0` tag already existed on Docker Hub**
-  # before this build — see the retracted entry below, dated
-  # 2026-09-11. Retagged `1.0.0-retracted-2026-09-11` today, before
-  # this build, so it stays reachable by name once the live `1.0.0`
-  # tag pointed here instead — the same discipline `0.6.0`'s own
-  # retraction below already used for the same situation.
-  #
-  # **0.7.0 — published 2026-09-12.**
-  #
-  #   bigbrother1969/aistack-core:0.7.0
-  #   @sha256:61a18a664a2e41d22c2e682b1cc0d1e0d09e57806c2b92f3cde44f091013c5ba
-  #
-  # Built from 0f511b6 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 1751 tests with `clean: True`.
-  # 73 artifacts, 16 checks. Before the build, 0.6.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # Freezes `claude/PLAN-J11-CONSOLE-2026-09-11.md` §10 and §11, all
-  # shipped the same day as 0.6.0 without the version ever moving:
-  # the Docker dependency graph, external network topology and
-  # hardware inventory, live Beszel metrics — all three new sections
-  # of `architecture.html` — plus network-wide Docker discovery over
-  # SSH and the LAN-only screen managing its candidate usernames,
-  # linked from the console.
-  #
-  # **0.6.0 — published 2026-09-12.**
-  #
-  #   bigbrother1969/aistack-core:0.6.0
-  #   @sha256:28a3e4e621d83c563725e08fd6e774158f2752b0d4e3a2008f60c1496a986a47
-  #
-  # Built from 4d68ffc on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 1549 tests with `clean: True`.
-  # 73 artifacts, 16 checks. Before the build, 0.5.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-  # Freezes eight days of shipped work that had never bumped the
-  # version — `architecture.html` rendered as a real page, the Time
-  # Foundation and Evidence/Observation Foundation contracts, the
-  # four-domain Health Cockpit (Storage, Services, Backup/DR, GPU),
-  # and the unified Console with all five links reachable in HTTPS —
-  # on top of `evaluate` (below), which this build also carries.
-  #
-  # This reuses the number the entry below already had, because
-  # `pyproject.toml` had quietly gone back to `0.5.0` by the time this
-  # session started — a single unlabeled commit (`1b02a8a`, folding in
-  # the Storage domain) reverted the version alongside unrelated code,
-  # with no accompanying doc update, so nothing surfaced the drift
-  # until this build's own docs collided with it. The owner's call:
-  # rather than invent a number neither `pyproject.toml` nor Docker Hub
-  # ever actually carried, `0.6.0` stays this build's number and the
-  # entry below is retracted in place — the tag on Docker Hub now
-  # points here; the entry below's image is preserved at its own
-  # digest, retagged `bigbrother1969/aistack-core:0.6.0-retracted` so
-  # it stays reachable by name, not only by digest.
-  #
-  # **0.6.0 — published 2026-09-11, retracted 2026-09-12.**
-  #
-  #   bigbrother1969/aistack-core:0.6.0-retracted
-  #   @sha256:203bec639e4bae1240bc1d19bd9485e7eb2c24f185565aa23f7f2925c07e3109
-  #
-  # Built from a823190 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 1191 tests with `clean: True`. 69
-  # artifacts, 16 checks. Freezes `evaluate`
-  # (`aistack.runtime.evaluate`, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`
-  # jalon J5): the first `RuntimeFinding` correlating two separately
-  # collected pieces of evidence — unexplained CPU consumption and the
-  # host's own temperature — into one governed conclusion, citing
-  # `OPS-0004`'s vocabulary. STD-0300 § VS-4 criteria 4.2, 4.4 and 4.5
-  # close with it. This code is not retracted — it ships in 0.6.0,
-  # above, same as everything else since 0.5.0. What's retracted is
-  # only this entry's claim to the tag: `pyproject.toml` reverted to
-  # `0.5.0` the same day (`1b02a8a`, undocumented), so the number this
-  # entry once used was free again by the time the build above needed
-  # one. Originally built as `bigbrother1969/aistack-core:0.6.0`;
-  # retagged `0.6.0-retracted` so it stays reachable by name once the
-  # live `0.6.0` tag pointed elsewhere. Kept here rather than erased —
-  # the same reasoning `0.1.0`'s entry below gives for the same kind
-  # of correction.
-  #
-  # **1.0.0 — published 2026-09-11, retracted 2026-09-11.**
-  #
-  #   bigbrother1969/aistack-core:1.0.0-retracted-2026-09-11
-  #   @sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3
-  #
-  # Built from 6680e61 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 1191 tests with `clean: True`. 69
-  # artifacts, 16 checks. **Not re-verified against 0.5.0's recorded
-  # digest before this build** — `GOV-0002/OS-047`'s own rule, skipped
-  # this once; named here rather than silently not done. Declared
-  # prematurely as the 1.0 boundary; corrected to `0.6.0`, above, same
-  # day. Kept here rather than erased — the same reasoning `0.1.0`'s
-  # entry below gives for the same kind of correction.
-  #
-  # Originally built as `bigbrother1969/aistack-core:1.0.0`; retagged
-  # `1.0.0-retracted-2026-09-11` on 2026-09-18, once the real 1.0
-  # boundary was ready to build for real, freeing the tag the same
-  # way `0.6.0-retracted`, above, was freed for its own live build.
-  #
-  # **0.5.0 — published 2026-09-04.**
-  #
-  #   bigbrother1969/aistack-core:0.5.0
-  #   @sha256:3def537335f5f9f36d2824f2c6d56e0c4f5c7232017be36b93bf78a307816896
-  #
-  # Built from 57290fa on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 940 tests with `clean: True`.
-  # 66 artifacts, 16 checks. Before the build, 0.4.0 was re-verified
-  # against its recorded digest (`GOV-0002/OS-047`'s own rule, applied
-  # for the first time) — pull matched. Freezes the closure of the
-  # eight `GOV-0002` residuals opened 2026-09-03 (OS-046, 047, 048,
-  # 049, 050, 051, 053, 054), all now Resolved: `docs/99-archive` and
-  # its eligibility exclusion, the Context Bundle's `repository_url`
-  # (read from the archive's `manifest.json` rather than always
-  # defaulting to "unknown"), three documents promoted to `Published`,
-  # two Draft decisions left Draft with the reasoning recorded instead
-  # of the status changed, and — the one requiring its own live
-  # measurement before it could close — a named pattern for running a
-  # provider CLI on a deployment host without `PYTHONPATH` set by
-  # hand, verified on this same host.
-  #
-  # **0.4.0 — published 2026-09-03.**
-  #
-  #   bigbrother1969/aistack-core:0.4.0
-  #   @sha256:daf46c76b309e047c8801a25857b1328c01fc69c84c25d1ac333e05c8bb2f9fb
-  #
-  # Built from 8757605 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 853 tests with `clean: True`.
-  # 66 artifacts, 16 checks. Freezes the generalized resource-priority
-  # system (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`) —
-  # dynamic Docker container discovery, pluggable per-app detectors
-  # (Jellyfin playback, CPU threshold), and the priority_ui screen —
-  # replacing 0.3.0's single hardcoded Jellyfin app and fourteen
-  # hardcoded background containers. All three run on the host, not
-  # from this image, but their governed modules under `src/aistack`
-  # are part of what `pip install .` now ships.
-  #
-  # **0.3.0 — published 2026-09-03.**
-  #
-  #   bigbrother1969/aistack-core:0.3.0
-  #   @sha256:55f9cd02711462306eb434a6c4184936b7a7fa1a28ddc7f374bea2248fde0376
-  #
-  # Built from 7fab030 on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 823 tests with `clean: True`.
-  # 66 artifacts, 16 checks. Freezes the resource-priority monitor
-  # (`claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md`) and the Selection
-  # UI's systemd deployment — both run on the host, not from this
-  # image, but their governed modules under `src/aistack` are part of
-  # what `pip install .` now ships.
-  #
-  # **0.2.0 — published 2026-08-29.**
-  #
-  #   bigbrother1969/aistack-core:0.2.0
-  #   @sha256:3ee7cf1fae80cce7c84f404f5354f5edeeeddbf950e299c4a2a8dcb1f4aa194f
-  #
-  # Built from 0a7ec1a on the reference host, behind the four terms
-  # OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
-  # HEAD equal to origin/main, and 668 tests with `clean: True`.
-  # 66 artifacts, 16 checks.
-  #
-  # **0.1.0 — published 2026-08-19, deleted 2026-08-23.**
-  #
-  #   bigbrother1969/aistack-core:0.1.0
-  #   @sha256:c8ca0fa791e63f8165910b84d913a74a4d084444680518a4a3db13aaaf6359ba
-  #
-  # Built from ef28e16, before a publication procedure existed. It
-  # carried bytecode the heritage did not know about, and the owner
-  # deleted it rather than rebuilding — GOV-0002/OS-011. **The record
-  # is kept**: a register that erased what it had unpublished could
-  # not show that a rule ever bound anything.
-  #
-  # The build command is not repeated here. It lives in OPS-0002
-  # § *Publishing an image*, once, and reads the version from
-  # `pyproject.toml` rather than carrying a literal — the defect
-  # `src/aistack/__main__.py` carried until 2026-08-29.
-  #
-  # The service below builds locally instead, so a change is
-  # validated before it is published.
-  #
-  aistack-core:
+  web:
+    <<: *aistack
+    container_name: aistack-web
+    command: ["web"]
+
+  events:
+    <<: *aistack
+    container_name: aistack-docker-events
+    command: ["events"]
+
+  diff:
+    <<: *aistack
+    container_name: aistack-docker-diff
+    command: ["diff"]
+
+  digest:
+    <<: *aistack
+    container_name: aistack-docker-digest
+    command: ["digest"]
+
+  packages:
+    <<: *aistack
+    container_name: aistack-docker-packages
+    command: ["packages"]
+
+  priority:
+    <<: *aistack
+    container_name: aistack-resource-priority
+    command: ["priority"]
+
+  # The knowledge-integrity validator, a one-shot tool (exits 0 when
+  # the bundle is sound, 1 on a blocking finding, 2 without a bundle):
+  # never started by `up`, run with `docker compose run --rm validate`.
+  validate:
+    image: bigbrother1969/aistack-core:${AISTACK_VERSION:?set AISTACK_VERSION in .env}
     build:
       context: .
       dockerfile: Dockerfile
-    image: aistack/core:local
-    container_name: aistack-core
+    profiles: ["tools"]
+    command: ["validate"]
     volumes:
       - ./context/bundles:/app/context/bundles:ro
-      # Read-write, not `:ro` — the Time Machine's own graph
-      # (`<generated_dir>/timemachine/graph`, ADR-0011 § *Decision*
-      # 1's addendum) lives inside this same tree, beside the four
-      # source streams it reads. One mount, not two: both are already
-      # one disposable, already-gitignored area on the host
-      # (`FDN-0003`), and splitting it across two volumes for paths
-      # that already coexist would add a second declaration nothing
-      # needs. `knowledge_integrity` (the default CMD) never touches
-      # this path; only `timemachine_rebuild`, run by overriding the
-      # command above, does.
-      - ./reports/generated:/app/reports/generated
     restart: "no"
+
+# ---------------------------------------------------------------
+# Published images, pinned by digest so a record is not a label
+# someone can move. OPS-0002 § *Publishing an image* governs the
+# act; this is where it is recorded.
+# ---------------------------------------------------------------
+#
+# **1.7.0 — published 2026-10-03, current.**
+#
+#   bigbrother1969/aistack-core:1.7.0
+#   @sha256:d5942c4c5eb5c070a104c413601d33a2e1c73af40c76907130f1873ac216fa7e
+#
+# Built from 3e72a70 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 3059 tests with `clean: True`
+# (run once, right after the pull, per OPS-0002 v1.15). 81
+# artifacts, 18 checks. Before the build, 1.6.1 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.7.0 entry gives the
+# full account; in short, the console and the five screens are one
+# web application on two listeners (ADR-0012), people sign in with
+# Pocket ID or, on the local network only, a fallback administrator
+# (ADR-0013), administrators act and users read (ADR-0014), and an
+# administrator writes, validates or discards an Explication, with
+# a list of every subject that has one (ADR-0015).
+#
+# **1.6.1 — published 2026-10-02, current.**
+#
+#   bigbrother1969/aistack-core:1.6.1
+#   @sha256:5de4a68497a0967f8c0938223b9a15d991b87efb2ee85a4adcc5cbd08448f86f
+#
+# Built from b2e764d on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2762 tests with `clean: True`
+# (run once, right after the pull, per OPS-0002 v1.15). 77
+# artifacts, 18 checks. Before the build, 1.6.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.1 entry gives the
+# full account; in short, the Docker event stream keeps only human
+# `exec`s (probes and declared healthchecks dropped, history
+# refiltered and archived out of the stream), the package inventory
+# re-read only when an image digest changes, the Time Machine
+# rebuild back to about a minute, restart loops counted over the
+# last hour in the Health Cockpit's Services domain, and every
+# AIStack unit running as the repository owner instead of root.
+#
+# **1.6.0 — published 2026-10-02, current.**
+#
+#   bigbrother1969/aistack-core:1.6.0
+#   @sha256:93a3d3f003f6bfaf802f3355676b3dfcc77049d234b3ca04ccf37d762bb79b74
+#
+# Built from fc7e645 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2726 tests with `clean: True`.
+# 77 artifacts, 18 checks. Before the build, 1.5.2 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.0 entry gives the
+# full account; in short, the homelab's operational inventory
+# declared and checked against what really runs (roadmap R9/R10:
+# instance configuration, two new Health Cockpit domains for
+# persistent state and inventory gaps, PRA tests proposed from
+# discovery), every Cockpit finding linked into the troubleshooting
+# assistant, three new read-only Time Machine views (/node in three
+# columns, /reconstitute, /explication), and the four Docker
+# collectors running as the repository owner instead of root.
+#
+# **1.5.2 — published 2026-09-30, current.**
+#
+#   bigbrother1969/aistack-core:1.5.2
+#   @sha256:816181143b936508d3d319ca45a1ed42b911e2e09c6e60b38216a31c61598f26
+#
+# Built from 4dc58d7 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2581 tests with `clean: True`.
+# 75 artifacts, 18 checks. Before the build, 1.5.1 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.2 entry gives the
+# full account; in short, the Time Machine ribbon rebuilt around
+# what a real production graph showed it needed (`ADR-0011` § 26)
+# — a real per-category time axis, label-aware clustering with a
+# whole-lane summary, ribbon/tree cross-links by name, a touch tap,
+# mobile-adaptive width, and a filter surviving a language switch —
+# plus the graphic-debt catch-up the 26 September charte graphique
+# had left undone across console/architecture/health and every
+# Time Machine screen, and the console's seven cards rewritten in
+# plain, didactic French and grouped by network scope.
+#
+# **1.5.1 — published 2026-09-28, current.**
+#
+#   bigbrother1969/aistack-core:1.5.1
+#   @sha256:332fad1cd66589002e9e60e1689f9495ea2e4342fb251569c03d17f674e5455a
+#
+# Built from ff0c523 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2538 tests with `clean: True`.
+# 75 artifacts, 18 checks. Before the build, 1.5.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.1 entry gives the
+# full account; in short, 1.5's fourth and last named collector
+# (`ADR-0011` § 23: package inventory, `dpkg`/`apk` fallback, never
+# a silent empty list), plus the roadmap's first two GUI/
+# interpretation pieces (§ 24-25): a time ribbon, chronological and
+# per-stream across every stream the graph holds, and an upgrade
+# correlation linking the package inventory nearest before and
+# after a detected image-digest change, no bounded time window.
+#
+# **1.5.0 — published 2026-09-28, current.**
+#
+#   bigbrother1969/aistack-core:1.5.0
+#   @sha256:7a81a42dbc0030fad27ead3a1d1d9f74f32096a5b3b85419e6f2392257ff1314
+#
+# Built from 1faad79 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2473 tests with `clean: True`.
+# 75 artifacts, 18 checks. Before the build, 1.4.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.0 entry gives the
+# full account; in short, the roadmap's third Time Machine step
+# (`ADR-0011` § 20-22): three passive collectors — Docker events,
+# periodic `docker diff`, and image-digest drift — feeding the same
+# graph in real time, each its own governed systemd poll with
+# collection gaps recorded as their own fact. Package inventory, the
+# fourth named collector, is explicitly deferred past this release.
+#
+# **1.4.0 — published 2026-09-28, current.**
+#
+#   bigbrother1969/aistack-core:1.4.0
+#   @sha256:afa0098bfcae644623e8555dbfd92d2ae58782a010dfe96a65a65b8e88160b68
+#
+# Built from c33f8dd on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2294 tests with `clean: True`.
+# 75 artifacts, 18 checks. Before the build, 1.3.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.4.0 entry gives the
+# full account; in short, the roadmap's second Time Machine step
+# (`ADR-0011` § 18-19): a foldable network tree read from the live
+# Docker/Compose catalogs, and a Mermaid provenance-graph diagram on
+# every node page, centred on the node being viewed.
+#
+# **1.3.0 — published 2026-09-28, current.**
+#
+#   bigbrother1969/aistack-core:1.3.0
+#   @sha256:72a477a914d86bd3798fa9c5fa8e2f668afaa4dc5d7efb6608834e3c74f6dfd3
+#
+# Built from a856006 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2270 tests with `clean: True`.
+# 75 artifacts, 17 checks. Before the build, 1.2.1 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.3.0 entry gives the
+# full account; in short, the Time Machine's first delivered step
+# (`ADR-0011`): AIStack's own five histories projected as a real
+# PROV-O graph (Oxigraph), browsable through a new LAN-only screen,
+# plus Explications read for the first time from four real sources
+# — explain answers, `pra_tests.yml`, `claude/` notes, and this
+# repository's own commit history.
+#
+# **1.2.1 — published 2026-09-27, current.**
+#
+#   bigbrother1969/aistack-core:1.2.1
+#   @sha256:f3310341240def1190a7c55360d7308813bca138b53625ab63be399a845f76fe
+#
+# Built from 1843a62 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2195 tests with `clean: True`.
+# 74 artifacts, 17 checks. Before the build, 1.2.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.2.1 entry gives the
+# full account; in short, a same-day fix: the AI Runtime's answers
+# now follow the display language (a second, fast model translates
+# whenever the target is not English), correcting what 1.2.0's own
+# README and ADR-0010 claimed the day they were published.
+#
+# **1.2.0 — published 2026-09-27, current.**
+#
+#   bigbrother1969/aistack-core:1.2.0
+#   @sha256:098f6dd0957e24a2a966e03b06ed0d2b5b793de3f6903d791682e4a7e224972c
+#
+# Built from eb4905c on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2183 tests with `clean: True`.
+# 74 artifacts, 17 checks. Before the build, 1.1.1 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.2.0 entry gives the
+# full account; in short, the first version of the roadmap toward
+# 2.0 (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`) — the console is
+# served by AIStack itself, with a Settings page and a language
+# switch, and every screen (console, Architecture, Health Cockpit,
+# the four mini-apps) is available in French and in English.
+#
+# **1.1.1 — published 2026-09-26, current.**
+#
+#   bigbrother1969/aistack-core:1.1.1
+#   @sha256:63a4727b8af21303a82d6217b45dd2769726288cb761f062344034ed0c1a3d8f
+#
+# Built from fa2b73d on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2081 tests with `clean: True`.
+# 73 artifacts, 17 checks. Before the build, 1.1.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.1 entry gives the
+# full account; in short, no new capability — `OPS-0009`'s own PRA
+# restore-test records catching up with real tests the owner ran the
+# same day: a real Arrstack backup gap found and closed, Raspberry's
+# real restic backup found and proven with a genuine restore (after a
+# first attempt failed on disk space, honestly recorded as a
+# failure), and the Vikunja MariaDB backup gap closed and verified
+# with a schema-level restore into a scratch database.
+#
+# **1.1.0 — published 2026-09-26.**
+#
+#   bigbrother1969/aistack-core:1.1.0
+#   @sha256:1e1433da6056d940ab2ddf02537f8df264e80eada524d5868b125cde19185e10
+#
+# Built from 3ef455b on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2078 tests with `clean: True`.
+# 73 artifacts, 17 checks. Before the build, 1.0.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.0 entry gives the
+# full account; in short, eight days of work that never bumped the
+# version, caught up in one pass — the AI Runtime's model/timeout
+# change, STD-0300 § VS-4 criteria 4.1 and 4.3 advanced, a corrected
+# stale claim in OPS-0001, the CMDB HTTP probe, Health Cockpit's
+# fifth domain ("Dette technique"), two real defects fixed, and the
+# not-yet-wired NextcloudProvider/verify_uploads foundation work.
+#
+# **1.0.0 — published 2026-09-18.**
+#
+#   bigbrother1969/aistack-core:1.0.0
+#   @sha256:d65c768584def01e8905630dd25da75bc45f8b2948b7eefb4ee7af89872c1776
+#
+# Built from 2d1bf58 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 1815 tests with `clean: True`.
+# 73 artifacts, 16 checks. Before the build, 0.7.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.0.0 entry gives the
+# full account; in short, this is the point where the two halves
+# `PLAN-TRAJECTOIRE` (J1 through J8) was building toward are both
+# real and connected — the governed infrastructure knowledge base
+# and the AI Runtime that can reason about it, explain a finding,
+# and, for the one case safe enough to automate without guessing at
+# a judgement call, apply and verify a fix (the Assistant de
+# pannes's propose→apply→verify mechanism) — plus Selection UI and
+# Priorité CPU closed to LAN-only, the last two console cards still
+# reachable from the public internet.
+#
+# **A second, unrelated `1.0.0` tag already existed on Docker Hub**
+# before this build — see the retracted entry below, dated
+# 2026-09-11. Retagged `1.0.0-retracted-2026-09-11` today, before
+# this build, so it stays reachable by name once the live `1.0.0`
+# tag pointed here instead — the same discipline `0.6.0`'s own
+# retraction below already used for the same situation.
+#
+# **0.7.0 — published 2026-09-12.**
+#
+#   bigbrother1969/aistack-core:0.7.0
+#   @sha256:61a18a664a2e41d22c2e682b1cc0d1e0d09e57806c2b92f3cde44f091013c5ba
+#
+# Built from 0f511b6 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 1751 tests with `clean: True`.
+# 73 artifacts, 16 checks. Before the build, 0.6.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# Freezes `claude/PLAN-J11-CONSOLE-2026-09-11.md` §10 and §11, all
+# shipped the same day as 0.6.0 without the version ever moving:
+# the Docker dependency graph, external network topology and
+# hardware inventory, live Beszel metrics — all three new sections
+# of `architecture.html` — plus network-wide Docker discovery over
+# SSH and the LAN-only screen managing its candidate usernames,
+# linked from the console.
+#
+# **0.6.0 — published 2026-09-12.**
+#
+#   bigbrother1969/aistack-core:0.6.0
+#   @sha256:28a3e4e621d83c563725e08fd6e774158f2752b0d4e3a2008f60c1496a986a47
+#
+# Built from 4d68ffc on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 1549 tests with `clean: True`.
+# 73 artifacts, 16 checks. Before the build, 0.5.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`) — pull matched.
+# Freezes eight days of shipped work that had never bumped the
+# version — `architecture.html` rendered as a real page, the Time
+# Foundation and Evidence/Observation Foundation contracts, the
+# four-domain Health Cockpit (Storage, Services, Backup/DR, GPU),
+# and the unified Console with all five links reachable in HTTPS —
+# on top of `evaluate` (below), which this build also carries.
+#
+# This reuses the number the entry below already had, because
+# `pyproject.toml` had quietly gone back to `0.5.0` by the time this
+# session started — a single unlabeled commit (`1b02a8a`, folding in
+# the Storage domain) reverted the version alongside unrelated code,
+# with no accompanying doc update, so nothing surfaced the drift
+# until this build's own docs collided with it. The owner's call:
+# rather than invent a number neither `pyproject.toml` nor Docker Hub
+# ever actually carried, `0.6.0` stays this build's number and the
+# entry below is retracted in place — the tag on Docker Hub now
+# points here; the entry below's image is preserved at its own
+# digest, retagged `bigbrother1969/aistack-core:0.6.0-retracted` so
+# it stays reachable by name, not only by digest.
+#
+# **0.6.0 — published 2026-09-11, retracted 2026-09-12.**
+#
+#   bigbrother1969/aistack-core:0.6.0-retracted
+#   @sha256:203bec639e4bae1240bc1d19bd9485e7eb2c24f185565aa23f7f2925c07e3109
+#
+# Built from a823190 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 1191 tests with `clean: True`. 69
+# artifacts, 16 checks. Freezes `evaluate`
+# (`aistack.runtime.evaluate`, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`
+# jalon J5): the first `RuntimeFinding` correlating two separately
+# collected pieces of evidence — unexplained CPU consumption and the
+# host's own temperature — into one governed conclusion, citing
+# `OPS-0004`'s vocabulary. STD-0300 § VS-4 criteria 4.2, 4.4 and 4.5
+# close with it. This code is not retracted — it ships in 0.6.0,
+# above, same as everything else since 0.5.0. What's retracted is
+# only this entry's claim to the tag: `pyproject.toml` reverted to
+# `0.5.0` the same day (`1b02a8a`, undocumented), so the number this
+# entry once used was free again by the time the build above needed
+# one. Originally built as `bigbrother1969/aistack-core:0.6.0`;
+# retagged `0.6.0-retracted` so it stays reachable by name once the
+# live `0.6.0` tag pointed elsewhere. Kept here rather than erased —
+# the same reasoning `0.1.0`'s entry below gives for the same kind
+# of correction.
+#
+# **1.0.0 — published 2026-09-11, retracted 2026-09-11.**
+#
+#   bigbrother1969/aistack-core:1.0.0-retracted-2026-09-11
+#   @sha256:efcb70b1a3be5d71f444d91a0483b5a632def704815079e80f1434976d5823c3
+#
+# Built from 6680e61 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 1191 tests with `clean: True`. 69
+# artifacts, 16 checks. **Not re-verified against 0.5.0's recorded
+# digest before this build** — `GOV-0002/OS-047`'s own rule, skipped
+# this once; named here rather than silently not done. Declared
+# prematurely as the 1.0 boundary; corrected to `0.6.0`, above, same
+# day. Kept here rather than erased — the same reasoning `0.1.0`'s
+# entry below gives for the same kind of correction.
+#
+# Originally built as `bigbrother1969/aistack-core:1.0.0`; retagged
+# `1.0.0-retracted-2026-09-11` on 2026-09-18, once the real 1.0
+# boundary was ready to build for real, freeing the tag the same
+# way `0.6.0-retracted`, above, was freed for its own live build.
+#
+# **0.5.0 — published 2026-09-04.**
+#
+#   bigbrother1969/aistack-core:0.5.0
+#   @sha256:3def537335f5f9f36d2824f2c6d56e0c4f5c7232017be36b93bf78a307816896
+#
+# Built from 57290fa on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 940 tests with `clean: True`.
+# 66 artifacts, 16 checks. Before the build, 0.4.0 was re-verified
+# against its recorded digest (`GOV-0002/OS-047`'s own rule, applied
+# for the first time) — pull matched. Freezes the closure of the
+# eight `GOV-0002` residuals opened 2026-09-03 (OS-046, 047, 048,
+# 049, 050, 051, 053, 054), all now Resolved: `docs/99-archive` and
+# its eligibility exclusion, the Context Bundle's `repository_url`
+# (read from the archive's `manifest.json` rather than always
+# defaulting to "unknown"), three documents promoted to `Published`,
+# two Draft decisions left Draft with the reasoning recorded instead
+# of the status changed, and — the one requiring its own live
+# measurement before it could close — a named pattern for running a
+# provider CLI on a deployment host without `PYTHONPATH` set by
+# hand, verified on this same host.
+#
+# **0.4.0 — published 2026-09-03.**
+#
+#   bigbrother1969/aistack-core:0.4.0
+#   @sha256:daf46c76b309e047c8801a25857b1328c01fc69c84c25d1ac333e05c8bb2f9fb
+#
+# Built from 8757605 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 853 tests with `clean: True`.
+# 66 artifacts, 16 checks. Freezes the generalized resource-priority
+# system (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`) —
+# dynamic Docker container discovery, pluggable per-app detectors
+# (Jellyfin playback, CPU threshold), and the priority_ui screen —
+# replacing 0.3.0's single hardcoded Jellyfin app and fourteen
+# hardcoded background containers. All three run on the host, not
+# from this image, but their governed modules under `src/aistack`
+# are part of what `pip install .` now ships.
+#
+# **0.3.0 — published 2026-09-03.**
+#
+#   bigbrother1969/aistack-core:0.3.0
+#   @sha256:55f9cd02711462306eb434a6c4184936b7a7fa1a28ddc7f374bea2248fde0376
+#
+# Built from 7fab030 on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 823 tests with `clean: True`.
+# 66 artifacts, 16 checks. Freezes the resource-priority monitor
+# (`claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md`) and the Selection
+# UI's systemd deployment — both run on the host, not from this
+# image, but their governed modules under `src/aistack` are part of
+# what `pip install .` now ships.
+#
+# **0.2.0 — published 2026-08-29.**
+#
+#   bigbrother1969/aistack-core:0.2.0
+#   @sha256:3ee7cf1fae80cce7c84f404f5354f5edeeeddbf950e299c4a2a8dcb1f4aa194f
+#
+# Built from 0a7ec1a on the reference host, behind the four terms
+# OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 668 tests with `clean: True`.
+# 66 artifacts, 16 checks.
+#
+# **0.1.0 — published 2026-08-19, deleted 2026-08-23.**
+#
+#   bigbrother1969/aistack-core:0.1.0
+#   @sha256:c8ca0fa791e63f8165910b84d913a74a4d084444680518a4a3db13aaaf6359ba
+#
+# Built from ef28e16, before a publication procedure existed. It
+# carried bytecode the heritage did not know about, and the owner
+# deleted it rather than rebuilding — GOV-0002/OS-011. **The record
+# is kept**: a register that erased what it had unpublished could
+# not show that a rule ever bound anything.
+#
+# The build command is not repeated here. It lives in OPS-0002
+# § *Publishing an image*, once, and reads the version from
+# `pyproject.toml` rather than carrying a literal — the defect
+# `src/aistack/__main__.py` carried until 2026-08-29.
+#
+# `build:` below builds the same image locally, so a change is
+# validated before it is published.
+#

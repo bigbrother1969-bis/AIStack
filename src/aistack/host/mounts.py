@@ -30,6 +30,8 @@ PSEUDO_TYPES = frozenset(
 # Docker's own layers and the snap images: what the host runs on, not
 # where anyone would put anything.
 HIDDEN_PREFIXES = ("/var/lib/docker/", "/run/docker/", "/snap/", "/var/snap/", "/run/user/")
+# Inside a container: the files Docker binds for its own name service.
+HIDDEN_POINTS = frozenset({"/etc/hosts", "/etc/hostname", "/etc/resolv.conf"})
 NETWORK_TYPES = frozenset({"nfs", "nfs4", "cifs", "smb3", "fuse.sshfs", "9p"})
 STATVFS_TIMEOUT = 2.0
 
@@ -76,7 +78,11 @@ def parse_mounts(text: str) -> list[Mount]:
         if len(fields) < 4:
             continue
         device, point, fstype, options = _unescape(fields[0]), _unescape(fields[1]), fields[2], fields[3]
-        if fstype in PSEUDO_TYPES or any((point + "/").startswith(prefix) for prefix in HIDDEN_PREFIXES):
+        if (
+            fstype in PSEUDO_TYPES
+            or point in HIDDEN_POINTS
+            or any((point + "/").startswith(prefix) for prefix in HIDDEN_PREFIXES)
+        ):
             continue
         found[point] = Mount(device, point, fstype, "ro" in options.split(","))
     return sorted(found.values(), key=lambda mount: mount.point)

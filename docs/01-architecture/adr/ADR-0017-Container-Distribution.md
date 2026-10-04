@@ -97,8 +97,8 @@ supported.
 | Step | State |
 |---|---|
 | § 1 — `aistack.config`, `config_init`, every declaration path through `configured()` | done — 2026-10-04 |
-| § 2 — the image runs AIStack; `docker-compose.yml` with six services | not started |
-| § 3 — host network, socket, same-path mounts | not started |
+| § 2 — the image runs AIStack; `docker-compose.yml` with six services, `.env.example` | done — 2026-10-04, not yet run on a host |
+| § 3 — host network, socket, same-path mounts | done — 2026-10-04, not yet run on a host |
 | § 4 — guided first start | not started |
 | Choosing where each component lives, from Settings (asked 2026-10-04) | not started |
 | § 5 — GIGABYTE on the compose file | not started |
@@ -112,6 +112,9 @@ supported.
 
 ## Open Points
 
-- The Selection screen's `selection_file` is a path relative to the
-  repository (`examples/selections/…`), absent from the image — to move
-  under the data or configuration volume in § 2.
+- The Selection screen's `selection_file`, a relative path, resolves
+  against the configuration directory when there is one (decided in
+  § 2's implementation, 2026-10-04): the owner's selection file goes to
+  `./config/examples/selections/` at the move.
+- `web_admin_password` asks the password interactively: in a container
+  it needs `docker compose exec` with a terminal.

@@ -12,7 +12,7 @@ they would describe every LAN route on the public port.
 
 from __future__ import annotations
 
-from aistack.config import configured
+from aistack.config import config_dir, configured
 
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -70,9 +70,10 @@ class WebPaths:
     topology: Path = (
         configured(PACKAGE_ROOT / "architecture" / "definitions" / "infrastructure_topology.yml")
     )
-    # What a definition's repository-relative paths (`selection_file`)
-    # resolve against: the checkout the application runs from.
-    repository_root: Path = PACKAGE_ROOT.parents[1]
+    # What a definition's relative paths (`selection_file`) resolve
+    # against: the configuration directory when there is one (the
+    # container, ADR-0017), else the checkout the application runs from.
+    repository_root: Path = config_dir() or PACKAGE_ROOT.parents[1]
 
 
 def create_app(

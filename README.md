@@ -324,7 +324,165 @@ Knowledge Artifacts preserve governed knowledge.
 
 ---
 
-## Getting Started
+## How to install
+
+AIStack runs **on the host it observes**, not in a container: it reads
+the Docker socket, the host's disks and its systemd units, and serves
+pages generated on that filesystem. The published Docker image
+(`bigbrother1969/aistack-core`) carries the same code but runs only the
+knowledge-integrity validator; an image that runs the web application is
+planned, not built. The installation below is the one the reference
+host (GIGABYTE) runs.
+
+### Prerequisites
+
+| What | Why | Notes |
+|---|---|---|
+| A Linux host with **systemd** | every AIStack service is a systemd unit | the reference host runs Debian-based Linux |
+| **Docker** and **Docker Compose** | AIStack observes the containers on this host | the account AIStack runs as must be in the `docker` group — it never needs root |
+| **Python 3.13** | the only version this code is verified on (`requires-python`) | most distributions ship an older `python3`; install 3.13 alongside it |
+| **git** | installation and updates come from the repository | |
+| An **OpenID Connect provider** — the reference host uses **Pocket ID** | people sign in with it (`ADR-0013`) | reachable over HTTPS from the host *and* from the browsers; must announce `RS256`, PKCE `S256` and a `groups` claim |
+| A **reverse proxy with TLS** (the reference host uses Nginx Proxy Manager, behind Cloudflare) | the public address | it points at the public port (8183) only — **never** at the local-network port |
+| *Optional:* **Ollama** on the host | the AI Runtime and the troubleshooting assistant | `ai_runtime.yml` names the endpoint and models |
+| *Optional:* **Syncthing** | the music-selection screen | its API key goes in `.env.web` |
+| *Optional:* **Beszel** | the health-metrics section of Architecture | |
+
+### Precautions
+
+- **Two ports, two audiences.** `service_ports.console` (8183) is the
+  public listener; `service_ports.web_lan` (8186) answers every screen,
+  including those that change the host (CPU priorities, SSH user names,
+  fixes). Publish 8183 through the proxy; never publish 8186, and keep it
+  reachable from the local network only (firewall).
+- **Secrets stay in `.env.web`**, at the repository root, never
+  committed (`.gitignore` already excludes it). Append to it without
+  displaying it (`read -rs`, `>> .env.web`), and keep it readable by the
+  service account only (`chmod 600 .env.web`).
+- **Docker group = root-equivalent.** The account in the `docker` group
+  can control every container; give it to the AIStack service account
+  and nobody else.
+- **Back up what AIStack keeps**: `reports/generated/` (histories,
+  explications, the sessions database, the graph) and `.env.web`. The
+  graph can be rebuilt; the histories cannot.
+- **Start in the development phase.** `instance_config.yml`'s
+  `phase: development` lightens the Explication rules while you set
+  AIStack up (`ADR-0016`); set `phase: production` when people other than
+  you start using it.
+
+### 1. Get the code and the environment
+
+```bash
+sudo mkdir -p /srv/aistack && sudo chown "$USER": /srv/aistack
+cd /srv/aistack
+git clone https://github.com/bigbrother1969-bis/AIStack.git    # or Codeberg
+cd AIStack
+python3.13 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -e ".[dev]"
+source scripts/dev-env.sh
+pytest -q && python -m aistack.cli.knowledge_integrity      # must end with clean: True
+```
+
+### 2. Declare your instance
+
+The declarations live under `src/aistack/*/definitions/`; the values in
+the repository describe the reference host. Review at least:
+
+| File | What to set |
+|---|---|
+| `instance/definitions/instance_config.yml` | `lan_hostname` (this host's name on the LAN), the two ports, `phase` |
+| `authentication/definitions/authentication.yml` | `issuer` (your OIDC provider), `public_base_url` (your public address), `admin_group` |
+| `architecture/definitions/infrastructure_topology.yml` | your machines and network |
+| `network_discovery/definitions/network_discovery.yml` | the LAN range to scan |
+| `console/definitions/console_links.yml`, `console_identity.yml` | the console's cards and its identity |
+| `architecture/definitions/service_categorization.yml`, `cmdb_probe_targets.yml` | your services and the endpoints to probe |
+| `backup_strategy/…`, `pra/…`, `priority/…`, `providers/*/…thresholds.yml` | backups, restore tests, CPU priorities, thresholds |
+| `ai_runtime/definitions/ai_runtime.yml` | the Ollama endpoint and models, if you use it |
+
+### 3. Create the client in the identity provider
+
+In Pocket ID (or any OIDC provider):
+
+1. Create a **group** named exactly as `admin_group` says
+   (`aistack_admins`) and add the administrators to it — the *name*, not
+   the display name, is what the token carries.
+2. Create a **confidential client** with PKCE, and declare **four**
+   addresses — providers compare them letter for letter:
+   - callback URLs: `https://<public address>/auth/callback` and
+     `http://<lan_hostname>:<web_lan>/auth/callback`;
+   - after-logout URLs: `https://<public address>/console.html` and
+     `http://<lan_hostname>:<web_lan>/console.html`.
+3. Allow the group (and any reader group) on the client.
+
+Then write the client's credentials and the fallback administrator's
+password hash into `.env.web`, without showing them:
+
+```bash
+read -rs -p "Client ID: " V && echo "AISTACK_OIDC_CLIENT_ID=$V" >> .env.web && unset V && echo
+read -rs -p "Client secret: " V && echo "AISTACK_OIDC_CLIENT_SECRET=$V" >> .env.web && unset V && echo
+python -m aistack.cli.web_admin_password >> .env.web    # asks twice, prints only the hash
+chmod 600 .env.web
+```
+
+The fallback administrator signs in on the local network only, for when
+the provider or the proxy is down.
+
+### 4. Install the services
+
+Each unit under `deploy/systemd/` names `User=big-brother` and
+`/srv/aistack/AIStack`: edit both to your account and path first.
+
+```bash
+sudo cp deploy/systemd/aistack-*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now aistack-web
+sudo systemctl enable --now aistack-docker-events-monitor aistack-docker-diff-monitor \
+  aistack-docker-digest-monitor aistack-docker-packages-monitor aistack-resource-priority-monitor
+ss -ltnp | grep -E ':8183|:8186'          # both listeners answer
+```
+
+### 5. First pages and first graph
+
+```bash
+python -m aistack.cli.architecture_render
+python -m aistack.cli.health_render
+python -m aistack.cli.console_render
+python -m aistack.cli.explications_import          # and the other explications_import_* sources
+python -m aistack.cli.timemachine_rebuild
+```
+
+Open `http://<lan_hostname>:<web_lan>/` on the local network, sign in,
+and check *Settings*: your profile must read **Administrator**. The
+user manual (*Help* in the console) walks through every screen.
+
+### Updating
+
+```bash
+cd /srv/aistack/AIStack && git pull
+source scripts/dev-env.sh
+.venv/bin/python -m pip install -e ".[dev]"
+pytest -q && python -m aistack.cli.knowledge_integrity
+sudo systemctl restart aistack-web
+```
+
+### With Docker (validator only, today)
+
+The image validates a Context Bundle exported from a clone; mount it:
+
+```bash
+docker pull bigbrother1969/aistack-core:1.7.0
+python3 scripts/export_project_sources.py                 # in a clone: writes context/bundles/
+docker run --rm -v "$PWD/context/bundles:/app/context/bundles:ro" \
+  bigbrother1969/aistack-core:1.7.0                        # knowledge-integrity report
+```
+
+`docker-compose.yml` records every published image by digest, and its
+`aistack-core` service runs the same image built locally.
+
+---
+
+## Getting Started (development)
 
 Clone the repository:
 

@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.14
-  status: Proposed
+  version: 1.15
+  status: Accepted
   owner: Architecture
   created: 2026-09-27
-  updated: 2026-10-02
+  updated: 2026-10-05
 
 relations:
   references:
@@ -28,11 +28,42 @@ relations:
 
 ## Status
 
+Accepted, 2026-10-05, by the owner — at the 1.9 cadrage, after the graph,
+its four Docker collectors and its screens had run on GIGABYTE since 1.3.
+What remains open is listed below and in § *Open Points*; accepting the
+record does not close them.
+
 Proposed, 2026-09-27.
 
 Written the day the owner took the decisions it records, left `Proposed`
 rather than accepted the same day — the rule adopted 2026-08-21 (ADR-0010
 § Status carries the same note).
+
+## Implementation state
+
+| Step | State |
+|---|---|
+| § 1 — Oxigraph, the files stay the truth | done — 1.3 (2026-09-27) |
+| § 2 — PROV-O plus the AIStack extensions | done — 1.3 |
+| § 3 — identity is a declared string (`aistack:stableSubject`) | done — 1.3, applied by the Docker collectors in 1.5 |
+| § 4 — occurrence time and recording time | done for `docker-events` (`aistack:occurredAt`, 1.5); the other streams carry their recording time only, stated as such |
+| § 5 — clock source and drift | not done — `aistack:clockSource` declared, never populated: one host, no second clock to measure against (§ *Open Points*) |
+| § 6 — the projection filters before indexing | done for user-data roots (1.3); secret-shape masking not built, by the owner's decision (§ *Open Points*) |
+| § 7 — Explications are `KnowledgeArtifact` | done — 1.3; since 2026-10-05 every version of a subject is read back, two written in the same second included (`aistack.history.every_version`) |
+| § 8 — the four import sources | done — 1.3 (§§ 14–17) |
+| § 9 — collection gaps | done — 1.5 |
+| § 10 — full rebuild on demand | done — 1.3 (`aistack.cli.timemachine_rebuild`) |
+| § 11 — retention, budget, AIStack's own PRA | not done — compaction and the disk budget are reserved; AIStack's own PRA coverage is part of 1.9 (decided by the owner, 2026-10-05) |
+| § 12 — SQLite FTS5 over Explications | not done — the Explications view filters by text; no FTS5 index exists |
+| § 13 — the GUI, read-only, LAN-only | done — 1.3 as a mini-app; superseded in its form by the single web application (`ADR-0012`, 2026-10-03), still LAN-only and signed-in (`ADR-0014`); the human acts of `ADR-0015` are its only writes |
+| §§ 14–17 — Explications from `explain`, `pra_tests.yml`, `claude/` notes, commits | done — 1.3 |
+| § 18 — the network tree | done — 1.4 (2026-09-28) |
+| § 19 — the provenance graph, one hop | done — 1.4 |
+| §§ 20–23 — the four Docker collectors | done — 1.5 (2026-09-28), 1.5.1 for the package inventory |
+| § 24 — the ribbon, v1 | done — 1.5.1; replaced by § 26 |
+| § 25 — the "upgrade" correlation | done — 1.5.1 |
+| § 26 — ribbon v2 | done — 1.5.2 (2026-09-29/30) |
+| § 27 — exec noise left out, packages once per image | done — 2026-10-02 |
 
 ## Context
 

@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
-  status: Proposed
+  version: 1.3
+  status: Accepted
   owner: Architecture
   created: 2026-09-27
-  updated: 2026-10-03
+  updated: 2026-10-05
 
 relations:
   references:
@@ -24,6 +24,9 @@ relations:
 
 ## Status
 
+Accepted, 2026-10-05, by the owner — at the 1.9 cadrage, after the
+decisions below had run on GIGABYTE since 1.2.
+
 Proposed, 2026-09-27.
 
 Written the day the owner took the decisions it records, and left
@@ -32,6 +35,16 @@ Written the day the owner took the decisions it records, and left
 the next; ADR-0009 § Status records the one exception taken so far). The
 decisions below are the owner's; what awaits acceptance is this record of
 them.
+
+## Implementation state
+
+| Step | State |
+|---|---|
+| § 1 — catalogs, `languages.yml`, `Translator` | done — 2026-09-27 (`507fe82`) |
+| § 2 — the reference checked by the suite | done — 2026-09-27; since 2026-10-05 the suite also keeps every catalog and the manual free of AIStack version numbers (the owner's rule: a page never says "in 1.x") |
+| § 3 — `?lang=`, then the cookie, then the reference | done — 2026-09-27 |
+| § 4 — the interface translated, what it displays not; findings translated by catalog | done — 2026-09-27; findings 2026-10-03 |
+| § 5 — the console becomes an application | done — 2026-09-27 (`0f37934`); its standard-library server was replaced by the single web application on 2026-10-03 (`ADR-0012`), which keeps §§ 1–4 |
 
 ## Context
 

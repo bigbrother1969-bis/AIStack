@@ -2,10 +2,11 @@
 `python -m aistack.cli.config_init [DIRECTORY]` — fill a configuration
 directory with every declaration AIStack ships (`ADR-0017` § 1).
 
-The directory is `AISTACK_CONFIG_DIR` unless one is given. A file
-already there is never overwritten: running it again after an upgrade
-only adds the declarations a new version brought. The container runs it
-at every start.
+The directory is `AISTACK_CONFIG_DIR` unless one is given. A file the
+owner edited, or put there himself, is never overwritten; a copy nobody
+edited follows the shipped version when a new version changes it
+(`aistack.instance.declarations`, decided by the owner 2026-10-05).
+The container runs it at every start.
 
 Each copy's fingerprint is kept in the directory's `.shipped.json`, so
 the web application can tell a declaration still holding the reference
@@ -19,16 +20,19 @@ import sys
 from pathlib import Path
 
 from aistack.config import CONFIG_DIR_ENV, config_dir, shipped_definitions
+from aistack.instance.declarations import follow
 from aistack.instance.first_start import remember_copies
 
 
-def init(directory: Path) -> tuple[list[str], list[str]]:
-    """Copy each shipped declaration missing from `directory`; returns
-    (copied, kept) file names."""
+def init(directory: Path) -> tuple[list[str], list[str], list[str]]:
+    """Copy each shipped declaration missing from `directory`, and bring
+    each untouched copy to its shipped version; returns (copied, kept,
+    updated) file names."""
 
     directory.mkdir(parents=True, exist_ok=True)
     copied, kept = [], []
-    for shipped in shipped_definitions():
+    shipped_files = shipped_definitions()
+    for shipped in shipped_files:
         target = directory / shipped.name
         if target.exists():
             kept.append(shipped.name)
@@ -36,7 +40,8 @@ def init(directory: Path) -> tuple[list[str], list[str]]:
             shutil.copy2(shipped, target)
             copied.append(shipped.name)
     remember_copies(directory, copied)
-    return copied, kept
+    updated = follow(directory, shipped_files)
+    return copied, kept, updated
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -46,10 +51,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Refused: give a directory or set {CONFIG_DIR_ENV}.", file=sys.stderr)
         return 1
 
-    copied, kept = init(directory)
-    print(f"{directory}: {len(copied)} declaration(s) copied, {len(kept)} kept as they were.")
+    copied, kept, updated = init(directory)
+    print(
+        f"{directory}: {len(copied)} declaration(s) copied, {len(updated)} untouched "
+        f"cop(y/ies) brought to the shipped version, {len(kept) - len(updated)} kept as they were."
+    )
     for name in copied:
         print(f"  + {name}")
+    for name in updated:
+        print(f"  ~ {name}")
     return 0
 
 

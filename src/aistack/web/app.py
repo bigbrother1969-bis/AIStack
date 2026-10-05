@@ -44,6 +44,7 @@ from aistack.web import (
 from aistack.instance.yaml.store import load_instance_config_yaml
 from aistack.web.storage import live_storage
 from aistack.web import storage as storage_screen
+from aistack.web import declarations as declarations_screen
 from aistack.instance.data_location import location_file
 from aistack.web.authentication import (
     Authentication,
@@ -167,6 +168,7 @@ def create_app(
     include(app, console.router)
     include(app, first_start.router)
     include(app, storage_screen.router)
+    include(app, declarations_screen.router)
     include(app, authentication.router)
     include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)

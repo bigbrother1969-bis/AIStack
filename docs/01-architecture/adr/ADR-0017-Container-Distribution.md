@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Accepted
   owner: Architecture
   created: 2026-10-04
-  updated: 2026-10-04
+  updated: 2026-10-05
 
 relations:
   references:
@@ -203,26 +203,34 @@ Settings if wanted (§ 4 bis).
 | § 1 — `aistack.config`, `config_init`, every declaration path through `configured()` | done — 2026-10-04 |
 | § 2 — the image runs AIStack; `docker-compose.yml` with six services, `.env.example` | done — 2026-10-04; tried on GIGABYTE the same day (`dev` image, ports 9183/9186): console and manual answer 200, ready ≈ 12 s after start |
 | § 3 — host network, socket, same-path mounts | done — 2026-10-04; tried on GIGABYTE the same day: both ports listening on the host, `docker ps` answers inside the container |
-| § 4 — guided first start | done — 2026-10-04 |
+| § 4 — guided first start | done — 2026-10-04; since 2026-10-05 `/setup` names the host's `./config/<file>` (`AISTACK_CONFIG_HOST_DIR`), not the container's `/config/<file>` |
 | § 4 bis — where the data lives, chosen from Settings | done — 2026-10-04 |
+| A shipped declaration that changes (open point, decided 2026-10-05) | done — 2026-10-05: an untouched copy follows the shipped version at start; an edited or owner-placed file is never touched, and Settings shows the difference until marked seen (`aistack.instance.declarations`) |
 | § 5 — GIGABYTE on the compose file | done — 2026-10-04, 14:49: six containers of the `dev` image, console 200 after 21 s, no first-start notice; sign-in, Settings, CPU priority, Selection and the Time Machine checked by the owner |
 
 ## Consequences
 
-- An upgrade of the image never touches the owner's declarations; a new
-  declaration a version brings is added at the next start.
+- An upgrade of the image never touches a declaration the owner edited or
+  placed himself; a new declaration a version brings is added at the next
+  start, and a copy nobody edited follows the version's changes (decided
+  2026-10-05). A changed shipped declaration whose copy the owner edited
+  is shown in Settings with its difference.
 - The validator image's default command changes; `OPS-0002` § *Publishing
   an image* is revised with § 2.
 
 ## Open Points
 
-- A declaration changed in the repository no longer reaches a host
-  whose `./config` already holds that file (measured 2026-10-04, the
-  evening of the move: AIStack's six containers declared in
-  `service_categorization.yml` had to be copied into GIGABYTE's
-  `./config` by hand). `config_init` never overwrites, by design; a way
-  to see, per file, how the shipped one differs from the one in use is
-  still to decide.
+- ~~A declaration changed in the repository no longer reaches a host
+  whose `./config` already holds that file~~ — **closed 2026-10-05** by
+  the owner's choice "auto + signalement": an untouched copy follows the
+  shipped version at start (its fingerprint is `.shipped.json`'s); a file
+  the owner edited, or placed himself, is never touched, and Settings →
+  *Shipped declarations* shows how it differs from the changed shipped one,
+  with the command that takes it, until marked seen (`.shipped-seen.json`).
+  Measured 2026-10-04: AIStack's six containers declared in
+  `service_categorization.yml` had to be copied into GIGABYTE's `./config`
+  by hand — GIGABYTE's files were placed by the owner, so only changes
+  shipped from now on are reported there.
 
 - The Selection screen's `selection_file`, a relative path, resolves
   against the configuration directory when there is one (decided in

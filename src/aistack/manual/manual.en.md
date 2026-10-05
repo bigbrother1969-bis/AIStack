@@ -365,6 +365,12 @@ done once its file has been edited; a file you put in `./config`
 yourself before the first start is never reported. Once everything
 required is declared, the link disappears.
 
+When a new version changes a shipped declaration: a copy you never
+edited follows the new version at start; a file you edited, or put there
+yourself, is never touched, but **Settings → Shipped declarations** shows
+the difference and the command that takes the shipped version, until you
+click "Seen, I keep my file".
+
 Every host directory your declarations name (backup disks, music) is
 added at the end of `x-aistack`'s `volumes:`, at the same path,
 read-only.

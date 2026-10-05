@@ -38,7 +38,7 @@ def test_every_shipped_declaration_has_a_distinct_name():
 def test_init_copies_what_is_missing_and_never_overwrites(tmp_path: Path):
     (tmp_path / "instance_config.yml").write_text("mine\n", encoding="utf-8")
 
-    copied, kept = init(tmp_path)
+    copied, kept, _updated = init(tmp_path)
 
     assert kept == ["instance_config.yml"]
     assert (tmp_path / "instance_config.yml").read_text(encoding="utf-8") == "mine\n"

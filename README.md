@@ -596,8 +596,10 @@ Never run the compose services and the systemd units on one host.
 **Upgrading** to a newer version: set it in `.env`
 (`AISTACK_VERSION=…`), then `docker compose pull && docker compose up -d`.
 Your `./config` and data are kept; a declaration a new version brings is
-added at the next start. A declaration a new version *changes* is not:
-compare it with the image's own copy before taking it.
+added at the next start. A declaration a new version *changes* follows it
+when you never edited your copy; when you did, your file is kept and
+Settings → *Shipped declarations* shows the difference and the command
+that takes the new one.
 
 **Moving a git + systemd installation to compose** (`ADR-0017` § 5),
 from the checkout, which stays and keeps the data where it is:

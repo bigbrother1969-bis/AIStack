@@ -136,3 +136,14 @@ storage:
       mount: "Le disque où les données d'AIStack doivent aller, avec son espace libre"
       save: "Enregistrer ce disque comme nouvel emplacement et afficher les commandes de déplacement"
       clear: "Oublier l'emplacement choisi ; rien n'est déplacé"
+declarations:
+  heading: "Déclarations livrées"
+  intro: "Les déclarations de {directory} viennent de celles livrées avec AIStack. Une copie que tu n'as jamais modifiée suit la version livrée à chaque démarrage ; un fichier que tu as modifié, ou posé toi-même, n'est jamais touché."
+  none: "Aucune déclaration livrée n'a changé depuis la dernière fois que tu l'as vue."
+  changed: "La version livrée de {name} a changé depuis ta copie. Différence entre ton fichier (−) et la version livrée (+) :"
+  cut: "Différence coupée après {count} lignes."
+  adopt: "Pour prendre la version livrée telle quelle, sur l'hôte, dans le dossier de docker-compose.yml :"
+  seen: "Vu, je garde mon fichier"
+  marked: "C'est noté : {name} n'est plus signalé tant que la version livrée ne change pas."
+  tooltip:
+    seen: "Ne plus signaler ce fichier tant que la version livrée ne change pas à nouveau ; ton fichier reste tel quel"

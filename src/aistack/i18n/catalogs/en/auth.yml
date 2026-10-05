@@ -136,3 +136,14 @@ storage:
       mount: "The disk AIStack's data is to go to, with its free space"
       save: "Save this disk as the new location and show the commands that move the data"
       clear: "Forget the chosen location; nothing is moved"
+declarations:
+  heading: "Shipped declarations"
+  intro: "The declarations in {directory} come from those AIStack ships. A copy you never edited follows the shipped version at every start; a file you edited, or put there yourself, is never touched."
+  none: "No shipped declaration changed since you last saw it."
+  changed: "The shipped version of {name} changed since your copy. Difference between your file (−) and the shipped version (+):"
+  cut: "Difference cut after {count} lines."
+  adopt: "To take the shipped version as it is, on the host, in the folder of docker-compose.yml:"
+  seen: "Seen, I keep my file"
+  marked: "Noted: {name} is no longer reported until the shipped version changes again."
+  tooltip:
+    seen: "Stop reporting this file until the shipped version changes again; your file stays as it is"

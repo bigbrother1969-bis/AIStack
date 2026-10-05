@@ -15,8 +15,8 @@
 #   - talks to the host's Docker through its socket — the account it
 #     runs as must be in the socket's group (`DOCKER_GID`);
 #   - reads its declarations from `./config` (filled with the shipped
-#     ones at first start, never overwritten) and keeps everything it
-#     records in `./data`;
+#     ones at first start; a file you edited is never overwritten) and
+#     keeps everything it records in `./data`;
 #   - sees each host directory a declaration names AT THE SAME PATH,
 #     read-only: backup disks, media libraries, the folders holding the
 #     Compose projects AIStack reads. Add yours at the end of the

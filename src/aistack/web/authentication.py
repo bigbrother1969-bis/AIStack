@@ -639,9 +639,11 @@ def settings_sections(request: Request) -> str:
             parts.append("</table>")
         parts.append("</section>")
 
+        from aistack.web.declarations import declarations_section
         from aistack.web.storage import storage_section
 
         parts.append(storage_section(request, t))
+        parts.append(declarations_section(request, t))
 
     return "\n".join(parts)
 

@@ -382,6 +382,13 @@ as déposé toi-même dans `./config` avant le premier démarrage n'est
 jamais signalé. Quand tout l'indispensable est déclaré, le lien
 disparaît.
 
+Quand une nouvelle version change une déclaration livrée : une copie que
+tu n'as jamais modifiée suit la nouvelle version au démarrage ; un
+fichier que tu as modifié, ou déposé toi-même, n'est jamais touché, mais
+**Paramètres → Déclarations livrées** montre la différence et la commande
+qui prend la version livrée, jusqu'à ce que tu cliques « Vu, je garde mon
+fichier ».
+
 Chaque dossier de l'hôte que nomment tes déclarations (disques de
 sauvegarde, musique) s'ajoute à la fin des `volumes:` de `x-aistack`,
 au même chemin, en lecture seule.

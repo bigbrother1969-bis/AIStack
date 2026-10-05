@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from urllib.parse import quote
 
 from aistack.contracts.health_score import (
@@ -8,6 +9,7 @@ from aistack.contracts.health_score import (
     TO_WATCH,
     HealthScore,
 )
+from aistack.contracts.quarantine_reading import READY, USED, QuarantineReading
 from aistack.contracts.runtime_finding import CitedReading, MatchedLine, RuntimeFinding
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
@@ -38,6 +40,8 @@ def render_html(
     lang: str | None = None,
     languages: Languages | None = None,
     troubleshooting_base_url: str | None = None,
+    quarantine: tuple[QuarantineReading, ...] = (),
+    quarantine_note: str = "",
 ) -> str:
     """
     Wrap a `HealthCockpit` snapshot into one self-contained HTML
@@ -76,6 +80,12 @@ def render_html(
     domain's findings are already text — `interpretation`,
     `remediation`, the evidence count — so this page is server-side
     HTML only, plain text on load, nothing to fail to execute.
+
+    **`quarantine`, added 2026-10-05** (`OPS-0012`) — the quarantined
+    code the card's score already counts, as one line under it: how
+    many items, until when, how many uses recorded, and each item used
+    or ready to be deleted by name. Empty (every earlier call) renders
+    no line; `quarantine_note` names a register that could not be read.
 
     Pure — no wall clock, the same discipline `render_html` for
     architecture already holds: the same cockpit and score always
@@ -166,7 +176,7 @@ def render_html(
   {_render_score(score, score_note, t)}
 </header>
 
-{_render_technical_debt(technical_debt_score, technical_debt_note, t)}
+{_render_technical_debt(technical_debt_score, technical_debt_note, t, _render_quarantine(quarantine, quarantine_note, t))}
 {sections}
 </body>
 </html>
@@ -202,7 +212,7 @@ def _render_score(score: HealthScore | None, score_note: str, t: Translator) -> 
 
 
 def _render_technical_debt(
-    score: TechnicalDebtScore | None, note: str, t: Translator
+    score: TechnicalDebtScore | None, note: str, t: Translator, quarantine: str = ""
 ) -> str:
     heading = escape_text(t("health.page.technical_debt"))
 
@@ -216,7 +226,7 @@ def _render_technical_debt(
     <strong>{score.value}/100</strong> — {escape_text(findings)}
     {escape_text("OPS-0004/technical-debt")}
   </p>
-</section>"""
+{quarantine}</section>"""
 
     if note:
         unavailable = t("health.page.technical_debt_unavailable", note=note)
@@ -224,9 +234,45 @@ def _render_technical_debt(
         return f"""<section class="technical-debt technical-debt-unavailable">
   <h2>{heading}</h2>
   <p class="note score-unavailable">{escape_text(unavailable)}</p>
-</section>"""
+{quarantine}</section>"""
 
     return ""
+
+
+def _day(value: date, t: Translator) -> str:
+    return value.strftime("%d/%m/%Y") if t.lang == "fr" else value.isoformat()
+
+
+def _render_quarantine(
+    readings: tuple[QuarantineReading, ...], note: str, t: Translator
+) -> str:
+    """The quarantine's line in the technical-debt card (`OPS-0012`)."""
+
+    if note:
+        return f'  <p class="quarantine note">{escape_text(t("health.page.quarantine_unavailable", note=note))}</p>\n'
+    if not readings:
+        return ""
+    uses = sum(reading.uses for reading in readings)
+    review = min(reading.review_after for reading in readings)
+    summary = t(
+        "health.page.quarantine",
+        count=len(readings),
+        review=_day(review, t),
+        uses=uses,
+    )
+    items = []
+    for reading in readings:
+        if reading.state == USED:
+            text = t("health.page.quarantine_used", entry=reading.entry, paths=", ".join(reading.paths), uses=reading.uses, last=reading.last_use)
+            items.append(f'    <li class="quarantine-used">{escape_text(text)}</li>')
+        elif reading.state == READY:
+            text = t("health.page.quarantine_ready", entry=reading.entry, paths=", ".join(reading.paths))
+            items.append(f'    <li class="quarantine-ready">{escape_text(text)}</li>')
+    listed = f'  <ul class="quarantine-items">\n{chr(10).join(items)}\n  </ul>\n' if items else ""
+    return (
+        f'  <p class="quarantine">{escape_text(summary)} '
+        f'{escape_text("OPS-0012")}</p>\n{listed}'
+    )
 
 
 def _render_domain(
@@ -381,6 +427,10 @@ header { margin-bottom: 1.4rem; }
 }
 .technical-debt h2 { margin: 0 0 .4rem; font-size: 1.1rem; display: flex; align-items: center; gap: .6rem; }
 .technical-debt-unavailable { background: #fafafa; }
+.technical-debt .quarantine { margin: .4rem 0 0; font-size: .9rem; color: #444; }
+.quarantine-items { margin: .3rem 0 0; padding-left: 1.2rem; font-size: .9rem; }
+.quarantine-used { color: #b42318; font-weight: 600; }
+.quarantine-ready { color: #7d4e00; }
 .finding {
   border-top: 1px solid #dde4ed; padding-top: .6rem; margin-top: .6rem;
   font-size: .92rem;

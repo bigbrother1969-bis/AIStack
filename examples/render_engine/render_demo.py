@@ -1,3 +1,8 @@
+# OPS-0012: in quarantine until 2026-11-16 — any use of this module is recorded.
+from aistack.quarantine.tripwire import tripwire
+
+tripwire(__name__)
+
 from pathlib import Path
 
 from render_engine.core import RenderInput
@@ -21,3 +26,4 @@ out = Path("examples/render_engine/render-engine-demo.html")
 out.write_text(output.content)
 
 print(f"Generated: {out}")
+

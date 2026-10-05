@@ -27,3 +27,9 @@ class ItemLifecycle:
     def __post_init__(self) -> None:
         if self.effective_at.tzinfo is None:
             raise ValueError("effective_at must be timezone-aware")
+
+
+# OPS-0012: in quarantine until 2026-11-16 — any use of this module is recorded.
+from aistack.quarantine.tripwire import tripwire
+
+tripwire(__name__)

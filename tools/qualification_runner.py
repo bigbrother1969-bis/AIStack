@@ -3,6 +3,12 @@
 
 from __future__ import annotations
 
+# OPS-0012: in quarantine until 2026-11-16 — any use of this module is recorded.
+from aistack.quarantine.tripwire import tripwire
+
+tripwire(__name__)
+
+
 import argparse
 import hashlib
 import json
@@ -1150,3 +1156,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

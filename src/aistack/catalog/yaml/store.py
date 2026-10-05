@@ -46,3 +46,9 @@ def save_catalog_yaml(catalog: Catalog, path: Path) -> Path:
     with path.open("w", encoding="utf-8") as stream:
         yaml.safe_dump(asdict(catalog), stream, sort_keys=False, allow_unicode=True)
     return path
+
+
+# OPS-0012: in quarantine until 2026-11-16 — any use of this module is recorded.
+from aistack.quarantine.tripwire import tripwire
+
+tripwire(__name__)

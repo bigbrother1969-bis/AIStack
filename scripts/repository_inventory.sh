@@ -3,6 +3,10 @@ set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# OPS-0012: in quarantine until 2026-11-16 — any run is recorded.
+source "$ROOT/scripts/quarantine_tripwire.sh"
+quarantine_tripwire scripts/repository_inventory.sh
+
 REPORT="$ROOT/reports/generated/repository-inventory.md"
 
 echo "# Repository Inventory" > "$REPORT"

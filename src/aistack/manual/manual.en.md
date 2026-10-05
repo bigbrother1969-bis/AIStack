@@ -131,6 +131,15 @@ A service started only when needed is declared with `on_demand: true` in
 `service_categorization.yml`: stopped, it is not counted as an inventory
 gap.
 
+AIStack's own code that is no longer used first goes through a
+**quarantine** (`OPS-0012`) before it is deleted: it stays in place for six
+weeks, and any use of it is recorded. While it is not empty, the quarantine
+counts in the technical debt (15 points, once); a line of the card says how
+many items it holds, the review date and the number of uses recorded, and
+names those that were used or are ready to be deleted. The detail:
+`python -m aistack.cli.quarantine_report` (with Docker:
+`docker compose exec web python -m aistack.cli.quarantine_report`).
+
 Each finding gives its subject, its interpretation, the proposed fix and its
 confidence. The **Diagnose with the AI assistant** link opens that finding in the troubleshooting
 assistant, on the local network.

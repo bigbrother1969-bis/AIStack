@@ -26,3 +26,9 @@ class Item:
 
         if not self.item_type.strip():
             raise ValueError("item_type must not be empty")
+
+
+# OPS-0012: in quarantine until 2026-11-16 — any use of this module is recorded.
+from aistack.quarantine.tripwire import tripwire
+
+tripwire(__name__)

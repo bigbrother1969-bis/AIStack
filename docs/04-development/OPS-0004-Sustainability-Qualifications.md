@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Draft
   owner: Operations
   created: 2026-09-04
-  updated: 2026-10-02
+  updated: 2026-10-05
 
 relations:
   references:
@@ -485,6 +485,34 @@ docstrings; unlike the sixth and seventh reference cases, this one adds no
 new governance register of its own, reusing `OPS-0009`/`OPS-0010` as
 already declared.
 
+## Ninth reference case — code en quarantaine, 2026-10-05, qualified
+
+A ninth case, given by the owner on 2026-10-05 while deciding how to clean
+AIStack of the code its first weeks left behind: "c'est aussi de la
+gouvernance de gérer le code mort et obsolète. Ça rentre dans la dette
+technique".
+
+**Not an incident and not a domain of the host.** The code concerned is
+AIStack's own: files found unused, put in quarantine for six weeks before
+being deleted (`OPS-0012`). Nothing on the host misbehaves because of them.
+
+Qualified by the owner's own words:
+
+- **technical debt** — yes, named by the owner;
+- **deployment misconfiguration**, **energy inefficiency**,
+  **sustainability anomaly** — not named, and not applied: dead code costs
+  nothing at run time and configures no deployment.
+
+**Exposure — the "Dette technique" card, not an eighth cockpit domain.**
+The seven domains `OPS-0008` weighs describe the host; the quarantine is
+counted beside them as one more group of findings, so it costs the card
+its weight once (`OPS-0008` § *Technical debt score*), and is listed in the
+card by its own line. No change to `health_score_weights.yml`.
+
+**One finding per quarantined item, whatever its state** — watched, used,
+or ready to be deleted: the debt lasts until the deletion, and the card
+clears when the register is empty. Full detail is in `OPS-0012`.
+
 ## What this register does not do
 
 **Updated 2026-09-11 (fourth time, for the fifth reference case)** — this
@@ -568,6 +596,11 @@ declares stateful but `OPS-0009`'s own file does not name at all, found
 by `find_undeclared_pra_tests`, joining `backup_strategy.yml`'s declared
 services against `pra_tests.yml`'s own.
 
+As of 2026-10-05 (`OPS-0012`), `technical debt` alone is additionally
+cited by `aistack.runtime.evaluate_quarantine`, for every item of the
+quarantine register — dead code waiting for its deletion — counted in the
+"Dette technique" card beside the domains rather than as one of them.
+
 Every one of `OPS-0004`'s four qualifications is now cited by multiple
-wired `RuntimeFinding` producers, across eight reference cases — the
+wired `RuntimeFinding` producers, across nine reference cases — the
 vocabulary's coverage is no longer a gap this section needs to track.

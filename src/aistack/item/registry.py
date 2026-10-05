@@ -47,3 +47,9 @@ class ItemRegistry:
 
     def __iter__(self) -> Iterator[GovernedItem]:
         return iter(self._items.values())
+
+
+# OPS-0012: in quarantine until 2026-11-16 — any use of this module is recorded.
+from aistack.quarantine.tripwire import tripwire
+
+tripwire(__name__)

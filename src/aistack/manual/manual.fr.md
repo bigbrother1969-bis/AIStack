@@ -136,6 +136,15 @@ Un service qu'on ne lance qu'à la demande se déclare avec
 `on_demand: true` dans `service_categorization.yml` : arrêté, il n'est pas
 compté comme un écart d'inventaire.
 
+Le code d'AIStack qui ne sert plus passe d'abord par une **quarantaine**
+(`OPS-0012`) avant d'être effacé : il reste en place six semaines, et toute
+utilisation est enregistrée. Tant qu'elle n'est pas vide, la quarantaine
+compte dans la dette technique (15 points, une fois) ; une ligne de la
+carte dit combien d'éléments elle contient, la date de révision et le
+nombre d'utilisations constatées, et nomme ceux qui ont servi ou sont prêts
+à effacer. Le détail : `python -m aistack.cli.quarantine_report` (avec
+Docker : `docker compose exec web python -m aistack.cli.quarantine_report`).
+
 Chaque constat indique son sujet, son interprétation, la correction proposée
 et sa confiance. Le lien **Diagnostiquer avec l'assistant IA** ouvre ce constat dans l'assistant
 de pannes, sur le réseau local.

@@ -8,6 +8,7 @@ from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
 from aistack.contracts.inventory_gap import InventoryGap
 from aistack.contracts.pra_test_reading import PraTestReading
+from aistack.contracts.quarantine_reading import QuarantineReading
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.restart_loop import RestartLoop
 from aistack.contracts.runtime_observation import LogEntry
@@ -113,7 +114,9 @@ class CitedReading:
     (1.6 tranche 2's État-persistant domain, `OPS-0010`, 2026-09-30), and,
     since 1.6 tranche 3's Écarts-d'inventaire domain (2026-09-30),
     `InventoryGap`, plus, since 2026-10-02, `RestartLoop` (the Services
-    domain's restart-loop check, counted over time) — spelled out directly rather than
+    domain's restart-loop check, counted over time), and, since 2026-10-05,
+    `QuarantineReading` (`OPS-0012`'s quarantined code, scored as technical
+    debt) — spelled out directly rather than
     imported from `aistack.kernel.evidence.Evidence`:
     `aistack.contracts` is the heritage's foundational layer, and
     importing `aistack.kernel.evidence` from it would read the
@@ -143,6 +146,7 @@ class CitedReading:
         | BackupStrategyDeclaration
         | InventoryGap
         | RestartLoop
+        | QuarantineReading
     )
 
     def __post_init__(self) -> None:

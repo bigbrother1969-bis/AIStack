@@ -7,15 +7,16 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Draft
   owner: Operations
   created: 2026-09-11
-  updated: 2026-10-04
+  updated: 2026-10-05
 
 relations:
   references:
     - OPS-0004
+    - OPS-0012
     - OPS-0005
     - OPS-0006
     - OPS-0007
@@ -110,6 +111,15 @@ same day, surprised by a 0/100 on GIGABYTE: the 2026-09-23 rule cost
 15) clamped it to 0 from the seventh finding on, and no single
 correction could ever move it. Per domain, the same cockpit reads
 70/100: it moves when a domain is cleared.
+
+**Since 2026-10-05, the quarantined code counts as one more group**
+(`OPS-0012`, `OPS-0004`'s ninth reference case, the owner's decision that
+day: "ça rentre dans la dette technique"). It is not a domain — the
+health score does not weigh it, `health_score_weights.yml` is unchanged —
+but while the quarantine register holds an item, the card counts it as a
+group with debt: 15 points, once, and one line under the score says how
+many items are in quarantine, until when, and how many uses their
+tripwires recorded.
 
 ## Declared weights
 

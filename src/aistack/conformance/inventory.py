@@ -32,6 +32,7 @@ from types import ModuleType
 from typing import Protocol
 
 from aistack.conformance.structural import protocol_members, satisfies
+from aistack.quarantine.tripwire import inspecting
 from aistack.contracts.contract_inventory import (
     ABSTRACT,
     PROTOCOL,
@@ -121,18 +122,21 @@ def take_inventory(package: str = "aistack") -> ContractInventory:
     modules: list[ModuleType] = [root]
     unreadable: list[tuple[str, str]] = []
 
-    for found in pkgutil.walk_packages(root.__path__, f"{package}."):
-        try:
-            modules.append(importlib.import_module(found.name))
-        except Exception as error:
-            # Deliberately broad. A module can fail to import for
-            # reasons no narrower clause anticipates, and an
-            # inventory that crashed on the first one would
-            # measure nothing at all. Every failure is named in
-            # the result, so nothing is swallowed.
-            unreadable.append(
-                (found.name, f"{type(error).__name__}: {error}")
-            )
+    # Reading every module is not using it: the quarantine's tripwires
+    # (`OPS-0012`) record nothing here.
+    with inspecting():
+        for found in pkgutil.walk_packages(root.__path__, f"{package}."):
+            try:
+                modules.append(importlib.import_module(found.name))
+            except Exception as error:
+                # Deliberately broad. A module can fail to import for
+                # reasons no narrower clause anticipates, and an
+                # inventory that crashed on the first one would
+                # measure nothing at all. Every failure is named in
+                # the result, so nothing is swallowed.
+                unreadable.append(
+                    (found.name, f"{type(error).__name__}: {error}")
+                )
 
     contracts: dict[type, str] = {}
     concrete: list[type] = []

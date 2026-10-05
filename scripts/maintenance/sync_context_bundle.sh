@@ -11,6 +11,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 ROOT="${AISTACK_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 
+# OPS-0012: in quarantine until 2026-11-16 — any run is recorded.
+source "$SCRIPT_DIR/../quarantine_tripwire.sh"
+quarantine_tripwire scripts/maintenance/sync_context_bundle.sh
+
 LOG_DIR="$ROOT/logs"
 
 LOG_FILE="$LOG_DIR/context_bundle_sync.log"

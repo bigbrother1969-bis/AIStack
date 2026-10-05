@@ -30,6 +30,18 @@ class HistoricalObservation:
     stem: str
     observed_at: datetime
     path: Path
+    # The collision suffix `write_artifact_with_history` gave the file:
+    # 0 for the first write of a second, 1, 2… for the next ones.
+    rank: int = 0
+
+    @property
+    def label(self) -> str:
+        """The file's own name without extension — `format_instant`, plus
+        `-<rank>` for a second or later write in the same second: what
+        tells two versions written in one second apart."""
+
+        stamp = format_instant(self.observed_at)
+        return f"{stamp}-{self.rank}" if self.rank else stamp
 
     def read(self) -> str:
         return self.path.read_text(encoding="utf-8")
@@ -90,6 +102,29 @@ def latest_observations(generated_dir: Path, stem: str) -> list[HistoricalObserv
         HistoricalObservation(stem=stem, observed_at=instant, path=best[instant][1])
         for instant in sorted(best)
     ]
+
+
+def every_version(generated_dir: Path, stem: str) -> list[HistoricalObservation]:
+    """
+    Every file `stem`'s history holds, oldest first — two written in the
+    same second included, in the order they were written (1.9).
+
+    `latest_observations` answers "what was current at each instant",
+    and keeps only the last write of a second. A history whose files are
+    *versions* rather than snapshots — an Explication's, where each
+    write is a text someone or something recorded — needs all of them:
+    an import that wrote three commits of one subject in one second lost
+    two of them to that reader (defect found 2026-10-03, fixed here).
+    """
+
+    found: list[HistoricalObservation] = []
+    for path in _history_dir(generated_dir, stem).glob("*"):
+        parsed = _parse_history_filename(path)
+        if parsed is None:
+            continue
+        instant, rank = parsed
+        found.append(HistoricalObservation(stem=stem, observed_at=instant, path=path, rank=rank))
+    return sorted(found, key=lambda observation: (observation.observed_at, observation.rank))
 
 
 def _history_dir(generated_dir: Path, stem: str) -> Path:

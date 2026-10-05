@@ -27,7 +27,7 @@ from aistack.generators import history as history_files
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.explications.store import deserialize_explication, record_explication
-from aistack.history import format_instant, latest_observations
+from aistack.history import every_version, format_instant
 from aistack.history.subject_names import stem_for_subject
 
 PROPOSED = "Proposed"
@@ -84,10 +84,10 @@ def versions(subject: str, output_dir: Path) -> list[Version]:
 
     return [
         Version(
-            instant=format_instant(observation.observed_at),
+            instant=observation.label,
             artifact=deserialize_explication(json.loads(observation.read())),
         )
-        for observation in latest_observations(output_dir, stem_for_subject(subject))
+        for observation in every_version(output_dir, stem_for_subject(subject))
     ]
 
 
@@ -104,11 +104,10 @@ def author_of(artifact: KnowledgeArtifact) -> str:
 def _a_second_of_its_own(history: list[Version]) -> datetime:
     """
     The instant the new version is recorded at, strictly after the last
-    one's second. History files are stamped to the second, and two
-    written in the same second read back as one instant
-    (`aistack.history.latest_observations` keeps the later): an act
-    landing in the same second as the version it acts on would hide it.
-    A person's acts are seconds apart; when one is not, it waits.
+    one's second. Since 1.9 two versions written in one second both read
+    back (`aistack.history.every_version`); an act still takes a second
+    of its own, so its recorded time is never the same as the version it
+    acts on. A person's acts are seconds apart; when one is not, it waits.
     """
 
     while True:

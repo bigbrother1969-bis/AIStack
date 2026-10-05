@@ -26,39 +26,13 @@ architecture component (`kernel`, `console`, `explications`) and a
 governance register entry (`OS-071`) are not the same kind of thing,
 and conflating them under one field would misrepresent both.
 
-**A real, measured write-ordering hazard this module paces around,
-not fixes.** `aistack.generators.history.write_artifact_with_history`
-always stamps a history file with the real wall-clock time of the
-call (`datetime.now(timezone.utc)`, second resolution), never a
-caller-supplied instant — and `aistack.history.query.available_instants`
-collapses two writes to the *same subject* landing in the same
-wall-clock second into one queryable instant, silently hiding the
-earlier of the two from `observation_at` (and so from
-`read_explication_history` and from `project_explications` alike).
-That was harmless for `pra_tests.yml` (a handful of subjects, one
-write each) and for `claude/` notes (5 files, proven safe by this
-module's own sibling test) — it is not harmless here: this
-repository's own busiest scope, `kernel`, has 38 real commits, all
-importable in the same script run, and a same-subject write loop with
-no pacing would collide most of them into a handful of instants,
-silently discarding history rather than recording it. Measured too:
-zero real commits share both a scope and an author-instant to the
-same wall-clock second, so the real historical dates themselves never
-collide — only a *fast, unpaced import* would manufacture a collision
-`git log` itself never has. Rather than reshape
-`write_artifact_with_history`/`available_instants` to accept or
-recognise a caller-supplied instant (new surface every other producer
-would have to consider, for a hazard only a historical bulk import
-like this one ever triggers), this module paces its own writes: before
-writing a second or later Explication for the same subject within one
-run, it waits out the current wall-clock second so the next write
-lands in a new one. Worst case, measured against the real 240-commit
-corpus (240 commits across 80 distinct scopes): 160 forced one-second
-waits, under three minutes total — a one-time cost for a one-time
-deliberate backfill (`aistack.cli.explications_import_commits`'s own
-docstring), not a recurring one: re-running this importer after only
-a few new commits waits out, at most, as many seconds as new commits
-share a scope with each other in that one run.
+**No pacing any more (1.9).** Two writes to the same subject in the
+same wall-clock second used to read back as one — the history reader
+kept the last write of each second — so this importer waited out a
+second between two commits of one scope (up to three minutes on the
+240-commit corpus). Explications are now read version by version
+(`aistack.history.every_version`), each file its own version even
+within one second, so the import writes as fast as it can.
 
 **Idempotent by commit sha, not by instant or content hash.** A
 commit is already immutable and already uniquely identified — no
@@ -92,9 +66,8 @@ from __future__ import annotations
 
 import re
 import subprocess
-import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from aistack.contracts.artifact import KnowledgeArtifact
@@ -195,20 +168,6 @@ def _scope(message: str) -> str | None:
     return match.group(1) if match else None
 
 
-def _wait_for_a_new_wall_clock_second(after: datetime) -> None:
-    """
-    Block until `datetime.now(timezone.utc)` reads a different second
-    than `after` — this module's own pacing against the real,
-    measured `write_artifact_with_history`/`available_instants` hazard
-    its docstring describes. A short poll, not a flat one-second
-    sleep: the wait is almost always shorter than a full second, since
-    `after` is rarely captured right at a second boundary.
-    """
-
-    while datetime.now(timezone.utc).replace(microsecond=0) <= after:
-        time.sleep(0.05)
-
-
 def import_commits(
     repo_root: Path = DEFAULT_REPO_ROOT,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
@@ -228,7 +187,6 @@ def import_commits(
     subjects_with_a_scoped_commit: set[str] = set()
 
     already_imported_by_subject: dict[str, set[str]] = {}
-    last_write_second_by_subject: dict[str, datetime] = {}
 
     for commit in _iter_commits(repo_root):
         commits_seen += 1
@@ -252,10 +210,6 @@ def import_commits(
             explications_already_imported += 1
             continue
 
-        last_write_second = last_write_second_by_subject.get(subject)
-        if last_write_second is not None:
-            _wait_for_a_new_wall_clock_second(last_write_second)
-
         artifact = KnowledgeArtifact(
             id=subject,
             title=f"Explication : {subject}",
@@ -278,9 +232,6 @@ def import_commits(
         )
         record_explication(artifact, output_dir=output_dir)
         already_imported_by_subject[subject].add(commit.sha)
-        last_write_second_by_subject[subject] = datetime.now(timezone.utc).replace(
-            microsecond=0
-        )
         explications_recorded += 1
 
     return CommitsImportSummary(

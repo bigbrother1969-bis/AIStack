@@ -331,7 +331,7 @@ section of the repository's README. In order:
 
 ### With Docker
 
-From 1.8 on, the Docker image runs AIStack itself: the repository's
+The Docker image runs AIStack itself: the repository's
 `docker-compose.yml` starts the web application and the five
 collectors, six services of one image. The prerequisites, the identity
 provider and the reverse proxy are the same; Python, git and the

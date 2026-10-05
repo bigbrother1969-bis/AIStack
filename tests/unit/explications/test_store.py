@@ -78,3 +78,21 @@ def test_record_explication_keeps_every_version_in_history(tmp_path):
 
 def test_read_latest_explication_on_a_never_recorded_subject_returns_none(tmp_path):
     assert read_latest_explication("never-recorded", output_dir=tmp_path) is None
+
+
+def test_three_versions_written_in_one_second_are_all_read_back(tmp_path, monkeypatch):
+    # The defect deferred to 1.9: an importer writing several versions of
+    # one subject in the same second used to read back as one.
+    from aistack.explications.store import read_explication_history
+
+    monkeypatch.setattr(
+        "aistack.generators.history.wall_clock", lambda: datetime(2026, 10, 5, 9, 0, 0, tzinfo=UTC)
+    )
+    for text in ("one", "two", "three"):
+        record_explication(_artifact(content=text), output_dir=tmp_path)
+
+    assert [artifact.content for artifact in read_explication_history("test-subject", tmp_path)] == [
+        "one",
+        "two",
+        "three",
+    ]

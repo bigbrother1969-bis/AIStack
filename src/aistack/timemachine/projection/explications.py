@@ -33,7 +33,7 @@ from typing import Iterable
 
 from aistack.history.subject_names import subject_for_stem
 from aistack.explications import deserialize_explication
-from aistack.history import available_stems, format_instant, latest_observations
+from aistack.history import available_stems, every_version
 from aistack.timemachine.graph import GraphStore, Literal
 from aistack.timemachine.iri import agent_iri, explication_iri, subject_iri
 from aistack.timemachine.projection.filter import filter_fact
@@ -114,12 +114,12 @@ def project_explications(
         subjects_seen += 1
         explained = subject_iri(subject)
 
-        for observation in latest_observations(explications_dir, stem):
-            instant = observation.observed_at
-
+        # Every version, two written in the same second included: each
+        # has its own node, named by its file (1.9).
+        for observation in every_version(explications_dir, stem):
             explications_seen += 1
             artifact = deserialize_explication(json.loads(observation.read()))
-            entity = explication_iri(subject, format_instant(instant))
+            entity = explication_iri(subject, observation.label)
 
             emit(entity, RDF_TYPE, PROV_ENTITY)
             emit(

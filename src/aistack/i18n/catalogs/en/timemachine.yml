@@ -62,7 +62,7 @@ nav:
 tree:
   heading: "Network tree"
   intro: "Network → Host → Stack → Container, from the live Docker/Compose catalogs (ADR-0011 §18) — not from the graph."
-  historique_notice: "Per-item history is still limited in 1.4: most containers have no real linked history yet (fine-grained collection, 1.5)."
+  historique_notice: "Only containers followed by the Docker collectors have a history; the others show their current state only."
   search_placeholder: "Search a name…"
   search_button: "Search"
   search_clear: "Clear"
@@ -89,7 +89,7 @@ ribbon:
   subject_filter_label: "Filtered to:"
   view_in_tree: "View in tree"
   list_heading: "Full list (accessible view)"
-  group_docker: "Docker collectors (1.5)"
+  group_docker: "Docker collectors"
   group_observation: "Observation history"
   pagination_prev: "◀ Previous page"
   pagination_next: "Next page ▶"

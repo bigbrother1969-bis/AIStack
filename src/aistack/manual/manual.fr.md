@@ -345,7 +345,7 @@ install* du README du dépôt. Dans l'ordre :
 
 ### Avec Docker
 
-À partir de la 1.8, l'image Docker fait tourner AIStack lui-même : le
+L'image Docker fait tourner AIStack lui-même : le
 fichier `docker-compose.yml` du dépôt démarre l'application web et les
 cinq collecteurs, six services d'une même image. Les prérequis, le
 fournisseur d'identité et le reverse proxy sont les mêmes ; Python, git

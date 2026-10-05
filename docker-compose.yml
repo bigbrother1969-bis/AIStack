@@ -28,6 +28,10 @@
 #   docker compose exec web python -m aistack.cli.timemachine_rebuild
 #   docker compose run --rm validate
 #
+# Building from a checkout between two releases: set
+# AISTACK_VERSION=dev in .env first, so a local build never takes a
+# published version's name (OPS-0002 § *Between two publications*).
+#
 # The six services replace the six systemd units of a git
 # installation; never run both on one host (the ports and the
 # collectors would collide).
@@ -45,6 +49,8 @@ x-aistack: &aistack
   environment:
     # The host directory behind /app/reports/generated, for Settings.
     AISTACK_DATA_DIR: ${AISTACK_DATA_DIR:-./data}
+    # The host directory behind /config, for what /setup says to edit.
+    AISTACK_CONFIG_HOST_DIR: ./config
   env_file:
     - path: .env.web
       required: false

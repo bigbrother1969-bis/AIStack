@@ -125,11 +125,24 @@ def disks_and_mounts(
     components: dict[str, Path],
     read: Callable[[], str] = read_proc_mounts,
     measure: Callable[[str], Usage] = _statvfs,
+    is_file: Callable[[str], bool] = os.path.isfile,
 ) -> list[MountRow]:
     """Every real mount, its size and free space, and which of
-    `components` (label → path) it holds."""
+    `components` (label → path) it holds.
 
-    mounts = parse_mounts(read())
+    **A single file bound in is not a mount to show** (1.9, the owner's
+    2026-10-04 screenshot): in the container, the NVIDIA runtime binds
+    its tools one file at a time — `/usr/bin/nvidia-debugdump`,
+    `nvidia-smi`, its libraries — and `/proc/self/mounts` lists each.
+    Nobody keeps anything on a file. A network share is never asked:
+    a share that does not answer would hang the page on that question,
+    and a share is always a directory."""
+
+    mounts = [
+        mount
+        for mount in parse_mounts(read())
+        if mount.network or not is_file(mount.point)
+    ]
     held: dict[str, list[str]] = {}
     for label, path in components.items():
         mount = holder(path.resolve(), mounts)

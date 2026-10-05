@@ -104,3 +104,37 @@ def test_no_message_is_left_empty():
     for code, messages in catalogs().items():
         for key, message in messages.items():
             assert message.strip(), f"{code}: {key} is empty"
+
+
+def test_no_message_names_a_version_of_aistack():
+    # The owner's rule, 2026-10-05: a page says what exists and what is
+    # missing, never "limited in 1.4" or "available in 1.x" — a number
+    # that the next release turns into a false statement.
+    import re
+
+    version = re.compile(r"(?<![\d.])(?:1\.\d{1,2}|2\.0)(?:\.\d+)?(?![\d.])")
+    found = [
+        f"{code}:{key}: {text}"
+        for code, messages in catalogs().items()
+        for key, text in messages.items()
+        if version.search(text)
+    ]
+    assert not found, "\n".join(found)
+
+
+def test_the_manual_names_no_version_of_aistack_either():
+    import re
+    from pathlib import Path
+
+    import aistack
+
+    version = re.compile(r"(?<![\d.])(?:1\.\d{1,2}|2\.0)(?:\.\d+)?(?![\d.])")
+    manuals = sorted((Path(aistack.__file__).parent / "manual").glob("manual.*.md"))
+    assert manuals
+    found = [
+        f"{path.name}:{number}: {line}"
+        for path in manuals
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if version.search(line)
+    ]
+    assert not found, "\n".join(found)

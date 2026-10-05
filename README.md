@@ -413,13 +413,13 @@ Knowledge Artifacts preserve governed knowledge.
 
 ## How to install
 
-AIStack runs **on the host it observes**, not in a container: it reads
-the Docker socket, the host's disks and its systemd units, and serves
-pages generated on that filesystem. The published Docker image
-(`bigbrother1969/aistack-core`) carries the same code but runs only the
-knowledge-integrity validator; an image that runs the web application is
-planned, not built. The installation below is the one the reference
-host (GIGABYTE) runs.
+AIStack runs **on the host it observes**: it reads the Docker socket,
+the host's disks and its containers, and serves pages generated on that
+host. It installs two ways: **with Docker** — the published image
+(`bigbrother1969/aistack-core`) runs the whole application, six services
+of one image, see *With Docker* below; the reference host (GIGABYTE) runs
+this way — or **from a git checkout**, with a Python virtual environment
+and systemd units, described first.
 
 ### Prerequisites
 

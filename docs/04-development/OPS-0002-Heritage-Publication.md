@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.17
+  version: 1.18
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-10-04
+  updated: 2026-10-05
 
 relations:
   references:
@@ -754,6 +754,27 @@ silently because nothing runs it twice.
 
 **No credential appears here.** The owner authenticates to the registry
 personally, as for every other step of this procedure.
+
+### Between two publications, the reference host runs `dev`
+
+**A local build never carries a published version's tag** (decided by the
+owner, 2026-10-05). `docker compose build` names the image it builds after
+`AISTACK_VERSION`; with `.env` still at the version last published, the
+2026-10-05 build of unreleased code was tagged `aistack-core:1.8.0` on
+GIGABYTE — a local image wearing the name of a published one whose digest
+it no longer had.
+
+So, on the reference host:
+
+- after a publication, `.env` goes back to `AISTACK_VERSION=dev`, and every
+  patch that changes code is deployed with
+  `docker compose build && docker compose up -d` — the image is
+  `aistack-core:dev`, never pushed;
+- at the next publication, the image is built and pushed by the commands
+  above, `.env` is set to that version, `docker compose up -d` runs it, and
+  `.env` returns to `dev` after the next code patch;
+- a local tag that a build overwrote is restored from the registry:
+  `docker pull bigbrother1969/aistack-core:<version>`.
 
 ### How a recipient checks an image
 

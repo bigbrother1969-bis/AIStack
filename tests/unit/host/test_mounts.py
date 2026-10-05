@@ -62,3 +62,24 @@ def test_the_name_service_files_docker_binds_are_not_mounts_to_show():
     text = "/dev/sda2 /etc/hosts ext4 rw 0 0\n/dev/sda2 /etc/resolv.conf ext4 rw 0 0\n/dev/sdb1 /media ext4 ro 0 0\n"
 
     assert [m.point for m in parse_mounts(text)] == ["/media"]
+
+
+def test_a_single_file_bound_into_the_container_is_not_shown():
+    # The NVIDIA runtime binds its tools one file at a time
+    # (the owner's 2026-10-04 screenshot showed nvidia-debugdump).
+    text = (
+        "/dev/sda2 / ext4 rw 0 0\n"
+        "/dev/sda2 /usr/bin/nvidia-debugdump ext4 ro,nosuid 0 0\n"
+        "/dev/sda2 /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.535 ext4 ro 0 0\n"
+        "nas:/music /mnt/music nfs4 rw 0 0\n"
+    )
+    asked: list[str] = []
+
+    def is_file(point: str) -> bool:
+        asked.append(point)
+        return point.startswith("/usr/")
+
+    rows = disks_and_mounts({}, read=lambda: text, measure=lambda point: Usage(1, 1), is_file=is_file)
+
+    assert [row.mount.point for row in rows] == ["/", "/mnt/music"]
+    assert "/mnt/music" not in asked

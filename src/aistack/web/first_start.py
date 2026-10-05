@@ -17,7 +17,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, Response
 
-from aistack.config import config_dir
+from aistack.config import config_dir, shown_config_dir
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
 from aistack.instance.first_start import (
@@ -94,7 +94,9 @@ def badge(request: Request) -> str:
 
 
 def _where(name: str) -> str:
-    directory = config_dir()
+    # Where the owner edits it: `./config/…` on the host, never the
+    # container's `/config/…` (1.9).
+    directory = shown_config_dir()
     return f"{directory}/{name}" if directory is not None else name
 
 

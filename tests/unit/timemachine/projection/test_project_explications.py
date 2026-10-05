@@ -210,3 +210,20 @@ def test_a_person_s_acts_revise_their_predecessor_and_a_validation_adds_a_second
         )
     }
     assert authors == {agent_iri("person:alice"), agent_iri("person:bob")}
+
+
+def test_versions_written_in_one_second_are_distinct_entities(tmp_path: Path, monkeypatch):
+    # 1.9: a bulk import used to merge them into one node.
+    monkeypatch.setattr(
+        "aistack.generators.history.wall_clock", lambda: datetime(2026, 10, 5, 9, 0, 0, tzinfo=UTC)
+    )
+    generated_dir = tmp_path / "reports" / "generated"
+    for text in ("one", "two", "three"):
+        record_explication(_artifact(content=text), output_dir=generated_dir / "explications")
+
+    store = OxigraphGraphStore(tmp_path / "graph")
+    summary = project_explications(store, generated_dir=generated_dir)
+
+    assert summary.explications_seen == 3
+    rows = list(store.query(f"SELECT ?s WHERE {{ ?s <{RDF_TYPE}> <{PROV_ENTITY}> }}"))
+    assert len(rows) == 3

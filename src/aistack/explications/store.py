@@ -63,7 +63,7 @@ from aistack.history.subject_names import stem_for_subject
 from aistack.contracts.artifact import KnowledgeArtifact
 from aistack.contracts.undeclared import UNDECLARED
 from aistack.generators.history import write_artifact_with_history
-from aistack.history import latest_observations
+from aistack.history import every_version
 
 # **Corrected before any real data ever existed at the old path** —
 # patch 0054 declared this as `reports/generated/history/explications`,
@@ -214,7 +214,8 @@ def read_explication_history(
     """
 
     history: list[KnowledgeArtifact] = []
-    for observation in latest_observations(output_dir, stem_for_subject(subject)):
+    # Every version, two written in the same second included (1.9).
+    for observation in every_version(output_dir, stem_for_subject(subject)):
         history.append(deserialize_explication(json.loads(observation.read())))
 
     return history

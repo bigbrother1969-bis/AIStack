@@ -72,3 +72,14 @@ def test_with_nothing_left_the_page_says_so(tmp_path: Path):
     text = client(tmp_path, []).get("/setup?lang=en").text
 
     assert "Everything needed to start is declared." in text
+
+
+def test_in_the_container_the_page_names_the_host_s_directory(tmp_path: Path, monkeypatch):
+    # 1.9: the owner edits ./config on the host, never the container's /config.
+    monkeypatch.setenv("AISTACK_CONFIG_DIR", str(tmp_path / "config"))
+    monkeypatch.setenv("AISTACK_CONFIG_HOST_DIR", "./config/")
+
+    text = client(tmp_path, EVERYTHING).get("/setup?lang=fr").text
+
+    assert "./config/instance_config.yml" in text
+    assert str(tmp_path / "config") + "/instance_config.yml" not in text

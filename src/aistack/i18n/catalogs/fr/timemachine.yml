@@ -65,7 +65,7 @@ nav:
 tree:
   heading: "Arbre du réseau"
   intro: "Réseau → Hôte → Stack → Conteneur, à partir des catalogues Docker/Compose en direct (ADR-0011 §18) — pas du graphe."
-  historique_notice: "L'historique par élément est encore limité en 1.4 : la plupart des conteneurs n'ont pas encore d'historique réel lié (collecte fine, 1.5)."
+  historique_notice: "Seuls les conteneurs suivis par les collecteurs Docker ont un historique ; les autres n'affichent que leur état actuel."
   search_placeholder: "Rechercher un nom…"
   search_button: "Rechercher"
   search_clear: "Réinitialiser"
@@ -92,7 +92,7 @@ ribbon:
   subject_filter_label: "Filtré sur :"
   view_in_tree: "Voir dans l'arbre"
   list_heading: "Liste complète (vue accessible)"
-  group_docker: "Collecteurs Docker (1.5)"
+  group_docker: "Collecteurs Docker"
   group_observation: "Historique d'observations"
   pagination_prev: "◀ Page précédente"
   pagination_next: "Page suivante ▶"

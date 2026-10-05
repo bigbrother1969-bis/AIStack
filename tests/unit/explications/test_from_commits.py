@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 from aistack.explications import read_explication_history
@@ -142,36 +142,16 @@ def test_two_commits_sharing_a_scope_in_one_run_both_survive(
     tmp_path: Path, monkeypatch
 ):
     """
-    The real hazard this module's own docstring names: two writes to
-    the same subject in the same wall-clock second would otherwise
-    collapse to one queryable instant
-    (`aistack.history.query.available_instants`). Both this module's
-    own pacing wait and `write_artifact_with_history`'s own stamp read
-    from the same clock, so both are frozen together and advanced
-    together by a mocked `time.sleep` — proving the pacing logic
-    itself, without a real wall-clock second's delay in the test
-    suite.
+    Two writes to the same subject in the same wall-clock second — the
+    clock is frozen, nothing waits — both read back (1.9: Explications
+    are read version by version, `aistack.history.every_version`).
     """
 
-    import aistack.explications.from_commits as from_commits_module
     import aistack.generators.history as history_module
 
-    class FrozenDatetime(history_module.datetime):
-        _instant = datetime(2026, 9, 27, 12, 0, 0, tzinfo=UTC)
-
-        @classmethod
-        def now(cls, tz=None):
-            return cls._instant
-
-    monkeypatch.setattr(history_module, "datetime", FrozenDatetime)
-    monkeypatch.setattr(from_commits_module, "datetime", FrozenDatetime)
-
-    def fake_sleep(_seconds: float) -> None:
-        FrozenDatetime._instant = FrozenDatetime._instant.replace(
-            microsecond=0
-        ) + timedelta(seconds=1)
-
-    monkeypatch.setattr(from_commits_module.time, "sleep", fake_sleep)
+    monkeypatch.setattr(
+        history_module, "wall_clock", lambda: datetime(2026, 9, 27, 12, 0, 0, tzinfo=UTC)
+    )
 
     repo = _make_repo(
         tmp_path,

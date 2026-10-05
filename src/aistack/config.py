@@ -21,12 +21,26 @@ import os
 from pathlib import Path
 
 CONFIG_DIR_ENV = "AISTACK_CONFIG_DIR"
+# The same directory as the host names it — `./config` beside
+# `docker-compose.yml` — for what a page tells the owner to edit: the
+# container's `/config` is not a path on the host (1.9).
+CONFIG_HOST_DIR_ENV = "AISTACK_CONFIG_HOST_DIR"
 PACKAGE_ROOT = Path(__file__).resolve().parent
 
 
 def config_dir() -> Path | None:
     value = os.environ.get(CONFIG_DIR_ENV, "").strip()
     return Path(value) if value else None
+
+
+def shown_config_dir() -> str | None:
+    """The configuration directory as the owner finds it on the host:
+    `AISTACK_CONFIG_HOST_DIR` when set, else the directory itself."""
+
+    directory = config_dir()
+    if directory is None:
+        return None
+    return os.environ.get(CONFIG_HOST_DIR_ENV, "").strip().rstrip("/") or str(directory)
 
 
 def configured(shipped: Path) -> Path:

@@ -175,3 +175,22 @@ def test_parse_instant_rejects_a_shape_it_did_not_write():
         assert False, "expected ValueError"
     except ValueError as exc:
         assert "2026-09-03T18-05-00Z" in str(exc)
+
+
+def test_every_version_keeps_the_writes_of_one_second_in_order(tmp_path):
+    from aistack.history import every_version, latest_observations
+
+    history = tmp_path / "history" / "subject"
+    history.mkdir(parents=True)
+    for name in ("2026-10-05T09-00-00Z-1.json", "2026-10-05T09-00-00Z.json", "2026-10-05T09-00-01Z.json", "note.txt"):
+        (history / name).write_text("{}", encoding="utf-8")
+
+    versions = every_version(tmp_path, "subject")
+
+    assert [version.label for version in versions] == [
+        "2026-10-05T09-00-00Z",
+        "2026-10-05T09-00-00Z-1",
+        "2026-10-05T09-00-01Z",
+    ]
+    # The snapshot reader keeps one per second, as before.
+    assert len(latest_observations(tmp_path, "subject")) == 2

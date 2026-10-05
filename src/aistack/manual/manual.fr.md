@@ -393,6 +393,39 @@ Chaque dossier de l'hôte que nomment tes déclarations (disques de
 sauvegarde, musique) s'ajoute à la fin des `volumes:` de `x-aistack`,
 au même chemin, en lecture seule.
 
+## Sauvegarder et restaurer AIStack
+
+AIStack se sauvegarde lui-même chaque nuit à 03:00, à chaud, sans rien
+arrêter : `scripts/backup_aistack.sh`, lancé par le minuteur systemd
+`aistack-backup.timer`. L'archive va dans `/media/BACKUP/AIStack/`
+(lisible par toi seul, gardée 30 jours) et contient les données (sauf le
+graphe de la Time Machine, qui se reconstruit), `./config` et les
+fichiers `.env`, secrets compris.
+
+Mise en place, une fois, sur le serveur (en root) :
+
+```
+install -d -o <utilisateur> -g <utilisateur> -m 700 /media/BACKUP/AIStack
+cp deploy/systemd/aistack-backup.service deploy/systemd/aistack-backup.timer /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now aistack-backup.timer
+```
+
+Le domaine Sauvegarde/PRA du Cockpit Santé signale une sauvegarde
+absente ou de plus de 2 jours.
+
+**Tester une restauration**, sans toucher à l'installation en service :
+
+```
+scripts/restore_aistack.sh /media/BACKUP/AIStack/aistack-<date>.tar.gz /tmp/aistack-restore
+```
+
+Le script restaure dans un dossier neuf, vérifie la base des sessions et
+les explications, puis affiche la commande qui reconstruit le graphe de la
+Time Machine à partir des fichiers restaurés, dans un conteneur jetable
+sans réseau. Si elle réussit, note la date et la durée dans
+`pra_tests.yml` (service `aistack`). Remettre une copie restaurée en
+service reste un geste manuel.
+
 ## En cas de problème
 
 - **« Invalid callback URL » chez le fournisseur** : l'adresse de retour de

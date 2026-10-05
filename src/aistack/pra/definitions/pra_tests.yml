@@ -221,3 +221,8 @@ services:
     last_test:
       status: success
       date: "2026-09-26"
+  # AIStack itself (1.9, 2026-10-05; roadmap R4): never restored for
+  # real yet — `null` until the owner runs scripts/restore_aistack.sh
+  # and rebuilds the graph from the restored files (OPS-0010).
+  - name: aistack
+    last_test: null

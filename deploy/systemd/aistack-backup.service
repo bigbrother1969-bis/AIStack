@@ -1,0 +1,31 @@
+# AIStack — its own nightly backup (OPS-0010, 1.9)
+#
+# Runs scripts/backup_aistack.sh as the account AIStack runs as: hot,
+# nothing is stopped. Started by aistack-backup.timer at 03:00; works the
+# same for a docker compose installation and a git one (the script reads
+# AISTACK_DATA_DIR from .env).
+#
+# Install (as root, on GIGABYTE), once:
+#
+#   install -d -o big-brother -g big-brother -m 700 /media/BACKUP/AIStack
+#   cp deploy/systemd/aistack-backup.service deploy/systemd/aistack-backup.timer /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-backup.timer
+#
+# First run by hand, to see it work:
+#
+#   systemctl start aistack-backup && journalctl -u aistack-backup -n 5
+
+[Unit]
+Description=AIStack backup (data, declarations, environment) to /media/BACKUP/AIStack
+After=local-fs.target
+RequiresMountsFor=/media/BACKUP
+
+[Service]
+Type=oneshot
+User=big-brother
+Group=big-brother
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/scripts/backup_aistack.sh
+Nice=10
+IOSchedulingClass=idle

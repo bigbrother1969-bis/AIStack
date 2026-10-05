@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Operations
   created: 2026-09-11
-  updated: 2026-09-11
+  updated: 2026-10-05
 
 relations:
   references:
@@ -61,9 +61,17 @@ old is it. There is no second kind here, and `BackupThreshold` carries no
 - **Threshold**: alert if no backup file is found at all, or if the newest
   one found is older than **7 jours** (7 days = 168 hours).
 
-This is the only backup location declared so far — the one mechanism
-already running and already observable, the owner's own choice for the v1
-scope of this domain (`OPS-0004` § *Fourth reference case*).
+This was the only backup location declared until 2026-10-05 — the one
+mechanism already running and already observable, the owner's own choice
+for the v1 scope of this domain (`OPS-0004` § *Fourth reference case*).
+
+### GIGABYTE — AIStack's own backup (2026-10-05)
+
+- **Path**: `/media/BACKUP/AIStack/`, written every night at 03:00 by
+  `scripts/backup_aistack.sh` (`OPS-0010` § *AIStack's own backup*).
+- **Threshold**: **2 jours** (48 hours) — one missed night is not yet a
+  finding, two are. Decided with the owner's choice of a nightly run,
+  2026-10-05.
 
 ### Out of scope for this version
 

@@ -1,0 +1,13 @@
+# AIStack — every night at 03:00, after the Nextcloud (02:20) and
+# Immich (02:40) database dumps (OPS-0010, 1.9). See
+# aistack-backup.service for the install.
+
+[Unit]
+Description=AIStack nightly backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

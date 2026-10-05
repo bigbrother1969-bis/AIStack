@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Draft
   owner: Operations
   created: 2026-09-30
-  updated: 2026-09-30
+  updated: 2026-10-05
 
 relations:
   references:
@@ -87,6 +87,8 @@ Twelve, all on the "stock déjà réel" scope: `wordpress`, `arrstack`,
 history where one exists — is in `backup_strategy.yml`'s own header
 comment, not duplicated here.
 
+Since 2026-10-05, a thirteenth: **`aistack`**, AIStack itself (below).
+
 Three real, confirmed gaps: `nextcloud`, `immich` (mechanism mentioned in
 passing but never grounded to a script), `gigabyte` (the host's own
 system-level state, distinct from the app-level backups that run on it —
@@ -105,6 +107,37 @@ reason).
 
 Both are a named absence this register records (`FDN-0003` Article 12),
 not a silent one.
+
+## AIStack's own backup
+
+Decided by the owner, 2026-10-05 (1.9; roadmap `R4`, `ADR-0011` § 11):
+AIStack's history — its explications above all, "the information that
+will be worth the most" — was in no verified backup.
+
+- **Mechanism**: `scripts/backup_aistack.sh`, run by
+  `deploy/systemd/aistack-backup.timer` every night at **03:00**, as the
+  account AIStack runs as, on the host — after the Nextcloud and Immich
+  dumps (02:20, 02:40).
+- **Hot**: nothing is stopped. The histories are append-only, so a file
+  written during the run is in this archive or the next. The session
+  database is copied by SQLite's own backup API (`dump_sql`); everything
+  else is archived as it stands (`live_file_backup`).
+- **What**: the data directory (`AISTACK_DATA_DIR` from `.env`, else
+  `reports/generated`) except the Time Machine graph, which
+  `timemachine_rebuild` rebuilds from the files; `./config`; and `.env`,
+  `.env.web`, `.env.resource-priority` — **the secrets are included**, the
+  owner's choice: the archive is mode 600 in a directory mode 700.
+- **Where and how long**: `/media/BACKUP/AIStack/aistack-<UTC>.tar.gz`,
+  **30 days** kept, the same as the Nextcloud and Immich dumps. Its
+  freshness is `OPS-0006`'s (2 days).
+- **Restore**: `scripts/restore_aistack.sh <archive> <new directory>` —
+  never over the live installation. It puts the session database back,
+  checks it (`PRAGMA integrity_check`) and every Explication (valid
+  JSON), and prints the command that rebuilds the Time Machine graph from
+  the restored files in a throwaway container with no network. A restore
+  test is that rebuild succeeding, timed; recorded by the owner in
+  `pra_tests.yml` (`aistack`, `null` until then). Putting a restored copy
+  in production stays the owner's act.
 
 ## What this register does not do
 

@@ -22,3 +22,8 @@ hosts:
     thresholds:
       - path: /media/BACKUP/persiaut-consulting/wordpress/
         max_age_days: 7
+      # AIStack's own nightly backup (scripts/backup_aistack.sh,
+      # 03:00; 1.9, decided by the owner 2026-10-05): two days, so one
+      # missed night is not yet a finding and two are.
+      - path: /media/BACKUP/AIStack/
+        max_age_days: 2

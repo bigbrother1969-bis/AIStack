@@ -53,7 +53,7 @@ rather than accepted the same day — the rule adopted 2026-08-21 (ADR-0010
 | § 8 — the four import sources | done — 1.3 (§§ 14–17) |
 | § 9 — collection gaps | done — 1.5 |
 | § 10 — full rebuild on demand | done — 1.3 (`aistack.cli.timemachine_rebuild`) |
-| § 11 — retention, budget, AIStack's own PRA | not done — compaction and the disk budget are reserved; AIStack's own PRA coverage is part of 1.9 (decided by the owner, 2026-10-05) |
+| § 11 — retention, budget, AIStack's own PRA | not done — compaction and the disk budget are reserved; AIStack's own backup runs since 2026-10-05 (`OPS-0010` § *AIStack's own backup*), its first real restore test is the owner's to run |
 | § 12 — SQLite FTS5 over Explications | not done — the Explications view filters by text; no FTS5 index exists |
 | § 13 — the GUI, read-only, LAN-only | done — 1.3 as a mini-app; superseded in its form by the single web application (`ADR-0012`, 2026-10-03), still LAN-only and signed-in (`ADR-0014`); the human acts of `ADR-0015` are its only writes |
 | §§ 14–17 — Explications from `explain`, `pra_tests.yml`, `claude/` notes, commits | done — 1.3 |

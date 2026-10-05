@@ -176,8 +176,10 @@ def test_the_real_backup_strategy_definition_loads():
         "uptime-kuma",
         "vaultwarden",
         "vikunja",
+        "aistack",
     }
 
+    assert by_service["aistack"].engines == (DUMP_SQL, LIVE_FILE_BACKUP)
     assert by_service["wordpress"].engines == (DUMP_SQL,)
     assert by_service["arrstack"].engines == (STOP_AND_ARCHIVE,)
     assert by_service["changedetection"].engines == (LIVE_FILE_BACKUP,)

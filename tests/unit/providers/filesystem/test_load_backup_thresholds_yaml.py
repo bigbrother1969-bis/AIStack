@@ -160,10 +160,13 @@ def test_the_real_backup_thresholds_definition_loads():
 
     gigabyte = register.for_host("GIGABYTE")
 
-    assert len(gigabyte) == 1
-    wordpress = gigabyte[0]
+    assert len(gigabyte) == 2
+    wordpress, own_backup = gigabyte
     assert wordpress.path == "/media/BACKUP/persiaut-consulting/wordpress/"
     assert wordpress.max_age_hours == 7 * 24
+    # AIStack's own nightly backup (1.9): two days.
+    assert own_backup.path == "/media/BACKUP/AIStack/"
+    assert own_backup.max_age_hours == 2 * 24
 
     # Case-sensitive on purpose, the same reason
     # `test_the_real_storage_thresholds_definition_loads` asserts it.

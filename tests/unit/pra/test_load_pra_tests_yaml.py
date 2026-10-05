@@ -211,7 +211,10 @@ def test_the_real_pra_tests_definition_loads():
         "uptime-kuma",
         "vaultwarden",
         "vikunja",
+        "aistack",
     }
+    # AIStack itself (1.9): never restored for real yet.
+    assert by_service["aistack"].status is None
 
     # The owner's own real restore-test history, found 2026-09-23 in
     # the legacy `homelab_documentation` engine's own

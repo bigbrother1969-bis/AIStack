@@ -189,3 +189,17 @@ services:
       (dump_sql), snapshot restic de /srv/vikunja/files
       (live_file_backup) ; /srv/vikunja/db lui-même n'est jamais
       capturé directement
+  # AIStack itself (1.9, decided by the owner 2026-10-05; roadmap R4,
+  # ADR-0011 § 11): its data, its declarations and its environment.
+  - name: aistack
+    host: GIGABYTE
+    has_state: true
+    engines: [dump_sql, live_file_backup]
+    mechanism: >-
+      scripts/backup_aistack.sh, lancé par aistack-backup.timer
+      (quotidien, 03:00) — copie cohérente de la base des sessions par
+      l'API de sauvegarde de SQLite (dump_sql), archive à chaud des
+      historiques, explications, pages générées, de ./config et des
+      fichiers .env (live_file_backup), dans /media/BACKUP/AIStack,
+      droits 600, rétention 30 jours ; le graphe de la Time Machine
+      n'est pas sauvegardé, il se reconstruit (timemachine_rebuild)

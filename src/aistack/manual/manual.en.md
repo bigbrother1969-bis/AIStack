@@ -375,6 +375,39 @@ Every host directory your declarations name (backup disks, music) is
 added at the end of `x-aistack`'s `volumes:`, at the same path,
 read-only.
 
+## Backing up and restoring AIStack
+
+AIStack backs itself up every night at 03:00, hot, stopping nothing:
+`scripts/backup_aistack.sh`, run by the systemd timer
+`aistack-backup.timer`. The archive goes to `/media/BACKUP/AIStack/`
+(readable by you only, kept 30 days) and holds the data (except the Time
+Machine graph, which is rebuilt), `./config` and the `.env` files,
+secrets included.
+
+Setting it up, once, on the server (as root):
+
+```
+install -d -o <user> -g <user> -m 700 /media/BACKUP/AIStack
+cp deploy/systemd/aistack-backup.service deploy/systemd/aistack-backup.timer /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now aistack-backup.timer
+```
+
+The Health cockpit's Backup/DR domain reports a missing backup, or one
+older than 2 days.
+
+**Testing a restore**, without touching the installation in service:
+
+```
+scripts/restore_aistack.sh /media/BACKUP/AIStack/aistack-<date>.tar.gz /tmp/aistack-restore
+```
+
+The script restores into a new directory, checks the session database and
+the explications, then prints the command that rebuilds the Time Machine
+graph from the restored files, in a throwaway container with no network.
+If it succeeds, record the date and the duration in `pra_tests.yml`
+(service `aistack`). Putting a restored copy back in service stays a
+manual act.
+
 ## Troubleshooting
 
 - **"Invalid callback URL" at the provider**: the callback of the address

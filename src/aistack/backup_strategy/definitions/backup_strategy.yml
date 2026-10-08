@@ -126,6 +126,9 @@ services:
   # /media/Films/Mangas, /media/Documents, /media/Multimedia,
   # /media/Comics/Comics, /media/freebox) names neither. One copy, no
   # backup: stated as such until a real copy exists elsewhere.
+  # Owner, 2026-10-08: no disk is available for a copy of this size —
+  # the risk is known and kept, to be fixed later; the finding stays on
+  # the Health page until then.
   - name: nextcloud-files
     host: GIGABYTE
     has_state: true
@@ -152,6 +155,8 @@ services:
   # /media/BACKUP/immich (mounted at /data in immich_server) — the
   # backup disk itself, outside Deja Dup's include-list. Only the
   # external library (/media/Multimedia/Photos) is really copied.
+  # Owner, 2026-10-08: no disk available yet — known risk, kept, to be
+  # fixed later (same as nextcloud-files).
   - name: immich-uploads
     host: GIGABYTE
     has_state: true

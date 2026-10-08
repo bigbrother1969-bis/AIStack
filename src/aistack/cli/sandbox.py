@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from aistack.sandbox.declaration import SandboxDeclaration, load_sandbox_declaration
@@ -54,12 +55,13 @@ def restore(
     generated_dir: Path,
     runner: Runner = docker_runner,
     host: Runner = host_runner,
+    progress: Callable[[str], None] = lambda line: None,
 ) -> tuple[SandboxRun, Path]:
     recipe = declaration.recipes.get(service)
     if recipe is None:
         known = ", ".join(sorted(declaration.recipes)) or "none"
         raise SystemExit(f"No sandbox recipe for `{service}` (known: {known}).")
-    run = SandboxRun(service, declaration.run_root, runner, host)
+    run = SandboxRun(service, declaration.run_root, runner, host, progress=progress)
     try:
         RECIPES[recipe.kind](run, recipe, expansion=declaration.expansion, margin_gib=declaration.margin_gib)
     except StepFailed as error:
@@ -107,7 +109,10 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
         print("\n".join(done) if done else "Nothing left by a sandbox run.")
         return 0
 
-    run, report = restore(args.service, declaration, data_dir(root or Path.cwd()), runner)
+    run, report = restore(
+        args.service, declaration, data_dir(root or Path.cwd()), runner,
+        progress=lambda line: print(line, flush=True),
+    )
     print(summary(run))
     print(f"\nRapport : {report}")
     return 0 if run.succeeded else 1

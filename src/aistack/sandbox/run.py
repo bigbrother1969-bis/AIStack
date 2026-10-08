@@ -91,6 +91,10 @@ class SandboxRun:
     run_root: Path
     runner: Runner = docker_runner
     host: Runner = host_runner
+    # Where each step is announced as it starts (the command prints it;
+    # a long step — a big dump, a photo from Deja Dup — is then visibly
+    # at work, not stuck).
+    progress: Callable[[str], None] = field(default=lambda line: None)
     clock: Callable[[], float] = field(default=lambda: time.monotonic())
     started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     steps: list[Step] = field(default_factory=list)
@@ -146,8 +150,12 @@ class SandboxRun:
     @contextmanager
     def step(self, name: str) -> Iterator[None]:
         started = self.clock()
+        self.progress(f"  … {name}")
         try:
             yield
+        except KeyboardInterrupt:
+            self.steps.append(Step(name, round(self.clock() - started, 1), False, "interrupted"))
+            raise
         except StepFailed as error:
             self.steps.append(Step(name, round(self.clock() - started, 1), False, self.hide(str(error))))
             raise

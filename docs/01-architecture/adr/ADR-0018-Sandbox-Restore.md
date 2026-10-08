@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -132,8 +132,10 @@ owner has read the report and copied it.
   copies them. `backup_strategy.yml` states it (`nextcloud-files`,
   `immich-uploads`, no engine); the recipes restore the databases,
   check the files that are really backed up (Immich's external
-  library, from Deja Dup) and say what is not. Where to copy those
-  files is the owner's decision.
+  library, from Deja Dup) and say what is not. The owner, the same
+  day: no disk is available for a copy of this size; the risk is known,
+  kept and to be fixed later — the two uncovered-state findings stay
+  on the Health page until then.
 
 - Where the run directory lives on hosts other than the reference
   host: declared per instance, not decided here.

@@ -16,6 +16,7 @@ says so.
 from __future__ import annotations
 
 import hashlib
+import os
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -57,7 +58,8 @@ def _restore_one(run: SandboxRun, sample: FileSample, relative: str, target: Pat
     """Take one file back from the duplicity backup; '' when it worked,
     else why not."""
 
-    common = ["--no-encryption", "--archive-dir", str(run.directory / "duplicity-cache")]
+    cache = os.path.expanduser(sample.archive_dir) if sample.archive_dir else str(run.directory / "duplicity-cache")
+    common = ["--no-encryption", "--archive-dir", cache]
     source = f"file://{sample.duplicity_target}"
     result = run.host(
         ["duplicity", "restore", *common, "--path-to-restore", relative, source, str(target)], 1800
@@ -145,6 +147,7 @@ def restore_immich(
                 host_path = sample.host_prefix.rstrip("/") + "/" + original[len(sample.live_prefix):].lstrip("/")
                 relative = host_path.lstrip("/")
                 target = run.directory / "sample" / f"{index}-{Path(original).name}"
+                run.progress(f"    photo {index + 1}/{len(rows)} : {Path(original).name}")
                 problem = _restore_one(run, sample, relative, target)
                 if problem:
                     details.append(f"{Path(original).name}: {problem}")

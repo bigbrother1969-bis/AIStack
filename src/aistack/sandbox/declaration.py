@@ -40,6 +40,10 @@ class FileSample:
     duplicity_target: Path
     count: int = 3
     older_than_days: int = 8
+    # duplicity's local cache of the backup's signatures and manifests.
+    # Deja Dup's own keeps duplicity from rebuilding it from the whole
+    # chain at every run; empty means a fresh one inside the run.
+    archive_dir: str = ""
 
 
 @dataclass(frozen=True)
@@ -103,6 +107,7 @@ def load_sandbox_declaration(path: Path | None = None) -> SandboxDeclaration:
                 duplicity_target=Path(str(_required(sample, "duplicity_target", f"{where} file_sample"))),
                 count=int(sample.get("count", 3)),
                 older_than_days=int(sample.get("older_than_days", 8)),
+                archive_dir=str(sample.get("archive_dir") or ""),
             )
         recipes[str(name)] = SandboxRecipe(
             name=str(name),

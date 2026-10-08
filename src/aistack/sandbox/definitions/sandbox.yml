@@ -81,6 +81,10 @@ recipes:
       duplicity_target: /media/BACKUP/GIGABYTE_DAILY
       count: 3
       older_than_days: 8
+      # Deja Dup's own duplicity cache: without it, duplicity first
+      # rebuilds the signatures of the whole chain (the first run,
+      # 2026-10-08, was interrupted there).
+      archive_dir: ~/.cache/deja-dup
     not_backed_up: >-
       les photos téléversées (UPLOAD_LOCATION=/media/BACKUP/immich) n'ont
       pas de sauvegarde : elles sont sur le disque de sauvegarde

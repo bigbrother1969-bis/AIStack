@@ -177,3 +177,33 @@ def test_the_shipped_declaration_knows_nextcloud_and_immich():
     assert recipes["immich"].file_sample is not None
     assert recipes["immich"].file_sample.host_prefix == "/media/Multimedia/Photos/"
     assert recipes["immich"].not_backed_up
+
+
+def test_deja_dups_own_cache_is_used_when_declared(tmp_path: Path):
+    declaration = _immich(tmp_path)
+    recipe = declaration.recipes["immich"]
+    assert recipe.file_sample is not None
+    sample = FileSample(**{**recipe.file_sample.__dict__, "archive_dir": "~/.cache/deja-dup"})
+    from dataclasses import replace
+    declaration.recipes["immich"] = replace(recipe, file_sample=sample)
+    host = FakeHost()
+
+    _restore("immich", declaration, tmp_path, FakeDocker(), host)
+
+    cache = host.calls[0][host.calls[0].index("--archive-dir") + 1]
+    assert cache.endswith("/.cache/deja-dup") and not cache.startswith("~")
+
+
+def test_each_step_is_announced_and_an_interruption_names_its_step(tmp_path: Path):
+    lines: list[str] = []
+
+    class Interrupting(FakeHost):
+        def __call__(self, args: Sequence[str], timeout: float) -> CommandResult:
+            raise KeyboardInterrupt
+
+    run, _ = cli.restore("immich", _immich(tmp_path), tmp_path / "data", FakeDocker(), Interrupting(), lines.append)
+
+    assert "  … load database" in lines and "  … file sample" in lines
+    assert run.failure == "interrupted"
+    assert [(s.name, s.detail) for s in run.steps if not s.ok] == [("file sample", "interrupted")]
+    assert not run.directory.exists()

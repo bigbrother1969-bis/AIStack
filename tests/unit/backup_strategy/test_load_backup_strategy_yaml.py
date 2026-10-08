@@ -167,7 +167,9 @@ def test_the_real_backup_strategy_definition_loads():
         "wordpress",
         "arrstack",
         "nextcloud",
+        "nextcloud-files",
         "immich",
+        "immich-uploads",
         "gigabyte",
         "changedetection",
         "homepage",
@@ -189,12 +191,19 @@ def test_the_real_backup_strategy_definition_loads():
     # grounded — systemd timers (dump_sql) + Deja Dup (live_file_backup,
     # owner-stated) for nextcloud/immich, Clonezilla (stop_and_archive,
     # owner-stated) for the gigabyte host itself.
-    assert by_service["nextcloud"].engines == (DUMP_SQL, LIVE_FILE_BACKUP)
+    #
+    # Corrected 2026-10-08 (1.9 sandbox cadrage): Nextcloud's files and
+    # Immich's uploads live on the backup disk itself and Deja Dup does
+    # not copy them — two stateful parts no engine covers, stated as
+    # such. Only Immich's external library is really copied.
+    assert by_service["nextcloud"].engines == (DUMP_SQL,)
     assert by_service["immich"].engines == (DUMP_SQL, LIVE_FILE_BACKUP)
     assert by_service["gigabyte"].engines == (STOP_AND_ARCHIVE,)
     assert by_service["nextcloud"].covered is True
     assert by_service["immich"].covered is True
     assert by_service["gigabyte"].covered is True
+    assert by_service["nextcloud-files"].covered is False
+    assert by_service["immich-uploads"].covered is False
 
     for declaration in declarations:
         assert declaration.has_state is True

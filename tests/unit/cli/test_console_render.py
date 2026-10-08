@@ -450,13 +450,13 @@ services:
   - name: nextcloud
     host: GIGABYTE
     has_state: true
-    engines: []
-    mechanism: null
+    engines: [dump_sql]
+    mechanism: a nightly dump
   - name: wordpress
     host: GIGABYTE
     has_state: true
-    engines: []
-    mechanism: null
+    engines: [dump_sql]
+    mechanism: a nightly dump
 """,
         encoding="utf-8",
     )

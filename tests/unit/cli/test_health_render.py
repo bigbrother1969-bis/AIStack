@@ -590,13 +590,13 @@ services:
   - name: nextcloud
     host: GIGABYTE
     has_state: true
-    engines: []
-    mechanism: null
+    engines: [dump_sql]
+    mechanism: a nightly dump
   - name: wordpress
     host: GIGABYTE
     has_state: true
-    engines: []
-    mechanism: null
+    engines: [dump_sql]
+    mechanism: a nightly dump
 """,
         encoding="utf-8",
     )
@@ -1298,3 +1298,33 @@ def test_a_container_running_between_two_crashes_is_still_a_restart_loop(monkeyp
 
     assert [finding.subject for finding in domain.findings] == ["arrstack/mularr"]
     assert "restarted 6 times" in domain.findings[0].interpretation
+
+
+def test_a_state_no_engine_covers_is_not_also_asked_for_a_restore_test(monkeypatch, tmp_path):
+    """Nothing to restore: the uncovered-state finding names it once
+    (2026-10-08, nextcloud-files / immich-uploads)."""
+
+    fresh_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    pra_path = tmp_path / "pra_tests.yml"
+    pra_path.write_text(pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8")
+    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    backup_path = tmp_path / "backup_strategy.yml"
+    backup_path.write_text(
+        """
+services:
+  - name: nextcloud
+    host: GIGABYTE
+    has_state: true
+    engines: [dump_sql]
+    mechanism: a nightly dump
+  - name: nextcloud-files
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: null
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+
+    assert cli.pra_tests_domain().findings == ()

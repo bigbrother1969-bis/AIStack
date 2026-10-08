@@ -110,14 +110,31 @@ services:
   - name: nextcloud
     host: GIGABYTE
     has_state: true
-    engines: [dump_sql, live_file_backup]
+    engines: [dump_sql]
     mechanism: >-
       backup-nextcloud-db.timer (quotidien, 02:20) →
       /usr/local/sbin/backup_nextcloud_db.sh — docker exec nc_db
       mariadb-dump --single-transaction --quick --databases nextcloud,
       gzippé dans /media/BACKUP/SQL_BACKUPS/nextcloud, rétention 30
-      jours (dump_sql) ; fichiers (uploads) couverts par Deja Dup,
-      déclaré par le owner (live_file_backup)
+      jours (dump_sql) ; les fichiers, voir nextcloud-files
+  # Corrected 2026-10-08 (1.9, sandbox cadrage, owner's decision): the
+  # files were declared covered by Deja Dup on 2026-10-02. Measured on
+  # GIGABYTE that day: nc_app mounts /media/BACKUP/nextcloud/data
+  # (/var/www/html) and /media/BACKUP/nextcloud/data_directory (the
+  # user data) — on the backup disk itself, the Raspberry's NFS share —
+  # and Deja Dup's include-list (/media/BD/BD, /media/BD/Books,
+  # /media/Films/Mangas, /media/Documents, /media/Multimedia,
+  # /media/Comics/Comics, /media/freebox) names neither. One copy, no
+  # backup: stated as such until a real copy exists elsewhere.
+  - name: nextcloud-files
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: >-
+      aucun — /media/BACKUP/nextcloud/data et
+      /media/BACKUP/nextcloud/data_directory sont sur le disque de
+      sauvegarde lui-même (partage NFS du Raspberry) et Deja Dup ne
+      les copie pas : une seule copie
   - name: immich
     host: GIGABYTE
     has_state: true
@@ -127,8 +144,22 @@ services:
       /usr/local/sbin/backup_immich_db.sh — docker exec immich_postgres
       pg_dump -U postgres -d immich, gzippé dans
       /media/BACKUP/SQL_BACKUPS/immich, rétention 30 jours (dump_sql) ;
-      fichiers (bibliothèque photo) couverts par Deja Dup, déclaré par
-      le owner (live_file_backup)
+      bibliothèque externe /media/Multimedia/Photos (montée en
+      /external/photos) copiée par Deja Dup dans
+      /media/BACKUP/GIGABYTE_DAILY, non chiffrée (live_file_backup) ;
+      les photos téléversées, voir immich-uploads
+  # Corrected 2026-10-08, same measurement: UPLOAD_LOCATION is
+  # /media/BACKUP/immich (mounted at /data in immich_server) — the
+  # backup disk itself, outside Deja Dup's include-list. Only the
+  # external library (/media/Multimedia/Photos) is really copied.
+  - name: immich-uploads
+    host: GIGABYTE
+    has_state: true
+    engines: []
+    mechanism: >-
+      aucun — UPLOAD_LOCATION=/media/BACKUP/immich est sur le disque de
+      sauvegarde lui-même (partage NFS du Raspberry) et Deja Dup ne le
+      copie pas : une seule copie
   - name: gigabyte
     host: GIGABYTE
     has_state: true

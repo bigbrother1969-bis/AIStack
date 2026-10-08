@@ -273,7 +273,9 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         declarations = load_backup_strategy_yaml(DEFAULT_BACKUP_STRATEGY)
-        stateful_services = [d.service for d in declarations if d.has_state]
+        # A state no engine covers has nothing to restore-test: the
+        # uncovered-state finding already names it (2026-10-08).
+        stateful_services = [d.service for d in declarations if d.has_state and d.covered]
         declared_services = [reading.service for reading in readings]
         observed_at = readings[0].observed_at if readings else None
 

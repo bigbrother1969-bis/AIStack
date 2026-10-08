@@ -415,9 +415,15 @@ If it succeeds, record the date and the duration in `pra_tests.yml`
 (service `aistack`). Putting a restored copy back in service stays a
 manual act.
 
+Simpler: `python -m aistack.cli.sandbox restore aistack` does all of this
+in a sandbox (next section), also starts the application on the restored
+data and measures the recovery time. The environment files (secrets) are
+restored and counted, never given to the sandbox: sign-in is not
+available there, the console is what is checked.
+
 ## Testing a service's restore in a sandbox
 
-For the services that have a recipe (WordPress to begin with), a command
+For the services that have a recipe (WordPress and AIStack itself), a command
 on the host restores the latest backup beside the running service, never
 in its place:
 

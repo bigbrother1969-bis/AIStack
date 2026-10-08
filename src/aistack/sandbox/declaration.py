@@ -18,7 +18,13 @@ from aistack.config import configured
 
 SHIPPED = Path(__file__).resolve().parent / "definitions" / "sandbox.yml"
 
-KINDS = ("wordpress_mariadb",)
+KINDS = ("wordpress_mariadb", "aistack_archive")
+
+# What each kind needs beyond `backup_dir` and `files_archive`.
+_NEEDS = {
+    "wordpress_mariadb": ("database_dump", "live_database_container", "live_web_container"),
+    "aistack_archive": ("live_web_container",),
+}
 
 
 @dataclass(frozen=True)
@@ -26,10 +32,10 @@ class SandboxRecipe:
     name: str
     kind: str
     backup_dir: Path
-    database_dump: str
     files_archive: str
-    live_database_container: str
     live_web_container: str
+    database_dump: str = ""
+    live_database_container: str = ""
     database_timeout_seconds: float = 900
     web_timeout_seconds: float = 180
 
@@ -63,14 +69,16 @@ def load_sandbox_declaration(path: Path | None = None) -> SandboxDeclaration:
         kind = _required(raw, "kind", where)
         if kind not in KINDS:
             raise ValueError(f"{where}: unknown kind `{kind}` (known: {', '.join(KINDS)})")
+        for key in _NEEDS[str(kind)]:
+            _required(raw, key, where)
         recipes[str(name)] = SandboxRecipe(
             name=str(name),
             kind=str(kind),
             backup_dir=Path(str(_required(raw, "backup_dir", where))),
-            database_dump=str(_required(raw, "database_dump", where)),
             files_archive=str(_required(raw, "files_archive", where)),
-            live_database_container=str(_required(raw, "live_database_container", where)),
             live_web_container=str(_required(raw, "live_web_container", where)),
+            database_dump=str(raw.get("database_dump") or ""),
+            live_database_container=str(raw.get("live_database_container") or ""),
             database_timeout_seconds=float(raw.get("database_timeout_seconds", 900)),
             web_timeout_seconds=float(raw.get("web_timeout_seconds", 180)),
         )

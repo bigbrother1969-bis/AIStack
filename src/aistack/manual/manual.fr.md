@@ -433,9 +433,16 @@ sans réseau. Si elle réussit, note la date et la durée dans
 `pra_tests.yml` (service `aistack`). Remettre une copie restaurée en
 service reste un geste manuel.
 
+Plus simple : `python -m aistack.cli.sandbox restore aistack` fait tout
+cela en bac à sable (section suivante), démarre en plus l'application sur
+les données restaurées et mesure le temps de reprise. Les fichiers
+d'environnement (secrets) sont restaurés et comptés, jamais donnés au bac
+à sable : la connexion n'y est pas disponible, la console est ce qui est
+vérifié.
+
 ## Tester la restauration d'un service en bac à sable
 
-Pour les services qui ont une recette (WordPress pour commencer), une
+Pour les services qui ont une recette (WordPress et AIStack lui-même), une
 commande sur l'hôte restaure la dernière sauvegarde à côté du service en
 service, jamais à sa place :
 

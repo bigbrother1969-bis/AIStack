@@ -20,7 +20,10 @@ from pathlib import Path
 
 from aistack.sandbox.declaration import SandboxDeclaration, load_sandbox_declaration
 from aistack.sandbox.run import Runner, SandboxRun, StepFailed, cleanup, docker_runner
+from aistack.sandbox.aistack_archive import restore_aistack
 from aistack.sandbox.wordpress import restore_wordpress
+
+RECIPES = {"wordpress_mariadb": restore_wordpress, "aistack_archive": restore_aistack}
 
 
 def data_dir(root: Path) -> Path:
@@ -50,7 +53,7 @@ def restore(
         raise SystemExit(f"No sandbox recipe for `{service}` (known: {known}).")
     run = SandboxRun(service, declaration.run_root, runner)
     try:
-        restore_wordpress(run, recipe, expansion=declaration.expansion, margin_gib=declaration.margin_gib)
+        RECIPES[recipe.kind](run, recipe, expansion=declaration.expansion, margin_gib=declaration.margin_gib)
     except StepFailed as error:
         run.failure = str(error)
     except KeyboardInterrupt:

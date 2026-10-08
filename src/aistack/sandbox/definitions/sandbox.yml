@@ -34,3 +34,15 @@ recipes:
     live_web_container: wp_app
     database_timeout_seconds: 900
     web_timeout_seconds: 180
+
+  # `scripts/backup_aistack.sh`, nightly at 03:00 (aistack-backup.timer):
+  # data, declarations, environment files and the session database in
+  # one archive, 30 days kept. Restored with the image the live web
+  # container runs; the environment files (secrets) are restored and
+  # counted, never given to the sandbox's containers.
+  aistack:
+    kind: aistack_archive
+    backup_dir: /media/BACKUP/AIStack/
+    files_archive: "aistack-*.tar.gz"
+    live_web_container: aistack-web
+    web_timeout_seconds: 180

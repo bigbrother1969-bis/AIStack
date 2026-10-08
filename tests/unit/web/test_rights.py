@@ -43,6 +43,8 @@ ANYONE = {
     "/login",
     "/auth/callback",
     "/login/local",
+    # Docker's healthcheck (1.10): "ok", nothing else, LAN listener only.
+    "/healthz",
 }
 # Sign-in itself, whose own checks (CSRF, password) answer for it.
 SIGN_IN_ACTIONS = {"/logout", "/login/local"}

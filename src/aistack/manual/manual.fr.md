@@ -400,6 +400,12 @@ Chaque dossier de l'hôte que nomment tes déclarations (disques de
 sauvegarde, musique) s'ajoute à la fin des `volumes:` de `x-aistack`,
 au même chemin, en lecture seule.
 
+Le service `web` a un contrôle de santé : `docker ps` le montre
+`healthy` quand l'application répond sur le port du réseau local. Un
+tableau de bord qui lit Docker (Homepage, par exemple) affiche alors
+« healthy » sur sa tuile, à condition qu'elle nomme le conteneur
+`aistack-web` (dans Homepage : `server:` et `container: aistack-web`).
+
 ## Sauvegarder et restaurer AIStack
 
 AIStack se sauvegarde lui-même chaque nuit à 03:00, à chaud, sans rien

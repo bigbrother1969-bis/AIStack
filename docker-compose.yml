@@ -79,6 +79,14 @@ services:
     <<: *aistack
     container_name: aistack-web
     command: ["web"]
+    # `healthy` in `docker ps` and in dashboards reading Docker
+    # (Homepage): /healthz on the local-network port answers `ok`.
+    healthcheck:
+      test: ["CMD", "python", "-m", "aistack.cli.healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   events:
     <<: *aistack

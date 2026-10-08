@@ -458,6 +458,12 @@ Every host directory your declarations name (backup disks, music) is
 added at the end of `x-aistack`'s `volumes:`, at the same path,
 read-only.
 
+The `web` service has a healthcheck: `docker ps` shows it `healthy`
+when the application answers on the local-network port. A dashboard
+reading Docker (Homepage, for example) then shows "healthy" on its
+tile, as long as the tile names the container `aistack-web` (in
+Homepage: `server:` and `container: aistack-web`).
+
 ## Backing up and restoring AIStack
 
 AIStack backs itself up every night at 03:00, hot, stopping nothing:

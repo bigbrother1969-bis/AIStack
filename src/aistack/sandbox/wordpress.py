@@ -19,6 +19,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from aistack.sandbox.declaration import SandboxRecipe
+from aistack.sandbox.compare import MARIADB, compare, compare_files, compare_tables, live_mount_source
 from aistack.sandbox.run import SandboxRun, StepFailed
 
 DATABASE = "wordpress"
@@ -223,3 +224,12 @@ def restore_wordpress(
     )
     if run.succeeded:
         run.restore_finished = run.clock()
+    compare(run, [
+        ("base", lambda: compare_tables(
+            run, engine=MARIADB, sandbox_container=run.name("db"), sandbox_database=DATABASE,
+            live_container=recipe.live_database_container,
+        )),
+        ("wp-content", lambda: compare_files(
+            content, live_mount_source(run, recipe.live_web_container, "/var/www/html/wp-content"),
+        )),
+    ])

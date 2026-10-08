@@ -199,6 +199,14 @@ control: the scan tries them unattended.
 The scan itself runs from the server:
 `python -m aistack.cli.network_docker_discover`.
 
+To compare the restored backup with the running service, add
+`--compare`: `python -m aistack.cli.sandbox restore wordpress --compare`.
+The report shows, with no verdict, the rows per table and the files per
+folder on the backup side and the live side, the biggest gaps first. A
+backup from last night is always a little behind: you judge the gap. The
+live side is only read (files on the host, counts in the container's
+database with its own environment).
+
 ## Going back to the image before an upgrade
 
 When a service misbehaves after its image was upgraded (by Watchtower,

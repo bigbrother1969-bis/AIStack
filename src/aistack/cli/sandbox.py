@@ -3,6 +3,8 @@
 
     python -m aistack.cli.sandbox recipes            the services it knows
     python -m aistack.cli.sandbox restore wordpress  restore, check, time, remove
+    python -m aistack.cli.sandbox restore wordpress --compare
+                                                     … and compare with the live service
     python -m aistack.cli.sandbox cleanup            what an interrupted run left
     python -m aistack.cli.sandbox rollback wordpress [--container wp_app]
                                                      rehearse going back to the image
@@ -23,6 +25,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+from aistack.sandbox.compare import summary_lines
 from aistack.sandbox.declaration import SandboxDeclaration, load_sandbox_declaration
 from aistack.sandbox.run import Runner, SandboxRun, StepFailed, cleanup, docker_runner, host_runner
 from aistack.sandbox.aistack_archive import restore_aistack
@@ -63,12 +66,14 @@ def restore(
     progress: Callable[[str], None] = lambda line: None,
     rollback: bool = False,
     only: str = "",
+    compare_live: bool = False,
 ) -> tuple[SandboxRun, Path]:
     recipe = declaration.recipes.get(service)
     if recipe is None:
         known = ", ".join(sorted(declaration.recipes)) or "none"
         raise SystemExit(f"No sandbox recipe for `{service}` (known: {known}).")
     run = SandboxRun(service, declaration.run_root, runner, host, progress=progress)
+    run.compare = compare_live
     try:
         if rollback:
             run.rehearsal = True
@@ -95,6 +100,9 @@ def summary(run: SandboxRun) -> str:
         lines.append(f"  [{mark}] {check.name}: {check.observed}")
     if run.recovery_seconds is not None:
         lines.append(f"  temps de reprise mesuré : {run.recovery_seconds:g} s")
+    if run.facts.get("comparison"):
+        lines.append("")
+        lines.extend(summary_lines(run.facts["comparison"]))
     lines.append("")
     if run.rehearsal:
         for previous in run.previous_images:
@@ -119,6 +127,7 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
     sub.add_parser("recipes")
     one = sub.add_parser("restore")
     one.add_argument("service")
+    one.add_argument("--compare", action="store_true", help="also compare the restored backup with the live service")
     sub.add_parser("cleanup")
     back = sub.add_parser("rollback")
     back.add_argument("service")
@@ -139,6 +148,7 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
         args.service, declaration, data_dir(root or Path.cwd()), runner,
         progress=lambda line: print(line, flush=True),
         rollback=args.command == "rollback", only=getattr(args, "container", ""),
+        compare_live=getattr(args, "compare", False),
     )
     print(summary(run))
     print(f"\nRapport : {report}")

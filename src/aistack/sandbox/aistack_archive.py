@@ -24,6 +24,7 @@ import time
 from collections.abc import Callable
 
 from aistack.sandbox.declaration import SandboxRecipe
+from aistack.sandbox.compare import compare, compare_files, live_mount_source
 from aistack.sandbox.run import SandboxRun, StepFailed
 from aistack.sandbox.wordpress import newest
 
@@ -181,3 +182,8 @@ def restore_aistack(
     run.check("signed-in pages guarded", health in ("302", "303", "307"), f"HTTP {health or 'none'}", required=False)
     if run.succeeded:
         run.restore_finished = run.clock()
+    compare(run, [
+        ("données", lambda: compare_files(
+            data, live_mount_source(run, recipe.live_web_container, "/app/reports/generated"),
+        )),
+    ])

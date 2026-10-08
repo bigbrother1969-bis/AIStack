@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -64,8 +64,9 @@ published on the host. Its containers have their own names
 inside the sandbox network.
 
 A sandbox never writes to a live container, a live volume or a live
-database. It reads the live containers only to know which image they
-run (by digest) — the restore uses the same image as the live service.
+database. It reads the live containers to know which image they run
+(by digest) — the restore uses the same image as the live service —
+and, when a comparison is asked (§ 7), to count rows and files.
 
 The sandbox gets its own throwaway credentials, generated for the run
 and never written to a report. It never reads the live service's
@@ -121,6 +122,22 @@ other containers of the recipe (GIGABYTE, 2026-10-08: WordPress's
 previous MariaDB image had been removed). A pulled image stays on the host: it is the one the
 real rollback needs.
 
+### 7. Comparing the sandbox with the live service
+
+Decided by the owner, 2026-10-08. On demand (`--compare`), before the
+sandbox is removed, the restored backup is set next to the live service
+as numbers: rows per table, files and bytes per first-level folder,
+biggest gaps first, tables found on one side only. No verdict and no
+check: a backup taken last night is always a little behind, the report
+shows by how much and the owner judges. It never changes the measured
+time to recovery.
+
+The live side is read only: files are walked on the host; a database is
+asked `SELECT COUNT(*)` from inside its own live container, with that
+container's own environment — its password stays there, never on a
+command line AIStack builds, never in a report. A part that cannot be
+compared is said so; the others still are.
+
 ## Implementation state
 
 | Part | State |
@@ -133,7 +150,7 @@ real rollback needs.
 | § 4 Nextcloud, Immich recipes | done — first real runs on GIGABYTE 2026-10-08, success (84.8 s, 262.8 s), recorded in `pra_tests.yml` |
 | § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
 | Rollback before an upgrade, by digest | done — `python -m aistack.cli.sandbox rollback <service>`: rehearsal in the sandbox with the earlier image, pin printed; first real run 2026-10-08: the earlier MariaDB image was gone, said so |
-| Diff between the sandbox and the live service | to do |
+| Diff between the sandbox and the live service | done — `restore <service> --compare` (§ 7); first real run by the owner to come |
 
 ## Consequences
 

@@ -106,6 +106,9 @@ class SandboxRun:
     # Set for a rollback rehearsal from its start, even if it stops
     # before any earlier image is found.
     rehearsal: bool = False
+    # Compare the restored backup with the live service before teardown
+    # (`ADR-0018` § 7).
+    compare: bool = False
     # The earlier images found for a rollback rehearsal
     # (`aistack.sandbox.rollback.PreviousImage`), for the summary.
     previous_images: list[Any] = field(default_factory=list)

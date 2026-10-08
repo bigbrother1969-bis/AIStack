@@ -24,6 +24,7 @@ from aistack.sandbox.databases import (
     wait_until_loaded,
 )
 from aistack.sandbox.declaration import SandboxRecipe
+from aistack.sandbox.compare import MARIADB, compare, compare_tables
 from aistack.sandbox.run import SandboxRun, StepFailed
 from aistack.sandbox.wordpress import newest
 
@@ -89,3 +90,9 @@ def restore_nextcloud(
     )
     if run.succeeded:
         run.restore_finished = run.clock()
+    compare(run, [
+        ("base", lambda: compare_tables(
+            run, engine=MARIADB, sandbox_container=run.name("db"), sandbox_database=DATABASE,
+            live_container=recipe.live_database_container,
+        )),
+    ])

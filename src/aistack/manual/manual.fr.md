@@ -472,6 +472,14 @@ sauvegarde ne contient est dit dans le rapport. Si une exécution a été
 interrompue, `python -m aistack.cli.sandbox cleanup` retire ce qu'elle a
 laissé.
 
+Pour comparer la sauvegarde restaurée avec le service en marche, ajoute
+`--compare` : `python -m aistack.cli.sandbox restore wordpress --compare`.
+Le rapport montre, sans verdict, les lignes par table et les fichiers par
+dossier côté sauvegarde et côté vivant, les plus gros écarts d'abord. Une
+sauvegarde de la nuit a toujours un peu de retard : c'est à toi de juger
+l'écart. Le côté vivant est seulement lu (fichiers sur l'hôte, comptages
+dans la base du conteneur avec ses propres variables).
+
 ## Revenir à l'image d'avant une mise à jour
 
 Quand un service va mal après une mise à jour de son image (Watchtower,

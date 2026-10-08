@@ -29,6 +29,7 @@ from aistack.sandbox.databases import (
     wait_until_loaded,
 )
 from aistack.sandbox.declaration import FileSample, SandboxRecipe
+from aistack.sandbox.compare import POSTGRES, compare, compare_tables
 from aistack.sandbox.run import SandboxRun, StepFailed
 from aistack.sandbox.wordpress import newest
 
@@ -200,3 +201,9 @@ def restore_immich(
     )
     if run.succeeded:
         run.restore_finished = run.clock()
+    compare(run, [
+        ("base", lambda: compare_tables(
+            run, engine=POSTGRES, sandbox_container=run.name("db"), sandbox_database=DATABASE,
+            live_container=recipe.live_database_container,
+        )),
+    ])

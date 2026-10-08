@@ -225,3 +225,17 @@ def test_a_run_has_its_own_names(tmp_path: Path):
     run = SandboxRun("wordpress", tmp_path)
     assert run.network.startswith("aistack-sandbox-wordpress-")
     assert run.name("db") == f"{run.network}-db"
+
+
+def test_a_comparison_never_changes_the_verdict_or_the_recovery_time(tmp_path: Path):
+    plain, _ = cli.restore("wordpress", _declaration(tmp_path, _backups(tmp_path)), tmp_path / "data", FakeDocker())
+    other = tmp_path / "other"
+    other.mkdir()
+    compared, _ = cli.restore(
+        "wordpress", _declaration(other, _backups(other)), other / "data", FakeDocker(), compare_live=True
+    )
+
+    assert compared.succeeded and plain.succeeded
+    assert compared.recovery_seconds == plain.recovery_seconds
+    assert set(compared.facts["comparison"]) == {"base", "wp-content"}
+    assert [s.name for s in compared.steps][-2:] == ["compare with live", "teardown"]

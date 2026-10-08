@@ -85,3 +85,17 @@ def test_the_report_lists_states_uses_and_amendments(tmp_path: Path, monkeypatch
     assert "! 2026-10-20T03:00:00+02:00  scripts/old.sh  par cron" in text
     assert "à amender à l'effacement : README.md" in text
     assert text.endswith("2 élément(s) : 1 utilisé(s), 0 prêt(s) à effacer")
+
+
+def test_every_state_reads_the_same_in_the_english_catalog_and_has_a_french_one():
+    from aistack.i18n import translator_for
+    from aistack.i18n.findings import finding_interpretation, finding_remediation
+
+    found = statuses((MODULE, SCRIPT), (USE,), date(2026, 10, 21)) + statuses((MODULE,), (), date(2026, 11, 16))
+    findings = evaluate_quarantine(found)
+    assert {status.state for status in found} == {WATCHED, USED, READY}
+    english, french = translator_for("en"), translator_for("fr")
+    for finding in findings:
+        assert finding_interpretation(finding, english) == finding.interpretation
+        assert finding_remediation(finding, english) == finding.remediation
+        assert finding_interpretation(finding, french) != finding.interpretation

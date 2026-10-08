@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from aistack.contracts.finding_message import FindingMessage, part
 from aistack.contracts.quarantine_reading import READY, USED, QuarantineReading
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.quarantine.status import EntryStatus
@@ -48,7 +49,16 @@ def evaluate_quarantine(found: Sequence[EntryStatus]) -> tuple[RuntimeFinding, .
 
 def _finding(reading: QuarantineReading) -> RuntimeFinding:
     what = ", ".join(reading.paths)
+    values = {
+        "entry": reading.entry,
+        "paths": what,
+        "since": str(reading.since),
+        "review": str(reading.review_after),
+        "uses": str(reading.uses),
+        "last": reading.last_use,
+    }
     if reading.state == USED:
+        key = "used"
         interpretation = (
             f"{reading.entry} ({what}) is in quarantine since {reading.since} "
             f"but was used {reading.uses} time(s), last on {reading.last_use}: "
@@ -59,6 +69,7 @@ def _finding(reading: QuarantineReading) -> RuntimeFinding:
             f"and remove its tripwires: the code is still used."
         )
     elif reading.state == READY:
+        key = "ready"
         interpretation = (
             f"{reading.entry} ({what}) has been in quarantine since "
             f"{reading.since} and was never used before its review date, "
@@ -69,6 +80,7 @@ def _finding(reading: QuarantineReading) -> RuntimeFinding:
             f"lists, then remove the entry."
         )
     else:
+        key = "watched"
         interpretation = (
             f"{reading.entry} ({what}) is dead code in quarantine since "
             f"{reading.since}; no use recorded so far."
@@ -84,4 +96,10 @@ def _finding(reading: QuarantineReading) -> RuntimeFinding:
         grounding=f"{SIGNATURE}/{reading.entry}",
         evidence=(CitedReading(provider=QUARANTINE_SOURCE, reading=reading),),
         qualifications=QUARANTINE_QUALIFICATIONS,
+        # The same sentences as catalog keys (ADR-0010 § 4): the action
+        # plan shows them in its reader's language.
+        message=FindingMessage(
+            interpretation=(part(f"findings.quarantine.{key}.interpretation", **values),),
+            remediation=(part(f"findings.quarantine.{key}.remediation", **values),),
+        ),
     )

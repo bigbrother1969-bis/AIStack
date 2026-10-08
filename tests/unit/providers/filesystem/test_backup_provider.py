@@ -136,3 +136,27 @@ def test_a_path_that_cannot_be_read_is_a_reading_of_its_own(monkeypatch: pytest.
 
     assert reading.unreachable == "No such device"
     assert reading.newest_file_mtime is None
+
+
+def test_a_path_that_does_not_answer_is_reported_not_waited_on(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    """An NFS share mounted `hard` whose server is down blocks every stat."""
+
+    import threading
+
+    stuck = tmp_path / "BACKUP"
+    released = threading.Event()
+    real_exists = Path.exists
+
+    def exists(self: Path, *args: object, **kwargs: object) -> bool:
+        if self == stuck:
+            released.wait(5)
+        return real_exists(self)
+
+    monkeypatch.setattr(Path, "exists", exists)
+    started = time.monotonic()
+
+    (reading,) = BackupProvider(timeout=0.2).collect_freshness((str(stuck),))
+
+    released.set()
+    assert time.monotonic() - started < 2
+    assert reading.unreachable == "no answer within 0.2 s"

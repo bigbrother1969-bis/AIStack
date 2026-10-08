@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -36,6 +37,9 @@ class BackupProvider:
     provider_id = "aistack.provider.backup"
     provider_name = "Backup Provider"
 
+    def __init__(self, timeout: float = 10.0) -> None:
+        self.timeout = timeout
+
     def collect_freshness(
         self, paths: tuple[str, ...]
     ) -> tuple[BackupReading, ...]:
@@ -65,17 +69,32 @@ class BackupProvider:
             # ("No such device", GIGABYTE 2026-10-08) — is a reading of
             # its own: never skipped as if absent, never a crash of the
             # whole render.
-            try:
-                if not directory.exists():
-                    continue
-                newest = _newest_mtime(directory)
-            except OSError as error:
+            #
+            # And never a wait without end: the reference host's backup
+            # disk is an NFS share of the Raspberry, mounted `hard` — if
+            # the Raspberry is down, a stat blocks until it is back, and
+            # the console is rendered at every start of the web
+            # application. Past `self.timeout` seconds, the path is
+            # reported as not answering.
+            outcome = _scan_within(directory, self.timeout)
+            if isinstance(outcome, OSError):
+                present, newest = True, None
+                problem = outcome.strerror or type(outcome).__name__
+            elif outcome is None:
+                present, newest = True, None
+                problem = f"no answer within {self.timeout:g} s"
+            else:
+                present, newest = outcome
+                problem = ""
+            if not present:
+                continue
+            if problem:
                 readings.append(
                     BackupReading(
                         path=raw_path,
                         observed_at=datetime.now(timezone.utc),
                         newest_file_mtime=None,
-                        unreachable=error.strerror or type(error).__name__,
+                        unreachable=problem,
                     )
                 )
                 continue
@@ -93,6 +112,33 @@ class BackupProvider:
             )
 
         return tuple(readings)
+
+
+def _scan_within(directory: Path, timeout: float) -> tuple[bool, float | None] | OSError | None:
+    """`_scan`'s result, the OSError it raised, or None when it did not
+    answer in time. A daemon thread: one blocked on a dead NFS server
+    never keeps the process from exiting."""
+
+    box: list[tuple[bool, float | None] | OSError] = []
+
+    def run() -> None:
+        try:
+            box.append(_scan(directory))
+        except OSError as error:
+            box.append(error)
+
+    worker = threading.Thread(target=run, name="aistack-backup-scan", daemon=True)
+    worker.start()
+    worker.join(timeout)
+    return box[0] if box else None
+
+
+def _scan(directory: Path) -> tuple[bool, float | None]:
+    """Whether `directory` exists, and its newest file's mtime."""
+
+    if not directory.exists():
+        return False, None
+    return True, _newest_mtime(directory)
 
 
 def _newest_mtime(directory: Path) -> float | None:

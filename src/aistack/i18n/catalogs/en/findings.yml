@@ -93,3 +93,14 @@ consumption:
     remediation: "Check cooling and airflow before further unclassified consumption adds to the heat {sensor} is already reporting."
   hot_others:
     interpretation: "The host also read {celsius}°C on {sensor} and {others} other sensor(s), at or above its own declared threshold — a physical consequence correlated with the same consumption ({qualification})."
+
+quarantine:
+  used:
+    interpretation: "{entry} ({paths}) is in quarantine since {since} but was used {uses} time(s), last on {last}: it is not dead code."
+    remediation: "Take {entry} out of src/aistack/quarantine/register.yml and remove its tripwires: the code is still used."
+  ready:
+    interpretation: "{entry} ({paths}) has been in quarantine since {since} and was never used before its review date, {review}."
+    remediation: "Delete {entry}'s files with the amendments the register lists, then remove the entry."
+  watched:
+    interpretation: "{entry} ({paths}) is dead code in quarantine since {since}; no use recorded so far."
+    remediation: "Nothing before {review}, its review date."

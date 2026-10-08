@@ -94,6 +94,7 @@ ribbon:
   list_heading: "Liste complète (vue accessible)"
   group_docker: "Collecteurs Docker"
   group_observation: "Historique d'observations"
+  group_hosts: "Hôtes"
   pagination_prev: "◀ Page précédente"
   pagination_next: "Page suivante ▶"
   pagination_summary: "Page {page} sur {total_pages} ({total} événements)"

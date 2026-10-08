@@ -122,6 +122,9 @@ RIBBON_PALETTE: tuple[dict[str, str], ...] = (
 # The flat list's page size (owner's cadrage, 2026-09-30: "50-100 par page").
 RIBBON_PAGE_SIZE = 100
 
+# The hosts' streams (1.11, `ADR-0020`): `host-<name>`, one per host.
+HOST_STEM_PREFIX = "host-"
+
 # The ribbon's two real categories (`ADR-0011` § 26): the four 1.5
 # Docker collectors, each with its own projector, and every other stream.
 DOCKER_COLLECTOR_STREAMS: frozenset[str] = frozenset(
@@ -534,22 +537,27 @@ def _mark(entry: Entry, badge: dict[str, str], href: str) -> RibbonMark:
     )
 
 
-def ribbon_svgs(marks: list[RibbonMark], lane_streams: list[str]) -> tuple[RibbonSvg, RibbonSvg]:
-    """The Docker-collector ribbon and the observation ribbon, each with
-    its own time axis (`ADR-0011` § 26)."""
+def ribbon_group(stream: str) -> str:
+    """`docker`, `hosts` or `observation` — the ribbon's three groups."""
 
-    def docker(stream: str) -> bool:
-        return stream in DOCKER_COLLECTOR_STREAMS
+    if stream in DOCKER_COLLECTOR_STREAMS:
+        return "docker"
+    if stream.startswith(HOST_STEM_PREFIX):
+        return "hosts"
+    return "observation"
 
-    return (
+
+def ribbon_svgs(marks: list[RibbonMark], lane_streams: list[str]) -> tuple[RibbonSvg, RibbonSvg, RibbonSvg]:
+    """The Docker-collector ribbon, the hosts' ribbon (1.11, `ADR-0020`)
+    and the observation ribbon, each with its own time axis
+    (`ADR-0011` § 26)."""
+
+    return tuple(  # type: ignore[return-value]
         render_ribbon_svg(
-            tuple(m for m in marks if docker(m.stream)),
-            tuple(s for s in lane_streams if docker(s)),
-        ),
-        render_ribbon_svg(
-            tuple(m for m in marks if not docker(m.stream)),
-            tuple(s for s in lane_streams if not docker(s)),
-        ),
+            tuple(m for m in marks if ribbon_group(m.stream) == group),
+            tuple(s for s in lane_streams if ribbon_group(s) == group),
+        )
+        for group in ("docker", "hosts", "observation")
     )
 
 
@@ -593,7 +601,7 @@ def ribbon_page(
         marks.append(_mark(entry, badge, href))
 
     lane_streams = sorted({m.stream for m in marks}) if subject else all_streams
-    docker_svg, observation_svg = ribbon_svgs(marks, lane_streams)
+    docker_svg, hosts_svg, observation_svg = ribbon_svgs(marks, lane_streams)
 
     total_pages = max(1, -(-len(filtered) // RIBBON_PAGE_SIZE))
     current_page = min(page, total_pages)
@@ -603,6 +611,8 @@ def ribbon_page(
         "entries": filtered[start : start + RIBBON_PAGE_SIZE],
         "ribbon_svg_docker": docker_svg.markup,
         "ribbon_svg_docker_mark_count": docker_svg.mark_count,
+        "ribbon_svg_hosts": hosts_svg.markup,
+        "ribbon_svg_hosts_mark_count": hosts_svg.mark_count,
         "ribbon_svg_observation": observation_svg.markup,
         "ribbon_svg_observation_mark_count": observation_svg.mark_count,
         "filter_streams": [
@@ -632,7 +642,7 @@ def node_ribbon_panel(entries: list[Entry], subject: str | None, node_href: Node
         for entry in entries
         if _about(entry, subject)
     ]
-    docker_svg, observation_svg = ribbon_svgs(marks, sorted({m.stream for m in marks}))
+    docker_svg, hosts_svg, observation_svg = ribbon_svgs(marks, sorted({m.stream for m in marks}))
 
     return {
         "has_subject": True,
@@ -640,6 +650,8 @@ def node_ribbon_panel(entries: list[Entry], subject: str | None, node_href: Node
         "has_marks": bool(marks),
         "ribbon_svg_docker": docker_svg.markup,
         "ribbon_svg_docker_mark_count": docker_svg.mark_count,
+        "ribbon_svg_hosts": hosts_svg.markup,
+        "ribbon_svg_hosts_mark_count": hosts_svg.mark_count,
         "ribbon_svg_observation": observation_svg.markup,
         "ribbon_svg_observation_mark_count": observation_svg.mark_count,
     }

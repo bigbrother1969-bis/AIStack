@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -117,7 +117,7 @@ dated by the event.
 | Part | State |
 |---|---|
 | § 2–5 the collector, its units, its key, its output | done — `aistack/host_collector.py` (standard library only), `deploy/host-collector/` (service, timer, configuration example) |
-| § 7 reading the records, the graph, the Time Machine | to do |
+| § 7 reading the records, the graph, the Time Machine | done — `hosts.yml`, `aistack.hosts.records`, `project_host_changes` (stream `host-<name>`, one entity per event), the ribbon's *Hosts* group, `python -m aistack.cli.hosts` |
 
 ## Consequences
 

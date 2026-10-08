@@ -604,6 +604,22 @@ qui change tout seul) s'écrit dans `/etc/aistack-host-collector.conf`
 (`ignore = <chemin>`), comme ce qui doit l'être en plus
 (`watch = <dossier>`, `glob = <motif>`).
 
+Pour voir où en est chaque hôte — dernier passage, événements par
+sorte, hôte silencieux (plus de passage depuis une heure) ou illisible
+(disque du Raspberry non monté) :
+
+```
+python -m aistack.cli.hosts
+python -m aistack.cli.hosts --last 10
+```
+
+Après la reconstruction du graphe
+(`docker compose exec web python -m aistack.cli.timemachine_rebuild`),
+le ruban de la Time Machine a un groupe **Hôtes** : une ligne par hôte,
+un repère par événement ; le nœud d'un événement dit ce qui a changé
+(versions, état d'une unité, ligne de commande apt, ce qui a changé d'un
+fichier : taille, droits, propriétaire, contenu).
+
 ## En cas de problème
 
 - **« Invalid callback URL » chez le fournisseur** : l'adresse de retour de

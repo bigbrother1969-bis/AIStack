@@ -37,6 +37,10 @@ from aistack.timemachine.projection.dock_changes import (
     DockChangeProjectionSummary,
     project_dock_changes,
 )
+from aistack.timemachine.projection.host_changes import (
+    HostChangesProjectionSummary,
+    project_host_changes,
+)
 from aistack.timemachine.projection.explications import (
     ExplicationProjectionSummary,
     project_explications,
@@ -244,6 +248,7 @@ __all__ = [
     "DockerEventsProjectionSummary",
     "DockerPackagesProjectionSummary",
     "ExplicationProjectionSummary",
+    "HostChangesProjectionSummary",
     "ProjectionSummary",
     "UpgradeCorrelationProjectionSummary",
     "project_collection_gaps",
@@ -253,6 +258,7 @@ __all__ = [
     "project_docker_events",
     "project_docker_packages",
     "project_explications",
+    "project_host_changes",
     "project_observation_history",
     "project_upgrade_correlation",
 ]

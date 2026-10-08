@@ -193,3 +193,13 @@ AISTACK_UPGRADE_CORRELATES_WITH = f"{AISTACK}upgradeCorrelatesWith"
 # changed to. Identifiers, plain `Literal`s, like `imageDigest`.
 AISTACK_CHANGE_OUTCOME = f"{AISTACK}changeOutcome"
 AISTACK_PREVIOUS_DIGEST = f"{AISTACK}previousDigest"
+
+# What changes on the hosts (1.11, `ADR-0020`): one entity per event a
+# host collector recorded. `hostEventKind` is the collector's own kind
+# (`package`, `apt`, `file`, `unit`, `baseline`); `hostAction` what
+# happened (`upgrade`, `modified`, `enabled`…); `hostDetail` the
+# versions, states or command line — never a file's fingerprint or
+# content.
+AISTACK_HOST_EVENT_KIND = f"{AISTACK}hostEventKind"
+AISTACK_HOST_ACTION = f"{AISTACK}hostAction"
+AISTACK_HOST_DETAIL = f"{AISTACK}hostDetail"

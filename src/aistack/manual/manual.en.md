@@ -578,6 +578,22 @@ changes on its own) goes into `/etc/aistack-host-collector.conf`
 (`ignore = <path>`), as does what should be followed as well
 (`watch = <directory>`, `glob = <pattern>`).
 
+To see where each host stands — last run, events by kind, a silent host
+(no run for an hour) or an unreadable one (the Raspberry's disk not
+mounted):
+
+```
+python -m aistack.cli.hosts
+python -m aistack.cli.hosts --last 10
+```
+
+Once the graph is rebuilt
+(`docker compose exec web python -m aistack.cli.timemachine_rebuild`),
+the Time Machine's ribbon has a **Hosts** group: one lane per host, one
+mark per event; an event's node says what changed (versions, a unit's
+state, an apt command line, what changed of a file: size, mode, owner,
+content).
+
 ## Troubleshooting
 
 - **"Invalid callback URL" at the provider**: the callback of the address

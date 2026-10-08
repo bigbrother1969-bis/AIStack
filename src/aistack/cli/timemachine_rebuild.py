@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from aistack.hosts.records import load_hosts_declaration, read_all
 from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 from aistack.timemachine.projection import (
     DEFAULT_GENERATED_DIR,
@@ -13,6 +14,7 @@ from aistack.timemachine.projection import (
     project_docker_events,
     project_docker_packages,
     project_explications,
+    project_host_changes,
     project_observation_history,
     project_upgrade_correlation,
 )
@@ -106,6 +108,10 @@ def main() -> None:
     people, the images it changed and the explication of its why —
     after `project_explications`, whose nodes it links to.
 
+    **`project_host_changes` runs tenth** (1.11, `ADR-0020` § 7): what
+    the host collectors recorded, one stream per host declared in
+    `hosts.yml`; a host whose records cannot be read is named.
+
     **The leaf directory, created here, not assumed.** `pyoxigraph
     .Store`'s own documented behaviour creates the directory its
     `path` names if it is missing — measured, 2026-09-27, to create
@@ -132,6 +138,8 @@ def main() -> None:
     upgrade_correlation_summary = project_upgrade_correlation(store, generated_dir=generated_dir)
     collection_gaps_summary = project_collection_gaps(store, generated_dir=generated_dir)
     dock_changes_summary = project_dock_changes(store, generated_dir=generated_dir)
+    host_records = read_all(load_hosts_declaration(generated_dir))
+    host_changes_summary = project_host_changes(store, host_records)
 
     print("Time Machine Projection")
     print(f"- Source: {generated_dir}")
@@ -154,13 +162,18 @@ def main() -> None:
     print(f"- Collection-gap streams seen: {collection_gaps_summary.streams_seen}")
     print(f"- Collection gaps seen: {collection_gaps_summary.gaps_seen}")
     print(f"- Governed changes seen: {dock_changes_summary.changes_seen}")
+    print(f"- Hosts seen: {host_changes_summary.hosts_seen} ({host_changes_summary.hosts_unreadable} unreadable)")
+    print(f"- Host events seen: {host_changes_summary.events_seen}")
+    for records in host_records:
+        if records.problem:
+            print(f"  ! {records.host}: {records.problem}")
     print(
         "- Facts written: "
-        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + upgrade_correlation_summary.facts_written + collection_gaps_summary.facts_written + dock_changes_summary.facts_written}"
+        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + upgrade_correlation_summary.facts_written + collection_gaps_summary.facts_written + dock_changes_summary.facts_written + host_changes_summary.facts_written}"
     )
     print(
         "- Facts dropped: "
-        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + upgrade_correlation_summary.facts_dropped + collection_gaps_summary.facts_dropped + dock_changes_summary.facts_dropped}"
+        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + upgrade_correlation_summary.facts_dropped + collection_gaps_summary.facts_dropped + dock_changes_summary.facts_dropped + host_changes_summary.facts_dropped}"
     )
 
 

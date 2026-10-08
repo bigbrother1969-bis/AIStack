@@ -99,6 +99,15 @@
         </summary>
         <div class="ribbon-graphic">{{ ribbon_svg_docker | safe }}</div>
       </details>
+      {% if ribbon_svg_hosts_mark_count %}
+      <details class="ribbon-group" open>
+        <summary title="{{ t('timemachine.tooltip.group_fold') }}">
+          {{ t('timemachine.ribbon.group_hosts') }}
+          <span class="ribbon-group-count">{{ ribbon_svg_hosts_mark_count }}</span>
+        </summary>
+        <div class="ribbon-graphic">{{ ribbon_svg_hosts | safe }}</div>
+      </details>
+      {% endif %}
       <details class="ribbon-group" open>
         <summary title="{{ t('timemachine.tooltip.group_fold') }}">
           {{ t('timemachine.ribbon.group_observation') }}

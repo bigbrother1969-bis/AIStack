@@ -34,6 +34,7 @@ _DOCKER_DIFF_PREFIX = "urn:aistack:docker-diff:"
 _DOCKER_DIGEST_PREFIX = "urn:aistack:docker-digest:"
 _DOCKER_PACKAGES_PREFIX = "urn:aistack:docker-packages:"
 _DOCK_CHANGE_PREFIX = "urn:aistack:dock-change:"
+_HOST_EVENT_PREFIX = "urn:aistack:host-event:"
 
 
 def stream_iri(stem: str) -> str:
@@ -190,6 +191,17 @@ def dock_change_iri(proposal_id: str, container: str = "") -> str:
     return f"{_DOCK_CHANGE_PREFIX}{proposal_id}" + (f":{container}" if container else "")
 
 
+def host_event_iri(host: str, line: int) -> str:
+    """
+    The IRI of one event a host collector recorded (1.11, `ADR-0020`):
+    keyed by the host and the event's line in its `events.jsonl`,
+    which is only ever appended to — the same line is the same event at
+    every rebuild.
+    """
+
+    return f"{_HOST_EVENT_PREFIX}{host}:{line}"
+
+
 _ALL_PREFIXES = (
     _STREAM_PREFIX,
     _OBSERVATION_PREFIX,
@@ -203,6 +215,7 @@ _ALL_PREFIXES = (
     _DOCKER_DIGEST_PREFIX,
     _DOCKER_PACKAGES_PREFIX,
     _DOCK_CHANGE_PREFIX,
+    _HOST_EVENT_PREFIX,
 )
 
 

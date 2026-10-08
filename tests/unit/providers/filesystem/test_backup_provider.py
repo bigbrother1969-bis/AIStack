@@ -113,3 +113,26 @@ def test_several_paths_are_read_in_one_call(tmp_path: Path):
     assert len(by_path) == 2
     assert by_path[str(a)].newest_file_mtime is not None
     assert by_path[str(b)].newest_file_mtime is None
+
+
+def test_a_path_that_cannot_be_read_is_a_reading_of_its_own(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    """GIGABYTE, 2026-10-08: inside the container, a disk mounted on demand
+    answers "No such device" while unmounted — the whole health render
+    crashed on it. It is now a reading saying so."""
+
+    import errno
+
+    unreachable = tmp_path / "BACKUP"
+    real_exists = Path.exists
+
+    def exists(self: Path, *args: object, **kwargs: object) -> bool:
+        if self == unreachable:
+            raise OSError(errno.ENODEV, "No such device", str(self))
+        return real_exists(self)
+
+    monkeypatch.setattr(Path, "exists", exists)
+
+    (reading,) = BackupProvider().collect_freshness((str(unreachable),))
+
+    assert reading.unreachable == "No such device"
+    assert reading.newest_file_mtime is None

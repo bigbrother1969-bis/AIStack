@@ -60,22 +60,25 @@ class BackupProvider:
         for raw_path in paths:
             directory = Path(raw_path)
 
-            if not directory.exists():
+            # A path that exists but cannot be read — a disk mounted on
+            # demand, seen from a container while it is unmounted
+            # ("No such device", GIGABYTE 2026-10-08) — is a reading of
+            # its own: never skipped as if absent, never a crash of the
+            # whole render.
+            try:
+                if not directory.exists():
+                    continue
+                newest = _newest_mtime(directory)
+            except OSError as error:
+                readings.append(
+                    BackupReading(
+                        path=raw_path,
+                        observed_at=datetime.now(timezone.utc),
+                        newest_file_mtime=None,
+                        unreachable=error.strerror or type(error).__name__,
+                    )
+                )
                 continue
-
-            newest: float | None = None
-
-            for candidate in directory.rglob("*"):
-                if not candidate.is_file():
-                    continue
-
-                try:
-                    mtime = candidate.stat().st_mtime
-                except OSError:
-                    continue
-
-                if newest is None or mtime > newest:
-                    newest = mtime
 
             readings.append(
                 BackupReading(
@@ -90,3 +93,17 @@ class BackupProvider:
             )
 
         return tuple(readings)
+
+
+def _newest_mtime(directory: Path) -> float | None:
+    newest: float | None = None
+    for candidate in directory.rglob("*"):
+        try:
+            if not candidate.is_file():
+                continue
+            mtime = candidate.stat().st_mtime
+        except OSError:
+            continue
+        if newest is None or mtime > newest:
+            newest = mtime
+    return newest

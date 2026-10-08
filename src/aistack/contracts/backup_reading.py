@@ -40,11 +40,22 @@ class BackupReading:
     path: str
     observed_at: datetime
     newest_file_mtime: datetime | None = None
+    # Why the path could not be read at all (an error's own text), or
+    # "" when it was. Seen on GIGABYTE, 2026-10-08: a disk the host
+    # mounts on demand answers "No such device" inside the container
+    # while unmounted — not "no backup", not "no such path" (1.9).
+    unreachable: str = ""
 
     def __post_init__(self) -> None:
         if not self.path.strip():
             raise ValueError(
                 "a backup reading is about one path; this one names none"
+            )
+
+        if self.unreachable and self.newest_file_mtime is not None:
+            raise ValueError(
+                f"{self.path} is reported unreachable ({self.unreachable}) "
+                f"and yet with a newest backup file"
             )
 
         if (

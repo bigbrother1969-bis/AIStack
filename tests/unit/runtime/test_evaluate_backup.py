@@ -130,3 +130,22 @@ def test_one_finding_per_gap():
 
     assert {f.subject for f in findings} == {"/a/", "/b/"}
     assert all(f.qualifications == BACKUP_GAP_QUALIFICATIONS for f in findings)
+
+
+def test_an_unreachable_path_is_said_to_be_unreachable_not_empty():
+    from aistack.contracts.backup_gap import UNREACHABLE
+    from aistack.runtime.backup_gap import find_backup_gaps
+    from aistack.contracts.backup_threshold import BackupThreshold
+
+    reading = BackupReading(
+        path=PATH,
+        observed_at=datetime(2026, 10, 8, 9, 0, tzinfo=timezone.utc),
+        unreachable="No such device",
+    )
+    (gap,) = find_backup_gaps([reading], [BackupThreshold(path=PATH, max_age_hours=48)])
+    assert gap.reason == UNREACHABLE
+
+    (finding,) = evaluate_backup([gap])
+    assert "could not be read (No such device)" in finding.interpretation
+    assert "holds no backup file" not in finding.interpretation
+    assert "mounted on the host" in finding.remediation

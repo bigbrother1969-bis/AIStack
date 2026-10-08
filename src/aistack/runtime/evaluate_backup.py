@@ -37,7 +37,7 @@ from aistack.contracts.finding_message import FindingMessage, part
 
 from collections.abc import Sequence
 
-from aistack.contracts.backup_gap import MISSING, BackupGap
+from aistack.contracts.backup_gap import MISSING, UNREACHABLE, BackupGap
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.undeclared import UNDECLARED
 
@@ -91,6 +91,14 @@ def evaluate_backup(gaps: Sequence[BackupGap]) -> tuple[RuntimeFinding, ...]:
 def _interpretation(gap: BackupGap) -> str:
     reading = gap.reading
 
+    if gap.reason == UNREACHABLE:
+        return (
+            f"{reading.path} could not be read ({reading.unreachable}), so "
+            f"whether its backup exists or is fresh is unknown — the "
+            f"condition OPS-0004's fourth reference case names (technical "
+            f"debt, deployment misconfiguration)."
+        )
+
     # `BackupGap.__post_init__` already guarantees `reason == STALE`
     # implies `newest_file_mtime is not None` — but that guarantee
     # lives on a different type, so mypy cannot see it from here.
@@ -117,6 +125,13 @@ def _interpretation(gap: BackupGap) -> str:
 
 
 def _remediation(gap: BackupGap) -> str:
+    if gap.reason == UNREACHABLE:
+        return (
+            f"Check that the disk holding {gap.reading.path} is mounted on "
+            f"the host and visible where AIStack runs — a disk mounted on "
+            f"demand is not seen from a container while it is unmounted."
+        )
+
     if gap.reason == MISSING:
         return (
             f"Verify the backup job that should write to "
@@ -136,6 +151,14 @@ def _message(gap: BackupGap) -> FindingMessage:
     """The same two sentences as `_interpretation`/`_remediation`, as catalog keys."""
 
     reading = gap.reading
+
+    if gap.reason == UNREACHABLE:
+        return FindingMessage(
+            interpretation=(
+                part("findings.backup.unreachable.interpretation", path=reading.path, error=reading.unreachable),
+            ),
+            remediation=(part("findings.backup.unreachable.remediation", path=reading.path),),
+        )
 
     if gap.reason == MISSING:
         remediation = (part("findings.backup.missing.remediation", path=reading.path),)

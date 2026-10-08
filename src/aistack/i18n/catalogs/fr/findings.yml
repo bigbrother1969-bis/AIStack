@@ -33,6 +33,9 @@ backup:
   stale:
     interpretation: "La sauvegarde la plus récente de {path} date de {age} heures, au-delà de son seuil déclaré de {threshold} heures — la situation que nomme le quatrième cas de référence d'OPS-0004 (dette technique, mauvaise configuration du déploiement)."
     remediation: "Chercher pourquoi la tâche de sauvegarde de {path} n'a pas tourné récemment et rétablir sa planification — la lacune que nomme le quatrième cas de référence d'OPS-0004, pas une sauvegarde manuelle ponctuelle."
+  unreachable:
+    interpretation: "{path} n'a pas pu être lu ({error}) : on ne sait donc pas si sa sauvegarde existe ni si elle est à jour — la situation que nomme le quatrième cas de référence d'OPS-0004 (dette technique, mauvaise configuration du déploiement)."
+    remediation: "Vérifier que le disque qui porte {path} est monté sur l'hôte et visible là où tourne AIStack — un disque monté à la demande n'est pas vu depuis un conteneur tant qu'il est démonté."
 
 gpu:
   temperature:

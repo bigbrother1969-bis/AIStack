@@ -34,6 +34,9 @@ backup:
   stale:
     interpretation: "{path}'s newest backup is {age} hours old, above its declared threshold of {threshold} hours — the condition OPS-0004's fourth reference case names (technical debt, deployment misconfiguration)."
     remediation: "Investigate why {path}'s backup job has not run recently and restore its schedule — the gap OPS-0004's fourth reference case names, not a one-time manual backup."
+  unreachable:
+    interpretation: "{path} could not be read ({error}), so whether its backup exists or is fresh is unknown — the condition OPS-0004's fourth reference case names (technical debt, deployment misconfiguration)."
+    remediation: "Check that the disk holding {path} is mounted on the host and visible where AIStack runs — a disk mounted on demand is not seen from a container while it is unmounted."
 
 gpu:
   temperature:

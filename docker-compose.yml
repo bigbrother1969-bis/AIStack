@@ -65,9 +65,13 @@ x-aistack: &aistack
     # The host directories your declarations name, at the same path,
     # read-only. The reference host keeps its disks under /media and
     # its Compose projects under /srv and /opt.
-    - /media:/media:ro
-    - /srv:/srv:ro
-    - /opt:/opt:ro
+    # `rslave`: a disk the host mounts after the container started (a
+    # USB disk, an on-demand mount) appears inside it too; without it
+    # the container keeps the view it started with — on GIGABYTE,
+    # 2026-10-08, /media/BACKUP answered "No such device".
+    - /media:/media:ro,rslave
+    - /srv:/srv:ro,rslave
+    - /opt:/opt:ro,rslave
 
 services:
 

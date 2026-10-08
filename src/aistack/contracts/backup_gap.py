@@ -14,8 +14,11 @@ from aistack.contracts.backup_reading import BackupReading
 # scope*).
 MISSING = "missing"
 STALE = "stale"
+# The declared path could not be read at all (1.9, 2026-10-08): neither
+# missing nor stale is known, and saying either would be a guess.
+UNREACHABLE = "unreachable"
 
-REASONS = (MISSING, STALE)
+REASONS = (MISSING, STALE, UNREACHABLE)
 
 
 @dataclass(frozen=True)
@@ -48,6 +51,12 @@ class BackupGap:
                 f"gap reason; only {REASONS} are detected in this scope "
                 f"(existence and freshness only — the owner's chosen v1 "
                 f"scope, 2026-09-11)"
+            )
+
+        if (self.reason == UNREACHABLE) != bool(self.reading.unreachable):
+            raise ValueError(
+                f"{self.reading.path}: a gap is 'unreachable' exactly when "
+                f"its reading could not read the path"
             )
 
         if self.reason == MISSING and self.reading.newest_file_mtime is not None:

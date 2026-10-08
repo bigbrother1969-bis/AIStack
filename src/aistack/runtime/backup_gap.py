@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from aistack.contracts.backup_gap import MISSING, STALE, BackupGap
+from aistack.contracts.backup_gap import MISSING, STALE, UNREACHABLE, BackupGap
 from aistack.contracts.backup_reading import BackupReading
 from aistack.contracts.backup_threshold import BackupThreshold
 
@@ -37,6 +37,16 @@ def find_backup_gaps(
         threshold = by_path.get(reading.path)
 
         if threshold is None:
+            continue
+
+        if reading.unreachable:
+            gaps.append(
+                BackupGap(
+                    reading=reading,
+                    max_age_hours=threshold.max_age_hours,
+                    reason=UNREACHABLE,
+                )
+            )
             continue
 
         if reading.newest_file_mtime is None:

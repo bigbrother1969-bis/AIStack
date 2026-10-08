@@ -45,7 +45,8 @@ def test_every_service_sees_the_socket_its_configuration_and_its_data():
     assert "./config:/config" in volumes
     assert "${AISTACK_DATA_DIR:-./data}:/app/reports/generated" in volumes
     host_paths = [volume for volume in volumes if volume.startswith("/") and "docker.sock" not in volume]
-    assert host_paths and all(volume.endswith(":ro") for volume in host_paths)
+    # Read-only, and following the host's later mounts (`rslave`, 1.9).
+    assert host_paths and all(volume.rsplit(":", 1)[1].split(",") == ["ro", "rslave"] for volume in host_paths)
     for host_path in host_paths:
         source, target, _ = host_path.split(":")
         assert source == target  # the same path, as declarations name it

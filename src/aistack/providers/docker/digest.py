@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import subprocess
+
 from typing import Any
 
 from aistack.providers.docker.identity import identities_of, list_running_container_names
@@ -58,6 +61,35 @@ def collect_running_container_digests() -> list[dict[str, Any]]:
     for identity in identities:
         if not identity.image_digest:
             continue
-        results.append({"subject": identity.stable_subject, "digest": identity.image_digest})
+        results.append({
+            "subject": identity.stable_subject,
+            "digest": identity.image_digest,
+            "image": identity.image_name,
+        })
 
     return results
+
+
+def image_repo_digests(image_id: str) -> list[str]:
+    """
+    The registry digests (`repo@sha256:…`) of one local image — what
+    `docker pull` can fetch again once the image itself has been
+    removed (a Watchtower clean-up), which the local id cannot
+    (`ADR-0018`, rollback by digest, 1.9). Empty when Docker does not
+    answer, or for an image built locally and never pushed.
+    """
+
+    try:
+        done = subprocess.run(
+            ["docker", "image", "inspect", "--format", "{{json .RepoDigests}}", image_id],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    if done.returncode != 0:
+        return []
+    try:
+        parsed = json.loads(done.stdout.strip() or "[]")
+    except json.JSONDecodeError:
+        return []
+    return [str(item) for item in parsed] if isinstance(parsed, list) else []

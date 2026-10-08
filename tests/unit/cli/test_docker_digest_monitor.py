@@ -33,6 +33,10 @@ def _docker(ps_stdout: str = "", inspect_stdout: str = "[]"):
             return subprocess.CompletedProcess(args=args, returncode=0, stdout=ps_stdout, stderr="")
         if args[:2] == ["docker", "inspect"]:
             return subprocess.CompletedProcess(args=args, returncode=0, stdout=inspect_stdout, stderr="")
+        if args[:3] == ["docker", "image", "inspect"]:
+            return subprocess.CompletedProcess(
+                args=args, returncode=0, stdout='["frigate@sha256:repo-digest-1"]\n', stderr=""
+            )
         raise AssertionError(f"unexpected call: {args}")
 
     return patch("subprocess.run", side_effect=_fake_run)
@@ -138,7 +142,8 @@ def test_run_cycle_records_a_changed_subject_and_advances_the_checkpoint(tmp_pat
         changed = run_cycle(generated_dir, checkpoint_path, dry_run=False, now=now)
 
     assert changed == [{"subject": "frigate", "digest": "sha256:image-digest-1"}]
-    assert (generated_dir / "docker-digest" / "frigate" / "docker-digest.json").exists()
+    recorded = generated_dir / "docker-digest" / "frigate" / "docker-digest.json"
+    assert json.loads(recorded.read_text())["repo_digests"] == ["frigate@sha256:repo-digest-1"]
     assert load_checkpoint(checkpoint_path) == now.isoformat()
 
 

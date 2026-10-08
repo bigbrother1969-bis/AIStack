@@ -83,6 +83,10 @@ class ContainerIdentity:
     stable_subject: str
     mount_destinations: tuple[str, ...]
     image_digest: str = ""
+    # The image name the container was started from (`Config.Image`,
+    # e.g. `wordpress:latest`) — what a rollback pins, by digest
+    # (`ADR-0018`, 1.9).
+    image_name: str = ""
 
 
 def list_running_container_names() -> list[str]:
@@ -181,6 +185,7 @@ def identities_of(names: list[str]) -> list[ContainerIdentity]:
 
         raw_image = entry.get("Image")
         image_digest = str(raw_image) if raw_image else ""
+        configured_image = config.get("Image") if isinstance(config, dict) else None
 
         identities.append(
             ContainerIdentity(
@@ -190,6 +195,7 @@ def identities_of(names: list[str]) -> list[ContainerIdentity]:
                 ),
                 mount_destinations=destinations,
                 image_digest=image_digest,
+                image_name=str(configured_image) if configured_image else "",
             )
         )
 

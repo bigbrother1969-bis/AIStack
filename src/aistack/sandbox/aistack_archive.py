@@ -96,7 +96,7 @@ def restore_aistack(
         if len(shown) < 2:
             raise StepFailed(f"cannot read the image of the live container {recipe.live_web_container}")
         run.facts["images"] = {"web": {"id": shown[0], "name": shown[1], "live_container": recipe.live_web_container}}
-    image = shown[0]
+    image = run.image_for(recipe.live_web_container, shown[0])
     # The account the live installation runs as: the restored files
     # belong to it, as they do on the host.
     user = f"{os.getuid()}:{os.getgid()}"

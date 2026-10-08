@@ -199,6 +199,24 @@ control: the scan tries them unattended.
 The scan itself runs from the server:
 `python -m aistack.cli.network_docker_discover`.
 
+## Going back to the image before an upgrade
+
+When a service misbehaves after its image was upgraded (by Watchtower,
+for instance), rehearse the rollback in a sandbox first:
+
+```
+python -m aistack.cli.sandbox rollback wordpress
+python -m aistack.cli.sandbox rollback wordpress --container wp_app
+```
+
+The command finds the image each container of the recipe ran before its
+last upgrade (the digest history), pulls it by its digest if it is no
+longer on the host, restores the latest backup with it and checks it
+like any restore. If everything passes, it prints the `image: …@sha256:…`
+line to put in the service's compose file and the command to apply it.
+Going back for real stays your act; an image pinned by its digest is no
+longer upgraded by Watchtower, remove the pin once the problem is fixed.
+
 ## Troubleshooting assistant
 
 *Local network, sign-in required, actions reserved to administrators.* The

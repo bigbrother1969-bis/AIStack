@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from aistack.generators.collection_gap import record_collection_gap
-from aistack.providers.docker.digest import collect_running_container_digests
+from aistack.providers.docker.digest import collect_running_container_digests, image_repo_digests
 from aistack.providers.docker.digest_history import (
     DEFAULT_GENERATED_DIR,
     has_changed,
@@ -176,8 +176,17 @@ def run_cycle(
         if dry_run:
             is_new = has_changed(subject, digest, generated_dir=generated_dir)
         else:
-            is_new = (
-                record_image_digest(subject, digest, generated_dir=generated_dir)
+            # The registry digests are looked up only when the digest
+            # changed: one `docker image inspect` per upgrade, not per
+            # container per poll.
+            is_new = has_changed(subject, digest, generated_dir=generated_dir) and (
+                record_image_digest(
+                    subject,
+                    digest,
+                    image=str(entry.get("image") or ""),
+                    repo_digests=image_repo_digests(digest),
+                    generated_dir=generated_dir,
+                )
                 is not None
             )
 

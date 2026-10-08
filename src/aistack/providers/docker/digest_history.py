@@ -75,6 +75,8 @@ def record_image_digest(
     subject: str,
     digest: str,
     *,
+    image: str = "",
+    repo_digests: tuple[str, ...] | list[str] = (),
     generated_dir: Path = DEFAULT_GENERATED_DIR,
 ) -> Path | None:
     """
@@ -95,10 +97,15 @@ def record_image_digest(
         return None
 
     output_path = _output_path(subject, generated_dir)
-    content = (
-        json.dumps({"subject": subject, "digest": digest}, indent=2, ensure_ascii=False)
-        + "\n"
-    )
+    record: dict[str, object] = {"subject": subject, "digest": digest}
+    # Since 1.9: what a rollback needs to start this image again once it
+    # is no longer on disk — its name, and the registry digests `docker
+    # pull` can fetch (`ADR-0018`). Readers of `digest` are unchanged.
+    if image:
+        record["image"] = image
+    if repo_digests:
+        record["repo_digests"] = list(repo_digests)
+    content = json.dumps(record, indent=2, ensure_ascii=False) + "\n"
 
     latest_path, _ = write_artifact_with_history(content, output_path)
 

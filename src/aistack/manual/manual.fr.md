@@ -472,6 +472,26 @@ sauvegarde ne contient est dit dans le rapport. Si une exécution a été
 interrompue, `python -m aistack.cli.sandbox cleanup` retire ce qu'elle a
 laissé.
 
+## Revenir à l'image d'avant une mise à jour
+
+Quand un service va mal après une mise à jour de son image (Watchtower,
+par exemple), répète d'abord le retour arrière en bac à sable :
+
+```
+python -m aistack.cli.sandbox rollback wordpress
+python -m aistack.cli.sandbox rollback wordpress --container wp_app
+```
+
+La commande retrouve l'image que chaque conteneur de la recette faisait
+tourner avant sa dernière mise à jour (l'historique des digests), la
+télécharge par son digest si elle n'est plus sur la machine, restaure la
+dernière sauvegarde avec elle et la vérifie comme une restauration
+ordinaire. Si tout passe, elle affiche la ligne `image: …@sha256:…` à
+mettre dans le fichier compose du service et la commande pour
+l'appliquer. Le retour en vrai reste ton geste ; une image épinglée par
+son digest n'est plus mise à jour par Watchtower, retire l'épingle une
+fois le problème réglé.
+
 ## En cas de problème
 
 - **« Invalid callback URL » chez le fournisseur** : l'adresse de retour de

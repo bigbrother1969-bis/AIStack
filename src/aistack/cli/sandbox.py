@@ -4,6 +4,10 @@
     python -m aistack.cli.sandbox recipes            the services it knows
     python -m aistack.cli.sandbox restore wordpress  restore, check, time, remove
     python -m aistack.cli.sandbox cleanup            what an interrupted run left
+    python -m aistack.cli.sandbox rollback wordpress [--container wp_app]
+                                                     rehearse going back to the image
+                                                     a container ran before its last
+                                                     upgrade, then print the line to pin
 
 Run on the host, from the checkout (`source scripts/dev-env.sh`), by a
 user allowed to run `docker`. Never touches a live container: it reads
@@ -24,6 +28,7 @@ from aistack.sandbox.run import Runner, SandboxRun, StepFailed, cleanup, docker_
 from aistack.sandbox.aistack_archive import restore_aistack
 from aistack.sandbox.immich import restore_immich
 from aistack.sandbox.nextcloud import restore_nextcloud
+from aistack.sandbox.rollback import pin_instructions, prepare_rollback
 from aistack.sandbox.wordpress import restore_wordpress
 
 RECIPES = {
@@ -56,6 +61,8 @@ def restore(
     runner: Runner = docker_runner,
     host: Runner = host_runner,
     progress: Callable[[str], None] = lambda line: None,
+    rollback: bool = False,
+    only: str = "",
 ) -> tuple[SandboxRun, Path]:
     recipe = declaration.recipes.get(service)
     if recipe is None:
@@ -63,6 +70,8 @@ def restore(
         raise SystemExit(f"No sandbox recipe for `{service}` (known: {known}).")
     run = SandboxRun(service, declaration.run_root, runner, host, progress=progress)
     try:
+        if rollback:
+            run.previous_images = prepare_rollback(run, recipe, generated_dir, only)
         RECIPES[recipe.kind](run, recipe, expansion=declaration.expansion, margin_gib=declaration.margin_gib)
     except StepFailed as error:
         run.failure = str(error)
@@ -74,7 +83,8 @@ def restore(
 
 
 def summary(run: SandboxRun) -> str:
-    lines = [f"Sandbox {run.run_id}: {'SUCCÈS' if run.succeeded else 'ÉCHEC'}"]
+    title = "Répétition du retour arrière" if run.image_overrides else "Sandbox"
+    lines = [f"{title} {run.run_id}: {'SUCCÈS' if run.succeeded else 'ÉCHEC'}"]
     if run.failure:
         lines.append(f"  arrêt : {run.failure}")
     for step in run.steps:
@@ -85,6 +95,18 @@ def summary(run: SandboxRun) -> str:
     if run.recovery_seconds is not None:
         lines.append(f"  temps de reprise mesuré : {run.recovery_seconds:g} s")
     lines.append("")
+    if run.image_overrides:
+        for previous in run.previous_images:
+            lines.append(
+                f"  {previous.container} : image d'avant la mise à jour {previous.upgraded_at or ''} "
+                f"→ {previous.used}".replace("  →", " →")
+            )
+        if run.succeeded:
+            lines.append("")
+            lines.append("Pour revenir en vrai (à faire toi-même) :")
+            for previous in run.previous_images:
+                lines.extend("  " + line for line in pin_instructions(previous))
+        return "\n".join(lines)
     lines.append("Entrée proposée pour pra_tests.yml (à copier si tu la valides) :")
     lines.append(run.proposed_entry())
     return "\n".join(lines)
@@ -97,6 +119,9 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
     one = sub.add_parser("restore")
     one.add_argument("service")
     sub.add_parser("cleanup")
+    back = sub.add_parser("rollback")
+    back.add_argument("service")
+    back.add_argument("--container", default="", help="only this container of the recipe")
     args = parser.parse_args(argv)
 
     declaration = load_sandbox_declaration()
@@ -112,6 +137,7 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
     run, report = restore(
         args.service, declaration, data_dir(root or Path.cwd()), runner,
         progress=lambda line: print(line, flush=True),
+        rollback=args.command == "rollback", only=getattr(args, "container", ""),
     )
     print(summary(run))
     print(f"\nRapport : {report}")

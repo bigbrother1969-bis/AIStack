@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -101,6 +101,22 @@ The report proposes an entry for `pra_tests.yml` (date, result, time to
 recovery, why). It does not write it: the entry enters only once the
 owner has read the report and copied it.
 
+### 6. Going back to the image before an upgrade
+
+Decided by the owner, 2026-10-08. A rollback is rehearsed before it is
+done: the latest backup restored in the sandbox with the image the
+service ran before its last upgrade — the newest digest the digest
+collector recorded that differs from the running one — and checked
+like any restore. The command then prints the line to pin in the
+service's compose file (`image: <repository>@sha256:…`) and the command
+to apply it. Going back for real stays the owner's act.
+
+An earlier image no longer on the host is fetched again by its registry
+digest, which the digest collector records with each new digest since
+1.9; an image recorded before has none, and the rehearsal says it
+cannot be fetched. A pulled image stays on the host: it is the one the
+real rollback needs.
+
 ## Implementation state
 
 | Part | State |
@@ -112,7 +128,7 @@ owner has read the report and copied it.
 | § 4 AIStack recipe | done — first real run on GIGABYTE 2026-10-08, success, 77.8 s, recorded in `pra_tests.yml` |
 | § 4 Nextcloud, Immich recipes | done — first real runs on GIGABYTE 2026-10-08, success (84.8 s, 262.8 s), recorded in `pra_tests.yml` |
 | § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
-| Rollback before an upgrade, by digest | to do |
+| Rollback before an upgrade, by digest | done — `python -m aistack.cli.sandbox rollback <service>`: rehearsal in the sandbox with the earlier image, pin printed; first real run by the owner to come |
 | Diff between the sandbox and the live service | to do |
 
 ## Consequences

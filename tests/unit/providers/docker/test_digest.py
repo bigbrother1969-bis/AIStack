@@ -47,7 +47,7 @@ def test_a_running_container_s_digest_is_collected_under_its_stable_subject():
     with _fake_run(ps_stdout="arrstack-gluetun-1\n", inspect_stdout=json.dumps([INSPECT_ENTRY])):
         results = collect_running_container_digests()
 
-    assert results == [{"subject": "arrstack/gluetun", "digest": "sha256:image-digest-1"}]
+    assert results == [{"subject": "arrstack/gluetun", "digest": "sha256:image-digest-1", "image": ""}]
 
 
 def test_a_container_with_no_observable_digest_is_skipped_not_recorded_empty():
@@ -75,6 +75,6 @@ def test_two_running_containers_each_get_their_own_entry():
         results = collect_running_container_digests()
 
     assert results == [
-        {"subject": "arrstack/gluetun", "digest": "sha256:image-digest-1"},
-        {"subject": "frigate", "digest": "sha256:image-digest-2"},
+        {"subject": "arrstack/gluetun", "digest": "sha256:image-digest-1", "image": ""},
+        {"subject": "frigate", "digest": "sha256:image-digest-2", "image": ""},
     ]

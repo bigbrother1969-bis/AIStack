@@ -100,6 +100,12 @@ class SandboxRun:
     steps: list[Step] = field(default_factory=list)
     checks: list[Check] = field(default_factory=list)
     facts: dict[str, Any] = field(default_factory=dict)
+    # Rollback rehearsal (`ADR-0018`, 1.9): the image to run instead of
+    # the live container's own, by live container name.
+    image_overrides: dict[str, str] = field(default_factory=dict)
+    # The earlier images found for a rollback rehearsal
+    # (`aistack.sandbox.rollback.PreviousImage`), for the summary.
+    previous_images: list[Any] = field(default_factory=list)
     restore_started: float | None = None
     restore_finished: float | None = None
     failure: str = ""
@@ -111,6 +117,17 @@ class SandboxRun:
         # Throwaway, for this run only: never the live service's, never
         # written to the report.
         self.password = secrets.token_urlsafe(24)
+
+    # -- images ----------------------------------------------------------
+
+    def image_for(self, container: str, live_image: str) -> str:
+        """The image this run starts for `container`: the live one,
+        unless a rollback rehearsal named an earlier one."""
+
+        chosen = self.image_overrides.get(container, live_image)
+        if chosen != live_image:
+            self.facts.setdefault("rehearsed_with", {})[container] = chosen
+        return chosen
 
     # -- names and isolation -------------------------------------------
 
@@ -234,7 +251,11 @@ class SandboxRun:
 
     def proposed_entry(self) -> str:
         """`pra_tests.yml`'s entry for this run — proposed, never written
-        (`ADR-0018` § 5)."""
+        (`ADR-0018` § 5). A rollback rehearsal proposes none: it tests
+        an earlier image, not the service as it runs."""
+
+        if self.image_overrides:
+            return ""
 
         lines = [
             f"  # Sandbox restore {self.run_id} (ADR-0018): "

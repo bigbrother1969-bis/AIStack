@@ -96,8 +96,8 @@ def restore_wordpress(
                 raise StepFailed(f"cannot read the image of the live container {container}")
             images[role] = {"id": shown[0], "name": shown[1], "live_container": container}
         run.facts["images"] = images
-    database_image = images["database"]["id"]
-    web_image = images["web"]["id"]
+    database_image = run.image_for(recipe.live_database_container, images["database"]["id"])
+    web_image = run.image_for(recipe.live_web_container, images["web"]["id"])
 
     with run.step("room"):
         run.check_room((dump, archive), expansion, margin_gib)

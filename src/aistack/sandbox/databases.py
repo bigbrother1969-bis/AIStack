@@ -29,7 +29,7 @@ def live_image(run: SandboxRun, container: str, role: str) -> tuple[str, list[st
     command_json = run.docker("inspect", "--format", "{{json .Config.Cmd}}", container).stdout.strip()
     command = json.loads(command_json) if command_json and command_json != "null" else []
     run.facts.setdefault("images", {})[role] = {"id": shown[0], "name": shown[1], "live_container": container}
-    return shown[0], [str(part) for part in command]
+    return run.image_for(container, shown[0]), [str(part) for part in command]
 
 
 def _init_name(dump: Path) -> str:

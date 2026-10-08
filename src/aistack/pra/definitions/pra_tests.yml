@@ -221,8 +221,17 @@ services:
     last_test:
       status: success
       date: "2026-09-26"
-  # AIStack itself (1.9, 2026-10-05; roadmap R4): never restored for
-  # real yet — `null` until the owner runs scripts/restore_aistack.sh
-  # and rebuilds the graph from the restored files (OPS-0010).
+  # AIStack itself (1.9; roadmap R4). First real restore test run by
+  # the owner on GIGABYTE, 2026-10-08 (OPS-0010 § AIStack's own backup):
+  # the 03:00 job's first archive (100 MB, 59 s, commit a9fbb80) restored
+  # into /tmp by scripts/restore_aistack.sh in 14 s — session database
+  # `ok`, 323 explication files all readable, 17 streams / 3765 history
+  # files, 18 declarations, the three .env files — then the Time Machine
+  # graph rebuilt from the restored files in a throwaway container with
+  # no network in 22.6 s (134,251 facts, 0 dropped). 37 s end to end,
+  # rounded up to one minute.
   - name: aistack
-    last_test: null
+    last_test:
+      status: success
+      date: "2026-10-08"
+      rto_minutes: 1

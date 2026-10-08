@@ -125,7 +125,23 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
-# **1.8.0 — published 2026-10-04, current; also `latest`.**
+# **1.9.0 — published 2026-10-08, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:1.9.0
+#   @sha256:59943810d825fe9a6807a105153abbbe08e7df3423fb12fd1688655e22e8c70a
+#
+# Built from d30a08e (tag v1.9.0) on the reference host, behind the
+# four terms OPS-0002 § *Publishing an image* requires: a clean tree,
+# `main`, HEAD equal to origin/main, and 3249 tests with `clean: True`
+# (run once, right after the pull). 85 artifacts. Before the build,
+# 1.8.0 was re-verified against its recorded digest (`GOV-0002/OS-047`)
+# — pull matched. Pushed under its version and as `latest`; the
+# reference host runs it through this file since the same evening.
+# Restore tests in a sandbox (`ADR-0018`), AIStack in its own PRA, the
+# action plan: `docs/03-handbook/RELEASE-NOTES.md`'s own 1.9.0 entry
+# gives the full account.
+#
+# **1.8.0 — published 2026-10-04, current.**
 #
 #   bigbrother1969/aistack-core:1.8.0
 #   @sha256:2faa48f0798b39ff979698322277ee879d7c0c49b8364586687abb1324da73e1

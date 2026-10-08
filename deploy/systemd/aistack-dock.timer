@@ -1,0 +1,12 @@
+# AIStack — looks for validated proposals every two minutes (ADR-0019,
+# 1.10). See aistack-dock.service for the install.
+
+[Unit]
+Description=AIStack dock executor, every two minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=2min
+
+[Install]
+WantedBy=timers.target

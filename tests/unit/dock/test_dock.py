@@ -230,3 +230,18 @@ def test_a_refusal_is_said_in_the_reader_s_language(tmp_path: Path):
 
     location = unquote(reply.headers["location"])
     assert "error=" in location and "pourquoi" in location
+
+
+def test_the_page_shows_what_the_dock_did(tmp_path: Path):
+    proposal = proposals.propose(tmp_path, "wordpress", [CHANGE], "security release of WordPress", "alice")
+    proposal.status = proposals.ROLLED_BACK
+    proposal.operations = [
+        {"name": "rehearsal", "status": "done", "seconds": 61.2, "detail": "wordpress-20261009-080000"},
+        {"name": "live checks", "status": "failed", "seconds": 4.0, "detail": "wp_app is unhealthy"},
+    ]
+    proposals.save(tmp_path, proposal)
+
+    page = _client(tmp_path).get("/dock/").text
+
+    assert "Répétition avec la nouvelle image" in page and "wp_app is unhealthy" in page
+    assert "revenue en arrière" in page and 'class="op-failed"' in page

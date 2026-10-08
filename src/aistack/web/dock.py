@@ -38,6 +38,22 @@ STATUS_KEYS = {
     proposals.FAILED: "dock.status_label.failed",
     proposals.ROLLED_BACK: "dock.status_label.rolled_back",
 }
+OPERATION_KEYS = {
+    "preconditions": "dock.operation.preconditions",
+    "sandbox restore": "dock.operation.sandbox_restore",
+    "fetch": "dock.operation.fetch",
+    "rehearsal": "dock.operation.rehearsal",
+    "keep": "dock.operation.keep",
+    "apply": "dock.operation.apply",
+    "live checks": "dock.operation.live_checks",
+    "rollback": "dock.operation.rollback",
+    "live checks after rollback": "dock.operation.live_checks_after_rollback",
+}
+OPERATION_STATUS_KEYS = {
+    "running": "dock.operation_status.running",
+    "done": "dock.operation_status.done",
+    "failed": "dock.operation_status.failed",
+}
 REFUSED_KEYS = (
     "dock.refused.unknown", "dock.refused.why", "dock.refused.nothing", "dock.refused.open",
     "dock.refused.not_proposed", "dock.refused.same_person", "dock.refused.closed",
@@ -97,6 +113,8 @@ def index(request: Request) -> Response:
         "development": _development(request),
         "min_why": proposals.MIN_WHY,
         "status_keys": STATUS_KEYS,
+        "operation_keys": OPERATION_KEYS,
+        "operation_status_keys": OPERATION_STATUS_KEYS,
         "status": request.query_params.get("status"),
         "error": request.query_params.get("error"),
         **language.context(),
@@ -114,7 +132,7 @@ def propose(request: Request, service: str = Form(""), why: str = Form("")) -> R
         proposals.ImageChange(
             container=c.container, image=c.image, from_digest=c.running_digest, to_digest=c.published_digest,
             from_image_id=c.image_id, compose_project=c.compose_project, compose_service=c.compose_service,
-            compose_dir=c.compose_dir,
+            compose_dir=c.compose_dir, compose_files=c.compose_files,
         )
         for c in _candidates(request)
         if c.service == service and c.update_available

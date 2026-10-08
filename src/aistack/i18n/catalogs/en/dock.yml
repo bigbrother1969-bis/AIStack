@@ -33,6 +33,20 @@ status_label:
   applied: "applied"
   failed: "failed"
   rolled_back: "rolled back"
+operation:
+  preconditions: "Preconditions"
+  sandbox_restore: "Sandbox restore (within 24 h)"
+  fetch: "Fetch by digest"
+  rehearsal: "Rehearsal with the new image"
+  keep: "Previous image kept"
+  apply: "Apply"
+  live_checks: "Checks on the live service"
+  rollback: "Rollback"
+  live_checks_after_rollback: "Checks after rollback"
+operation_status:
+  running: "running"
+  done: "done"
+  failed: "failed"
 status:
   proposed: "Proposal {id} recorded."
   validated: "Proposal {id} validated."

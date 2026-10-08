@@ -67,6 +67,7 @@ def restore(
     rollback: bool = False,
     only: str = "",
     compare_live: bool = False,
+    image_overrides: dict[str, str] | None = None,
 ) -> tuple[SandboxRun, Path]:
     recipe = declaration.recipes.get(service)
     if recipe is None:
@@ -74,6 +75,9 @@ def restore(
         raise SystemExit(f"No sandbox recipe for `{service}` (known: {known}).")
     run = SandboxRun(service, declaration.run_root, runner, host, progress=progress)
     run.compare = compare_live
+    # The dock's rehearsal (`ADR-0019` § 4): the new image instead of
+    # the live container's, by container name.
+    run.image_overrides.update(image_overrides or {})
     try:
         if rollback:
             run.rehearsal = True

@@ -504,6 +504,31 @@ n'a pas commencé.
 Un service gouverné ne doit plus porter le label de Watchtower : la page
 signale ceux qui l'ont encore. Retire-le de leur fichier compose.
 
+L'exécuteur du quai tourne sur l'hôte, comme service systemd, et prend
+les propositions validées une à une. Installe-le une fois, en root :
+
+```
+cp deploy/systemd/aistack-dock.service deploy/systemd/aistack-dock.timer /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now aistack-dock.timer
+```
+
+Pour chaque proposition, dans l'ordre : vérifications préalables (le
+conteneur tourne toujours l'image d'origine, sans label Watchtower) ;
+restauration en bac à sable réussie de moins de 24 h, sinon il en lance
+une ; téléchargement de la nouvelle image par son digest ; répétition de
+la restauration avec elle ; conservation de l'image précédente
+(`aistack-dock/<conteneur>:<proposition>`) ; application avec le projet
+compose du service ; vérifications sur le service réel. Un échec avant
+l'application arrête tout sans rien toucher ; un échec après remet
+l'image précédente et vérifie de nouveau. Chaque étape apparaît sur la
+page, avec sa durée et ce qu'elle a constaté. En ligne de commande :
+
+```
+python -m aistack.cli.dock list
+python -m aistack.cli.dock show <proposition>
+journalctl -u aistack-dock -n 50
+```
+
 ## Revenir à l'image d'avant une mise à jour
 
 Quand un service va mal après une mise à jour de son image (Watchtower,

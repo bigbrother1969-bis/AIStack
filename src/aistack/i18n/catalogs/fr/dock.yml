@@ -33,6 +33,20 @@ status_label:
   applied: "appliquée"
   failed: "échouée"
   rolled_back: "revenue en arrière"
+operation:
+  preconditions: "Préconditions"
+  sandbox_restore: "Restauration en bac à sable (moins de 24 h)"
+  fetch: "Téléchargement par digest"
+  rehearsal: "Répétition avec la nouvelle image"
+  keep: "Image précédente conservée"
+  apply: "Application"
+  live_checks: "Vérifications sur le service réel"
+  rollback: "Retour arrière"
+  live_checks_after_rollback: "Vérifications après retour arrière"
+operation_status:
+  running: "en cours"
+  done: "fait"
+  failed: "échec"
 status:
   proposed: "Proposition {id} enregistrée."
   validated: "Proposition {id} validée."

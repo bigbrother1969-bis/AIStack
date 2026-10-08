@@ -225,6 +225,30 @@ long as it has not started.
 A governed service must no longer carry Watchtower's label: the page
 reports those that still do. Remove it from their compose file.
 
+The dock's executor runs on the host as a systemd service and takes
+validated proposals one at a time. Install it once, as root:
+
+```
+cp deploy/systemd/aistack-dock.service deploy/systemd/aistack-dock.timer /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now aistack-dock.timer
+```
+
+For each proposal, in order: preconditions (the container still runs
+the original image, without Watchtower's label); a successful sandbox
+restore less than 24 hours old, or one run now; the new image fetched
+by its digest; the restore rehearsed with it; the previous image kept
+(`aistack-dock/<container>:<proposal>`); the change applied with the
+service's compose project; checks on the live service. A failure before
+the change stops everything with nothing touched; a failure after puts
+the previous image back and checks again. Every step shows on the page
+with its duration and what it found. From the command line:
+
+```
+python -m aistack.cli.dock list
+python -m aistack.cli.dock show <proposal>
+journalctl -u aistack-dock -n 50
+```
+
 ## Going back to the image before an upgrade
 
 When a service misbehaves after its image was upgraded (by Watchtower,

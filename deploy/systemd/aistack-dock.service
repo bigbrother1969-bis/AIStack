@@ -1,0 +1,32 @@
+# AIStack — the dock executor (ADR-0019, 1.10)
+#
+# Executes the image updates an administrator validated on the *Quai*
+# page: sandbox restore (within 24 h), fetch by digest, rehearsal with
+# the new image, apply with compose, live checks, rollback if they
+# fail. Runs as the account AIStack runs as, with its Docker rights;
+# started every two minutes by aistack-dock.timer, does nothing when no
+# proposal is validated.
+#
+# Install (as root, on GIGABYTE), once:
+#
+#   cp deploy/systemd/aistack-dock.service deploy/systemd/aistack-dock.timer /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-dock.timer
+#
+# What it did: journalctl -u aistack-dock -n 50
+
+[Unit]
+Description=AIStack dock executor (governed image updates)
+After=docker.service local-fs.target
+Requires=docker.service
+RequiresMountsFor=/media/BACKUP
+
+[Service]
+Type=oneshot
+User=big-brother
+Group=big-brother
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_dock.sh run
+# A rehearsal restores a whole backup: long, never killed half-way.
+TimeoutStartSec=4h
+Nice=5

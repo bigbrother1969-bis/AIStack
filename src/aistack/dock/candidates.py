@@ -21,6 +21,7 @@ _COMPOSE = (
     "com.docker.compose.project",
     "com.docker.compose.service",
     "com.docker.compose.project.working_dir",
+    "com.docker.compose.project.config_files",
 )
 
 
@@ -36,6 +37,7 @@ class Candidate:
     compose_project: str = ""
     compose_service: str = ""
     compose_dir: str = ""
+    compose_files: str = ""
     problem: str = ""
 
     @property
@@ -104,6 +106,7 @@ def inspect_service(
             compose_project=str(labels.get(_COMPOSE[0], "")),
             compose_service=str(labels.get(_COMPOSE[1], "")),
             compose_dir=str(labels.get(_COMPOSE[2], "")),
+            compose_files=str(labels.get(_COMPOSE[3], "")),
             problem=problem,
         ))
     return found

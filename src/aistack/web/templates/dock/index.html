@@ -30,6 +30,8 @@
     .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
     .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
     .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+    .operations td { font-size: .85rem; vertical-align: top; }
+    .operations .op-failed td { color: #a12b1f; }
     .history { font-size: .82rem; color: #5b6b7d; margin: .4rem 0 0; padding-left: 1.1rem; }
   </style>
 </head>
@@ -111,6 +113,15 @@
         </form>
       {% endif %}
       {% if p.status == 'validated' %}<p class="note">{{ t('dock.waiting_for_dock') }}</p>{% endif %}
+      {% if p.operations %}
+        <table class="operations">
+          {% for op in p.operations %}
+            <tr class="op-{{ op.status }}"><td>{{ t(operation_keys[op.name]) if op.name in operation_keys else op.name }}</td>
+                <td>{{ t(operation_status_keys[op.status]) if op.status in operation_status_keys else op.status }}</td>
+                <td>{{ op.seconds }} s</td><td>{{ op.detail }}</td></tr>
+          {% endfor %}
+        </table>
+      {% endif %}
       <ul class="history">
         {% for h in p.history %}<li>{{ h.at }} — {{ h.event }} — {{ h.by }}{% if h.detail and h.event != 'proposed' %} : {{ h.detail }}{% endif %}</li>{% endfor %}
       </ul>

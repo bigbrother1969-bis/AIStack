@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -116,9 +116,9 @@ provenance graph.
 | § 1 `dock.yml`, update detection, Watchtower label check | done — `aistack.dock` (registry `HEAD` with an anonymous token), page `/dock` |
 | § 2 mandatory why, recorded as an explication | to do |
 | § 3 proposals and validations in the application | done — `/dock`, administrators, LAN, two people in production |
-| § 3 the dock executor on the host | to do |
-| § 4 gates (sandbox restore, rehearsal, digest) | to do |
-| § 5 apply, check, rollback | to do |
+| § 3 the dock executor on the host | done — `aistack.dock.executor`, `python -m aistack.cli.dock`, `aistack-dock.timer` (every two minutes, one executor at a time) |
+| § 4 gates (sandbox restore, rehearsal, digest) | done — the newest restore with the live images decides; the rehearsal starts `repository@digest` |
+| § 5 apply, check, rollback | done — previous image kept as `aistack-dock/<container>:<proposal>`; checks: image, running, health, no restart after 30 s, WordPress database and pages |
 | § 6 transaction service in `KernelServices`, provenance trace | to do |
 
 ## Consequences
@@ -132,6 +132,13 @@ provenance graph.
   executes is only what a validated proposal names.
 
 ## Open Points
+
+- Until § 6, the operations are kept in the proposal itself (name,
+  status, start, seconds, detail), not yet as `aistack.transaction`
+  operations; § 6 moves them there without changing what is recorded.
+- The live checks of a recipe are written for WordPress, the only
+  governed service; another recipe gets the generic checks (image,
+  running, health, restarts) until its own are written.
 
 - Other change kinds (host packages, declared scripts) come after this
   one has run for real.

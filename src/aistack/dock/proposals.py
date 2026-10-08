@@ -53,6 +53,9 @@ class ImageChange:
     compose_project: str = ""
     compose_service: str = ""
     compose_dir: str = ""
+    # Compose's own label, comma-separated: the files the dock recreates
+    # the container with (`ADR-0019` § 5).
+    compose_files: str = ""
 
 
 @dataclass
@@ -67,6 +70,9 @@ class Proposal:
     decided_by: str = ""
     decided_at: str = ""
     history: list[dict[str, str]] = field(default_factory=list)
+    # What the dock executor did, one entry per operation (`ADR-0019`
+    # § 4–6): name, status, start, seconds, detail.
+    operations: list[dict[str, Any]] = field(default_factory=list)
 
     def note(self, event: str, by: str, detail: str = "", at: str = "") -> None:
         self.history.append({"at": at or _now(), "by": by, "event": event, "detail": detail})

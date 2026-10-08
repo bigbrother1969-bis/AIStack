@@ -133,7 +133,23 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
-# **1.10.0 — published 2026-10-08, current; also `latest`.**
+# **1.11.0 — published 2026-10-08, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:1.11.0
+#   @sha256:c62c72b2c213f8715c89228fc189a2ff8013784601d2ab144e4e4b4f44c0d705
+#
+# Built from 950e0c9 (tag v1.11.0) on the reference host, behind the
+# four terms OPS-0002 § *Publishing an image* requires: a clean tree,
+# `main`, HEAD equal to origin/main, and 3325 tests with `clean: True`
+# (run once, right after the pull). 87 artifacts. Before the build,
+# 1.10.0 was re-verified against its recorded digest (`GOV-0002/OS-047`)
+# — pull matched. Pushed under its version and as `latest`; the
+# reference host runs it through this file since the same evening, the
+# web service `healthy`. What changes on the hosts themselves
+# (`ADR-0020`): `docs/03-handbook/RELEASE-NOTES.md`'s own 1.11.0 entry
+# gives the full account.
+#
+# **1.10.0 — published 2026-10-08, current.**
 #
 #   bigbrother1969/aistack-core:1.10.0
 #   @sha256:44e0cd1098ea9ea12bea15bfeae426c568a6e11328dd6dade3a8106224536c3b

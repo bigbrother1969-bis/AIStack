@@ -460,6 +460,10 @@ python -m aistack.cli.sandbox recipes
 python -m aistack.cli.sandbox restore wordpress
 ```
 
+The command runs on the host, from a checkout of the repository (git
+installation, `scripts/dev-env.sh`): it needs Docker and, for Immich,
+`duplicity`. A Docker-only installation does not have it.
+
 The sandbox has its own internal Docker network (no Internet, no access
 to the services, no published port), its own containers
 (`aistack-sandbox-…`) and its own throwaway passwords. It reuses the

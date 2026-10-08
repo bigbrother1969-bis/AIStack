@@ -453,6 +453,10 @@ python -m aistack.cli.sandbox recipes
 python -m aistack.cli.sandbox restore wordpress
 ```
 
+La commande tourne sur l'hôte, depuis une copie du dépôt (installation
+git, `scripts/dev-env.sh`) : elle a besoin de Docker et, pour Immich, de
+`duplicity`. Une installation par Docker seul ne l'a pas.
+
 Le bac à sable a son propre réseau Docker interne (ni Internet, ni accès
 aux services, aucun port publié), ses propres conteneurs
 (`aistack-sandbox-…`) et ses propres mots de passe jetables. Il reprend

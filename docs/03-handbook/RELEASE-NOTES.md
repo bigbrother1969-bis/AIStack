@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.12
+  version: 1.13
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-10-04
+  updated: 2026-10-08
 
 relations:
   references:
@@ -36,6 +36,63 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 1.9.0 — 2026-10-08
+
+**A backup is proven by restoring it: AIStack now restores a service's
+latest backup in a sandbox beside the running service, checks it, times
+it and proposes the PRA-test entry — and it backs itself up.**
+
+- **Restore tests in a sandbox** (`ADR-0018`). `python -m
+  aistack.cli.sandbox restore <service>`, on the host: the latest backup
+  restored with the image the service runs, on its own internal Docker
+  network with no port and throwaway passwords, files on the local disk
+  after a free-space check, everything removed at the end but the
+  report. Each step is shown as it runs; the report gives every check,
+  the measured time to recovery, and the `pra_tests.yml` entry it
+  proposes — written only by you. Recipes: WordPress (database and
+  `wp-content`, the site answering), Nextcloud (database), Immich
+  (database, and photos of the external library taken back from Déjà Dup
+  and compared with the database), AIStack itself (data, Time Machine
+  graph rebuilt, the application started on it).
+- **Compare with the running service** (`--compare`): rows per table and
+  files per folder, backup next to live, biggest gaps first — numbers,
+  no verdict. The live side is only read.
+- **Rehearse going back before an upgrade** (`rollback <service>`): the
+  image a container ran before its last upgrade, fetched again by its
+  registry digest if it was removed, run with the latest backup in the
+  sandbox; then the line to pin in the compose file. Going back for real
+  stays yours. The digest collector now remembers each image's registry
+  digests, so the next upgrade can be rehearsed.
+- **AIStack in its own disaster-recovery plan.** A nightly backup
+  (systemd timer, 03:00, 30 days kept, secrets included, mode 600) and a
+  restore script into a new directory; the reference host's restore
+  test recorded.
+- **An action plan.** The Health Cockpit's two score badges lead to a
+  page that ranks what to do by what it gains, for the health score and
+  for technical debt, with a link into the assistant for each finding.
+- **Shipped declarations follow the version.** A declaration you never
+  changed is taken from the new version at start; one you changed is
+  kept and shown in Settings → *Shipped declarations*, with the
+  difference and the command to take the new one.
+- **Code in quarantine.** Files believed unused wait six weeks behind a
+  tripwire that records any use before they are deleted; they count as
+  technical debt meanwhile (`OPS-0012`).
+- **Fixes.** A backup disk mounted on demand, or a network share that
+  does not answer, is a finding instead of a page that fails to render
+  (the containers now see mounts made after they started); explications
+  written in the same second are all kept; single-file mounts no longer
+  show as disks; `/setup` shows the host's `./config` path; findings
+  read in the page's language; no version number is shown on screen.
+- **What the tests found on the reference host**, said rather than
+  hidden: Nextcloud's files and Immich's uploads live on the backup disk
+  itself with no other copy — declared as uncovered state until a copy
+  exists.
+
+`pytest -q` — 3249 passed; `mypy src` — 623 source files, no issues;
+knowledge integrity — 85 artifacts, `clean: True`.
 
 ---
 

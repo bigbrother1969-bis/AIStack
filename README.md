@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 8
+  version: 9
   created: 2026-07-04
-  updated: 2026-10-04
+  updated: 2026-10-08
 ---
 
 # AIStack
@@ -79,9 +79,25 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.8.0
+### Concrete capabilities, as of 1.9.0
 
-- **Ready to run from Docker Hub — new as of 1.8.0** — one image,
+- **Restore tests in a sandbox — new as of 1.9.0** — one command on the
+  host restores a service's latest backup beside the running service,
+  never in its place: its own internal Docker network, no port, its own
+  throwaway passwords, the same image the service runs, everything
+  removed at the end but the report. It checks what was restored (the
+  site answers, the tables are there, a photo taken back from the backup
+  matches its database), measures the real time to recovery and proposes
+  the PRA-test entry — which enters `pra_tests.yml` only once the owner
+  agrees. Recipes for WordPress, Nextcloud, Immich and AIStack itself; on
+  the reference host all four were tested this way on 2026-10-08. On
+  demand, the restored backup is compared with the running service (rows
+  per table, files per folder, no verdict), and going back to the image a
+  container ran before its last upgrade is rehearsed the same way before
+  it is done by hand. AIStack backs itself up every night (data,
+  declarations, environment), and the Health Cockpit's two score badges
+  lead to an action plan: what to do first, ranked by what it gains.
+- **Ready to run from Docker Hub — as of 1.8.0** — one image,
   `bigbrother1969/aistack-core`, runs the whole of AIStack: the web
   application and the five collectors are six services of one
   `docker-compose.yml`, on the host's network, reading their
@@ -142,7 +158,12 @@ AIStack transforms observations into sustainable knowledge assets.
   "running" between two crashes is flagged, not missed. As of 1.8.0:
   the technical-debt card costs a domain's weight once per domain
   carrying debt, so it moves when a domain is cleared; a service started
-  only on demand is no inventory gap when stopped.
+  only on demand is no inventory gap when stopped. As of 1.9.0: a backup
+  disk that cannot be read, or does not answer, is a finding, never a
+  page that fails to render; code waiting in quarantine before deletion
+  counts as technical debt; a declaration shipped with a new version is
+  taken automatically when yours is untouched, and shown in Settings when
+  you changed it.
 - **Runtime diagnosis** — a sweep of the Docker host, no container
   named, qualifies log lines against declared signatures, correlates
   unexplained CPU consumption against host temperature and against the
@@ -352,9 +373,9 @@ got past its absence.
   and as `latest`, and the reference host itself runs that exact image
   through `docker-compose.yml` — the first user of every release.
 
-**As of 1.8.0**: `pytest -q` — **3126 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **598 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **83 knowledge artifacts**,
+**As of 1.9.0**: `pytest -q` — **3249 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **623 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **85 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

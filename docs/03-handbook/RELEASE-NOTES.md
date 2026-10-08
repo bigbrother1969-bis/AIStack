@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.14
+  version: 1.15
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -38,6 +38,41 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.11.0 — 2026-10-08
+
+**The Time Machine now remembers what changes on the hosts themselves,
+not only in their containers — packages, files, units — without ever
+keeping a file's content.**
+
+- **A collector on each host** (`ADR-0020`). One file,
+  `aistack-host-collector`, written with the Python standard library
+  only, so it runs on a host that has no copy of AIStack; started by
+  systemd every 15 minutes, as root because part of what it watches
+  only root can read, but read-only, with no network, writing only to
+  its own directory. Installed on GIGABYTE and on the Raspberry, which
+  writes to its backup disk that GIGABYTE already mounts.
+- **What it records.** Every package installed, upgraded, removed or
+  purged, dated by the host's own `dpkg.log` — the first run takes in
+  every rotation still on disk, about eight months; every apt run, its
+  command line and who asked; every file added, removed or modified
+  under `/etc`, `/usr/local/bin`, `/usr/local/sbin`, in the crontabs and
+  among the compose and `.env` files of the projects under `/srv` and
+  `/opt` (more through `/etc/aistack-host-collector.conf`); every
+  systemd service, timer, socket or path unit enabled or disabled.
+- **Never the content.** A file is known by its size, mode, owner and a
+  fingerprint keyed with a secret of the host's own, readable by root
+  only: a short password in an `.env` cannot be found again from its
+  fingerprint. The Time Machine says that a file changed and when,
+  never what it says.
+- **In the Time Machine.** After the graph is rebuilt, the ribbon has a
+  third group, *Hosts*, one lane per host, one mark per event; an
+  event's node says what changed. `python -m aistack.cli.hosts` gives
+  each host's last run and events, and says a host whose collector has
+  gone silent or whose records cannot be read.
+- **Fixes.** The Quai's governed changes now reach the Time Machine's
+  ribbon, as one `dock` stream, instead of each change appearing as a
+  stream of its own.
 
 ## 1.10.0 — 2026-10-08
 

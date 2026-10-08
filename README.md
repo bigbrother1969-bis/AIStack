@@ -9,7 +9,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 10
+  version: 11
   created: 2026-07-04
   updated: 2026-10-08
 ---
@@ -79,9 +79,23 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.10.0
+### Concrete capabilities, as of 1.11.0
 
-- **Governed image updates, the Quai — new as of 1.10.0** — a service
+- **What changes on the hosts themselves — new as of 1.11.0** — a
+  collector on each host (GIGABYTE and the Raspberry on the reference
+  installation), one file using the Python standard library only, run
+  by systemd every 15 minutes as root but read-only and with no network,
+  records every package installed, upgraded or removed (with eight
+  months of history taken from the hosts' own logs at the first run),
+  every apt run and who asked for it, every file added, removed or
+  modified under `/etc`, `/usr/local/bin` and `/usr/local/sbin`, in the
+  crontabs and among the compose and `.env` files of the projects, and
+  every systemd unit enabled or disabled. A file is known by its size,
+  mode, owner and a fingerprint keyed with the host's own secret — never
+  by its content. The Time Machine shows each host as its own lane in a
+  *Hosts* group; `python -m aistack.cli.hosts` says when each collector
+  last ran and whether one has gone silent.
+- **Governed image updates, the Quai — as of 1.10.0** — a service
   declared in `dock.yml` (WordPress on the reference host) no longer
   updates itself at night: the Quai page shows when a newer image is
   published for the tag it runs, an administrator proposes the update
@@ -389,9 +403,9 @@ got past its absence.
   and as `latest`, and the reference host itself runs that exact image
   through `docker-compose.yml` — the first user of every release.
 
-**As of 1.10.0**: `pytest -q` — **3305 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **636 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **86 knowledge artifacts**,
+**As of 1.11.0**: `pytest -q` — **3325 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **641 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **87 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

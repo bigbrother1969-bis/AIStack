@@ -54,12 +54,41 @@ def _sha1(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _differs(target: Path, original: str, checksum: str, size: int) -> str:
+    """'' when the restored file is the one the database names, else
+    how it differs.
+
+    Immich hashes an uploaded photo's content; for an external-library
+    photo it stores the SHA-1 of `path:<originalPath>` instead, so as
+    not to read the whole library at every scan (GIGABYTE, 2026-10-08:
+    all three sampled photos "differed" against a content hash). Such a
+    checksum proves nothing about the content: the file's size is then
+    compared with the one Immich read from it (EXIF table).
+    """
+
+    if not target.is_file() or target.stat().st_size == 0:
+        return "restored file is empty or missing"
+    path_hash = hashlib.sha1(f"path:{original}".encode()).hexdigest()  # noqa: S324
+    if checksum == path_hash:
+        if size < 0:
+            return "no size recorded by Immich to compare with"
+        if target.stat().st_size != size:
+            return f"size {target.stat().st_size} bytes, Immich recorded {size}"
+        return ""
+    return "" if _sha1(target) == checksum else "content checksum differs"
+
+
 def _restore_one(run: SandboxRun, sample: FileSample, relative: str, target: Path) -> str:
     """Take one file back from the duplicity backup; '' when it worked,
     else why not."""
 
     cache = os.path.expanduser(sample.archive_dir) if sample.archive_dir else str(run.directory / "duplicity-cache")
     common = ["--no-encryption", "--archive-dir", cache]
+    if sample.archive_dir and sample.archive_name:
+        # The cache Deja Dup keeps for this backup, by its own name: the
+        # default name (a hash of the URL) differs, and duplicity would
+        # rebuild a second cache beside it (GIGABYTE, 2026-10-08).
+        common += ["--name", sample.archive_name]
     source = f"file://{sample.duplicity_target}"
     result = run.host(
         ["duplicity", "restore", *common, "--path-to-restore", relative, source, str(target)], 1800
@@ -130,20 +159,22 @@ def restore_immich(
             run.facts["not_backed_up"] = f"{recipe.not_backed_up} ({assets - external} asset(s))"
 
         with run.step("file sample"):
+            exif = _table(run, "asset_exif", "exif")
             rows = [
-                line.split("|", 1) for line in postgres_sql(
+                line.split("|", 2) for line in postgres_sql(
                     run,
-                    f'SELECT "originalPath", encode(checksum, \'hex\') FROM "{asset}" '
-                    f'WHERE "deletedAt" IS NULL AND "originalPath" LIKE \'{prefix}%\' '
-                    f'AND "createdAt" < now() - interval \'{sample.older_than_days} days\' '
+                    f'SELECT a."originalPath", encode(a.checksum, \'hex\'), coalesce(e."fileSizeInByte", -1) '
+                    f'FROM "{asset}" a LEFT JOIN "{exif}" e ON e."assetId" = a.id '
+                    f'WHERE a."deletedAt" IS NULL AND a."originalPath" LIKE \'{prefix}%\' '
+                    f'AND a."createdAt" < now() - interval \'{sample.older_than_days} days\' '
                     f"ORDER BY random() LIMIT {sample.count}",
                     DATABASE,
-                ).splitlines() if "|" in line
+                ).splitlines() if line.count("|") == 2
             ]
             (run.directory / "sample").mkdir()
             matched = 0
             details = []
-            for index, (original, checksum) in enumerate(rows):
+            for index, (original, checksum, size) in enumerate(rows):
                 host_path = sample.host_prefix.rstrip("/") + "/" + original[len(sample.live_prefix):].lstrip("/")
                 relative = host_path.lstrip("/")
                 target = run.directory / "sample" / f"{index}-{Path(original).name}"
@@ -151,13 +182,15 @@ def restore_immich(
                 problem = _restore_one(run, sample, relative, target)
                 if problem:
                     details.append(f"{Path(original).name}: {problem}")
-                elif _sha1(target) != checksum:
-                    details.append(f"{Path(original).name}: checksum differs")
                 else:
-                    matched += 1
+                    difference = _differs(target, original, checksum, int(size))
+                    if difference:
+                        details.append(f"{Path(original).name}: {difference}")
+                    else:
+                        matched += 1
         run.check(
             "photos from Deja Dup match the database", bool(rows) and matched == len(rows),
-            f"{matched}/{len(rows)} photo(s) restored with the checksum the database holds"
+            f"{matched}/{len(rows)} photo(s) restored and matching the database"
             + (" — " + "; ".join(details) if details else ""),
             required=external > 0,
         )

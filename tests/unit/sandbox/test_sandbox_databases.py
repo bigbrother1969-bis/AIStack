@@ -15,10 +15,11 @@ PHOTO = b"a photo"
 
 
 class FakeDocker:
-    def __init__(self, *, checksum: str | None = None, external: int = 2) -> None:
+    def __init__(self, *, checksum: str | None = None, external: int = 2, size: int = -1) -> None:
         self.calls: list[list[str]] = []
         self.checksum = checksum or hashlib.sha1(PHOTO).hexdigest()  # noqa: S324
         self.external = external
+        self.size = size
 
     def __call__(self, args: Sequence[str], timeout: float) -> CommandResult:
         args = list(args)
@@ -39,10 +40,19 @@ class FakeDocker:
                 return CommandResult(0, "asset\n")
             if "table_name IN ('user', 'users')" in query:
                 return CommandResult(0, "user\n")
+            if "table_name IN ('asset_exif', 'exif')" in query:
+                return CommandResult(0, "asset_exif\n")
             if "installedat" in query:
                 return CommandResult(0, "1690000000\n")
-            if "encode(checksum" in query:
-                return CommandResult(0, f"/external/photos/2024/a.jpg|{self.checksum}\n/external/photos/2024/b.jpg|{self.checksum}\n")
+            if "encode(a.checksum" in query:
+                rows = []
+                for name in ("a.jpg", "b.jpg"):
+                    path = f"/external/photos/2024/{name}"
+                    checksum = self.checksum
+                    if checksum == "path":
+                        checksum = hashlib.sha1(f"path:{path}".encode()).hexdigest()  # noqa: S324
+                    rows.append(f"{path}|{checksum}|{self.size}")
+                return CommandResult(0, "\n".join(rows) + "\n")
             if "LIKE '/external/photos/%'" in query:
                 return CommandResult(0, f"{self.external}\n")
             if '"asset"' in query:
@@ -148,7 +158,7 @@ def test_a_photo_whose_checksum_differs_fails_the_test(tmp_path: Path):
 
     assert not run.succeeded
     (sample,) = [c for c in run.checks if c.name == "photos from Deja Dup match the database"]
-    assert "checksum differs" in sample.observed
+    assert "content checksum differs" in sample.observed
 
 
 def test_a_photo_missing_from_the_backup_is_named(tmp_path: Path):
@@ -207,3 +217,31 @@ def test_each_step_is_announced_and_an_interruption_names_its_step(tmp_path: Pat
     assert run.failure == "interrupted"
     assert [(s.name, s.detail) for s in run.steps if not s.ok] == [("file sample", "interrupted")]
     assert not run.directory.exists()
+
+
+def test_an_external_photo_hashed_by_its_path_is_compared_by_size(tmp_path: Path):
+    run, _ = _restore("immich", _immich(tmp_path), tmp_path, FakeDocker(checksum="path", size=len(PHOTO)))
+
+    assert run.succeeded, run.failure
+
+
+def test_an_external_photo_of_another_size_is_named(tmp_path: Path):
+    run, _ = _restore("immich", _immich(tmp_path), tmp_path, FakeDocker(checksum="path", size=999))
+
+    (sample,) = [c for c in run.checks if c.name == "photos from Deja Dup match the database"]
+    assert not sample.ok and "Immich recorded 999" in sample.observed
+
+
+def test_deja_dups_cache_is_used_by_its_own_name(tmp_path: Path):
+    from dataclasses import replace
+
+    declaration = _immich(tmp_path)
+    recipe = declaration.recipes["immich"]
+    assert recipe.file_sample is not None
+    sample = replace(recipe.file_sample, archive_dir="~/.cache/deja-dup", archive_name="1fde80a7")
+    declaration.recipes["immich"] = replace(recipe, file_sample=sample)
+    host = FakeHost()
+
+    _restore("immich", declaration, tmp_path, FakeDocker(), host)
+
+    assert host.calls[0][host.calls[0].index("--name") + 1] == "1fde80a7"

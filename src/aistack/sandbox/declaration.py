@@ -44,6 +44,8 @@ class FileSample:
     # Deja Dup's own keeps duplicity from rebuilding it from the whole
     # chain at every run; empty means a fresh one inside the run.
     archive_dir: str = ""
+    # The name of Deja Dup's cache for this backup inside archive_dir.
+    archive_name: str = ""
 
 
 @dataclass(frozen=True)
@@ -108,6 +110,7 @@ def load_sandbox_declaration(path: Path | None = None) -> SandboxDeclaration:
                 count=int(sample.get("count", 3)),
                 older_than_days=int(sample.get("older_than_days", 8)),
                 archive_dir=str(sample.get("archive_dir") or ""),
+                archive_name=str(sample.get("archive_name") or ""),
             )
         recipes[str(name)] = SandboxRecipe(
             name=str(name),

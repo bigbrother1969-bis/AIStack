@@ -85,6 +85,9 @@ recipes:
       # rebuilds the signatures of the whole chain (the first run,
       # 2026-10-08, was interrupted there).
       archive_dir: ~/.cache/deja-dup
+      # Deja Dup's cache for GIGABYTE_DAILY (ls ~/.cache/deja-dup,
+      # 2026-10-08). Without it duplicity builds a second one.
+      archive_name: 1fde80a736400bfa9b8669b2b1bceca9
     not_backed_up: >-
       les photos téléversées (UPLOAD_LOCATION=/media/BACKUP/immich) n'ont
       pas de sauvegarde : elles sont sur le disque de sauvegarde

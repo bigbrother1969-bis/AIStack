@@ -442,7 +442,7 @@ vérifié.
 
 ## Tester la restauration d'un service en bac à sable
 
-Pour les services qui ont une recette (WordPress et AIStack lui-même), une
+Pour les services qui ont une recette (WordPress, AIStack lui-même, Nextcloud et Immich), une
 commande sur l'hôte restaure la dernière sauvegarde à côté du service en
 service, jamais à sa place :
 
@@ -464,7 +464,11 @@ rapport, écrit dans le dossier des données, sous `sandbox/`.
 
 La commande affiche chaque étape, chaque vérification, le temps de
 reprise mesuré et l'entrée qu'elle propose pour `pra_tests.yml`. Elle ne
-l'écrit pas : copie-la si tu la valides. Si une exécution a été
+l'écrit pas : copie-la si tu la valides. Pour Nextcloud et Immich, la
+base de données est restaurée entière ; pour Immich, quelques photos de
+la bibliothèque externe sont reprises dans la sauvegarde Déjà Dup et
+comparées à l'empreinte que la base garde d'elles. Ce qu'aucune
+sauvegarde ne contient est dit dans le rapport. Si une exécution a été
 interrompue, `python -m aistack.cli.sandbox cleanup` retire ce qu'elle a
 laissé.
 

@@ -53,6 +53,18 @@ def docker_runner(args: Sequence[str], timeout: float) -> CommandResult:
     return CommandResult(done.returncode, done.stdout, done.stderr)
 
 
+def host_runner(args: Sequence[str], timeout: float) -> CommandResult:
+    """A command on the host itself (duplicity), not through Docker."""
+
+    try:
+        done = subprocess.run(list(args), capture_output=True, text=True, timeout=timeout, check=False)
+    except subprocess.TimeoutExpired:
+        return CommandResult(124, "", f"no answer within {timeout:g} s")
+    except FileNotFoundError:
+        return CommandResult(127, "", f"{args[0]} is not installed")
+    return CommandResult(done.returncode, done.stdout, done.stderr)
+
+
 class StepFailed(Exception):
     """A step that cannot go on; its message says why."""
 
@@ -78,6 +90,7 @@ class SandboxRun:
     service: str
     run_root: Path
     runner: Runner = docker_runner
+    host: Runner = host_runner
     clock: Callable[[], float] = field(default=lambda: time.monotonic())
     started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     steps: list[Step] = field(default_factory=list)

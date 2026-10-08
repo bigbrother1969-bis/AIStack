@@ -423,7 +423,7 @@ available there, the console is what is checked.
 
 ## Testing a service's restore in a sandbox
 
-For the services that have a recipe (WordPress and AIStack itself), a command
+For the services that have a recipe (WordPress, AIStack itself, Nextcloud and Immich), a command
 on the host restores the latest backup beside the running service, never
 in its place:
 
@@ -445,7 +445,11 @@ written to the data directory, under `sandbox/`.
 
 The command prints each step, each check, the measured recovery time and
 the entry it proposes for `pra_tests.yml`. It does not write it: copy it
-if you agree with it. If a run was interrupted,
+if you agree with it. For Nextcloud and Immich, the whole database is
+restored; for Immich, a few photos of the external library are taken
+back from the Deja Dup backup and compared with the checksum the database
+keeps of them. What no backup holds is said in the report. If a run was
+interrupted,
 `python -m aistack.cli.sandbox cleanup` removes what it left.
 
 ## Troubleshooting

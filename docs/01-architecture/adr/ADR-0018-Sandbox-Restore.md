@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -110,7 +110,7 @@ owner has read the report and copied it.
 | § 3 local disk, cleanup | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
 | § 4 WordPress recipe | done — first real run on GIGABYTE 2026-10-08, success, 55.8 s, recorded in `pra_tests.yml` |
 | § 4 AIStack recipe | done — first real run on GIGABYTE 2026-10-08, success, 77.8 s, recorded in `pra_tests.yml` |
-| § 4 Nextcloud, Immich recipes | to do |
+| § 4 Nextcloud, Immich recipes | done — database restored, Immich photos sampled from Deja Dup; first real run by the owner to come |
 | § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
 | Rollback before an upgrade, by digest | to do |
 | Diff between the sandbox and the live service | to do |
@@ -125,6 +125,15 @@ owner has read the report and copied it.
   restored; the command refuses to start otherwise.
 
 ## Open Points
+
+- Measured 2026-10-08 while writing the Nextcloud and Immich recipes:
+  Nextcloud's files and Immich's uploads live on the backup disk
+  itself (`/media/BACKUP`, the Raspberry's NFS share) and no backup
+  copies them. `backup_strategy.yml` states it (`nextcloud-files`,
+  `immich-uploads`, no engine); the recipes restore the databases,
+  check the files that are really backed up (Immich's external
+  library, from Deja Dup) and say what is not. Where to copy those
+  files is the owner's decision.
 
 - Where the run directory lives on hosts other than the reference
   host: declared per instance, not decided here.

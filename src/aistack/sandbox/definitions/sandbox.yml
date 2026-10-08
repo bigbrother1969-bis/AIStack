@@ -46,3 +46,42 @@ recipes:
     files_archive: "aistack-*.tar.gz"
     live_web_container: aistack-web
     web_timeout_seconds: 180
+
+  # /usr/local/sbin/backup_nextcloud_db.sh (backup-nextcloud-db.timer,
+  # 02:20): `mariadb-dump --single-transaction --databases nextcloud`,
+  # gzipped, 30 days kept. The database only: the files have no backup
+  # (measured 2026-10-08, backup_strategy.yml `nextcloud-files`).
+  nextcloud:
+    kind: nextcloud_mariadb
+    backup_dir: /media/BACKUP/SQL_BACKUPS/nextcloud/
+    database_dump: "nextcloud-*.sql.gz"
+    live_database_container: nc_db
+    expansion: 12
+    database_timeout_seconds: 1800
+    not_backed_up: >-
+      les fichiers de Nextcloud (/media/BACKUP/nextcloud/data et
+      data_directory) n'ont pas de sauvegarde : ils sont sur le disque
+      de sauvegarde lui-même et Deja Dup ne les copie pas
+
+  # /usr/local/sbin/backup_immich_db.sh (backup-immich-db.timer, 02:40):
+  # `pg_dump -d immich`, gzipped, 30 days kept. Then a few photos of the
+  # external library (/media/Multimedia/Photos, /external/photos in the
+  # container) taken back from Deja Dup and checked against the
+  # database's checksum. Uploads have no backup (`immich-uploads`).
+  immich:
+    kind: immich_postgres
+    backup_dir: /media/BACKUP/SQL_BACKUPS/immich/
+    database_dump: "immich-*.sql.gz"
+    live_database_container: immich_postgres
+    expansion: 12
+    database_timeout_seconds: 3600
+    file_sample:
+      live_prefix: /external/photos/
+      host_prefix: /media/Multimedia/Photos/
+      duplicity_target: /media/BACKUP/GIGABYTE_DAILY
+      count: 3
+      older_than_days: 8
+    not_backed_up: >-
+      les photos téléversées (UPLOAD_LOCATION=/media/BACKUP/immich) n'ont
+      pas de sauvegarde : elles sont sur le disque de sauvegarde
+      lui-même et Deja Dup ne les copie pas

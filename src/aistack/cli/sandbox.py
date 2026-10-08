@@ -19,11 +19,18 @@ import sys
 from pathlib import Path
 
 from aistack.sandbox.declaration import SandboxDeclaration, load_sandbox_declaration
-from aistack.sandbox.run import Runner, SandboxRun, StepFailed, cleanup, docker_runner
+from aistack.sandbox.run import Runner, SandboxRun, StepFailed, cleanup, docker_runner, host_runner
 from aistack.sandbox.aistack_archive import restore_aistack
+from aistack.sandbox.immich import restore_immich
+from aistack.sandbox.nextcloud import restore_nextcloud
 from aistack.sandbox.wordpress import restore_wordpress
 
-RECIPES = {"wordpress_mariadb": restore_wordpress, "aistack_archive": restore_aistack}
+RECIPES = {
+    "wordpress_mariadb": restore_wordpress,
+    "aistack_archive": restore_aistack,
+    "nextcloud_mariadb": restore_nextcloud,
+    "immich_postgres": restore_immich,
+}
 
 
 def data_dir(root: Path) -> Path:
@@ -46,12 +53,13 @@ def restore(
     declaration: SandboxDeclaration,
     generated_dir: Path,
     runner: Runner = docker_runner,
+    host: Runner = host_runner,
 ) -> tuple[SandboxRun, Path]:
     recipe = declaration.recipes.get(service)
     if recipe is None:
         known = ", ".join(sorted(declaration.recipes)) or "none"
         raise SystemExit(f"No sandbox recipe for `{service}` (known: {known}).")
-    run = SandboxRun(service, declaration.run_root, runner)
+    run = SandboxRun(service, declaration.run_root, runner, host)
     try:
         RECIPES[recipe.kind](run, recipe, expansion=declaration.expansion, margin_gib=declaration.margin_gib)
     except StepFailed as error:

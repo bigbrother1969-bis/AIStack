@@ -270,11 +270,11 @@ def test_the_real_pra_tests_definition_loads():
     assert by_service["vikunja"].status == "success"
     assert by_service["vikunja"].rto_minutes is None
 
-    # Wordpress has a real, confirmed backup mechanism but has never
-    # had an actual restore test performed — `UNTESTED`, not a
-    # fabricated success, the same honest gap `gigabyte` already
-    # carries.
-    assert by_service["wordpress"].status is None
+    # Wordpress: tested for the first time in the sandbox (ADR-0018),
+    # 2026-10-08, 55.8 s — the entry the run proposed, validated by the
+    # owner.
+    assert by_service["wordpress"].status == "success"
+    assert by_service["wordpress"].rto_minutes == 1
 
     for service in by_service:
         assert thresholds.for_service(service).max_age_days == 90.0

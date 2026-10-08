@@ -159,6 +159,11 @@
 # step back from `not_declared` rather than closing it outright. A
 # real Wordpress restore test remains a separate, still-open action
 # for the owner to perform whenever convenient.
+#
+# **2026-10-08 — done, in the sandbox (ADR-0018).** The first run of
+# `python -m aistack.cli.sandbox restore wordpress` restored the night's
+# dump and archive beside the live site, checked it and timed it; the
+# owner validated the entry it proposed (below).
 
 max_age_days: 90
 
@@ -185,8 +190,15 @@ services:
       status: success
       date: "2026-09-26"
       rto_minutes: 3
+  # Sandbox restore wordpress-20261008-103432 (ADR-0018), run by the
+  # owner on GIGABYTE: the 2026-10-08 03:00 dump and wp-content archive,
+  # 30 tables, 8337 files, site address read back, home and login pages
+  # HTTP 200; 55.8 s measured, entry validated by the owner.
   - name: wordpress
-    last_test: null
+    last_test:
+      status: success
+      date: "2026-10-08"
+      rto_minutes: 1
   - name: changedetection
     last_test:
       status: success

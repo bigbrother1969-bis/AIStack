@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -105,12 +105,12 @@ owner has read the report and copied it.
 
 | Part | State |
 |---|---|
-| § 1 command | done — `aistack.sandbox`, `aistack.cli.sandbox`; first real run by the owner pending |
-| § 2 isolation | done — `aistack.sandbox`, `aistack.cli.sandbox`; first real run by the owner pending |
-| § 3 local disk, cleanup | done — `aistack.sandbox`, `aistack.cli.sandbox`; first real run by the owner pending |
-| § 4 WordPress recipe | done — `aistack.sandbox`, `aistack.cli.sandbox`; first real run by the owner pending |
+| § 1 command | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
+| § 2 isolation | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
+| § 3 local disk, cleanup | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
+| § 4 WordPress recipe | done — first real run on GIGABYTE 2026-10-08, success, 55.8 s, recorded in `pra_tests.yml` |
 | § 4 AIStack, Nextcloud, Immich recipes | to do |
-| § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; first real run by the owner pending |
+| § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
 | Rollback before an upgrade, by digest | to do |
 | Diff between the sandbox and the live service | to do |
 

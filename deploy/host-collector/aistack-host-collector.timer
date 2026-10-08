@@ -1,0 +1,13 @@
+# AIStack — the host collector every 15 minutes (ADR-0020, 1.11). See
+# aistack-host-collector.service for the install.
+
+[Unit]
+Description=AIStack host collector, every 15 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitInactiveSec=15min
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

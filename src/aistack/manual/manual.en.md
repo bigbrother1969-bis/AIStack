@@ -538,6 +538,46 @@ keeps of them. What no backup holds is said in the report. If a run was
 interrupted,
 `python -m aistack.cli.sandbox cleanup` removes what it left.
 
+## Traceability of the hosts
+
+What changes on GIGABYTE and on the Raspberry themselves, not in their
+containers, enters the Time Machine:
+- packages installed, upgraded or removed (dpkg, apt), dated by the
+  hosts' own logs;
+- the files of `/etc`, of `/usr/local/bin` and `/usr/local/sbin`, the
+  crontabs, and the compose and `.env` files of the projects under
+  `/srv` and `/opt`;
+- systemd units enabled or disabled.
+
+Of a file, AIStack keeps its size, mode, owner and a fingerprint made
+with a key of the host's own, **never its content**. At the first run,
+the package history still in the logs is taken in, about eight months.
+
+The collector is one file, run on each host as root every 15 minutes:
+it only reads, has no network, and writes only to its directory.
+Installing it on GIGABYTE, from the repository:
+
+```
+cd /srv/aistack/AIStack
+install -d -m 0750 reports/generated/hosts/gigabyte
+sudo install -m 0755 src/aistack/host_collector.py /usr/local/sbin/aistack-host-collector
+sudo cp deploy/host-collector/aistack-host-collector.service deploy/host-collector/aistack-host-collector.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-host-collector.service.d
+printf '[Service]\nEnvironment=HOST=gigabyte\nEnvironment=OUTPUT=%s\nReadWritePaths=%s\n' \
+  "$PWD/reports/generated/hosts/gigabyte" "$PWD/reports/generated/hosts/gigabyte" \
+  | sudo tee /etc/systemd/system/aistack-host-collector.service.d/host.conf
+sudo systemctl daemon-reload && sudo systemctl start aistack-host-collector
+journalctl -u aistack-host-collector -n 5 --no-pager
+sudo systemctl enable --now aistack-host-collector.timer
+```
+
+On the Raspberry, the same three files (copied from GIGABYTE with
+`scp`) and the directory `/media/BACKUP/AIStack/hosts/raspberry`, which
+GIGABYTE reads over NFS. What should not be followed (a file that
+changes on its own) goes into `/etc/aistack-host-collector.conf`
+(`ignore = <path>`), as does what should be followed as well
+(`watch = <directory>`, `glob = <pattern>`).
+
 ## Troubleshooting
 
 - **"Invalid callback URL" at the provider**: the callback of the address

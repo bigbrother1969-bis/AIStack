@@ -1,0 +1,8 @@
+# /etc/aistack-host-collector.conf — optional (ADR-0020).
+# Already watched: /etc, /usr/local/bin, /usr/local/sbin, the user
+# crontabs, the compose files and .env files one and two levels under
+# /srv and /opt. One setting per line:
+#
+#   watch = /another/directory           # every file under it
+#   glob = /home/*/bin/*.sh              # files matching a pattern
+#   ignore = /etc/cups/subscriptions.conf*   # a file that changes on its own

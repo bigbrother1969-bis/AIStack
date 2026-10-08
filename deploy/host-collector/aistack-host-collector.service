@@ -1,0 +1,46 @@
+# AIStack — what changes on this host (ADR-0020, 1.11)
+#
+# Packages (dpkg, apt), files of /etc, /usr/local/{bin,sbin}, the
+# crontabs and the compose projects' files (a keyed fingerprint, never
+# the content), systemd units. Root, because part of it only root can
+# read; read-only everywhere but its output and its key; no network.
+#
+# Install (as root), once per host — see the manual, "Traceability of
+# the hosts":
+#
+#   install -m 0755 src/aistack/host_collector.py /usr/local/sbin/aistack-host-collector
+#   cp aistack-host-collector.service aistack-host-collector.timer /etc/systemd/system/
+#   mkdir -p /etc/systemd/system/aistack-host-collector.service.d
+#   # host.conf there: HOST, OUTPUT and the same OUTPUT as ReadWritePaths (below)
+#   systemctl daemon-reload && systemctl enable --now aistack-host-collector.timer
+#
+# What it did: journalctl -u aistack-host-collector -n 5
+
+[Unit]
+Description=AIStack host collector (packages, files, units — never contents)
+After=local-fs.target
+RequiresMountsFor=/var/log
+
+[Service]
+Type=oneshot
+# Set per host in aistack-host-collector.service.d/host.conf — the
+# output twice, since ReadWritePaths= does not expand variables:
+#   [Service]
+#   Environment=HOST=gigabyte
+#   Environment=OUTPUT=/srv/aistack/AIStack/reports/generated/hosts/gigabyte
+#   ReadWritePaths=/srv/aistack/AIStack/reports/generated/hosts/gigabyte
+Environment=HOST=
+Environment=OUTPUT=
+ExecStart=/usr/local/sbin/aistack-host-collector --host ${HOST} --output ${OUTPUT}
+Nice=10
+IOSchedulingClass=idle
+# Reads everything, writes only its output and its key.
+ProtectSystem=strict
+# The key, /var/lib/aistack-host-collector, writable by StateDirectory=.
+StateDirectory=aistack-host-collector
+StateDirectoryMode=0700
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateNetwork=yes
+NoNewPrivileges=yes
+TimeoutStartSec=30min

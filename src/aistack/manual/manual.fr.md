@@ -563,6 +563,47 @@ l'appliquer. Le retour en vrai reste ton geste ; une image épinglée par
 son digest n'est plus mise à jour par Watchtower, retire l'épingle une
 fois le problème réglé.
 
+## Traçabilité des hôtes
+
+Ce qui change sur GIGABYTE et sur le Raspberry eux-mêmes, et non dans
+leurs conteneurs, entre dans la Time Machine :
+- les paquets installés, mis à jour ou retirés (dpkg, apt), datés par
+  les journaux des hôtes ;
+- les fichiers de `/etc`, de `/usr/local/bin` et `/usr/local/sbin`, les
+  crontabs, et les fichiers compose et `.env` des projets sous `/srv` et
+  `/opt` ;
+- les unités systemd activées ou désactivées.
+
+D'un fichier, AIStack garde la taille, les droits, le propriétaire et
+une empreinte calculée avec une clé propre à l'hôte, **jamais son
+contenu**. Au premier passage, l'historique des paquets encore présent
+dans les journaux est repris, sur environ huit mois.
+
+Le collecteur est un seul fichier, qui tourne sur chaque hôte en root
+toutes les 15 minutes : il ne fait que lire, sans réseau, et n'écrit
+que dans son dossier. Installation sur GIGABYTE, depuis le dépôt :
+
+```
+cd /srv/aistack/AIStack
+install -d -m 0750 reports/generated/hosts/gigabyte
+sudo install -m 0755 src/aistack/host_collector.py /usr/local/sbin/aistack-host-collector
+sudo cp deploy/host-collector/aistack-host-collector.service deploy/host-collector/aistack-host-collector.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-host-collector.service.d
+printf '[Service]\nEnvironment=HOST=gigabyte\nEnvironment=OUTPUT=%s\nReadWritePaths=%s\n' \
+  "$PWD/reports/generated/hosts/gigabyte" "$PWD/reports/generated/hosts/gigabyte" \
+  | sudo tee /etc/systemd/system/aistack-host-collector.service.d/host.conf
+sudo systemctl daemon-reload && sudo systemctl start aistack-host-collector
+journalctl -u aistack-host-collector -n 5 --no-pager
+sudo systemctl enable --now aistack-host-collector.timer
+```
+
+Sur le Raspberry, les mêmes trois fichiers (copiés depuis GIGABYTE avec
+`scp`) et le dossier `/media/BACKUP/AIStack/hosts/raspberry`, que
+GIGABYTE lit à travers NFS. Ce qui ne doit pas être suivi (un fichier
+qui change tout seul) s'écrit dans `/etc/aistack-host-collector.conf`
+(`ignore = <chemin>`), comme ce qui doit l'être en plus
+(`watch = <dossier>`, `glob = <motif>`).
+
 ## En cas de problème
 
 - **« Invalid callback URL » chez le fournisseur** : l'adresse de retour de

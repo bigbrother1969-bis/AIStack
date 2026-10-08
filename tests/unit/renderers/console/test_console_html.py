@@ -551,3 +551,13 @@ def test_an_unknown_language_is_served_in_the_reference():
     document = render_html((selection_ui_link(),), lang="xx")
 
     assert '<html lang="fr">' in document
+
+
+def test_the_group_marker_reaches_the_page_as_a_css_escape():
+    # Python read "\25B8" as the octal escape \x15 followed by "B8":
+    # the browser drew an unknown-character box in front of each
+    # group title (seen on GIGABYTE, 2026-10-08).
+    document = render_html((selection_ui_link(),))
+
+    assert 'content: "\\25B8"' in document
+    assert not any(ord(character) < 32 and character not in "\n\t" for character in document)

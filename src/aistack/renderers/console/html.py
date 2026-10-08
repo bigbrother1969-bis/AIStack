@@ -501,7 +501,7 @@ body {
 }
 .link-group > summary::-webkit-details-marker { display: none; }
 .link-group > summary::before {
-  content: "\25B8"; display: inline-block; color: #888; font-size: .75rem;
+  content: "\\25B8"; display: inline-block; color: #888; font-size: .75rem;
   transition: transform .1s ease;
 }
 .link-group[open] > summary::before { transform: rotate(90deg); }

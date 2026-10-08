@@ -180,14 +180,17 @@ def run(
             cli, "NvidiaGpuProvider", lambda: FakeGpuProvider(gpu_readings)
         )
 
-    # `None` leaves the real `socket.gethostname()` in place — the
-    # same choice every other test here already makes for
-    # `HostProvider`: this machine's own name will not match any host
-    # `DEFAULT_STORAGE_THRESHOLDS` declares, so storage capacity is
-    # silently not checked, the documented behaviour for a host with
-    # nothing declared for it, not a fake to maintain.
-    if hostname is not None:
-        monkeypatch.setattr(cli.socket, "gethostname", lambda: hostname)
+    # `None` names a host no declaration names, so storage, backup and
+    # GPU thresholds are silently not checked — the documented behaviour
+    # for a host with nothing declared for it. Until 2026-10-05 `None`
+    # left the real `socket.gethostname()` in place, on the assumption
+    # that it would match no declared host: false on GIGABYTE, the
+    # reference host itself, where the suite runs before every
+    # publication — the first backup threshold declared for a path not
+    # yet written (/media/BACKUP/AIStack/) failed eleven tests there.
+    monkeypatch.setattr(
+        cli.socket, "gethostname", lambda: hostname if hostname is not None else "a-host-nothing-declares"
+    )
 
     monkeypatch.setattr(
         "sys.argv",

@@ -140,6 +140,13 @@ names those that were used or are ready to be deleted. The detail:
 `python -m aistack.cli.quarantine_report` (with Docker:
 `docker compose exec web python -m aistack.cli.quarantine_report`).
 
+A click on a score's badge ("to watch", "action required"), on the
+console as in the cockpit, opens the **action plan**: what to do first,
+domain by domain, ranked by what each action gains on the score, with
+where to act (the file to edit, the command to run) and, for each
+finding, the link to the AI assistant. Nothing is applied from it; it is
+recomputed at every run of the cockpit.
+
 Each finding gives its subject, its interpretation, the proposed fix and its
 confidence. The **Diagnose with the AI assistant** link opens that finding in the troubleshooting
 assistant, on the local network.

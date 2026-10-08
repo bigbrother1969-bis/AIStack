@@ -22,6 +22,7 @@ from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
 from aistack.renderers.console.pages import HELP_PATH, LEGAL_PATH, LICENSE_PATH
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import domain_slug, escape_text
+from aistack.renderers.plan.html import DEBT_ANCHOR, HEALTH_ANCHOR, plan_link
 
 # Duplicated from `aistack.renderers.health.html._BUCKET_BADGE_CLASS`
 # rather than imported: each renderer in this package is pure and
@@ -234,8 +235,9 @@ def _render_cartouche_score(
             f'<span class="cartouche-score" title="{escape_text(t("console.tooltip.score"))}">'
             f'{escape_text(t("console.cartouche.score"))} '
             f'<strong>{score.value}/100</strong> '
-            f'<span class="badge {badge_class}">'
-            f"{escape_text(bucket_label(t, score.bucket))}</span></span>"
+            f'<a class="badge {badge_class}" href="{plan_link(t, HEALTH_ANCHOR)}" '
+            f'title="{escape_text(t("plan.tooltip.badge"))}">'
+            f"{escape_text(bucket_label(t, score.bucket))}</a></span>"
         )
 
     if score_note:
@@ -259,8 +261,9 @@ def _render_cartouche_technical_debt(
             f'title="{escape_text(t("console.tooltip.technical_debt"))}">'
             f'{escape_text(t("console.cartouche.technical_debt"))} '
             f'<strong>{score.value}/100</strong> '
-            f'<span class="badge {badge_class}">'
-            f"{escape_text(bucket_label(t, score.bucket))}</span></div>"
+            f'<a class="badge {badge_class}" href="{plan_link(t, DEBT_ANCHOR)}" '
+            f'title="{escape_text(t("plan.tooltip.badge"))}">'
+            f"{escape_text(bucket_label(t, score.bucket))}</a></div>"
         )
 
     if note:
@@ -553,6 +556,8 @@ body {
 }
 a.domain-badge.badge-alert { cursor: pointer; }
 a.domain-badge.badge-alert:hover { filter: brightness(0.96); text-decoration: underline; }
+a.badge { text-decoration: none; cursor: pointer; }
+a.badge:hover { filter: brightness(0.96); text-decoration: underline; }
 .badge {
   font-size: .72rem; font-weight: normal; padding: .15rem .5rem;
   border-radius: 999px; border: 1px solid;

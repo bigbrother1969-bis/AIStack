@@ -935,6 +935,20 @@ def test_main_writes_one_cockpit_per_declared_language(monkeypatch, tmp_path, wo
     assert '<html lang="fr">' in (generated_dir / "health.html").read_text(encoding="utf-8")
 
 
+def test_main_writes_the_action_plan_in_every_language(monkeypatch, tmp_path, workspace):
+    """2026-10-08: the page the two score badges open, next to health.html,
+    and not one more history stream."""
+
+    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+
+    cli.main()
+
+    generated_dir = workspace / "reports" / "generated"
+    assert "Plan d'action" in (generated_dir / "plan.html").read_text(encoding="utf-8")
+    assert "Action plan" in (generated_dir / "plan.en.html").read_text(encoding="utf-8")
+    assert not (generated_dir / "history" / "plan").exists()
+
+
 # --------------------------------------------------------------------
 # main() — the score (OPS-0008)
 # --------------------------------------------------------------------

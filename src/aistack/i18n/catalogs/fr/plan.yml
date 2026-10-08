@@ -1,0 +1,42 @@
+# Plan d'action — ce qu'il faut faire d'abord pour améliorer le score de
+# santé et réduire la dette technique, classé par gain (demande du owner,
+# 2026-10-08). Ouvert depuis les pastilles des deux scores.
+
+title: "AIStack — Plan d'action"
+heading: "Plan d'action"
+intro: "Ce qu'il faut faire d'abord, classé par ce que chaque action fait gagner, calculé à partir des mêmes constats et des mêmes poids que les deux scores. Rien n'est appliqué depuis cette page : elle dit quoi faire, où, et ouvre l'assistant IA pour chaque constat."
+generated: "Calculé au dernier passage du Cockpit Santé."
+health_heading: "Améliorer le score de santé"
+health_now: "Score de santé : {value}/100 ({bucket})."
+health_none: "Rien à corriger : aucun domaine mesuré ne porte de constat."
+health_unavailable: "Score de santé non calculé — {note}"
+debt_heading: "Réduire la dette technique"
+debt_now: "Dette technique : {value}/100 ({bucket}). Chaque groupe qui porte de la dette retire {weight} points, une seule fois."
+debt_none: "Aucune dette technique : rien à faire."
+debt_unavailable: "Dette technique non calculée — {note}"
+gain: "+{points} points quand ce domaine n'a plus de constat"
+gain_zero: "Corriger ce domaine ne change pas le score à lui seul."
+gain_one: "+{points} dès le premier constat corrigé."
+gain_one_zero: "Un constat corrigé seul ne change rien tant que le domaine en garde assez pour rester à zéro : il faut les corriger tous."
+debt_gain: "+{points} points quand ce groupe n'a plus de dette"
+waiting: "Rien à faire maintenant : la quarantaine se règle à sa date de revue."
+how: "Comment faire :"
+findings: "{count} constat(s)"
+diagnose: "Diagnostiquer avec l'assistant IA"
+back_to_health: "Voir le Cockpit Santé"
+group:
+  quarantine: "Code en quarantaine"
+how_to:
+  storage: "Libère de la place sur le point de montage indiqué, ou relève son seuil dans ./config/storage_thresholds.yml si la valeur est normale (OPS-0005)."
+  services: "Regarde les journaux du conteneur (docker logs) pour comprendre pourquoi il redémarre ou n'est pas sain, puis corrige et redémarre-le ; l'assistant IA guide pas à pas."
+  backup: "Vérifie que la tâche de sauvegarde tourne (systemctl list-timers, journalctl) et qu'elle écrit bien au chemin déclaré dans ./config/backup_thresholds.yml (OPS-0006)."
+  gpu: "Vérifie la charge, la mémoire et la température du GPU (nvidia-smi) ; relève le seuil dans ./config/gpu_thresholds.yml si la valeur est normale (OPS-0007)."
+  pra_tests: "Fais un vrai test de restauration du service, puis note-le dans ./config/pra_tests.yml (status, date, rto_minutes). Pour AIStack lui-même : scripts/restore_aistack.sh (manuel, « Sauvegarder et restaurer AIStack »)."
+  uncovered_state: "Déclare comment le service est sauvegardé dans ./config/backup_strategy.yml (OPS-0010), ou mets en place une sauvegarde s'il n'en a pas."
+  inventory_gap: "Déclare le conteneur dans ./config/service_categorization.yml, marque-le on_demand: true s'il ne tourne qu'à la demande, ou arrête-le s'il ne doit pas tourner (OPS-0011)."
+  quarantine: "Le code inutilisé est effacé à la revue ; un élément qui a servi sort de la quarantaine. Le détail : python -m aistack.cli.quarantine_report (OPS-0012)."
+  other: "Lis la correction proposée pour chaque constat ; l'assistant IA guide pas à pas."
+tooltip:
+  back_to_health: "Ouvrir le Cockpit Santé : chaque domaine et ses constats en détail"
+  diagnose: "Ouvrir ce constat dans l'assistant de pannes, sur le réseau local"
+  badge: "Ouvrir le plan d'action : quoi faire d'abord, et ce que ça fait gagner"

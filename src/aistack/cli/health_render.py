@@ -11,16 +11,17 @@ from pathlib import Path
 from aistack.architecture.yaml import load_service_categorization_yaml
 from aistack.backup_strategy.yaml import load_backup_strategy_yaml
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
-from aistack.contracts.health_score import HealthScoreWeights
+from aistack.contracts.health_score import HealthScore, HealthScoreWeights
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.health import HealthHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
+from aistack.health.plan import debt_plan, health_plan
 from aistack.health.quarantine import quarantine_findings
 from aistack.health.technical_debt import compute_technical_debt_score
-from aistack.i18n import default_languages
+from aistack.i18n import Languages, default_languages
 from aistack.i18n.pages import page_file
 from aistack.instance.yaml import load_instance_config_yaml
 from aistack.pra.yaml import load_pra_tests_yaml
@@ -50,6 +51,7 @@ from aistack.runtime.inventory_gap import (
 from aistack.runtime.pra_test_gap import find_pra_test_gaps, find_undeclared_pra_tests
 from aistack.runtime.storage_shortage import find_storage_shortage
 from aistack.runtime.uncovered_state_gap import find_uncovered_state
+from aistack.renderers.plan.html import PLAN_PAGE, render_plan
 
 # `OPS-0005`'s own declared thresholds — the same file
 # `aistack.cli.runtime_diagnose.DEFAULT_STORAGE_THRESHOLDS` reads.
@@ -700,6 +702,19 @@ def main() -> None:
         if language.code == languages.reference:
             output_path = written
 
+    plan_written = write_plan(
+        cockpit,
+        weights,
+        quarantine,
+        score=score,
+        score_note=score_note,
+        debt_score=debt_score,
+        debt_note=debt_score_note,
+        troubleshooting_base_url=troubleshooting_base_url,
+        generated_dir=generated_dir,
+        languages=languages,
+    )
+
     if score is not None:
         print(
             f"Health cockpit written to {output_path} "
@@ -716,6 +731,64 @@ def main() -> None:
         )
     else:
         print(f"Technical-debt score: {debt_score_note}")
+
+    print(f"Action plan written to {plan_written}")
+
+
+def write_plan(
+    cockpit: HealthCockpit,
+    weights: HealthScoreWeights | None,
+    quarantine: tuple[RuntimeFinding, ...],
+    *,
+    score: HealthScore | None,
+    score_note: str,
+    debt_score: TechnicalDebtScore | None,
+    debt_note: str,
+    troubleshooting_base_url: str | None,
+    generated_dir: Path,
+    languages: Languages,
+) -> Path:
+    """
+    `plan.html`, the action plan the two score badges open (the owner's
+    request, 2026-10-08), one page per language, from the same cockpit,
+    weights and quarantine as the scores. Written plainly, not with
+    `write_artifact_with_history`: it is a view of `health.html`'s own
+    run, not one more history stream for the Time Machine.
+    """
+
+    weight = (weights.for_domain("Services") or 0) if weights is not None else 0
+    health = health_plan(cockpit, weights) if weights is not None else ()
+    debt = debt_plan(cockpit, weight, quarantine) if weights is not None else ()
+    subject_counts: dict[str, int] = {}
+    for domain in cockpit.domains:
+        for finding in domain.findings:
+            subject_counts[finding.subject] = subject_counts.get(finding.subject, 0) + 1
+
+    reference = generated_dir / PLAN_PAGE
+    for language in languages.available:
+        path = page_file(generated_dir, PLAN_PAGE, language.code, languages.reference)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f".{path.name}.tmp")
+        temporary.write_text(
+            render_plan(
+                health,
+                debt,
+                score=score,
+                score_note=score_note,
+                debt_score=debt_score,
+                debt_note=debt_note,
+                weight=weight,
+                subject_counts=subject_counts,
+                troubleshooting_base_url=troubleshooting_base_url,
+                lang=language.code,
+                languages=languages,
+            ),
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+        if language.code == languages.reference:
+            reference = path
+    return reference
 
 
 if __name__ == "__main__":

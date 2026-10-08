@@ -71,7 +71,7 @@ def _console_route(request: Request) -> Response:
 
 # The two pages that describe the infrastructure need a session
 # (ADR-0014 § 5); the console, Settings and the reading pages do not.
-SIGNED_IN_PATHS = ("/architecture.html", "/health.html")
+SIGNED_IN_PATHS = ("/architecture.html", "/health.html", "/plan.html")
 
 for _path in CONSOLE_PATHS:
     router.add_api_route(

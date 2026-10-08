@@ -145,6 +145,13 @@ nombre d'utilisations constatées, et nomme ceux qui ont servi ou sont prêts
 à effacer. Le détail : `python -m aistack.cli.quarantine_report` (avec
 Docker : `docker compose exec web python -m aistack.cli.quarantine_report`).
 
+Un clic sur la pastille d'un score (« à surveiller », « action requise »),
+sur la console comme dans le Cockpit, ouvre le **plan d'action** : ce qu'il
+faut faire d'abord, domaine par domaine, classé par ce que chaque action
+fait gagner au score, avec où agir (le fichier à modifier, la commande à
+lancer) et, pour chaque constat, le lien vers l'assistant IA. Rien n'y est
+appliqué ; il est recalculé à chaque passage du Cockpit.
+
 Chaque constat indique son sujet, son interprétation, la correction proposée
 et sa confiance. Le lien **Diagnostiquer avec l'assistant IA** ouvre ce constat dans l'assistant
 de pannes, sur le réseau local.

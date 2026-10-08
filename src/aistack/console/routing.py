@@ -42,7 +42,8 @@ from aistack.renderers.text import escape_text
 # `_SERVED_ARTIFACTS`): `reports/generated/` also holds internal JSON
 # catalogs and each artifact's own `history/`, and no path outside this
 # list is ever mapped to a file — a request cannot name one.
-PAGES = ("console.html", "architecture.html", "health.html")
+# `plan.html`, the action plan the two score badges open (2026-10-08).
+PAGES = ("console.html", "architecture.html", "health.html", "plan.html")
 SETTINGS_PATH = "/settings"
 
 # The three reading pages the console's left column links to

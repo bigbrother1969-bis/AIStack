@@ -23,6 +23,7 @@ from aistack.i18n import Languages, Translator, default_languages, translator_fo
 from aistack.renderers.assets import MARK_DATA_URI
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import domain_slug, escape_text
+from aistack.renderers.plan.html import DEBT_ANCHOR, HEALTH_ANCHOR, plan_link
 
 _BUCKET_BADGE_CLASS = {
     EXCELLENT: "badge-clean",
@@ -195,8 +196,9 @@ def _render_score(score: HealthScore | None, score_note: str, t: Translator) -> 
         return (
             f'<p class="score">{escape_text(t("health.page.score"))} '
             f"<strong>{score.value}/100</strong> "
-            f'<span class="badge {badge_class}">'
-            f"{escape_text(bucket_label(t, score.bucket))}</span> "
+            f'<a class="badge {badge_class}" href="{plan_link(t, HEALTH_ANCHOR)}" '
+            f'title="{escape_text(t("plan.tooltip.badge"))}">'
+            f"{escape_text(bucket_label(t, score.bucket))}</a> "
             f"— {escape_text(measured)}"
             f"</p>"
         )
@@ -221,7 +223,7 @@ def _render_technical_debt(
         findings = t("health.page.technical_debt_findings", count=len(score.findings))
 
         return f"""<section class="technical-debt">
-  <h2>{heading} <span class="badge {badge_class}">{escape_text(bucket_label(t, score.bucket))}</span></h2>
+  <h2>{heading} <a class="badge {badge_class}" href="{plan_link(t, DEBT_ANCHOR)}" title="{escape_text(t("plan.tooltip.badge"))}">{escape_text(bucket_label(t, score.bucket))}</a></h2>
   <p class="score">
     <strong>{score.value}/100</strong> — {escape_text(findings)}
     {escape_text("OPS-0004/technical-debt")}
@@ -415,6 +417,8 @@ header { margin-bottom: 1.4rem; }
 .badge-clean { background: #e4f3ea; border-color: #1f6d43; color: #1f6d43; }
 .badge-watch { background: #faf1d8; border-color: #8a6100; color: #8a6100; }
 .badge-alert { background: #f9e3e1; border-color: #9c2b2b; color: #9c2b2b; }
+a.badge { text-decoration: none; cursor: pointer; }
+a.badge:hover { filter: brightness(.95); text-decoration: underline; }
 .domain-not-instrumented { background: #fafafa; }
 .domain-clean { background: #f7fdf6; }
 .domain-alert { background: #fff8f8; }

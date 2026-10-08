@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('dock.title') }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; color: #1f2933; padding: 0 1rem; }
+    header { margin-bottom: 1.5rem; }
+    h1, h2 { color: #16335c; }
+    .meta, .note { color: #5b6b7d; font-size: .88rem; }
+    .status { padding: .8rem 1rem; border-radius: 6px; background: #e8f5e9; border: 1px solid #a5d6a7; margin: 1rem 0; }
+    .error { padding: .8rem 1rem; border-radius: 6px; background: #fdecea; border: 1px solid #f5a9a1; margin: 1rem 0; }
+    .warn { padding: .8rem 1rem; border-radius: 6px; background: #fff4e5; border: 1px solid #f0c27b; margin: 1rem 0; }
+    .card { border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; background: #fff; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eef1f5; vertical-align: top; }
+    code { font-size: .82rem; word-break: break-all; }
+    .badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .75rem; border: 1px solid #ccd5e0; }
+    .badge.update { background: #e4f3ea; color: #1f6d43; border-color: #1f6d43; }
+    .badge.proposed { background: #e8f0fe; color: #1a4fa0; }
+    .badge.validated { background: #e4f3ea; color: #1f6d43; }
+    .badge.rejected, .badge.failed { background: #fdecea; color: #a12b1f; }
+    textarea { width: 100%; min-height: 4.5rem; font: inherit; padding: .4rem; box-sizing: border-box; }
+    button { padding: .5rem .9rem; font-size: .92rem; cursor: pointer; border: 1px solid #bbb; border-radius: 6px; background: white; }
+    button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+    form.inline { display: inline-block; margin-right: .4rem; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; font-size: .88rem; }
+    .top a { color: #1f6feb; text-decoration: none; }
+    .lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
+    .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
+    .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
+    .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+    .history { font-size: .82rem; color: #5b6b7d; margin: .4rem 0 0; padding-left: 1.1rem; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+  <header>
+    <h1>{{ t('dock.heading') }}</h1>
+    <p>{{ t('dock.intro') }}</p>
+    <p class="meta">{{ t('dock.phase_development') if development else t('dock.phase_production') }}</p>
+  </header>
+
+  {% if status %}<div class="status">{{ status }}</div>{% endif %}
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  {% for c in watchtower %}
+    <div class="warn">{{ t('dock.watchtower', container=c.container) }}</div>
+  {% endfor %}
+
+  <h2>{{ t('dock.services_heading') }}</h2>
+  {% if not services %}<p>{{ t('dock.no_service') }}</p>{% endif %}
+  {% for service in services %}
+    <div class="card">
+      <h3>{{ service.name }}
+        {% if service.updates %}<span class="badge update">{{ t('dock.update_available') }}</span>{% endif %}
+      </h3>
+      <table>
+        <tr><th>{{ t('dock.column.container') }}</th><th>{{ t('dock.column.image') }}</th><th>{{ t('dock.column.state') }}</th></tr>
+        {% for c in service.containers %}
+          <tr>
+            <td>{{ c.container }}</td>
+            <td><code>{{ c.image }}</code></td>
+            <td>
+              {% if c.problem %}{{ c.problem }}
+              {% elif c.update_available %}{{ t('dock.state.update') }}<br><code>{{ c.running_digest[:19] }}…</code> → <code>{{ c.published_digest[:19] }}…</code>
+              {% else %}{{ t('dock.state.current') }}{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+      {% if service.updates %}
+        <form method="post" action="{{ base }}/propose"><!--aistack:csrf-->
+          <input type="hidden" name="service" value="{{ service.name }}">
+          <p><label>{{ t('dock.why_label', count=min_why) }}<br>
+            <textarea name="why" required minlength="{{ min_why }}" title="{{ t('dock.tooltip.why') }}"></textarea></label></p>
+          <button class="primary" type="submit" title="{{ t('dock.tooltip.propose') }}">{{ t('dock.propose') }}</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <h2>{{ t('dock.proposals_heading') }}</h2>
+  {% if not proposals %}<p>{{ t('dock.no_proposal') }}</p>{% endif %}
+  {% for p in proposals %}
+    <div class="card">
+      <h3>{{ p.service }} <span class="badge {{ p.status }}">{{ t(status_keys[p.status]) }}</span></h3>
+      <p class="meta">{{ t('dock.proposed_by', who=p.proposed_by, at=p.proposed_at) }}</p>
+      <p><strong>{{ t('dock.why') }}</strong> {{ p.why }}</p>
+      <table>
+        {% for change in p.changes %}
+          <tr><td>{{ change.container }}</td><td><code>{{ change.image }}</code></td>
+              <td><code>{{ change.from_digest[:19] }}…</code> → <code>{{ change.to_digest[:19] }}…</code></td></tr>
+        {% endfor %}
+      </table>
+      {% if p.status == 'proposed' %}
+        <form class="inline" method="post" action="{{ base }}/validate"><!--aistack:csrf-->
+          <input type="hidden" name="proposal" value="{{ p.id }}">
+          <button class="primary" type="submit" title="{{ t('dock.tooltip.validate') }}">{{ t('dock.validate') }}</button>
+        </form>
+      {% endif %}
+      {% if p.status in ('proposed', 'validated') %}
+        <form class="inline" method="post" action="{{ base }}/reject"><!--aistack:csrf-->
+          <input type="hidden" name="proposal" value="{{ p.id }}">
+          <button type="submit" title="{{ t('dock.tooltip.reject') }}">{{ t('dock.reject') }}</button>
+        </form>
+      {% endif %}
+      {% if p.status == 'validated' %}<p class="note">{{ t('dock.waiting_for_dock') }}</p>{% endif %}
+      <ul class="history">
+        {% for h in p.history %}<li>{{ h.at }} — {{ h.event }} — {{ h.by }}{% if h.detail and h.event != 'proposed' %} : {{ h.detail }}{% endif %}</li>{% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</body>
+</html>

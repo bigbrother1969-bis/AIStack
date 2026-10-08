@@ -207,6 +207,24 @@ backup from last night is always a little behind: you judge the gap. The
 live side is only read (files on the host, counts in the container's
 database with its own environment).
 
+## Dock: updating a service the governed way
+
+The services declared in `dock.yml` (WordPress to begin with) change
+image only through the dock, from the console → *Dock* (local network,
+signed in). The page shows, for each container, the image it runs and
+whether a newer image is published for the same tag; it pulls nothing.
+
+When an update is available, an administrator proposes it, writing why
+(mandatory: it becomes the change's explication). An administrator
+validates it — in production, someone other than the author. The
+validated proposal is then taken by the dock's executor on the host:
+a sandbox restore of the latest backup, a rehearsal with the new image,
+then the change with the way back ready. A proposal can be rejected as
+long as it has not started.
+
+A governed service must no longer carry Watchtower's label: the page
+reports those that still do. Remove it from their compose file.
+
 ## Going back to the image before an upgrade
 
 When a service misbehaves after its image was upgraded (by Watchtower,

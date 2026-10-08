@@ -1,0 +1,20 @@
+# The dock — governed changes (ADR-0019, decided by the owner 2026-10-08).
+#
+# A service declared here is updated only through the dock: a newer
+# image published for the tag a container runs is detected, proposed
+# with its why, validated, rehearsed in the sandbox with the latest
+# backup, applied, checked — and put back if the checks fail.
+#
+# `recipe` names the sandbox recipe (sandbox.yml) that rehearses the
+# service; `containers` the live containers the dock may recreate. A
+# governed container must no longer carry Watchtower's label
+# (com.centurylinklabs.watchtower.enable=true): the owner removes it,
+# the dock page reports any that still has it.
+#
+# WordPress first (owner's choice): its recipe rehearses the whole
+# service, database and site.
+
+services:
+  wordpress:
+    recipe: wordpress
+    containers: [wp_app, wordpress_db]

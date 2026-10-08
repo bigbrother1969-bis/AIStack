@@ -256,3 +256,19 @@ links:
     service: web_lan
     path: /timemachine/
     scope: lan
+  - name:
+      fr: Quai
+      en: Dock
+    description:
+      fr: >-
+        Mettre à jour un service de façon gouvernée : la nouvelle image
+        est proposée avec son pourquoi, validée, testée en bac à sable
+        avec la dernière sauvegarde, puis appliquée avec retour arrière
+        prêt. Accessible uniquement depuis le réseau local.
+      en: >-
+        Governed image updates — proposed with their why, validated,
+        rehearsed in a sandbox, applied with the way back ready
+        (ADR-0019). AIStack web application, LAN listener only
+    service: web_lan
+    path: /dock/
+    scope: lan

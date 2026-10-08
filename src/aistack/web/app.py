@@ -45,6 +45,7 @@ from aistack.instance.yaml.store import load_instance_config_yaml
 from aistack.web.storage import live_storage
 from aistack.web import storage as storage_screen
 from aistack.web import declarations as declarations_screen
+from aistack.web import dock as dock_screen
 from aistack.instance.data_location import location_file
 from aistack.web.authentication import (
     Authentication,
@@ -176,6 +177,7 @@ def create_app(
     include(app, selection.router, selection.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)
     include(app, timemachine.router, timemachine.PREFIX)
+    include(app, dock_screen.router, dock_screen.PREFIX)
 
     @app.middleware("http")
     async def _who_is_signed_in(request: Request, call_next: Any) -> Response:

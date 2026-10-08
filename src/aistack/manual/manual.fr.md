@@ -484,6 +484,26 @@ sauvegarde de la nuit a toujours un peu de retard : c'est à toi de juger
 l'écart. Le côté vivant est seulement lu (fichiers sur l'hôte, comptages
 dans la base du conteneur avec ses propres variables).
 
+## Quai : mettre à jour un service de façon gouvernée
+
+Les services déclarés dans `dock.yml` (WordPress pour commencer) ne
+changent d'image que par le quai, depuis la console → *Quai* (réseau
+local, connecté). La page montre, pour chaque conteneur, l'image qui
+tourne et si une image plus récente est publiée pour le même tag ; elle
+ne télécharge rien.
+
+Quand une mise à jour est disponible, un administrateur la propose en
+écrivant pourquoi (obligatoire : ce sera l'explication du changement).
+Un administrateur la valide — en production, un autre que l'auteur. La
+proposition validée est ensuite prise en charge par l'exécuteur du
+quai, sur l'hôte : restauration en bac à sable de la dernière
+sauvegarde, répétition avec la nouvelle image, puis application avec
+retour arrière prêt. Une proposition peut être rejetée tant qu'elle
+n'a pas commencé.
+
+Un service gouverné ne doit plus porter le label de Watchtower : la page
+signale ceux qui l'ont encore. Retire-le de leur fichier compose.
+
 ## Revenir à l'image d'avant une mise à jour
 
 Quand un service va mal après une mise à jour de son image (Watchtower,

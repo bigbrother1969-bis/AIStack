@@ -7,6 +7,7 @@ from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 from aistack.timemachine.projection import (
     DEFAULT_GENERATED_DIR,
     project_collection_gaps,
+    project_dock_changes,
     project_docker_diff,
     project_docker_digest,
     project_docker_events,
@@ -100,6 +101,11 @@ def main() -> None:
     competing activity node minted here for one this module does not
     own.
 
+    **`project_dock_changes` runs ninth** (1.10, `ADR-0019` § 6): each
+    governed change the dock executed, as an activity tied to its
+    people, the images it changed and the explication of its why —
+    after `project_explications`, whose nodes it links to.
+
     **The leaf directory, created here, not assumed.** `pyoxigraph
     .Store`'s own documented behaviour creates the directory its
     `path` names if it is missing — measured, 2026-09-27, to create
@@ -125,6 +131,7 @@ def main() -> None:
     docker_packages_summary = project_docker_packages(store, generated_dir=generated_dir)
     upgrade_correlation_summary = project_upgrade_correlation(store, generated_dir=generated_dir)
     collection_gaps_summary = project_collection_gaps(store, generated_dir=generated_dir)
+    dock_changes_summary = project_dock_changes(store, generated_dir=generated_dir)
 
     print("Time Machine Projection")
     print(f"- Source: {generated_dir}")
@@ -146,13 +153,14 @@ def main() -> None:
     print(f"- Upgrade correlations written: {upgrade_correlation_summary.correlations_written}")
     print(f"- Collection-gap streams seen: {collection_gaps_summary.streams_seen}")
     print(f"- Collection gaps seen: {collection_gaps_summary.gaps_seen}")
+    print(f"- Governed changes seen: {dock_changes_summary.changes_seen}")
     print(
         "- Facts written: "
-        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + upgrade_correlation_summary.facts_written + collection_gaps_summary.facts_written}"
+        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + upgrade_correlation_summary.facts_written + collection_gaps_summary.facts_written + dock_changes_summary.facts_written}"
     )
     print(
         "- Facts dropped: "
-        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + upgrade_correlation_summary.facts_dropped + collection_gaps_summary.facts_dropped}"
+        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + upgrade_correlation_summary.facts_dropped + collection_gaps_summary.facts_dropped + dock_changes_summary.facts_dropped}"
     )
 
 

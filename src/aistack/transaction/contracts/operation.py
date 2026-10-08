@@ -16,6 +16,9 @@ class Operation:
 
     The payload is opaque to the orchestrator and is interpreted only by
     the specialized engine responsible for the operation kind.
+
+    `result` holds what the engine returned, `error` why it failed —
+    set by the executor (1.10, `ADR-0019` § 6).
     """
 
     name: str
@@ -25,3 +28,7 @@ class Operation:
     payload: object
 
     status: OperationStatus = OperationStatus.CREATED
+
+    result: object = None
+
+    error: str = ""

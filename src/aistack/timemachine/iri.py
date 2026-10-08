@@ -33,6 +33,7 @@ _COLLECTION_GAP_PREFIX = "urn:aistack:collection-gap:"
 _DOCKER_DIFF_PREFIX = "urn:aistack:docker-diff:"
 _DOCKER_DIGEST_PREFIX = "urn:aistack:docker-digest:"
 _DOCKER_PACKAGES_PREFIX = "urn:aistack:docker-packages:"
+_DOCK_CHANGE_PREFIX = "urn:aistack:dock-change:"
 
 
 def stream_iri(stem: str) -> str:
@@ -178,6 +179,17 @@ def docker_packages_iri(subject: str, instant_label: str) -> str:
     return f"{_DOCKER_PACKAGES_PREFIX}{subject}:{instant_label}"
 
 
+def dock_change_iri(proposal_id: str, container: str = "") -> str:
+    """
+    The IRI of one governed change (1.10, `ADR-0019` § 6): the dock's
+    `prov:Activity`, keyed by its proposal — unique, and the name the
+    Quai page and `python -m aistack.cli.dock show` already give it —
+    or, with `container`, the `prov:Entity` of one image it changed.
+    """
+
+    return f"{_DOCK_CHANGE_PREFIX}{proposal_id}" + (f":{container}" if container else "")
+
+
 _ALL_PREFIXES = (
     _STREAM_PREFIX,
     _OBSERVATION_PREFIX,
@@ -190,6 +202,7 @@ _ALL_PREFIXES = (
     _DOCKER_DIFF_PREFIX,
     _DOCKER_DIGEST_PREFIX,
     _DOCKER_PACKAGES_PREFIX,
+    _DOCK_CHANGE_PREFIX,
 )
 
 

@@ -121,6 +121,11 @@ def _report(tmp_path: Path, started: datetime, result: str = "success", **facts)
     }))
 
 
+def _closing(proposal: store.Proposal) -> str:
+    """The detail of the event that set the final state."""
+    return next(h["detail"] for h in reversed(proposal.history) if h["event"] == proposal.status)
+
+
 def _names(proposal: store.Proposal) -> list[tuple[str, str]]:
     return [(op["name"], op["status"]) for op in proposal.operations]
 
@@ -190,7 +195,7 @@ def test_a_failed_restore_stops_with_nothing_touched(tmp_path: Path):
     (done,) = _dock(tmp_path, docker, restorer).run_all()
 
     assert done.status == store.FAILED
-    assert "nothing live was touched" in done.history[-1]["detail"]
+    assert "nothing live was touched" in _closing(done)
     assert not any(call[0] in ("pull", "tag", "compose") for call in docker.calls)
 
 
@@ -210,7 +215,7 @@ def test_a_watchtower_label_stops_the_change(tmp_path: Path):
     _proposal(tmp_path)
     (done,) = _dock(tmp_path, FakeDocker(watchtower=True), FakeRestorer()).run_all()
 
-    assert done.status == store.FAILED and "Watchtower" in done.history[-1]["detail"]
+    assert done.status == store.FAILED and "Watchtower" in _closing(done)
 
 
 def test_a_container_changed_since_the_proposal_stops_the_change(tmp_path: Path):
@@ -220,7 +225,7 @@ def test_a_container_changed_since_the_proposal_stops_the_change(tmp_path: Path)
 
     (done,) = _dock(tmp_path, docker, FakeRestorer()).run_all()
 
-    assert done.status == store.FAILED and "propose again" in done.history[-1]["detail"]
+    assert done.status == store.FAILED and "propose again" in _closing(done)
 
 
 # -- the way back ------------------------------------------------------------------
@@ -245,7 +250,7 @@ def test_a_site_that_breaks_is_rolled_back(tmp_path: Path):
 
     (done,) = _dock(tmp_path, docker, FakeRestorer()).run_all()
 
-    assert done.status == store.ROLLED_BACK and "HTTP 500" in done.history[-1]["detail"]
+    assert done.status == store.ROLLED_BACK and "HTTP 500" in _closing(done)
 
 
 def test_an_interrupted_run_is_closed_and_says_what_it_may_have_left(tmp_path: Path):
@@ -282,3 +287,47 @@ def test_the_command_lists_and_shows(tmp_path: Path, capsys):
     assert dock_cli.main(["show", proposal.id], root=tmp_path) == 0
     shown = capsys.readouterr().out
     assert "validated" in shown and "WordPress security release" in shown
+
+
+# -- the transaction and the why -------------------------------------------------------
+
+def test_the_change_runs_as_a_transaction_of_registered_kinds(tmp_path: Path):
+    _proposal(tmp_path)
+    _report(tmp_path, NOW - timedelta(hours=1))
+    dock = _dock(tmp_path, FakeDocker(), FakeRestorer())
+
+    (done,) = dock.run_all()
+
+    assert [op["kind"] for op in done.operations] == [
+        "dock.preconditions", "dock.sandbox_restore", "dock.fetch", "dock.rehearsal",
+        "dock.keep", "dock.apply", "dock.live_checks",
+    ]
+    assert dock.transactions.registry.get("dock.rollback") is not None
+
+
+def test_the_why_is_recorded_beside_the_container_s_observations(tmp_path: Path):
+    from aistack.explications import read_latest_explication
+
+    _proposal(tmp_path)
+    _report(tmp_path, NOW - timedelta(hours=1))
+
+    (done,) = _dock(tmp_path, FakeDocker(), FakeRestorer()).run_all()
+
+    why = read_latest_explication("wordpress/wordpress", tmp_path / "explications")
+    assert why is not None
+    assert why.content.startswith("WordPress security release")
+    assert "appliquée" in why.content
+    assert why.source == "person:alice" and why.confidence == "Declared"
+    assert why.metadata["dock_proposal"] == done.id and why.metadata["explication_status"] == "Validated"
+    assert "validated_by" not in why.metadata  # alice validated her own proposal (development)
+    assert done.history[-1]["event"] == "explication"
+
+
+def test_a_change_stopped_before_the_live_service_records_its_why_too(tmp_path: Path):
+    from aistack.explications import read_latest_explication
+
+    _proposal(tmp_path)
+    (done,) = _dock(tmp_path, FakeDocker(watchtower=True), FakeRestorer()).run_all()
+
+    why = read_latest_explication("wordpress/wordpress", tmp_path / "explications")
+    assert why is not None and "échouée" in why.content and "Watchtower" in why.content

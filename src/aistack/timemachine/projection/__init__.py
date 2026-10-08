@@ -33,6 +33,10 @@ from aistack.timemachine.projection.docker_packages import (
     DockerPackagesProjectionSummary,
     project_docker_packages,
 )
+from aistack.timemachine.projection.dock_changes import (
+    DockChangeProjectionSummary,
+    project_dock_changes,
+)
 from aistack.timemachine.projection.explications import (
     ExplicationProjectionSummary,
     project_explications,
@@ -234,6 +238,7 @@ def project_observation_history(
 __all__ = [
     "CollectionGapsProjectionSummary",
     "DEFAULT_GENERATED_DIR",
+    "DockChangeProjectionSummary",
     "DockerDiffProjectionSummary",
     "DockerDigestProjectionSummary",
     "DockerEventsProjectionSummary",
@@ -242,6 +247,7 @@ __all__ = [
     "ProjectionSummary",
     "UpgradeCorrelationProjectionSummary",
     "project_collection_gaps",
+    "project_dock_changes",
     "project_docker_diff",
     "project_docker_digest",
     "project_docker_events",

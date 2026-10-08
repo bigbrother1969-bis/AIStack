@@ -249,6 +249,14 @@ python -m aistack.cli.dock show <proposal>
 journalctl -u aistack-dock -n 50
 ```
 
+Once a proposal is executed, its why enters the Time Machine as the
+explication of the container it changed (subject
+`<compose project>/<service>`, for example `wordpress/wordpress`), with
+its author, its outcome and the proposal's name. After the graph is
+rebuilt, the change appears there as an activity tied to the people who
+proposed and validated it, to the images before and after, and to its
+explication.
+
 ## Going back to the image before an upgrade
 
 When a service misbehaves after its image was upgraded (by Watchtower,

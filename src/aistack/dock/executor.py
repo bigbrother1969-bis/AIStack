@@ -47,11 +47,18 @@ from typing import Any
 from aistack.dock import proposals as store
 from aistack.dock.candidates import WATCHTOWER_LABEL
 from aistack.dock.declaration import GovernedService
+from aistack.dock.explication import record_change_explication
+from aistack.kernel.services.transactions import TransactionServices, create_transaction_services
 from aistack.dock.registry import parse_reference
 from aistack.sandbox.compare import MARIADB
 from aistack.sandbox.declaration import SandboxDeclaration, SandboxRecipe
 from aistack.sandbox.run import Runner, docker_runner
 from aistack.sandbox.wordpress import _FETCH
+from aistack.transaction.contracts.operation import Operation
+from aistack.transaction.contracts.operation_status import OperationStatus
+from aistack.transaction.contracts.transaction import Transaction
+from aistack.transaction.contracts.transaction_status import TransactionStatus
+from aistack.transaction.interfaces.operation_engine import OperationEngine
 
 EXECUTOR = "dock"
 FRESH = timedelta(hours=24)
@@ -131,12 +138,83 @@ def _why_not(run: Any) -> str:
 
 
 @dataclass
+class Change:
+    """What every operation of one change receives (the transaction's
+    payload): the proposal, what it is checked against, and what the
+    operations learn on the way."""
+
+    proposal: store.Proposal
+    service: GovernedService | None
+    recipe: SandboxRecipe | None
+    new_images: dict[str, str] = field(default_factory=dict)
+    applied: list[store.ImageChange] = field(default_factory=list)
+
+
+class _Engine(OperationEngine):
+    """One dock operation, registered by its kind."""
+
+    def __init__(self, step: Callable[[Change], str]) -> None:
+        self._step = step
+
+    def execute(self, payload: object) -> object:
+        if not isinstance(payload, Change):
+            raise TypeError("a dock operation expects a Change payload")
+        return self._step(payload)
+
+
+# The change, in order: (operation name, kind). The operations up to
+# `keep` touch nothing live; from `apply` on, a failure is rolled back.
+CHANGE_OPERATIONS = (
+    ("preconditions", "dock.preconditions"),
+    ("sandbox restore", "dock.sandbox_restore"),
+    ("fetch", "dock.fetch"),
+    ("rehearsal", "dock.rehearsal"),
+    ("keep", "dock.keep"),
+    ("apply", "dock.apply"),
+    ("live checks", "dock.live_checks"),
+)
+TOUCHING = ("apply", "live checks")
+ROLLBACK_OPERATIONS = (
+    ("rollback", "dock.rollback"),
+    ("live checks after rollback", "dock.live_checks_after_rollback"),
+)
+
+
+class _Recorder:
+    """Keeps each operation in the proposal as it starts and ends."""
+
+    def __init__(self, dock: Dock, proposal: store.Proposal) -> None:
+        self.dock, self.proposal = dock, proposal
+        self.started_at = 0.0
+
+    def started(self, operation: Operation) -> None:
+        self.proposal.operations.append({
+            "name": operation.name, "kind": operation.kind, "status": "running",
+            "started_at": _iso(self.dock.now()), "seconds": 0.0, "detail": "",
+        })
+        self.dock._save(self.proposal)
+        self.dock.progress(f"  … {operation.name}")
+        self.started_at = self.dock.clock()
+
+    def finished(self, operation: Operation) -> None:
+        entry = self.proposal.operations[-1]
+        succeeded = operation.status == OperationStatus.SUCCEEDED
+        entry["status"] = "done" if succeeded else "failed"
+        entry["detail"] = str(operation.result or "") if succeeded else operation.error
+        entry["seconds"] = round(self.dock.clock() - self.started_at, 1)
+        self.dock._save(self.proposal)
+
+
+@dataclass
 class Dock:
     generated_dir: Path
     services: tuple[GovernedService, ...]
     sandbox: SandboxDeclaration
     restorer: Restorer
     runner: Runner = docker_runner
+    # The kernel's transaction service (`ADR-0019` § 6); the dock
+    # registers its operation kinds there.
+    transactions: TransactionServices = field(default_factory=create_transaction_services)
     now: Callable[[], datetime] = field(default=lambda: datetime.now(timezone.utc))
     clock: Callable[[], float] = field(default=lambda: time.monotonic())
     sleep: Callable[[float], None] = field(default=lambda seconds: time.sleep(seconds))
@@ -145,6 +223,23 @@ class Dock:
     # restart, and how long a health check may take to turn healthy.
     settle_seconds: float = 30
     health_timeout_seconds: float = 180
+
+    def __post_init__(self) -> None:
+        steps: dict[str, Callable[[Change], str]] = {
+            "dock.preconditions": self._preconditions,
+            "dock.sandbox_restore": self._restore_gate,
+            "dock.fetch": self._fetch,
+            "dock.rehearsal": self._rehearsal,
+            "dock.keep": self._keep,
+            "dock.apply": self._apply,
+            "dock.live_checks": lambda change: self._live(change, change.new_images),
+            "dock.rollback": self._rollback,
+            "dock.live_checks_after_rollback": lambda change: self._live(
+                change, {c.container: c.from_image_id for c in change.applied}
+            ),
+        }
+        for kind, step in steps.items():
+            self.transactions.registry.register(kind, _Engine(step))
 
     # -- the queue -------------------------------------------------------
 
@@ -188,35 +283,16 @@ class Dock:
         self.progress(f"{proposal.id}: {status}{' — ' + detail if detail else ''}")
         return proposal
 
-    @contextmanager
-    def operation(self, proposal: store.Proposal, name: str) -> Iterator[dict[str, Any]]:
-        entry: dict[str, Any] = {
-            "name": name, "status": "running", "started_at": _iso(self.now()), "seconds": 0.0, "detail": "",
-        }
-        proposal.operations.append(entry)
-        self._save(proposal)
-        self.progress(f"  … {name}")
-        started = self.clock()
-        try:
-            yield entry
-        except OperationFailed as error:
-            entry["status"], entry["detail"] = "failed", str(error)
-            raise
-        except Exception as error:  # noqa: BLE001 - recorded, then the change stops on it
-            entry["status"], entry["detail"] = "failed", f"{type(error).__name__}: {error}"
-            raise OperationFailed(entry["detail"]) from error
-        else:
-            entry["status"] = "done"
-        finally:
-            entry["seconds"] = round(self.clock() - started, 1)
-            self._save(proposal)
-
     def docker(self, *args: str, timeout: float = 120) -> str:
         result = self.runner(list(args), timeout)
         if result.returncode != 0:
             lines = (result.stderr or result.stdout).strip().splitlines()
             raise OperationFailed(f"docker {' '.join(args[:2])}: {lines[-1] if lines else 'failed'}")
         return result.stdout.strip()
+
+    def _transaction(self, operations: tuple[tuple[str, str], ...], change: Change) -> Transaction:
+        transaction = Transaction(operations=[Operation(name, kind, change) for name, kind in operations])
+        return self.transactions.executor.execute(transaction, _Recorder(self, change.proposal))
 
     def execute(self, proposal: store.Proposal) -> store.Proposal:
         # Read again: it may have been rejected since the queue was read.
@@ -230,106 +306,113 @@ class Dock:
 
         service = next((s for s in self.services if s.name == proposal.service), None)
         recipe = self.sandbox.recipes.get(service.recipe) if service else None
-        new_images: dict[str, str] = {}
-        try:
-            with self.operation(proposal, "preconditions") as entry:
-                if service is None or recipe is None:
-                    raise OperationFailed(
-                        f"`{proposal.service}` is no longer declared in dock.yml with a sandbox recipe"
-                    )
-                entry["detail"] = self._preconditions(proposal, service)
-            with self.operation(proposal, "sandbox restore") as entry:
-                entry["detail"] = self._restore_gate(recipe)
-            with self.operation(proposal, "fetch") as entry:
-                for change in proposal.changes:
-                    reference = pinned_reference(change)
-                    self.docker("pull", reference, timeout=1800)
-                    new_images[change.container] = self.docker("image", "inspect", "--format", "{{.Id}}", reference)
-                entry["detail"] = ", ".join(pinned_reference(change) for change in proposal.changes)
-            with self.operation(proposal, "rehearsal") as entry:
-                overrides = {change.container: pinned_reference(change) for change in proposal.changes}
-                run, report = self.restorer(
-                    recipe.name, self.sandbox, self.generated_dir, self.runner,
-                    progress=self.progress, image_overrides=overrides,
-                )
-                if not run.succeeded:
-                    raise OperationFailed(f"{run.run_id}: {_why_not(run)}")
-                entry["detail"] = f"{run.run_id} — {report.name}"
-            with self.operation(proposal, "keep") as entry:
-                for change in proposal.changes:
-                    self.docker("tag", change.from_image_id, keep_tag(proposal.id, change.container))
-                entry["detail"] = ", ".join(keep_tag(proposal.id, c.container) for c in proposal.changes)
-        except OperationFailed as error:
-            return self._finish(proposal, store.FAILED, f"{error} — nothing live was touched")
+        change = Change(proposal, service, recipe)
+        done = self._transaction(CHANGE_OPERATIONS, change)
+        if done.status == TransactionStatus.SUCCEEDED:
+            return self._close(proposal, store.APPLIED, "")
+        failed = next(op for op in done.operations if op.status == OperationStatus.FAILED)
+        if failed.name not in TOUCHING:
+            return self._close(proposal, store.FAILED, f"{failed.error} — nothing live was touched")
 
-        applied: list[store.ImageChange] = []
-        try:
-            with self.operation(proposal, "apply") as entry:
-                for change in proposal.changes:
-                    applied.append(change)
-                    self.docker("tag", pinned_reference(change), change.image)
-                    self.docker(*compose_up(change), timeout=600)
-                entry["detail"] = ", ".join(f"{c.container} → {c.to_digest[:19]}…" for c in proposal.changes)
-            with self.operation(proposal, "live checks") as entry:
-                entry["detail"] = self.live_checks(service, recipe, new_images)
-        except OperationFailed as error:
-            return self._roll_back(proposal, service, recipe, applied, str(error))
-        return self._finish(proposal, store.APPLIED, "")
-
-    def _roll_back(
-        self,
-        proposal: store.Proposal,
-        service: GovernedService | None,
-        recipe: SandboxRecipe | None,
-        applied: list[store.ImageChange],
-        reason: str,
-    ) -> store.Proposal:
-        assert service is not None and recipe is not None
-        try:
-            with self.operation(proposal, "rollback") as entry:
-                for change in reversed(applied):
-                    self.docker("tag", keep_tag(proposal.id, change.container), change.image)
-                    self.docker(*compose_up(change), timeout=600)
-                entry["detail"] = ", ".join(c.container for c in applied)
-            with self.operation(proposal, "live checks after rollback") as entry:
-                entry["detail"] = self.live_checks(
-                    service, recipe, {change.container: change.from_image_id for change in applied}
-                )
-        except OperationFailed as error:
-            return self._finish(
+        back = self._transaction(ROLLBACK_OPERATIONS, change)
+        if back.status != TransactionStatus.SUCCEEDED:
+            failed_back = next(op for op in back.operations if op.status == OperationStatus.FAILED)
+            return self._close(
                 proposal, store.FAILED,
-                f"{reason}; the way back failed too ({error}) — the live service needs a person",
+                f"{failed.error}; the way back failed too ({failed_back.error}) — the live service needs a person",
             )
-        return self._finish(proposal, store.ROLLED_BACK, f"{reason} — the previous images run again")
+        return self._close(proposal, store.ROLLED_BACK, f"{failed.error} — the previous images run again")
+
+    def _close(self, proposal: store.Proposal, status: str, detail: str) -> store.Proposal:
+        """The end of an executed change: its state, then its why in the
+        Time Machine (`ADR-0019` § 2)."""
+
+        self._finish(proposal, status, detail)
+        try:
+            subjects = record_change_explication(self.generated_dir, proposal, self.now())
+        except OSError as error:
+            proposal.note("explication", EXECUTOR, f"not recorded: {error}", _iso(self.now()))
+        else:
+            proposal.note("explication", EXECUTOR, ", ".join(subjects), _iso(self.now()))
+        self._save(proposal)
+        return proposal
+
+    # -- the operations ------------------------------------------------------
+
+    def _fetch(self, change: Change) -> str:
+        for item in change.proposal.changes:
+            reference = pinned_reference(item)
+            self.docker("pull", reference, timeout=1800)
+            change.new_images[item.container] = self.docker("image", "inspect", "--format", "{{.Id}}", reference)
+        return ", ".join(pinned_reference(item) for item in change.proposal.changes)
+
+    def _rehearsal(self, change: Change) -> str:
+        assert change.recipe is not None
+        overrides = {item.container: pinned_reference(item) for item in change.proposal.changes}
+        run, report = self.restorer(
+            change.recipe.name, self.sandbox, self.generated_dir, self.runner,
+            progress=self.progress, image_overrides=overrides,
+        )
+        if not run.succeeded:
+            raise OperationFailed(f"{run.run_id}: {_why_not(run)}")
+        return f"{run.run_id} — {report.name}"
+
+    def _keep(self, change: Change) -> str:
+        proposal = change.proposal
+        for item in proposal.changes:
+            self.docker("tag", item.from_image_id, keep_tag(proposal.id, item.container))
+        return ", ".join(keep_tag(proposal.id, item.container) for item in proposal.changes)
+
+    def _apply(self, change: Change) -> str:
+        for item in change.proposal.changes:
+            change.applied.append(item)
+            self.docker("tag", pinned_reference(item), item.image)
+            self.docker(*compose_up(item), timeout=600)
+        return ", ".join(f"{item.container} → {item.to_digest[:19]}…" for item in change.proposal.changes)
+
+    def _rollback(self, change: Change) -> str:
+        for item in reversed(change.applied):
+            self.docker("tag", keep_tag(change.proposal.id, item.container), item.image)
+            self.docker(*compose_up(item), timeout=600)
+        return ", ".join(item.container for item in change.applied)
+
+    def _live(self, change: Change, expected: dict[str, str]) -> str:
+        assert change.service is not None and change.recipe is not None
+        return self.live_checks(change.service, change.recipe, expected)
 
     # -- the gates ---------------------------------------------------------
 
-    def _preconditions(self, proposal: store.Proposal, service: GovernedService) -> str:
+    def _preconditions(self, change: Change) -> str:
+        proposal, service = change.proposal, change.service
+        if service is None or change.recipe is None:
+            raise OperationFailed(f"`{proposal.service}` is no longer declared in dock.yml with a sandbox recipe")
         if not proposal.changes:
             raise OperationFailed("the proposal names no image")
-        for change in proposal.changes:
-            if change.container not in service.containers:
-                raise OperationFailed(f"{change.container} is not a container of `{service.name}` in dock.yml")
-            if not change.compose_service or not (change.compose_dir or change.compose_files):
-                raise OperationFailed(f"{change.container} names no compose project: the dock cannot recreate it")
-            if not change.from_image_id or not change.to_digest:
-                raise OperationFailed(f"{change.container}: the proposal lacks the image it replaces or the new digest")
+        for item in proposal.changes:
+            if item.container not in service.containers:
+                raise OperationFailed(f"{item.container} is not a container of `{service.name}` in dock.yml")
+            if not item.compose_service or not (item.compose_dir or item.compose_files):
+                raise OperationFailed(f"{item.container} names no compose project: the dock cannot recreate it")
+            if not item.from_image_id or not item.to_digest:
+                raise OperationFailed(f"{item.container}: the proposal lacks the image it replaces or the new digest")
             shown = self.docker(
                 "inspect", "--format",
-                f'{{{{.Image}}}}|{{{{index .Config.Labels "{WATCHTOWER_LABEL}"}}}}', change.container,
+                f'{{{{.Image}}}}|{{{{index .Config.Labels "{WATCHTOWER_LABEL}"}}}}', item.container,
             ).split("|")
-            if shown[0] != change.from_image_id:
+            if shown[0] != item.from_image_id:
                 raise OperationFailed(
-                    f"{change.container} no longer runs the image the proposal was written against — propose again"
+                    f"{item.container} no longer runs the image the proposal was written against — propose again"
                 )
             if shown[1:2] and shown[1].lower() == "true":
                 raise OperationFailed(
-                    f"{change.container} still carries Watchtower's label: remove it from its compose file, "
+                    f"{item.container} still carries Watchtower's label: remove it from its compose file, "
                     "then propose again"
                 )
-        return ", ".join(change.container for change in proposal.changes)
+        return ", ".join(item.container for item in proposal.changes)
 
-    def _restore_gate(self, recipe: SandboxRecipe) -> str:
+    def _restore_gate(self, change: Change) -> str:
+        recipe = change.recipe
+        assert recipe is not None
         found = recent_restore(self.generated_dir, recipe.name, self.now())
         if found is not None:
             return f"{found.get('run_id')} (success, {found.get('started_at')}), less than 24 h old"

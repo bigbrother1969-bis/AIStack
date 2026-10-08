@@ -60,6 +60,11 @@ PROV_WAS_ASSOCIATED_WITH = f"{PROV}wasAssociatedWith"
 PROV_WAS_ATTRIBUTED_TO = f"{PROV}wasAttributedTo"
 PROV_GENERATED_AT_TIME = f"{PROV}generatedAtTime"
 PROV_INVALIDATED_AT_TIME = f"{PROV}invalidatedAtTime"
+# A governed change's own activity (1.10, `ADR-0019` § 6): when the
+# dock started it and when it ended, PROV-O's own two terms for an
+# activity's bounds.
+PROV_STARTED_AT_TIME = f"{PROV}startedAtTime"
+PROV_ENDED_AT_TIME = f"{PROV}endedAtTime"
 
 
 # --- `aistack:` extensions § *Decision* 2, 3, 5, 7, 9 add ------------
@@ -180,3 +185,11 @@ AISTACK_PACKAGE_MECHANISM = f"{AISTACK}packageMechanism"
 # predicate that links existing entities rather than announcing a new
 # collection stream of its own.
 AISTACK_UPGRADE_CORRELATES_WITH = f"{AISTACK}upgradeCorrelatesWith"
+
+# The dock's governed changes (1.10, `ADR-0019` § 6). `changeOutcome`
+# is how the change ended — `applied`, `rolled_back` or `failed`, the
+# proposal's own final state; `previousDigest` the registry digest the
+# container ran before it, beside `imageDigest` for the one it was
+# changed to. Identifiers, plain `Literal`s, like `imageDigest`.
+AISTACK_CHANGE_OUTCOME = f"{AISTACK}changeOutcome"
+AISTACK_PREVIOUS_DIGEST = f"{AISTACK}previousDigest"

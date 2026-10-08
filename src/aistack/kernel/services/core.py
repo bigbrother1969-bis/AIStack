@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from aistack.kernel.services.execution import (
     ExecutionServices,
 )
+from aistack.kernel.services.transactions import (
+    TransactionServices,
+)
 
 from aistack.transport.default_transport_engine import (
     DefaultTransportEngine,
@@ -36,3 +39,7 @@ class KernelServices:
     transport: DefaultTransportEngine
 
     execution: ExecutionServices
+
+    # Since 1.10 (`ADR-0019` § 6): the operation registry and the
+    # executor the dock's changes run through.
+    transactions: TransactionServices

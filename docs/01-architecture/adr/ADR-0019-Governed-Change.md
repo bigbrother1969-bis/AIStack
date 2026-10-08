@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -114,12 +114,12 @@ provenance graph.
 | Part | State |
 |---|---|
 | § 1 `dock.yml`, update detection, Watchtower label check | done — `aistack.dock` (registry `HEAD` with an anonymous token), page `/dock` |
-| § 2 mandatory why, recorded as an explication | to do |
+| § 2 mandatory why, recorded as an explication | done — `aistack.dock.explication`: once executed, per container, under its digest subject (`<project>/<service>`), by its author, `Declared`/`Validated`, outcome in the text |
 | § 3 proposals and validations in the application | done — `/dock`, administrators, LAN, two people in production |
 | § 3 the dock executor on the host | done — `aistack.dock.executor`, `python -m aistack.cli.dock`, `aistack-dock.timer` (every two minutes, one executor at a time) |
 | § 4 gates (sandbox restore, rehearsal, digest) | done — the newest restore with the live images decides; the rehearsal starts `repository@digest` |
 | § 5 apply, check, rollback | done — previous image kept as `aistack-dock/<container>:<proposal>`; checks: image, running, health, no restart after 30 s, WordPress database and pages |
-| § 6 transaction service in `KernelServices`, provenance trace | to do |
+| § 6 transaction service in `KernelServices`, provenance trace | done — `TransactionServices` (registry + executor: statuses, stop at the first failure, a listener); the dock registers nine kinds; `project_dock_changes`: one `prov:Activity` per change, its people, images and why |
 
 ## Consequences
 
@@ -133,9 +133,10 @@ provenance graph.
 
 ## Open Points
 
-- Until § 6, the operations are kept in the proposal itself (name,
-  status, start, seconds, detail), not yet as `aistack.transaction`
-  operations; § 6 moves them there without changing what is recorded.
+- The operations run as `aistack.transaction` operations and are
+  still kept in the proposal (name, kind, status, start, seconds,
+  detail), which the page and the graph read; a transaction is not
+  persisted on its own.
 - The live checks of a recipe are written for WordPress, the only
   governed service; another recipe gets the generic checks (image,
   running, health, restarts) until its own are written.

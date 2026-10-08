@@ -21,6 +21,7 @@ from aistack.cli.sandbox import data_dir, restore
 from aistack.dock import proposals as store
 from aistack.dock.declaration import load_dock_declaration
 from aistack.dock.executor import Dock, exclusive
+from aistack.kernel.bootstrap.default import create_kernel
 from aistack.sandbox.declaration import load_sandbox_declaration
 from aistack.sandbox.run import Runner, docker_runner
 
@@ -81,6 +82,9 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
             sandbox=load_sandbox_declaration(),
             restorer=restore,
             runner=runner,
+            # The kernel's transaction service: the change runs through
+            # its executor, its operations registered by kind (ADR-0019 § 6).
+            transactions=create_kernel().services.transactions,
             progress=lambda line: print(line, flush=True),
         )
         for closed in dock.close_interrupted():

@@ -529,6 +529,14 @@ python -m aistack.cli.dock show <proposition>
 journalctl -u aistack-dock -n 50
 ```
 
+Une fois la proposition exécutée, son pourquoi entre dans la Time
+Machine comme explication du conteneur changé (sujet
+`<projet compose>/<service>`, par exemple `wordpress/wordpress`), avec
+son auteur, son résultat et le nom de la proposition. Après la
+reconstruction du graphe, le changement y apparaît comme une activité
+reliée aux personnes qui l'ont proposé et validé, aux images avant et
+après, et à son explication.
+
 ## Revenir à l'image d'avant une mise à jour
 
 Quand un service va mal après une mise à jour de son image (Watchtower,

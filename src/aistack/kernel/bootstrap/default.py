@@ -41,6 +41,14 @@ from aistack.kernel.services.execution import (
     ExecutionServices,
 )
 
+from aistack.kernel.services.transactions import (
+    create_transaction_services,
+)
+
+from aistack.transaction.adapters.transport_operation_engine import (
+    TransportOperationEngine,
+)
+
 from aistack.kernel.tracing.repository import (
     InMemoryTraceRepository,
 )
@@ -90,11 +98,21 @@ def create_kernel() -> Kernel:
         trace_repository=trace_repository,
     )
 
+    # A transport is one kind of operation a transaction can hold
+    # (`ADR-0019` § 6): registered here, where the transport engine is
+    # built; the dock registers its own kinds before its changes.
+    transactions = create_transaction_services()
+    transactions.registry.register(
+        "transport",
+        TransportOperationEngine(transport),
+    )
+
     services = KernelServices(
         transport_registry=transport_registry,
         delivery_verifier=delivery_verifier,
         transport=transport,
         execution=execution_services,
+        transactions=transactions,
     )
 
     kernel = Kernel(

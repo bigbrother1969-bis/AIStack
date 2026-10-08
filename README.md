@@ -9,7 +9,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 9
+  version: 10
   created: 2026-07-04
   updated: 2026-10-08
 ---
@@ -79,9 +79,25 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.9.0
+### Concrete capabilities, as of 1.10.0
 
-- **Restore tests in a sandbox — new as of 1.9.0** — one command on the
+- **Governed image updates, the Quai — new as of 1.10.0** — a service
+  declared in `dock.yml` (WordPress on the reference host) no longer
+  updates itself at night: the Quai page shows when a newer image is
+  published for the tag it runs, an administrator proposes the update
+  with its reason in writing, and another validates it (one may do both
+  while AIStack is being set up). An executor on the host then takes it:
+  a sandbox restore of the latest backup within the last 24 hours, the
+  new image fetched by its registry digest and rehearsed in the sandbox,
+  the previous image kept, the container recreated with its own compose
+  project, checks on the live service — and the previous image put back
+  if they fail. Each step shows on the page as it runs; the reason is
+  recorded in the Time Machine as the change's explication, and the
+  change enters the provenance graph with the people behind it, the
+  images before and after and its outcome. The web container answers a
+  healthcheck, so `docker ps` and dashboards reading Docker show it
+  `healthy`.
+- **Restore tests in a sandbox — as of 1.9.0** — one command on the
   host restores a service's latest backup beside the running service,
   never in its place: its own internal Docker network, no port, its own
   throwaway passwords, the same image the service runs, everything
@@ -373,9 +389,9 @@ got past its absence.
   and as `latest`, and the reference host itself runs that exact image
   through `docker-compose.yml` — the first user of every release.
 
-**As of 1.9.0**: `pytest -q` — **3249 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **623 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **85 knowledge artifacts**,
+**As of 1.10.0**: `pytest -q` — **3305 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **636 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **86 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

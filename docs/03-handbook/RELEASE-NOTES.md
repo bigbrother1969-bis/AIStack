@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.13
+  version: 1.14
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -38,6 +38,49 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 it says what the build was *for*.
 
 ---
+
+## 1.10.0 — 2026-10-08
+
+**AIStack makes its first change to a service — only the one an
+administrator validated, after it was rehearsed on the latest backup,
+with the way back ready and the reason kept.**
+
+- **The Quai** (`ADR-0019`). Console → *Quai*, on the local network,
+  signed in. For each service declared in `dock.yml` (WordPress to
+  begin with), the page shows whether a newer image is published for
+  the tag each container runs — the registry is asked, nothing is
+  downloaded. An administrator proposes the update and writes why
+  (required); an administrator validates it — in production, another
+  than the author. A proposal can be rejected until it starts.
+- **The dock's executor**, on the host (`aistack-dock.timer`, every two
+  minutes, `python -m aistack.cli.dock list|show`). For a validated
+  proposal, in order: the container still runs the image the proposal
+  was written against and no longer carries Watchtower's label; a
+  sandbox restore of the latest backup has succeeded within 24 hours,
+  or one is run; the new image is fetched by its registry digest, never
+  by a tag; the restore is rehearsed with it; the previous image is
+  kept; the container is recreated with its own compose project; the
+  live service is checked (the right image, running, healthy, no
+  restart for 30 s, then WordPress's database, home and login pages).
+  A failure before the change stops it with nothing touched; a failure
+  after puts the previous image back and checks again. Every step is on
+  the page with its duration and what it found.
+- **Nothing changes without its why.** Once executed, the reason is
+  recorded in the Time Machine as the explication of the container it
+  changed, by its author; the change enters the provenance graph as an
+  activity tied to the people who proposed and validated it, to the
+  images before and after, to its outcome and to its explication.
+- **One transaction.** A change runs as one transaction of operations
+  through the kernel's transaction service — each operation's status
+  kept, the first failure stopping the rest.
+- **A healthcheck.** The web container answers `/healthz` on the
+  local-network port; `docker ps` — and a dashboard reading Docker such
+  as Homepage — shows it `healthy`.
+- **Fixes.** The arrow in front of the console's two groups of screens
+  showed as an unknown character.
+
+On the reference host, WordPress's two containers no longer carry
+Watchtower's label: they change only through the Quai.
 
 ## 1.9.0 — 2026-10-08
 

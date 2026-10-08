@@ -433,6 +433,34 @@ sans réseau. Si elle réussit, note la date et la durée dans
 `pra_tests.yml` (service `aistack`). Remettre une copie restaurée en
 service reste un geste manuel.
 
+## Tester la restauration d'un service en bac à sable
+
+Pour les services qui ont une recette (WordPress pour commencer), une
+commande sur l'hôte restaure la dernière sauvegarde à côté du service en
+service, jamais à sa place :
+
+```
+cd <dossier d'AIStack>
+source scripts/dev-env.sh
+python -m aistack.cli.sandbox recipes
+python -m aistack.cli.sandbox restore wordpress
+```
+
+Le bac à sable a son propre réseau Docker interne (ni Internet, ni accès
+aux services, aucun port publié), ses propres conteneurs
+(`aistack-sandbox-…`) et ses propres mots de passe jetables. Il reprend
+les images des conteneurs en service et ne lit rien d'autre chez eux. Les
+fichiers restaurés vont sur le disque local (`run_root` dans
+`sandbox.yml`) ; la commande vérifie d'abord la place libre et refuse si
+elle manque. À la fin, réussite ou échec, tout est effacé sauf le
+rapport, écrit dans le dossier des données, sous `sandbox/`.
+
+La commande affiche chaque étape, chaque vérification, le temps de
+reprise mesuré et l'entrée qu'elle propose pour `pra_tests.yml`. Elle ne
+l'écrit pas : copie-la si tu la valides. Si une exécution a été
+interrompue, `python -m aistack.cli.sandbox cleanup` retire ce qu'elle a
+laissé.
+
 ## En cas de problème
 
 - **« Invalid callback URL » chez le fournisseur** : l'adresse de retour de

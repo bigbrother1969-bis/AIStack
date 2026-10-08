@@ -30,7 +30,7 @@ how_to:
   services: "Read the container's logs (docker logs) to see why it restarts or is unhealthy, then fix and restart it; the AI assistant guides you step by step."
   backup: "Check the backup job runs (systemctl list-timers, journalctl) and writes to the path declared in ./config/backup_thresholds.yml (OPS-0006)."
   gpu: "Check the GPU's load, memory and temperature (nvidia-smi); raise the threshold in ./config/gpu_thresholds.yml if the value is normal (OPS-0007)."
-  pra_tests: "Run a real restore test of the service, then record it in ./config/pra_tests.yml (status, date, rto_minutes). For AIStack itself: scripts/restore_aistack.sh (manual, \"Backing up and restoring AIStack\")."
+  pra_tests: "Run a real restore test of the service, then record it in ./config/pra_tests.yml (status, date, rto_minutes). For WordPress: python -m aistack.cli.sandbox restore wordpress, which proposes the entry (manual, \"Testing a service's restore in a sandbox\"). For AIStack itself: scripts/restore_aistack.sh (manual, \"Backing up and restoring AIStack\")."
   uncovered_state: "Declare how the service is backed up in ./config/backup_strategy.yml (OPS-0010), or set up a backup if it has none."
   inventory_gap: "Declare the container in ./config/service_categorization.yml, mark it on_demand: true if it only runs on demand, or stop it if it should not run (OPS-0011)."
   quarantine: "Unused code is deleted at the review; an item that was used leaves the quarantine. The detail: python -m aistack.cli.quarantine_report (OPS-0012)."

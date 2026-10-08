@@ -415,6 +415,33 @@ If it succeeds, record the date and the duration in `pra_tests.yml`
 (service `aistack`). Putting a restored copy back in service stays a
 manual act.
 
+## Testing a service's restore in a sandbox
+
+For the services that have a recipe (WordPress to begin with), a command
+on the host restores the latest backup beside the running service, never
+in its place:
+
+```
+cd <AIStack directory>
+source scripts/dev-env.sh
+python -m aistack.cli.sandbox recipes
+python -m aistack.cli.sandbox restore wordpress
+```
+
+The sandbox has its own internal Docker network (no Internet, no access
+to the services, no published port), its own containers
+(`aistack-sandbox-…`) and its own throwaway passwords. It reuses the
+images of the running containers and reads nothing else from them. The
+restored files go to the local disk (`run_root` in `sandbox.yml`); the
+command checks the free space first and refuses when it is short. At the
+end, success or failure, everything is removed except the report,
+written to the data directory, under `sandbox/`.
+
+The command prints each step, each check, the measured recovery time and
+the entry it proposes for `pra_tests.yml`. It does not write it: copy it
+if you agree with it. If a run was interrupted,
+`python -m aistack.cli.sandbox cleanup` removes what it left.
+
 ## Troubleshooting
 
 - **"Invalid callback URL" at the provider**: the callback of the address

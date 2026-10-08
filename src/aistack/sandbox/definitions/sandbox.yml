@@ -1,0 +1,36 @@
+# Sandbox restore — ADR-0018, decided by the owner 2026-10-08.
+#
+# A sandbox restore puts a service's latest backup back on its feet
+# beside the live service, never in its place: its own internal Docker
+# network (no Internet, no port), its own containers
+# (`aistack-sandbox-…`), its own throwaway credentials, files under
+# `run_root` — all removed at the end, only the report kept.
+#
+#   python -m aistack.cli.sandbox restore wordpress
+#
+# `run_root` is on the host's local disk (owner's choice, 2026-10-08).
+# Before restoring, the command checks the free space there against
+# `expansion` times the size of the backup files plus `margin_gib`,
+# and refuses when it is short.
+#
+# Each recipe names the backup files (the newest matching each pattern)
+# and the live containers whose images the restore reuses — only their
+# image is read, never their environment, volumes or secrets.
+
+run_root: /srv/aistack/sandbox
+margin_gib: 1
+expansion: 4
+
+recipes:
+  # `/srv/scripts/backup-wordpress.sh`, nightly at 03:00: a
+  # `mariadb-dump` of the WordPress database and a `tar czf` of
+  # `/srv/wordpress/wp-content`, 14 days kept.
+  wordpress:
+    kind: wordpress_mariadb
+    backup_dir: /media/BACKUP/persiaut-consulting/wordpress/
+    database_dump: "db-*.sql"
+    files_archive: "wp-content-*.tar.gz"
+    live_database_container: wordpress_db
+    live_web_container: wp_app
+    database_timeout_seconds: 900
+    web_timeout_seconds: 180

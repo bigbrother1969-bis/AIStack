@@ -110,3 +110,39 @@ def record_image_digest(
     latest_path, _ = write_artifact_with_history(content, output_path)
 
     return latest_path
+
+
+REGISTRY_FILE = "registry-digests.json"
+
+
+def known_repo_digests(subject: str, digest: str, *, generated_dir: Path = DEFAULT_GENERATED_DIR) -> list[str] | None:
+    """The registry digests remembered for one image of `subject`, or
+    None when that image was never looked up (`ADR-0018`, 1.9)."""
+
+    path = generated_dir / DIGEST_DIRNAME / subject / REGISTRY_FILE
+    try:
+        known = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    value = known.get(digest) if isinstance(known, dict) else None
+    return [str(item) for item in value] if isinstance(value, list) else None
+
+
+def remember_repo_digests(
+    subject: str, digest: str, repo_digests: list[str], *, generated_dir: Path = DEFAULT_GENERATED_DIR
+) -> None:
+    """Remember, beside the history and without touching it, which
+    registry digests one image of `subject` has — so the image a
+    container runs today can be fetched again after its next upgrade,
+    even though its history record predates them."""
+
+    path = generated_dir / DIGEST_DIRNAME / subject / REGISTRY_FILE
+    try:
+        known = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        known = {}
+    if not isinstance(known, dict):
+        known = {}
+    known[digest] = list(repo_digests)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(known, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

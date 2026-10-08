@@ -103,6 +103,9 @@ class SandboxRun:
     # Rollback rehearsal (`ADR-0018`, 1.9): the image to run instead of
     # the live container's own, by live container name.
     image_overrides: dict[str, str] = field(default_factory=dict)
+    # Set for a rollback rehearsal from its start, even if it stops
+    # before any earlier image is found.
+    rehearsal: bool = False
     # The earlier images found for a rollback rehearsal
     # (`aistack.sandbox.rollback.PreviousImage`), for the summary.
     previous_images: list[Any] = field(default_factory=list)
@@ -254,7 +257,7 @@ class SandboxRun:
         (`ADR-0018` § 5). A rollback rehearsal proposes none: it tests
         an earlier image, not the service as it runs."""
 
-        if self.image_overrides:
+        if self.rehearsal or self.image_overrides:
             return ""
 
         lines = [

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -112,9 +112,13 @@ service's compose file (`image: <repository>@sha256:…`) and the command
 to apply it. Going back for real stays the owner's act.
 
 An earlier image no longer on the host is fetched again by its registry
-digest, which the digest collector records with each new digest since
-1.9; an image recorded before has none, and the rehearsal says it
-cannot be fetched. A pulled image stays on the host: it is the one the
+digest, which the digest collector looks up once per image since 1.9 and
+remembers beside the history (`registry-digests.json`, the history
+itself untouched) — the images running today included, so their next
+upgrade can be rehearsed. An image that was already gone before has
+none: the rehearsal says it cannot be fetched and goes on with the
+other containers of the recipe (GIGABYTE, 2026-10-08: WordPress's
+previous MariaDB image had been removed). A pulled image stays on the host: it is the one the
 real rollback needs.
 
 ## Implementation state
@@ -128,7 +132,7 @@ real rollback needs.
 | § 4 AIStack recipe | done — first real run on GIGABYTE 2026-10-08, success, 77.8 s, recorded in `pra_tests.yml` |
 | § 4 Nextcloud, Immich recipes | done — first real runs on GIGABYTE 2026-10-08, success (84.8 s, 262.8 s), recorded in `pra_tests.yml` |
 | § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
-| Rollback before an upgrade, by digest | done — `python -m aistack.cli.sandbox rollback <service>`: rehearsal in the sandbox with the earlier image, pin printed; first real run by the owner to come |
+| Rollback before an upgrade, by digest | done — `python -m aistack.cli.sandbox rollback <service>`: rehearsal in the sandbox with the earlier image, pin printed; first real run 2026-10-08: the earlier MariaDB image was gone, said so |
 | Diff between the sandbox and the live service | to do |
 
 ## Consequences

@@ -13,7 +13,9 @@ from aistack.providers.docker.digest import collect_running_container_digests, i
 from aistack.providers.docker.digest_history import (
     DEFAULT_GENERATED_DIR,
     has_changed,
+    known_repo_digests,
     record_image_digest,
+    remember_repo_digests,
 )
 
 # `aistack.timemachine.projection.docker_digest.STREAM_STEM`
@@ -176,15 +178,20 @@ def run_cycle(
         if dry_run:
             is_new = has_changed(subject, digest, generated_dir=generated_dir)
         else:
-            # The registry digests are looked up only when the digest
-            # changed: one `docker image inspect` per upgrade, not per
-            # container per poll.
+            # The registry digests are looked up once per image, not per
+            # container per poll: remembered beside the history, so an
+            # image recorded before they were kept can still be fetched
+            # again after the next upgrade (`ADR-0018`, 1.9).
+            repo_digests = known_repo_digests(subject, digest, generated_dir=generated_dir)
+            if repo_digests is None:
+                repo_digests = image_repo_digests(digest)
+                remember_repo_digests(subject, digest, repo_digests, generated_dir=generated_dir)
             is_new = has_changed(subject, digest, generated_dir=generated_dir) and (
                 record_image_digest(
                     subject,
                     digest,
                     image=str(entry.get("image") or ""),
-                    repo_digests=image_repo_digests(digest),
+                    repo_digests=repo_digests,
                     generated_dir=generated_dir,
                 )
                 is not None

@@ -21,6 +21,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from aistack.providers.docker.digest_history import known_repo_digests
 from aistack.providers.docker.identity import stable_subject_from_labels
 from aistack.sandbox.declaration import SandboxRecipe
 from aistack.sandbox.run import SandboxRun, StepFailed
@@ -90,7 +91,13 @@ def find_previous(run: SandboxRun, container: str, generated_dir: Path) -> Previ
             current=current,
             previous=digest,
             upgraded_at=upgraded_at,
-            repo_digests=tuple(str(item) for item in record.get("repo_digests") or ()),
+            repo_digests=tuple(
+                str(item) for item in (
+                    record.get("repo_digests")
+                    or known_repo_digests(subject, digest, generated_dir=generated_dir)
+                    or ()
+                )
+            ),
             compose_dir=labels["com.docker.compose.project.working_dir"],
             compose_files=labels["com.docker.compose.project.config_files"],
             compose_service=labels["com.docker.compose.service"],
@@ -165,10 +172,22 @@ def prepare_rollback(
 
     with run.step("fetch previous images"):
         ready = []
+        unavailable = []
         for previous in found:
-            used = make_available(run, previous)
+            try:
+                used = make_available(run, previous)
+            except StepFailed as error:
+                # One image that cannot be had does not stop the
+                # rehearsal of the others; it is said in the report.
+                unavailable.append(str(error))
+                continue
             ready.append(PreviousImage(**{**previous.__dict__, "used": used}))
             run.image_overrides[previous.container] = used
+        run.facts["rollback"]["unavailable"] = unavailable
+        if not ready:
+            raise StepFailed("; ".join(unavailable))
+        for reason in unavailable:
+            run.check("earlier image available", False, reason, required=False)
         run.facts["rollback"]["images"] = {
             item.container: {
                 "subject": item.subject, "current": item.current, "previous": item.previous,

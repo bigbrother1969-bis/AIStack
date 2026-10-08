@@ -144,6 +144,8 @@ def test_run_cycle_records_a_changed_subject_and_advances_the_checkpoint(tmp_pat
     assert changed == [{"subject": "frigate", "digest": "sha256:image-digest-1"}]
     recorded = generated_dir / "docker-digest" / "frigate" / "docker-digest.json"
     assert json.loads(recorded.read_text())["repo_digests"] == ["frigate@sha256:repo-digest-1"]
+    remembered = generated_dir / "docker-digest" / "frigate" / "registry-digests.json"
+    assert json.loads(remembered.read_text()) == {"sha256:image-digest-1": ["frigate@sha256:repo-digest-1"]}
     assert load_checkpoint(checkpoint_path) == now.isoformat()
 
 

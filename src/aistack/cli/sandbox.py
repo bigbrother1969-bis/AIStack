@@ -71,6 +71,7 @@ def restore(
     run = SandboxRun(service, declaration.run_root, runner, host, progress=progress)
     try:
         if rollback:
+            run.rehearsal = True
             run.previous_images = prepare_rollback(run, recipe, generated_dir, only)
         RECIPES[recipe.kind](run, recipe, expansion=declaration.expansion, margin_gib=declaration.margin_gib)
     except StepFailed as error:
@@ -83,7 +84,7 @@ def restore(
 
 
 def summary(run: SandboxRun) -> str:
-    title = "Répétition du retour arrière" if run.image_overrides else "Sandbox"
+    title = "Répétition du retour arrière" if run.rehearsal else "Sandbox"
     lines = [f"{title} {run.run_id}: {'SUCCÈS' if run.succeeded else 'ÉCHEC'}"]
     if run.failure:
         lines.append(f"  arrêt : {run.failure}")
@@ -95,7 +96,7 @@ def summary(run: SandboxRun) -> str:
     if run.recovery_seconds is not None:
         lines.append(f"  temps de reprise mesuré : {run.recovery_seconds:g} s")
     lines.append("")
-    if run.image_overrides:
+    if run.rehearsal:
         for previous in run.previous_images:
             lines.append(
                 f"  {previous.container} : image d'avant la mise à jour {previous.upgraded_at or ''} "

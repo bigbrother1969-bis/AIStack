@@ -155,3 +155,57 @@ def test_without_a_registry_digest_the_local_image_is_tagged_to_be_pinned():
 
     assert f"  docker tag {EARLIER} wordpress:rollback" in lines
     assert "    image: wordpress:rollback" in lines
+
+
+def test_a_failed_rehearsal_proposes_no_pra_entry(tmp_path: Path):
+    run, _ = _rollback(tmp_path, FakeDocker())
+
+    assert not run.succeeded
+    assert run.proposed_entry() == ""
+    assert "pra_tests.yml" not in cli.summary(run)
+
+
+def test_registry_digests_remembered_beside_the_history_make_an_old_record_fetchable(tmp_path: Path):
+    from aistack.providers.docker.digest_history import remember_repo_digests
+
+    generated = tmp_path / "data"
+    _history(generated, [{"subject": "nextcloud/db", "digest": EARLIER}, {"subject": "nextcloud/db", "digest": LIVE}])
+    remember_repo_digests("nextcloud/db", EARLIER, ["mariadb@sha256:bbb"], generated_dir=generated)
+    docker = FakeDocker(earlier_on_host=False)
+
+    run, _ = _rollback(tmp_path, docker)
+
+    assert ["pull", "mariadb@sha256:bbb"] in docker.calls
+    assert run.succeeded
+
+
+def test_one_image_that_cannot_be_had_does_not_stop_the_others(tmp_path: Path):
+    from aistack.sandbox.rollback import prepare_rollback
+    from aistack.sandbox.run import SandboxRun
+
+    generated = tmp_path / "data"
+    for service in ("db", "app"):
+        directory = generated / "docker-digest" / "nextcloud" / service / "history" / "docker-digest"
+        directory.mkdir(parents=True)
+        (directory / "2026-10-01T00-00-00Z.json").write_text(json.dumps({"digest": f"{EARLIER}-{service}"}))
+        (directory / "2026-10-02T00-00-00Z.json").write_text(json.dumps({"digest": LIVE}))
+
+    def docker(args: Sequence[str], timeout: float) -> CommandResult:
+        args = list(args)
+        if args[0] == "inspect":
+            service = "db" if args[-1] == "nc_db" else "app"
+            return CommandResult(0, f"{LIVE}|img:1|nextcloud|{service}|/srv/nextcloud|\n")
+        if args[:2] == ["image", "inspect"]:
+            return CommandResult(0 if args[-1].endswith("-app") else 1)
+        return CommandResult(0)
+
+    recipe = SandboxRecipe(name="nextcloud", kind="nextcloud_mariadb", backup_dir=tmp_path,
+                           live_database_container="nc_db", live_web_container="nc_app")
+    run = SandboxRun("nextcloud", tmp_path / "sandbox", docker)
+
+    ready = prepare_rollback(run, recipe, generated)
+
+    assert [item.container for item in ready] == ["nc_app"]
+    assert run.image_overrides == {"nc_app": f"{EARLIER}-app"}
+    (missing,) = [c for c in run.checks if c.name == "earlier image available"]
+    assert "nc_db" in missing.observed and not missing.required

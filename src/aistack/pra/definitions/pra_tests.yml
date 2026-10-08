@@ -242,6 +242,13 @@ services:
   # graph rebuilt from the restored files in a throwaway container with
   # no network in 22.6 s (134,251 facts, 0 dropped). 37 s end to end,
   # rounded up to one minute.
+  # Sandbox restore aistack-20261008-112015 (ADR-0018), the same day,
+  # now the reference: the newest archive restored with the live
+  # image, session database `ok`, 323 explications readable, 17
+  # streams, 18 declarations, the Time Machine graph rebuilt, the web
+  # application started on the restored data and its console HTTP 200,
+  # signed-in pages still guarded (303); 77.8 s measured. Entry
+  # validated by the owner.
   - name: aistack
     last_test:
       status: success

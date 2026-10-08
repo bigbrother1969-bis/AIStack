@@ -10,12 +10,18 @@ ROOT = Path(__file__).parents[3]
 
 
 def _run(cwd: Path, *args: str) -> str:
+    # The hosts the rebuild reads: only under the test's own data
+    # directory — the shipped `hosts.yml` names the Raspberry by an
+    # absolute path, which exists on the reference host (1.11).
+    config = cwd / "test-config"
+    config.mkdir(exist_ok=True)
+    (config / "hosts.yml").write_text("hosts:\n  gigabyte:\n    directory: hosts/gigabyte\n")
     result = subprocess.run(
         [sys.executable, "-m", "aistack.cli.timemachine_rebuild", *args],
         capture_output=True,
         text=True,
         cwd=cwd,
-        env={"PYTHONPATH": str(ROOT / "src"), "PATH": "/usr/bin:/bin"},
+        env={"PYTHONPATH": str(ROOT / "src"), "PATH": "/usr/bin:/bin", "AISTACK_CONFIG_DIR": str(config)},
     )
     assert result.returncode == 0, result.stderr
     return result.stdout

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Accepted
   owner: Architecture
   created: 2026-10-08
@@ -110,7 +110,7 @@ owner has read the report and copied it.
 | § 3 local disk, cleanup | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
 | § 4 WordPress recipe | done — first real run on GIGABYTE 2026-10-08, success, 55.8 s, recorded in `pra_tests.yml` |
 | § 4 AIStack recipe | done — first real run on GIGABYTE 2026-10-08, success, 77.8 s, recorded in `pra_tests.yml` |
-| § 4 Nextcloud, Immich recipes | done — database restored, Immich photos sampled from Deja Dup; first real run by the owner to come |
+| § 4 Nextcloud, Immich recipes | done — first real runs on GIGABYTE 2026-10-08, success (84.8 s, 262.8 s), recorded in `pra_tests.yml` |
 | § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
 | Rollback before an upgrade, by digest | to do |
 | Diff between the sandbox and the live service | to do |

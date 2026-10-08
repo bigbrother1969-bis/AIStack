@@ -175,16 +175,29 @@ services:
       status: success
       date: "2026-09-26"
       rto_minutes: 1
+  # Sandbox restore nextcloud-20261008-121524 (ADR-0018), run by the
+  # owner on GIGABYTE: the 2026-10-08 02:20 dump loaded with the image
+  # nc_db runs, 179 tables, 7 accounts, 88473 file index entries; 84.8 s.
+  # The database only — the files have no backup (`nextcloud-files` in
+  # backup_strategy.yml, known and kept by the owner the same day).
+  # Validated by the owner; replaces the 2026-06-24 record (2 min).
   - name: nextcloud
     last_test:
       status: success
-      date: "2026-06-24"
-      rto_minutes: 2
+      date: "2026-10-08"
+      rto_minutes: 1
+  # Sandbox restore immich-20261008-132354 (ADR-0018), run by the owner
+  # on GIGABYTE: the 2026-10-08 02:40 dump loaded with the image and
+  # command immich_postgres runs, 61 tables, 114446 assets, 6 accounts;
+  # three external-library photos taken back from Deja Dup, all three
+  # matching the database; 262.8 s. Uploads (19268 assets) have no
+  # backup (`immich-uploads`, known and kept by the owner the same
+  # day). Validated by the owner; replaces the 2026-06-24 record (5 min).
   - name: immich
     last_test:
       status: success
-      date: "2026-06-24"
-      rto_minutes: 5
+      date: "2026-10-08"
+      rto_minutes: 4
   - name: arrstack
     last_test:
       status: success

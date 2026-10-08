@@ -217,13 +217,13 @@ def test_the_real_pra_tests_definition_loads():
     assert by_service["aistack"].status == "success"
     assert by_service["aistack"].rto_minutes == 1
 
-    # The owner's own real restore-test history, found 2026-09-23 in
-    # the legacy `homelab_documentation` engine's own
-    # `runtime/pra_tests.json` and carried over here — not invented.
+    # Nextcloud and Immich: restored in the sandbox, 2026-10-08 — their
+    # databases, and for Immich a sample of its external library (the
+    # uploads and Nextcloud's files have no backup).
     assert by_service["nextcloud"].status == "success"
-    assert by_service["nextcloud"].rto_minutes == 2
+    assert by_service["nextcloud"].rto_minutes == 1
     assert by_service["immich"].status == "success"
-    assert by_service["immich"].rto_minutes == 5
+    assert by_service["immich"].rto_minutes == 4
 
     # Never tested in that history either — declared the same honest
     # way, not a fabricated success.

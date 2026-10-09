@@ -137,6 +137,9 @@ def create_app(
     app.state.collect_findings = collect_findings
     app.state.ask_ai = ask_ai
     app.state.troubleshooting_sessions = {}
+    # The CPU findings the list last showed, and when: a reading is an
+    # instant, so the one the owner clicked may be gone a second later.
+    app.state.troubleshooting_listed = {}
     # What the AI is working on, for whom: the notice on every page
     # when an answer is ready (2026-10-09).
     app.state.ai_jobs = AIJobs()

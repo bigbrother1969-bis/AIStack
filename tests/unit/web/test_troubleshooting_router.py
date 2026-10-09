@@ -71,14 +71,19 @@ class Host:
         self.definition = definition
         self.asked: list[tuple[str, str, str]] = []
         self.queued: list[object] = []
+        # A calmer reading: the CPU finding is no longer seen.
+        self.calm = False
+        self.resolved = False
 
     def collect(self):
         background = {
             c.name for c in load_resource_priority_yaml(self.definition).background.containers
         }
         tagged = [("Tests PRA", finding("nextcloud")), ("État persistant", finding("nextcloud"))]
+        if not self.resolved:
+            tagged.append(("Tests PRA", finding("gigabyte")))
 
-        if "newcomer" not in background:
+        if "newcomer" not in background and not self.calm:
             tagged.insert(0, (CONSUMPTION_DOMAIN, finding("newcomer")))
 
         return qualify(tagged), ""
@@ -155,6 +160,28 @@ def test_an_unknown_key_goes_back_to_the_list(tmp_path: Path, host: Host):
     reply = client(tmp_path, host).post("/troubleshooting/finding/nowhere/start")
 
     assert reply.status_code == 303
+    assert reply.headers["location"].startswith("/troubleshooting/?status=")
+    assert host.asked == []
+
+
+def test_a_cpu_finding_the_list_showed_starts_though_the_next_reading_is_calm(tmp_path: Path, host: Host):
+    web = client(tmp_path, host)
+    assert "newcomer" in web.get("/troubleshooting/").text
+    host.calm = True
+
+    reply = web.post("/troubleshooting/finding/newcomer/start")
+
+    assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/1"
+    assert [subject for subject, _, _ in host.asked] == ["newcomer"] * 3
+
+
+def test_a_cockpit_finding_gone_since_the_list_is_resolved(tmp_path: Path, host: Host):
+    web = client(tmp_path, host)
+    assert "gigabyte" in web.get("/troubleshooting/").text
+    host.resolved = True
+
+    reply = web.post("/troubleshooting/finding/gigabyte/start")
+
     assert reply.headers["location"].startswith("/troubleshooting/?status=")
     assert host.asked == []
 

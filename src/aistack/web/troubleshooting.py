@@ -19,6 +19,7 @@ received for it, which were never recorded on their own.
 
 from __future__ import annotations
 
+import time
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -48,6 +49,11 @@ from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
 PREFIX = "/troubleshooting"
+
+# How long a CPU finding the list showed can still be started once a
+# fresh reading no longer sees it (UAT, 2026-10-09: aistack-docker-digest
+# at 18.9 % on the list, under 5 % the second the owner clicked).
+LISTED_FOR_SECONDS = 15 * 60
 
 router = APIRouter(dependencies=[LAN_ONLY, SIGNED_IN_ONLY])
 
@@ -108,6 +114,10 @@ def aide(request: Request) -> Response:
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 def index(request: Request) -> Response:
     findings, note = request.app.state.collect_findings()
+    now = time.monotonic()
+    request.app.state.troubleshooting_listed = {
+        entry.key: (entry, now) for entry in findings if entry.domain == CONSUMPTION_DOMAIN
+    }
 
     return _render(
         request,
@@ -138,6 +148,14 @@ def start(request: Request, key: str) -> RedirectResponse:
 
     findings, _ = request.app.state.collect_findings()
     entry = next((f for f in findings if f.key == key), None)
+
+    if entry is None:
+        # A CPU reading is an instant: the one the list showed is the
+        # one the owner asks about, while it is recent. A cockpit
+        # finding gone from a fresh collection is resolved.
+        listed = request.app.state.troubleshooting_listed.get(key)
+        if listed is not None and time.monotonic() - listed[1] <= LISTED_FOR_SECONDS:
+            entry = listed[0]
 
     if entry is None:
         return _back_to_list(language.t("troubleshooting.status.not_found", subject=key))

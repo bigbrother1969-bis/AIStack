@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import gzip
 import json
-import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -90,18 +89,20 @@ def test_compaction_runs_at_most_once_a_day(tmp_path: Path) -> None:
 
 
 def test_measure_adds_up_and_finds_the_pace(tmp_path: Path) -> None:
-    (tmp_path / "big").mkdir()
-    (tmp_path / "big" / "a").write_bytes(b"x" * 7000)
-    old = tmp_path / "old"
-    old.write_bytes(b"y" * 1000)
-    stamp = (NOW - timedelta(days=30)).timestamp()
-    os.utime(old, (stamp, stamp))
+    history = tmp_path / "big" / "history" / "big"
+    history.mkdir(parents=True)
+    (history / "2026-10-08T10-00-00Z.json").write_bytes(b"x" * 7000)
+    (history / "2026-09-01T10-00-00Z.json").write_bytes(b"x" * 500)
+    # A graph rewritten today is no growth.
+    (tmp_path / "timemachine").mkdir()
+    (tmp_path / "timemachine" / "graph").write_bytes(b"y" * 500)
 
-    reading = measure(tmp_path, BUDGET)
-    assert reading.used_bytes == 8000 and reading.files == 2
-    assert reading.largest[0] == ("big", 7000)
+    reading = measure(tmp_path, BUDGET, NOW)
+    assert reading.used_bytes == 8000 and reading.files == 3
+    assert reading.largest[0] == ("big", 7500)
     assert reading.percent == 80
-    assert reading.daily_bytes == 1000  # 7000 written this week, a day on average
+    assert reading.daily_bytes == 1000  # 7000 observed this week, a day on average
+    assert reading.days_left == 2
 
 
 def test_findings_near_and_over_the_budget(tmp_path: Path) -> None:

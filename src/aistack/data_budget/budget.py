@@ -4,8 +4,9 @@ old observations (`ADR-0021`; the owner, 2026-10-09: a budget of 2 GB,
 observations older than 90 days compressed, in place).
 
 **Measured, never estimated.** `measure` walks the data directory and
-adds up what is there; the pace is what was written over the last seven
-days (file modification times), so the date the budget would be reached
+adds up what is there; the pace is what the observation histories gained
+over the last seven days (by the instant in each name), so the date the
+budget would be reached
 is a projection from a measurement, said as such.
 
 **Compressed, never deleted.** `compress_old` turns an observation file
@@ -64,8 +65,18 @@ def load_data_budget(path: Path | None = None) -> DataBudget:
 
 
 def measure(generated_dir: Path, budget: DataBudget, now: datetime | None = None) -> DataUsageReading:
-    moment = (now or datetime.now(timezone.utc)).timestamp()
-    week_ago = moment - 7 * 86400
+    """
+    Every file added up. The pace is what the observation histories
+    gained over the last seven days, by the instant each observation
+    carries in its name — not by modification time: the graph and the
+    pages are rewritten whole at every rebuild, which is no growth
+    (GIGABYTE, 2026-10-09: 45 MB a day by modification time, the graph
+    alone counting 87 MB a week, against about 20 MB a day of new
+    observations).
+    """
+
+    moment = now or datetime.now(timezone.utc)
+    week_ago = moment - timedelta(days=7)
     total = 0
     files = 0
     recent = 0
@@ -84,8 +95,10 @@ def measure(generated_dir: Path, budget: DataBudget, now: datetime | None = None
                 by_top[key] = by_top.get(key, 0) + info.st_size
             else:
                 by_top[name] = info.st_size
-            if info.st_mtime >= week_ago:
-                recent += info.st_size
+            if len(top) >= 2 and top[-2] == "history":
+                parsed = _parse_history_filename(Path(name))
+                if parsed is not None and week_ago <= parsed[0] <= moment:
+                    recent += info.st_size
     largest = tuple(sorted(by_top.items(), key=lambda item: item[1], reverse=True)[:6])
     return DataUsageReading(
         directory=str(generated_dir),

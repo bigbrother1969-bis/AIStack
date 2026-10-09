@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-10-09
@@ -53,8 +53,11 @@ Decided by the owner, 2026-10-09.
 `data_budget.yml` (`./config`, shipped in
 `aistack/data_budget/definitions/`): `budget_mb: 2048`,
 `warn_percent: 80`. What the data directory takes is measured — every
-file added up — never estimated; the pace is what was written over the
-last seven days.
+file added up — never estimated; the pace is what the observation
+histories gained over the last seven days, by the instant each
+observation carries in its name. *Corrected 2026-10-09, at the first
+run:* by modification time the pace read 45 MB a day, because the graph
+and the pages are rewritten whole at every rebuild — no growth.
 
 ### 2. A health domain, "Données d'AIStack"
 

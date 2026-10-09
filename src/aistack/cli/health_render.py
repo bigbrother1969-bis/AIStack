@@ -54,6 +54,7 @@ from aistack.runtime.pra_test_gap import find_pra_test_gaps, find_undeclared_pra
 from aistack.runtime.storage_shortage import find_storage_shortage
 from aistack.runtime.uncovered_state_gap import find_uncovered_state
 from aistack.renderers.plan.html import PLAN_PAGE, render_plan
+from aistack.vigil.snapshot import take as take_snapshot, write as write_snapshot
 
 # `OPS-0005`'s own declared thresholds — the same file
 # `aistack.cli.runtime_diagnose.DEFAULT_STORAGE_THRESHOLDS` reads.
@@ -708,6 +709,16 @@ def main() -> None:
 
         if language.code == languages.reference:
             output_path = written
+
+    # The vigil (2.0) compares this render with the one before.
+    write_snapshot(
+        take_snapshot(
+            cockpit,
+            score.value if score is not None else None,
+            debt_score.value if debt_score is not None else None,
+        ),
+        generated_dir,
+    )
 
     plan_written = write_plan(
         cockpit,

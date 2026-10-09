@@ -1,0 +1,33 @@
+# AIStack — the vigil (2.0), for a git installation (the Docker one
+# runs it as the `vigil` service of docker-compose.yml; never both).
+#
+# Every 15 minutes: renders the health cockpit and the console again,
+# compares the health and the dock's proposals with the pass before,
+# and sends what changed to Gotify in one message (a silent host, a
+# failed restore test, the health going down, the dock). Address and
+# token: AISTACK_GOTIFY_URL and AISTACK_GOTIFY_TOKEN in .env.web.
+#
+# Install (as root):
+#
+#   cp deploy/systemd/aistack-vigil.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-vigil
+#
+# Watch it with: journalctl -u aistack-vigil -f
+
+[Unit]
+Description=AIStack vigil (health kept fresh, Gotify notifications)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=big-brother
+Group=big-brother
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_vigil.sh --every 900
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

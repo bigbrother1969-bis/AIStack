@@ -420,8 +420,8 @@ section of the repository's README. In order:
 ### With Docker
 
 The Docker image runs AIStack itself: the repository's
-`docker-compose.yml` starts the web application and the five
-collectors, six services of one image. The prerequisites, the identity
+`docker-compose.yml` starts the web application, the five
+collectors and the vigil, seven services of one image. The prerequisites, the identity
 provider and the reverse proxy are the same; Python, git and the
 systemd units are no longer needed.
 
@@ -570,6 +570,35 @@ To run a test now and see the outcomes:
 ./run_pra_schedule.sh --all
 ./run_pra_schedule.sh --list
 ```
+
+## Vigil and notifications
+
+The vigil renders the Health cockpit and the console again every 15
+minutes, and sends to **Gotify** what changed since its previous pass:
+- a silent host (its collector no longer writes);
+- a failed restore test;
+- the health going down, with the new findings;
+- the Dock: an update proposed and waiting for your validation, then
+  applied, rolled back or failed.
+
+Each event is said once: a finding that stays is not repeated. The
+events of one pass go out as one message; a silent host, a failed test
+or a rollback make it ring. The first pass only notes what is already
+there.
+
+In Gotify, create an "AIStack" application and copy its token; add to
+`.env.web`, without displaying them:
+
+```
+AISTACK_GOTIFY_URL=https://gotify.<nom_de_domaine>
+AISTACK_GOTIFY_TOKEN=<the application's token>
+```
+
+With Docker, the vigil is the `vigil` service: `docker compose up -d`,
+then `docker compose exec vigil python -m aistack.cli.vigil --test` for
+a test message and `docker compose logs -f vigil` to follow it. In a
+git installation: `deploy/systemd/aistack-vigil.service`. Without these
+two variables the vigil still runs, and says notifications are off.
 
 ## Traceability of the hosts
 

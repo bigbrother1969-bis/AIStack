@@ -32,7 +32,7 @@
 # AISTACK_VERSION=dev in .env first, so a local build never takes a
 # published version's name (OPS-0002 § *Between two publications*).
 #
-# The six services replace the six systemd units of a git
+# The seven services replace the seven systemd units of a git
 # installation; never run both on one host (the ports and the
 # collectors would collide).
 
@@ -112,6 +112,14 @@ services:
     <<: *aistack
     container_name: aistack-resource-priority
     command: ["priority"]
+
+  # The vigil (2.0): every 15 minutes, renders the health cockpit and
+  # the console again and sends what changed to Gotify
+  # (AISTACK_GOTIFY_URL and AISTACK_GOTIFY_TOKEN in .env.web).
+  vigil:
+    <<: *aistack
+    container_name: aistack-vigil
+    command: ["vigil"]
 
   # The knowledge-integrity validator, a one-shot tool (exits 0 when
   # the bundle is sound, 1 on a blocking finding, 2 without a bundle):

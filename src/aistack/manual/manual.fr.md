@@ -359,7 +359,7 @@ install* du README du dépôt. Dans l'ordre :
 
 L'image Docker fait tourner AIStack lui-même : le
 fichier `docker-compose.yml` du dépôt démarre l'application web et les
-cinq collecteurs, six services d'une même image. Les prérequis, le
+cinq collecteurs et la vigie, sept services d'une même image. Les prérequis, le
 fournisseur d'identité et le reverse proxy sont les mêmes ; Python, git
 et les unités systemd ne servent plus.
 
@@ -596,6 +596,36 @@ mettre dans le fichier compose du service et la commande pour
 l'appliquer. Le retour en vrai reste ton geste ; une image épinglée par
 son digest n'est plus mise à jour par Watchtower, retire l'épingle une
 fois le problème réglé.
+
+## Vigie et notifications
+
+La vigie refait le Cockpit Santé et la console toutes les 15 minutes, et
+t'envoie sur **Gotify** ce qui a changé depuis son passage précédent :
+- un hôte silencieux (son collecteur n'écrit plus) ;
+- un test de restauration en échec ;
+- la santé qui baisse, avec les nouveaux constats ;
+- le Quai : une mise à jour proposée qui attend ta validation, puis
+  appliquée, revenue en arrière ou en échec.
+
+Chaque événement n'est dit qu'une fois : un constat qui reste n'est pas
+répété. Les événements d'un même passage partent en un seul message ;
+un hôte silencieux, un test échoué ou un retour arrière le font sonner.
+Le premier passage ne fait que noter ce qui existe déjà.
+
+Dans Gotify, crée une application « AIStack » et copie son jeton ;
+ajoute dans `.env.web`, sans les afficher :
+
+```
+AISTACK_GOTIFY_URL=https://gotify.<nom_de_domaine>
+AISTACK_GOTIFY_TOKEN=<jeton de l'application>
+```
+
+Avec Docker, la vigie est le service `vigil` : `docker compose up -d`,
+puis `docker compose exec vigil python -m aistack.cli.vigil --test` pour
+un message d'essai et `docker compose logs -f vigil` pour la suivre. En
+installation git : `deploy/systemd/aistack-vigil.service`. Sans ces deux
+variables, la vigie tourne quand même et dit que les notifications sont
+coupées.
 
 ## Traçabilité des hôtes
 

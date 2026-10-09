@@ -1,0 +1,12 @@
+# Notifications Gotify de la vigie (2.0). Miroir de catalogs/en/notify.yml.
+
+title: "AIStack — {count} nouveauté(s)"
+event:
+  health: "Santé en baisse : {before} → {after}/100."
+  host: "Hôte silencieux — {text}"
+  pra: "Test de restauration échoué — {text}"
+  dock_proposed: "Quai : mise à jour de {service} proposée par {by}, en attente de validation."
+  dock_applied: "Quai : mise à jour de {service} appliquée."
+  dock_rolled_back: "Quai : mise à jour de {service} revenue en arrière (vérifications en échec)."
+  dock_failed: "Quai : mise à jour de {service} en échec."
+test: "Message d'essai de la vigie d'AIStack : les notifications arrivent."

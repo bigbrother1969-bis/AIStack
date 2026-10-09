@@ -14,3 +14,9 @@ console:
 tooltip:
   back_to_console: "Revenir à la console, la page d'accueil d'AIStack"
   external: "Ouvre un site extérieur : {url}"
+
+# The notice shown on every page when an AI answer is ready (2026-10-09).
+notice:
+  ready: "Réponse de l'IA prête — {label} : {subject}"
+  open: "Ouvrir cette réponse"
+  close: "Fermer cette notification"

@@ -86,14 +86,18 @@ def run_diagnosis(
     answers: MutableMapping[str, AIRuntimeAnswer],
     ask: AskAI,
     record: Record,
+    on_answer: Callable[[str], Any] = lambda operation: None,
 ) -> None:
     """
     Ask the three operations in order, storing each answer in `answers`
-    the moment it arrives, then record the three together.
+    the moment it arrives — then telling `on_answer`, which a page uses
+    to say the answer is ready (2026-10-09) — and record the three
+    together.
     """
 
     for operation in OPERATIONS:
         answers[operation] = ask(finding, operation, target_language)
+        on_answer(operation)
 
     record(finding, tuple(answers[operation] for operation in OPERATIONS))
 

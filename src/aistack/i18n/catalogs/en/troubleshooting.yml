@@ -27,7 +27,7 @@ step:
   recommend_warning: "A suggestion for you — nothing is applied without your explicit click on “Apply” below."
   model: "Model: {model}"
   unreachable: "The AI engine gave no answer: {reason}"
-  pending: "The AI model is working on this answer. With the current model one step can take several minutes; this page refreshes itself every 15 seconds, and you can also leave and come back later."
+  pending: "The AI model is working on this answer. With the current model one step can take several minutes; this page refreshes itself every 15 seconds, and you can also leave it: a notice will appear on whatever page you are on when the answer is ready."
   apply: "Apply the fix (classify as “background”)"
   apply_note_before: "The only action this button can take: classify"
   apply_note_middle: "as a “background” container in"

@@ -23,7 +23,8 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from aistack.i18n import Languages, default_languages
+from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER, Languages, default_languages
+from aistack.i18n.web import page_language
 from aistack.priority.screen import Discover, discover_containers
 from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
@@ -47,6 +48,8 @@ from aistack.web import storage as storage_screen
 from aistack.web import declarations as declarations_screen
 from aistack.web import dock as dock_screen
 from aistack.web import health
+from aistack.web import notifications
+from aistack.web.ai_jobs import AIJobs
 from aistack.instance.data_location import location_file
 from aistack.web.authentication import (
     Authentication,
@@ -55,9 +58,10 @@ from aistack.web.authentication import (
     answer_refused,
     answer_sign_in_required,
     build_authentication,
+    current_session,
     fill_markers,
 )
-from aistack.web.exposure import Listeners, include
+from aistack.web.exposure import Listeners, arrival_port, include
 from aistack.renderers.nav import SESSION_MARKER
 
 
@@ -131,6 +135,9 @@ def create_app(
     app.state.collect_findings = collect_findings
     app.state.ask_ai = ask_ai
     app.state.troubleshooting_sessions = {}
+    # What the AI is working on, for whom: the notice on every page
+    # when an answer is ready (2026-10-09).
+    app.state.ai_jobs = AIJobs()
     # One worker: the model answers one call at a time on this host,
     # and a diagnosis must not hold a request open for minutes.
     app.state.run_in_background = (
@@ -180,6 +187,7 @@ def create_app(
     include(app, timemachine.router, timemachine.PREFIX)
     include(app, dock_screen.router, dock_screen.PREFIX)
     include(app, health.router)
+    include(app, notifications.router)
 
     @app.middleware("http")
     async def _who_is_signed_in(request: Request, call_next: Any) -> Response:
@@ -201,6 +209,7 @@ def create_app(
         if marker in body:
             body = body.replace(marker, first_start.badge(request).encode("utf-8") + marker, 1)
         filled = fill_markers(request, body)
+        filled = _with_notices(request, filled)
         rebuilt = Response(content=filled, status_code=response.status_code)
         # Every header as it was — each `set-cookie` on its own — but the
         # length, which the filled body changes.
@@ -224,3 +233,22 @@ def create_app(
         return Response(status_code=error.status_code)
 
     return app
+
+
+def _with_notices(request: Request, body: bytes) -> bytes:
+    """The AI notice (`aistack.web.notifications`) before `</body>`, on
+    the local-network listener and for a signed-in person only — the
+    screens that ask the AI answer there and nowhere else."""
+
+    listeners: Listeners = request.app.state.listeners
+    if arrival_port(request) != listeners.lan_port or current_session(request) is None:
+        return body
+    end = body.rfind(b"</body>")
+    if end < 0:
+        return body
+    language = page_language(
+        request.query_params.get(LANGUAGE_PARAMETER),
+        request.cookies.get(LANGUAGE_COOKIE),
+        request.app.state.languages,
+    )
+    return body[:end] + notifications.snippet(language.t).encode("utf-8") + body[end:]

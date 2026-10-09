@@ -291,6 +291,11 @@ watch. For one of them:
 
 Every AI reasoning is kept in the subject's history.
 
+An AI answer can take several minutes: there is no need to wait on the
+page. As soon as an answer is ready, a notice appears at the bottom right
+of whatever page you are on (on the local network, signed in); a click
+opens the answer, the cross closes it.
+
 ## Time Machine
 
 *Local network, sign-in required.* What AIStack observed, kept in a

@@ -29,7 +29,7 @@ step:
   recommend_warning: "Suggestion pour toi — rien ne s'applique sans ton clic explicite sur « Appliquer » ci-dessous."
   model: "Modèle : {model}"
   unreachable: "Le moteur IA n'a pas répondu : {reason}"
-  pending: "Le modèle IA calcule cette réponse. Avec le modèle actuel, une étape peut prendre plusieurs minutes ; cette page se rafraîchit toute seule toutes les 15 secondes, tu peux aussi la quitter et revenir plus tard."
+  pending: "Le modèle IA calcule cette réponse. Avec le modèle actuel, une étape peut prendre plusieurs minutes ; cette page se rafraîchit toute seule toutes les 15 secondes, tu peux aussi la quitter : une notification apparaîtra sur la page où tu seras quand la réponse sera prête."
   apply: "Appliquer la correction (classer « background »)"
   apply_note_before: "Seule action que ce bouton sait faire : classer"
   apply_note_middle: "comme conteneur « background » dans"

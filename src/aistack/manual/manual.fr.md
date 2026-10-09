@@ -224,6 +224,11 @@ surveillance CPU. Pour l'une d'elles :
 
 Chaque raisonnement de l'IA est gardé dans l'historique du sujet.
 
+Une réponse de l'IA peut prendre plusieurs minutes : inutile d'attendre sur
+la page. Dès qu'une réponse est prête, une notification apparaît en bas à
+droite de la page où tu te trouves (sur le réseau local, connecté) ; un
+clic ouvre la réponse, la croix la ferme.
+
 ## Time Machine
 
 *Réseau local, connexion requise.* Ce qu'AIStack a observé, gardé dans un

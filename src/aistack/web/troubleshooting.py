@@ -43,7 +43,7 @@ from aistack.troubleshooting.guide import (
     describe_unreachable,
     run_diagnosis,
 )
-from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY
+from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY, current_session
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
@@ -153,6 +153,17 @@ def start(request: Request, key: str) -> RedirectResponse:
     history = request.app.state.generated_dir / "ai-reasoning"
     ask = request.app.state.ask_ai
 
+    # Each answer, once there, is announced to whoever started the
+    # diagnosis, on whatever page they are (2026-10-09).
+    jobs = request.app.state.ai_jobs
+    job_id = f"troubleshooting:{key}"
+    session = current_session(request)
+    jobs.start(job_id, session.subject if session else "", entry.finding.subject, len(OPERATIONS))
+    steps = {operation: step for step, operation in OPERATION_BY_STEP.items()}
+
+    def announce(operation: str) -> None:
+        jobs.answered(job_id, f"troubleshooting.step.{operation}", step_href(key, steps[operation]))
+
     request.app.state.run_in_background(
         lambda: run_diagnosis(
             entry.finding,
@@ -160,10 +171,15 @@ def start(request: Request, key: str) -> RedirectResponse:
             answers,  # type: ignore[arg-type]
             ask,
             lambda finding, done: record_ai_reasoning(finding, done, history),
+            announce,
         )
     )
 
     return first_step
+
+
+def step_href(key: str, step: int) -> str:
+    return f"{PREFIX}/finding/{quote(key)}/step/{step}"
 
 
 @router.get("/finding/{key:path}/step/{step}", response_class=HTMLResponse, include_in_schema=False)
@@ -181,6 +197,11 @@ def step(request: Request, key: str, step: int) -> Response:
 
     answer = answers.get(operation) if operation else None
     unreachable = ""
+
+    if answer is not None:
+        person = current_session(request)
+        if person is not None:
+            request.app.state.ai_jobs.seen(person.subject, step_href(key, step))
 
     if answer is not None and not answer.reachable:
         message_key, parameters = describe_unreachable(answer.unreachable_reason)

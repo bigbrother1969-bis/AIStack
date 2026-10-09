@@ -134,26 +134,85 @@ def test_the_help_page_is_served(tmp_path: Path, host: Host):
     assert client(tmp_path, host).get("/troubleshooting/aide").status_code == 200
 
 
-def test_starting_asks_once_records_and_opens_step_one(tmp_path: Path, host: Host):
+def test_starting_shows_aistack_s_own_facts_and_asks_no_ai(tmp_path: Path, host: Host):
     web = client(tmp_path, host)
 
     reply = web.post("/troubleshooting/finding/newcomer/start?lang=en")
 
     assert reply.status_code == 303
     assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/1"
+    assert host.asked == []
+
+    facts = web.get("/troubleshooting/finding/newcomer/step/2?lang=en").text
+    assert "Container" in facts and "newcomer" in facts and "12.2" in facts
+    assert "Class in resource_priority.yml" in facts and "unclassified" in facts
+
+    todo = web.get("/troubleshooting/finding/newcomer/step/3?lang=en").text
+    assert 'action="/troubleshooting/finding/newcomer/apply"' in todo
+    assert "docker stats --no-stream newcomer" in todo
+
+    opinion = web.get("/troubleshooting/finding/newcomer/step/4?lang=en").text
+    assert 'action="/troubleshooting/finding/newcomer/ask"' in opinion
+    assert 'http-equiv="refresh"' not in opinion
+    assert host.asked == []
+
+
+def test_asking_the_ai_runs_the_three_operations_once_and_records_them(tmp_path: Path, host: Host):
+    web = client(tmp_path, host)
+    web.post("/troubleshooting/finding/newcomer/start?lang=en")
+
+    reply = web.post("/troubleshooting/finding/newcomer/ask?lang=en")
+
+    assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/4"
     assert host.asked == [
         ("newcomer", "reason", "en"),
         ("newcomer", "explain", "en"),
         ("newcomer", "recommend", "en"),
     ]
     assert list((tmp_path / "ai-reasoning").glob("newcomer*"))
+    page = web.get("/troubleshooting/finding/newcomer/step/4").text
+    assert "recommend answer for newcomer" in page and 'id="ai-reason"' in page
+    assert 'action="/troubleshooting/finding/newcomer/ask"' not in page
 
-    for step in (1, 2, 3, 4):
-        assert web.get(f"/troubleshooting/finding/newcomer/step/{step}").status_code == 200
 
-    assert "recommend answer for newcomer" in web.get(
-        "/troubleshooting/finding/newcomer/step/4"
-    ).text
+def test_a_backup_gap_says_where_to_declare_its_real_copy(tmp_path: Path, host: Host):
+    from aistack.contracts.backup_strategy_declaration import BackupStrategyDeclaration
+    from aistack.contracts.uncovered_state_gap import UncoveredStateGap
+    from aistack.runtime.evaluate_uncovered_state import evaluate_uncovered_state
+
+    (gap,) = evaluate_uncovered_state(
+        [
+            UncoveredStateGap(
+                declaration=BackupStrategyDeclaration(
+                    service="nextcloud-files",
+                    host="GIGABYTE",
+                    has_state=True,
+                    engines=(),
+                    mechanism="aucun — une seule copie",
+                )
+            )
+        ]
+    )
+    app = create_app(
+        tmp_path,
+        LISTENERS,
+        LANGUAGES,
+        WebPaths(resource_priority=host.definition),
+        collect_findings=lambda: (qualify([("État persistant", gap)]), ""),
+        ask_ai=host.ask,
+        run_in_background=lambda job: job(),
+    )
+    web = signed_in(TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False))
+    web.post("/troubleshooting/finding/nextcloud-files/start")
+
+    facts = web.get("/troubleshooting/finding/nextcloud-files/step/2?lang=fr").text
+    assert "Mécanisme" not in facts or "aucun — une seule copie" in facts
+    assert "aucun — une seule copie" in facts and "GIGABYTE" in facts
+    todo = web.get("/troubleshooting/finding/nextcloud-files/step/3?lang=fr").text
+    assert "./config/backup_strategy.yml" in todo
+    assert "  - name: nextcloud-files" in todo and "host: GIGABYTE" in todo
+    assert "/apply" not in todo
+    assert host.asked == []
 
 
 def test_an_unknown_key_goes_back_to_the_list(tmp_path: Path, host: Host):
@@ -172,7 +231,7 @@ def test_a_cpu_finding_the_list_showed_starts_though_the_next_reading_is_calm(tm
     reply = web.post("/troubleshooting/finding/newcomer/start")
 
     assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/1"
-    assert [subject for subject, _, _ in host.asked] == ["newcomer"] * 3
+    assert "newcomer" in web.get("/troubleshooting/finding/newcomer/step/2").text
 
 
 def test_a_cockpit_finding_gone_since_the_list_is_resolved(tmp_path: Path, host: Host):
@@ -228,6 +287,7 @@ def test_the_fix_is_refused_for_a_finding_of_another_domain(tmp_path: Path, host
         ("GET", "/troubleshooting/aide"),
         ("POST", "/troubleshooting/finding/newcomer/start"),
         ("POST", "/troubleshooting/finding/newcomer/apply"),
+        ("POST", "/troubleshooting/finding/newcomer/ask"),
     ],
 )
 def test_nothing_answers_asks_or_writes_on_the_public_port(
@@ -242,36 +302,46 @@ def test_nothing_answers_asks_or_writes_on_the_public_port(
     assert host.definition.read_bytes() == before
 
 
-def test_the_steps_wait_for_an_answer_still_being_computed(tmp_path: Path, host: Host):
+def test_the_ai_step_waits_for_answers_still_being_computed(tmp_path: Path, host: Host):
     web = client(tmp_path, host, background=True)
+    web.post("/troubleshooting/finding/newcomer/start?lang=en")
 
-    reply = web.post("/troubleshooting/finding/newcomer/start?lang=en")
+    reply = web.post("/troubleshooting/finding/newcomer/ask?lang=en")
 
-    assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/1"
+    assert reply.headers["location"] == "/troubleshooting/finding/newcomer/step/4"
     assert len(host.queued) == 1 and host.asked == []
 
-    first = web.get("/troubleshooting/finding/newcomer/step/1")
-    pending = web.get("/troubleshooting/finding/newcomer/step/2?lang=en")
+    facts = web.get("/troubleshooting/finding/newcomer/step/2")
+    pending = web.get("/troubleshooting/finding/newcomer/step/4?lang=en")
 
-    assert first.status_code == 200 and 'http-equiv="refresh"' not in first.text
+    assert 'http-equiv="refresh"' not in facts.text
     assert 'http-equiv="refresh"' in pending.text
-    assert "working on this answer" in pending.text
+    assert "The AI model is working" in pending.text
 
     host.queued[0]()  # the background worker runs the diagnosis
 
-    done = web.get("/troubleshooting/finding/newcomer/step/2")
+    done = web.get("/troubleshooting/finding/newcomer/step/4")
     assert "reason answer for newcomer" in done.text
     assert 'http-equiv="refresh"' not in done.text
     assert list((tmp_path / "ai-reasoning").glob("newcomer*"))
 
 
-def test_a_running_diagnosis_is_joined_not_started_twice(tmp_path: Path, host: Host):
+def test_the_ai_is_asked_once_per_session(tmp_path: Path, host: Host):
     web = client(tmp_path, host, background=True)
 
     web.post("/troubleshooting/finding/newcomer/start")
+    web.post("/troubleshooting/finding/newcomer/ask")
     web.post("/troubleshooting/finding/newcomer/start")
+    web.post("/troubleshooting/finding/newcomer/ask")
 
     assert len(host.queued) == 1
+
+
+def test_asking_without_a_session_goes_back_to_the_list(tmp_path: Path, host: Host):
+    reply = client(tmp_path, host).post("/troubleshooting/finding/newcomer/ask")
+
+    assert reply.headers["location"].startswith("/troubleshooting/?status=")
+    assert host.asked == []
 
 
 def test_an_engine_that_gave_no_answer_is_said_in_the_reader_s_language(tmp_path: Path, host: Host):
@@ -297,8 +367,9 @@ def test_an_engine_that_gave_no_answer_is_said_in_the_reader_s_language(tmp_path
     )
     web = signed_in(TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False))
     web.post("/troubleshooting/finding/newcomer/start?lang=fr")
+    web.post("/troubleshooting/finding/newcomer/ask?lang=fr")
 
-    page = web.get("/troubleshooting/finding/newcomer/step/2?lang=fr").text
+    page = web.get("/troubleshooting/finding/newcomer/step/4?lang=fr").text
 
     assert "pas de réponse dans le délai déclaré (900 s)" in page
     assert "did not answer" not in page
@@ -340,4 +411,7 @@ def test_a_finding_is_shown_in_the_reader_s_language(tmp_path: Path, host: Host)
     assert "ne contient aucun fichier de sauvegarde" in listing
     assert "holds no backup file" not in listing
     assert step.status_code == 200
-    assert "Mesuré" in step.text and "Vérifier que la tâche de sauvegarde" in step.text
+    assert "Mesuré" in step.text
+    todo = web.get("/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fnextcloud/step/3?lang=fr").text
+    assert "Vérifier que la tâche de sauvegarde" in todo
+    assert "systemctl list-timers" in todo

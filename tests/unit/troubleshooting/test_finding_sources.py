@@ -21,3 +21,44 @@ def test_without_one_the_checkout_is_read(tmp_path: Path, monkeypatch):
     assert findings.FindingSources().network_docker_observation == (
         findings.REPOSITORY_ROOT / "reports" / "generated" / "network-docker-observation.json"
     )
+
+
+def test_a_pra_finding_cites_the_declared_mechanism_and_the_entry_to_write():
+    from datetime import datetime, timezone
+
+    from aistack.contracts.pra_test_reading import PraTestReading
+    from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
+    from aistack.i18n.translator import translator_for
+    from aistack.troubleshooting.facts import PRA_TESTS, Declarations, guidance
+    from aistack.web.app import PACKAGE_ROOT
+
+    finding = RuntimeFinding(
+        subject="gigabyte",
+        signature="OPS-0004",
+        interpretation="never tested",
+        remediation="test it",
+        confidence="Measured",
+        grounding="OPS-0009",
+        evidence=(
+            CitedReading(
+                provider="pra",
+                reading=PraTestReading(service="gigabyte", observed_at=datetime.now(timezone.utc)),
+            ),
+        ),
+        qualifications=("OPS-0004/technical-debt",),
+    )
+    t = translator_for("fr")
+    declared = Declarations(
+        PACKAGE_ROOT / "backup_strategy" / "definitions" / "backup_strategy.yml",
+        PACKAGE_ROOT / "pra" / "definitions" / "pra_tests.yml",
+        PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml",
+    )
+
+    guide = guidance(PRA_TESTS, finding, t, declared, "test it")
+
+    facts = {fact.label: fact.value for fact in guide.facts}
+    assert facts["Dernier test"] == "jamais"
+    assert "Clonezilla" in facts["Mécanisme déclaré"]
+    assert facts["Âge maximal d'un test (jours)"] == "90"
+    assert guide.snippet_file == "./config/pra_tests.yml"
+    assert "  - name: gigabyte\n    last_test:\n      status: success" in guide.snippet

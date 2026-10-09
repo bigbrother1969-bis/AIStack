@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from aistack.web.ai_jobs import AIJobs
 from tests.unit.web.test_troubleshooting_router import LAN_PORT, PUBLIC_PORT, Host, client, host  # noqa: F401
 
-STEP_2 = "/troubleshooting/finding/newcomer/step/2"
+STEP_4 = "/troubleshooting/finding/newcomer/step/4"
 
 
 def test_a_job_s_answers_are_ready_for_its_owner_only_until_opened():
@@ -35,31 +35,33 @@ def test_a_job_s_answers_are_ready_for_its_owner_only_until_opened():
 def test_each_answer_of_a_diagnosis_is_announced_with_its_step(tmp_path: Path, host: Host):  # noqa: F811
     web = client(tmp_path, host)
     web.post("/troubleshooting/finding/newcomer/start")
+    web.post("/troubleshooting/finding/newcomer/ask")
 
     reply = web.get("/notifications")
 
     assert reply.status_code == 200
     data = reply.json()
     assert data["running"] == 0
-    assert sorted(item["href"] for item in data["ready"]) == [
-        STEP_2, "/troubleshooting/finding/newcomer/step/3", "/troubleshooting/finding/newcomer/step/4",
-    ]
+    assert sorted(item["href"] for item in data["ready"]) == sorted(
+        f"{STEP_4}#ai-{operation}" for operation in ("reason", "explain", "recommend")
+    )
     assert any("Raisonnement" in item["text"] and "newcomer" in item["text"] for item in data["ready"])
 
 
 def test_opening_an_answer_takes_it_off_the_notices(tmp_path: Path, host: Host):  # noqa: F811
     web = client(tmp_path, host)
     web.post("/troubleshooting/finding/newcomer/start")
+    web.post("/troubleshooting/finding/newcomer/ask")
 
-    web.get(STEP_2)
+    web.get(STEP_4)
 
-    hrefs = [item["href"] for item in web.get("/notifications").json()["ready"]]
-    assert STEP_2 not in hrefs and len(hrefs) == 2
+    assert web.get("/notifications").json()["ready"] == []
 
 
 def test_a_diagnosis_still_running_is_counted(tmp_path: Path, host: Host):  # noqa: F811
     web = client(tmp_path, host, background=True)
     web.post("/troubleshooting/finding/newcomer/start")
+    web.post("/troubleshooting/finding/newcomer/ask")
 
     assert web.get("/notifications").json() == {"running": 1, "ready": []}
 

@@ -37,8 +37,9 @@ from aistack.i18n.web import PageLanguage, page_language
 from aistack.priority.yaml import save_resource_priority_yaml
 from aistack.troubleshooting.apply import BackgroundChange, class_as_background
 from aistack.troubleshooting.findings import CONSUMPTION_DOMAIN, resource_priority_definition
+from aistack.troubleshooting.facts import Declarations, guidance
 from aistack.troubleshooting.guide import (
-    OPERATION_BY_STEP,
+    AI_STEP,
     OPERATIONS,
     STEP_COUNT,
     describe_unreachable,
@@ -129,22 +130,16 @@ def index(request: Request) -> Response:
 @router.post("/finding/{key:path}/start", include_in_schema=False, dependencies=[ADMIN_ACTION])
 def start(request: Request, key: str) -> RedirectResponse:
     """
-    Start the diagnosis of the finding routed by `key`, freshly
-    re-collected, in the background, and open its first step at once.
-
-    The three answers arrive one by one into the session; the steps
-    show each as soon as it exists. A diagnosis already running for
-    this key is joined, never started twice — the model works on one
-    call at a time on this host.
+    Open the finding routed by `key`, freshly re-collected: the finding,
+    the facts AIStack has of it and what to do are shown at once, with
+    no AI (2026-10-09). The AI's opinion is asked on step 4 only, on a
+    click (`ask`). A session already open for this key is kept, with
+    whatever the AI already answered.
     """
 
     language = _language(request)
     sessions = _sessions(request)
     first_step = RedirectResponse(f"{PREFIX}/finding/{quote(key)}/step/1", status_code=303)
-
-    running = sessions.get(key)
-    if running is not None and len(running["answers"]) < len(OPERATIONS):  # type: ignore[arg-type]
-        return first_step
 
     findings, _ = request.app.state.collect_findings()
     entry = next((f for f in findings if f.key == key), None)
@@ -160,40 +155,70 @@ def start(request: Request, key: str) -> RedirectResponse:
     if entry is None:
         return _back_to_list(language.t("troubleshooting.status.not_found", subject=key))
 
-    answers: dict[str, object] = {}
+    running = sessions.get(key)
+    if running is not None and running.get("asked"):
+        return first_step
+
     sessions[key] = {
         "finding": entry.finding,
         "domain": entry.domain,
         "applyable": entry.applyable,
-        "answers": answers,
+        "answers": {},
+        "asked": False,
     }
+    return first_step
+
+
+@router.post("/finding/{key:path}/ask", include_in_schema=False, dependencies=[ADMIN_ACTION])
+def ask(request: Request, key: str) -> RedirectResponse:
+    """
+    Ask the AI's opinion — `reason`, `explain`, `recommend` — in the
+    background; each answer appears on step 4 as it arrives and is
+    announced on whatever page the owner is. Asked once per session:
+    the model works on one call at a time on this host.
+    """
+
+    language = _language(request)
+    session = _sessions(request).get(key)
+    ai_step = RedirectResponse(step_href(key, AI_STEP), status_code=303)
+
+    if session is None:
+        return _back_to_list(language.t("troubleshooting.status.expired", subject=key))
+    if session.get("asked"):
+        return ai_step
+
+    session["asked"] = True
+    finding = session["finding"]
+    assert isinstance(finding, RuntimeFinding)
+    answers = session["answers"]
 
     history = request.app.state.generated_dir / "ai-reasoning"
-    ask = request.app.state.ask_ai
+    ai = request.app.state.ask_ai
 
-    # Each answer, once there, is announced to whoever started the
-    # diagnosis, on whatever page they are (2026-10-09).
     jobs = request.app.state.ai_jobs
     job_id = f"troubleshooting:{key}"
-    session = current_session(request)
-    jobs.start(job_id, session.subject if session else "", entry.finding.subject, len(OPERATIONS))
-    steps = {operation: step for step, operation in OPERATION_BY_STEP.items()}
+    person = current_session(request)
+    jobs.start(job_id, person.subject if person else "", finding.subject, len(OPERATIONS))
 
     def announce(operation: str) -> None:
-        jobs.answered(job_id, f"troubleshooting.step.{operation}", step_href(key, steps[operation]))
+        jobs.answered(job_id, f"troubleshooting.step.{operation}", answer_href(key, operation))
 
     request.app.state.run_in_background(
         lambda: run_diagnosis(
-            entry.finding,
+            finding,
             language.lang,
             answers,  # type: ignore[arg-type]
-            ask,
-            lambda finding, done: record_ai_reasoning(finding, done, history),
+            ai,
+            lambda found, done: record_ai_reasoning(found, done, history),
             announce,
         )
     )
 
-    return first_step
+    return ai_step
+
+
+def answer_href(key: str, operation: str) -> str:
+    return f"{step_href(key, AI_STEP)}#ai-{operation}"
 
 
 def step_href(key: str, step: int) -> str:
@@ -207,23 +232,36 @@ def step(request: Request, key: str, step: int) -> Response:
     if session is None or step < 1 or step > STEP_COUNT:
         return _back_to_list(_language(request).t("troubleshooting.status.expired", subject=key))
 
-    operation = OPERATION_BY_STEP.get(step)
     answers = session["answers"]
     assert isinstance(answers, dict)
     finding = session["finding"]
     assert isinstance(finding, RuntimeFinding)
+    language = _language(request)
 
-    answer = answers.get(operation) if operation else None
-    unreachable = ""
-
-    if answer is not None:
+    if step == AI_STEP:
         person = current_session(request)
         if person is not None:
-            request.app.state.ai_jobs.seen(person.subject, step_href(key, step))
+            for operation in answers:
+                request.app.state.ai_jobs.seen(person.subject, answer_href(key, operation))
 
-    if answer is not None and not answer.reachable:
-        message_key, parameters = describe_unreachable(answer.unreachable_reason)
-        unreachable = _language(request).t(message_key, **parameters)
+    opinions = []
+    for operation in OPERATIONS:
+        answer = answers.get(operation)
+        unreachable = ""
+        if answer is not None and not answer.reachable:
+            message_key, parameters = describe_unreachable(answer.unreachable_reason)
+            unreachable = language.t(message_key, **parameters)
+        opinions.append({"operation": operation, "answer": answer, "unreachable": unreachable})
+
+    paths = request.app.state.paths
+    domain = str(session["domain"])
+    guide = guidance(
+        domain,
+        finding,
+        language.t,
+        Declarations(paths.backup_strategy, paths.pra_tests, paths.resource_priority),
+        finding_remediation(finding, language.t),
+    )
 
     return _render(
         request,
@@ -231,16 +269,18 @@ def step(request: Request, key: str, step: int) -> Response:
         {
             "key": key,
             "subject": finding.subject,
-            "domain": session["domain"],
+            "domain": domain,
             "applyable": session["applyable"],
             "step": step,
             "total_steps": STEP_COUNT,
+            "ai_step": AI_STEP,
             "finding": finding,
-            "answer": answer,
-            # An AI step whose answer has not arrived yet: the page
-            # says so and refreshes itself.
-            "pending": operation is not None and answer is None,
-            "unreachable": unreachable,
+            "guide": guide,
+            "asked": bool(session.get("asked")),
+            "opinions": opinions,
+            # The AI asked and an answer not there yet: the page says
+            # so and refreshes itself.
+            "pending": step == AI_STEP and bool(session.get("asked")) and len(answers) < len(OPERATIONS),
         },
     )
 

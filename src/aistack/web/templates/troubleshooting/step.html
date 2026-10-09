@@ -48,6 +48,19 @@
       margin-top: 1rem;
     }
     .apply-note { color: #666; font-size: .82rem; margin: .5rem 0 0; }
+    button.ask {
+      padding: .6rem 1.1rem; font-size: .95rem; cursor: pointer;
+      border: 1px solid #1f6feb; border-radius: 6px; background: white; color: #1f6feb;
+    }
+    .intro { color: #444; font-size: .9rem; }
+    ol.todo li { margin-bottom: .6rem; line-height: 1.45; }
+    .snippet-in { font-size: .88rem; margin: 1rem 0 .3rem; }
+    pre.snippet {
+      background: #f6f8fa; border: 1px solid #dde4ed; border-radius: 6px;
+      padding: .7rem .9rem; font-size: .85rem; overflow-x: auto; white-space: pre-wrap;
+    }
+    .opinion { margin-top: 1.2rem; }
+    .opinion h3 { font-size: 1rem; margin-bottom: .2rem; }
     .lang-switch { font-size: .85rem; margin-left: auto; }
     .lang-switch a { color: #1f6feb; text-decoration: none; }
     .lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
@@ -87,41 +100,68 @@
       <dd>{{ confidence_of(finding) }}</dd>
       <dt>{{ t('troubleshooting.step.qualifications') }}</dt>
       <dd>{{ finding.qualifications | join(', ') if finding.qualifications else '—' }}</dd>
-      <dt>{{ t('troubleshooting.step.remediation') }}</dt>
-      <dd>{{ remediation_of(finding) }}</dd>
     </dl>
+  {% elif step == 2 %}
+    <h2>{{ t('troubleshooting.step.facts') }}</h2>
+    <p class="intro">{{ t('troubleshooting.step.facts_intro') }}</p>
+    {% if guide.facts %}
+      <dl class="config">
+        {% for fact in guide.facts %}
+          <dt>{{ fact.label }}</dt>
+          <dd>{{ fact.value }}</dd>
+        {% endfor %}
+      </dl>
+    {% else %}
+      <p>{{ t('troubleshooting.step.no_facts') }}</p>
+    {% endif %}
+  {% elif step == 3 %}
+    <h2>{{ t('troubleshooting.step.todo') }}</h2>
+    <ol class="todo">
+      {% for item in guide.steps %}<li>{{ item }}</li>{% endfor %}
+    </ol>
+    {% if guide.snippet %}
+      <p class="snippet-in">{{ t('troubleshooting.step.snippet_in') }} <code>{{ guide.snippet_file }}</code></p>
+      <pre class="snippet">{{ guide.snippet }}</pre>
+    {% endif %}
+    {% if guide.verify %}
+      <p class="snippet-in">{{ t('troubleshooting.step.verify') }}</p>
+      <pre class="snippet">{{ guide.verify }}</pre>
+    {% endif %}
+    {% if applyable %}
+      <form method="post" action="{{ base }}/finding/{{ key | urlencode }}/apply"><!--aistack:csrf-->
+        <button class="apply" type="submit" title="{{ t('troubleshooting.tooltip.apply', subject=subject) }}">{{ t('troubleshooting.step.apply') }}</button>
+      </form>
+      <p class="apply-note">
+        {{ t('troubleshooting.step.apply_note_before') }} <strong>{{ subject }}</strong>
+        {{ t('troubleshooting.step.apply_note_middle') }} <code>resource_priority.yml</code>
+        {{ t('troubleshooting.step.apply_note_after') }}
+      </p>
+    {% else %}
+      <p class="apply-note">{{ t('troubleshooting.step.no_apply', domain=domain) }}</p>
+    {% endif %}
   {% else %}
-    {% if step == 2 %}
-      <h2>{{ t('troubleshooting.step.reason') }}</h2>
-    {% elif step == 3 %}
-      <h2>{{ t('troubleshooting.step.explain') }}</h2>
+    <h2>{{ t('troubleshooting.step.ai') }}</h2>
+    <div class="warning">{{ t('troubleshooting.step.ai_warning') }}</div>
+    {% if not asked %}
+      <form method="post" action="{{ base }}/finding/{{ key | urlencode }}/ask"><!--aistack:csrf-->
+        <button class="ask" type="submit" title="{{ t('troubleshooting.tooltip.ask') }}">{{ t('troubleshooting.step.ask') }}</button>
+      </form>
+      <p class="apply-note">{{ t('troubleshooting.step.ask_note') }}</p>
     {% else %}
-      <h2>{{ t('troubleshooting.step.recommend') }}</h2>
-      <div class="warning">{{ t('troubleshooting.step.recommend_warning') }}</div>
-    {% endif %}
-
-    {% if pending %}
-      <p class="pending">{{ t('troubleshooting.step.pending') }}</p>
-    {% elif answer.reachable %}
-      <p class="model">{{ t('troubleshooting.step.model', model=answer.model) }}</p>
-      <p class="response" lang="{{ answer.language }}">{{ answer.response }}</p>
-    {% else %}
-      <p class="unreachable">{{ t('troubleshooting.step.unreachable', reason=unreachable) }}</p>
-    {% endif %}
-
-    {% if step == total_steps %}
-      {% if applyable %}
-        <form method="post" action="{{ base }}/finding/{{ key | urlencode }}/apply"><!--aistack:csrf-->
-          <button class="apply" type="submit" title="{{ t('troubleshooting.tooltip.apply', subject=subject) }}">{{ t('troubleshooting.step.apply') }}</button>
-        </form>
-        <p class="apply-note">
-          {{ t('troubleshooting.step.apply_note_before') }} <strong>{{ subject }}</strong>
-          {{ t('troubleshooting.step.apply_note_middle') }} <code>resource_priority.yml</code>
-          {{ t('troubleshooting.step.apply_note_after') }}
-        </p>
-      {% else %}
-        <p class="apply-note">{{ t('troubleshooting.step.no_apply', domain=domain) }}</p>
-      {% endif %}
+      {% if pending %}<p class="pending">{{ t('troubleshooting.step.pending') }}</p>{% endif %}
+      {% for opinion in opinions %}
+        <section id="ai-{{ opinion.operation }}" class="opinion">
+          <h3>{% if opinion.operation == 'reason' %}{{ t('troubleshooting.step.reason') }}{% elif opinion.operation == 'explain' %}{{ t('troubleshooting.step.explain') }}{% else %}{{ t('troubleshooting.step.recommend') }}{% endif %}</h3>
+          {% if opinion.answer is none %}
+            <p class="model">{{ t('troubleshooting.step.waiting') }}</p>
+          {% elif opinion.answer.reachable %}
+            <p class="model">{{ t('troubleshooting.step.model', model=opinion.answer.model) }}</p>
+            <p class="response" lang="{{ opinion.answer.language }}">{{ opinion.answer.response }}</p>
+          {% else %}
+            <p class="unreachable">{{ t('troubleshooting.step.unreachable', reason=opinion.unreachable) }}</p>
+          {% endif %}
+        </section>
+      {% endfor %}
     {% endif %}
   {% endif %}
 

@@ -237,6 +237,8 @@ SCREENS = [
     "/troubleshooting/?status=ok",
     "/troubleshooting/aide",
     "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/step/1",
+    "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/step/2",
+    "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/step/3",
     "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/step/4",
     "/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fx/applied",
     "/timemachine/",

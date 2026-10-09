@@ -35,8 +35,10 @@ from aistack.contracts.runtime_finding import RuntimeFinding
 AI_RUNTIME = configured(Path(__file__).resolve().parents[1] / "ai_runtime" / "definitions" / "ai_runtime.yml")
 
 OPERATIONS = ("reason", "explain", "recommend")
+# 1 the finding, 2 the facts, 3 what to do — AIStack's own, at once;
+# 4 the AI's opinion, asked on the owner's click (2026-10-09).
 STEP_COUNT = 4
-OPERATION_BY_STEP: dict[int, str] = {2: "reason", 3: "explain", 4: "recommend"}
+AI_STEP = 4
 
 # (finding, operation, target language) -> one answer.
 AskAI = Callable[[RuntimeFinding, str, str], AIRuntimeAnswer]

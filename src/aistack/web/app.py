@@ -77,6 +77,9 @@ class WebPaths:
         configured(PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml")
     )
     resource_priority: Path = configured(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml")
+    # What the troubleshooting assistant states of a finding (2026-10-09).
+    backup_strategy: Path = configured(PACKAGE_ROOT / "backup_strategy" / "definitions" / "backup_strategy.yml")
+    pra_tests: Path = configured(PACKAGE_ROOT / "pra" / "definitions" / "pra_tests.yml")
     selection: Path = configured(PACKAGE_ROOT / "selection" / "definitions" / "music_android.yml")
     # The generalized sync's contents and destinations (ADR-0022).
     sync: Path = configured(PACKAGE_ROOT / "sync" / "definitions" / "sync.yml")

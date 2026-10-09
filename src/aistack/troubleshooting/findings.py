@@ -37,7 +37,7 @@ import json
 import socket
 import subprocess
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import NamedTuple
 
@@ -86,6 +86,17 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PACKAGE_ROOT.parents[1]
 
 
+NETWORK_OBSERVATION = Path("reports") / "generated" / "network-docker-observation.json"
+
+
+def _network_observation() -> Path:
+    """The working directory's data first (the container's `/app`, a
+    service started from the checkout), else the checkout's."""
+
+    here = Path.cwd() / NETWORK_OBSERVATION
+    return here if here.exists() else REPOSITORY_ROOT / NETWORK_OBSERVATION
+
+
 @dataclass(frozen=True)
 class FindingSources:
     """Every declaration file the collection reads, one field each."""
@@ -105,12 +116,15 @@ class FindingSources:
     categorization: Path = (
         configured(PACKAGE_ROOT / "architecture" / "definitions" / "service_categorization.yml")
     )
-    # Anchored on the checkout, not the working directory: a systemd
-    # service's working directory is not guaranteed to be the
-    # repository root. Optional, best-effort data either way.
-    network_docker_observation: Path = (
-        REPOSITORY_ROOT / "reports" / "generated" / "network-docker-observation.json"
-    )
+    # The data directory the application serves, else the checkout's.
+    # Anchored on the checkout alone until 2026-10-09, it pointed inside
+    # site-packages in the Docker image (`/usr/local/lib/python3.13/
+    # reports/...`): the assistant never read the last network discovery
+    # and listed every container of the Raspberry as declared but
+    # running nowhere, while the cockpit, reading the data directory,
+    # had nothing to report (UAT, GIGABYTE). Optional, best-effort data
+    # either way.
+    network_docker_observation: Path = field(default_factory=lambda: _network_observation())
 
 
 SOURCES = FindingSources()

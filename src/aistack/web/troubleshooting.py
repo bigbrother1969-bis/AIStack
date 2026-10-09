@@ -20,6 +20,7 @@ received for it, which were never recorded on their own.
 from __future__ import annotations
 
 import time
+from typing import Any
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -194,6 +195,8 @@ def ask(request: Request, key: str) -> RedirectResponse:
 
     history = request.app.state.generated_dir / "ai-reasoning"
     ai = request.app.state.ask_ai
+    # The facts of step 2 go with the question (the owner, 2026-10-09).
+    context = "\n".join(f"- {fact.label}: {fact.value}" for fact in _guide(request, session).facts)
 
     jobs = request.app.state.ai_jobs
     job_id = f"troubleshooting:{key}"
@@ -211,10 +214,25 @@ def ask(request: Request, key: str) -> RedirectResponse:
             ai,
             lambda found, done: record_ai_reasoning(found, done, history),
             announce,
+            context,
         )
     )
 
     return ai_step
+
+
+def _guide(request: Request, session: dict[str, object]) -> Any:
+    finding = session["finding"]
+    assert isinstance(finding, RuntimeFinding)
+    paths = request.app.state.paths
+    t = _language(request).t
+    return guidance(
+        str(session["domain"]),
+        finding,
+        t,
+        Declarations(paths.backup_strategy, paths.pra_tests, paths.resource_priority),
+        finding_remediation(finding, t),
+    )
 
 
 def answer_href(key: str, operation: str) -> str:
@@ -253,15 +271,9 @@ def step(request: Request, key: str, step: int) -> Response:
             unreachable = language.t(message_key, **parameters)
         opinions.append({"operation": operation, "answer": answer, "unreachable": unreachable})
 
-    paths = request.app.state.paths
     domain = str(session["domain"])
-    guide = guidance(
-        domain,
-        finding,
-        language.t,
-        Declarations(paths.backup_strategy, paths.pra_tests, paths.resource_priority),
-        finding_remediation(finding, language.t),
-    )
+    guide = _guide(request, session)
+    destination = request.app.state.ai_destination() if step == AI_STEP else ("", "")
 
     return _render(
         request,
@@ -276,6 +288,8 @@ def step(request: Request, key: str, step: int) -> Response:
             "ai_step": AI_STEP,
             "finding": finding,
             "guide": guide,
+            "destination": destination[0],
+            "destination_model": destination[1],
             "asked": bool(session.get("asked")),
             "opinions": opinions,
             # The AI asked and an answer not there yet: the page says

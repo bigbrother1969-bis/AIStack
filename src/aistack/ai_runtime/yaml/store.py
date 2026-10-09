@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from aistack.ai_runtime.definition import AIRuntimeDefinition
+from aistack.ai_runtime.definition import AIRuntimeDefinition, GeminiDefinition
 
 _REQUIRED_FIELDS = ("host", "port")
 
@@ -58,12 +58,24 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
     timeout = data.get("timeout")
     translator_model = data.get("translator_model")
 
+    gemini = None
+    raw = data.get("gemini")
+    if raw is not None:
+        if not isinstance(raw, dict) or not raw.get("model"):
+            raise ValueError(f"AI Runtime definition {path}: gemini names no model")
+        gemini = GeminiDefinition(
+            model=str(raw["model"]),
+            api_key_env=str(raw.get("api_key_env") or "AISTACK_GEMINI_API_KEY"),
+            timeout=float(raw.get("timeout") or 60),
+        )
+
     if timeout is None:
         return AIRuntimeDefinition(
             host=str(data["host"]),
             port=int(data["port"]),
             model=str(model) if model else None,
             translator_model=str(translator_model) if translator_model else None,
+            gemini=gemini,
         )
 
     return AIRuntimeDefinition(
@@ -72,4 +84,5 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
         model=str(model) if model else None,
         timeout=float(timeout),
         translator_model=str(translator_model) if translator_model else None,
+        gemini=gemini,
     )

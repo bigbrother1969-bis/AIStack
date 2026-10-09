@@ -237,22 +237,43 @@ Le scan lui-même se lance depuis le serveur :
 
 *Réseau local, connexion requise, actions réservées aux administrateurs.*
 La liste des pannes réelles détectées maintenant par le Cockpit Santé et la
-surveillance CPU. Pour l'une d'elles :
+surveillance CPU. **Commencer →** ouvre une panne en quatre étapes :
 
-1. **Commencer →** : un modèle d'IA local (Ollama) lit le constat et propose
-   une explication et une prochaine étape — jamais une source de vérité ;
-2. l'assistant guide pas à pas ; le lien **Besoin d'aide pour ouvrir un
-   terminal ?** explique comment se connecter au serveur ;
-3. pour la seule correction qu'AIStack sait appliquer d'un clic (déclarer un
-   conteneur « au ralenti » dans les priorités CPU), **Appliquer** l'écrit,
-   puis un nouveau diagnostic vérifie qu'elle a réellement agi.
+1. **la panne** détectée ;
+2. **ce qu'AIStack en sait** : les mesures et les déclarations qu'elle cite,
+   lues à l'instant — rien de généré ;
+3. **ce que tu fais** : la marche à suivre, le bloc à écrire et le fichier où
+   l'écrire, la commande qui montre que c'est réglé. Pour la seule
+   correction qu'AIStack sait appliquer d'un clic (déclarer un conteneur
+   « au ralenti » dans les priorités CPU), **Appliquer** l'écrit, puis un
+   nouveau diagnostic vérifie qu'elle a réellement agi ;
+4. **l'avis de l'IA**, facultatif : seulement si tu cliques **Demander
+   l'avis de l'IA** — un raisonnement, une explication et une suggestion,
+   jamais une source de vérité.
 
-Chaque raisonnement de l'IA est gardé dans l'historique du sujet.
+La question part, avec les faits de l'étape 2, d'abord à **Google Gemini**
+quand une clé est déclarée, sinon — ou si Gemini ne répond pas — au modèle
+local d'Ollama. Avec Gemini, la question **sort de ton réseau** : noms
+d'hôtes, chemins, services, mécanismes de sauvegarde (jamais de mot de
+passe) ; l'étape 4 le dit avant le clic. Pour l'activer, crée une clé dans
+Google AI Studio et ajoute-la dans `.env.web`, sans l'afficher :
 
-Une réponse de l'IA peut prendre plusieurs minutes : inutile d'attendre sur
-la page. Dès qu'une réponse est prête, une notification apparaît en bas à
-droite de la page où tu te trouves (sur le réseau local, connecté) ; un
-clic ouvre la réponse, la croix la ferme.
+```
+AISTACK_GEMINI_API_KEY=<ta clé>
+```
+
+puis `docker compose up -d`. Le modèle se choisit dans
+`./config/ai_runtime.yml` (bloc `gemini:`) ; retire ce bloc pour que tout
+reste sur la machine.
+
+Chaque raisonnement de l'IA est gardé dans l'historique du sujet. Le lien
+**Besoin d'aide pour ouvrir un terminal ?** explique comment se connecter au
+serveur.
+
+Une réponse de l'IA locale peut prendre plusieurs minutes : inutile
+d'attendre sur la page. Dès qu'une réponse est prête, une notification
+apparaît en bas à droite de la page où tu te trouves (sur le réseau local,
+connecté) ; un clic ouvre la réponse, la croix la ferme.
 
 ## Time Machine
 

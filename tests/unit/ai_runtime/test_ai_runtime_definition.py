@@ -125,12 +125,13 @@ def test_the_real_ai_runtime_definition_loads():
     assert definition.port == 11434
 
 
-def test_the_real_ai_runtime_definition_declares_a_translator_model():
-    # 2026-09-27: the owner's own fix for the AI Runtime's answers
-    # coming back in English regardless of the display language —
-    # `aistack.ai_runtime.operations`'s own docstring. Re-verify with
-    # `ollama list` on the real host before trusting this is still
-    # pulled there; this test only locks in what the file declares.
+def test_the_real_ai_runtime_definition_asks_qwen_in_french_without_a_translator():
+    # 2026-10-09, UAT of 2.0: the owner chose `qwen2.5:3b`, which
+    # writes French itself, over `deepseek-r1:1.5b` translated by
+    # `qwen2.5:0.5b` (broken French, 25 to 34 minutes). This test only
+    # locks in what the file declares; `ollama list` on the host says
+    # whether the model is pulled there.
     definition = load_ai_runtime_yaml(DEFAULT_AI_RUNTIME)
 
-    assert definition.translator_model == "qwen2.5:0.5b"
+    assert definition.model == "qwen2.5:3b"
+    assert definition.translator_model is None

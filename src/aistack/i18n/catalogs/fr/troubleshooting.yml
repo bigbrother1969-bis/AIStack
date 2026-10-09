@@ -44,7 +44,8 @@ step:
   ai: "Avis de l'IA (facultatif)"
   ai_warning: "Un avis, pas une consigne : le modèle ne voit que l'intitulé du constat, rien de ta machine, et peut se tromper. Ce qui fait foi, ce sont les étapes 2 et 3."
   ask: "Demander l'avis de l'IA"
-  ask_note: "Trois réponses du modèle déclaré dans ai_runtime.yml ; sur GIGABYTE, compte plusieurs minutes chacune. Tu peux quitter la page : une notification apparaîtra quand chaque réponse sera prête."
+  ask_gemini: "Envoyé à Google Gemini ({model}), hors de ton réseau, avec les faits de l'étape 2 (noms d'hôtes, chemins, services ; jamais de mot de passe). Réponse en quelques secondes ; si Gemini ne répond pas, le modèle local prend le relais."
+  ask_ollama: "Envoyé au modèle local {model} (Ollama, sur cette machine), avec les faits de l'étape 2 ; compte plusieurs minutes par réponse. Tu peux quitter la page : une notification apparaîtra quand chaque réponse sera prête."
   waiting: "En attente…"
 applied:
   intro: "Résultat de l'application de la correction."
@@ -150,6 +151,8 @@ guide:
   consumption: "Si {subject} n'a pas besoin du processeur en priorité, le bouton ci-dessous le classe en arrière-plan : il sera bridé dès qu'une application prioritaire (Jellyfin, Immich) travaille. S'il doit au contraire passer avant les autres, déclare-le dans priority de resource_priority.yml."
   uncovered_state: "Une fois une copie réelle de {subject} en place ailleurs que sur son propre disque, remplace son entrée dans backup_strategy.yml par le bloc ci-dessous, rempli avec le vrai moteur et la vraie commande. Tant qu'aucune copie n'existe, le constat reste affiché : c'est un risque connu, pas une erreur d'AIStack."
   mechanism_placeholder: "la commande ou le timer réel, et où va la copie"
+  pra_clonezilla: "{subject} est sauvegardé par des images Clonezilla : le test est de vérifier qu'une image est restaurable. Démarre GIGABYTE sur la clé Clonezilla, choisis device-image, puis l'emplacement où sont rangées les images, puis l'option « chk-img-restorable » (vérifier qu'une image est restaurable), et la dernière image de {subject}. Clonezilla relit et contrôle chaque partition sans rien écrire sur un disque. Note l'heure de début et de fin : leur écart est le rto_minutes du bloc ci-dessous."
+  pra_clonezilla_note: "Vérification Clonezilla (chk-img-restorable) de la dernière image : l'image est restaurable ; pas une restauration complète sur un disque."
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:

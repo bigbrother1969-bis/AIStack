@@ -94,7 +94,9 @@ def _value(t: Translate, field: str, value: Any) -> str:
     if isinstance(value, float):
         return f"{value:.1f}"
     if isinstance(value, datetime):
-        return value.strftime("%Y-%m-%d %H:%M")
+        # The zone said: in the container it is UTC, two hours from the
+        # owner's clock in summer (UAT, 2026-10-09: "16:52" read at 18:53).
+        return (value.strftime("%Y-%m-%d %H:%M ") + (value.tzname() or "")).strip()
     if isinstance(value, date):
         return value.isoformat()
     if isinstance(value, tuple):
@@ -190,7 +192,14 @@ def guidance(
         )
 
     if domain == PRA_TESTS:
-        facts += _declared_backup(subject, declarations.backup_strategy, t)
+        declared = _declared_backup(subject, declarations.backup_strategy, t)
+        facts += declared
+        # A host imaged by Clonezilla: the owner's test, 2026-10-09 —
+        # Clonezilla checks the image is restorable without a disk to
+        # write it to. Not a full restore, and said so in the entry.
+        clonezilla = any("clonezilla" in fact.value.lower() for fact in declared)
+        if clonezilla:
+            steps.insert(0, t("troubleshooting.guide.pra_clonezilla", subject=subject))
         max_age = _pra_max_age(subject, declarations.pra_tests)
         if max_age is not None:
             facts.append(Fact(t("troubleshooting.fact.max_age_days"), str(max_age)))
@@ -199,7 +208,8 @@ def guidance(
             tuple(facts),
             tuple(steps),
             snippet=(
-                f"  - name: {subject}\n"
+                (f"  # {t('troubleshooting.guide.pra_clonezilla_note')}\n" if clonezilla else "")
+                + f"  - name: {subject}\n"
                 "    last_test:\n"
                 "      status: success\n"
                 f'      date: "{today}"\n'

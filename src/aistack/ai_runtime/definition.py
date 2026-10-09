@@ -80,3 +80,19 @@ class AIRuntimeDefinition:
     model: str | None = None
     timeout: float = DEFAULT_TIMEOUT_SECONDS
     translator_model: str | None = None
+    # Google Gemini, asked first when declared and its key is in the
+    # environment; Ollama above answers when it does not (the owner,
+    # 2026-10-09, UAT of 2.0: "Gemini d'abord et Ollama en solution de
+    # secours"). The `engine:` discriminator this docstring declined
+    # to add for a hypothetical second engine is this block: the
+    # second engine now exists.
+    gemini: "GeminiDefinition | None" = None
+
+
+@dataclass(frozen=True)
+class GeminiDefinition:
+    model: str
+    # The environment variable holding the API key (`.env.web`); the
+    # key itself is never written in a declaration.
+    api_key_env: str = "AISTACK_GEMINI_API_KEY"
+    timeout: float = 60.0

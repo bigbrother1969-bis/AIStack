@@ -304,22 +304,41 @@ longer upgraded by Watchtower, remove the pin once the problem is fixed.
 
 *Local network, sign-in required, actions reserved to administrators.* The
 list of real faults detected right now by the Health Cockpit and the CPU
-watch. For one of them:
+watch. **Start →** opens a fault in four steps:
 
-1. **Start →**: a local AI model (Ollama) reads the finding and proposes an
-   explanation and a next step — never a source of truth;
-2. the assistant guides you step by step; **Need help opening a terminal?**
-   explains how to connect to the server;
-3. for the one fix AIStack knows how to apply in one click (declaring a
-   container "throttled" in the CPU priorities), **Apply** writes it, then a
-   new diagnosis checks it really worked.
+1. **the fault** detected;
+2. **what AIStack knows of it**: the readings and declarations it cites,
+   read just now — nothing generated;
+3. **what you do**: the steps, the block to write and the file to write it
+   in, the command that shows it is fixed. For the one fix AIStack knows
+   how to apply in one click (declaring a container "throttled" in the CPU
+   priorities), **Apply** writes it, then a new diagnosis checks it really
+   worked;
+4. **the AI's opinion**, optional: only if you click **Ask the AI's
+   opinion** — a reasoning, an explanation and a suggestion, never a source
+   of truth.
 
-Every AI reasoning is kept in the subject's history.
+The question goes, with the facts of step 2, first to **Google Gemini** when
+a key is declared, otherwise — or when Gemini does not answer — to the local
+Ollama model. With Gemini the question **leaves your network**: host names,
+paths, services, backup mechanisms (never a password); step 4 says so
+before the click. To turn it on, create a key in Google AI Studio and add it
+to `.env.web`, without displaying it:
 
-An AI answer can take several minutes: there is no need to wait on the
-page. As soon as an answer is ready, a notice appears at the bottom right
-of whatever page you are on (on the local network, signed in); a click
-opens the answer, the cross closes it.
+```
+AISTACK_GEMINI_API_KEY=<your key>
+```
+
+then `docker compose up -d`. The model is chosen in `./config/ai_runtime.yml`
+(the `gemini:` block); remove that block to keep everything on the machine.
+
+Every AI reasoning is kept in the subject's history. **Need help opening a
+terminal?** explains how to connect to the server.
+
+An answer from the local AI can take several minutes: there is no need to
+wait on the page. As soon as an answer is ready, a notice appears at the
+bottom right of whatever page you are on (on the local network, signed in);
+a click opens the answer, the cross closes it.
 
 ## Time Machine
 

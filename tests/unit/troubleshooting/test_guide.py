@@ -21,9 +21,10 @@ def test_the_engines_receive_the_declared_timeout(monkeypatch: pytest.MonkeyPatc
             super().__init__(**kwargs)
 
     monkeypatch.setattr(guide, "OllamaEngine", Recording)
+    monkeypatch.delenv("AISTACK_GEMINI_API_KEY", raising=False)
     monkeypatch.setitem(guide._CALLS, "reason", lambda *args, **kwargs: "answered")
 
-    assert guide.ask_ollama(object(), "reason", "fr") == "answered"  # type: ignore[arg-type]
+    assert guide.ask_ai_runtime(object(), "reason", "fr") == "answered"  # type: ignore[arg-type]
 
     declared = guide.load_ai_runtime_yaml(guide.AI_RUNTIME).timeout
     assert built and all(kwargs["timeout"] == declared for kwargs in built)
@@ -76,3 +77,66 @@ def test_each_silence_of_the_engine_has_its_message(reason: str, key: str, param
 
     for lang in ("fr", "en"):
         assert translator_for(lang)(key, **parameters)
+
+
+def _finding() -> Any:
+    from datetime import datetime, timezone
+
+    from aistack.contracts.pra_test_reading import PraTestReading
+    from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
+
+    return RuntimeFinding(
+        subject="gigabyte", signature="OPS-0004", interpretation="never tested",
+        remediation="test it", confidence="Measured", grounding="OPS-0009",
+        evidence=(CitedReading(provider="pra", reading=PraTestReading(service="gigabyte", observed_at=datetime.now(timezone.utc))),),
+        qualifications=("OPS-0004/technical-debt",),
+    )
+
+
+class Engine:
+    def __init__(self, text: str, reason: str = "") -> None:
+        self.text, self.reason, self.prompts, self.model = text, reason, [], "m"
+
+    def complete(self, prompt: str) -> tuple[str, str]:
+        self.prompts.append(prompt)
+        return self.text, self.reason
+
+
+def test_gemini_answers_first_with_the_facts(monkeypatch: pytest.MonkeyPatch):
+    gemini = Engine("Vérifie l'image.")
+    ollama = Engine("never asked")
+    monkeypatch.setenv("AISTACK_GEMINI_API_KEY", "k")
+    monkeypatch.setattr(guide, "GeminiEngine", lambda model, key, timeout: gemini)
+    monkeypatch.setattr(guide, "OllamaEngine", lambda **kwargs: ollama)
+
+    answer = guide.ask_ai_runtime(_finding(), "recommend", "fr", "- Dernier test: jamais")
+
+    assert answer.reachable and answer.response == "Vérifie l'image."
+    assert answer.model.startswith("gemini:")
+    assert "- Dernier test: jamais" in gemini.prompts[0]
+    assert ollama.prompts == []
+    assert guide.ai_destination()[0] == "gemini"
+
+
+def test_ollama_answers_when_gemini_does_not_and_says_why(monkeypatch: pytest.MonkeyPatch):
+    gemini = Engine("", "Gemini refused the request with status 429")
+    ollama = Engine("Réponse locale.")
+    monkeypatch.setenv("AISTACK_GEMINI_API_KEY", "k")
+    monkeypatch.setattr(guide, "GeminiEngine", lambda model, key, timeout: gemini)
+    monkeypatch.setattr(guide, "OllamaEngine", lambda **kwargs: ollama)
+
+    answer = guide.ask_ai_runtime(_finding(), "reason", "fr", "- fait")
+
+    assert answer.response == "Réponse locale."
+    assert "429" in answer.model
+    assert "- fait" in ollama.prompts[0]
+
+
+def test_without_a_key_nothing_leaves_the_host(monkeypatch: pytest.MonkeyPatch):
+    ollama = Engine("Réponse locale.")
+    monkeypatch.delenv("AISTACK_GEMINI_API_KEY", raising=False)
+    monkeypatch.setattr(guide, "GeminiEngine", lambda *a: pytest.fail("Gemini asked without a key"))
+    monkeypatch.setattr(guide, "OllamaEngine", lambda **kwargs: ollama)
+
+    assert guide.ask_ai_runtime(_finding(), "explain", "fr").response == "Réponse locale."
+    assert guide.ai_destination()[0] == "ollama"

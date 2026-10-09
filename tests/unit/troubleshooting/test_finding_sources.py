@@ -58,7 +58,11 @@ def test_a_pra_finding_cites_the_declared_mechanism_and_the_entry_to_write():
 
     facts = {fact.label: fact.value for fact in guide.facts}
     assert facts["Dernier test"] == "jamais"
+    assert facts["Observé le"].endswith(" UTC")
     assert "Clonezilla" in facts["Mécanisme déclaré"]
     assert facts["Âge maximal d'un test (jours)"] == "90"
     assert guide.snippet_file == "./config/pra_tests.yml"
     assert "  - name: gigabyte\n    last_test:\n      status: success" in guide.snippet
+    # The owner's test for a host imaged by Clonezilla (2026-10-09).
+    assert "chk-img-restorable" in guide.steps[0]
+    assert guide.snippet.startswith("  # Vérification Clonezilla")

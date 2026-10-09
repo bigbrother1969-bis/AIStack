@@ -21,11 +21,15 @@ from __future__ import annotations
 
 from aistack.config import configured
 
+import os
 import re
 from collections.abc import Callable, MutableMapping
 from pathlib import Path
+from dataclasses import replace
 from typing import Any
 
+from aistack.ai_runtime.definition import AIRuntimeDefinition
+from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
 from aistack.ai_runtime.operations import explain, reason, recommend
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
@@ -40,14 +44,70 @@ OPERATIONS = ("reason", "explain", "recommend")
 STEP_COUNT = 4
 AI_STEP = 4
 
-# (finding, operation, target language) -> one answer.
-AskAI = Callable[[RuntimeFinding, str, str], AIRuntimeAnswer]
+# (finding, operation, target language, facts) -> one answer.
+AskAI = Callable[..., AIRuntimeAnswer]
 Record = Callable[[RuntimeFinding, tuple[AIRuntimeAnswer, ...]], Any]
 
 _CALLS = {"reason": reason, "explain": explain, "recommend": recommend}
 
 
-def ask_ollama(finding: RuntimeFinding, operation: str, target_language: str) -> AIRuntimeAnswer:
+def _gemini(definition: AIRuntimeDefinition) -> GeminiEngine | None:
+    """Gemini, when declared and its key is in the environment."""
+
+    declared = definition.gemini
+    if declared is None:
+        return None
+    key = os.environ.get(declared.api_key_env, "")
+    if not key:
+        return None
+    return GeminiEngine(declared.model, key, declared.timeout)
+
+
+def ai_destination() -> tuple[str, str]:
+    """Where the next question goes: ("gemini", model) or ("ollama", model)."""
+
+    definition = load_ai_runtime_yaml(AI_RUNTIME)
+    if _gemini(definition) is not None and definition.gemini is not None:
+        return "gemini", definition.gemini.model
+    return "ollama", definition.model or ""
+
+
+def ask_ai_runtime(
+    finding: RuntimeFinding, operation: str, target_language: str, context: str = ""
+) -> AIRuntimeAnswer:
+    """
+    One answer: from Gemini when it is declared and has its key, with
+    the facts of the assistant's step 2; from the Ollama model
+    `ai_runtime.yml` declares when Gemini is not declared or does not
+    answer (the owner, 2026-10-09). An Ollama answer given in Gemini's
+    place says so, and why, in its `model`.
+    """
+
+    definition = load_ai_runtime_yaml(AI_RUNTIME)
+    gemini = _gemini(definition)
+    first = None
+    if gemini is not None:
+        first = _CALLS[operation](
+            finding, gemini, f"gemini:{gemini.model}", target_language=target_language, context=context
+        )
+        if first.reachable:
+            return first
+
+    answer = ask_ollama(finding, operation, target_language, context, definition)
+    if first is None:
+        return answer
+    if answer.reachable:
+        return replace(answer, model=f"{answer.model} (Gemini: {first.unreachable_reason})")
+    return replace(answer, unreachable_reason=f"{first.unreachable_reason} ; {answer.unreachable_reason}")
+
+
+def ask_ollama(
+    finding: RuntimeFinding,
+    operation: str,
+    target_language: str,
+    context: str = "",
+    definition: AIRuntimeDefinition | None = None,
+) -> AIRuntimeAnswer:
     """
     One answer from the model `ai_runtime.yml` declares, within its
     declared `timeout`. A second, fast model translates into
@@ -55,7 +115,7 @@ def ask_ollama(finding: RuntimeFinding, operation: str, target_language: str) ->
     `translator_model:` is declared (`aistack.ai_runtime.operations`).
     """
 
-    definition = load_ai_runtime_yaml(AI_RUNTIME)
+    definition = definition or load_ai_runtime_yaml(AI_RUNTIME)
     engine = OllamaEngine(
         host=definition.host,
         port=definition.port,
@@ -79,6 +139,7 @@ def ask_ollama(finding: RuntimeFinding, operation: str, target_language: str) ->
         definition.model,
         target_language=target_language,
         translator=translator,
+        context=context,
     )
 
 
@@ -89,6 +150,7 @@ def run_diagnosis(
     ask: AskAI,
     record: Record,
     on_answer: Callable[[str], Any] = lambda operation: None,
+    context: str = "",
 ) -> None:
     """
     Ask the three operations in order, storing each answer in `answers`
@@ -98,7 +160,9 @@ def run_diagnosis(
     """
 
     for operation in OPERATIONS:
-        answers[operation] = ask(finding, operation, target_language)
+        answers[operation] = ask(finding, operation, target_language, context) if context else ask(
+            finding, operation, target_language
+        )
         on_answer(operation)
 
     record(finding, tuple(answers[operation] for operation in OPERATIONS))

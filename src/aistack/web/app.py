@@ -29,7 +29,7 @@ from aistack.priority.screen import Discover, discover_containers
 from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
 from aistack.troubleshooting.findings import CollectFindings, qualified_findings
-from aistack.troubleshooting.guide import AskAI, ask_ollama
+from aistack.troubleshooting.guide import AskAI, ai_destination, ask_ai_runtime
 from aistack.timemachine.screen import ExpiringValue, live_network_tree
 from aistack.timemachine.tree import NetworkTreeNode
 from aistack.web import (
@@ -103,7 +103,8 @@ def create_app(
     syncthing: SyncthingStatus = read_syncthing,
     kernel: Any = None,
     collect_findings: CollectFindings = qualified_findings,
-    ask_ai: AskAI = ask_ollama,
+    ask_ai: AskAI = ask_ai_runtime,
+    destination: Callable[[], tuple[str, str]] = ai_destination,
     run_in_background: Callable[[Callable[[], None]], Any] | None = None,
     network_tree: Callable[[], list[NetworkTreeNode]] | None = None,
     auth: Authentication | None = None,
@@ -139,6 +140,8 @@ def create_app(
     # ... the host's findings, and the AI Runtime, for the assistant.
     app.state.collect_findings = collect_findings
     app.state.ask_ai = ask_ai
+    # Where the AI's question goes, said before the click (2026-10-09).
+    app.state.ai_destination = destination
     app.state.troubleshooting_sessions = {}
     # The CPU findings the list last showed, and when: a reading is an
     # instant, so the one the owner clicked may be gone a second later.

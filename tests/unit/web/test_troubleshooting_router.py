@@ -58,7 +58,7 @@ def answer(found: RuntimeFinding, operation: str, language: str) -> AIRuntimeAns
         subject=found.subject,
         model="fake",
         prompt=f"{operation} in {language}",
-        response=f"{operation} answer for {found.subject}",
+        response=f"{operation} answer for **{found.subject}**",
         reachable=True,
         unreachable_reason="",
     )
@@ -71,6 +71,7 @@ class Host:
         self.definition = definition
         self.asked: list[tuple[str, str, str]] = []
         self.queued: list[object] = []
+        self.contexts: list[str] = []
         # A calmer reading: the CPU finding is no longer seen.
         self.calm = False
         self.resolved = False
@@ -88,8 +89,9 @@ class Host:
 
         return qualify(tagged), ""
 
-    def ask(self, found: RuntimeFinding, operation: str, language: str):
+    def ask(self, found: RuntimeFinding, operation: str, language: str, context: str = ""):
         self.asked.append((found.subject, operation, language))
+        self.contexts.append(context)
         return answer(found, operation, language)
 
 
@@ -102,7 +104,7 @@ def host(tmp_path: Path) -> Host:
 
 
 def client(
-    tmp_path: Path, host: Host, port: int = LAN_PORT, background: bool = False
+    tmp_path: Path, host: Host, port: int = LAN_PORT, background: bool = False, destination=("ollama", "qwen2.5:3b")
 ) -> TestClient:
     """`background=True` keeps the diagnosis queued instead of running it at once."""
 
@@ -113,6 +115,7 @@ def client(
         WebPaths(resource_priority=host.definition),
         collect_findings=host.collect,
         ask_ai=host.ask,
+        destination=lambda: destination,
         run_in_background=host.queued.append if background else (lambda job: job()),
     )
 
@@ -170,8 +173,11 @@ def test_asking_the_ai_runs_the_three_operations_once_and_records_them(tmp_path:
         ("newcomer", "recommend", "en"),
     ]
     assert list((tmp_path / "ai-reasoning").glob("newcomer*"))
+    # The facts of step 2 go with the question (2026-10-09).
+    assert all("CPU (%): 12.2" in context for context in host.contexts)
     page = web.get("/troubleshooting/finding/newcomer/step/4").text
     assert "recommend answer for newcomer" in page and 'id="ai-reason"' in page
+    assert "**" not in page
     assert 'action="/troubleshooting/finding/newcomer/ask"' not in page
 
 
@@ -337,6 +343,17 @@ def test_the_ai_is_asked_once_per_session(tmp_path: Path, host: Host):
     assert len(host.queued) == 1
 
 
+def test_the_page_says_the_question_leaves_the_house_before_the_click(tmp_path: Path, host: Host):
+    web = client(tmp_path, host, destination=("gemini", "gemini-x"))
+    web.post("/troubleshooting/finding/newcomer/start")
+
+    page = web.get("/troubleshooting/finding/newcomer/step/4?lang=fr").text
+
+    assert "Envoyé à Google Gemini (gemini-x), hors de ton réseau" in page
+    local = client(tmp_path, host).get("/troubleshooting/").text
+    assert local
+
+
 def test_asking_without_a_session_goes_back_to_the_list(tmp_path: Path, host: Host):
     reply = client(tmp_path, host).post("/troubleshooting/finding/newcomer/ask")
 
@@ -345,7 +362,7 @@ def test_asking_without_a_session_goes_back_to_the_list(tmp_path: Path, host: Ho
 
 
 def test_an_engine_that_gave_no_answer_is_said_in_the_reader_s_language(tmp_path: Path, host: Host):
-    def silent(found: RuntimeFinding, operation: str, language: str) -> AIRuntimeAnswer:
+    def silent(found: RuntimeFinding, operation: str, language: str, context: str = "") -> AIRuntimeAnswer:
         return AIRuntimeAnswer(
             operation=operation,
             subject=found.subject,

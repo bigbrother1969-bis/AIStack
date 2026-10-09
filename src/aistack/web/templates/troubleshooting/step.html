@@ -146,7 +146,11 @@
       <form method="post" action="{{ base }}/finding/{{ key | urlencode }}/ask"><!--aistack:csrf-->
         <button class="ask" type="submit" title="{{ t('troubleshooting.tooltip.ask') }}">{{ t('troubleshooting.step.ask') }}</button>
       </form>
-      <p class="apply-note">{{ t('troubleshooting.step.ask_note') }}</p>
+      {% if destination == 'gemini' %}
+        <p class="apply-note"><strong>{{ t('troubleshooting.step.ask_gemini', model=destination_model) }}</strong></p>
+      {% else %}
+        <p class="apply-note">{{ t('troubleshooting.step.ask_ollama', model=destination_model) }}</p>
+      {% endif %}
     {% else %}
       {% if pending %}<p class="pending">{{ t('troubleshooting.step.pending') }}</p>{% endif %}
       {% for opinion in opinions %}
@@ -156,7 +160,7 @@
             <p class="model">{{ t('troubleshooting.step.waiting') }}</p>
           {% elif opinion.answer.reachable %}
             <p class="model">{{ t('troubleshooting.step.model', model=opinion.answer.model) }}</p>
-            <p class="response" lang="{{ opinion.answer.language }}">{{ opinion.answer.response }}</p>
+            <p class="response" lang="{{ opinion.answer.language }}">{{ opinion.answer.response | replace('**', '') }}</p>
           {% else %}
             <p class="unreachable">{{ t('troubleshooting.step.unreachable', reason=opinion.unreachable) }}</p>
           {% endif %}

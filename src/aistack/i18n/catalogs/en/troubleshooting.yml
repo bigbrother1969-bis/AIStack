@@ -42,7 +42,8 @@ step:
   ai: "The AI's opinion (optional)"
   ai_warning: "An opinion, not an instruction: the model sees only the finding's sentence, nothing of your machine, and can be wrong. Steps 2 and 3 are what counts."
   ask: "Ask the AI's opinion"
-  ask_note: "Three answers from the model declared in ai_runtime.yml; on GIGABYTE, allow several minutes each. You can leave the page: a notice will appear when each answer is ready."
+  ask_gemini: "Sent to Google Gemini ({model}), outside your network, with the facts of step 2 (host names, paths, services; never a password). Answers in seconds; if Gemini does not answer, the local model takes over."
+  ask_ollama: "Sent to the local model {model} (Ollama, on this machine), with the facts of step 2; allow several minutes per answer. You can leave the page: a notice will appear when each answer is ready."
   waiting: "Waiting…"
 applied:
   intro: "Result of applying the fix."
@@ -148,6 +149,8 @@ guide:
   consumption: "If {subject} does not need the processor first, the button below classes it as background: it is throttled whenever a priority application (Jellyfin, Immich) works. If it must instead go before the others, declare it under priority in resource_priority.yml."
   uncovered_state: "Once a real copy of {subject} exists somewhere other than its own disk, replace its entry in backup_strategy.yml with the block below, filled with the real engine and command. Until a copy exists the finding stays: a known risk, not an AIStack error."
   mechanism_placeholder: "the real command or timer, and where the copy goes"
+  pra_clonezilla: "{subject} is backed up by Clonezilla images: the test is to check that an image is restorable. Boot GIGABYTE from the Clonezilla key, choose device-image, then where the images are kept, then the option “chk-img-restorable” (check the image is restorable), and the latest image of {subject}. Clonezilla reads back and checks every partition without writing to any disk. Note the start and end times: the difference is the rto_minutes of the block below."
+  pra_clonezilla_note: "Clonezilla check (chk-img-restorable) of the latest image: the image is restorable; not a full restore to a disk."
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:

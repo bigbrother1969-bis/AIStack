@@ -170,7 +170,7 @@ def test_every_control_of_a_generated_page_has_a_tooltip(page: str):
     assert untitled(generated_pages()[page]) == []
 
 
-def answer(finding, operation: str, language: str) -> AIRuntimeAnswer:
+def answer(finding, operation: str, language: str, context: str = "") -> AIRuntimeAnswer:
     return AIRuntimeAnswer(
         operation=operation,
         subject=finding.subject,

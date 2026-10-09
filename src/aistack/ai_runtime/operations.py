@@ -101,6 +101,7 @@ def reason(
     *,
     target_language: str = "fr",
     translator: AIEngine | None = None,
+    context: str = "",
 ) -> AIRuntimeAnswer:
     """
     Ask the AI Runtime to reason about one `RuntimeFinding` — what it
@@ -126,7 +127,7 @@ def reason(
 
     return _ask(
         "reason", finding, engine, model, _REASON_PROMPT,
-        target_language, translator,
+        target_language, translator, context,
     )
 
 
@@ -137,6 +138,7 @@ def explain(
     *,
     target_language: str = "fr",
     translator: AIEngine | None = None,
+    context: str = "",
 ) -> AIRuntimeAnswer:
     """
     Ask the AI Runtime to explain one `RuntimeFinding` in plain
@@ -147,7 +149,7 @@ def explain(
 
     return _ask(
         "explain", finding, engine, model, _EXPLAIN_PROMPT,
-        target_language, translator,
+        target_language, translator, context,
     )
 
 
@@ -158,6 +160,7 @@ def recommend(
     *,
     target_language: str = "fr",
     translator: AIEngine | None = None,
+    context: str = "",
 ) -> AIRuntimeAnswer:
     """
     Ask the AI Runtime to suggest a next step for one `RuntimeFinding`.
@@ -175,7 +178,7 @@ def recommend(
 
     return _ask(
         "recommend", finding, engine, model, _RECOMMEND_PROMPT,
-        target_language, translator,
+        target_language, translator, context,
     )
 
 
@@ -187,6 +190,7 @@ def _ask(
     prompt_template: str,
     target_language: str,
     translator: AIEngine | None,
+    context: str = "",
 ) -> AIRuntimeAnswer:
     if target_language not in _LANGUAGE_DIRECTIVE:
         raise ValueError(
@@ -208,7 +212,9 @@ def _ask(
         )
 
     prompt = prompt_template.format(
-        **_describe(finding), language_directive=_LANGUAGE_DIRECTIVE[target_language]
+        **_describe(finding),
+        context_block=_CONTEXT_BLOCK.format(context=context.strip()) if context.strip() else "",
+        language_directive=_LANGUAGE_DIRECTIVE[target_language],
     )
     text, reason_ = engine.complete(prompt)
 
@@ -266,6 +272,16 @@ def _describe(finding: RuntimeFinding) -> dict[str, str]:
     }
 
 
+# The facts AIStack measured or declared on the host (the assistant's
+# step 2), sent with the question so the answer is about this host
+# (the owner, 2026-10-09: "on envoie les faits pour mieux cibler la
+# réponse"). Empty: the prompts are exactly as before.
+_CONTEXT_BLOCK = """
+What AIStack measured or declared on the host about this finding — \
+also established fact, to build on, never to contradict:
+{context}
+"""
+
 _TRANSLATE_PROMPT = """\
 Translate the following text into {language}. Reply with only the \
 translation itself — no preface, no explanation, no quotation marks, \
@@ -289,7 +305,7 @@ qualifications: {qualifications}
 confidence: {confidence}
 interpretation: {interpretation}
 declared remediation: {remediation}
-
+{context_block}
 In two or three sentences, reason about what this finding means for \
 the system it describes. Do not repeat the interpretation verbatim; \
 add context a reader would not already have from it alone.
@@ -311,7 +327,7 @@ qualifications: {qualifications}
 confidence: {confidence}
 interpretation: {interpretation}
 declared remediation: {remediation}
-
+{context_block}
 In plain, non-technical language, explain what this finding is \
 telling the owner and why it was flagged. Keep it short.
 {language_directive}"""
@@ -333,7 +349,7 @@ qualifications: {qualifications}
 confidence: {confidence}
 interpretation: {interpretation}
 declared remediation: {remediation}
-
+{context_block}
 Suggest one concrete next step the owner could take, building on \
 the declared remediation above rather than replacing it. State \
 clearly that this is a suggestion for the owner to judge, not an \

@@ -495,6 +495,35 @@ sauvegarde de la nuit a toujours un peu de retard : c'est à toi de juger
 l'écart. Le côté vivant est seulement lu (fichiers sur l'hôte, comptages
 dans la base du conteneur avec ses propres variables).
 
+### Tests de restauration planifiés
+
+Chaque dimanche matin, après les sauvegardes de la nuit, le minuteur
+`aistack-pra.timer` refait ce test pour chaque service qui a une recette
+et n'a pas été testé dans les six derniers jours. Le résultat est
+**enregistré par AIStack** dans le dossier des données
+(`pra/scheduled.jsonl`) et compte dans le domaine Tests PRA du Cockpit
+Santé : une réussite rafraîchit la date du service, un échec devient un
+constat jusqu'au prochain test réussi. `pra_tests.yml` reste ton fichier :
+AIStack ne le réécrit jamais, et garde pour chaque service le résultat le
+plus récent des deux. Le test attend que le Quai ait fini, et le Quai
+attend le test.
+
+Installation, une fois, sur l'hôte (en root) :
+
+```
+cd /srv/aistack/AIStack
+cp deploy/systemd/aistack-pra.service deploy/systemd/aistack-pra.timer /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now aistack-pra.timer
+```
+
+Pour lancer un test tout de suite et voir les résultats :
+
+```
+./run_pra_schedule.sh wordpress
+./run_pra_schedule.sh --all
+./run_pra_schedule.sh --list
+```
+
 ## Quai : mettre à jour un service de façon gouvernée
 
 Les services déclarés dans `dock.yml` (WordPress pour commencer) ne

@@ -31,3 +31,8 @@ def _quiet_hosts(monkeypatch: pytest.MonkeyPatch) -> None:
 
     for module in _COCKPIT_BUILDERS:
         monkeypatch.setattr(f"{module}.hosts_domain", quiet)
+        # The scheduled restore tests' records (2.0) live in the real
+        # data directory too: a cockpit built by a test reads
+        # pra_tests.yml alone. `tests/unit/pra/test_scheduled.py` tests
+        # the merge itself.
+        monkeypatch.setattr(f"{module}.with_scheduled", lambda readings, *_args: tuple(readings))

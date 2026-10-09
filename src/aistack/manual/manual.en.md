@@ -543,6 +543,34 @@ keeps of them. What no backup holds is said in the report. If a run was
 interrupted,
 `python -m aistack.cli.sandbox cleanup` removes what it left.
 
+### Scheduled restore tests
+
+Every Sunday morning, after the night's backups, the timer
+`aistack-pra.timer` runs this test again for every service that has a
+recipe and was not tested in the last six days. The outcome is
+**recorded by AIStack** in the data directory (`pra/scheduled.jsonl`)
+and counts in the Health cockpit's DR tests domain: a success refreshes
+the service's date, a failure becomes a finding until the next
+successful test. `pra_tests.yml` stays your file: AIStack never rewrites
+it, and keeps for each service the more recent outcome of the two. The
+test waits for the Dock to finish, and the Dock waits for the test.
+
+Install, once, on the host (as root):
+
+```
+cd /srv/aistack/AIStack
+cp deploy/systemd/aistack-pra.service deploy/systemd/aistack-pra.timer /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now aistack-pra.timer
+```
+
+To run a test now and see the outcomes:
+
+```
+./run_pra_schedule.sh wordpress
+./run_pra_schedule.sh --all
+./run_pra_schedule.sh --list
+```
+
 ## Traceability of the hosts
 
 What changes on GIGABYTE and on the Raspberry themselves, not in their

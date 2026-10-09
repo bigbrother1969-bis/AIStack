@@ -33,6 +33,7 @@ from aistack.providers.filesystem import (
     backup_thresholds_for_host,
     storage_thresholds_for_host,
 )
+from aistack.pra.scheduled import with_scheduled
 from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.providers.gpu import NvidiaGpuProvider, gpu_thresholds_for_host
 from aistack.runtime.backup_gap import find_backup_gaps
@@ -260,6 +261,8 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         readings, thresholds = load_pra_tests_yaml(DEFAULT_PRA_TESTS)
+        # The scheduled restore tests' outcomes, when more recent (2.0).
+        readings = with_scheduled(readings)
     except (ValueError, OSError) as error:
         return HealthDomain(
             name="Tests PRA",

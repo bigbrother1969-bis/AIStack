@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Accepted
   owner: Architecture
   created: 2026-10-08
-  updated: 2026-10-08
+  updated: 2026-10-09
 
 relations:
   references:
@@ -138,6 +138,20 @@ container's own environment — its password stays there, never on a
 command line AIStack builds, never in a report. A part that cannot be
 compared is said so; the others still are.
 
+### 8. Scheduled, and recorded by AIStack
+
+Added 2026-10-09 (2.0; the owner: "tests PRA planifiés", and, asked
+whether a successful scheduled test proposes its entry or records it,
+"enregistrée seule"). Every week a timer on the host runs § 1 for each
+service with a recipe not tested in the last six days. Its outcome —
+success with the measured recovery time, or failure with its reason —
+is recorded by AIStack in the data directory (`pra/scheduled.jsonl`,
+appended), not in `pra_tests.yml`: the owner's file, comments
+included, is never rewritten. The Tests PRA domain keeps, per service,
+the more recent of the two. A test run by hand (§ 5) still only
+proposes its entry. A scheduled test waits for the dock executor's
+lock (`ADR-0019`) and holds it while it runs.
+
 ## Implementation state
 
 | Part | State |
@@ -150,6 +164,7 @@ compared is said so; the others still are.
 | § 4 Nextcloud, Immich recipes | done — first real runs on GIGABYTE 2026-10-08, success (84.8 s, 262.8 s), recorded in `pra_tests.yml` |
 | § 5 report and proposed entry | done — `aistack.sandbox`, `aistack.cli.sandbox`; run on GIGABYTE 2026-10-08 |
 | Rollback before an upgrade, by digest | done — `python -m aistack.cli.sandbox rollback <service>`: rehearsal in the sandbox with the earlier image, pin printed; first real run 2026-10-08: the earlier MariaDB image was gone, said so |
+| § 8 scheduled tests | done — `aistack.pra.scheduled`, `python -m aistack.cli.pra_schedule`, `run_pra_schedule.sh`, `deploy/systemd/aistack-pra.{service,timer}` (Sunday 05:00) |
 | Diff between the sandbox and the live service | done — `restore <service> --compare` (§ 7); first real run by the owner to come |
 
 ## Consequences

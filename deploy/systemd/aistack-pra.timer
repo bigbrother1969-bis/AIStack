@@ -1,0 +1,14 @@
+# AIStack — scheduled restore tests, every Sunday morning (2.0), after
+# the night's backups. See aistack-pra.service for the install.
+
+[Unit]
+Description=AIStack scheduled restore tests, weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 05:00
+RandomizedDelaySec=20min
+# A Sunday missed (host off) is caught up at the next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

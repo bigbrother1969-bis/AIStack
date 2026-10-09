@@ -1,0 +1,34 @@
+# AIStack — scheduled restore tests (2.0)
+#
+# Every service with a sandbox recipe (ADR-0018) not tested in the last
+# six days: its newest backup restored in the sandbox, checked, timed
+# and removed — the live service is never touched. Each outcome is
+# recorded in the data directory (pra/scheduled.jsonl) and counts in
+# the health cockpit's Tests PRA domain. Waits for the dock executor,
+# and holds it off while it runs.
+#
+# Install (as root, on GIGABYTE), once:
+#
+#   cp deploy/systemd/aistack-pra.service deploy/systemd/aistack-pra.timer /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-pra.timer
+#
+# What it did: journalctl -u aistack-pra -n 80
+# The outcomes:  ./run_pra_schedule.sh --list
+
+[Unit]
+Description=AIStack scheduled restore tests (sandbox)
+After=docker.service local-fs.target
+Requires=docker.service
+RequiresMountsFor=/media/BACKUP
+
+[Service]
+Type=oneshot
+User=big-brother
+Group=big-brother
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_pra_schedule.sh
+# Every recipe in turn restores a whole backup: long, never killed half-way.
+TimeoutStartSec=6h
+Nice=10
+IOSchedulingClass=idle

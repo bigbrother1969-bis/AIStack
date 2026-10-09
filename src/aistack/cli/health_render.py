@@ -25,6 +25,7 @@ from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import Languages, default_languages
 from aistack.i18n.pages import page_file
 from aistack.instance.yaml import load_instance_config_yaml
+from aistack.pra.scheduled import with_scheduled
 from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
@@ -387,6 +388,8 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         readings, thresholds = load_pra_tests_yaml(DEFAULT_PRA_TESTS)
+        # The scheduled restore tests' outcomes, when more recent (2.0).
+        readings = with_scheduled(readings)
     except (ValueError, OSError) as error:
         return HealthDomain(
             name="Tests PRA",

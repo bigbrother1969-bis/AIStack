@@ -47,6 +47,7 @@ from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.hosts.health import hosts_domain
+from aistack.pra.scheduled import with_scheduled
 from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.yaml import load_resource_priority_yaml
@@ -267,6 +268,8 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         readings, thresholds = load_pra_tests_yaml(SOURCES.pra_tests)
+        # The scheduled restore tests' outcomes, when more recent (2.0).
+        readings = with_scheduled(readings)
     except (ValueError, OSError) as error:
         return HealthDomain(
             name="Tests PRA",

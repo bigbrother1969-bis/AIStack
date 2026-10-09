@@ -75,6 +75,16 @@ def _legacy(request: Request, pair: str) -> Path | None:
     return Path(paths.repository_root) / old.selection_file
 
 
+def _moment(text: str) -> str:
+    """An instant as the pages show it: minutes, and the zone said."""
+
+    try:
+        moment = datetime.fromisoformat(text)
+    except ValueError:
+        return text
+    return moment.strftime("%Y-%m-%d %H:%M ") + (moment.tzname() or "")
+
+
 def _recorded(request: Request, generated: Path, pair: str) -> bool:
     if selection_file(generated, pair).exists():
         return True
@@ -111,7 +121,7 @@ def pairs(request: Request) -> Response:
                     "recorded": _recorded(request, generated, pair),
                     "waiting": waiting(generated, pair),
                     "selected_gb": f"{int(applied.get('selected_bytes') or 0) / 1e9:.1f}",
-                    "applied_at": str(applied.get("at") or ""),
+                    "applied_at": _moment(str(applied.get("at") or "")),
                     "folder": folder_for(declaration, content.id, destination.id),
                 }
             )
@@ -139,24 +149,29 @@ def pair_page(request: Request, pair: str) -> Response:
         report = dict(applied["report"])
         for key in ("linked", "relinked", "removed", "pruned"):
             report[key] = range(int(report.get(key) or 0))
-        context["last_generation"] = {"generated_at": applied["generated_at"], "report": report}
-    context.update(base=f"{PREFIX}/{pair}", status=request.query_params.get("status"), share=_missing_folder(declaration, pair, language))
+        context["last_generation"] = {"generated_at": _moment(applied["generated_at"]), "report": report}
+    context.update(base=f"{PREFIX}/{pair}", status=request.query_params.get("status"), **_folder_state(declaration, pair, language))
     return _render(request, "selection/index.html", context, language)
 
 
-def _missing_folder(declaration: SyncDeclaration, pair: str, language: PageLanguage) -> dict[str, str] | None:
-    """The folder to create, when Syncthing answers and does not have it."""
+def _folder_state(declaration: SyncDeclaration, pair: str, language: PageLanguage) -> dict[str, Any]:
+    """`share`: the folder to create, when Syncthing answers and does not
+    have it; `reshare`: True when it has it, so the offer can be sent
+    again."""
 
     if declaration.syncthing is None:
-        return None
+        return {"share": None, "reshare": False}
     content, destination = split_pair(pair)
     folder = folder_for(declaration, content, destination)
     try:
         if SyncthingConfig.of(declaration.syncthing).folder(folder) is not None:
-            return None
+            return {"share": None, "reshare": True}
     except SyncthingRefused:
-        return None
-    return {"folder": folder, "device": declaration.destinations[destination].label(language.t.lang)}
+        return {"share": None, "reshare": False}
+    return {
+        "share": {"folder": folder, "device": declaration.destinations[destination].label(language.t.lang)},
+        "reshare": False,
+    }
 
 
 @router.get("/{pair}/syncthing-status", include_in_schema=False)
@@ -203,6 +218,23 @@ async def share(request: Request, pair: str) -> RedirectResponse:
                 config.device_id(declaration.destinations[destination].device),
             )
         message = t("selection.share.done", folder=folder)
+    except SyncthingRefused as error:
+        message = t("selection.share.failed", reason=str(error))
+    return RedirectResponse(f"{PREFIX}/{pair}/?status={quote(message)}", status_code=303)
+
+
+@router.post("/{pair}/reshare", include_in_schema=False, dependencies=[ADMIN_ACTION])
+async def reshare(request: Request, pair: str) -> RedirectResponse:
+    declaration, pair = _pair(request, pair)
+    t = _language(request).t
+    content, destination = split_pair(pair)
+    folder = folder_for(declaration, content, destination)
+    if declaration.syncthing is None:
+        raise HTTPException(status_code=404)
+    config = SyncthingConfig.of(declaration.syncthing)
+    try:
+        config.reshare(folder, config.device_id(declaration.destinations[destination].device))
+        message = t("selection.share.reshared", folder=folder)
     except SyncthingRefused as error:
         message = t("selection.share.failed", reason=str(error))
     return RedirectResponse(f"{PREFIX}/{pair}/?status={quote(message)}", status_code=303)

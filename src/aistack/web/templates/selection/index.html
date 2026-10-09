@@ -141,6 +141,11 @@
           {% endif %}
         </div>
       {% endif %}
+      {% if reshare %}
+        <form method="post" action="{{ base }}/reshare" style="margin:.4rem 0 0"><!--aistack:csrf-->
+          <button type="submit" title="{{ t('selection.tooltip.reshare') }}">{{ t('selection.share.reshare') }}</button>
+        </form>
+      {% endif %}
     </div>
   </section>
 

@@ -183,7 +183,15 @@ def test_nothing_answers_or_writes_on_the_public_port(workspace: Path, method: s
 def test_a_missing_syncthing_folder_says_to_create_it_rather_than_unreachable(workspace: Path, monkeypatch):
     from aistack.web import selection
 
-    monkeypatch.setattr(selection, "_missing_folder", lambda *a: {"folder": "aistack-music-phone", "device": "Phone"})
+    monkeypatch.setattr(selection, "_folder_state", lambda *a: {"share": {"folder": "aistack-music-phone", "device": "Phone"}, "reshare": False})
     page = client(workspace).get(f"/selection/{PAIR}/?lang=en").text
     assert "to create" in page and 'id="syncthing-body"' not in page
     assert f'action="/selection/{PAIR}/share"' in page
+
+
+def test_an_existing_folder_can_be_shared_again(workspace: Path, monkeypatch):
+    from aistack.web import selection
+
+    monkeypatch.setattr(selection, "_folder_state", lambda *a: {"share": None, "reshare": True})
+    page = client(workspace).get(f"/selection/{PAIR}/?lang=en").text
+    assert f'action="/selection/{PAIR}/reshare"' in page and "Share again" in page

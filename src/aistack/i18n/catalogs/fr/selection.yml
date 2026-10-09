@@ -49,6 +49,7 @@ status:
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:
+  reshare: "Retire l'appareil du dossier puis l'y remet : Syncthing lui renvoie l'invitation"
   all_pairs: "Revenir à la liste des contenus et des appareils"
   share: "Ajoute le dossier à Syncthing (envoi seul) et le partage avec l'appareil"
   open_pair: "Ouvrir la sélection de ce contenu pour cet appareil"
@@ -64,6 +65,8 @@ all_pairs: "Tous les contenus"
 waiting: "Sélection enregistrée : elle sera appliquée sur GIGABYTE dans les deux minutes (exécutant aistack-sync), puis Syncthing l'enverra à l'appareil."
 recorded: "{count} répertoire(s) enregistré(s) pour {pair}."
 share:
+  reshare: "Relancer le partage"
+  reshared: "Partage de {folder} relancé : l'appareil le reverra à sa prochaine connexion. S'il avait été ignoré sur l'appareil, réactive-le là-bas (Syncthing → Paramètres → dossiers ignorés)."
   card: "à créer"
   card_meta: "Le dossier n'existe pas encore dans Syncthing : crée-le avec le bouton ci-dessus."
   missing: "Le dossier Syncthing {folder} n'existe pas encore pour {device}."

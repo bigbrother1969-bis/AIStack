@@ -49,6 +49,7 @@ status:
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:
+  reshare: "Takes the device off the folder and puts it back: Syncthing sends the invitation again"
   all_pairs: "Back to every content and device"
   share: "Adds the folder to Syncthing (send only) and shares it with the device"
   open_pair: "Open this content's selection for this device"
@@ -63,6 +64,8 @@ all_pairs: "Every content"
 waiting: "Selection recorded: it will be applied on GIGABYTE within two minutes (the aistack-sync executor), then Syncthing will send it to the device."
 recorded: "{count} folder(s) recorded for {pair}."
 share:
+  reshare: "Share again"
+  reshared: "Share of {folder} sent again: the device will see it at its next connection. If it was ignored on the device, un-ignore it there (Syncthing → Settings → ignored folders)."
   card: "to create"
   card_meta: "The folder does not exist in Syncthing yet: create it with the button above."
   missing: "The Syncthing folder {folder} does not exist yet for {device}."

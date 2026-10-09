@@ -170,3 +170,20 @@ def test_syncthing_folders_are_read_and_added_send_only():
         "type": "sendonly",
         "devices": [{"deviceID": "ZUFNO6Y-AAAA"}],
     }
+
+
+def test_a_folder_is_offered_again_by_taking_the_device_off_and_back():
+    puts: list[list[str]] = []
+    folder = {"id": "aistack-books-phone", "path": "/data/BD/x", "devices": [{"deviceID": "SELF"}, {"deviceID": "PHONE"}]}
+
+    def call(method: str, path: str, body: bytes | None):
+        if method == "GET":
+            return [folder]
+        assert path == "/rest/config/folders/aistack-books-phone"
+        puts.append([d["deviceID"] for d in json.loads(body or b"{}")["devices"]])
+        return None
+
+    SyncthingConfig(call).reshare("aistack-books-phone", "PHONE")
+    assert puts == [["SELF"], ["SELF", "PHONE"]]
+    with pytest.raises(SyncthingRefused):
+        SyncthingConfig(lambda m, p, b: []).reshare("missing", "PHONE")

@@ -46,7 +46,7 @@
             <strong>{{ entry.content }}</strong>
             <span>
               {% if entry.waiting %}{{ t('selection.pairs.waiting') }}
-              {% elif entry.applied_at %}{{ t('selection.pairs.selected', size=entry.selected_gb) }} — {{ t('selection.pairs.applied', at=entry.applied_at[:16] | replace('T', ' ')) }}
+              {% elif entry.applied_at %}{{ t('selection.pairs.selected', size=entry.selected_gb) }} — {{ t('selection.pairs.applied', at=entry.applied_at) }}
               {% elif entry.recorded %}{{ t('selection.pairs.waiting') }}
               {% else %}{{ t('selection.pairs.none') }}{% endif %}
             </span>

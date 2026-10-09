@@ -67,6 +67,25 @@ class SyncthingConfig:
                 return dict(folder)
         return None
 
+    def reshare(self, folder_id: str, device_id: str) -> None:
+        """
+        Offer the folder to the device again: the device is taken off
+        the folder's list and put back, so Syncthing sends it a new
+        offer at its next connection (the owner, 2026-10-09: the phone
+        missed the first one). A folder ignored on the device itself
+        stays ignored until it is un-ignored there.
+        """
+
+        from urllib.parse import quote
+
+        folder = self.folder(folder_id)
+        if folder is None:
+            raise SyncthingRefused(f"no folder `{folder_id}` in this Syncthing")
+        path = f"/rest/config/folders/{quote(folder_id, safe='')}"
+        others = [d for d in folder.get("devices") or [] if d.get("deviceID") != device_id]
+        self.call("PUT", path, json.dumps({**folder, "devices": others}).encode("utf-8"))
+        self.call("PUT", path, json.dumps({**folder, "devices": [*others, {"deviceID": device_id}]}).encode("utf-8"))
+
     def add_folder(self, folder_id: str, label: str, path: str, device_id: str) -> None:
         """A send-only folder (one way, `ADR-0022` § 3), shared with one device."""
 

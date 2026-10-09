@@ -110,3 +110,10 @@ host_silence:
   no_record:
     interpretation: "Aucun relevé du collecteur de l'hôte {host} dans {directory} ({problem}) : ce qui change sur cet hôte n'est pas tracé (ADR-0020)."
   remediation: "Sur {host} : systemctl status aistack-host-collector.timer et journalctl -u aistack-host-collector ; pour un hôte qui écrit sur un disque partagé, vérifier aussi que le disque est monté des deux côtés (manuel, « Traçabilité des hôtes »)."
+
+data_budget:
+  over:
+    interpretation: "Les données d'AIStack occupent {used}, au-delà de leur budget de {budget} ({percent} %) (ADR-0021)."
+  near:
+    interpretation: "Les données d'AIStack occupent {used}, soit {percent} % de leur budget de {budget} ; au rythme des sept derniers jours, le budget est atteint dans environ {days} jour(s) (ADR-0021)."
+  remediation: "Les plus gros : {biggest}. Compresser les observations anciennes (python -m aistack.cli.data_budget --compress), raccourcir compress_after_days, ou relever budget_mb dans ./config/data_budget.yml."

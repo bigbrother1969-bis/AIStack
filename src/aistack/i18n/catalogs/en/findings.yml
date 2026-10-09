@@ -111,3 +111,10 @@ host_silence:
   no_record:
     interpretation: "No record from the collector of host {host} in {directory} ({problem}): what changes on this host is not traced (ADR-0020)."
   remediation: "On {host}: systemctl status aistack-host-collector.timer and journalctl -u aistack-host-collector; for a host writing to a shared disk, also check the disk is mounted on both sides (manual, \"Traceability of the hosts\")."
+
+data_budget:
+  over:
+    interpretation: "AIStack's data takes {used}, past its budget of {budget} ({percent} %) (ADR-0021)."
+  near:
+    interpretation: "AIStack's data takes {used}, {percent} % of its budget of {budget}; the budget is reached in about {days} day(s) at the pace of the last seven (ADR-0021)."
+  remediation: "Largest: {biggest}. Compress older observations (python -m aistack.cli.data_budget --compress), shorten compress_after_days, or raise budget_mb in ./config/data_budget.yml."

@@ -14,6 +14,7 @@ domain:
   uncovered_state: "Uncovered state"
   inventory_gap: "Inventory gaps"
   hosts: "Hosts"
+  data_budget: "AIStack's data"
 domain_state:
   not_instrumented: "{domain} — not instrumented"
   clean: "{domain} — nothing to report"

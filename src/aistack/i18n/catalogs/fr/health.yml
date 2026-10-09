@@ -15,6 +15,7 @@ domain:
   uncovered_state: "État persistant"
   inventory_gap: "Écarts d'inventaire"
   hosts: "Hôtes"
+  data_budget: "Données d'AIStack"
 domain_state:
   not_instrumented: "{domain} — non instrumenté"
   clean: "{domain} — rien à signaler"

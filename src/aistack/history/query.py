@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import gzip
+
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -17,6 +19,7 @@ _FILENAME_STAMP = re.compile(
     r"^(?P<stamp>\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)(?:-(?P<suffix>\d+))?$"
 )
 _STAMP_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
+COMPRESSED_SUFFIX = ".gz"
 
 
 @dataclass(frozen=True)
@@ -44,6 +47,11 @@ class HistoricalObservation:
         return f"{stamp}-{self.rank}" if self.rank else stamp
 
     def read(self) -> str:
+        # Observations older than the data budget's window are kept
+        # gzip-compressed, never deleted (`ADR-0021`, 2026-10-09).
+        if self.path.suffix == COMPRESSED_SUFFIX:
+            with gzip.open(self.path, "rt", encoding="utf-8") as stream:
+                return stream.read()
         return self.path.read_text(encoding="utf-8")
 
 
@@ -139,7 +147,10 @@ def _parse_history_filename(path: Path) -> tuple[datetime, int] | None:
     module's own files.
     """
 
-    match = _FILENAME_STAMP.match(path.stem)
+    # `<stamp>.json.gz`, a compressed observation (`ADR-0021`): the
+    # same instant and rank as the `<stamp>.json` it was.
+    name = Path(path.stem) if path.suffix == COMPRESSED_SUFFIX else path
+    match = _FILENAME_STAMP.match(name.stem)
     if match is None:
         return None
 

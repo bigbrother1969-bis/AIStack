@@ -5,6 +5,7 @@ from aistack.contracts.finding_message import FindingMessage
 from aistack.contracts.backup_reading import BackupReading
 from aistack.contracts.backup_strategy_declaration import BackupStrategyDeclaration
 from aistack.contracts.container_state_reading import ContainerStateReading
+from aistack.contracts.data_usage import DataUsageReading
 from aistack.contracts.host_silence import HostSilence
 from aistack.contracts.gpu_reading import GpuReading
 from aistack.contracts.inventory_gap import InventoryGap
@@ -118,7 +119,8 @@ class CitedReading:
     domain's restart-loop check, counted over time), and, since 2026-10-05,
     `QuarantineReading` (`OPS-0012`'s quarantined code, scored as technical
     debt), and, since 2026-10-09, `HostSilence` (the Hosts domain, a
-    collector that stopped writing, `ADR-0020`) — spelled out directly rather than
+    collector that stopped writing, `ADR-0020`) and `DataUsageReading`
+    (AIStack's data against its budget, `ADR-0021`) — spelled out directly rather than
     imported from `aistack.kernel.evidence.Evidence`:
     `aistack.contracts` is the heritage's foundational layer, and
     importing `aistack.kernel.evidence` from it would read the
@@ -150,6 +152,7 @@ class CitedReading:
         | RestartLoop
         | QuarantineReading
         | HostSilence
+        | DataUsageReading
     )
 
     def __post_init__(self) -> None:

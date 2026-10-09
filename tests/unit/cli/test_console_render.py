@@ -258,7 +258,7 @@ def test_the_default_console_links_definition_exists():
 # --------------------------------------------------------------------
 
 
-def test_build_cockpit_always_names_all_eight_domains(monkeypatch, tmp_path):
+def test_build_cockpit_always_names_all_nine_domains(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
@@ -279,6 +279,7 @@ def test_build_cockpit_always_names_all_eight_domains(monkeypatch, tmp_path):
         "État persistant",
         "Écarts d'inventaire",
         "Hôtes",
+        "Données d'AIStack",
     }
 
 

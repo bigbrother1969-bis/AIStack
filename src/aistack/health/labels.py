@@ -30,6 +30,7 @@ DOMAIN_KEYS: dict[str, str] = {
     "État persistant": "health.domain.uncovered_state",
     "Écarts d'inventaire": "health.domain.inventory_gap",
     "Hôtes": "health.domain.hosts",
+    "Données d'AIStack": "health.domain.data_budget",
 }
 
 

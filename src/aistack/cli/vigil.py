@@ -21,6 +21,7 @@ import sys
 import time
 from pathlib import Path
 
+from aistack.data_budget.budget import compact_if_due, human_size, load_data_budget
 from aistack.dock import proposals as store
 from aistack.i18n import default_languages, translator_for
 from aistack.instance.yaml import load_instance_config_yaml
@@ -39,6 +40,24 @@ def _render() -> None:
             print(f"{module}: exit {done.returncode}: {(done.stderr or done.stdout).strip()[-400:]}", flush=True)
 
 
+def _compact(generated: Path) -> None:
+    """Once a day, the observations older than the data budget's window
+    are compressed (ADR-0021)."""
+
+    try:
+        done = compact_if_due(generated, load_data_budget())
+    except (OSError, ValueError) as error:
+        print(f"vigil: compaction skipped ({error})", flush=True)
+        return
+    if done is not None and (done.files or done.problems):
+        print(
+            f"vigil: {done.files} old observation(s) compressed "
+            f"({human_size(done.before)} → {human_size(done.after)})"
+            + (f", {len(done.problems)} problem(s): {done.problems[0]}" if done.problems else ""),
+            flush=True,
+        )
+
+
 def _console_url() -> str:
     try:
         return load_instance_config_yaml(INSTANCE_CONFIG).service_url("web_lan") + "/console.html"
@@ -47,6 +66,7 @@ def _console_url() -> str:
 
 
 def one_pass(generated: Path, gotify: notify.Gotify | None, dry_run: bool, render: bool = True) -> int:
+    _compact(generated)
     if render:
         _render()
     t = translator_for(default_languages().reference)

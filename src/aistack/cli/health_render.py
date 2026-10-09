@@ -17,6 +17,7 @@ from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.health import HealthHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.hosts.health import hosts_domain
+from aistack.data_budget.health import data_budget_domain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
 from aistack.health.plan import debt_plan, health_plan
@@ -572,6 +573,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             uncovered_state_domain(),
             inventory_gap_domain(),
             hosts_domain(),
+            data_budget_domain(),
         )
     )
 

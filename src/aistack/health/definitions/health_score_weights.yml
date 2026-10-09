@@ -22,6 +22,10 @@
 # `Tests PRA` ("même ordre de grandeur que le domaine le plus proche
 # en signification").
 #
+# `Données d'AIStack` added 2026-10-09 (2.0, tranche 3, ADR-0021):
+# AIStack's own data directory against its declared disk budget.
+# Weighted 10, the same as `Stockage`, the domain closest in meaning.
+#
 # `Hôtes` added 2026-10-09 (2.0, tranche 2): the owner's decision of
 # the same day, "hôte silencieux = constat Santé" — a host collector
 # (ADR-0020) that stopped writing. Weighted 15, the same as `Services`,
@@ -52,3 +56,5 @@ weights:
     points: 25
   - domain: Hôtes
     points: 15
+  - domain: Données d'AIStack
+    points: 10

@@ -47,6 +47,7 @@ from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.hosts.health import hosts_domain
+from aistack.data_budget.health import data_budget_domain
 from aistack.pra.scheduled import with_scheduled
 from aistack.pra.yaml import load_pra_tests_yaml
 from aistack.priority.definition import ResourcePriorityDefinition
@@ -415,6 +416,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             uncovered_state_domain(),
             inventory_gap_domain(),
             hosts_domain(),
+            data_budget_domain(),
         )
     )
 

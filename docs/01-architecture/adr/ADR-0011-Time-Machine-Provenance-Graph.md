@@ -410,6 +410,10 @@ backup, a real restoration test run by the owner) is this ADR's
 condition for calling any of the above safe to rely on, not an optional
 extra alongside it.
 
+*2026-10-09:* the budget and the compaction this section reserves are
+decided and implemented by `ADR-0021` (2 GB, observations older than
+90 days gzip-compressed in place, never deleted).
+
 ### 12. SQLite FTS5 for full-text search over Explications
 
 The owner's decision, 2026-09-27: `sqlite3` (stdlib) with an FTS5 virtual

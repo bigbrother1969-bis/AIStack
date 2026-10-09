@@ -627,6 +627,26 @@ installation git : `deploy/systemd/aistack-vigil.service`. Sans ces deux
 variables, la vigie tourne quand même et dit que les notifications sont
 coupées.
 
+## Budget disque des données d'AIStack
+
+Les données d'AIStack (le dossier des données : historique, graphe de la
+Time Machine, relevés des collecteurs) ont un budget déclaré dans
+`./config/data_budget.yml` : 2 Go par défaut. Le Cockpit Santé a un
+domaine **Données d'AIStack** : un constat à 80 % du budget, avec le
+nombre de jours avant de l'atteindre au rythme des sept derniers jours,
+et un constat urgent au-delà, que la vigie envoie sur Gotify.
+
+Chaque jour, la vigie **compresse** les observations de plus de 90 jours
+(`compress_after_days`) de `history`, `docker-diff` et `docker-events`,
+sur place : rien n'est effacé, AIStack les lit comme avant et la Time
+Machine se reconstruit à l'identique.
+
+```
+docker compose exec web python -m aistack.cli.data_budget
+docker compose exec web python -m aistack.cli.data_budget --compress --dry-run
+docker compose exec web python -m aistack.cli.data_budget --compress
+```
+
 ## Traçabilité des hôtes
 
 Ce qui change sur GIGABYTE et sur le Raspberry eux-mêmes, et non dans

@@ -35,6 +35,7 @@ how_to:
   uncovered_state: "Déclare comment le service est sauvegardé dans ./config/backup_strategy.yml (OPS-0010), ou mets en place une sauvegarde s'il n'en a pas."
   inventory_gap: "Déclare le conteneur dans ./config/service_categorization.yml, marque-le on_demand: true s'il ne tourne qu'à la demande, ou arrête-le s'il ne doit pas tourner (OPS-0011)."
   hosts: "Sur l'hôte : systemctl status aistack-host-collector.timer, puis journalctl -u aistack-host-collector ; pour le Raspberry, vérifie aussi que /media/BACKUP est monté des deux côtés. python -m aistack.cli.hosts dit la dernière écriture de chaque hôte (ADR-0020)."
+  data_budget: "python -m aistack.cli.data_budget montre ce qui prend la place ; --compress compresse tout de suite les observations plus anciennes que la fenêtre (rien n'est effacé). Sinon, raccourcis compress_after_days ou relève budget_mb dans ./config/data_budget.yml (ADR-0021)."
   quarantine: "Le code inutilisé est effacé à la revue ; un élément qui a servi sort de la quarantaine. Le détail : python -m aistack.cli.quarantine_report (OPS-0012)."
   other: "Lis la correction proposée pour chaque constat ; l'assistant IA guide pas à pas."
 tooltip:

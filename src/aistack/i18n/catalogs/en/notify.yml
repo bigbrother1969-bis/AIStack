@@ -5,6 +5,7 @@ event:
   health: "Health going down: {before} → {after}/100."
   host: "Silent host — {text}"
   pra: "Restore test failed — {text}"
+  data: "AIStack's data — {text}"
   dock_proposed: "Dock: update of {service} proposed by {by}, waiting for validation."
   dock_applied: "Dock: update of {service} applied."
   dock_rolled_back: "Dock: update of {service} rolled back (checks failed)."

@@ -2,6 +2,9 @@
 What the vigil tells the owner, and how (2.0, tranche 2; the owner,
 2026-10-09).
 
+Since 2.0's tranche 3, also AIStack's own data nearing (or past) its
+disk budget (ADR-0021), urgent past it.
+
 Four kinds of event, chosen by the owner: the health going down, the
 dock (a proposal waiting, a change applied, rolled back or failed), a
 silent host, a failed restore test. "1 par événement, regroupé": each
@@ -38,6 +41,8 @@ URGENT = 8
 HOSTS_DOMAIN = "Hôtes"
 PRA_DOMAIN = "Tests PRA"
 PRA_FAILED = "findings.pra_tests.failed.interpretation"
+DATA_DOMAIN = "Données d'AIStack"
+DATA_OVER = "findings.data_budget.over.interpretation"
 DOCK_ENDED = {store.APPLIED: "applied", store.ROLLED_BACK: "rolled_back", store.FAILED: "failed"}
 
 
@@ -118,6 +123,9 @@ def events(
                     found.append(Event("host", t("notify.event.host", text=_said(t, finding)), urgent=True))
                 elif finding.domain == PRA_DOMAIN and finding.message and finding.message[0][0] == PRA_FAILED:
                     found.append(Event("pra", t("notify.event.pra", text=_said(t, finding)), urgent=True))
+                elif finding.domain == DATA_DOMAIN:
+                    over = bool(finding.message) and finding.message[0][0] == DATA_OVER
+                    found.append(Event("data", t("notify.event.data", text=_said(t, finding)), urgent=over))
             if (
                 snapshot.score is not None
                 and previous.score is not None
@@ -127,7 +135,7 @@ def events(
                     Event("health", t("notify.event.health", before=previous.score, after=snapshot.score))
                 )
                 for finding in new:
-                    if finding.domain not in (HOSTS_DOMAIN,) and not (
+                    if finding.domain not in (HOSTS_DOMAIN, DATA_DOMAIN) and not (
                         finding.domain == PRA_DOMAIN and finding.message and finding.message[0][0] == PRA_FAILED
                     ):
                         found.append(Event("health", "· " + _said(t, finding)))

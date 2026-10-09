@@ -44,6 +44,7 @@ HOW_TO = {
     "État persistant": "plan.how_to.uncovered_state",
     "Écarts d'inventaire": "plan.how_to.inventory_gap",
     "Hôtes": "plan.how_to.hosts",
+    "Données d'AIStack": "plan.how_to.data_budget",
     QUARANTINE: "plan.how_to.quarantine",
 }
 

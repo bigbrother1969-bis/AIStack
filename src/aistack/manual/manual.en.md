@@ -600,6 +600,26 @@ a test message and `docker compose logs -f vigil` to follow it. In a
 git installation: `deploy/systemd/aistack-vigil.service`. Without these
 two variables the vigil still runs, and says notifications are off.
 
+## Disk budget of AIStack's data
+
+AIStack's data (the data directory: history, the Time Machine's graph,
+the collectors' records) has a budget declared in
+`./config/data_budget.yml`: 2 GB by default. The Health cockpit has an
+**AIStack's data** domain: a finding at 80 % of the budget, with the
+number of days before it is reached at the pace of the last seven days,
+and an urgent finding past it, which the vigil sends to Gotify.
+
+Every day, the vigil **compresses** the observations older than 90 days
+(`compress_after_days`) of `history`, `docker-diff` and `docker-events`,
+in place: nothing is deleted, AIStack reads them as before and the Time
+Machine rebuilds the same graph.
+
+```
+docker compose exec web python -m aistack.cli.data_budget
+docker compose exec web python -m aistack.cli.data_budget --compress --dry-run
+docker compose exec web python -m aistack.cli.data_budget --compress
+```
+
 ## Traceability of the hosts
 
 What changes on GIGABYTE and on the Raspberry themselves, not in their

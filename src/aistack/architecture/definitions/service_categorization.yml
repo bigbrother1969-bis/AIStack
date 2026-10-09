@@ -412,7 +412,7 @@ categories:
 
   - name: AIStack
     services:
-      # AIStack's own six containers since GIGABYTE moved to
+      # AIStack's own containers since GIGABYTE moved to
       # docker-compose.yml (ADR-0017 § 5, 2026-10-04): the collectors
       # then saw them as undeclared inventory gaps.
       - name: AIStack
@@ -435,6 +435,11 @@ categories:
       - name: AIStack — Priorité CPU
         container: aistack-resource-priority
         description: Collecteur technique d'AIStack (limites CPU appliquées)
+      # The vigil, 2.0 (2026-10-09): its first run on GIGABYTE was an
+      # inventory gap of its own.
+      - name: AIStack — Vigie
+        container: aistack-vigil
+        description: Vigie d'AIStack (santé rafraîchie, notifications Gotify)
       - name: Music Sync
         icon: music
         href: https://music-sync.persiaut-family.fr

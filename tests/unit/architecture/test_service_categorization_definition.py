@@ -366,7 +366,7 @@ def test_the_real_service_categorization_loads():
         for category in definition.categories
         for service in category.services
     ]
-    assert len(all_services) == 76  # + AIStack's own six, 2026-10-04
+    assert len(all_services) == 77  # + AIStack's own six, 2026-10-04, and its vigil, 2026-10-09
 
     by_name = {service.name: service for service in all_services}
 
@@ -393,6 +393,7 @@ def test_the_real_service_categorization_loads():
     "AIStack — Empreintes d'images",
     "AIStack — Paquets",
     "AIStack — Priorité CPU",
+    "AIStack — Vigie",
     "Music Sync",
 ]
 
@@ -411,6 +412,7 @@ def test_the_real_service_categorization_loads():
         "AIStack — Empreintes d'images",
         "AIStack — Paquets",
         "AIStack — Priorité CPU",
+        "AIStack — Vigie",
         "Nextcloud — Base de données",
         "Nextcloud — Redis",
         "Nextcloud — Cron",
@@ -433,7 +435,7 @@ def test_the_real_service_categorization_loads():
         "Unpackerr",
         "MinIO",
     }
-    assert len(_NO_ICON_OR_HREF) == 26
+    assert len(_NO_ICON_OR_HREF) == 27
 
     # `icon`/`href`/`description` joined 2026-09-12 (§10) — every
     # user-facing service carries all three, unlike `container` (which

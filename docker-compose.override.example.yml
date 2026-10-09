@@ -8,12 +8,10 @@
 services:
 
   web:
-    volumes:
-      # The Selection screen writes the music copied to the phone into
-      # `target_root` (music_android.yml): the one host directory the
-      # application writes to, so read-write here — every other host
-      # path stays read-only.
-      - /media/TechData/Storage/Music-Android:/media/TechData/Storage/Music-Android
+    # No host directory is mounted read-write any more: since 2.0
+    # (ADR-0022) the Selection screen only records, and the host
+    # executor aistack-sync writes the hard links (a hard link between
+    # two bind mounts fails: "Invalid cross-device link").
     # The troubleshooting assistant reads the GPU with nvidia-smi, which
     # the NVIDIA container runtime brings into the container. Without
     # that runtime (scripts/compose_preflight.sh says so), remove this

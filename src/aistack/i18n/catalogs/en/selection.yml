@@ -1,7 +1,7 @@
 # Selection UI mini-app (selection_ui) — ADR-0010. The page title comes
 # from the application's own definition (declared data), not from here.
 
-heading: "Synchronise the smartphone"
+heading: "Sync to a device"
 meta: "{title} — {count} nodes — library: {root}"
 absent_title: "{count} selected folder(s) no longer exist(s) in the library"
 absent_detail: "They will leave the selection on the next click on “Synchronise”."
@@ -35,7 +35,7 @@ toolbar:
   search: "Search a folder..."
   collapse_all: "Collapse all"
   expand_all: "Expand all"
-sync_button: "Synchronise with the smartphone"
+sync_button: "Record the selection"
 syncing: "Synchronising…"
 badge:
   redundant: "already included by a ticked parent"
@@ -49,9 +49,32 @@ status:
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:
+  all_pairs: "Back to every content and device"
+  share: "Adds the folder to Syncthing (send only) and shares it with the device"
+  open_pair: "Open this content's selection for this device"
   filter: "Filter the tree by directory name"
   collapse_all: "Fold every directory"
   expand_all: "Unfold every directory"
   sync: "Save the selection and create or remove the files to sync to the phone"
   fold: "Fold or unfold this directory"
   select: "Include {label} (and everything in it) in the sync"
+
+all_pairs: "Every content"
+waiting: "Selection recorded: it will be applied on GIGABYTE within two minutes (the aistack-sync executor), then Syncthing will send it to the device."
+recorded: "{count} folder(s) recorded for {pair}."
+share:
+  missing: "The Syncthing folder {folder} does not exist yet for {device}."
+  button: "Create and share the folder"
+  done: "Folder {folder} created and shared: accept it on the device."
+  failed: "Syncthing refused: {reason}"
+pairs:
+  heading: "Sync to a device"
+  intro: "One content of GIGABYTE, one device: tick what should go, the executor on GIGABYTE applies it, Syncthing carries it. Nothing comes back to GIGABYTE."
+  destination_quota: "quota {quota} GB"
+  destination_no_quota: "no quota"
+  selected: "{size} GB ticked"
+  none: "nothing ticked"
+  waiting: "waiting to be applied"
+  applied: "applied {at}"
+  open: "Open"
+  later: "e-reader and USB keys: coming"

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-10-09
@@ -134,8 +134,9 @@ medium, its free space, measured when it is plugged in.
 
 | Part | State |
 |---|---|
-| § 1, § 2 (Syncthing), § 4, § 5, § 7: declarations, the screen per content and destination, Syncthing folders | to do — tranche 4.1 |
-| § 6 the host executor; § 2 (Kindle, USB) | to do — tranche 4.2 |
+| § 1, § 2 (Syncthing), § 4, § 5, § 7: declarations, the screen per content and destination, Syncthing folders | done — `sync.yml`, `aistack.sync` (declaration, screen, syncthing), `/selection/` and `/selection/<content>--<device>/` |
+| § 6 the host executor, for Syncthing pairs | done — `python -m aistack.cli.sync_apply`, `run_sync.sh`, `deploy/systemd/aistack-sync.{service,timer}` |
+| § 2 (Kindle, USB) | to do — tranche 4.2 |
 
 ## Consequences
 
@@ -147,9 +148,10 @@ medium, its free space, measured when it is plugged in.
 
 ## Open Points
 
-- Whether the web container's hard links into `Music-Android` ever
-  worked since the Docker installation (2026-10-04): a link between two
-  bind mounts fails with "Invalid cross-device link". § 6 removes the
-  question; the test on GIGABYTE says whether today's screen was
-  silently failing.
+- *Answered 2026-10-09:* the web container's hard links into
+  `Music-Android` had been failing since the Docker installation
+  (2026-10-04) — `os.link` between the read-only `/media` and the
+  read-write `Music-Android` bind mounts: "[Errno 18] Invalid
+  cross-device link"; the folder's last change dated 2026-09-03. § 6
+  removes the cause; the read-write mount is no longer needed.
 - Podcasts: declared when the directory exists.

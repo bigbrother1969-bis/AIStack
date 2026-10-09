@@ -46,6 +46,7 @@
 <body>
   <div class="top">
     <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <a href="/selection/?lang={{ lang }}" title="{{ t('selection.tooltip.all_pairs') }}">{{ t('selection.all_pairs') }}</a>
     <!--aistack:session-->
     <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
       {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
@@ -58,6 +59,19 @@
 
   {% if status %}
     <div class="status">{{ status }}</div>
+  {% endif %}
+
+  {% if waiting %}
+    <div class="status">{{ t('selection.waiting') }}</div>
+  {% endif %}
+
+  {% if share %}
+    <div class="warning">
+      {{ t('selection.share.missing', folder=share.folder, device=share.device) }}
+      <form method="post" action="{{ base }}/share" style="display:inline"><!--aistack:csrf-->
+        <button type="submit" title="{{ t('selection.tooltip.share') }}">{{ t('selection.share.button') }}</button>
+      </form>
+    </div>
   {% endif %}
 
   {% if absent %}

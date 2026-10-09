@@ -277,7 +277,7 @@ def _desired(
             if entry.is_dir() or entry.is_symlink():
                 continue
 
-            if entry.suffix.lower() not in extensions:
+            if entry.suffix.lower() not in extensions and "*" not in extensions:
                 continue
 
             desired[f"{node}/{entry.name}"] = entry

@@ -189,12 +189,13 @@ links:
   - name: Selection UI
     description:
       fr: >-
-        Choisir les morceaux de musique à préparer pour la
-        synchronisation vers le téléphone Android, et vérifier la
-        place disponible avant de lancer la copie.
+        Choisir, contenu par contenu (musique, livres, BD, photos,
+        vidéos, documents…), ce qui part vers le téléphone ou un
+        ordinateur, et vérifier la place disponible.
       en: >-
-        Choose the music tracks to prepare for syncing to the Android
-        phone, and check the space available before starting the copy.
+        Choose, content by content (music, books, comics, photos,
+        videos, documents…), what goes to the phone or a computer, and
+        check the space available.
     service: web_lan
     path: /selection/
     scope: lan

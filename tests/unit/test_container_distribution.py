@@ -83,7 +83,8 @@ def test_the_host_s_additions_are_an_example_never_committed():
     example = yaml.safe_load((root / "docker-compose.override.example.yml").read_text(encoding="utf-8"))
 
     web = example["services"]["web"]
-    assert any(volume.count(":") == 1 for volume in web["volumes"])  # the one read-write host path
+    # No read-write host path since 2.0: the sync executor runs on the host (ADR-0022).
+    assert "volumes" not in web
     assert web["deploy"]["resources"]["reservations"]["devices"][0]["driver"] == "nvidia"
     assert "/docker-compose.override.yml" in (root / ".gitignore").read_text(encoding="utf-8").splitlines()
 

@@ -1,7 +1,7 @@
 # Mini-app Selection UI (selection_ui) — ADR-0010. Le titre de la page
 # vient de la définition de l'application (donnée déclarée), pas d'ici.
 
-heading: "Synchroniser le smartphone"
+heading: "Synchroniser vers un appareil"
 meta: "{title} — {count} nœuds — bibliothèque : {root}"
 absent_title: "{count} répertoire(s) sélectionné(s) n'existe(nt) plus dans la bibliothèque"
 absent_detail: "Ils disparaîtront de la sélection au prochain clic sur « Synchroniser »."
@@ -35,7 +35,7 @@ toolbar:
   search: "Rechercher un répertoire..."
   collapse_all: "Tout replier"
   expand_all: "Tout déplier"
-sync_button: "Synchroniser avec le smartphone"
+sync_button: "Enregistrer la sélection"
 syncing: "Synchronisation en cours…"
 badge:
   redundant: "déjà inclus par un parent coché"
@@ -49,6 +49,9 @@ status:
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:
+  all_pairs: "Revenir à la liste des contenus et des appareils"
+  share: "Ajoute le dossier à Syncthing (envoi seul) et le partage avec l'appareil"
+  open_pair: "Ouvrir la sélection de ce contenu pour cet appareil"
   filter: "Filtrer l'arborescence par nom de répertoire"
   collapse_all: "Replier tous les répertoires"
   expand_all: "Déplier tous les répertoires"
@@ -56,3 +59,23 @@ tooltip:
   \ téléphone"
   fold: "Replier ou déplier ce répertoire"
   select: "Inclure {label} (et tout son contenu) dans la synchronisation"
+
+all_pairs: "Tous les contenus"
+waiting: "Sélection enregistrée : elle sera appliquée sur GIGABYTE dans les deux minutes (exécutant aistack-sync), puis Syncthing l'enverra à l'appareil."
+recorded: "{count} répertoire(s) enregistré(s) pour {pair}."
+share:
+  missing: "Le dossier Syncthing {folder} n'existe pas encore pour {device}."
+  button: "Créer et partager le dossier"
+  done: "Dossier {folder} créé et partagé : accepte-le sur l'appareil."
+  failed: "Syncthing a refusé : {reason}"
+pairs:
+  heading: "Synchroniser vers un appareil"
+  intro: "Un contenu de GIGABYTE, un appareil : coche ce qui doit partir, l'exécutant sur GIGABYTE l'applique, Syncthing le transporte. Rien ne revient vers GIGABYTE."
+  destination_quota: "quota {quota} Go"
+  destination_no_quota: "sans quota"
+  selected: "{size} Go cochés"
+  none: "rien de coché"
+  waiting: "en attente d'application"
+  applied: "appliqué {at}"
+  open: "Ouvrir"
+  later: "liseuse et clés USB : bientôt"

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('selection.pairs.heading') }}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 1.5rem; color: #1f2933; background: #f7f9fb; }
+    .top { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    .top a { color: #16335c; text-decoration: none; }
+    .lang-switch { margin-left: auto; display: flex; gap: .4rem; align-items: center; }
+    .flag { display: block; border: 1px solid #ccd; }
+    h1 { font-family: Georgia, serif; color: #16335c; margin: 0 0 .3rem; }
+    .intro { color: #5b6b7d; max-width: 60rem; }
+    .status { padding: .8rem 1rem; border-radius: 6px; background: #e8f5e9; border: 1px solid #a5d6a7; margin: 1rem 0; }
+    section { background: #fff; border: 1px solid #dde3ea; border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; }
+    h2 { font-size: 1.1rem; margin: 0 0 .6rem; color: #16335c; }
+    h2 small { color: #5b6b7d; font-weight: normal; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: .6rem; }
+    .pair { display: block; border: 1px solid #dde3ea; border-left: 4px solid #c7d0da; border-radius: 6px; padding: .6rem .8rem; color: inherit; text-decoration: none; }
+    .pair.recorded { border-left-color: #2e7d32; }
+    .pair.waiting { border-left-color: #b26a00; }
+    .pair strong { display: block; }
+    .pair span { font-size: .85rem; color: #5b6b7d; }
+    .later { color: #5b6b7d; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+  <h1>{{ t('selection.pairs.heading') }}</h1>
+  <p class="intro">{{ t('selection.pairs.intro') }}</p>
+  {% if status %}<div class="status">{{ status }}</div>{% endif %}
+
+  {% for row in rows %}
+    <section>
+      <h2>{{ row.destination }} <small>— {% if row.quota_gb %}{{ t('selection.pairs.destination_quota', quota=row.quota_gb) }}{% else %}{{ t('selection.pairs.destination_no_quota') }}{% endif %}</small></h2>
+      <div class="grid">
+        {% for entry in row.entries %}
+          <a class="pair {{ 'waiting' if entry.waiting else ('recorded' if entry.recorded else '') }}" href="{{ base }}/{{ entry.pair }}/?lang={{ lang }}" title="{{ t('selection.tooltip.open_pair') }}">
+            <strong>{{ entry.content }}</strong>
+            <span>
+              {% if entry.waiting %}{{ t('selection.pairs.waiting') }}
+              {% elif entry.applied_at %}{{ t('selection.pairs.selected', size=entry.selected_gb) }} — {{ t('selection.pairs.applied', at=entry.applied_at[:16] | replace('T', ' ')) }}
+              {% elif entry.recorded %}{{ t('selection.pairs.waiting') }}
+              {% else %}{{ t('selection.pairs.none') }}{% endif %}
+            </span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+  <p class="later">{{ t('selection.pairs.later') }}</p>
+</body>
+</html>

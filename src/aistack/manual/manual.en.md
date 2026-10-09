@@ -176,18 +176,43 @@ priority application becomes active, throttled containers are limited; once
 it is quiet again, after the grace window, everything goes back to normal.
 Every decision is recorded and visible in the Time Machine.
 
-## Synchronise the smartphone
+## Sync to a device
 
-*Local network, sign-in required, syncing reserved to administrators.*
-Choosing, in the music library, what is copied to the phone:
+*Local network, sign-in required, recording reserved to administrators.*
+The **Selection UI** page lists, for every device paired with GIGABYTE's
+Syncthing (the phone, the laptop…), every content declared in
+`./config/sync.yml`: music, photos, pictures, videos, films, series, books,
+comics, manga, documents. For one content and one device:
 
 - tick folders in the tree (search and *Collapse all* / *Expand all* help);
-  a sub-folder of a ticked folder is included;
-- the **Capacity** card compares the selection with the declared capacity
-  and refuses a selection that is too large;
-- **Synchronise with the smartphone** applies the selection in the target folder;
-  Syncthing then sends it to the phone, whose progress shows when the device
-  is declared.
+  a sub-folder of a ticked folder is included; excluded folders
+  (`restricted`, `lost+found`…) are never offered;
+- the **Capacity** card compares the selection with the device's quota,
+  shared by all its contents (64 GB for the phone);
+- **Record the selection** records it; the executor on GIGABYTE
+  (`aistack-sync.timer`, every two minutes) applies it with hard links, on
+  the content's own disk — no extra room taken —, and Syncthing sends it to
+  the device; nothing comes back to GIGABYTE;
+- when the Syncthing folder does not exist yet, **Create and share the
+  folder** adds it to Syncthing (send only) and shares it with the device:
+  accept it on the device afterwards.
+
+Install, once, on GIGABYTE: a `.aistack-sync` folder at the root of each
+content disk, owned by the account that owns the files, then the executor;
+the Syncthing container must see each disk under `/data` (`/media/BD` →
+`/data/BD`…):
+
+```
+cd /srv/aistack/AIStack
+for d in /media/BD /media/Comics /media/Multimedia /media/Documents /media/Films /media/TechData; do
+  sudo install -d -o big-brother -g big-brother "$d/.aistack-sync"
+done
+sudo cp deploy/systemd/aistack-sync.service deploy/systemd/aistack-sync.timer /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-sync.timer
+./run_sync.sh --list
+```
+
+The e-reader and USB keys come next (ADR-0022).
 
 ## Network discovery
 

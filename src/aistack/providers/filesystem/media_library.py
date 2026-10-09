@@ -32,6 +32,11 @@ DEFAULT_MEDIA_EXTENSIONS = frozenset(
     }
 )
 
+# A set of extensions holding this one counts every file as media:
+# the generalized sync's `any` contents, documents of every kind
+# (ADR-0022, 2026-10-09).
+EVERY_FILE = "*"
+
 
 @dataclass
 class _Counted:
@@ -270,7 +275,7 @@ class MediaLibraryProvider:
 
             extension = Path(name).suffix.lower()
 
-            if extension not in self.media_extensions:
+            if extension not in self.media_extensions and EVERY_FILE not in self.media_extensions:
                 counted.other_files += 1
                 counted.unrecognized[extension] = (
                     counted.unrecognized.get(extension, 0) + 1

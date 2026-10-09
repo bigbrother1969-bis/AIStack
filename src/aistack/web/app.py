@@ -78,6 +78,8 @@ class WebPaths:
     )
     resource_priority: Path = configured(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml")
     selection: Path = configured(PACKAGE_ROOT / "selection" / "definitions" / "music_android.yml")
+    # The generalized sync's contents and destinations (ADR-0022).
+    sync: Path = configured(PACKAGE_ROOT / "sync" / "definitions" / "sync.yml")
     topology: Path = (
         configured(PACKAGE_ROOT / "architecture" / "definitions" / "infrastructure_topology.yml")
     )

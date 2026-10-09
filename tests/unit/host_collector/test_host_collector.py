@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import ast
 import gzip
 import json
@@ -143,6 +145,13 @@ def test_a_file_is_known_by_a_keyed_fingerprint_never_its_content(tmp_path: Path
     (secret / "db.env").write_text("PASSWORD=hunter2\n")
     _run(tmp_path, Units())
     (secret / "db.env").write_text("PASSWORD=hunter3\n")
+    # File times tick coarsely (a few milliseconds): two writes of the
+    # same size in one tick keep the same mtime, and the collector,
+    # trusting size + time + inode, would not read the file again (a
+    # failure seen on GIGABYTE, 2026-10-09). A real edit fifteen minutes
+    # apart never shares a tick; the test says so explicitly.
+    later = (secret / "db.env").stat().st_mtime_ns + 1_000_000_000
+    os.utime(secret / "db.env", ns=(later, later))
     _run(tmp_path, Units(), now="2026-10-08T19:15:00+00:00")
 
     written = "".join(p.read_text() for p in (tmp_path / "out").rglob("*.json*"))

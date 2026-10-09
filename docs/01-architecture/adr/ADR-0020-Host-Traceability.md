@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-10-08
-  updated: 2026-10-08
+  updated: 2026-10-09
 
 relations:
   references:
@@ -112,12 +112,22 @@ The records are read by AIStack into the history and projected into the
 provenance graph like the container streams: per host, per kind,
 dated by the event.
 
+### 8. A silent host is a health finding
+
+Added 2026-10-09 (2.0; the owner: "hôte silencieux = constat Santé").
+A traced host with no run read for longer than `hosts.yml`'s
+`silent_after_minutes` — or no record at all, its disk not mounted —
+is a finding of the health cockpit's *Hôtes* domain: in the score, the
+action plan and the troubleshooting assistant, not only in
+`python -m aistack.cli.hosts`.
+
 ## Implementation state
 
 | Part | State |
 |---|---|
 | § 2–5 the collector, its units, its key, its output | done — `aistack/host_collector.py` (standard library only), `deploy/host-collector/` (service, timer, configuration example) |
 | § 7 reading the records, the graph, the Time Machine | done — `hosts.yml`, `aistack.hosts.records`, `project_host_changes` (stream `host-<name>`, one entity per event), the ribbon's *Hosts* group, `python -m aistack.cli.hosts` |
+| § 8 a silent host is a health finding | done — `aistack.hosts.health` (the cockpit's *Hôtes* domain, weighted 15 in `health_score_weights.yml`) |
 
 ## Consequences
 

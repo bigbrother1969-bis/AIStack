@@ -29,6 +29,7 @@ DOMAIN_KEYS: dict[str, str] = {
     "Tests PRA": "health.domain.pra_tests",
     "État persistant": "health.domain.uncovered_state",
     "Écarts d'inventaire": "health.domain.inventory_gap",
+    "Hôtes": "health.domain.hosts",
 }
 
 

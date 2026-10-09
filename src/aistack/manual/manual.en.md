@@ -599,6 +599,11 @@ mark per event; an event's node says what changed (versions, a unit's
 state, an apt command line, what changed of a file: size, mode, owner,
 content).
 
+A silent host is also a finding of the Health cockpit, in the **Hosts**
+domain: it counts in the score, appears in the action plan and opens in
+the troubleshooting assistant. The delay is set in `./config/hosts.yml`
+(`silent_after_minutes`).
+
 ## Troubleshooting
 
 - **"Invalid callback URL" at the provider**: the callback of the address

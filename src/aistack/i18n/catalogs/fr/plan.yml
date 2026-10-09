@@ -34,6 +34,7 @@ how_to:
   pra_tests: "Fais un vrai test de restauration du service, puis note-le dans ./config/pra_tests.yml (status, date, rto_minutes). Pour WordPress : python -m aistack.cli.sandbox restore wordpress, qui propose l'entrée (manuel, « Tester la restauration d'un service en bac à sable »). Pour AIStack lui-même : python -m aistack.cli.sandbox restore aistack, ou scripts/restore_aistack.sh (manuel, « Sauvegarder et restaurer AIStack »)."
   uncovered_state: "Déclare comment le service est sauvegardé dans ./config/backup_strategy.yml (OPS-0010), ou mets en place une sauvegarde s'il n'en a pas."
   inventory_gap: "Déclare le conteneur dans ./config/service_categorization.yml, marque-le on_demand: true s'il ne tourne qu'à la demande, ou arrête-le s'il ne doit pas tourner (OPS-0011)."
+  hosts: "Sur l'hôte : systemctl status aistack-host-collector.timer, puis journalctl -u aistack-host-collector ; pour le Raspberry, vérifie aussi que /media/BACKUP est monté des deux côtés. python -m aistack.cli.hosts dit la dernière écriture de chaque hôte (ADR-0020)."
   quarantine: "Le code inutilisé est effacé à la revue ; un élément qui a servi sort de la quarantaine. Le détail : python -m aistack.cli.quarantine_report (OPS-0012)."
   other: "Lis la correction proposée pour chaque constat ; l'assistant IA guide pas à pas."
 tooltip:

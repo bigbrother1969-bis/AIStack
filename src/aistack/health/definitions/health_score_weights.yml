@@ -22,6 +22,12 @@
 # `Tests PRA` ("même ordre de grandeur que le domaine le plus proche
 # en signification").
 #
+# `Hôtes` added 2026-10-09 (2.0, tranche 2): the owner's decision of
+# the same day, "hôte silencieux = constat Santé" — a host collector
+# (ADR-0020) that stopped writing. Weighted 15, the same as `Services`,
+# the domain closest in meaning (something installed that stopped
+# running); the owner may change it in ./config.
+#
 # `Écarts d'inventaire` added 2026-09-30 (1.6 tranche 3, R9): the
 # domain vocabulary reopened to seven by the owner's own explicit
 # decision, the same deliberate-reopening discipline `Tests PRA`/
@@ -44,3 +50,5 @@ weights:
     points: 25
   - domain: Écarts d'inventaire
     points: 25
+  - domain: Hôtes
+    points: 15

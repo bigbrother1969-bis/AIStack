@@ -43,6 +43,7 @@ HOW_TO = {
     "Tests PRA": "plan.how_to.pra_tests",
     "État persistant": "plan.how_to.uncovered_state",
     "Écarts d'inventaire": "plan.how_to.inventory_gap",
+    "Hôtes": "plan.how_to.hosts",
     QUARANTINE: "plan.how_to.quarantine",
 }
 

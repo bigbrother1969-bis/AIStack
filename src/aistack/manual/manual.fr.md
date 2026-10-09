@@ -625,6 +625,11 @@ un repère par événement ; le nœud d'un événement dit ce qui a changé
 (versions, état d'une unité, ligne de commande apt, ce qui a changé d'un
 fichier : taille, droits, propriétaire, contenu).
 
+Un hôte silencieux est aussi un constat du Cockpit Santé, dans le
+domaine **Hôtes** : il compte dans le score, apparaît dans le plan
+d'action et s'ouvre dans l'assistant de pannes. Le délai se règle dans
+`./config/hosts.yml` (`silent_after_minutes`).
+
 ## En cas de problème
 
 - **« Invalid callback URL » chez le fournisseur** : l'adresse de retour de

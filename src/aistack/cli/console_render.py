@@ -18,6 +18,7 @@ from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.console.identity import load_console_identity
 from aistack.generators.console import ConsoleHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
+from aistack.hosts.health import hosts_domain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
 from aistack.health.quarantine import quarantine_findings
@@ -397,6 +398,7 @@ def build_cockpit(hostname: str) -> HealthCockpit:
             pra_tests_domain(),
             uncovered_state_domain(),
             inventory_gap_domain(),
+            hosts_domain(),
         )
     )
 

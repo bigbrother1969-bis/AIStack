@@ -14,6 +14,7 @@ domain:
   pra_tests: "Tests PRA"
   uncovered_state: "État persistant"
   inventory_gap: "Écarts d'inventaire"
+  hosts: "Hôtes"
 domain_state:
   not_instrumented: "{domain} — non instrumenté"
   clean: "{domain} — rien à signaler"

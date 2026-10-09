@@ -103,3 +103,10 @@ quarantine:
   watched:
     interpretation: "{entry} ({paths}) est du code mort en quarantaine depuis le {since} ; aucune utilisation constatée à ce jour."
     remediation: "Rien à faire avant le {review}, sa date de revue."
+
+host_silence:
+  silent:
+    interpretation: "Le collecteur de l'hôte {host} n'a rien écrit depuis {minutes} minutes (dernier passage : {last_run}) : ce qui change sur cet hôte n'est plus tracé (ADR-0020)."
+  no_record:
+    interpretation: "Aucun relevé du collecteur de l'hôte {host} dans {directory} ({problem}) : ce qui change sur cet hôte n'est pas tracé (ADR-0020)."
+  remediation: "Sur {host} : systemctl status aistack-host-collector.timer et journalctl -u aistack-host-collector ; pour un hôte qui écrit sur un disque partagé, vérifier aussi que le disque est monté des deux côtés (manuel, « Traçabilité des hôtes »)."

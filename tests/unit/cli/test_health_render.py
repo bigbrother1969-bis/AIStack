@@ -53,6 +53,7 @@ _DOMAIN_NAMES = {
     "Tests PRA",
     "État persistant",
     "Écarts d'inventaire",
+    "Hôtes",
 }
 
 
@@ -229,7 +230,7 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
     assert "no storage-threshold definition at" in storage.note
 
 
-def test_all_seven_domains_are_always_present(monkeypatch, tmp_path):
+def test_all_eight_domains_are_always_present(monkeypatch, tmp_path):
     """
     `PLAN-J7` § 1's domain vocabulary, reopened from four to five on
     the owner's own explicit decision, 2026-09-23 (Storage, Services,

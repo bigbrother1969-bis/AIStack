@@ -64,6 +64,8 @@ all_pairs: "Tous les contenus"
 waiting: "Sélection enregistrée : elle sera appliquée sur GIGABYTE dans les deux minutes (exécutant aistack-sync), puis Syncthing l'enverra à l'appareil."
 recorded: "{count} répertoire(s) enregistré(s) pour {pair}."
 share:
+  card: "à créer"
+  card_meta: "Le dossier n'existe pas encore dans Syncthing : crée-le avec le bouton ci-dessus."
   missing: "Le dossier Syncthing {folder} n'existe pas encore pour {device}."
   button: "Créer et partager le dossier"
   done: "Dossier {folder} créé et partagé : accepte-le sur l'appareil."

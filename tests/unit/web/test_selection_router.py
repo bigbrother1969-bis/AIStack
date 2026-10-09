@@ -178,3 +178,12 @@ def test_nothing_answers_or_writes_on_the_public_port(workspace: Path, method: s
 
     assert reply.status_code == 404
     assert not (workspace / "data" / "sync").exists()
+
+
+def test_a_missing_syncthing_folder_says_to_create_it_rather_than_unreachable(workspace: Path, monkeypatch):
+    from aistack.web import selection
+
+    monkeypatch.setattr(selection, "_missing_folder", lambda *a: {"folder": "aistack-music-phone", "device": "Phone"})
+    page = client(workspace).get(f"/selection/{PAIR}/?lang=en").text
+    assert "to create" in page and 'id="syncthing-body"' not in page
+    assert f'action="/selection/{PAIR}/share"' in page

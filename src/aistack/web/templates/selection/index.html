@@ -118,7 +118,10 @@
 
     <div class="card">
       <div class="label">{{ t('selection.card.syncthing', folder=definition.syncthing.folder_id if definition.syncthing else "") }}</div>
-      {% if not definition.syncthing %}
+      {% if share %}
+        <div class="value">{{ t('selection.share.card') }}</div>
+        <div class="meta">{{ t('selection.share.card_meta') }}</div>
+      {% elif not definition.syncthing %}
         <div class="meta">{{ t('selection.syncthing.not_configured') }}</div>
       {% else %}
         <div id="syncthing-body">

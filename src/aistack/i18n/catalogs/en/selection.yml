@@ -63,6 +63,8 @@ all_pairs: "Every content"
 waiting: "Selection recorded: it will be applied on GIGABYTE within two minutes (the aistack-sync executor), then Syncthing will send it to the device."
 recorded: "{count} folder(s) recorded for {pair}."
 share:
+  card: "to create"
+  card_meta: "The folder does not exist in Syncthing yet: create it with the button above."
   missing: "The Syncthing folder {folder} does not exist yet for {device}."
   button: "Create and share the folder"
   done: "Folder {folder} created and shared: accept it on the device."

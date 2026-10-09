@@ -67,6 +67,9 @@ class ConsoleLink:
     description: str
     url: str
     scope: str
+    # What the screen asks of AI, said on its card (owner, 2026-10-09:
+    # "pour justifier « AI » dans « AIStack »"). Empty: no AI.
+    ai: str = ""
 
     def __post_init__(self) -> None:
         if not self.name.strip():

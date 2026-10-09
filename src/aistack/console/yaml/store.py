@@ -154,4 +154,10 @@ def _load_link(
         ),
         url=url,
         scope=data["scope"],
+        # Optional (2026-10-09): what the screen asks of AI.
+        ai=(
+            pick_localized(data["ai"], lang, languages, f"{label}.ai")
+            if data.get("ai")
+            else ""
+        ),
     )

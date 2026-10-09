@@ -401,10 +401,16 @@ def _render_link(link: ConsoleLink, t: Translator) -> str:
     scope_line = t("console.card_scope_lan") if link.scope == LAN else ""
     description = _without_scope_sentence(link.description, scope_line) if scope_line else link.description
     scope_html = f'\n      <p class="card-scope"><em>{escape_text(scope_line)}</em></p>' if scope_line else ""
+    ai_html = (
+        f'\n      <p class="card-ai"><span class="ai-mark" title="{escape_text(t("console.ai_mark_title"))}">'
+        f'{escape_text(t("console.ai_mark"))}</span> {escape_text(link.ai)}</p>'
+        if link.ai
+        else ""
+    )
 
     return f"""    <a class="card card-{link.scope}" href="{escape_text(_link_href(link.url, t.lang))}" title="{escape_text(tooltip)}">
       <h2>{escape_text(link.name)}</h2>
-      <p>{escape_text(description)}</p>{scope_html}
+      <p>{escape_text(description)}</p>{ai_html}{scope_html}
     </a>"""
 
 
@@ -551,6 +557,12 @@ body {
   font-family: Georgia, "Times New Roman", Times, serif;
 }
 .card p { margin: 0 0 .6rem; font-size: .9rem; color: #5b6b7d; }
+.card .card-ai { margin: .4rem 0 0; font-size: .85rem; color: #16335c; }
+.card .ai-mark {
+  display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+  padding: .05rem .4rem; margin-right: .3rem; border-radius: 4px;
+  background: #16335c; color: #ffffff; vertical-align: 1px;
+}
 .card .card-scope { margin: .4rem 0 0; font-size: .85rem; color: #3d5a73; }
 /* Scope accent, 2026-09-30 (the owner's "bandeau de couleur
    différent") — a left-edge stripe, deliberately not the health

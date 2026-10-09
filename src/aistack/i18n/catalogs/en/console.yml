@@ -23,6 +23,9 @@ aside:
   copyright: "© {year} {publisher}"
 # The last line of every local-network card, in italics (owner, 2026-10-09).
 card_scope_lan: "Reachable from the local network only."
+# The mark on a card whose screen uses AI (owner, 2026-10-09).
+ai_mark: "AI"
+ai_mark_title: "Feature that uses artificial intelligence"
 tooltip:
   manual: "Open the user manual: every screen in detail, and how to set up an installation"
   manual_section: "Go to this part of the manual"

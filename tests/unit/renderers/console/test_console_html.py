@@ -594,3 +594,33 @@ def test_a_description_written_before_still_shows_the_scope_once():
 
 def test_a_public_card_says_no_scope_line():
     assert 'class="card-scope"' not in render_html((health_link(),))
+
+
+def test_a_card_whose_screen_uses_ai_says_so_under_an_ai_mark():
+    assistant = ConsoleLink(
+        name="Assistant de pannes",
+        description="Diagnostiquer une panne réelle.",
+        url="http://GIGABYTE:8186/troubleshooting/",
+        scope=LAN,
+        ai="Un modèle d'IA local raisonne sur la panne.",
+    )
+
+    document = render_html((assistant, selection_ui_link()))
+
+    card = document.split("Assistant de pannes", 1)[1].split("</a>", 1)[0]
+    assert '<span class="ai-mark"' in card and ">IA</span> Un modèle d'IA local" in card
+    # Before the scope line, which stays last.
+    assert card.index("card-ai") < card.index("card-scope")
+    assert document.count('class="card-ai"') == 1
+
+
+def test_the_shipped_cards_mark_the_screens_that_use_ai():
+    from pathlib import Path
+
+    import aistack
+    from aistack.console.yaml import load_console_links_yaml
+
+    shipped = Path(aistack.__file__).parent / "console" / "definitions" / "console_links.yml"
+    links = load_console_links_yaml(shipped, lang="fr")
+
+    assert sorted(link.name for link in links if link.ai) == ["Assistant de pannes", "Cockpit Santé", "Time Machine"]

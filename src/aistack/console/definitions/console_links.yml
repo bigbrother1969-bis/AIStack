@@ -171,6 +171,15 @@
 #     the end of a description before adding its own. The English
 #     descriptions were rewritten in the same plain words as the
 #     French ones.
+#
+#   - **`ai`, 2026-10-09** (the owner: "indique les fonctionnalités qui
+#     utilisent de l'IA, pour justifier « AI » dans « AIStack »"):
+#     optional, localized like `description` — what the screen asks of
+#     AI, in one sentence, shown on its card under an "AI" mark. Only
+#     where AI is really at work: the troubleshooting assistant (the
+#     local model reasons, explains, recommends), the Time Machine (it
+#     keeps and shows the model's reasoning) and the Health Cockpit
+#     (each finding leads to the assistant).
 
 links:
   - name: Selection UI
@@ -219,6 +228,11 @@ links:
         incident...).
       en: Health score and findings by domain (PLAN-J7)
     url: /health.html
+    ai:
+      fr: >-
+        Chaque anomalie mène à l'assistant de pannes, où l'IA propose son diagnostic.
+      en: >-
+        Each finding leads to the troubleshooting assistant, where the AI offers its diagnosis.
     scope: public
   - name:
       fr: Découverte réseau
@@ -247,6 +261,11 @@ links:
         understand the likely cause, then get a recommended action.
     service: web_lan
     path: /troubleshooting/
+    ai:
+      fr: >-
+        Un modèle d'IA local (Ollama) raisonne sur la panne, l'explique en clair et recommande une action ; rien ne s'applique sans ton clic.
+      en: >-
+        A local AI model (Ollama) reasons about the fault, explains it in plain words and recommends an action; nothing is applied without your click.
     scope: lan
   - name: Time Machine
     description:
@@ -261,6 +280,11 @@ links:
         as a graph you can explore.
     service: web_lan
     path: /timemachine/
+    ai:
+      fr: >-
+        Garde chaque raisonnement de l'IA, daté et relié à ce qu'il explique, pour que tu puisses le relire, le corriger ou le valider.
+      en: >-
+        Keeps every reasoning of the AI, dated and tied to what it explains, so you can read it again, correct it or validate it.
     scope: lan
   - name:
       fr: Quai

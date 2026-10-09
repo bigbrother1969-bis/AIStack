@@ -12,7 +12,10 @@ into GIGABYTE's `./config` by hand.
 **A copy nobody edited follows the shipped file.** `config_init` keeps
 each copy's fingerprint (`.shipped.json`); a file still holding exactly
 what was copied was never touched by the owner, and is replaced by the
-new shipped version at the next start.
+new shipped version at the next start. So is a file holding exactly the
+shipped version recorded as seen (`.shipped-seen.json`), since
+2026-10-09: a copy made by hand, or before `.shipped.json` existed, that
+the owner never edited.
 
 **A file the owner edited, or put there himself, is never touched** —
 but when the shipped version changes, Settings says so and shows the
@@ -90,7 +93,14 @@ def follow(directory: Path, shipped: list[Path]) -> list[str]:
         current = fingerprint(source)
         in_use = fingerprint(target)
         recorded = copies.get(name)
-        if recorded is not None and in_use == recorded and current != recorded:
+        # Untouched: still what was copied, or — for a copy made before
+        # `.shipped.json` existed, or by hand — byte for byte the
+        # shipped version the owner last had (GIGABYTE, 2026-10-09:
+        # `health_score_weights.yml`, identical to 1.11's, never
+        # followed 2.0's new domain, and the score could not be
+        # computed).
+        untouched = (recorded is not None and in_use == recorded) or in_use == seen.get(name)
+        if untouched and current != in_use:
             _copy(source, target)
             copies[name] = current
             replaced.append(name)

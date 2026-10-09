@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -171,10 +172,29 @@ def compose(t: Translator, found: Sequence[Event]) -> Message | None:
 Post = Callable[[str, bytes, dict[str, str]], Any]
 
 
+# Python's own "Python-urllib/3.x" is refused by Cloudflare's bot
+# protection in front of a self-hosted Gotify (HTTP 403, GIGABYTE,
+# 2026-10-09): AIStack says who it is.
+USER_AGENT = "AIStack-vigil (+https://codeberg.org/bigbrother1969/AIStack)"
+
+
+class GotifyRefused(OSError):
+    """Gotify, or what stands in front of it, answered with an error."""
+
+
 def _post(url: str, data: bytes, headers: dict[str, str]) -> Any:
-    request = urllib.request.Request(url, data=data, headers=headers, method="POST")
-    with urllib.request.urlopen(request, timeout=20) as answer:  # noqa: S310 — the owner's own server
-        return answer.status
+    request = urllib.request.Request(url, data=data, headers={**headers, "User-Agent": USER_AGENT}, method="POST")
+    try:
+        with urllib.request.urlopen(request, timeout=20) as answer:  # noqa: S310 — the owner's own server
+            return answer.status
+    except urllib.error.HTTPError as error:
+        body = error.read(300).decode("utf-8", errors="replace").strip()
+        served_by = error.headers.get("Server", "") if error.headers else ""
+        raise GotifyRefused(
+            f"HTTP {error.code} from {url}"
+            + (f" (server: {served_by})" if served_by else "")
+            + (f": {body}" if body else "")
+        ) from None
 
 
 @dataclass(frozen=True)

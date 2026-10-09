@@ -86,7 +86,11 @@ def main(argv: list[str] | None = None, generated: Path = GENERATED_DIR) -> int:
             print(f"{notify.URL_VARIABLE} and {notify.TOKEN_VARIABLE} are not set (.env.web).")
             return 2
         t = translator_for(default_languages().reference)
-        gotify.send(notify.Message("AIStack", t("notify.test"), notify.NORMAL), click=_console_url())
+        try:
+            gotify.send(notify.Message("AIStack", t("notify.test"), notify.NORMAL), click=_console_url())
+        except OSError as error:
+            print(f"Gotify did not take the message: {error}")
+            return 1
         print("Test message sent.")
         return 0
 

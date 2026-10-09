@@ -127,3 +127,25 @@ def test_the_snapshot_round_trips(tmp_path: Path) -> None:
     taken = _snapshot(81, _finding("Tests PRA", "immich", "k", message=(("k", (("service", "immich"),)),)))
     snapshot.write(taken, tmp_path)
     assert snapshot.read(tmp_path) == taken
+
+
+def test_gotify_is_called_as_aistack_and_a_refusal_says_why(monkeypatch) -> None:
+    import io
+    import urllib.error
+
+    seen = {}
+
+    def refuse(request, timeout):
+        seen["agent"] = request.get_header("User-agent")
+        raise urllib.error.HTTPError(
+            request.full_url, 403, "Forbidden", {"Server": "cloudflare"}, io.BytesIO(b"error code: 1010")
+        )
+
+    monkeypatch.setattr(notify.urllib.request, "urlopen", refuse)
+    gotify = notify.Gotify("https://gotify.example", "t")
+    try:
+        gotify.send(notify.Message("t", "m", notify.NORMAL))
+    except notify.GotifyRefused as error:
+        said = str(error)
+    assert seen["agent"].startswith("AIStack-vigil")
+    assert said == "HTTP 403 from https://gotify.example/message (server: cloudflare): error code: 1010"

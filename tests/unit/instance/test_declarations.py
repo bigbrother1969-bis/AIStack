@@ -77,3 +77,16 @@ def test_a_file_that_already_equals_the_new_shipped_version_is_not_reported(tmp_
     source.write_text("x: 1\n", encoding="utf-8")
 
     assert divergences(directory, [source]) == []
+
+
+def test_a_hand_made_copy_equal_to_the_shipped_version_follows_it(tmp_path: Path):
+    # GIGABYTE, 2026-10-09: health_score_weights.yml copied by hand,
+    # identical to the shipped file, never followed 2.0's new domain.
+    directory = _config(tmp_path, "w: 1\n", copied=False)
+    source = _shipped(tmp_path, "w: 1\n")
+    assert follow(directory, [source]) == []
+
+    source.write_text("w: 1\nhosts: 15\n", encoding="utf-8")
+    assert follow(directory, [source]) == ["thing.yml"]
+    assert (directory / "thing.yml").read_text(encoding="utf-8") == "w: 1\nhosts: 15\n"
+    assert divergences(directory, [source]) == []

@@ -60,6 +60,14 @@
       padding: .7rem .9rem; font-size: .85rem; overflow-x: auto; white-space: pre-wrap;
     }
     .opinion { margin-top: 1.2rem; }
+    form.record {
+      background: #f4f9f4; border: 1px solid #a5d6a7; border-radius: 6px;
+      padding: .8rem 1rem; margin: 1rem 0; display: grid; gap: .5rem;
+    }
+    form.record h3 { margin: 0; font-size: 1rem; }
+    form.record label { display: grid; grid-template-columns: 12rem 1fr; align-items: center; gap: .6rem; font-size: .9rem; }
+    form.record input, form.record select { min-height: 30px; font-size: .9rem; }
+    form.record button.apply { justify-self: start; margin-top: .3rem; }
     .opinion h3 { font-size: 1rem; margin-bottom: .2rem; }
     .lang-switch { font-size: .85rem; margin-left: auto; }
     .lang-switch a { color: #1f6feb; text-decoration: none; }
@@ -119,8 +127,26 @@
     <ol class="todo">
       {% for item in guide.steps %}<li>{{ item }}</li>{% endfor %}
     </ol>
+    {% if guide.record %}
+      <form class="record" method="post" action="{{ base }}/finding/{{ key | urlencode }}/record"><!--aistack:csrf-->
+        <h3>{{ t('troubleshooting.record.heading') }}</h3>
+        <p class="apply-note">{{ t('troubleshooting.record.intro', subject=subject) }}</p>
+        <label>{{ t('troubleshooting.record.status') }}
+          <select name="status" title="{{ t('troubleshooting.tooltip.record_status') }}">
+            <option value="success">{{ t('troubleshooting.record.success') }}</option>
+            <option value="failed">{{ t('troubleshooting.record.failed') }}</option>
+          </select></label>
+        <label>{{ t('troubleshooting.record.date') }}
+          <input type="date" name="date" value="{{ today }}" required title="{{ t('troubleshooting.tooltip.record_date') }}"></label>
+        <label>{{ t('troubleshooting.record.minutes') }}
+          <input type="number" name="rto_minutes" min="0" step="1" title="{{ t('troubleshooting.tooltip.record_minutes') }}"></label>
+        <label>{{ t('troubleshooting.record.method') }}
+          <input type="text" name="method" value="{{ guide.record_method }}" title="{{ t('troubleshooting.tooltip.record_method') }}"></label>
+        <button class="apply" type="submit" title="{{ t('troubleshooting.tooltip.record', subject=subject) }}">{{ t('troubleshooting.record.submit') }}</button>
+      </form>
+    {% endif %}
     {% if guide.snippet %}
-      <p class="snippet-in">{{ t('troubleshooting.step.snippet_in') }} <code>{{ guide.snippet_file }}</code></p>
+      <p class="snippet-in">{% if guide.record %}{{ t('troubleshooting.record.or_by_hand') }} {% endif %}{{ t('troubleshooting.step.snippet_in') }} <code>{{ guide.snippet_file }}</code></p>
       <pre class="snippet">{{ guide.snippet }}</pre>
     {% endif %}
     {% if guide.verify %}
@@ -136,7 +162,7 @@
         {{ t('troubleshooting.step.apply_note_middle') }} <code>resource_priority.yml</code>
         {{ t('troubleshooting.step.apply_note_after') }}
       </p>
-    {% else %}
+    {% elif not guide.record %}
       <p class="apply-note">{{ t('troubleshooting.step.no_apply', domain=domain) }}</p>
     {% endif %}
   {% else %}

@@ -20,6 +20,8 @@ received for it, which were never recorded on their own.
 from __future__ import annotations
 
 import time
+from datetime import date, datetime, timezone
+from datetime import time as dt_time
 from typing import Any
 from urllib.parse import quote
 
@@ -38,7 +40,10 @@ from aistack.i18n.web import PageLanguage, page_language
 from aistack.priority.yaml import save_resource_priority_yaml
 from aistack.troubleshooting.apply import BackgroundChange, class_as_background
 from aistack.troubleshooting.findings import CONSUMPTION_DOMAIN, resource_priority_definition
-from aistack.troubleshooting.facts import Declarations, guidance
+from aistack.contracts.pra_test_reading import FAILED, SUCCESS
+from aistack.pra.scheduled import ScheduledTest
+from aistack.pra.scheduled import record as record_pra
+from aistack.troubleshooting.facts import PRA_TESTS, Declarations, guidance
 from aistack.troubleshooting.guide import (
     AI_STEP,
     OPERATIONS,
@@ -288,6 +293,7 @@ def step(request: Request, key: str, step: int) -> Response:
             "ai_step": AI_STEP,
             "finding": finding,
             "guide": guide,
+            "today": date.today().isoformat(),
             "destination": destination[0],
             "destination_model": destination[1],
             "asked": bool(session.get("asked")),
@@ -362,6 +368,67 @@ def apply(request: Request, key: str) -> RedirectResponse:
     }
 
     return applied
+
+
+@router.post("/finding/{key:path}/record", include_in_schema=False, dependencies=[ADMIN_ACTION])
+async def record_test(request: Request, key: str) -> RedirectResponse:
+    """
+    Record the restore test the owner made, from the assistant (UAT,
+    2026-10-09: "pas de bouton Appliquer"). AIStack cannot run a test
+    that boots the host on rescue media; it records the owner's result
+    where the scheduled tests go (`pra/scheduled.jsonl`, `ADR-0018`
+    § 8), never in the owner's `pra_tests.yml`, and collects the
+    findings again to say whether this one is gone.
+    """
+
+    t = _language(request).t
+    session = _sessions(request).get(key)
+    if session is None or session.get("domain") != PRA_TESTS:
+        return _back_to_list(t("troubleshooting.status.not_applyable", subject=key))
+    finding = session["finding"]
+    assert isinstance(finding, RuntimeFinding)
+
+    form = await request.form()
+    status = SUCCESS if form.get("status") == "success" else FAILED
+    try:
+        day = date.fromisoformat(str(form.get("date") or ""))
+    except ValueError:
+        day = date.today()
+    minutes_text = str(form.get("rto_minutes") or "").strip()
+    minutes = int(minutes_text) if minutes_text.isdigit() else None
+    method = str(form.get("method") or "").strip()[:200]
+    person = current_session(request)
+    who = person.subject if person else ""
+    now = datetime.now(timezone.utc)
+    at = now if day == now.date() else datetime.combine(day, dt_time(12), tzinfo=timezone.utc)
+
+    record_pra(
+        request.app.state.generated_dir,
+        ScheduledTest(
+            service=finding.subject,
+            at=at,
+            status=status,
+            run_id=" — ".join(part for part in ("manual", method, who) if part),
+            rto_minutes=minutes if status == SUCCESS else None,
+            failure=method if status == FAILED else "",
+        ),
+    )
+
+    findings_after, _ = request.app.state.collect_findings()
+    still_present = any(
+        entry.domain == PRA_TESTS and entry.finding.subject == finding.subject for entry in findings_after
+    )
+    session["applied"] = {
+        "outcome": "unresolved" if still_present else "resolved",
+        "message": t(
+            "troubleshooting.record.done",
+            subject=finding.subject,
+            status=t(f"troubleshooting.record.{'success' if status == SUCCESS else 'failed'}"),
+            date=day.isoformat(),
+        ),
+        "file": "pra/scheduled.jsonl",
+    }
+    return RedirectResponse(f"{PREFIX}/finding/{quote(key)}/applied", status_code=303)
 
 
 @router.get("/finding/{key:path}/applied", response_class=HTMLResponse, include_in_schema=False)

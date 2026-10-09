@@ -46,6 +46,8 @@ from aistack.instance.yaml.store import load_instance_config_yaml
 from aistack.web.storage import live_storage
 from aistack.web import storage as storage_screen
 from aistack.web import declarations as declarations_screen
+from aistack.web import api_keys as api_keys_screen
+from aistack.api_keys import apply_to_environ, load_api_keys
 from aistack.web import dock as dock_screen
 from aistack.web import health
 from aistack.web import notifications
@@ -111,6 +113,8 @@ def create_app(
     phase: str | None = None,
     storage: Callable[[Path], Any] | None = None,
     pending: list[Any] | None = None,
+    api_keys: Callable[[], Any] | None = None,
+    test_api_key: Callable[[str], str | None] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -124,6 +128,11 @@ def create_app(
     # from a path that does not exist. Each screen declares both forms.
     app.router.redirect_slashes = False
     app.state.generated_dir = generated_dir
+    # The API keys entered from Settings, laid over the environment
+    # (2026-10-09); `api_keys` and `test_api_key` are replaced in tests.
+    app.state.api_keys = api_keys if api_keys is not None else load_api_keys
+    app.state.test_api_key = test_api_key if test_api_key is not None else api_keys_screen.test_key
+    apply_to_environ(generated_dir, app.state.api_keys())
     app.state.listeners = listeners
     # The host's disks and mounts, for Settings (2026-10-04).
     app.state.storage = storage if storage is not None else live_storage
@@ -189,6 +198,7 @@ def create_app(
     include(app, first_start.router)
     include(app, storage_screen.router)
     include(app, declarations_screen.router)
+    include(app, api_keys_screen.router)
     include(app, authentication.router)
     include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)

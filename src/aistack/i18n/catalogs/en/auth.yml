@@ -147,3 +147,33 @@ declarations:
   marked: "Noted: {name} is no longer reported until the shipped version changes again."
   tooltip:
     seen: "Stop reporting this file until the shipped version changes again; your file stays as it is"
+# Settings' API keys section (2026-10-09).
+api_keys:
+  heading: "API keys"
+  intro: "The keys and credentials AIStack's components use. A value entered here is kept in the data directory, readable by AIStack only, and wins over .env.web; cleared, the .env.web value comes back."
+  placeholder: "New value"
+  save: "Save"
+  clear: "Clear"
+  test: "Test"
+  applies: "taken into account {when}"
+  never_shown: "A key is never shown again: only its last four characters are."
+  column:
+    key: "Key"
+    state: "Current value"
+    change: "Change"
+  source:
+    settings: "Entered here"
+    env: "From .env.web"
+    absent: "Absent"
+  notice:
+    saved: "{name} saved."
+    cleared: "{name} cleared here; the .env.web value, if any, takes over."
+    unknown: "Unknown key: {name}."
+    test_ok: "{name}: the service accepted the key."
+    test_failed: "{name}: refused — {detail}"
+    test_absent: "{name}: nothing to test (value or declaration absent)."
+  tooltip:
+    value: "The new value of “{item}”; it will never be shown again"
+    save: "Save this value for {item}"
+    clear: "Clear the value entered here for {item}"
+    test: "Check with the service that {item} is accepted"

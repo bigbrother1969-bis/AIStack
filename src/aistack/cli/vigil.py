@@ -21,6 +21,7 @@ import sys
 import time
 from pathlib import Path
 
+from aistack.api_keys import apply_to_environ
 from aistack.data_budget.budget import compact_if_due, human_size, load_data_budget
 from aistack.dock import proposals as store
 from aistack.i18n import default_languages, translator_for
@@ -100,6 +101,8 @@ def main(argv: list[str] | None = None, generated: Path = GENERATED_DIR) -> int:
     parser.add_argument("--no-render", action="store_true", help="compare only, without rendering again")
     args = parser.parse_args(argv)
 
+    # The keys entered from Settings (2026-10-09), then each pass again.
+    apply_to_environ(generated)
     gotify = notify.Gotify.from_environment()
     if args.test:
         if gotify is None:
@@ -117,7 +120,8 @@ def main(argv: list[str] | None = None, generated: Path = GENERATED_DIR) -> int:
     if not args.every:
         return one_pass(generated, gotify, args.dry_run, render=not args.no_render)
     while True:
-        one_pass(generated, gotify, args.dry_run, render=not args.no_render)
+        apply_to_environ(generated)
+        one_pass(generated, notify.Gotify.from_environment(), args.dry_run, render=not args.no_render)
         time.sleep(args.every)
 
 

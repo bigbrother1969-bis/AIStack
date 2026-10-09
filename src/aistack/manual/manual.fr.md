@@ -246,7 +246,10 @@ surveillance CPU. **Commencer →** ouvre une panne en quatre étapes :
    l'écrire, la commande qui montre que c'est réglé. Pour la seule
    correction qu'AIStack sait appliquer d'un clic (déclarer un conteneur
    « au ralenti » dans les priorités CPU), **Appliquer** l'écrit, puis un
-   nouveau diagnostic vérifie qu'elle a réellement agi ;
+   nouveau diagnostic vérifie qu'elle a réellement agi. Pour un test de
+   restauration, que tu fais toi-même, **Enregistrer le résultat** le note
+   avec les tests planifiés (`pra/scheduled.jsonl`, sans toucher à ton
+   `pra_tests.yml`) et vérifie que le constat a disparu ;
 4. **l'avis de l'IA**, facultatif : seulement si tu cliques **Demander
    l'avis de l'IA** — un raisonnement, une explication et une suggestion,
    jamais une source de vérité.
@@ -256,13 +259,13 @@ quand une clé est déclarée, sinon — ou si Gemini ne répond pas — au mod�
 local d'Ollama. Avec Gemini, la question **sort de ton réseau** : noms
 d'hôtes, chemins, services, mécanismes de sauvegarde (jamais de mot de
 passe) ; l'étape 4 le dit avant le clic. Pour l'activer, crée une clé dans
-Google AI Studio et ajoute-la dans `.env.web`, sans l'afficher :
+Google AI Studio et saisis-la dans **Paramètres → Clés d'API** (voir
+ci-dessous), ou ajoute-la dans `.env.web` puis `docker compose up -d` :
 
 ```
 AISTACK_GEMINI_API_KEY=<ta clé>
 ```
-
-puis `docker compose up -d`. Le modèle se choisit dans
+ Le modèle se choisit dans
 `./config/ai_runtime.yml` (bloc `gemini:`) ; retire ce bloc pour que tout
 reste sur la machine.
 
@@ -274,6 +277,20 @@ Une réponse de l'IA locale peut prendre plusieurs minutes : inutile
 d'attendre sur la page. Dès qu'une réponse est prête, une notification
 apparaît en bas à droite de la page où tu te trouves (sur le réseau local,
 connecté) ; un clic ouvre la réponse, la croix la ferme.
+
+## Clés d'API
+
+*Réseau local, administrateurs.* Dans **Paramètres → Clés d'API** : toutes
+les clés et accès que les composants d'AIStack lisent (Gemini, Gotify,
+Syncthing, Jellyfin, Beszel…), déclarés dans `api_keys.yml`. Pour chacune :
+d'où vient la valeur (saisie ici, `.env.web` ou absente), ses quatre derniers
+caractères — jamais la clé entière —, un champ pour la remplacer, **Effacer**
+et, quand le service le permet, **Tester**. Une valeur saisie ici est gardée
+dans le dossier des données (`secrets/api_keys.json`, lisible par AIStack
+seul) et passe avant `.env.web` ; effacée, celle de `.env.web` revient. La
+ligne de chaque clé dit quand elle est prise en compte (tout de suite, au
+prochain passage de la vigie, au redémarrage d'un conteneur). Les secrets de
+connexion (Pocket ID, administrateur local) restent dans `.env.web`.
 
 ## Time Machine
 

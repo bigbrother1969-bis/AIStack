@@ -1,0 +1,52 @@
+# The API keys and credentials AIStack's components read from the
+# environment, entered or replaced from Settings (the owner,
+# 2026-10-09: "toutes les clés API, même les futures"; "écriture
+# seule, 4 derniers caractères"). A new key a component reads is one
+# entry here: Settings offers it from then on.
+#
+# `name` is the environment variable the component reads; a value
+# entered in Settings is kept in the data directory
+# (`secrets/api_keys.json`, mode 0600) and wins over `.env.web`.
+# `secret: false` is a setting shown in full (an address); every other
+# value is never shown again, only its last four characters.
+# `applies`: when a change is taken into account. `test`: how Settings
+# checks the value (gemini, gotify, syncthing; absent: no test).
+#
+# Left out on purpose: the sign-in secrets (AISTACK_OIDC_CLIENT_SECRET,
+# AISTACK_WEB_ADMIN_SCRYPT) — changed from a page they guard, a mistake
+# would lock the owner out; they stay in `.env.web`.
+
+keys:
+  - name: AISTACK_GEMINI_API_KEY
+    title: {fr: "Google Gemini — clé d'API", en: "Google Gemini — API key"}
+    used_by: {fr: "Avis de l'IA de l'assistant de pannes", en: "The troubleshooting assistant's AI opinion"}
+    applies: {fr: "immédiatement", en: "immediately"}
+    test: gemini
+  - name: AISTACK_GOTIFY_URL
+    title: {fr: "Gotify — adresse", en: "Gotify — address"}
+    used_by: {fr: "Notifications de la vigie", en: "The vigil's notifications"}
+    applies: {fr: "au prochain passage de la vigie (15 min au plus)", en: "at the vigil's next pass (15 min at most)"}
+    secret: false
+  - name: AISTACK_GOTIFY_TOKEN
+    title: {fr: "Gotify — jeton de l'application", en: "Gotify — application token"}
+    used_by: {fr: "Notifications de la vigie", en: "The vigil's notifications"}
+    applies: {fr: "au prochain passage de la vigie (15 min au plus)", en: "at the vigil's next pass (15 min at most)"}
+    test: gotify
+  - name: SYNCTHING_API_KEY
+    title: {fr: "Syncthing — clé d'API", en: "Syncthing — API key"}
+    used_by: {fr: "Synchronisation vers les appareils (création et relance des partages)", en: "Sync to devices (creating and re-offering shares)"}
+    applies: {fr: "immédiatement", en: "immediately"}
+    test: syncthing
+  - name: JELLYFIN_API_KEY
+    title: {fr: "Jellyfin — clé d'API", en: "Jellyfin — API key"}
+    used_by: {fr: "Priorités CPU (lecture en cours)", en: "CPU priorities (playback in progress)"}
+    applies: {fr: "au redémarrage du conteneur resource-priority", en: "when the resource-priority container restarts"}
+  - name: BESZEL_EMAIL
+    title: {fr: "Beszel — adresse e-mail", en: "Beszel — e-mail address"}
+    used_by: {fr: "Architecture (relevés Beszel)", en: "Architecture (Beszel readings)"}
+    applies: {fr: "au prochain rendu", en: "at the next rendering"}
+    secret: false
+  - name: BESZEL_PASSWORD
+    title: {fr: "Beszel — mot de passe", en: "Beszel — password"}
+    used_by: {fr: "Architecture (relevés Beszel)", en: "Architecture (Beszel readings)"}
+    applies: {fr: "au prochain rendu", en: "at the next rendering"}

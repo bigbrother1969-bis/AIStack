@@ -313,7 +313,9 @@ watch. **Start →** opens a fault in four steps:
    in, the command that shows it is fixed. For the one fix AIStack knows
    how to apply in one click (declaring a container "throttled" in the CPU
    priorities), **Apply** writes it, then a new diagnosis checks it really
-   worked;
+   worked. For a restore test, which you make yourself, **Record the
+   result** keeps it with the scheduled tests (`pra/scheduled.jsonl`,
+   without touching your `pra_tests.yml`) and checks the finding is gone;
 4. **the AI's opinion**, optional: only if you click **Ask the AI's
    opinion** — a reasoning, an explanation and a suggestion, never a source
    of truth.
@@ -322,14 +324,14 @@ The question goes, with the facts of step 2, first to **Google Gemini** when
 a key is declared, otherwise — or when Gemini does not answer — to the local
 Ollama model. With Gemini the question **leaves your network**: host names,
 paths, services, backup mechanisms (never a password); step 4 says so
-before the click. To turn it on, create a key in Google AI Studio and add it
-to `.env.web`, without displaying it:
+before the click. To turn it on, create a key in Google AI Studio and enter
+it in **Settings → API keys** (see below), or add it to `.env.web` then
+`docker compose up -d`:
 
 ```
 AISTACK_GEMINI_API_KEY=<your key>
 ```
-
-then `docker compose up -d`. The model is chosen in `./config/ai_runtime.yml`
+ The model is chosen in `./config/ai_runtime.yml`
 (the `gemini:` block); remove that block to keep everything on the machine.
 
 Every AI reasoning is kept in the subject's history. **Need help opening a
@@ -339,6 +341,20 @@ An answer from the local AI can take several minutes: there is no need to
 wait on the page. As soon as an answer is ready, a notice appears at the
 bottom right of whatever page you are on (on the local network, signed in);
 a click opens the answer, the cross closes it.
+
+## API keys
+
+*Local network, administrators.* In **Settings → API keys**: every key and
+credential AIStack's components read (Gemini, Gotify, Syncthing, Jellyfin,
+Beszel…), declared in `api_keys.yml`. For each: where the value comes from
+(entered here, `.env.web` or absent), its last four characters — never the
+whole key —, a field to replace it, **Clear** and, when the service allows
+it, **Test**. A value entered here is kept in the data directory
+(`secrets/api_keys.json`, readable by AIStack only) and wins over `.env.web`;
+cleared, the `.env.web` value comes back. Each key's line says when it is
+taken into account (at once, at the vigil's next pass, when a container
+restarts). The sign-in secrets (Pocket ID, local administrator) stay in
+`.env.web`.
 
 ## Time Machine
 

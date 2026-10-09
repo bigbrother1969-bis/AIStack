@@ -67,6 +67,11 @@ class Guidance:
     snippet_file: str = ""
     # A command that shows the fix worked; empty when none.
     verify: str = ""
+    # The result of a test the owner made can be recorded from the page
+    # (a PRA test, 2026-10-09: "pas de bouton Appliquer"); the method
+    # proposed for the record.
+    record: bool = False
+    record_method: str = ""
 
 
 @dataclass(frozen=True)
@@ -217,6 +222,8 @@ def guidance(
             ),
             snippet_file="./config/pra_tests.yml",
             verify="python -m aistack.cli.health_render",
+            record=True,
+            record_method="Clonezilla chk-img-restorable" if clonezilla else "",
         )
 
     if domain == UNCOVERED_STATE:

@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from aistack.api_keys import apply_to_environ
 from aistack.priority.apply import ApplyReport, apply_resource_priority
 from aistack.priority.decision_history import record_decision
 from aistack.priority.definition import ResourcePriorityDefinition
@@ -243,6 +244,8 @@ def main(argv: list[str] | None = None) -> None:
         sys.argv[1:] if argv is None else argv
     )
 
+    # The keys entered from Settings (2026-10-09): Jellyfin's, read once here.
+    apply_to_environ(Path("reports/generated"))
     definition = load_resource_priority_yaml(definition_path)
     detectors = build_detectors(definition)
 

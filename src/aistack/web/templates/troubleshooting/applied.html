@@ -62,7 +62,7 @@
 
   {% if result.outcome in ("resolved", "unresolved") %}
     <p class="verify">
-      {{ t('troubleshooting.applied.verify_before') }} <code>resource_priority.yml</code>
+      {{ t('troubleshooting.applied.verify_before') }} <code>{{ result.file or 'resource_priority.yml' }}</code>
       {{ t('troubleshooting.applied.verify_middle') }} <code>evaluate()</code>
       {{ t('troubleshooting.applied.verify_after') }}
     </p>

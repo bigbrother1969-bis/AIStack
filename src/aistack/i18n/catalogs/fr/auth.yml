@@ -147,3 +147,33 @@ declarations:
   marked: "C'est noté : {name} n'est plus signalé tant que la version livrée ne change pas."
   tooltip:
     seen: "Ne plus signaler ce fichier tant que la version livrée ne change pas à nouveau ; ton fichier reste tel quel"
+# Settings' API keys section (2026-10-09).
+api_keys:
+  heading: "Clés d'API"
+  intro: "Les clés et accès que les composants d'AIStack utilisent. Une valeur saisie ici est gardée dans le dossier des données, lisible par AIStack seul, et passe avant celle de .env.web ; effacée, celle de .env.web revient."
+  placeholder: "Nouvelle valeur"
+  save: "Enregistrer"
+  clear: "Effacer"
+  test: "Tester"
+  applies: "pris en compte {when}"
+  never_shown: "Une clé n'est jamais réaffichée : seuls ses quatre derniers caractères le sont."
+  column:
+    key: "Clé"
+    state: "Valeur actuelle"
+    change: "Changer"
+  source:
+    settings: "Saisie ici"
+    env: "Depuis .env.web"
+    absent: "Absente"
+  notice:
+    saved: "{name} enregistrée."
+    cleared: "{name} effacée ici ; celle de .env.web, s'il y en a une, reprend la main."
+    unknown: "Clé inconnue : {name}."
+    test_ok: "{name} : le service a accepté la clé."
+    test_failed: "{name} : refusée — {detail}"
+    test_absent: "{name} : rien à tester (valeur ou déclaration absente)."
+  tooltip:
+    value: "La nouvelle valeur de « {item} » ; elle ne sera plus jamais affichée"
+    save: "Enregistrer cette valeur pour {item}"
+    clear: "Effacer la valeur saisie ici pour {item}"
+    test: "Vérifier auprès du service que {item} est acceptée"

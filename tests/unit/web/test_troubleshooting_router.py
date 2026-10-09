@@ -432,3 +432,40 @@ def test_a_finding_is_shown_in_the_reader_s_language(tmp_path: Path, host: Host)
     todo = web.get("/troubleshooting/finding/%2Fmedia%2FBACKUP%2Fnextcloud/step/3?lang=fr").text
     assert "Vérifier que la tâche de sauvegarde" in todo
     assert "systemctl list-timers" in todo
+
+
+def test_a_pra_test_s_result_is_recorded_from_the_page_and_checked(tmp_path: Path, host: Host):
+    from aistack.pra.scheduled import read_records
+
+    web = client(tmp_path, host)
+    web.post("/troubleshooting/finding/gigabyte/start")
+    page = web.get("/troubleshooting/finding/gigabyte/step/3?lang=fr").text
+    assert 'action="/troubleshooting/finding/gigabyte/record"' in page
+    assert "Enregistrer le résultat" in page and "n'a pas encore de correction automatique" not in page
+
+    def record_clears_it():
+        host.resolved = bool(read_records(tmp_path))
+        return Host.collect(host)
+
+    web.app.state.collect_findings = record_clears_it
+    reply = web.post(
+        "/troubleshooting/finding/gigabyte/record?lang=fr",
+        data={"status": "success", "date": "2026-10-09", "rto_minutes": "42", "method": "Clonezilla chk-img-restorable"},
+    )
+
+    assert reply.headers["location"] == "/troubleshooting/finding/gigabyte/applied"
+    (test,) = read_records(tmp_path)
+    assert (test.service, test.status, test.rto_minutes) == ("gigabyte", "success", 42)
+    assert "Clonezilla chk-img-restorable" in test.run_id
+    applied = web.get("/troubleshooting/finding/gigabyte/applied?lang=fr").text
+    assert "pra/scheduled.jsonl" in applied and "Corrigé" in applied
+
+
+def test_only_a_pra_finding_can_record_a_test(tmp_path: Path, host: Host):
+    web = client(tmp_path, host)
+    web.post("/troubleshooting/finding/newcomer/start")
+
+    reply = web.post("/troubleshooting/finding/newcomer/record", data={"status": "success", "date": "2026-10-09"})
+
+    assert reply.headers["location"].startswith("/troubleshooting/?status=")
+    assert not (tmp_path / "pra").exists()

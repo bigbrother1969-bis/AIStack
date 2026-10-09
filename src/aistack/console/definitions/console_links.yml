@@ -161,6 +161,16 @@
 #     above — Selection UI's own entry was the one card the rewrite
 #     missed, a real omission against this file's own stated rule, not
 #     a second owner decision.
+#
+#   - **The sentence leaves the descriptions, 2026-10-09** (the owner:
+#     "la phrase doit être en italique et être la dernière ligne
+#     affichée de la carte"). The console now writes it itself, in
+#     italics, on its own last line, for every `scope: lan` card — so
+#     no description carries it any more, and a copy of this file
+#     edited before still shows it once: the console removes it from
+#     the end of a description before adding its own. The English
+#     descriptions were rewritten in the same plain words as the
+#     French ones.
 
 links:
   - name: Selection UI
@@ -168,11 +178,10 @@ links:
       fr: >-
         Choisir les morceaux de musique à préparer pour la
         synchronisation vers le téléphone Android, et vérifier la
-        place disponible avant de lancer la copie. Accessible
-        uniquement depuis le réseau local.
+        place disponible avant de lancer la copie.
       en: >-
-        Candidate selection — AIStack web application, LAN listener
-        only (ADR-0012)
+        Choose the music tracks to prepare for syncing to the Android
+        phone, and check the space available before starting the copy.
     service: web_lan
     path: /selection/
     scope: lan
@@ -184,10 +193,9 @@ links:
         Régler quels programmes ont la priorité sur le processeur
         quand plusieurs tournent en même temps (par exemple,
         privilégier la lecture vidéo sur les tâches de fond).
-        Accessible uniquement depuis le réseau local.
       en: >-
-        CPU priority arbitration — AIStack web application, LAN
-        listener only (ADR-0012)
+        Set which programs get the processor first when several run at
+        once (for example, video playback before background tasks).
     service: web_lan
     path: /priority/
     scope: lan
@@ -219,11 +227,10 @@ links:
       fr: >-
         Gérer la liste des noms d'utilisateur SSH essayés
         automatiquement lors de la recherche des appareils présents
-        sur le réseau local. Accessible uniquement depuis le réseau
-        local.
+        sur le réseau local.
       en: >-
-        Candidate SSH users for the network scan — AIStack web
-        application, LAN listener only (ADR-0012)
+        Manage the SSH user names tried automatically when looking for
+        the devices present on the local network.
     service: web_lan
     path: /network-discovery/
     scope: lan
@@ -234,12 +241,10 @@ links:
       fr: >-
         Diagnostiquer une panne réelle, pas à pas : analyser la
         situation, comprendre la cause probable, puis recevoir une
-        recommandation d'action. Accessible uniquement depuis le
-        réseau local.
+        recommandation d'action.
       en: >-
-        Step-by-step guide through evaluate → reason/explain/recommend
-        on a real fault — AIStack web application, LAN listener only
-        (ADR-0012)
+        Diagnose a real fault, step by step: look at the situation,
+        understand the likely cause, then get a recommended action.
     service: web_lan
     path: /troubleshooting/
     scope: lan
@@ -249,10 +254,11 @@ links:
         Parcourir l'historique complet de l'infrastructure — commandes
         exécutées, mises à jour de paquets, versions des images,
         raisonnements de l'assistant IA — sous forme de graphe
-        consultable. Accessible uniquement depuis le réseau local.
+        consultable.
       en: >-
-        AIStack's complete history projected as a PROV-O graph —
-        AIStack web application, LAN listener only (ADR-0012)
+        Browse the whole history of the infrastructure — commands run,
+        package updates, image versions, the AI assistant's reasoning —
+        as a graph you can explore.
     service: web_lan
     path: /timemachine/
     scope: lan
@@ -264,11 +270,11 @@ links:
         Mettre à jour un service de façon gouvernée : la nouvelle image
         est proposée avec son pourquoi, validée, testée en bac à sable
         avec la dernière sauvegarde, puis appliquée avec retour arrière
-        prêt. Accessible uniquement depuis le réseau local.
+        prêt.
       en: >-
-        Governed image updates — proposed with their why, validated,
-        rehearsed in a sandbox, applied with the way back ready
-        (ADR-0019). AIStack web application, LAN listener only
+        Update a service the governed way: the new image is proposed
+        with its why, validated, tested in a sandbox with the latest
+        backup, then applied with the way back ready.
     service: web_lan
     path: /dock/
     scope: lan

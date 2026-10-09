@@ -5,7 +5,7 @@ language:
   switch_label: "Interface language"
 settings:
   link: "Settings"
-  tooltip: "Choose the interface language"
+  tooltip: "Interface language; profile, open sessions and sign-in log; disks and mounts, where AIStack keeps its data; declarations shipped with a new version"
 console:
   back: "← Back to the console"
 

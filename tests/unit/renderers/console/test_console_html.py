@@ -561,3 +561,36 @@ def test_the_group_marker_reaches_the_page_as_a_css_escape():
 
     assert 'content: "\\25B8"' in document
     assert not any(ord(character) < 32 and character not in "\n\t" for character in document)
+
+
+def test_a_lan_card_ends_with_its_scope_in_italics_on_its_own_line():
+    document = render_html((selection_ui_link(),))
+
+    card = document.split('class="card card-lan"', 1)[1].split("</a>", 1)[0]
+    assert card.rstrip().endswith('<p class="card-scope"><em>Accessible uniquement depuis le réseau local.</em></p>')
+    assert card.count("Accessible uniquement depuis le réseau local") == 1
+
+
+def test_a_description_written_before_still_shows_the_scope_once():
+    old = ConsoleLink(
+        name="Selection UI",
+        description="Choisir les morceaux. Accessible uniquement depuis le\n réseau local.",
+        url="http://GIGABYTE:8181",
+        scope=LAN,
+    )
+    english = ConsoleLink(
+        name="Time Machine",
+        description="AIStack's complete history — AIStack web application, LAN listener only (ADR-0012)",
+        url="http://GIGABYTE:8181",
+        scope=LAN,
+    )
+
+    document = render_html((old, english))
+
+    assert document.count("Accessible uniquement depuis le réseau local") == 2
+    assert "<p>Choisir les morceaux.</p>" in document
+    assert "LAN listener" not in document
+
+
+def test_a_public_card_says_no_scope_line():
+    assert 'class="card-scope"' not in render_html((health_link(),))

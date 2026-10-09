@@ -6,7 +6,7 @@ language:
   switch_label: "Langue de l'interface"
 settings:
   link: "Paramètres"
-  tooltip: "Choisir la langue de l'interface"
+  tooltip: "Langue de l'interface ; profil, sessions ouvertes et journal des connexions ; disques et montages, emplacement des données d'AIStack ; déclarations livrées avec une nouvelle version"
 console:
   back: "← Retour à la console"
 

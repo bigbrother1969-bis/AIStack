@@ -101,4 +101,6 @@ def test_the_left_column_carries_the_text_the_links_and_the_copyright():
         assert f'href="{path}"' in page
     assert "© 2026 PERSIAUT – Data &amp; Regulatory Advisory" in page
     assert 'title="Ouvrir Selection UI — accessible uniquement depuis le réseau local"' in page
-    assert 'title="Choisir la langue de l&#x27;interface"' in page or "title=\"Choisir la langue de l'interface\"" in page
+    # The Settings link says what the page holds (owner, 2026-10-09).
+    assert "Langue de l&#x27;interface ; profil, sessions ouvertes" in page or "Langue de l'interface ; profil, sessions ouvertes" in page
+    assert "déclarations livrées avec une nouvelle version" in page

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from aistack.contracts.console_link import LAN, PUBLIC, ConsoleLink
 from aistack.contracts.health_score import (
     ACTION_REQUIRED,
@@ -396,10 +398,35 @@ def _render_link(link: ConsoleLink, t: Translator) -> str:
         name=link.name,
     )
 
+    scope_line = t("console.card_scope_lan") if link.scope == LAN else ""
+    description = _without_scope_sentence(link.description, scope_line) if scope_line else link.description
+    scope_html = f'\n      <p class="card-scope"><em>{escape_text(scope_line)}</em></p>' if scope_line else ""
+
     return f"""    <a class="card card-{link.scope}" href="{escape_text(_link_href(link.url, t.lang))}" title="{escape_text(tooltip)}">
       <h2>{escape_text(link.name)}</h2>
-      <p>{escape_text(link.description)}</p>
+      <p>{escape_text(description)}</p>{scope_html}
     </a>"""
+
+
+# What a description written before 2026-10-09 still ends with: the
+# console now says it on the card's own last line (the owner's call).
+_OLD_SCOPE_ENDINGS = (
+    re.compile(r"\s*Accessible\s+uniquement\s+depuis\s+le\s+réseau\s+local\.?\s*$"),
+    re.compile(r"\s*[—.,]?\s*AIStack web application,\s+LAN\s+listener\s+only(\s*\(ADR-\d+\))?\.?\s*$"),
+)
+
+
+def _without_scope_sentence(description: str, scope_line: str) -> str:
+    """The description without the scope sentence at its end — a
+    `console_links.yml` copied before the console wrote that line
+    itself still carries it, and the card would say it twice."""
+
+    text = description.rstrip()
+    if text.endswith(scope_line):
+        text = text[: -len(scope_line)].rstrip()
+    for ending in _OLD_SCOPE_ENDINGS:
+        text = ending.sub("", text)
+    return text
 
 
 def _link_href(url: str, lang: str) -> str:
@@ -524,6 +551,7 @@ body {
   font-family: Georgia, "Times New Roman", Times, serif;
 }
 .card p { margin: 0 0 .6rem; font-size: .9rem; color: #5b6b7d; }
+.card .card-scope { margin: .4rem 0 0; font-size: .85rem; color: #3d5a73; }
 /* Scope accent, 2026-09-30 (the owner's "bandeau de couleur
    différent") — a left-edge stripe, deliberately not the health
    triptych above: blue-gray for a LAN-only card, amber-gold for a

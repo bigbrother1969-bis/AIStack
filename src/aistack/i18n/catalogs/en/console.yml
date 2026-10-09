@@ -21,6 +21,8 @@ aside:
   legal: "Legal notice"
   license: "Licence and sources"
   copyright: "© {year} {publisher}"
+# The last line of every local-network card, in italics (owner, 2026-10-09).
+card_scope_lan: "Reachable from the local network only."
 tooltip:
   manual: "Open the user manual: every screen in detail, and how to set up an installation"
   manual_section: "Go to this part of the manual"

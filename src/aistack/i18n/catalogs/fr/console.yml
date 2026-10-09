@@ -3,6 +3,7 @@
 
 title: "AIStack — Console"
 lockup_alt: "AIStack — Infrastructure Knowledge Platform"
+version: "Version {version}"
 cartouche:
   title: "État de santé du homelab"
   score: "Score de santé :"

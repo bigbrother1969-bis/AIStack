@@ -8,6 +8,7 @@ from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.history import write_artifact_with_history
 from aistack.health.cockpit import HealthCockpit
 from aistack.console.identity import ConsoleIdentity
+from aistack.__main__ import declared_version
 from aistack.renderers.console.html import render_html
 
 
@@ -36,7 +37,9 @@ class ConsoleHtmlArtifactGenerator:
     `technical_debt_score`/`technical_debt_note` default the same way
     for the "Dette technique" card added 2026-09-23 (`PLAN-J11`
     § 11.9.1). `lang` (ADR-0010, 2026-09-27) is the language the page
-    is written in, the reference when `None`.
+    is written in, the reference when `None`. `version` (2026-10-09)
+    is shown under the lockup: the installed distribution's own
+    (`aistack.__main__.declared_version`) when `None`.
     """
 
     def generate(
@@ -50,6 +53,7 @@ class ConsoleHtmlArtifactGenerator:
         technical_debt_note: str = "",
         lang: str | None = None,
         identity: ConsoleIdentity | None = None,
+        version: str | None = None,
     ) -> Path:
         content = render_html(
             links,
@@ -60,6 +64,7 @@ class ConsoleHtmlArtifactGenerator:
             technical_debt_note=technical_debt_note,
             lang=lang,
             identity=identity,
+            version=declared_version() if version is None else version,
         )
         write_artifact_with_history(content, output_path)
 

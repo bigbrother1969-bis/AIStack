@@ -180,6 +180,10 @@
 #     local model reasons, explains, recommends), the Time Machine (it
 #     keeps and shows the model's reasoning) and the Health Cockpit
 #     (each finding leads to the assistant).
+#
+#   - **The last two English descriptions, 2026-10-09**: Architecture
+#     and the Health cockpit still read "(PLAN-J2)", "(PLAN-J7)" in
+#     English; rewritten in the plain words of the French ones.
 
 links:
   - name: Selection UI
@@ -214,7 +218,9 @@ links:
         Consulter le schéma de l'infrastructure personnelle : les
         machines, les services, et la façon dont ils sont reliés
         entre eux.
-      en: Homelab topology diagram (PLAN-J2)
+      en: >-
+        See the diagram of the personal infrastructure: the machines,
+        the services, and how they are connected to each other.
     url: /architecture.html
     scope: public
   - name:
@@ -226,7 +232,10 @@ links:
         détail des anomalies détectées domaine par domaine (stockage,
         sauvegardes, processeur graphique, tests de reprise après
         incident...).
-      en: Health score and findings by domain (PLAN-J7)
+      en: >-
+        Follow the overall health score of the infrastructure, and the
+        detail of the faults found domain by domain (storage, backups,
+        graphics processor, disaster recovery tests...).
     url: /health.html
     ai:
       fr: >-

@@ -624,3 +624,31 @@ def test_the_shipped_cards_mark_the_screens_that_use_ai():
     links = load_console_links_yaml(shipped, lang="fr")
 
     assert sorted(link.name for link in links if link.ai) == ["Assistant de pannes", "Cockpit Santé", "Time Machine"]
+
+
+def test_the_running_version_sits_under_the_lockup() -> None:
+    # The owner, 2026-10-09: "mettre le numéro de version en cours sous
+    # le logo AIStack sur la page console".
+    page = render_html((), version="1.11.0", lang="fr")
+    lockup = page.index('class="lockup"')
+    line = page.index('<p class="aside-version">Version 1.11.0</p>')
+    assert lockup < line < page.index('class="aside-intro"')
+
+
+def test_no_version_line_when_the_version_is_unknown() -> None:
+    assert "aside-version\">" not in render_html((), version="unknown")
+    assert "aside-version\">" not in render_html(())
+
+
+def test_no_shipped_card_shows_a_plan_reference_in_english() -> None:
+    # The English console still said "(PLAN-J2)", "(PLAN-J7)" on the
+    # internet cards (screenshot, 2026-10-09).
+    from pathlib import Path
+
+    import aistack
+    from aistack.console.yaml import load_console_links_yaml
+
+    shipped = Path(aistack.__file__).parent / "console" / "definitions" / "console_links.yml"
+    for lang in ("fr", "en"):
+        for link in load_console_links_yaml(shipped, lang=lang):
+            assert "PLAN-" not in link.description, (lang, link.name)

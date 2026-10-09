@@ -48,6 +48,7 @@ def render_html(
     lang: str | None = None,
     languages: Languages | None = None,
     identity: ConsoleIdentity | None = None,
+    version: str = "",
 ) -> str:
     """
     Wrap the owner's declared `ConsoleLink`s into one self-contained
@@ -119,6 +120,12 @@ def render_html(
     **Grouped by `ConsoleLink.scope` since 2026-09-30** (the owner:
     "on regroupera les cartes 'LAN' et les cartes 'Internet'") — see
     `_render_link_groups` below.
+
+    **`version`, added 2026-10-09** (the owner: "mettre le numéro de
+    version en cours sous le logo AIStack sur la page console"): the
+    version the installed AIStack declares, one line under the lockup;
+    nothing when it is empty or unknown. Passed in, never read here, so
+    the function stays pure.
     """
 
     t = translator_for(lang)
@@ -149,7 +156,7 @@ def render_html(
 <div class="console-layout">
 <aside class="console-aside">
   <a href="#top" title="{escape_text(t("console.tooltip.lockup"))}"><img class="lockup" src="{LOCKUP_DATA_URI}" alt="{escape_text(t("console.lockup_alt"))}"></a>
-{_render_aside_text(t, identity)}
+{_render_version(t, version)}{_render_aside_text(t, identity)}
   {render_page_nav(t, declared, t.lang, back_to_console=False)}
 </aside>
 <div class="console-content">
@@ -163,6 +170,14 @@ def render_html(
 </body>
 </html>
 """
+
+
+def _render_version(t: Translator, version: str) -> str:
+    """The running version under the lockup, or nothing when unknown."""
+
+    if not version or version == "unknown":
+        return ""
+    return f'  <p class="aside-version">{escape_text(t("console.version", version=version))}</p>\n'
 
 
 def _render_aside_text(t: Translator, identity: ConsoleIdentity | None) -> str:
@@ -495,6 +510,7 @@ body {
   display: flex; flex-direction: column; align-items: center; gap: 1rem;
 }
 .console-aside .lockup { width: 100%; max-width: 220px; height: auto; }
+.aside-version { margin: -.25rem 0 0; font-size: .8rem; color: #5b6b7d; text-align: center; width: 100%; max-width: 220px; }
 .console-aside .page-nav {
   flex-direction: column; align-items: center; justify-content: flex-start;
   gap: .6rem; margin: 0;

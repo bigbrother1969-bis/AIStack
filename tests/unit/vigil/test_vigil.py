@@ -149,3 +149,18 @@ def test_gotify_is_called_as_aistack_and_a_refusal_says_why(monkeypatch) -> None
         said = str(error)
     assert seen["agent"].startswith("AIStack-vigil")
     assert said == "HTTP 403 from https://gotify.example/message (server: cloudflare): error code: 1010"
+
+
+def test_a_new_installation_gets_its_architecture_and_its_graph_once(tmp_path: Path):
+    """2.0.0-rc1: nothing else renders them on a new installation."""
+
+    from aistack.cli.vigil import first_renders
+
+    ran: list[str] = []
+
+    assert first_renders(tmp_path, ran.append) == ["aistack.cli.architecture_render", "aistack.cli.timemachine_rebuild"]
+
+    (tmp_path / "architecture.html").write_text("<html></html>", encoding="utf-8")
+    (tmp_path / "timemachine" / "graph").mkdir(parents=True)
+    assert first_renders(tmp_path, ran.append) == []
+    assert len(ran) == 2

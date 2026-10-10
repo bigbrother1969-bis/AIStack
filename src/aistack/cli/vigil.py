@@ -19,6 +19,7 @@ import argparse
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from aistack.api_keys import apply_to_environ
@@ -34,11 +35,35 @@ INSTANCE_CONFIG = configured(Path(__file__).resolve().parents[1] / "instance" / 
 RENDERS = ("aistack.cli.health_render", "aistack.cli.console_render")
 
 
-def _render() -> None:
+# Made once, when missing (2.0.0-rc1): on a new installation nothing
+# else renders the Architecture page or builds the Time Machine's graph,
+# and both are what AIStack discovers on its own. Each is then rebuilt
+# on demand, as before.
+FIRST_RENDERS = (
+    ("aistack.cli.architecture_render", Path("architecture.html")),
+    ("aistack.cli.timemachine_rebuild", Path("timemachine") / "graph"),
+)
+
+
+def _run(module: str) -> None:
+    done = subprocess.run([sys.executable, "-m", module], capture_output=True, text=True, timeout=900)
+    if done.returncode != 0:
+        print(f"{module}: exit {done.returncode}: {(done.stderr or done.stdout).strip()[-400:]}", flush=True)
+
+
+def first_renders(generated: Path, run: Callable[[str], None] = _run) -> list[str]:
+    """Render what a new installation does not have yet; returns the modules run."""
+
+    missing = [module for module, made in FIRST_RENDERS if not (generated / made).exists()]
+    for module in missing:
+        run(module)
+    return missing
+
+
+def _render(generated: Path = GENERATED_DIR) -> None:
+    first_renders(generated)
     for module in RENDERS:
-        done = subprocess.run([sys.executable, "-m", module], capture_output=True, text=True, timeout=900)
-        if done.returncode != 0:
-            print(f"{module}: exit {done.returncode}: {(done.stderr or done.stdout).strip()[-400:]}", flush=True)
+        _run(module)
 
 
 def _compact(generated: Path) -> None:
@@ -69,7 +94,7 @@ def _console_url() -> str:
 def one_pass(generated: Path, gotify: notify.Gotify | None, dry_run: bool, render: bool = True) -> int:
     _compact(generated)
     if render:
-        _render()
+        _render(generated)
     t = translator_for(default_languages().reference)
     previous = notify.read_state(generated)
     found, current = notify.events(t, previous, snapshot.read(generated), store.all_proposals(generated))

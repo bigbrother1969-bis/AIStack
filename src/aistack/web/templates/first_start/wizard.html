@@ -15,7 +15,7 @@
     ol.steps li.saved { border-color: #a5d6a7; background: #e8f5e9; }
     ol.steps li.coming { color: #9aa5b1; border-style: dashed; }
     form.step label { display: block; margin-top: .4rem; }
-    form.step input[type=text], form.step input[type=number] { width: 100%; max-width: 26rem; box-sizing: border-box;
+    form.step input[type=text], form.step input[type=number], form.step input[type=password] { width: 100%; max-width: 26rem; box-sizing: border-box;
       padding: .45rem .6rem; font-size: .95rem; border: 1px solid #bbb; border-radius: 6px; }
     form.step .help { color: #5b6b7d; font-size: .82rem; margin: .15rem 0 .2rem; }
     form.step fieldset { border: 1px solid #dde4ed; border-radius: 6px; padding: .5rem .8rem; }
@@ -141,9 +141,71 @@ docker compose --project-directory /srv/pocket-id up -d</pre>
     {% endif %}
     {% endif %}
     <p><a href="{{ action }}?check=1#proxy-hosts" title="{{ t('setup.tooltip.check') }}">{{ t('setup.step.public.check') }}</a></p>
-    <p class="done">{{ t('setup.step.public.next_soon') }}</p>
   </section>
   {% endif %}
+  {% elif step == 3 %}
+  <h2>{{ t('setup.step.sign_in.title') }}</h2>
+  <p>{{ t('setup.step.sign_in.intro') }}</p>
+  <h3>{{ t('setup.step.sign_in.procedure_heading') }}</h3>
+  <ol>
+    <li>{{ t('setup.step.sign_in.procedure_admin') }} <code>{{ sign_in.pocket_id }}/setup</code></li>
+    <li>{{ t('setup.step.sign_in.procedure_group', group=sign_in.admin_group) }}</li>
+    <li>{{ t('setup.step.sign_in.procedure_client') }}
+      <table class="proxy">
+        <tr><th>{{ t('setup.step.sign_in.field.name') }}</th><td><code>AIStack</code></td></tr>
+        <tr><th>{{ t('setup.step.sign_in.field.callbacks') }}</th><td>{% for url in sign_in.callbacks %}<code>{{ url }}</code><br>{% endfor %}</td></tr>
+        <tr><th>{{ t('setup.step.sign_in.field.logouts') }}</th><td>{% for url in sign_in.logouts %}<code>{{ url }}</code><br>{% endfor %}</td></tr>
+        <tr><th>{{ t('setup.step.sign_in.field.public_client') }}</th><td>{{ t('setup.step.sign_in.field.public_client_value') }}</td></tr>
+        <tr><th>{{ t('setup.step.sign_in.field.pkce') }}</th><td>{{ t('setup.step.sign_in.field.pkce_value') }}</td></tr>
+        <tr><th>{{ t('setup.step.sign_in.field.groups') }}</th><td>{{ t('setup.step.sign_in.field.groups_value', group=sign_in.admin_group) }}</td></tr>
+      </table>
+    </li>
+    <li>{{ t('setup.step.sign_in.procedure_copy') }}</li>
+  </ol>
+  <form class="step" method="post" action="{{ action }}">
+    <input type="hidden" name="form_token" value="{{ form_token }}">
+    <fieldset>
+      <legend>{{ t('setup.step.sign_in.mode') }}</legend>
+      <label><input type="radio" name="mode" value="pocket_id"{% if values.mode != 'local_only' %} checked{% endif %}> {{ t('setup.step.sign_in.mode_pocket_id') }}</label>
+      <label><input type="radio" name="mode" value="local_only"{% if values.mode == 'local_only' %} checked{% endif %}> {{ t('setup.step.sign_in.mode_local_only') }}</label>
+    </fieldset>
+    <label for="client_id">{{ t('setup.step.sign_in.client_id') }}</label>
+    <input type="text" id="client_id" name="client_id" value="{{ values.client_id }}" autocomplete="off">
+    <label for="client_secret">{{ t('setup.step.sign_in.client_secret') }}</label>
+    <p class="help">{% if sign_in.secret_shown %}{{ t('setup.step.sign_in.client_secret_kept', shown=sign_in.secret_shown) }}{% else %}{{ t('setup.step.sign_in.client_secret_help') }}{% endif %}</p>
+    <input type="password" id="client_secret" name="client_secret" value="" autocomplete="off">
+    <h3>{{ t('setup.step.sign_in.admin_heading') }}</h3>
+    <p class="help">{{ t('setup.step.sign_in.admin_help', lan=sign_in.lan) }}{% if sign_in.has_admin %} {{ t('setup.step.sign_in.admin_kept') }}{% endif %}</p>
+    <label for="password">{{ t('setup.step.sign_in.password') }}</label>
+    <input type="password" id="password" name="password" value="" autocomplete="new-password">
+    <label for="again">{{ t('setup.step.sign_in.again') }}</label>
+    <input type="password" id="again" name="again" value="" autocomplete="new-password">
+    <p class="note">{{ t('setup.step.sign_in.kept_where') }}</p>
+    <button type="submit" title="{{ t('setup.tooltip.save') }}">{{ t('setup.save') }}</button>
+  </form>
+  {% if saved %}
+  <section id="saved">
+    <p class="done">{{ t('setup.step.sign_in.saved') }}</p>
+    {% if values.mode != 'local_only' %}
+    {% if checks %}
+    <ul>
+      {% for check in checks %}
+      <li class="check {% if check.ok %}ok{% else %}failed{% endif %}">
+        {% if check.ok %}✓{% else %}✗{% endif %} <code>{{ check.url }}</code> — {% if check.ok %}{{ t('setup.check.ok') }}{% else %}{{ t('setup.check.failed', reason=check.detail) }}{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <p><a href="{{ action }}?check=1#saved" title="{{ t('setup.tooltip.check') }}">{{ t('setup.step.sign_in.check') }}</a></p>
+    {% endif %}
+  </section>
+  {% endif %}
+  {% endif %}
+
+  {% if saved and next %}
+  <p><a href="/setup/step/{{ next }}" title="{{ t('setup.tooltip.step') }}">{{ t('setup.next', title=t(next_title)) }}</a></p>
+  {% elif saved and last_ready %}
+  <p class="done">{{ t('setup.rest_soon') }}</p>
   {% endif %}
 
   <p class="note">{{ t('setup.restart_at_end') }}</p>

@@ -389,3 +389,141 @@ def test_the_written_declarations_keep_the_shipped_keys():
     assert answer is not None
 
     assert set(wizard.host_declaration(shipped, answer)) == set(shipped)
+
+
+# --------------------------------------------------------------------
+# Step 3 — signing in
+# --------------------------------------------------------------------
+
+SECRET = "pocket-id-client-secret-0123456789abcd"
+PASSWORD = "a long fallback password"
+
+
+@pytest.fixture
+def no_sign_in_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in ("AISTACK_OIDC_CLIENT_ID", "AISTACK_OIDC_CLIENT_SECRET", "AISTACK_WEB_ADMIN_SCRYPT"):
+        monkeypatch.delenv(name, raising=False)
+
+
+def through_step_two(tmp_path: Path):
+    app, generated, web, token = opened(tmp_path, ANSWERS)
+    web.post(
+        "/setup/step/1",
+        data={"form_token": wizard.form_token(token), "lan_hostname": "192.168.1.53", "console_port": "8183", "web_lan_port": "8186", "phase": "development"},
+    )
+    save_public(web, token)
+    return app, generated, web, token
+
+
+def save_sign_in(web: TestClient, token: str, **values: str):
+    form = {"form_token": wizard.form_token(token), "mode": "pocket_id", "client_id": "", "client_secret": "", "password": "", "again": ""}
+    return web.post("/setup/step/3?lang=fr", data=form | values)
+
+
+def test_step_three_gives_the_pocket_id_procedure_with_the_four_addresses(tmp_path: Path, config: Path, no_sign_in_environment: None):
+    _app, _generated, web, _token = through_step_two(tmp_path)
+
+    page = web.get("/setup/step/3?lang=fr").text
+
+    assert "https://id.sarfatti.fr/setup" in page
+    assert "aistack_admins" in page
+    for url in (
+        "https://aistack.sarfatti.fr/auth/callback",
+        "http://192.168.1.53:8186/auth/callback",
+        "https://aistack.sarfatti.fr/console.html",
+        "http://192.168.1.53:8186/console.html",
+    ):
+        assert f"<code>{url}</code>" in page, url
+    assert "PKCE" in page
+
+
+def test_step_three_keeps_the_secrets_apart_and_never_shows_them_again(tmp_path: Path, config: Path, no_sign_in_environment: None):
+    _app, generated, web, token = through_step_two(tmp_path)
+
+    reply = save_sign_in(web, token, client_id="aistack-client", client_secret=SECRET, password=PASSWORD, again=PASSWORD)
+
+    assert reply.status_code == 303
+    store = generated / "secrets" / "sign_in.json"
+    assert store.stat().st_mode & 0o777 == 0o600
+    kept = json.loads(store.read_text(encoding="utf-8"))
+    assert kept["AISTACK_OIDC_CLIENT_ID"] == "aistack-client"
+    assert kept["AISTACK_OIDC_CLIENT_SECRET"] == SECRET
+    assert kept["AISTACK_WEB_ADMIN_SCRYPT"].startswith("scrypt$")
+    assert PASSWORD not in store.read_text(encoding="utf-8")
+    # Not an API key: Settings never lists them.
+    assert not (generated / "secrets" / "api_keys.json").exists()
+
+    page = web.get("/setup/step/3?lang=fr").text
+    assert SECRET not in page and PASSWORD not in page
+    assert "…abcd" in page
+    assert 'value="aistack-client"' in page
+    assert 3 in wizard.progress(generated)
+
+
+def test_step_three_saved_again_with_empty_fields_keeps_what_it_had(tmp_path: Path, config: Path, no_sign_in_environment: None):
+    _app, generated, web, token = through_step_two(tmp_path)
+    save_sign_in(web, token, client_id="aistack-client", client_secret=SECRET, password=PASSWORD, again=PASSWORD)
+    before = wizard.sign_in_values(generated)
+
+    assert save_sign_in(web, token, client_id="aistack-client").status_code == 303
+
+    assert wizard.sign_in_values(generated) == before
+
+
+@pytest.mark.parametrize(
+    ("values", "error"),
+    [
+        ({"client_id": "", "client_secret": SECRET}, "L'identifiant du client"),
+        ({"client_id": "x", "client_secret": ""}, "Le secret du client"),
+        ({"client_id": "x", "client_secret": SECRET, "password": "short", "again": "short"}, "au moins 12 caractères"),
+        ({"client_id": "x", "client_secret": SECRET, "password": PASSWORD, "again": PASSWORD + "!"}, "diffèrent"),
+        ({"mode": "local_only"}, "Sans Pocket ID"),
+    ],
+)
+def test_step_three_refuses_and_sends_no_secret_back(tmp_path: Path, config: Path, no_sign_in_environment: None, values: dict, error: str):
+    _app, generated, web, token = through_step_two(tmp_path)
+
+    reply = save_sign_in(web, token, **values)
+
+    assert reply.status_code == 400
+    assert error in reply.text.replace("&#39;", "'")
+    assert SECRET not in reply.text and PASSWORD not in reply.text
+    assert wizard.sign_in_values(generated) == {}
+
+
+def test_the_fallback_administrator_alone_forgets_the_client(tmp_path: Path, config: Path, no_sign_in_environment: None):
+    _app, generated, web, token = through_step_two(tmp_path)
+    save_sign_in(web, token, client_id="aistack-client", client_secret=SECRET)
+
+    assert save_sign_in(web, token, mode="local_only", password=PASSWORD, again=PASSWORD).status_code == 303
+
+    kept = wizard.sign_in_values(generated)
+    assert set(kept) == {"AISTACK_WEB_ADMIN_SCRYPT"}
+    assert wizard.choices(generated)["sign_in"] == "local_only"
+
+
+def test_step_three_s_check_asks_pocket_id_only(tmp_path: Path, config: Path, no_sign_in_environment: None):
+    app, _generated, web, token = through_step_two(tmp_path)
+    save_sign_in(web, token, client_id="aistack-client", client_secret=SECRET)
+    app.state.asked.clear()
+
+    web.get("/setup/step/3?check=1")
+
+    assert app.state.asked == ["https://id.sarfatti.fr/.well-known/openid-configuration"]
+
+
+def test_the_kept_secrets_reach_the_sign_in_when_aistack_starts(tmp_path: Path):
+    wizard.keep_sign_in(tmp_path, "AISTACK_OIDC_CLIENT_ID", "aistack-client")
+    environ = {"AISTACK_OIDC_CLIENT_ID": "from-env-web", "OTHER": "x"}
+
+    wizard.apply_sign_in(tmp_path, environ)
+
+    assert environ == {"AISTACK_OIDC_CLIENT_ID": "aistack-client", "OTHER": "x"}
+
+
+def test_the_step_after_the_last_saved_one_is_offered(tmp_path: Path, config: Path, no_sign_in_environment: None):
+    _app, _generated, web, _token = through_step_two(tmp_path)
+
+    page = web.get("/setup/step/2?lang=fr").text
+
+    assert 'href="/setup/step/3"' in page and "Étape suivante" in page

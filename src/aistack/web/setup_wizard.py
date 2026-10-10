@@ -16,6 +16,7 @@ themselves.
 
 from __future__ import annotations
 
+import os
 import socket
 from collections.abc import Callable
 from datetime import datetime
@@ -25,6 +26,8 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from aistack.authentication.definition import AuthenticationDefinition, load_authentication_yaml
+from aistack.authentication.local_admin import hash_password
 from aistack.config import PACKAGE_ROOT, config_dir, configured, shown_config_dir
 from aistack.instance import setup_wizard as wizard
 from aistack.instance.first_start import still_shipped
@@ -55,7 +58,7 @@ STEP_TITLES = {
     CHECK: "setup.step.check.title",
 }
 # The steps the pages hold today; the others are announced.
-READY = (HOST, PUBLIC)
+READY = (HOST, PUBLIC, SIGN_IN)
 ERRORS = {
     "host_name": "setup.error.host_name",
     "port_range": "setup.error.port_range",
@@ -68,6 +71,12 @@ ERRORS = {
     "proxy": "setup.error.proxy",
     "form": "setup.error.form",
     "no_config_dir": "setup.error.no_config_dir",
+    "sign_in_mode": "setup.error.sign_in_mode",
+    "client_id": "setup.error.client_id",
+    "client_secret": "setup.error.client_secret",
+    "password_short": "setup.error.password_short",
+    "password_differs": "setup.error.password_differs",
+    "password_required": "setup.error.password_required",
 }
 
 
@@ -228,6 +237,51 @@ def _steps(request: Request, current: int) -> list[dict[str, Any]]:
     ]
 
 
+def _definition() -> AuthenticationDefinition:
+    return load_authentication_yaml(configured(SHIPPED_AUTHENTICATION))
+
+
+def _present(stored: dict[str, str], name: str) -> str:
+    return stored.get(name) or os.environ.get(name, "").strip()
+
+
+def _sign_in_values(request: Request) -> dict[str, str]:
+    definition = _definition()
+    stored = wizard.sign_in_values(_generated(request))
+    chosen = wizard.choices(_generated(request)).get("sign_in")
+    client_id = _present(stored, definition.client_id_env)
+    pocket_id = client_id or wizard.install_answers(_generated(request)).get("POCKET_ID") == "yes"
+    return {
+        "mode": chosen or (wizard.POCKET_ID if pocket_id else wizard.LOCAL_ONLY),
+        "client_id": client_id,
+    }
+
+
+def _sign_in_view(request: Request) -> dict[str, Any]:
+    """What step 3 says around its form: never a secret, only whether
+    there is one and its last four characters."""
+
+    definition = _definition()
+    stored = wizard.sign_in_values(_generated(request))
+    secret = _present(stored, definition.client_secret_env)
+    host = _host_values(request)
+    lan = f"http://{host['lan_hostname']}:{host['web_lan_port']}"
+    public = definition.public_base_url
+    return {
+        "secret_shown": ("…" + secret[-4:]) if len(secret) > 8 else ("…" if secret else ""),
+        "has_admin": bool(_present(stored, definition.local_admin_env)),
+        "admin_group": definition.admin_group,
+        "pocket_id": definition.issuer,
+        "callbacks": [definition.redirect_uri_for(public), definition.redirect_uri_for(lan)],
+        "logouts": [definition.after_logout_uri_for(public), definition.after_logout_uri_for(lan)],
+        "lan": lan,
+    }
+
+
+VALUES = {HOST: _host_values, PUBLIC: _public_values, SIGN_IN: _sign_in_values}
+FILES = {HOST: INSTANCE_FILE, PUBLIC: AUTHENTICATION_FILE}
+
+
 def _step_page(
     request: Request,
     step: int,
@@ -239,8 +293,9 @@ def _step_page(
     status_code: int = 200,
 ) -> Response:
     if values is None:
-        values = _host_values(request) if step == HOST else _public_values(request)
+        values = VALUES[step](request)
     saved = wizard.progress(_generated(request))
+    following = next((number for number in READY if number > step), None)
     context: dict[str, Any] = {
         "step": step,
         "steps": _steps(request, step),
@@ -249,19 +304,28 @@ def _step_page(
         "form_token": wizard.form_token(token),
         "action": f"{STEP_PATH}/{step}",
         "saved": step in saved,
-        "config_file": _shown(INSTANCE_FILE if step == HOST else AUTHENTICATION_FILE),
+        "config_file": _shown(FILES[step]) if step in FILES else "",
         "answers": wizard.install_answers(_generated(request)),
         "checks": checks,
-        "next": next((number for number in READY if number > step), None),
+        "next": following,
+        "next_title": STEP_TITLES[following] if following is not None else "",
+        "last_ready": step == READY[-1],
     }
     if step == PUBLIC and step in saved:
         context["proxy"] = _proxy_hosts(request)
+    if step == SIGN_IN:
+        context["sign_in"] = _sign_in_view(request)
     return _render(request, "first_start/wizard.html", context, status_code)
 
 
 def _shown(name: str) -> str:
     directory = shown_config_dir()
     return f"{directory}/{name}" if directory is not None else name
+
+
+def _ask(request: Request) -> Callable[[str], wizard.Probe]:
+    ask: Callable[[str], wizard.Probe] = request.app.state.setup_probe
+    return ask
 
 
 @router.get(f"{STEP_PATH}/{{step}}", response_class=HTMLResponse, include_in_schema=False)
@@ -272,11 +336,11 @@ def show_step(request: Request, step: int, check: str = "") -> Response:
     if step not in READY:
         return RedirectResponse(f"{STEP_PATH}/{_first_unsaved(request)}", status_code=303)
     checks = None
-    if step == PUBLIC and check and PUBLIC in wizard.progress(_generated(request)):
+    if check and step in (PUBLIC, SIGN_IN) and step in wizard.progress(_generated(request)):
         answer, _errors = wizard.parse_public(**_public_values(request))
         if answer is not None:
-            ask: Callable[[str], wizard.Probe] = request.app.state.setup_probe
-            checks = [wizard.check_aistack(answer, ask), wizard.check_pocket_id(answer, ask)]
+            checks = [wizard.check_aistack(answer, _ask(request))] if step == PUBLIC else []
+            checks.append(wizard.check_pocket_id(answer, _ask(request)))
     return _step_page(request, step, token, checks=checks)
 
 
@@ -296,6 +360,7 @@ async def save_step(request: Request, step: int) -> Response:
         return _step_page(request, step, token, errors=["no_config_dir"], status_code=409)
 
     when = _now()
+    generated = _generated(request)
     if step == HOST:
         entered = {key: values.get(key, "") for key in ("lan_hostname", "console_port", "web_lan_port", "phase")}
         host, errors = wizard.parse_host(**entered)
@@ -303,15 +368,43 @@ async def save_step(request: Request, step: int) -> Response:
             return _step_page(request, step, token, values=entered, errors=errors, status_code=400)
         data = wizard.host_declaration(_current(SHIPPED_INSTANCE), host)
         wizard.write_declaration(directory, INSTANCE_FILE, data, when)
-        wizard.mark_saved(_generated(request), HOST, when)
+        wizard.mark_saved(generated, HOST, when)
         return RedirectResponse(f"{STEP_PATH}/{PUBLIC}", status_code=303)
 
-    entered = {key: values.get(key, "") for key in ("domain", "proxy", "aistack_name", "id_name")}
-    public, errors = wizard.parse_public(**entered)
-    if public is None:
-        return _step_page(request, step, token, values=entered, errors=errors, status_code=400)
-    data = wizard.public_declaration(_current(SHIPPED_AUTHENTICATION), public)
-    wizard.write_declaration(directory, AUTHENTICATION_FILE, data, when)
-    wizard.remember(_generated(request), domain=public.domain, proxy=public.proxy)
-    wizard.mark_saved(_generated(request), PUBLIC, when)
-    return RedirectResponse(f"{STEP_PATH}/{PUBLIC}#proxy-hosts", status_code=303)
+    if step == PUBLIC:
+        entered = {key: values.get(key, "") for key in ("domain", "proxy", "aistack_name", "id_name")}
+        public, errors = wizard.parse_public(**entered)
+        if public is None:
+            return _step_page(request, step, token, values=entered, errors=errors, status_code=400)
+        data = wizard.public_declaration(_current(SHIPPED_AUTHENTICATION), public)
+        wizard.write_declaration(directory, AUTHENTICATION_FILE, data, when)
+        wizard.remember(generated, domain=public.domain, proxy=public.proxy)
+        wizard.mark_saved(generated, PUBLIC, when)
+        return RedirectResponse(f"{STEP_PATH}/{PUBLIC}#proxy-hosts", status_code=303)
+
+    # SIGN_IN — the passwords are never sent back to the page, even refused.
+    definition = _definition()
+    stored = wizard.sign_in_values(generated)
+    mode, client_id = values.get("mode", ""), values.get("client_id", "")
+    answer, errors = wizard.parse_sign_in(
+        mode,
+        client_id,
+        values.get("client_secret", ""),
+        values.get("password", ""),
+        values.get("again", ""),
+        has_client_secret=bool(_present(stored, definition.client_secret_env)),
+        has_admin=bool(_present(stored, definition.local_admin_env)),
+    )
+    if answer is None:
+        return _step_page(
+            request, step, token, values={"mode": mode, "client_id": client_id}, errors=errors, status_code=400
+        )
+    if answer.client_id is not None:
+        wizard.keep_sign_in(generated, definition.client_id_env, answer.client_id)
+    if answer.client_secret is not None:
+        wizard.keep_sign_in(generated, definition.client_secret_env, answer.client_secret)
+    if answer.admin_password:
+        wizard.keep_sign_in(generated, definition.local_admin_env, hash_password(answer.admin_password))
+    wizard.remember(generated, sign_in=answer.mode)
+    wizard.mark_saved(generated, SIGN_IN, when)
+    return RedirectResponse(f"{STEP_PATH}/{SIGN_IN}#saved", status_code=303)

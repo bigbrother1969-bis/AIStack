@@ -28,7 +28,7 @@ import json
 import os
 import re
 import secrets
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
@@ -402,3 +402,83 @@ def check_pocket_id(answer: PublicAnswer, ask: Any = probe) -> Check:
     if issuer != answer.issuer:
         return Check(url, False, f"issuer = {issuer}")
     return Check(url, True, "200")
+
+
+# --------------------------------------------------------------------
+# Step 3 — signing in
+# --------------------------------------------------------------------
+
+# The sign-in secrets entered here: the OpenID Connect client's id and
+# secret, the fallback administrator's scrypt hash. Kept like the API
+# keys (0600, never shown again) but apart from them — Settings never
+# lists them — and laid over the web process's environment when it
+# starts, before its sign-in is built: they win over `.env.web`.
+SIGN_IN_STORE = Path("secrets") / "sign_in.json"
+
+POCKET_ID = "pocket_id"
+LOCAL_ONLY = "local_only"
+SIGN_IN_MODES = (POCKET_ID, LOCAL_ONLY)
+MINIMUM_PASSWORD = 12
+
+
+def sign_in_values(generated: Path) -> dict[str, str]:
+    from aistack.api_keys import read_store
+
+    return read_store(generated, SIGN_IN_STORE)
+
+
+def keep_sign_in(generated: Path, name: str, value: str | None) -> None:
+    from aistack.api_keys import write_value
+
+    write_value(generated, name, value, SIGN_IN_STORE)
+
+
+def apply_sign_in(generated: Path, environ: MutableMapping[str, str] | None = None) -> None:
+    env = os.environ if environ is None else environ
+    for name, value in sign_in_values(generated).items():
+        env[name] = value
+
+
+@dataclass(frozen=True)
+class SignInAnswer:
+    """What step 3 keeps: None leaves a value as it is, "" forgets it."""
+
+    mode: str
+    client_id: str | None
+    client_secret: str | None
+    admin_password: str | None
+
+
+def parse_sign_in(
+    mode: str,
+    client_id: str,
+    client_secret: str,
+    password: str,
+    again: str,
+    *,
+    has_client_secret: bool,
+    has_admin: bool,
+) -> tuple[SignInAnswer | None, list[str]]:
+    errors = []
+    if mode not in SIGN_IN_MODES:
+        errors.append("sign_in_mode")
+    client_id, client_secret = client_id.strip(), client_secret.strip()
+    if mode == POCKET_ID:
+        if not client_id:
+            errors.append("client_id")
+        if not client_secret and not has_client_secret:
+            errors.append("client_secret")
+    if password or again:
+        if len(password) < MINIMUM_PASSWORD:
+            errors.append("password_short")
+        elif password != again:
+            errors.append("password_differs")
+    elif mode == LOCAL_ONLY and not has_admin:
+        errors.append("password_required")
+    if errors:
+        return None, errors
+    if mode == LOCAL_ONLY:
+        # Without Pocket ID, no client: one left from before would keep
+        # a sign-in button that cannot work.
+        return SignInAnswer(mode, "", "", password or None), []
+    return SignInAnswer(mode, client_id, client_secret or None, password or None), []

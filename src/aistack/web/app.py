@@ -53,6 +53,7 @@ from aistack.web import health
 from aistack.web import notifications
 from aistack.web import pending as pending_screen
 from aistack.web import setup_wizard as setup_wizard_screen
+from aistack.instance.setup_wizard import apply_sign_in
 from aistack.instance.setup_wizard import probe as setup_probe
 from aistack.web.ai_jobs import AIJobs
 from aistack.instance.data_location import location_file
@@ -185,6 +186,9 @@ def create_app(
             )
         ).get
     )
+    # The sign-in secrets the installation assistant kept (ADR-0023 § 5),
+    # laid over the environment before the sign-in reads it.
+    apply_sign_in(generated_dir)
     # Who is signed in (ADR-0013): Pocket ID, the sessions on disk
     # under the generated directory, the fallback administrator.
     app.state.authentication = (

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-10-10
@@ -146,7 +146,7 @@ as written; every place where it was not enough is a defect of 2.0.
 | Part | State |
 |---|---|
 | § 4 `install.sh` and the shipped prerequisite projects | done — `scripts/install.sh`, `deploy/prerequisites/{pocket-id,gotify,syncthing}` |
-| § 5 the guided first start | in progress — the installation token (`install.sh`, `aistack.cli.setup_token`), step 1 (the host) and step 2 (the public address, the proxy hosts to create, the check) in `/setup/step/<n>`; steps 3–6 to do |
+| § 5 the guided first start | in progress — the installation token (`install.sh`, `aistack.cli.setup_token`), step 1 (the host) and step 2 (the public address, the proxy hosts to create, the check), step 3 (signing in: the Pocket ID procedure with the four addresses, the client's id and secret, the fallback administrator's password hashed — kept in `secrets/sign_in.json`, 0600, laid over the web process's environment at start) in `/setup/step/<n>`; steps 4–6 to do |
 | § 6 the manual | to do |
 | The test at David's | to do — after § 4–6 |
 

@@ -76,26 +76,28 @@ def load_api_keys(path: Path | None = None) -> list[ApiKey]:
     return keys
 
 
-def read_store(generated_dir: Path) -> dict[str, str]:
+def read_store(generated_dir: Path, store: Path = STORE) -> dict[str, str]:
     try:
-        data = json.loads((generated_dir / STORE).read_text(encoding="utf-8"))
+        data = json.loads((generated_dir / store).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
     return {str(k): str(v) for k, v in data.items() if isinstance(v, str) and v} if isinstance(data, dict) else {}
 
 
-def write_value(generated_dir: Path, name: str, value: str | None) -> None:
-    """Keep `value` for `name` (None or empty: forget it), atomically, mode 0600."""
+def write_value(generated_dir: Path, name: str, value: str | None, store: Path = STORE) -> None:
+    """Keep `value` for `name` (None or empty: forget it), atomically, mode 0600;
+    `store` is another file of the same kind (the installation assistant's
+    sign-in secrets, `aistack.instance.setup_wizard`)."""
 
-    stored = read_store(generated_dir)
+    stored = read_store(generated_dir, store)
     if value:
         stored[name] = value
     else:
         stored.pop(name, None)
-    path = generated_dir / STORE
+    path = generated_dir / store
     path.parent.mkdir(parents=True, exist_ok=True)
     os.chmod(path.parent, 0o700)
-    descriptor, temporary = tempfile.mkstemp(dir=path.parent, prefix=".api_keys.")
+    descriptor, temporary = tempfile.mkstemp(dir=path.parent, prefix=f".{path.stem}.")
     try:
         os.fchmod(descriptor, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:

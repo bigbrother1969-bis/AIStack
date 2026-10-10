@@ -39,7 +39,9 @@ def test_on_lmde_it_says_every_step_and_changes_nothing(tmp_path: Path):
         assert step in out
     for prerequisite in ("pocket-id", "gotify", "syncthing"):
         assert f"deploy/prerequisites/{prerequisite}/compose.yml" in out
-    assert "ollama pull qwen2.5:3b" in out
+    # On a host that already has Ollama and the model (GIGABYTE), there
+    # is nothing to pull: the script says so instead.
+    assert "ollama pull qwen2.5:3b" in out or "Ollama déjà installé" in out
     assert ":8186/setup" in out
     assert not (tmp_path / "aistack").exists()
 

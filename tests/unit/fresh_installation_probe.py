@@ -5,8 +5,9 @@ installation's application — only the shipped declarations, copied by
 host — asked for every page an administrator can open on the local
 network. Prints one line per page: the status, then the path.
 
-Docker, Syncthing and the AI are replaced, as in every web test: what
-is checked is that the neutral declarations hold up every screen.
+Docker, Syncthing and the AI are replaced, as in every web test, and so
+are the host's disks and mounts Settings lists: what is checked is that
+the neutral declarations hold up every screen.
 """
 
 from __future__ import annotations
@@ -57,6 +58,9 @@ app = build(generated)
 # The sign-in as the new installation's own declaration says, not the
 # suite's fake provider.
 app.state.authentication = build_authentication(generated, "http://localhost:8186")
+# The disks and mounts Settings shows are discovered on the machine the
+# test runs on (GIGABYTE's /media/TechData), not shipped.
+app.state.storage = lambda generated_dir: []
 web = signed_in(client(app, LAN_PORT))
 for prefix, router, _guard in app.state.routers:
     for route in router.routes:

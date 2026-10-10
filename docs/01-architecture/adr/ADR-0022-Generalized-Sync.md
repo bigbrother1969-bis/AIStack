@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-10-09
-  updated: 2026-10-09
+  updated: 2026-10-10
 
 relations:
   references:
@@ -130,13 +130,52 @@ As today's 64 GB for the phone: a quota per destination, shared by all
 its contents, checked before anything is applied; for a removable
 medium, its free space, measured when it is plugged in.
 
+### 8. Revised 2026-10-10: where the devices really are
+
+Decided by the owner, 2026-10-10, after the first trial of § 2: the
+Kindle and the USB keys were plugged into the owner's laptop while the
+commands looked for them on GIGABYTE — they are never plugged into the
+server, but into the computer whose browser shows AIStack. Decided:
+
+- **Every device that runs Syncthing, whatever its system** (Linux,
+  Windows, macOS, Android): each device paired with the host's
+  Syncthing is a destination, read from Syncthing itself rather than
+  declared one by one; its quota is set from the page.
+- **No VPN required.** Measured on GIGABYTE the same day: Syncthing's
+  global and local discovery, relays and NAT traversal are on, and the
+  container publishes 22000/tcp, 22000/udp and 21027/udp; the devices'
+  addresses are `dynamic`. A device reaches GIGABYTE without Tailscale
+  (mutual authentication by device ID; a relay only carries encrypted
+  data); a port forward of 22000 on the box makes the connection direct.
+- **Folders prepared on the devices once**: on each device, the host's
+  entry accepts its shares automatically, a default folder path is set
+  and the default folder type is "Receive only"; every share AIStack
+  creates then lands there, under its plain name ("Livres"), which the
+  share's label becomes.
+- **The Kindle by e-mail** ("Send to Kindle", which takes EPUB): the
+  ticked books are sent to the Kindle's address from an account the
+  owner has approved at Amazon — no cable; the books go through
+  Amazon's cloud.
+- **USB keys from the browser**: the page writes the selection to a
+  folder of the key chosen in the browser (File System Access API,
+  Chromium browsers), which needs HTTPS — so the local network gets
+  HTTPS too: a local name resolved by the home DNS (AdGuard Home or
+  Pi-hole) to the host, with a real certificate. A ZIP of the selection
+  stays the way that works in any browser.
+
+The `kindle` and `usb` destination kinds of § 2 (a medium plugged into
+the host) are withdrawn; the draft written for them was set aside.
+After the 2.0 release (`ADR-0023` § 1).
+
 ## Implementation state
 
 | Part | State |
 |---|---|
 | § 1, § 2 (Syncthing), § 4, § 5, § 7: declarations, the screen per content and destination, Syncthing folders | done — `sync.yml`, `aistack.sync` (declaration, screen, syncthing), `/selection/` and `/selection/<content>--<device>/` |
 | § 6 the host executor, for Syncthing pairs | done — `python -m aistack.cli.sync_apply`, `run_sync.sh`, `deploy/systemd/aistack-sync.{service,timer}` |
-| § 2 (Kindle, USB) | to do — tranche 4.2 |
+| § 2 (Kindle, USB on the host) | withdrawn 2026-10-10 — § 8 |
+| § 8 every Syncthing device, prepared folders, plain share names | to do — after 2.0 |
+| § 8 Kindle by e-mail, USB from the browser, HTTPS on the local network | to do — after 2.0 |
 
 ## Consequences
 

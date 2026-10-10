@@ -25,6 +25,10 @@
     table.proxy { border-collapse: collapse; font-size: .85rem; margin: .6rem 0; width: 100%; }
     table.proxy th, table.proxy td { border: 1px solid #dde4ed; padding: .35rem .5rem; text-align: left; vertical-align: top; }
     table.proxy th { background: #f4f6f9; }
+    section.key { border: 1px solid #dde4ed; border-radius: 8px; padding: .3rem 1rem .8rem; margin: 1rem 0; background: #fafbfc; }
+    section.key h3 { font-size: 1rem; margin: .5rem 0 .2rem; color: #16335c; }
+    form.step.inline { flex-direction: row; flex-wrap: wrap; align-items: center; margin-top: .4rem; }
+    form.step.inline input { flex: 1; min-width: 14rem; }
     .check.ok { color: #1b5e20; } .check.failed { color: #9b1c1c; }
     pre { background: #f4f6f9; border: 1px solid #dde4ed; border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; white-space: pre-wrap; }
     code { word-break: break-all; }
@@ -236,6 +240,32 @@ docker compose up -d</pre>
     <p class="help">{{ t('setup.step.storage.apply_later') }}</p>
   </section>
   {% endif %}
+  {% elif step == 5 %}
+  <h2>{{ t('setup.step.api_keys.title') }}</h2>
+  <p>{{ t('setup.step.api_keys.intro') }}</p>
+  {% for key in keys %}
+  <section class="key" id="key-{{ key.name }}">
+    <h3>{{ key.title }} <code>{{ key.name }}</code></h3>
+    <p class="help">{{ key.used_by }} — {{ t('setup.step.api_keys.applies', when=key.applies) }}</p>
+    {% if key.prerequisite_missing %}<p class="help">{{ t('setup.step.api_keys.not_installed') }}</p>{% endif %}
+    <ol>{% for line in key.steps %}<li>{{ line }}</li>{% endfor %}</ol>
+    <p>{{ t('setup.step.api_keys.now') }} <strong>{{ key.source }}</strong>{% if key.shown %} <code>{{ key.shown }}</code>{% endif %}</p>
+    {% if key.notice %}<p class="{% if key.notice_failed %}errors{% else %}done{% endif %}" role="status">{{ key.notice }}</p>{% endif %}
+    <form class="step inline" method="post" action="{{ action }}">
+      <input type="hidden" name="form_token" value="{{ form_token }}">
+      <input type="hidden" name="name" value="{{ key.name }}">
+      <input type="{% if key.secret %}password{% else %}text{% endif %}" name="value" value="{{ key.suggested }}" autocomplete="off" placeholder="{{ t('setup.step.api_keys.placeholder') }}">
+      <button type="submit" name="action" value="save" title="{{ t('setup.tooltip.save') }}">{{ t('setup.save') }}</button>
+      {% if key.test and key.present %}<button type="submit" name="action" value="test" title="{{ t('setup.step.api_keys.tooltip_test') }}">{{ t('setup.step.api_keys.test') }}</button>{% endif %}
+      {% if key.from_assistant %}<button type="submit" name="action" value="clear" title="{{ t('setup.step.api_keys.tooltip_clear') }}">{{ t('setup.step.api_keys.clear') }}</button>{% endif %}
+    </form>
+  </section>
+  {% endfor %}
+  <p class="note">{{ t('setup.step.api_keys.kept_where') }}</p>
+  <form class="step" method="post" action="{{ action }}">
+    <input type="hidden" name="form_token" value="{{ form_token }}">
+    <button type="submit" name="action" value="done" title="{{ t('setup.step.api_keys.tooltip_done') }}">{{ t('setup.step.api_keys.done') }}</button>
+  </form>
   {% endif %}
 
   {% if saved and next %}

@@ -156,6 +156,7 @@ api_keys:
   clear: "Clear"
   test: "Test"
   applies: "taken into account {when}"
+  how: "How to get it"
   never_shown: "A key is never shown again: only its last four characters are."
   column:
     key: "Key"

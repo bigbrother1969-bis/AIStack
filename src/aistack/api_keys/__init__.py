@@ -45,6 +45,16 @@ class ApiKey:
     applies: dict[str, str]
     secret: bool = True
     test: str = ""
+    procedure: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    prerequisite: str = ""
+    suggested: str = ""
+
+    def steps(self, lang: str, host: str = "") -> list[str]:
+        """The procedure in `lang` (else the first language), `{host}` filled."""
+
+        found = dict(self.procedure)
+        lines = found.get(lang) or (self.procedure[0][1] if self.procedure else ())
+        return [line.replace("{host}", host or "localhost") for line in lines]
 
     def text(self, field: dict[str, str], lang: str) -> str:
         return field.get(lang) or next(iter(field.values()), self.name)
@@ -71,6 +81,12 @@ def load_api_keys(path: Path | None = None) -> list[ApiKey]:
                 applies=text(raw.get("applies"), ""),
                 secret=bool(raw.get("secret", True)),
                 test=str(raw.get("test") or ""),
+                procedure=tuple(
+                    (str(lang), tuple(str(line) for line in lines or ()))
+                    for lang, lines in (raw.get("procedure") or {}).items()
+                ),
+                prerequisite=str(raw.get("prerequisite") or ""),
+                suggested=str(raw.get("suggested") or ""),
             )
         )
     return keys

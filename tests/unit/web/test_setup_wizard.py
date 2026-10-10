@@ -610,3 +610,105 @@ def test_the_services_are_those_of_docker_compose_yml():
     built_on_aistack = {name for name, service in compose["services"].items() if "tools" not in (service.get("profiles") or [])}
 
     assert built_on_aistack == set(wizard.SERVICES)
+
+
+# --------------------------------------------------------------------
+# Step 5 — API keys
+# --------------------------------------------------------------------
+
+GEMINI = "AIzaSyTHE-GEMINI-KEY-0123456789wxyz"
+
+
+@pytest.fixture
+def no_api_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    from aistack import api_keys
+
+    monkeypatch.setattr(api_keys, "_ORIGINAL", {})
+    for key in api_keys.load_api_keys():
+        monkeypatch.setenv(key.name, "")
+        monkeypatch.delenv(key.name)
+
+
+def at_step_five(tmp_path: Path, answers: str = ANSWERS):
+    app, generated, web, token = opened(tmp_path, answers)
+    app.state.tested = []
+
+    def fake_test(kind: str) -> str | None:
+        app.state.tested.append(kind)
+        return "" if kind == "gemini" else "401 Unauthorized"
+
+    app.state.test_api_key = fake_test
+    return app, generated, web, token
+
+
+def test_step_five_lists_every_key_with_its_procedure(tmp_path: Path, config: Path, no_api_keys: None):
+    from aistack.api_keys import load_api_keys
+
+    _app, _generated, web, _token = at_step_five(tmp_path)
+
+    page = web.get("/setup/step/5?lang=fr").text
+
+    for key in load_api_keys():
+        assert f'id="key-{key.name}"' in page, key.name
+    assert "https://aistudio.google.com/apikey" in page
+    # {host} is the server's address, from install.sh.
+    assert "http://192.168.1.53:8070" in page and "http://192.168.1.53:8384" in page
+    # A setting gets a value to start from; a secret never does.
+    assert 'value="http://192.168.1.53:8070"' in page
+
+
+def test_step_five_keeps_a_key_like_settings_and_never_shows_it(tmp_path: Path, config: Path, no_api_keys: None):
+    import os
+
+    app, generated, web, token = at_step_five(tmp_path)
+
+    reply = web.post(
+        "/setup/step/5",
+        data={"form_token": wizard.form_token(token), "name": "AISTACK_GEMINI_API_KEY", "value": GEMINI, "action": "save"},
+    )
+
+    assert reply.status_code == 303
+    assert reply.headers["location"].endswith("#key-AISTACK_GEMINI_API_KEY")
+    kept = json.loads((generated / "secrets" / "api_keys.json").read_text(encoding="utf-8"))
+    assert kept == {"AISTACK_GEMINI_API_KEY": GEMINI}
+    assert os.environ["AISTACK_GEMINI_API_KEY"] == GEMINI
+    page = web.get(reply.headers["location"].split("#")[0] + "&lang=fr").text
+    assert GEMINI not in page and "…wxyz" in page
+    assert "AISTACK_GEMINI_API_KEY enregistrée." in page
+
+
+def test_step_five_tests_a_key_and_says_why_it_was_refused(tmp_path: Path, config: Path, no_api_keys: None):
+    app, _generated, web, token = at_step_five(tmp_path)
+    form = {"form_token": wizard.form_token(token), "action": "save"}
+    web.post("/setup/step/5", data=form | {"name": "AISTACK_GOTIFY_TOKEN", "value": "AbCdEfGhIjKl"})
+
+    reply = web.post("/setup/step/5", data=form | {"name": "AISTACK_GOTIFY_TOKEN", "action": "test"})
+    page = web.get(reply.headers["location"].split("#")[0] + "&lang=fr").text
+
+    assert app.state.tested == ["gotify"]
+    assert "401 Unauthorized" in page
+
+
+def test_a_prerequisite_install_sh_skipped_is_said_optional(tmp_path: Path, config: Path, no_api_keys: None):
+    _app, _generated, web, _token = at_step_five(tmp_path, ANSWERS.replace("GOTIFY=yes", "GOTIFY=no"))
+
+    page = web.get("/setup/step/5?lang=fr").text
+
+    assert page.count("install.sh ne l&#39;a pas installé") == 2
+
+
+def test_step_five_is_done_when_the_owner_says_so(tmp_path: Path, config: Path, no_api_keys: None):
+    _app, generated, web, token = at_step_five(tmp_path)
+
+    reply = web.post("/setup/step/5", data={"form_token": wizard.form_token(token), "action": "done"})
+
+    assert reply.status_code == 303
+    assert 5 in wizard.progress(generated)
+    assert not (generated / "secrets" / "api_keys.json").exists()
+
+
+def test_settings_shows_each_key_s_procedure_too():
+    from aistack.api_keys import load_api_keys
+
+    for key in load_api_keys():
+        assert key.steps("fr") and key.steps("en"), key.name

@@ -124,11 +124,19 @@ def api_keys_section(request: Request, t: Translator) -> str:
                 f'<button type="submit" title="{escape_text(t("auth.api_keys.tooltip.test", item=key.name))}">'
                 f'{escape_text(t("auth.api_keys.test"))}</button></form>'
             )
+        steps = key.steps(t.lang, request.app.state.instance_config.lan_hostname)
+        how = (
+            f'<details><summary>{escape_text(t("auth.api_keys.how"))}</summary><ol>'
+            + "".join(f"<li>{escape_text(line)}</li>" for line in steps)
+            + "</ol></details>"
+            if steps
+            else ""
+        )
         parts.append(
             "<tr>"
             f'<td><strong>{title}</strong><br><code>{name}</code><br>'
             f'<span style="color:#5b6b7d">{escape_text(key.text(key.used_by, t.lang))} — '
-            f'{escape_text(t("auth.api_keys.applies", when=key.text(key.applies, t.lang)))}</span></td>'
+            f'{escape_text(t("auth.api_keys.applies", when=key.text(key.applies, t.lang)))}</span>{how}</td>'
             f"<td>{state}</td>"
             f'<td>{change}{" ".join(actions)}</td>'
             "</tr>"

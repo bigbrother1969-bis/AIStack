@@ -26,6 +26,9 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from urllib.parse import quote
+
+from aistack import api_keys
 from aistack.authentication.definition import AuthenticationDefinition, load_authentication_yaml
 from aistack.authentication.local_admin import hash_password
 from aistack.config import PACKAGE_ROOT, config_dir, configured, shown_config_dir
@@ -58,7 +61,7 @@ STEP_TITLES = {
     CHECK: "setup.step.check.title",
 }
 # The steps the pages hold today; the others are announced.
-READY = (HOST, PUBLIC, SIGN_IN, STORAGE)
+READY = (HOST, PUBLIC, SIGN_IN, STORAGE, API_KEYS)
 ERRORS = {
     "host_name": "setup.error.host_name",
     "port_range": "setup.error.port_range",
@@ -318,7 +321,73 @@ def _storage_view(request: Request, values: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-VALUES = {HOST: _host_values, PUBLIC: _public_values, SIGN_IN: _sign_in_values, STORAGE: _storage_values}
+# Literal keys, so the catalog test sees every one of them.
+KEY_SOURCES = {
+    api_keys.FROM_SETTINGS: "setup.step.api_keys.source.settings",
+    api_keys.FROM_ENV_FILE: "setup.step.api_keys.source.env",
+    api_keys.ABSENT: "setup.step.api_keys.source.absent",
+}
+KEY_NOTICES = {
+    "saved": "setup.step.api_keys.notice.saved",
+    "cleared": "setup.step.api_keys.notice.cleared",
+    "test_ok": "setup.step.api_keys.notice.test_ok",
+    "test_failed": "setup.step.api_keys.notice.test_failed",
+    "test_absent": "setup.step.api_keys.notice.test_absent",
+}
+
+
+def _keys_view(request: Request) -> list[dict[str, Any]]:
+    """Every key of `api_keys.yml`, with its procedure: never a value,
+    only where it comes from and the last four characters."""
+
+    generated = _generated(request)
+    t = _language(request).t
+    answers = wizard.install_answers(generated)
+    host = answers.get("HOST_ADDRESS") or _host_values(request)["lan_hostname"]
+    loader: Callable[[], list[api_keys.ApiKey]] = request.app.state.api_keys
+    shown_notice = request.query_params.get("key", "")
+    notice = request.query_params.get("notice", "")
+    view = []
+    for key in loader():
+        source, shown = api_keys.state(key, generated)
+        prerequisite_missing = bool(key.prerequisite) and answers.get(key.prerequisite.upper().replace("-", "_")) == "no"
+        view.append(
+            {
+                "name": key.name,
+                "title": key.text(key.title, t.lang),
+                "used_by": key.text(key.used_by, t.lang),
+                "applies": key.text(key.applies, t.lang),
+                "secret": key.secret,
+                "source": t(KEY_SOURCES[source]),
+                "present": source != api_keys.ABSENT,
+                "from_assistant": source == api_keys.FROM_SETTINGS,
+                "shown": shown,
+                "steps": key.steps(t.lang, host),
+                "suggested": key.suggested.replace("{host}", host) if source == api_keys.ABSENT else "",
+                "test": bool(key.test),
+                "prerequisite_missing": prerequisite_missing,
+                "notice": t(
+                    KEY_NOTICES[notice], name=key.name, detail=request.query_params.get("detail", "")
+                )
+                if shown_notice == key.name and notice in KEY_NOTICES
+                else "",
+                "notice_failed": notice in ("test_failed", "test_absent"),
+            }
+        )
+    return view
+
+
+def _api_keys_values(request: Request) -> dict[str, Any]:
+    return {}
+
+
+VALUES = {
+    HOST: _host_values,
+    PUBLIC: _public_values,
+    SIGN_IN: _sign_in_values,
+    STORAGE: _storage_values,
+    API_KEYS: _api_keys_values,
+}
 FILES = {HOST: INSTANCE_FILE, PUBLIC: AUTHENTICATION_FILE, STORAGE: wizard.VOLUMES_FILE}
 
 
@@ -357,6 +426,8 @@ def _step_page(
         context["sign_in"] = _sign_in_view(request)
     if step == STORAGE:
         context["storage"] = _storage_view(request, values)
+    if step == API_KEYS:
+        context["keys"] = _keys_view(request)
     return _render(request, "first_start/wizard.html", context, status_code)
 
 
@@ -424,6 +495,9 @@ async def save_step(request: Request, step: int) -> Response:
         wizard.mark_saved(generated, PUBLIC, when)
         return RedirectResponse(f"{STEP_PATH}/{PUBLIC}#proxy-hosts", status_code=303)
 
+    if step == API_KEYS:
+        return _save_key(request, values, when)
+
     if step == STORAGE:
         typed = values.get("typed", "")
         folders, errors = wizard.parse_folders([str(item) for item in form.getlist("folder")], typed)
@@ -461,3 +535,41 @@ async def save_step(request: Request, step: int) -> Response:
     wizard.remember(generated, sign_in=answer.mode)
     wizard.mark_saved(generated, SIGN_IN, when)
     return RedirectResponse(f"{STEP_PATH}/{SIGN_IN}#saved", status_code=303)
+
+
+def _save_key(request: Request, values: dict[str, str], when: datetime) -> Response:
+    """One key saved, cleared or tested — as in Settings, same store —
+    or the step marked done."""
+
+    generated = _generated(request)
+    action = values.get("action", "save")
+    if action == "done":
+        wizard.mark_saved(generated, API_KEYS, when)
+        following = next((number for number in READY if number > API_KEYS), API_KEYS)
+        return RedirectResponse(f"{STEP_PATH}/{following}", status_code=303)
+    keys: list[api_keys.ApiKey] = request.app.state.api_keys()
+    key = next((key for key in keys if key.name == values.get("name", "")), None)
+    if key is None:
+        return RedirectResponse(f"{STEP_PATH}/{API_KEYS}", status_code=303)
+
+    def back(notice: str, detail: str = "") -> RedirectResponse:
+        query = f"key={quote(key.name)}&notice={notice}"
+        if detail:
+            query += f"&detail={quote(detail[:200])}"
+        return RedirectResponse(f"{STEP_PATH}/{API_KEYS}?{query}#key-{key.name}", status_code=303)
+
+    if action == "test":
+        reason = request.app.state.test_api_key(key.test) if key.test else None
+        if reason is None:
+            return back("test_absent")
+        return back("test_ok") if reason == "" else back("test_failed", reason)
+    if action == "clear":
+        api_keys.write_value(generated, key.name, None)
+        notice = "cleared"
+    elif values.get("value", "").strip():
+        api_keys.write_value(generated, key.name, values["value"].strip())
+        notice = "saved"
+    else:
+        return back("")
+    api_keys.apply_to_environ(generated, keys)
+    return back(notice)

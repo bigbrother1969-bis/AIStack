@@ -156,6 +156,7 @@ api_keys:
   clear: "Effacer"
   test: "Tester"
   applies: "pris en compte {when}"
+  how: "Comment l'obtenir"
   never_shown: "Une clé n'est jamais réaffichée : seuls ses quatre derniers caractères le sont."
   column:
     key: "Clé"

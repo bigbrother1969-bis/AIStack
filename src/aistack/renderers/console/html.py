@@ -445,9 +445,9 @@ def _path_of(url: str) -> str:
 
 
 # What waits for the owner behind a card (2026-10-10): the card carries
-# its screen's path in `data-pending`; the notice script the local
-# network listener adds for a signed-in person
-# (`aistack.web.notifications`) asks `/pending` and draws the pastille.
+# its screen's path in `data-pending`; the script the web application
+# adds for a signed-in person (`aistack.web.pending`) asks `/pending`
+# and draws the pastille.
 # The page itself stays script-free.
 
 
@@ -582,13 +582,7 @@ body {
   background: #ffffff; transition: border-color .15s ease;
 }
 .card:hover { border-color: #16335c; }
-.card[data-pending] { position: relative; }
-.pending-mark {
-  position: absolute; top: .55rem; right: .6rem; min-width: 1.4rem; height: 1.4rem;
-  padding: 0 .35rem; box-sizing: border-box; border-radius: .7rem;
-  background: #c2410c; color: #ffffff; font: 700 .78rem/1.4rem system-ui, sans-serif;
-  text-align: center; box-shadow: 0 0 0 2px #ffffff;
-}
+
 .card h2 {
   margin: 0 0 .4rem; font-size: 1.05rem; color: #16335c;
   font-family: Georgia, "Times New Roman", Times, serif;

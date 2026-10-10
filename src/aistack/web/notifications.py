@@ -106,24 +106,6 @@ SNIPPET = """<div id="aistack-notices" aria-live="polite"></div>
       .catch(function () {});
   }
   poll();
-  // What waits behind each console card (2026-10-10): a pastille.
-  var cards = document.querySelectorAll("a.card[data-pending]");
-  if (cards.length) {
-    fetch("__PENDING__", { credentials: "same-origin", headers: { "Accept": "application/json" } })
-      .then(function (r) { return r.ok ? r.json() : {}; })
-      .then(function (found) {
-        cards.forEach(function (card) {
-          var item = found[card.getAttribute("data-pending")];
-          if (!item || !item.count) { return; }
-          var mark = document.createElement("span");
-          mark.className = "pending-mark"; mark.textContent = item.count;
-          mark.title = item.text; mark.setAttribute("aria-label", item.text);
-          card.appendChild(mark);
-          card.title = item.text + " \u2014 " + card.title;
-        });
-      })
-      .catch(function () {});
-  }
 })();
 </script>
 """
@@ -135,7 +117,6 @@ def snippet(t: Callable[..., str]) -> str:
 
     return (
         SNIPPET.replace("__PATH__", PATH)
-        .replace("__PENDING__", "/pending")
         .replace("__POLL__", str(POLL_SECONDS * 1000))
         .replace("__IDLE__", str(IDLE_SECONDS * 1000))
         .replace("__OPEN__", json.dumps(t("common.notice.open")).replace("</", "<\\/"))

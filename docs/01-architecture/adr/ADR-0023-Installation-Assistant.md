@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-10-10
@@ -107,19 +107,30 @@ The read-only list of `ADR-0017` § 4 becomes steps, each saved from the
 page, LAN only, before anyone can sign in (an installation token,
 shown by the script, opens them):
 
+Every value the installation needs is asked on these pages, one step
+after the other, never left to a file to edit (the owner, 2026-10-10:
+"il faut que ces informations soient saisies dans l'assistant
+d'installation, comme tous les paramètres qui doivent être renseignés
+au fur et à mesure").
+
 1. **The host** — its name, the two ports (`instance_config.yml`).
-2. **Signing in** — Pocket ID (address, client id and secret, with the
+2. **The public address** — the domain name and the reverse proxy
+   (Nginx Proxy Manager, or another); the names AIStack and Pocket ID
+   answer on (by default `aistack.<domain>` and `id.<domain>`); the
+   page then shows the proxy hosts to create, with the port each
+   forwards to, and checks that the public address answers.
+3. **Signing in** — Pocket ID (address, client id and secret, with the
    procedure to create the client and the `aistack_admins` group) or
    the local administrator only (its password, hashed in the page's
    request, never stored in clear).
-3. **Storage** — where the data lives; the disks and folders AIStack
+4. **Storage** — where the data lives; the disks and folders AIStack
    reads, chosen among the host's mounts (`aistack.host.mounts`); the
    page writes them to `config/volumes.yml`, which `docker-compose.yml`
    includes, and says the one command that applies them.
-4. **API keys** — every key of `api_keys.yml`, each with its procedure:
+5. **API keys** — every key of `api_keys.yml`, each with its procedure:
    where to get it, what to click, what it unlocks; entered as in
    Settings (`secrets/api_keys.json`).
-5. **Check** — each prerequisite asked once (Pocket ID's discovery
+6. **Check** — each prerequisite asked once (Pocket ID's discovery
    document, Ollama's model list, Gotify's test message, Syncthing's
    version), and what is still missing.
 
@@ -152,7 +163,8 @@ as written; every place where it was not enough is a defect of 2.0.
 
 ## Open Points
 
-- Pocket ID needs HTTPS on a domain name (passkeys): does David's
-  installation have a domain and a reverse proxy, or does it start with
-  the local administrator only? To ask before § 5.2 is built.
+- *Answered 2026-10-10:* David's installation has a domain,
+  `sarfatti.fr`, and Nginx Proxy Manager for HTTPS — Pocket ID can be
+  installed there; the values are entered in the assistant (§ 5.2),
+  never written in AIStack's shipped declarations.
 - The installation token's lifetime and where it is shown again if lost.

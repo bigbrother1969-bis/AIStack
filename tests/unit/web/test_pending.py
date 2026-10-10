@@ -30,9 +30,10 @@ def test_a_signed_in_person_on_the_lan_gets_each_card_s_count_and_text(tmp_path:
     }
 
 
-def test_nothing_without_a_session_nor_on_the_public_port(tmp_path: Path):
+def test_nothing_without_a_session_and_the_counts_on_both_listeners_with_one(tmp_path: Path):
     assert client(tmp_path).get("/pending").json() == {}
-    assert signed_in(client(tmp_path, port=8183)).get("/pending").status_code == 404
+    assert client(tmp_path, port=8183).get("/pending").json() == {}
+    assert signed_in(client(tmp_path, port=8183)).get("/pending").json()["/dock/"]["count"] == 1
 
 
 def test_the_counts_read_the_proposals_waiting_and_the_vigil_s_findings(tmp_path: Path):
@@ -48,13 +49,15 @@ def test_the_counts_read_the_proposals_waiting_and_the_vigil_s_findings(tmp_path
     assert pending.counts(tmp_path) == {"/dock/": 1, "/troubleshooting/": 1}
 
 
-def test_the_lan_cards_carry_their_path_and_the_notice_script_draws_the_pastille():
+def test_the_lan_cards_carry_their_path_and_the_page_script_draws_the_pastille(tmp_path: Path):
     from aistack.contracts.console_link import ConsoleLink
     from aistack.renderers.console.html import render_html
-    from aistack.web.notifications import snippet
-    from aistack.i18n import translator_for
 
     page = render_html((ConsoleLink(name="Dock", description="d", url="http://GIGABYTE:8186/dock/", scope="lan"),))
-
     assert 'data-pending="/dock/"' in page and "<script" not in page
-    assert 'fetch("/pending"' in snippet(translator_for("fr"))
+
+    (tmp_path / "console.html").write_text(page, encoding="utf-8")
+    for port in (8183, 8186):
+        served = signed_in(client(tmp_path, port=port)).get("/console.html").text
+        assert 'fetch("/pending"' in served, port
+    assert 'fetch("/pending"' not in client(tmp_path, port=8183).get("/console.html").text

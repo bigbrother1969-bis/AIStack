@@ -25,11 +25,11 @@ from fastapi.responses import JSONResponse
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import page_language
 from aistack.web.authentication import current_session
-from aistack.web.exposure import LAN_ONLY
+from aistack.web.exposure import PUBLIC
 
 PATH = "/pending"
 
-router = APIRouter(dependencies=[LAN_ONLY])
+router = APIRouter(dependencies=[PUBLIC])
 
 
 def counts(generated_dir: Path) -> dict[str, int]:
@@ -82,3 +82,34 @@ def pending(request: Request) -> JSONResponse:
     return JSONResponse(
         {path: {"count": count, "text": t(TEXTS[path], count=count)} for path, count in found.items() if path in TEXTS}
     )
+
+
+# Added before `</body>` of every page for a signed-in person, on both
+# listeners: on a page with console cards, it asks `/pending` and draws
+# the pastilles; elsewhere it does nothing. The console page itself
+# stays script-free.
+SNIPPET = """<style>
+.card[data-pending] { position: relative; }
+.pending-mark { position: absolute; top: .55rem; right: .6rem; min-width: 1.4rem; height: 1.4rem; padding: 0 .35rem; box-sizing: border-box; border-radius: .7rem; background: #c2410c; color: #fff; font: 700 .78rem/1.4rem system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 2px #fff; }
+</style>
+<script>
+(function () {
+  var cards = document.querySelectorAll("a.card[data-pending]");
+  if (!cards.length || !window.fetch) { return; }
+  fetch("/pending" + window.location.search, { credentials: "same-origin", headers: { "Accept": "application/json" } })
+    .then(function (r) { return r.ok ? r.json() : {}; })
+    .then(function (found) {
+      cards.forEach(function (card) {
+        var item = found[card.getAttribute("data-pending")];
+        if (!item || !item.count) { return; }
+        var mark = document.createElement("span");
+        mark.className = "pending-mark"; mark.textContent = item.count;
+        mark.title = item.text; mark.setAttribute("aria-label", item.text);
+        card.appendChild(mark);
+        card.title = item.text + " \\u2014 " + card.title;
+      });
+    })
+    .catch(function () {});
+})();
+</script>
+"""

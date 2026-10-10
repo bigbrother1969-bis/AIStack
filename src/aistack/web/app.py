@@ -267,14 +267,18 @@ def _with_notices(request: Request, body: bytes) -> bytes:
     screens that ask the AI answer there and nowhere else."""
 
     listeners: Listeners = request.app.state.listeners
-    if arrival_port(request) != listeners.lan_port or current_session(request) is None:
+    if current_session(request) is None:
         return body
     end = body.rfind(b"</body>")
     if end < 0:
         return body
-    language = page_language(
-        request.query_params.get(LANGUAGE_PARAMETER),
-        request.cookies.get(LANGUAGE_COOKIE),
-        request.app.state.languages,
-    )
-    return body[:end] + notifications.snippet(language.t).encode("utf-8") + body[end:]
+    # The cards' pastilles, on both listeners (2026-10-10).
+    added = pending_screen.SNIPPET
+    if arrival_port(request) == listeners.lan_port:
+        language = page_language(
+            request.query_params.get(LANGUAGE_PARAMETER),
+            request.cookies.get(LANGUAGE_COOKIE),
+            request.app.state.languages,
+        )
+        added = notifications.snippet(language.t) + added
+    return body[:end] + added.encode("utf-8") + body[end:]

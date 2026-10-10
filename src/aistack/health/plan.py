@@ -6,7 +6,7 @@ la dette. Idem pour le cartouche « à surveiller » sur le score de
 santé").
 
 What to do first, ranked by what it gains — computed from the same
-cockpit, weights and quarantine the two scores are computed from, never
+cockpit and weights the two scores are computed from, never
 estimated apart from them:
 
 - **health**: per domain carrying findings, the points the health score
@@ -14,11 +14,9 @@ estimated apart from them:
   without that domain's findings), and what clearing one finding alone
   gains — often nothing while a domain saturates its own penalty, which
   the page says rather than hides;
-- **debt**: per group carrying technical debt — a domain, or the
-  quarantined code (`OPS-0012`) — the points the technical-debt score
-  gains once the group is cleared (one weight per group, `OPS-0008`
-  § *Technical debt score*). The quarantine clears at its review date,
-  not by an action now: it is listed last, as waiting.
+- **debt**: per domain carrying technical debt, the points the
+  technical-debt score gains once the domain is cleared (one weight per
+  domain, `OPS-0008` § *Technical debt score*).
 
 Pure: same inputs, same plan.
 """
@@ -34,10 +32,6 @@ from aistack.health.cockpit import HealthCockpit
 from aistack.health.score import compute_health_score
 from aistack.health.technical_debt import compute_technical_debt_score
 
-# The group name the quarantined code takes in the debt plan.
-QUARANTINE = "quarantine"
-
-
 @dataclass(frozen=True)
 class HealthAction:
     """One domain to clear: its findings, and what clearing it gains."""
@@ -50,13 +44,12 @@ class HealthAction:
 
 @dataclass(frozen=True)
 class DebtAction:
-    """One group of technical debt — a domain, or `QUARANTINE` — and what
-    clearing it gains on the technical-debt score."""
+    """One domain carrying technical debt, and what clearing it gains on
+    the technical-debt score."""
 
     group: str
     findings: tuple[RuntimeFinding, ...]
     gain: int
-    waiting: bool = False
 
 
 def _with(cockpit: HealthCockpit, name: str, findings: tuple[RuntimeFinding, ...]) -> HealthCockpit:
@@ -89,16 +82,12 @@ def _debt(findings: tuple[RuntimeFinding, ...]) -> tuple[RuntimeFinding, ...]:
 def debt_plan(
     cockpit: HealthCockpit,
     weight: int,
-    quarantine: tuple[RuntimeFinding, ...] = (),
 ) -> tuple[DebtAction, ...]:
-    """The groups carrying debt, the actionable ones first, the
-    quarantine — cleared by its review, not by an action — last."""
+    """The domains carrying debt, the one gaining most first."""
 
     groups: list[tuple[str, tuple[RuntimeFinding, ...]]] = [
         (domain.name, _debt(domain.findings)) for domain in cockpit.domains
     ]
-    if quarantine:
-        groups.append((QUARANTINE, _debt(quarantine)))
 
     def value(without: str | None) -> int:
         return compute_technical_debt_score(
@@ -107,9 +96,9 @@ def debt_plan(
 
     now = value(None)
     actions = [
-        DebtAction(name, findings, value(name) - now, waiting=name == QUARANTINE)
+        DebtAction(name, findings, value(name) - now)
         for name, findings in groups
         if findings
     ]
-    return tuple(sorted(actions, key=lambda action: (action.waiting, -action.gain, action.group)))
+    return tuple(sorted(actions, key=lambda action: (-action.gain, action.group)))
 

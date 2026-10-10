@@ -3,7 +3,6 @@ from __future__ import annotations
 from aistack.config import configured
 
 import json
-from datetime import date
 import socket
 import subprocess
 from pathlib import Path
@@ -13,7 +12,6 @@ from aistack.backup_strategy.yaml import load_backup_strategy_yaml
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.console.yaml import load_console_links_yaml
 from aistack.contracts.health_score import HealthScoreWeights
-from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.console.identity import load_console_identity
 from aistack.generators.console import ConsoleHtmlArtifactGenerator
@@ -22,7 +20,6 @@ from aistack.hosts.health import hosts_domain
 from aistack.data_budget.health import data_budget_domain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
-from aistack.health.quarantine import quarantine_findings
 from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import default_languages
 from aistack.i18n.pages import page_file
@@ -411,7 +408,6 @@ def build_cockpit(hostname: str) -> HealthCockpit:
 def technical_debt_score(
     cockpit: HealthCockpit,
     weights: HealthScoreWeights | None,
-    quarantine: tuple[RuntimeFinding, ...] = (),
 ) -> tuple[TechnicalDebtScore | None, str]:
     """Mirrors `aistack.cli.health_render.technical_debt_score` exactly."""
 
@@ -430,11 +426,7 @@ def technical_debt_score(
             "without it"
         )
 
-    # The quarantined code (`OPS-0012`, 2026-10-05) counts as one more
-    # group beside the domains: debt, but not a domain of the host.
     groups = tuple(tuple(domain.findings) for domain in cockpit.domains)
-    if quarantine:
-        groups += (quarantine,)
 
     return compute_technical_debt_score(groups, points), ""
 
@@ -529,8 +521,7 @@ def main() -> None:
     cockpit = build_cockpit(socket.gethostname())
     weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
     score = compute_health_score(cockpit, weights) if weights is not None else None
-    quarantine, _readings, _note = quarantine_findings(date.today())
-    debt_score, debt_score_note = technical_debt_score(cockpit, weights, quarantine)
+    debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
     written: list[str] = []
     links_count = 0

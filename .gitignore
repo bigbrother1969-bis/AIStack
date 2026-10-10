@@ -56,7 +56,6 @@ reports/generated/
 /reports/generated.avant-deplacement/
 /data_location.yml
 examples/catalog_engine/music-library-catalog.yml
-examples/render_engine/*.html
 
 # Wrong path since whatever commit moved this generator's output
 # directory from examples/selection_engine/ to examples/selections/
@@ -81,9 +80,6 @@ examples/selections/music-android-selection-real.yml
 # `app_id` existing later, which would write a second, differently
 # named report right beside it.
 examples/selections/*-last-generation.yml
-
-# Runtime logs
-logs/*.log
 
 # Local backups
 *.bak-*

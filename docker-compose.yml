@@ -27,7 +27,6 @@
 #
 #   docker compose exec web python -m aistack.cli.health_render
 #   docker compose exec web python -m aistack.cli.timemachine_rebuild
-#   docker compose run --rm validate
 #
 # Building from a checkout between two releases: set
 # AISTACK_VERSION=dev in .env first, so a local build never takes a
@@ -121,20 +120,6 @@ services:
     <<: *aistack
     container_name: aistack-vigil
     command: ["vigil"]
-
-  # The knowledge-integrity validator, a one-shot tool (exits 0 when
-  # the bundle is sound, 1 on a blocking finding, 2 without a bundle):
-  # never started by `up`, run with `docker compose run --rm validate`.
-  validate:
-    image: bigbrother1969/aistack-core:${AISTACK_VERSION:?set AISTACK_VERSION in .env}
-    build:
-      context: .
-      dockerfile: Dockerfile
-    profiles: ["tools"]
-    command: ["validate"]
-    volumes:
-      - ./context/bundles:/app/context/bundles:ro
-    restart: "no"
 
 # ---------------------------------------------------------------
 # Published images, pinned by digest so a record is not a label

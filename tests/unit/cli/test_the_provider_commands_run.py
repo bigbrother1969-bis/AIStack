@@ -44,13 +44,7 @@ from pathlib import Path
 
 import pytest
 
-from aistack.cli import (
-    architecture_render,
-    compose_catalog,
-    docker_catalog,
-    docker_discover,
-    docker_selection_catalog,
-)
+from aistack.cli import architecture_render
 
 
 OBSERVED_AT = "2026-08-29T09:00:00+00:00"
@@ -182,83 +176,6 @@ def written(workspace: Path, name: str) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_docker_catalog_writes_a_catalog(stubbed_providers, workspace):
-    docker_catalog.main()
-
-    catalog = written(workspace, "docker-runtime-catalog.json")
-
-    assert catalog["catalog_id"] == "docker-runtime"
-    assert [item["kind"] for item in catalog["items"]] == [
-        "container",
-        "image",
-        "network",
-        "volume",
-    ]
-
-
-def test_docker_catalog_writes_the_explanation_alongside_it(
-    stubbed_providers, workspace
-):
-    """
-    `STD-0300` VS-1 criterion 1.4: the explanation is generated in
-    the same run as the catalog it explains, from the same
-    observation — added 2026-09-04.
-    """
-
-    docker_catalog.main()
-
-    path = workspace / "reports" / "generated" / "docker-runtime-explanation.txt"
-
-    assert path.exists()
-    assert "aistack-web" in path.read_text(encoding="utf-8")
-
-
-def test_docker_discover_writes_the_observation(stubbed_providers, workspace):
-    docker_discover.main()
-
-    observation = written(workspace, "docker-provider-observation.json")
-
-    assert observation["provider"]["id"] == "aistack.provider.docker"
-    assert observation["collected_at"] == OBSERVED_AT
-
-
-def test_compose_catalog_writes_a_catalog(stubbed_providers, workspace):
-    compose_catalog.main()
-
-    catalog = written(workspace, "compose-runtime-catalog.json")
-
-    assert catalog["catalog_id"] == "compose-runtime"
-    assert catalog["items"]
-
-
-def test_docker_selection_catalog_writes_its_artifact(
-    stubbed_providers, workspace
-):
-    """
-    The fourth command, asserted on what it writes today.
-
-    Its output changed shape in the commit that repaired
-    GOV-0002/OS-042: the path produces a `CatalogView` and no
-    longer a `SelectionCatalog`. **The first version of this
-    assertion was written against the artifact of the day
-    before** — a test shaped for the destination would have
-    passed before the work and proved nothing about the defect
-    this file exists for.
-
-    `view_id` and `source_catalog_id` are the pair the retired
-    type did not carry, and they are what makes a view traceable
-    to the catalog it derives from.
-    """
-
-    docker_selection_catalog.main()
-
-    view = written(workspace, "docker-selection-catalog.json")
-
-    assert view["view_id"] == "docker-containers"
-    assert view["source_catalog_id"] == "docker-runtime"
-    assert [item["label"] for item in view["items"]] == ["aistack-web"]
-
-
 def test_architecture_render_writes_the_html_artifact(stubbed_providers, workspace):
     """
     J2 step 6: the fifth command, and the first to reach both
@@ -323,10 +240,6 @@ def test_every_provider_command_reaches_its_provider(
             CountingCompose,
         )
 
-        docker_catalog.main()
-        docker_discover.main()
-        docker_selection_catalog.main()
-        compose_catalog.main()
         architecture_render.main()
 
-    assert calls == ["docker", "docker", "docker", "compose", "docker", "compose"]
+    assert calls == ["docker", "compose"]

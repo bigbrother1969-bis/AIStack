@@ -35,7 +35,8 @@ def test_the_six_processes_are_six_services_of_one_image():
         assert services[name]["command"] == [name]
         assert services[name]["network_mode"] == "host"
         assert services[name]["restart"] == "unless-stopped"
-    assert services["validate"]["profiles"] == ["tools"]
+    # The knowledge-integrity validator was retired in 2.0.0-rc2.
+    assert set(services) == SERVICES | {"vigil"}
 
 
 def test_every_service_sees_the_socket_its_configuration_and_its_data():

@@ -556,7 +556,7 @@ python3.13 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
 .venv/bin/python -m pip install -e ".[dev]"
 source scripts/dev-env.sh
-pytest -q && python -m aistack.cli.knowledge_integrity      # must end with clean: True
+ruff check src tests && mypy && pytest -q
 ```
 
 ### 2. Declare your instance
@@ -623,7 +623,6 @@ ss -ltnp | grep -E ':8183|:8186'          # both listeners answer
 python -m aistack.cli.architecture_render
 python -m aistack.cli.health_render
 python -m aistack.cli.console_render
-python -m aistack.cli.explications_import          # and the other explications_import_* sources
 python -m aistack.cli.timemachine_rebuild
 ```
 
@@ -637,7 +636,7 @@ user manual (*Help* in the console) walks through every screen.
 cd /srv/aistack/AIStack && git pull
 source scripts/dev-env.sh
 .venv/bin/python -m pip install -e ".[dev]"
-pytest -q && python -m aistack.cli.knowledge_integrity
+ruff check src tests && mypy && pytest -q
 sudo systemctl restart aistack-web
 ```
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from aistack.config import configured
 
 import json
-from datetime import date
 import socket
 import subprocess
 from pathlib import Path
@@ -12,7 +11,6 @@ from aistack.architecture.yaml import load_service_categorization_yaml
 from aistack.backup_strategy.yaml import load_backup_strategy_yaml
 from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.contracts.health_score import HealthScore, HealthScoreWeights
-from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.health import HealthHtmlArtifactGenerator
 from aistack.health.cockpit import HealthCockpit, HealthDomain
@@ -21,7 +19,6 @@ from aistack.data_budget.health import data_budget_domain
 from aistack.health.score import compute_health_score
 from aistack.health.score_weights import health_score_weights
 from aistack.health.plan import debt_plan, health_plan
-from aistack.health.quarantine import quarantine_findings
 from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import Languages, default_languages
 from aistack.i18n.pages import page_file
@@ -581,7 +578,6 @@ def build_cockpit(hostname: str) -> HealthCockpit:
 def technical_debt_score(
     cockpit: HealthCockpit,
     weights: HealthScoreWeights | None,
-    quarantine: tuple[RuntimeFinding, ...] = (),
 ) -> tuple[TechnicalDebtScore | None, str]:
     """
     `PLAN-J11` § 11.9.1's "dette technique scorée" gap, closed
@@ -628,11 +624,7 @@ def technical_debt_score(
             "without it"
         )
 
-    # The quarantined code (`OPS-0012`, 2026-10-05) counts as one more
-    # group beside the domains: debt, but not a domain of the host.
     groups = tuple(tuple(domain.findings) for domain in cockpit.domains)
-    if quarantine:
-        groups += (quarantine,)
 
     return compute_technical_debt_score(groups, points), ""
 
@@ -666,8 +658,7 @@ def main() -> None:
 
     weights, score_note = health_score_weights(DEFAULT_HEALTH_SCORE_WEIGHTS)
     score = compute_health_score(cockpit, weights) if weights is not None else None
-    quarantine, quarantine_readings, quarantine_note = quarantine_findings(date.today())
-    debt_score, debt_score_note = technical_debt_score(cockpit, weights, quarantine)
+    debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
     try:
         # The assistant lives under a prefix of the web application's
@@ -703,8 +694,6 @@ def main() -> None:
             score_note=score_note,
             technical_debt_score=debt_score,
             technical_debt_note=debt_score_note,
-            quarantine=quarantine_readings,
-            quarantine_note=quarantine_note,
             lang=language.code,
             troubleshooting_base_url=troubleshooting_base_url,
         )
@@ -725,7 +714,6 @@ def main() -> None:
     plan_written = write_plan(
         cockpit,
         weights,
-        quarantine,
         score=score,
         score_note=score_note,
         debt_score=debt_score,
@@ -758,7 +746,6 @@ def main() -> None:
 def write_plan(
     cockpit: HealthCockpit,
     weights: HealthScoreWeights | None,
-    quarantine: tuple[RuntimeFinding, ...],
     *,
     score: HealthScore | None,
     score_note: str,
@@ -771,14 +758,14 @@ def write_plan(
     """
     `plan.html`, the action plan the two score badges open (the owner's
     request, 2026-10-08), one page per language, from the same cockpit,
-    weights and quarantine as the scores. Written plainly, not with
+    weights as the scores. Written plainly, not with
     `write_artifact_with_history`: it is a view of `health.html`'s own
     run, not one more history stream for the Time Machine.
     """
 
     weight = (weights.for_domain("Services") or 0) if weights is not None else 0
     health = health_plan(cockpit, weights) if weights is not None else ()
-    debt = debt_plan(cockpit, weight, quarantine) if weights is not None else ()
+    debt = debt_plan(cockpit, weight) if weights is not None else ()
     subject_counts: dict[str, int] = {}
     for domain in cockpit.domains:
         for finding in domain.findings:

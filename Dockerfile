@@ -2,10 +2,7 @@
 #
 # One image for every process: the web application and the five
 # collectors are services of `docker-compose.yml`, each running this
-# image with a different command (see `docker/entrypoint.sh`). The
-# knowledge-integrity validator stays a command of the same image:
-#
-#   docker run --rm bigbrother1969/aistack-core:<version> validate
+# image with a different command (see `docker/entrypoint.sh`).
 #
 # The `docker` client, copied as a single static binary from Docker's
 # own image, is how AIStack observes and throttles the host's

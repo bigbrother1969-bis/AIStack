@@ -131,15 +131,6 @@ A service started only when needed is declared with `on_demand: true` in
 `service_categorization.yml`: stopped, it is not counted as an inventory
 gap.
 
-AIStack's own code that is no longer used first goes through a
-**quarantine** (`OPS-0012`) before it is deleted: it stays in place for six
-weeks, and any use of it is recorded. While it is not empty, the quarantine
-counts in the technical debt (15 points, once); a line of the card says how
-many items it holds, the review date and the number of uses recorded, and
-names those that were used or are ready to be deleted. The detail:
-`python -m aistack.cli.quarantine_report` (with Docker:
-`docker compose exec web python -m aistack.cli.quarantine_report`).
-
 A click on a score's badge ("to watch", "action required"), on the
 console as in the cockpit, opens the **action plan**: what to do first,
 domain by domain, ranked by what each action gains on the score, with
@@ -578,7 +569,7 @@ to install* section of the repository's README. In order:
 2. **The code**: clone the repository into `/srv/aistack`, create the Python
    environment (`python3.13 -m venv .venv`, then
    `.venv/bin/python -m pip install -e ".[dev]"`), and check that `pytest -q`
-   and `python -m aistack.cli.knowledge_integrity` pass.
+   passes.
 3. **The declarations**: under `src/aistack/*/definitions/`, at least the
    host name and the two ports (`instance_config.yml`), the provider's
    address and the public address (`authentication.yml`), the topology, the

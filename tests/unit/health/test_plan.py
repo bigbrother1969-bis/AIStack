@@ -6,7 +6,7 @@ from aistack.contracts.health_score import DomainWeight, HealthScoreWeights
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.storage_reading import StorageReading
 from aistack.health.cockpit import HealthCockpit, HealthDomain
-from aistack.health.plan import QUARANTINE, debt_plan, health_plan
+from aistack.health.plan import debt_plan, health_plan
 from aistack.health.score import compute_health_score
 
 DEBT = "OPS-0004/technical-debt"
@@ -71,13 +71,10 @@ def test_a_clean_or_unmeasured_domain_is_not_an_action():
     assert health_plan(cockpit, WEIGHTS) == ()
 
 
-def test_debt_groups_gain_one_weight_each_and_the_quarantine_waits_last():
-    plan = debt_plan(COCKPIT, 15, quarantine=(finding("Q-001"),))
+def test_debt_groups_gain_one_weight_each():
+    plan = debt_plan(COCKPIT, 15)
 
-    assert [(action.group, action.gain, action.waiting) for action in plan] == [
-        ("Tests PRA", 15, False),
-        (QUARANTINE, 15, True),
-    ]
+    assert [(action.group, action.gain) for action in plan] == [("Tests PRA", 15)]
     # A finding not qualified technical debt is no debt to clear.
     assert all(action.group != "Stockage" for action in plan)
 

@@ -183,6 +183,11 @@ def test_the_rule_is_measured_over_a_heritage_that_can_break_it():
     `list`, whose only implementation was an in-memory dict never
     called from any CLI or generator. Same reason, same discipline:
     one fewer real abstract base, not a re-measured floor.
+
+    **Lowered to three for 2.0.0-rc2 (2026-10-10)**, when every module
+    no entry point reaches was removed, with the fifteen abstract bases
+    only they declared: `OperationEngine`, `OperationRegistry` and
+    `TraceRepository` remain.
     """
 
     bases = [
@@ -191,4 +196,4 @@ def test_the_rule_is_measured_over_a_heritage_that_can_break_it():
         if getattr(cls, "__abstractmethods__", frozenset())
     ]
 
-    assert len(bases) >= 18
+    assert len(bases) >= 3

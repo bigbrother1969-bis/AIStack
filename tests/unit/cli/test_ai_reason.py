@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import ai_reason as cli
-from aistack.cli import runtime_diagnose
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.temperature_reading import TemperatureReading
 
@@ -244,8 +243,4 @@ def test_main_does_not_record_reasoning_history_when_nothing_was_asked(
 
 
 def test_the_default_resource_priority_path_matches_runtime_diagnoses():
-    assert (
-        cli.DEFAULT_RESOURCE_PRIORITY
-        == runtime_diagnose.DEFAULT_RESOURCE_PRIORITY
-    )
     assert cli.DEFAULT_RESOURCE_PRIORITY.exists()

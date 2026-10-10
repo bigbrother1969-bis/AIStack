@@ -18,13 +18,10 @@ gain_zero: "Fixing this domain does not change the score on its own."
 gain_one: "+{points} from the first finding fixed."
 gain_one_zero: "One finding fixed alone changes nothing while the domain keeps enough to stay at zero: fix them all."
 debt_gain: "+{points} points once this group carries no debt"
-waiting: "Nothing to do now: the quarantine settles at its review date."
 how: "How:"
 findings: "{count} finding(s)"
 diagnose: "Diagnose with the AI assistant"
 back_to_health: "See the Health cockpit"
-group:
-  quarantine: "Code in quarantine"
 how_to:
   storage: "Free some space on the mount point shown, or raise its threshold in ./config/storage_thresholds.yml if the value is normal (OPS-0005)."
   services: "Read the container's logs (docker logs) to see why it restarts or is unhealthy, then fix and restart it; the AI assistant guides you step by step."
@@ -35,7 +32,6 @@ how_to:
   inventory_gap: "Declare the container in ./config/service_categorization.yml, mark it on_demand: true if it only runs on demand, or stop it if it should not run (OPS-0011)."
   hosts: "On the host: systemctl status aistack-host-collector.timer, then journalctl -u aistack-host-collector; for a host whose records are on a shared disk, also check that disk is mounted on both sides. python -m aistack.cli.hosts gives each host's last write (ADR-0020)."
   data_budget: "python -m aistack.cli.data_budget shows what takes the room; --compress compresses the observations older than the window right away (nothing is deleted). Otherwise, shorten compress_after_days or raise budget_mb in ./config/data_budget.yml (ADR-0021)."
-  quarantine: "Unused code is deleted at the review; an item that was used leaves the quarantine. The detail: python -m aistack.cli.quarantine_report (OPS-0012)."
   other: "Read the fix proposed for each finding; the AI assistant guides you step by step."
 tooltip:
   back_to_health: "Open the Health cockpit: every domain and its findings in detail"

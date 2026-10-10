@@ -136,15 +136,6 @@ Un service qu'on ne lance qu'à la demande se déclare avec
 `on_demand: true` dans `service_categorization.yml` : arrêté, il n'est pas
 compté comme un écart d'inventaire.
 
-Le code d'AIStack qui ne sert plus passe d'abord par une **quarantaine**
-(`OPS-0012`) avant d'être effacé : il reste en place six semaines, et toute
-utilisation est enregistrée. Tant qu'elle n'est pas vide, la quarantaine
-compte dans la dette technique (15 points, une fois) ; une ligne de la
-carte dit combien d'éléments elle contient, la date de révision et le
-nombre d'utilisations constatées, et nomme ceux qui ont servi ou sont prêts
-à effacer. Le détail : `python -m aistack.cli.quarantine_report` (avec
-Docker : `docker compose exec web python -m aistack.cli.quarantine_report`).
-
 Un clic sur la pastille d'un score (« à surveiller », « action requise »),
 sur la console comme dans le Cockpit, ouvre le **plan d'action** : ce qu'il
 faut faire d'abord, domaine par domaine, classé par ce que chaque action
@@ -526,7 +517,7 @@ section *How to install* du README du dépôt. Dans l'ordre :
 2. **Le code** : cloner le dépôt dans `/srv/aistack`, créer l'environnement
    Python (`python3.13 -m venv .venv`, puis
    `.venv/bin/python -m pip install -e ".[dev]"`), et vérifier que
-   `pytest -q` et `python -m aistack.cli.knowledge_integrity` passent.
+   `pytest -q` passe.
 3. **Les déclarations** : sous `src/aistack/*/definitions/`, au minimum le
    nom de l'hôte et les deux ports (`instance_config.yml`), l'adresse du
    fournisseur et l'adresse publique (`authentication.yml`), la topologie,

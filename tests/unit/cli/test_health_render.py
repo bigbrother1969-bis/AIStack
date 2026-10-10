@@ -39,7 +39,6 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import health_render as cli
-from aistack.cli import runtime_diagnose
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
@@ -1229,7 +1228,6 @@ def test_the_default_storage_thresholds_path_matches_runtime_diagnoses():
     stayed in sync: both must resolve to the exact same file on disk.
     """
 
-    assert cli.DEFAULT_STORAGE_THRESHOLDS == runtime_diagnose.DEFAULT_STORAGE_THRESHOLDS
     assert cli.DEFAULT_STORAGE_THRESHOLDS.exists()
 
 
@@ -1239,7 +1237,6 @@ def test_the_default_backup_thresholds_path_matches_runtime_diagnoses():
     for `OPS-0006`'s own file.
     """
 
-    assert cli.DEFAULT_BACKUP_THRESHOLDS == runtime_diagnose.DEFAULT_BACKUP_THRESHOLDS
     assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()
 
 
@@ -1249,7 +1246,6 @@ def test_the_default_gpu_thresholds_path_matches_runtime_diagnoses():
     for `OPS-0007`'s own file.
     """
 
-    assert cli.DEFAULT_GPU_THRESHOLDS == runtime_diagnose.DEFAULT_GPU_THRESHOLDS
     assert cli.DEFAULT_GPU_THRESHOLDS.exists()
 
 

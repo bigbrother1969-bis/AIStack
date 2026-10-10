@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aistack.contracts.quarantine_reading import QuarantineReading
 from aistack.contracts.health_score import HealthScore
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.generators.history import write_artifact_with_history
@@ -51,8 +50,6 @@ class HealthHtmlArtifactGenerator:
         technical_debt_note: str = "",
         lang: str | None = None,
         troubleshooting_base_url: str | None = None,
-        quarantine: tuple[QuarantineReading, ...] = (),
-        quarantine_note: str = "",
     ) -> Path:
         content = render_html(
             cockpit,
@@ -62,8 +59,6 @@ class HealthHtmlArtifactGenerator:
             technical_debt_note=technical_debt_note,
             lang=lang,
             troubleshooting_base_url=troubleshooting_base_url,
-            quarantine=quarantine,
-            quarantine_note=quarantine_note,
         )
         write_artifact_with_history(content, output_path)
 

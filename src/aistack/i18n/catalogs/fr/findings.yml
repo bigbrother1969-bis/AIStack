@@ -93,16 +93,6 @@ consumption:
   hot_others:
     interpretation: "L'hôte a aussi relevé {celsius} °C sur {sensor} et {others} autre(s) capteur(s), au niveau ou au-dessus de son propre seuil déclaré — une conséquence physique corrélée à cette même consommation ({qualification})."
 
-quarantine:
-  used:
-    interpretation: "{entry} ({paths}) est en quarantaine depuis le {since} mais a servi {uses} fois, la dernière le {last} : ce n'est pas du code mort."
-    remediation: "Sortir {entry} de src/aistack/quarantine/register.yml et retirer ses alarmes : le code sert encore."
-  ready:
-    interpretation: "{entry} ({paths}) est en quarantaine depuis le {since} et n'a jamais servi avant sa date de revue, le {review}."
-    remediation: "Effacer les fichiers de {entry} avec les corrections que liste le registre, puis retirer l'entrée."
-  watched:
-    interpretation: "{entry} ({paths}) est du code mort en quarantaine depuis le {since} ; aucune utilisation constatée à ce jour."
-    remediation: "Rien à faire avant le {review}, sa date de revue."
 
 host_silence:
   silent:

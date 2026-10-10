@@ -17,7 +17,7 @@ from aistack.contracts.health_score import HealthScore
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.contracts.technical_debt_score import TechnicalDebtScore
 from aistack.health.labels import bucket_label, domain_label
-from aistack.health.plan import QUARANTINE, DebtAction, HealthAction
+from aistack.health.plan import DebtAction, HealthAction
 from aistack.i18n import Languages, Translator, default_languages, translator_for
 from aistack.i18n.findings import finding_interpretation, finding_remediation
 from aistack.renderers.assets import MARK_DATA_URI
@@ -45,12 +45,11 @@ HOW_TO = {
     "Écarts d'inventaire": "plan.how_to.inventory_gap",
     "Hôtes": "plan.how_to.hosts",
     "Données d'AIStack": "plan.how_to.data_budget",
-    QUARANTINE: "plan.how_to.quarantine",
 }
 
 
 def _group_label(t: Translator, group: str) -> str:
-    return t("plan.group.quarantine") if group == QUARANTINE else domain_label(t, group)
+    return domain_label(t, group)
 
 
 def _how(t: Translator, group: str) -> str:
@@ -65,7 +64,7 @@ def _finding(
     subject_counts: dict[str, int],
 ) -> str:
     diagnose = ""
-    if base_url and domain != QUARANTINE:
+    if base_url:
         # The same routing key the Health cockpit's own link uses.
         key = finding.subject if subject_counts.get(finding.subject, 0) <= 1 else f"{domain}::{finding.subject}"
         diagnose = (
@@ -138,12 +137,10 @@ def _debt_section(
     if score is not None and not actions:
         parts.append(f'<p>{escape_text(t("plan.debt_none"))}</p>')
     for rank, action in enumerate(actions, 1):
-        waiting = f'<p class="note">{escape_text(t("plan.waiting"))}</p>' if action.waiting else ""
         parts.append(
-            f'<article class="action{" waiting" if action.waiting else ""}">'
+            '<article class="action">'
             f'<h3><span class="rank">{rank}</span> {escape_text(_group_label(t, action.group))} '
             f'<span class="gain">{escape_text(t("plan.debt_gain", points=action.gain))}</span></h3>'
-            f"{waiting}"
             f'<p class="how"><strong>{escape_text(t("plan.how"))}</strong> {escape_text(_how(t, action.group))}</p>'
             f'<p class="count">{escape_text(t("plan.findings", count=len(action.findings)))}</p>'
             "<ul>\n"
@@ -214,7 +211,6 @@ section { margin-bottom: 2rem; }
   border: 1px solid #dde4ed; border-radius: 8px; padding: .9rem 1.2rem;
   margin-bottom: 1rem; background: #fff;
 }
-.action.waiting { background: #fafafa; }
 .action h3 { margin: 0 0 .4rem; font-size: 1.05rem; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
 .rank {
   display: inline-flex; align-items: center; justify-content: center;

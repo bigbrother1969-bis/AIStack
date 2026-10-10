@@ -9,7 +9,7 @@ from aistack.health.plan import debt_plan, health_plan
 from aistack.renderers.console.html import render_html as render_console
 from aistack.renderers.health.html import render_html as render_health
 from aistack.renderers.plan.html import render_plan
-from tests.unit.health.test_plan import COCKPIT, WEIGHTS, finding
+from tests.unit.health.test_plan import COCKPIT, WEIGHTS
 from tests.unit.web.test_every_control_has_a_tooltip import untitled
 
 SCORE = HealthScore(value=81, measured_domains=3, total_domains=3, bucket=TO_WATCH)
@@ -19,7 +19,7 @@ DEBT = TechnicalDebtScore(value=70, findings=(), bucket=ACTION_REQUIRED)
 def page(lang: str = "fr", base_url: str | None = "http://gigabyte:8186/troubleshooting") -> str:
     return render_plan(
         health_plan(COCKPIT, WEIGHTS),
-        debt_plan(COCKPIT, 15, quarantine=(finding("Q-001"),)),
+        debt_plan(COCKPIT, 15),
         score=SCORE,
         debt_score=DEBT,
         weight=15,
@@ -37,10 +37,7 @@ def test_the_plan_ranks_and_says_how_and_what_it_gains():
     assert "+50 points quand ce domaine" in text
     assert "il faut les corriger tous" in text
     assert "./config/pra_tests.yml" in text and "scripts/restore_aistack.sh" in text
-    assert "Code en quarantaine" in text and "Rien à faire maintenant" in text
     assert 'href="http://gigabyte:8186/troubleshooting/#finding-wordpress"' in text
-    # The quarantined code has no troubleshooting finding to open.
-    assert "#finding-Q-001" not in text
     assert untitled(text) == []
 
 

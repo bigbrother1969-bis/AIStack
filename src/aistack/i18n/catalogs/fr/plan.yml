@@ -19,13 +19,10 @@ gain_zero: "Corriger ce domaine ne change pas le score à lui seul."
 gain_one: "+{points} dès le premier constat corrigé."
 gain_one_zero: "Un constat corrigé seul ne change rien tant que le domaine en garde assez pour rester à zéro : il faut les corriger tous."
 debt_gain: "+{points} points quand ce groupe n'a plus de dette"
-waiting: "Rien à faire maintenant : la quarantaine se règle à sa date de revue."
 how: "Comment faire :"
 findings: "{count} constat(s)"
 diagnose: "Diagnostiquer avec l'assistant IA"
 back_to_health: "Voir le Cockpit Santé"
-group:
-  quarantine: "Code en quarantaine"
 how_to:
   storage: "Libère de la place sur le point de montage indiqué, ou relève son seuil dans ./config/storage_thresholds.yml si la valeur est normale (OPS-0005)."
   services: "Regarde les journaux du conteneur (docker logs) pour comprendre pourquoi il redémarre ou n'est pas sain, puis corrige et redémarre-le ; l'assistant IA guide pas à pas."
@@ -36,7 +33,6 @@ how_to:
   inventory_gap: "Déclare le conteneur dans ./config/service_categorization.yml, marque-le on_demand: true s'il ne tourne qu'à la demande, ou arrête-le s'il ne doit pas tourner (OPS-0011)."
   hosts: "Sur l'hôte : systemctl status aistack-host-collector.timer, puis journalctl -u aistack-host-collector ; pour un hôte dont les relevés sont sur un disque partagé, vérifie aussi que ce disque est monté des deux côtés. python -m aistack.cli.hosts dit la dernière écriture de chaque hôte (ADR-0020)."
   data_budget: "python -m aistack.cli.data_budget montre ce qui prend la place ; --compress compresse tout de suite les observations plus anciennes que la fenêtre (rien n'est effacé). Sinon, raccourcis compress_after_days ou relève budget_mb dans ./config/data_budget.yml (ADR-0021)."
-  quarantine: "Le code inutilisé est effacé à la revue ; un élément qui a servi sort de la quarantaine. Le détail : python -m aistack.cli.quarantine_report (OPS-0012)."
   other: "Lis la correction proposée pour chaque constat ; l'assistant IA guide pas à pas."
 tooltip:
   back_to_health: "Ouvrir le Cockpit Santé : chaque domaine et ses constats en détail"

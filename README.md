@@ -604,6 +604,30 @@ pytest -q && python -m aistack.cli.knowledge_integrity
 sudo systemctl restart aistack-web
 ```
 
+### With the installation script and assistant (2.0)
+
+The simplest way (`ADR-0023`), on a Debian-family host (Debian, Ubuntu,
+Linux Mint, LMDE), as your usual account with `sudo`:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/v<version>/scripts/install.sh
+bash install.sh --dry-run          # says what it would do, changes nothing
+bash install.sh --version <version>
+```
+
+The script installs Docker and Compose when missing, lays out
+`/srv/aistack` (with `COMPOSE_FILE=docker-compose.yml:config/volumes.yml`
+in `.env`), offers Pocket ID, Gotify, Syncthing and Ollama, starts
+AIStack and prints `http://<server>:8186/setup/open?token=…`. That
+address opens the **installation assistant**, on the local network only:
+the host, the public address (with the reverse-proxy hosts to create),
+signing in (the Pocket ID procedure, the client, the fallback
+administrator), the folders AIStack reads, the API keys with how to get
+each, then a check of every prerequisite. Nothing is edited by hand;
+the manual's *Setting up a new installation* follows the same path.
+With `COMPOSE_FILE` set, Compose no longer loads a
+`docker-compose.override.yml` by itself: add it to that line if you use one.
+
 ### With Docker (from 1.8)
 
 From 1.8 on, the image runs AIStack itself (`ADR-0017`): the web

@@ -289,8 +289,9 @@ et, quand le service le permet, **Tester**. Une valeur saisie ici est gardée
 dans le dossier des données (`secrets/api_keys.json`, lisible par AIStack
 seul) et passe avant `.env.web` ; effacée, celle de `.env.web` revient. La
 ligne de chaque clé dit quand elle est prise en compte (tout de suite, au
-prochain passage de la vigie, au redémarrage d'un conteneur). Les secrets de
-connexion (Pocket ID, administrateur local) restent dans `.env.web`.
+prochain passage de la vigie, au redémarrage d'un conteneur). Chaque clé dit aussi comment l'obtenir (« Comment l'obtenir »). Les secrets
+de connexion (Pocket ID, administrateur local) n'y sont pas : ils restent
+dans `.env.web`, ou dans ce qu'a gardé l'assistant d'installation.
 
 ## Time Machine
 
@@ -377,19 +378,147 @@ recommence. Le graphe voit chaque action au prochain `timemachine_rebuild`.
 
 ## Mise en route d'une nouvelle installation
 
-Le détail des prérequis et des précautions est dans la section *How to
-install* du README du dépôt. Dans l'ordre :
+Une nouvelle installation se fait avec Docker, en deux temps : un script
+pose la base sur le serveur, puis l'**assistant d'installation**, dans le
+navigateur, demande tout le reste, une étape après l'autre. Aucun
+fichier n'est à modifier à la main.
 
-1. **Prérequis** : un hôte Linux avec systemd, Docker et Docker Compose,
-   Python 3.13, git, un fournisseur OpenID Connect (Pocket ID) joignable en
-   HTTPS, et un reverse proxy avec TLS pour l'adresse publique. En option :
-   Ollama (l'IA), Syncthing (la musique), Beszel (les métriques).
+### Avec Docker
+
+**Avant de commencer.**
+
+- Un serveur Linux de la famille Debian : Debian, Ubuntu, Linux Mint ou
+  LMDE. Un autre système reçoit la liste de ce qu'il faut installer, et
+  le script s'arrête.
+- Ton compte habituel, avec `sudo`. Pas `root`.
+- Pour se connecter depuis l'extérieur avec Pocket ID (passkeys) : un nom
+  de domaine, un reverse proxy en HTTPS (Nginx Proxy Manager, par
+  exemple), et la box qui renvoie les ports 80 et 443 vers lui. Sans
+  cela, seul l'administrateur de secours se connecte, depuis le réseau
+  local.
+
+**1. Le script.** Sur le serveur, la version à installer à la place de
+`<version>` :
+
+```
+curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/v<version>/scripts/install.sh
+bash install.sh --dry-run      # dit ce qu'il ferait, sans rien changer
+bash install.sh --version <version>
+```
+
+Il lit d'abord, puis demande avant chaque changement :
+
+1. **le système** ;
+2. **Docker et Docker Compose**, depuis le dépôt de Docker, s'ils
+   manquent ; ton compte est ajouté au groupe `docker` ;
+3. **le dossier d'AIStack**, `/srv/aistack` (ou celui donné par `--dir`) :
+   `docker-compose.yml`, `.env`, `config/`, `data/`, `.env.web` ;
+4. **les prérequis**, chacun facultatif, chacun dans son propre dossier
+   `/srv/<nom>` : **Pocket ID** (il demande le nom de domaine), **Gotify**
+   (les notifications), **Syncthing** (la synchronisation vers les
+   appareils) et **Ollama** avec le modèle `qwen2.5:3b` (l'IA locale, en
+   secours de Gemini) ;
+5. **le démarrage d'AIStack**, puis l'adresse de l'assistant.
+
+Le script n'affiche jamais de secret : ceux qu'il crée vont dans un
+fichier lisible par toi seul, et il dit lequel. Relancé, il ne refait que
+ce qui manque.
+
+**2. L'assistant d'installation.** Le script finit par une adresse de la
+forme `http://<adresse du serveur>:8186/setup/open?token=…` : ouvre-la
+depuis un poste du réseau local. Le jeton qu'elle porte ouvre
+l'assistant, et lui seul ; il reste valable jusqu'à la fin de
+l'assistant. Adresse perdue ? Sur le serveur :
+
+```
+cd /srv/aistack
+docker compose exec web python -m aistack.cli.setup_token
+```
+
+Six étapes, chacune enregistrée depuis sa page :
+
+1. **L'hôte** : le nom du serveur sur le réseau local (son adresse IP
+   s'il ne répond pas depuis un autre poste), le port public (8183), le
+   port du réseau local (8186) et la phase. Laisse **Mise au point**
+   pendant l'installation.
+2. **L'adresse publique** : le nom de domaine, le reverse proxy et les
+   deux noms, `aistack.<domaine>` et `id.<domaine>`. La page donne
+   ensuite les deux hôtes à créer dans le reverse proxy, avec l'adresse
+   et le port vers lesquels chacun renvoie, puis vérifie qu'ils
+   répondent.
+3. **La connexion** : la procédure dans Pocket ID (le premier compte sur
+   `https://id.<domaine>/setup`, le groupe `aistack_admins`, le client
+   OIDC et ses **quatre adresses**, que la page écrit pour toi), puis
+   l'identifiant et le secret du client, et le mot de passe de
+   l'**administrateur de secours**. Le secret n'est plus jamais affiché ;
+   le mot de passe est haché, jamais gardé en clair.
+4. **Le stockage** : `/media`, `/srv` et `/opt` sont toujours lus ; coche
+   les autres disques du serveur, ou tape d'autres dossiers (un par
+   ligne). AIStack les lit, en lecture seule, au même chemin.
+5. **Les clés d'API** : chaque clé avec la façon de l'obtenir (Gemini,
+   Gotify, Syncthing…), **Tester** pour la vérifier. Aucune n'est
+   indispensable.
+6. **La vérification** : chaque prérequis est interrogé une fois (Gotify
+   envoie un message de test à ton téléphone) ; ce qui ne répond pas est
+   dit, avec ce qu'on perd sans lui. **Terminer l'assistant** efface le
+   jeton.
+
+**3. Redémarrer et se connecter.** La dernière page donne la commande :
+
+```
+cd /srv/aistack
+docker compose up -d --force-recreate
+```
+
+Puis connecte-toi avec Pocket ID à l'adresse publique, ou, depuis le
+réseau local, avec l'administrateur de secours (`/login/local`). Dans
+**Paramètres**, ton profil doit indiquer **Administrateur**. Le reste — la
+topologie, les sauvegardes, les liens de la console — se déclare au fil
+de l'eau, dans `./config`.
+
+**Ce que l'assistant écrit, et où.** Les déclarations dans `./config`
+(`instance_config.yml`, `authentication.yml`, `volumes.yml`, que
+`docker compose` lit grâce à la ligne `COMPOSE_FILE` de `.env`) ; les
+secrets dans le dossier des données, lisibles par AIStack seul
+(`secrets/sign_in.json` pour la connexion, `secrets/api_keys.json` pour
+les clés d'API). Ensuite, les déclarations se modifient dans leurs
+fichiers, les clés d'API dans **Paramètres → Clés d'API**. Un dossier à
+lire en plus : ajoute-le à `./config/volumes.yml`, puis
+`docker compose up -d`.
+
+Tant qu'une déclaration indispensable garde les valeurs de l'hôte de
+référence, **chaque page affiche « ⚠ À configurer »** en haut : ce lien
+ouvre la page **Premier démarrage** (`/setup`), qui dit ce qu'il reste à
+déclarer, et, sur le réseau local, mène à l'assistant tant qu'il est
+ouvert.
+
+Quand une nouvelle version change une déclaration livrée : une copie que
+tu n'as jamais modifiée suit la nouvelle version au démarrage ; un
+fichier que tu as modifié, ou déposé toi-même, n'est jamais touché, mais
+**Paramètres → Déclarations livrées** montre la différence et la commande
+qui prend la version livrée, jusqu'à ce que tu cliques « Vu, je garde mon
+fichier ».
+
+Le service `web` a un contrôle de santé : `docker ps` le montre
+`healthy` quand l'application répond sur le port du réseau local. Un
+tableau de bord qui lit Docker (Homepage, par exemple) affiche alors
+« healthy » sur sa tuile, à condition qu'elle nomme le conteneur
+`aistack-web` (dans Homepage : `server:` et `container: aistack-web`).
+
+### Depuis le dépôt git (développement)
+
+Pour travailler sur AIStack lui-même, sans Docker. Le détail est dans la
+section *How to install* du README du dépôt. Dans l'ordre :
+
+1. **Prérequis** : un hôte Linux avec systemd, Python 3.13, git, un
+   fournisseur OpenID Connect (Pocket ID) joignable en HTTPS, et un
+   reverse proxy avec TLS pour l'adresse publique. En option : Ollama
+   (l'IA), Syncthing, Beszel (les métriques).
 2. **Le code** : cloner le dépôt dans `/srv/aistack`, créer l'environnement
    Python (`python3.13 -m venv .venv`, puis
    `.venv/bin/python -m pip install -e ".[dev]"`), et vérifier que
    `pytest -q` et `python -m aistack.cli.knowledge_integrity` passent.
-3. **Les déclarations** : sous `src/aistack/*/definitions/` (avec Docker,
-   dans `./config`, voir plus bas), au minimum le
+3. **Les déclarations** : sous `src/aistack/*/definitions/`, au minimum le
    nom de l'hôte et les deux ports (`instance_config.yml`), l'adresse du
    fournisseur et l'adresse publique (`authentication.yml`), la topologie,
    le réseau à scanner et les liens de la console. Laisse
@@ -414,65 +543,14 @@ install* du README du dépôt. Dans l'ordre :
    `timemachine_rebuild`.
 9. **Vérifier** : ouvre l'adresse du réseau local, connecte-toi ; dans
    Paramètres, ton profil doit indiquer **Administrateur**.
-10. **Passer en production** quand d'autres personnes utilisent AIStack :
-    `phase: production` dans `instance_config.yml`, puis redémarrer
-    `aistack-web`.
 
-### Avec Docker
+### Passer en production
 
-L'image Docker fait tourner AIStack lui-même : le
-fichier `docker-compose.yml` du dépôt démarre l'application web et les
-cinq collecteurs et la vigie, sept services d'une même image. Les prérequis, le
-fournisseur d'identité et le reverse proxy sont les mêmes ; Python, git
-et les unités systemd ne servent plus.
-
-```
-mkdir -p /srv/aistack && cd /srv/aistack
-# y copier docker-compose.yml et .env.example depuis le dépôt
-cp .env.example .env        # AISTACK_VERSION, tes identifiants d'utilisateur et de groupe, le groupe du socket Docker
-mkdir -p config data
-touch .env.web && chmod 600 .env.web
-docker compose pull && docker compose up -d
-```
-
-Au premier démarrage, `./config` reçoit toutes les déclarations
-qu'AIStack livre, avec les valeurs de l'hôte de référence. AIStack
-démarre quand même, et **chaque page affiche « ⚠ À configurer »** en
-haut : ce lien ouvre la page **Premier démarrage** (`/setup`), qui dit ce
-qu'il reste à déclarer, dans quel fichier, et les valeurs utilisées
-aujourd'hui :
-
-1. **l'hôte et ses ports** — `./config/instance_config.yml` ;
-2. **le fournisseur d'identité et l'adresse publique** —
-   `./config/authentication.yml` ;
-3. **le client OpenID Connect** — son identifiant et son secret dans
-   `.env.web` ;
-4. *recommandé* : **le compte de secours** —
-   `docker compose exec web python -m aistack.cli.web_admin_password`,
-   puis colle la ligne dans `.env.web`.
-
-Après chaque modification, `docker compose restart`. Une déclaration
-compte comme faite dès que son fichier a été modifié ; un fichier que tu
-as déposé toi-même dans `./config` avant le premier démarrage n'est
-jamais signalé. Quand tout l'indispensable est déclaré, le lien
-disparaît.
-
-Quand une nouvelle version change une déclaration livrée : une copie que
-tu n'as jamais modifiée suit la nouvelle version au démarrage ; un
-fichier que tu as modifié, ou déposé toi-même, n'est jamais touché, mais
-**Paramètres → Déclarations livrées** montre la différence et la commande
-qui prend la version livrée, jusqu'à ce que tu cliques « Vu, je garde mon
-fichier ».
-
-Chaque dossier de l'hôte que nomment tes déclarations (disques de
-sauvegarde, musique) s'ajoute à la fin des `volumes:` de `x-aistack`,
-au même chemin, en lecture seule.
-
-Le service `web` a un contrôle de santé : `docker ps` le montre
-`healthy` quand l'application répond sur le port du réseau local. Un
-tableau de bord qui lit Docker (Homepage, par exemple) affiche alors
-« healthy » sur sa tuile, à condition qu'elle nomme le conteneur
-`aistack-web` (dans Homepage : `server:` et `container: aistack-web`).
+Quand d'autres personnes utilisent AIStack : `phase: production` dans
+`instance_config.yml`, puis redémarrer AIStack (`docker compose restart`,
+ou `sudo systemctl restart aistack-web` sur une installation git). Une
+deuxième personne valide alors les Explications, et rien n'est jamais
+effacé.
 
 ## Sauvegarder et restaurer AIStack
 
@@ -774,6 +852,14 @@ d'action et s'ouvre dans l'assistant de pannes. Le délai se règle dans
 
 ## En cas de problème
 
+- **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :
+  il faut l'adresse avec le jeton ;
+  `docker compose exec web python -m aistack.cli.setup_token` la réaffiche
+  (`--new` en fait une nouvelle, `--reopen` rouvre un assistant terminé).
+- **La vérification de l'adresse publique échoue depuis le serveur, mais
+  l'adresse répond depuis un téléphone en 4G** : la box ne renvoie pas vers
+  l'intérieur une adresse publique demandée de l'intérieur (NAT loopback) ;
+  ce n'est pas bloquant.
 - **« Invalid callback URL » chez le fournisseur** : l'adresse de retour de
   l'adresse utilisée n'est pas déclarée à l'identique sur le client.
 - **« not allowed » chez le fournisseur** : ton compte n'est pas dans un

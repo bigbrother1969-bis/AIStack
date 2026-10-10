@@ -20,6 +20,17 @@ assert not os.environ.get("AISTACK_REFERENCE_DIR"), "the reference host's declar
 
 generated = Path(sys.argv[1])
 
+# The machine running the test is not the reference host: its own paths
+# (a pytest directory under /tmp named after its user, its home) are
+# what the pages show of where the data is, and say nothing shipped.
+_OWN_PATHS = re.compile(r"/tmp/pytest-of-[^/\s\"'<]+|" + re.escape(str(Path.home())))
+_REFERENCE = re.compile(r"GIGABYTE|persiaut|TechData|[Rr]aspberry|PNTJYZD|big-brother|192\.168\.1\.10|sarfatti")
+
+
+def reference_names(text: str) -> list[str]:
+    return _REFERENCE.findall(_OWN_PATHS.sub("", text))
+
+
 from aistack.cli import console_render, health_render  # noqa: E402
 
 # Both write to reports/generated under the working directory.
@@ -28,7 +39,7 @@ console_render.main()
 health_render.main()
 for page in ("console.html", "health.html"):
     text = (generated / page).read_text(encoding="utf-8")
-    found = re.findall(r"GIGABYTE|persiaut|TechData|[Rr]aspberry|PNTJYZD|big-brother|192\.168\.1\.10|sarfatti", text)
+    found = reference_names(text)
     print("RENDERED", page, sorted(set(found)))
 
 from tests.unit.web.test_rights import LAN_PORT, build, client  # noqa: E402
@@ -49,6 +60,6 @@ for prefix, router, _guard in app.state.routers:
         reply = web.get(path + ("?lang=fr" if "?" not in path else ""))
         print(reply.status_code, path)
         text = reply.text if reply.headers.get("content-type", "").startswith("text/html") else ""
-        found = re.findall(r"GIGABYTE|persiaut|TechData|[Rr]aspberry|PNTJYZD|big-brother|192\.168\.1\.10|sarfatti", text)
+        found = reference_names(text)
         if found:
             print("REFERENCE", path, sorted(set(found)))

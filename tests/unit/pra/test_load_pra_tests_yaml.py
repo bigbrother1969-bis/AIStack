@@ -193,7 +193,7 @@ def test_the_real_pra_tests_definition_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     readings, thresholds = load_pra_tests_yaml(
-        repo_root / "src" / "aistack" / "pra" / "definitions" / "pra_tests.yml"
+        repo_root / "tests" / "reference" / "definitions" / "pra_tests.yml"
     )
 
     by_service = {reading.service: reading for reading in readings}

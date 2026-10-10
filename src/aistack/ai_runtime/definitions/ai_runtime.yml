@@ -1,89 +1,13 @@
-# AI Runtime definition — J6, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`.
+# AIStack — the AI the troubleshooting assistant asks for its opinion.
 #
-# `host` is `127.0.0.1`, not the hostname `GIGABYTE` this file
-# declared until 2026-09-18 — corrected against a real defect found
-# while scoping J8 (`claude/PLAN-J8-AI-TROUBLESHOOTING-ASSISTANT
-# -2026-09-18.md`): `getent hosts GIGABYTE` resolves only to IPv6
-# addresses (Tailscale/MagicDNS plus a `fe80::` link-local per Docker
-# `veth`, no IPv4 at all), while `ss -tlnp` showed Ollama's own
-# systemd service bound only to `127.0.0.1:11434`, IPv4 loopback —
-# nothing ever listened at any address `GIGABYTE` could resolve to.
-# `ai_reason` always runs directly on GIGABYTE (`OPS-0002` — never
-# invoked remotely), so loopback is what the real, observed bind
-# address already asks for; the owner chose this over widening
-# Ollama's own exposure to the LAN (`OLLAMA_HOST=0.0.0.0`), which
-# nothing today needs. `port` is unchanged, `11434`, five models
-# loaded (`ollama list` on 2026-09-18: qwen2.5-coder:3b,
-# deepseek-r1:1.5b, qwen2.5:3b, nomic-embed-text:latest,
-# qwen2.5:0.5b).
-#
-# `model` is `deepseek-r1:1.5b` — the owner's explicit choice
-# (2026-09-25), reopening the same speed/reliability tradeoff decided
-# the other way on 2026-09-18 (`qwen2.5:0.5b`, still the fast
-# default's own history below). QUAL-0001 §13 recorded `qwen2.5:0.5b`
-# answering a closed YES/NO factual question incorrectly, a test
-# `deepseek-r1:1.5b` passed — the owner chose to test the slower but
-# correct model for real, against the live AI Runtime rather than
-# only QUAL-0001's older, separate experiment harness.
-#
-# `timeout` is raised to `900` (15 minutes) to match this choice:
-# `deepseek-r1:1.5b` averaged ~500s per call in QUAL-0001, with the
-# single slowest observed call (the richest context, G1, oldest
-# result in that campaign) at ~623.5s
-# (`claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md` § 10-11) —
-# comfortably under 900s, but with real margin left rather than cut
-# close, the same "generous first number, revise once timed for real"
-# discipline `OllamaEngine.DEFAULT_TIMEOUT_SECONDS` states for its own
-# 120s. `qwen2.5:0.5b` never needed this: ~15.7s average, well under
-# even the old 120s default.
-#
-# Previous declaration (2026-09-18 to 2026-09-25): `model:
-# qwen2.5:0.5b`, `timeout` unset (120s default) — chosen for speed,
-# with the same known YES/NO reliability gap named rather than hidden
-# at the time. Kept here as history, not repeated as the current
-# value: revert both lines to return to that choice.
-#
-# `translator_model` is new, 2026-09-27: the owner's own real use of
-# the guided troubleshooting UI found `deepseek-r1:1.5b` answering in
-# English regardless of the French-only instruction every prompt
-# still ends with (`aistack.ai_runtime.operations`'s own docstring) —
-# also making the just-published 1.2.0 README/RELEASE-NOTES claim
-# ("the AI Runtime's own answers stay in French") false the day it
-# shipped. The owner's chosen fix, over a stricter prompt or a model
-# change: a second, fast model translates the answer into whichever
-# language the caller actually asked for, whenever that is not
-# English. `qwen2.5:0.5b` is reused for it — the same fast model this
-# file's own history above already names as one of the five `ollama
-# list` showed installed on this host, 2026-09-18 — not a new model
-# pulled for this alone. Nine days separate that confirmation from
-# this line: re-run `ollama list` on this host before trusting it is
-# still there, the same "an owner's declared fact, not a guess"
-# discipline `model`'s own paragraph above already holds.
-
-#
-# **2026-10-09, UAT of 2.0 — `model: qwen2.5:3b`, no translator** (the
-# owner's choice). On GIGABYTE, `deepseek-r1:1.5b` took 25 to 34
-# minutes for the three answers of one finding, and what came back —
-# through `qwen2.5:0.5b`'s translation — was broken French with stray
-# Chinese characters ("gigabélet", "确保") and nothing of the host. The
-# assistant no longer depends on it: AIStack states the facts and what
-# to do itself, and the AI's opinion is asked only on a click
-# (`aistack.troubleshooting.facts`). `qwen2.5:3b`, already installed
-# (`ollama list`, 2026-09-18), writes French itself, so the translation
-# pass is no longer declared. `timeout` stays at 900 s until a real call
-# is timed. Revert both lines to return to the previous choice.
-#
-# **`gemini:` — Google Gemini first, Ollama as the fallback** (the
-# owner, 2026-10-09, same UAT, with the facts of the assistant's step 2
-# sent along: "on envoie les faits pour mieux cibler la réponse"). Asked
-# only when the key is in the environment variable named here
-# (`.env.web`, like the Gotify token); without it, or when Gemini does
-# not answer, the Ollama model above answers. The question leaves the
-# house: the troubleshooting page says so before the click. `model` is
-# one of the stable codes ai.google.dev listed on 2026-10-09
-# (`gemini-3.5-flash-lite` and `gemini-3.8-flash` recommended for new
-# projects); check it in Google AI Studio and change it here if needed.
-# Remove the block to keep everything on this host.
+# Google Gemini first, when its key is set (`gemini.api_key_env`, entered
+# in /setup or Settings → API keys): the question and its facts then
+# leave the local network, and the page says so before the click. The
+# local model of Ollama (`host`, `port`, `model`) answers when Gemini is
+# not set or does not answer — `127.0.0.1`, since Ollama listens on the
+# loopback only and AIStack runs on the host's network. `timeout`: how
+# long, in seconds, a local answer may take. Remove the `gemini` block
+# to keep every question on this server.
 
 host: 127.0.0.1
 port: 11434

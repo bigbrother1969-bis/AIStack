@@ -55,21 +55,16 @@
   <section>
     <h2>{{ t('troubleshooting.help.find_heading') }}</h2>
     <p>
-      {{ t('troubleshooting.help.find_address') }} <code>192.168.1.10</code>.
+      {{ t('troubleshooting.help.find_address') }} <code>{{ host }}</code>.
     </p>
-    <div class="note">
-      {{ t('troubleshooting.help.find_note_before') }} <code>GIGABYTE</code> {{ t('troubleshooting.help.find_note_after') }}
-    </div>
+    <div class="note">{{ t('troubleshooting.help.find_note') }}</div>
   </section>
 
   <section>
     <h2>{{ t('troubleshooting.help.ssh_heading') }}</h2>
     <p>{{ t('troubleshooting.help.ssh_from') }}</p>
-    <pre><code>ssh big-brother@192.168.1.10</code></pre>
-    <p>
-      {{ t('troubleshooting.help.ssh_replace_before') }} <code>ssh big-brother@GIGABYTE</code>{{ t('troubleshooting.help.ssh_replace_middle') }}
-      <code>big-brother</code> {{ t('troubleshooting.help.ssh_replace_after') }}
-    </p>
+    <pre><code>ssh {{ t('troubleshooting.help.ssh_account') }}@{{ host }}</code></pre>
+    <p>{{ t('troubleshooting.help.ssh_replace') }}</p>
   </section>
 
   <section>

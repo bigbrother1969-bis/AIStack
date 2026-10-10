@@ -15,13 +15,41 @@ host's values from one the owner wrote (`ADR-0017` § 4).
 
 from __future__ import annotations
 
+import fcntl
 import shutil
 import sys
 from pathlib import Path
 
 from aistack.config import CONFIG_DIR_ENV, config_dir, shipped_definitions
-from aistack.instance.declarations import follow
-from aistack.instance.first_start import remember_copies
+from aistack.instance.declarations import SEEN_RECORD, follow
+from aistack.instance.first_start import SHIPPED_RECORD, remember_copies
+
+# Which shipped declarations a directory's records describe. Generation
+# 2 (2.0.0-rc1): the package ships neutral declarations — a new
+# installation carries nothing of the reference host. A directory filled
+# before holds copies of the reference host's values that its owner
+# lives on: they become his files, never followed to the neutral ones.
+GENERATION_FILE = ".shipped-generation"
+GENERATION = "2"
+LOCK_FILE = ".config_init.lock"
+
+
+def adopt_older_copies(directory: Path) -> bool:
+    """Make every declaration of a directory filled before the neutral
+    declarations the owner's own; True when there was one to adopt."""
+
+    marker = directory / GENERATION_FILE
+    try:
+        if marker.read_text(encoding="utf-8").strip() == GENERATION:
+            return False
+    except OSError:
+        pass
+    older = any(directory.glob("*.yml"))
+    if older:
+        (directory / SHIPPED_RECORD).unlink(missing_ok=True)
+        (directory / SEEN_RECORD).unlink(missing_ok=True)
+    marker.write_text(GENERATION + "\n", encoding="utf-8")
+    return older
 
 
 def init(directory: Path) -> tuple[list[str], list[str], list[str]]:
@@ -30,6 +58,17 @@ def init(directory: Path) -> tuple[list[str], list[str], list[str]]:
     updated) file names."""
 
     directory.mkdir(parents=True, exist_ok=True)
+    # Seven containers start together and each runs this: one at a time.
+    with (directory / LOCK_FILE).open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            return _init(directory)
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+
+
+def _init(directory: Path) -> tuple[list[str], list[str], list[str]]:
+    adopt_older_copies(directory)
     copied, kept = [], []
     shipped_files = shipped_definitions()
     for shipped in shipped_files:

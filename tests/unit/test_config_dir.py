@@ -9,13 +9,14 @@ import sys
 from pathlib import Path
 
 from aistack.cli.config_init import init
-from aistack.config import CONFIG_DIR_ENV, configured, shipped_definitions
+from aistack.config import CONFIG_DIR_ENV, REFERENCE_DIR_ENV, configured, shipped_definitions
 
 SHIPPED = Path("/package/instance/definitions/instance_config.yml")
 
 
 def test_without_a_directory_the_shipped_declaration_is_read(monkeypatch):
     monkeypatch.delenv(CONFIG_DIR_ENV, raising=False)
+    monkeypatch.delenv(REFERENCE_DIR_ENV, raising=False)
 
     assert configured(SHIPPED) == SHIPPED
 
@@ -23,6 +24,7 @@ def test_without_a_directory_the_shipped_declaration_is_read(monkeypatch):
 def test_a_file_in_the_directory_replaces_the_shipped_one_and_only_that_one(monkeypatch, tmp_path: Path):
     (tmp_path / "instance_config.yml").write_text("lan_hostname: OTHER\n", encoding="utf-8")
     monkeypatch.setenv(CONFIG_DIR_ENV, str(tmp_path))
+    monkeypatch.delenv(REFERENCE_DIR_ENV, raising=False)
 
     assert configured(SHIPPED) == tmp_path / "instance_config.yml"
     other = Path("/package/pra/definitions/pra_tests.yml")
@@ -51,7 +53,7 @@ def test_a_process_started_with_the_directory_reads_its_declarations(tmp_path: P
 
     init(tmp_path)
     text = (tmp_path / "instance_config.yml").read_text(encoding="utf-8")
-    (tmp_path / "instance_config.yml").write_text(text.replace("lan_hostname: GIGABYTE", "lan_hostname: ELSEWHERE"), encoding="utf-8")
+    (tmp_path / "instance_config.yml").write_text(text.replace("lan_hostname: localhost", "lan_hostname: ELSEWHERE"), encoding="utf-8")
 
     code = (
         "from aistack.web.app import INSTANCE_CONFIG;"

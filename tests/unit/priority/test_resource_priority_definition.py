@@ -437,12 +437,7 @@ def test_the_real_resource_priority_definition_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     definition = load_resource_priority_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "priority"
-        / "definitions"
-        / "resource_priority.yml"
+        repo_root / "tests" / "reference" / "definitions" / "resource_priority.yml"
     )
 
     assert len(definition.priority) == 2

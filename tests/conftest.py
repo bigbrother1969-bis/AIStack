@@ -13,9 +13,19 @@ real one, from `aistack.hosts.health` directly.
 
 from __future__ import annotations
 
-import pytest
+import os
+from pathlib import Path
 
-from aistack.health.cockpit import HealthDomain
+# The reference host's declarations (2.0.0-rc1): the package ships
+# neutral ones, and the suite reads GIGABYTE's, as it always has, from
+# tests/reference/definitions — set before anything imports aistack,
+# since a module resolves its declaration's path when it is imported.
+REFERENCE_DEFINITIONS = Path(__file__).resolve().parent / "reference" / "definitions"
+os.environ["AISTACK_REFERENCE_DIR"] = str(REFERENCE_DEFINITIONS)
+
+import pytest  # noqa: E402
+
+from aistack.health.cockpit import HealthDomain  # noqa: E402
 
 _COCKPIT_BUILDERS = (
     "aistack.cli.health_render",

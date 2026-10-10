@@ -3,7 +3,7 @@
 title: "AIStack — Découverte réseau (utilisateurs SSH)"
 heading: "Découverte réseau — utilisateurs SSH"
 meta: "Sous-réseau scanné : {cidr} — variable d'environnement pour la clé SSH : {key_env} — délai de connexion : {timeout}s"
-warning: "Cette page tourne uniquement sur le LAN, jamais via aistack.persiaut-family.fr. Chaque nom d'utilisateur ajouté ici sera essayé, sans surveillance, contre chaque hôte trouvé par le scan réseau — n'ajoute que des utilisateurs réels que tu contrôles."
+warning: "Cette page tourne uniquement sur le LAN, jamais par l'adresse publique. Chaque nom d'utilisateur ajouté ici sera essayé, sans surveillance, contre chaque hôte trouvé par le scan réseau — n'ajoute que des utilisateurs réels que tu contrôles."
 list_heading: "Utilisateurs candidats, essayés dans l'ordre"
 remove: "Retirer"
 empty: "Aucun utilisateur déclaré — le scan n'authentifiera contre aucun hôte tant qu'un nom n'est pas ajouté."

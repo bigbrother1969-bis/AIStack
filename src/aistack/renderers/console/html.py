@@ -194,7 +194,7 @@ def _render_aside_text(t: Translator, identity: ConsoleIdentity | None) -> str:
         f'  <p class="aside-copyright">'
         f'{escape_text(t("console.aside.copyright", year=identity.copyright_year, publisher=identity.publisher))}'
         f"</p>\n"
-        if identity is not None
+        if identity is not None and identity.publisher
         else ""
     )
 

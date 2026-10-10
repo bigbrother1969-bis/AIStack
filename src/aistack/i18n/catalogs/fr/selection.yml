@@ -62,7 +62,7 @@ tooltip:
   select: "Inclure {label} (et tout son contenu) dans la synchronisation"
 
 all_pairs: "Tous les contenus"
-waiting: "Sélection enregistrée : elle sera appliquée sur GIGABYTE dans les deux minutes (exécutant aistack-sync), puis Syncthing l'enverra à l'appareil."
+waiting: "Sélection enregistrée : elle sera appliquée sur le serveur dans les deux minutes (exécutant aistack-sync), puis Syncthing l'enverra à l'appareil."
 recorded: "{count} répertoire(s) enregistré(s) pour {pair}."
 share:
   reshare: "Relancer le partage"
@@ -75,7 +75,7 @@ share:
   failed: "Syncthing a refusé : {reason}"
 pairs:
   heading: "Synchroniser vers un appareil"
-  intro: "Un contenu de GIGABYTE, un appareil : coche ce qui doit partir, l'exécutant sur GIGABYTE l'applique, Syncthing le transporte. Rien ne revient vers GIGABYTE."
+  intro: "Un contenu du serveur, un appareil : coche ce qui doit partir, l'exécutant sur le serveur l'applique, Syncthing le transporte. Rien ne revient vers le serveur."
   destination_quota: "quota {quota} Go"
   destination_no_quota: "sans quota"
   selected: "{size} Go cochés"

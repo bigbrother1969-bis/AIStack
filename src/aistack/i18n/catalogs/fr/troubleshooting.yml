@@ -62,7 +62,7 @@ status:
   nothing_applied: "Aucune application en cours pour {subject} — relance depuis la liste."
   not_applyable: "Aucune correction automatique disponible pour {subject} — seules les pannes de consommation CPU proposent ce bouton, relance depuis la liste."
 message:
-  already_priority: "{subject} est déjà classé « priority » dans resource_priority.yml — cet assistant ne sait appliquer que le classement « background » (utilise priority_ui, http://GIGABYTE:8182, pour changer un classement priority)."
+  already_priority: "{subject} est déjà classé « priority » dans resource_priority.yml — cet assistant ne sait appliquer que le classement « background » (change un classement « priority » depuis l'écran Priorité CPU)."
   already_background: "{subject} était déjà classé « background » dans resource_priority.yml — rien à écrire."
   added: "{subject} ajouté à background.containers dans resource_priority.yml (ralenti partagé : {cpus} CPU dès que le moniteur resource-priority tourne)."
 help:
@@ -73,15 +73,13 @@ help:
   terminal_heading: "1. Ouvrir un terminal sur ton ordinateur"
   terminal_before: "Sous Linux, le raccourci"
   terminal_after: "ouvre un terminal sur la plupart des environnements de bureau (dont Cinnamon, utilisé par Linux Mint). S'il ne fait rien sur ta machine, cherche « Terminal » dans le menu des applications."
-  find_heading: "2. Trouver GIGABYTE sur ton réseau local"
-  find_address: "Adresse observée pendant cette session :"
-  find_note_before: "Cette adresse peut changer si ta box réattribue les adresses (DHCP) — ce n'est pas garanti à vie. Si elle ne répond plus, essaie d'abord le nom"
-  find_note_after: "à la place de l'adresse ; sinon, consulte la liste des appareils connectés dans l'interface de ta box/routeur."
+  find_heading: "2. Trouver le serveur sur ton réseau local"
+  find_address: "Son nom (ou son adresse) sur le réseau local, déclaré à l'installation :"
+  find_note: "S'il ne répond pas, essaie son adresse IP : la liste des appareils connectés de ta box ou de ton routeur la donne. La box peut la changer (DHCP) si elle n'est pas réservée."
   ssh_heading: "3. Se connecter en SSH"
   ssh_from: "Depuis le terminal ouvert à l'étape 1 :"
-  ssh_replace_before: "(remplace l'adresse par celle que tu as retrouvée à l'étape 2 si elle a changé, ou essaie"
-  ssh_replace_middle: "). Le mot de passe du compte"
-  ssh_replace_after: "sur GIGABYTE est ensuite demandé — rien ne s'affiche à l'écran pendant que tu tapes, c'est normal en SSH, pas un bug."
+  ssh_account: "ton-compte"
+  ssh_replace: "Remplace « ton-compte » par ton compte sur le serveur ; son mot de passe est ensuite demandé — rien ne s'affiche à l'écran pendant que tu tapes, c'est normal en SSH, pas un bug."
   paste_heading: "4. Copier-coller une commande"
   paste_before: "Pour coller dans la plupart des terminaux Linux :"
   paste_keys: "Ctrl+Maj+V"
@@ -151,7 +149,7 @@ guide:
   consumption: "Si {subject} n'a pas besoin du processeur en priorité, le bouton ci-dessous le classe en arrière-plan : il sera bridé dès qu'une application prioritaire (Jellyfin, Immich) travaille. S'il doit au contraire passer avant les autres, déclare-le dans priority de resource_priority.yml."
   uncovered_state: "Une fois une copie réelle de {subject} en place ailleurs que sur son propre disque, remplace son entrée dans backup_strategy.yml par le bloc ci-dessous, rempli avec le vrai moteur et la vraie commande. Tant qu'aucune copie n'existe, le constat reste affiché : c'est un risque connu, pas une erreur d'AIStack."
   mechanism_placeholder: "la commande ou le timer réel, et où va la copie"
-  pra_clonezilla: "{subject} est sauvegardé par des images Clonezilla : le test est de vérifier qu'une image est restaurable. Démarre GIGABYTE sur la clé Clonezilla, choisis device-image, puis l'emplacement où sont rangées les images, puis l'option « chk-img-restorable » (vérifier qu'une image est restaurable), et la dernière image de {subject}. Clonezilla relit et contrôle chaque partition sans rien écrire sur un disque. Note l'heure de début et de fin : leur écart est le rto_minutes du bloc ci-dessous."
+  pra_clonezilla: "{subject} est sauvegardé par des images Clonezilla : le test est de vérifier qu'une image est restaurable. Démarre la machine sur la clé Clonezilla, choisis device-image, puis l'emplacement où sont rangées les images, puis l'option « chk-img-restorable » (vérifier qu'une image est restaurable), et la dernière image de {subject}. Clonezilla relit et contrôle chaque partition sans rien écrire sur un disque. Note l'heure de début et de fin : leur écart est le rto_minutes du bloc ci-dessous."
   pra_clonezilla_note: "Vérification Clonezilla (chk-img-restorable) de la dernière image : l'image est restaurable ; pas une restauration complète sur un disque."
 record:
   heading: "Enregistrer le résultat de ton test"
@@ -168,7 +166,7 @@ record:
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:
-  help: "Comment ouvrir un terminal et se connecter à GIGABYTE pour appliquer une commande"
+  help: "Comment ouvrir un terminal et se connecter au serveur pour appliquer une commande"
   start: "Ouvrir ce constat : ce qu'AIStack en sait et ce que tu fais, puis l'avis de l'IA si tu le demandes"
   ask: "Demander au modèle IA son raisonnement, une explication et une suggestion, avec les faits de l'étape 2"
   next: "Étape suivante"

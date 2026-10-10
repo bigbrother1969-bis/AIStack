@@ -14,7 +14,7 @@ AIStack answers on two addresses:
 - **the public address** (for example `https://aistack.<domain_name>`),
   reachable from the internet: the console, help, legal notice, licence,
   Settings and — once signed in — Architecture and the Health Cockpit;
-- **the local-network address** (for example `http://GIGABYTE:8186`):
+- **the local-network address** (for example `http://server:8186`):
   everything above, plus the screens that show the infrastructure's history
   or act on it (CPU priority, music selection, network discovery, the
   troubleshooting assistant, the Time Machine).
@@ -179,7 +179,7 @@ Every decision is recorded and visible in the Time Machine.
 ## Sync to a device
 
 *Local network, sign-in required, recording reserved to administrators.*
-The **Selection UI** page lists, for every device paired with GIGABYTE's
+The **Selection UI** page lists, for every device paired with the server's
 Syncthing (the phone, the laptop…), every content declared in
 `./config/sync.yml`: music, photos, pictures, videos, films, series, books,
 comics, manga, documents. For one content and one device:
@@ -188,24 +188,24 @@ comics, manga, documents. For one content and one device:
   a sub-folder of a ticked folder is included; excluded folders
   (`restricted`, `lost+found`…) are never offered;
 - the **Capacity** card compares the selection with the device's quota,
-  shared by all its contents (64 GB for the phone);
-- **Record the selection** records it; the executor on GIGABYTE
+  shared by all its contents (`quota_gb` in `sync.yml`);
+- **Record the selection** records it; the executor on the server
   (`aistack-sync.timer`, every two minutes) applies it with hard links, on
   the content's own disk — no extra room taken —, and Syncthing sends it to
-  the device; nothing comes back to GIGABYTE;
+  the device; nothing comes back to the server;
 - when the Syncthing folder does not exist yet, **Create and share the
   folder** adds it to Syncthing (send only) and shares it with the device:
   accept it on the device afterwards.
 
-Install, once, on GIGABYTE: a `.aistack-sync` folder at the root of each
-content disk, owned by the account that owns the files, then the executor;
-the Syncthing container must see each disk under `/data` (`/media/BD` →
-`/data/BD`…):
+Install, once, on the server, from a copy of the repository: a
+`.aistack-sync` folder at the root of each content disk, owned by the
+account that owns the files, then the executor; the Syncthing container
+must see each disk under `/data` (`/media/Music` → `/data/Music`…):
 
 ```
-cd /srv/aistack/AIStack
-for d in /media/BD /media/Comics /media/Multimedia /media/Documents /media/Films /media/TechData; do
-  sudo install -d -o big-brother -g big-brother "$d/.aistack-sync"
+cd <copy of the repository>
+for d in /media/Music /media/Photos; do        # your content disks
+  sudo install -d -o "$USER" -g "$USER" "$d/.aistack-sync"
 done
 sudo cp deploy/systemd/aistack-sync.service deploy/systemd/aistack-sync.timer /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now aistack-sync.timer
@@ -234,7 +234,7 @@ database with its own environment).
 
 ## Dock: updating a service the governed way
 
-The services declared in `dock.yml` (WordPress to begin with) change
+The services declared in `dock.yml` (WordPress, for instance) change
 image only through the dock, from the console → *Dock* (local network,
 signed in). The page shows, for each container, the image it runs and
 whether a newer image is published for the same tag; it pulls nothing.
@@ -755,8 +755,8 @@ docker compose exec web python -m aistack.cli.data_budget --compress
 
 ## Traceability of the hosts
 
-What changes on GIGABYTE and on the Raspberry themselves, not in their
-containers, enters the Time Machine:
+What changes on the hosts themselves — the server, and the other
+machines you follow —, not in their containers, enters the Time Machine:
 - packages installed, upgraded or removed (dpkg, apt), dated by the
   hosts' own logs;
 - the files of `/etc`, of `/usr/local/bin` and `/usr/local/sbin`, the
@@ -770,31 +770,34 @@ the package history still in the logs is taken in, about eight months.
 
 The collector is one file, run on each host as root every 15 minutes:
 it only reads, has no network, and writes only to its directory.
-Installing it on GIGABYTE, from the repository:
+Installing it on the server, from a copy of the repository, for a host
+named `server` whose records go to AIStack's data directory
+(`/srv/aistack/data` with Docker):
 
 ```
-cd /srv/aistack/AIStack
-install -d -m 0750 reports/generated/hosts/gigabyte
+cd <copy of the repository>
+OUT=/srv/aistack/data/hosts/server
+install -d -m 0750 "$OUT"
 sudo install -m 0755 src/aistack/host_collector.py /usr/local/sbin/aistack-host-collector
 sudo cp deploy/host-collector/aistack-host-collector.service deploy/host-collector/aistack-host-collector.timer /etc/systemd/system/
 sudo mkdir -p /etc/systemd/system/aistack-host-collector.service.d
-printf '[Service]\nEnvironment=HOST=gigabyte\nEnvironment=OUTPUT=%s\nReadWritePaths=%s\n' \
-  "$PWD/reports/generated/hosts/gigabyte" "$PWD/reports/generated/hosts/gigabyte" \
+printf '[Service]\nEnvironment=HOST=server\nEnvironment=OUTPUT=%s\nReadWritePaths=%s\n' "$OUT" "$OUT" \
   | sudo tee /etc/systemd/system/aistack-host-collector.service.d/host.conf
 sudo systemctl daemon-reload && sudo systemctl start aistack-host-collector
 journalctl -u aistack-host-collector -n 5 --no-pager
 sudo systemctl enable --now aistack-host-collector.timer
 ```
 
-On the Raspberry, the same three files (copied from GIGABYTE with
-`scp`) and the directory `/media/BACKUP/AIStack/hosts/raspberry`, which
-GIGABYTE reads over NFS. What should not be followed (a file that
+Then declare the host in `./config/hosts.yml` (`server:` with
+`directory: hosts/server`). On another machine, the same three files
+(copied with `scp`) and a directory the server reads, an NFS-shared disk
+for instance, declared in `hosts.yml` by its absolute path. What should not be followed (a file that
 changes on its own) goes into `/etc/aistack-host-collector.conf`
 (`ignore = <path>`), as does what should be followed as well
 (`watch = <directory>`, `glob = <pattern>`).
 
 To see where each host stands — last run, events by kind, a silent host
-(no run for an hour) or an unreadable one (the Raspberry's disk not
+(no run for an hour) or an unreadable one (a shared disk not
 mounted):
 
 ```

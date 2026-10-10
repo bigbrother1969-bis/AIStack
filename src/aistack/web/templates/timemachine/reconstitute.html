@@ -8,7 +8,7 @@
   <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
-  <!--
+  {#
     `/reconstitute` — gap #3 of `claude/AUDIT-TIMEMACHINE-
     REALIGNEMENT-MAQUETTES-2026-10-02.md` ("le curseur du ruban
     n'ouvre que le /node de l'instant le plus proche — il ne
@@ -26,7 +26,7 @@
     Évolution, and a "Restaurer en bac à sable" button — that last one
     is a write, and this screen's own architecture decision forbids
     writing outright (`ADR-0011` § *Decision* 10).
-  -->
+  #}
   {{ page_nav | safe }}
   <a class="back-link" href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.back_to_streams') }}">{{ t('timemachine.back_to_streams') }}</a>
 

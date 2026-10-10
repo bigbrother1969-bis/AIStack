@@ -19,13 +19,10 @@ from aistack.i18n import Languages, default_languages, pick_localized
 
 DEFAULT_IDENTITY = configured(Path(__file__).resolve().parent / "definitions" / "console_identity.yml")
 
+# Who publishes this installation's pages is optional (2.0.0-rc1): a
+# new installation is a private one, and its legal notice says so
+# until the person running it declares themselves.
 _REQUIRED = (
-    "publisher",
-    "legal_form",
-    "siren",
-    "city",
-    "publication_director",
-    "contact_url",
     "copyright_year",
     "license",
     "license_url",
@@ -83,7 +80,7 @@ def load_console_identity(
         raise ValueError(f"console identity {path} is missing: {', '.join(missing)}")
 
     for url_field in ("contact_url", "license_url"):
-        if not str(data[url_field]).startswith("https://"):
+        if data.get(url_field) and not str(data[url_field]).startswith("https://"):
             raise ValueError(f"console identity {path}: {url_field} must be an https:// address")
 
     repositories = tuple(
@@ -102,12 +99,14 @@ def load_console_identity(
             raise ValueError(f"console identity {path}: image {image.name} must have an https:// address")
 
     return ConsoleIdentity(
-        publisher=str(data["publisher"]),
-        legal_form=pick_localized(data["legal_form"], lang, declared, f"{path}: legal_form"),
-        siren=str(data["siren"]),
-        city=str(data["city"]),
-        publication_director=str(data["publication_director"]),
-        contact_url=str(data["contact_url"]),
+        publisher=str(data.get("publisher") or ""),
+        legal_form=pick_localized(data["legal_form"], lang, declared, f"{path}: legal_form")
+        if data.get("legal_form")
+        else "",
+        siren=str(data.get("siren") or ""),
+        city=str(data.get("city") or ""),
+        publication_director=str(data.get("publication_director") or ""),
+        contact_url=str(data.get("contact_url") or ""),
         copyright_year=int(data["copyright_year"]),
         license=str(data["license"]),
         license_url=str(data["license_url"]),

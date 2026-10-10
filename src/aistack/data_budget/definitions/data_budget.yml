@@ -1,16 +1,12 @@
-# ADR-0021 — the disk budget of AIStack's data directory, and the
-# compaction of old observations. Decided by the owner, 2026-10-09
-# (measured on GIGABYTE the same day: 571 MB, 15 716 files, about
-# 12 to 23 MB written a day; the system disk at 76 %).
+# AIStack — the disk budget of AIStack's data directory (ADR-0021).
 #
 # - budget_mb: what AIStack's data may take on its disk. Past
-#   warn_percent of it, the health cockpit's "Données d'AIStack"
-#   domain has a finding; past the budget, an urgent one.
+#   warn_percent of it, the health cockpit's "Données d'AIStack" domain
+#   has a finding; past the budget, an urgent one.
 # - compress_after_days: an observation older than this is
 #   gzip-compressed in place — still read by AIStack, never deleted.
-#   The graph is rebuilt from it exactly as before.
 # - compress: the directories of the data directory whose history is
-#   compressed (each `<dir>/…/history/<stem>/` below it).
+#   compressed that way.
 
 budget_mb: 2048
 warn_percent: 80

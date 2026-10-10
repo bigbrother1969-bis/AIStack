@@ -213,12 +213,7 @@ def test_the_real_network_discovery_definition_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     definition = load_network_discovery_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "network_discovery"
-        / "definitions"
-        / "network_discovery.yml"
+        repo_root / "tests" / "reference" / "definitions" / "network_discovery.yml"
     )
 
     assert definition.cidr == "192.168.1.0/24"

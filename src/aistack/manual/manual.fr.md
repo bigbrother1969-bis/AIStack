@@ -15,7 +15,7 @@ AIStack répond sur deux adresses :
   joignable depuis internet : la console, l'aide, les mentions légales, la
   licence, les Paramètres, et — une fois connecté — Architecture et le
   Cockpit Santé ;
-- **l'adresse du réseau local** (par exemple `http://GIGABYTE:8186`) : tout ce
+- **l'adresse du réseau local** (par exemple `http://serveur:8186`) : tout ce
   qui précède, plus les écrans qui montrent l'historique de l'infrastructure
   ou qui agissent sur elle (Priorité CPU, sélection musicale, découverte
   réseau, assistant de pannes, Time Machine).
@@ -186,7 +186,7 @@ Machine.
 
 *Réseau local, connexion requise, enregistrement réservé aux
 administrateurs.* La page **Selection UI** liste, pour chaque appareil
-appairé avec le Syncthing de GIGABYTE (le téléphone, le portable…), chaque
+appairé avec le Syncthing du serveur (le téléphone, le portable…), chaque
 contenu déclaré dans `./config/sync.yml` : musique, photos, images,
 vidéos, films, séries, livres, BD, mangas, comics, documents. Pour un
 contenu et un appareil :
@@ -196,24 +196,24 @@ contenu et un appareil :
   inclus d'office ; les répertoires exclus (`restricted`, `lost+found`…)
   ne sont jamais proposés ;
 - la carte **Capacité** compare la sélection au quota de l'appareil,
-  partagé entre tous ses contenus (64 Go pour le téléphone) ;
-- **Enregistrer la sélection** l'enregistre ; l'exécutant sur GIGABYTE
+  partagé entre tous ses contenus (`quota_gb` dans `sync.yml`) ;
+- **Enregistrer la sélection** l'enregistre ; l'exécutant sur le serveur
   (`aistack-sync.timer`, toutes les deux minutes) l'applique par liens
   physiques, sur le disque du contenu — aucune place prise en plus —, et
-  Syncthing l'envoie à l'appareil ; rien ne revient vers GIGABYTE ;
+  Syncthing l'envoie à l'appareil ; rien ne revient vers le serveur ;
 - si le dossier Syncthing n'existe pas encore, **Créer et partager le
   dossier** l'ajoute à Syncthing (envoi seul) et le partage avec
   l'appareil : accepte-le ensuite sur l'appareil.
 
-Installation, une fois, sur GIGABYTE : un dossier `.aistack-sync` à la
-racine de chaque disque de contenu, au compte qui possède les fichiers,
-puis l'exécutant ; le conteneur Syncthing doit voir chaque disque sous
-`/data` (`/media/BD` → `/data/BD`…) :
+Installation, une fois, sur le serveur, depuis une copie du dépôt : un
+dossier `.aistack-sync` à la racine de chaque disque de contenu, au compte
+qui possède les fichiers, puis l'exécutant ; le conteneur Syncthing doit
+voir chaque disque sous `/data` (`/media/Musique` → `/data/Musique`…) :
 
 ```
-cd /srv/aistack/AIStack
-for d in /media/BD /media/Comics /media/Multimedia /media/Documents /media/Films /media/TechData; do
-  sudo install -d -o big-brother -g big-brother "$d/.aistack-sync"
+cd <copie du dépôt>
+for d in /media/Musique /media/Photos; do      # tes disques de contenu
+  sudo install -d -o "$USER" -g "$USER" "$d/.aistack-sync"
 done
 sudo cp deploy/systemd/aistack-sync.service deploy/systemd/aistack-sync.timer /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now aistack-sync.timer
@@ -667,7 +667,7 @@ Pour lancer un test tout de suite et voir les résultats :
 
 ## Dock : mettre à jour un service de façon gouvernée
 
-Les services déclarés dans `dock.yml` (WordPress pour commencer) ne
+Les services déclarés dans `dock.yml` (WordPress, par exemple) ne
 changent d'image que par le dock, depuis la console → *Dock* (réseau
 local, connecté). La page montre, pour chaque conteneur, l'image qui
 tourne et si une image plus récente est publiée pour le même tag ; elle
@@ -790,8 +790,9 @@ docker compose exec web python -m aistack.cli.data_budget --compress
 
 ## Traçabilité des hôtes
 
-Ce qui change sur GIGABYTE et sur le Raspberry eux-mêmes, et non dans
-leurs conteneurs, entre dans la Time Machine :
+Ce qui change sur les hôtes eux-mêmes — le serveur, et les autres
+machines que tu suis —, et non dans leurs conteneurs, entre dans la Time
+Machine :
 - les paquets installés, mis à jour ou retirés (dpkg, apt), datés par
   les journaux des hôtes ;
 - les fichiers de `/etc`, de `/usr/local/bin` et `/usr/local/sbin`, les
@@ -806,32 +807,35 @@ dans les journaux est repris, sur environ huit mois.
 
 Le collecteur est un seul fichier, qui tourne sur chaque hôte en root
 toutes les 15 minutes : il ne fait que lire, sans réseau, et n'écrit
-que dans son dossier. Installation sur GIGABYTE, depuis le dépôt :
+que dans son dossier. Installation sur le serveur, depuis une copie du
+dépôt, pour un hôte nommé `server` dont les relevés vont dans le dossier
+de données d'AIStack (`/srv/aistack/data` avec Docker) :
 
 ```
-cd /srv/aistack/AIStack
-install -d -m 0750 reports/generated/hosts/gigabyte
+cd <copie du dépôt>
+OUT=/srv/aistack/data/hosts/server
+install -d -m 0750 "$OUT"
 sudo install -m 0755 src/aistack/host_collector.py /usr/local/sbin/aistack-host-collector
 sudo cp deploy/host-collector/aistack-host-collector.service deploy/host-collector/aistack-host-collector.timer /etc/systemd/system/
 sudo mkdir -p /etc/systemd/system/aistack-host-collector.service.d
-printf '[Service]\nEnvironment=HOST=gigabyte\nEnvironment=OUTPUT=%s\nReadWritePaths=%s\n' \
-  "$PWD/reports/generated/hosts/gigabyte" "$PWD/reports/generated/hosts/gigabyte" \
+printf '[Service]\nEnvironment=HOST=server\nEnvironment=OUTPUT=%s\nReadWritePaths=%s\n' "$OUT" "$OUT" \
   | sudo tee /etc/systemd/system/aistack-host-collector.service.d/host.conf
 sudo systemctl daemon-reload && sudo systemctl start aistack-host-collector
 journalctl -u aistack-host-collector -n 5 --no-pager
 sudo systemctl enable --now aistack-host-collector.timer
 ```
 
-Sur le Raspberry, les mêmes trois fichiers (copiés depuis GIGABYTE avec
-`scp`) et le dossier `/media/BACKUP/AIStack/hosts/raspberry`, que
-GIGABYTE lit à travers NFS. Ce qui ne doit pas être suivi (un fichier
+Puis déclare l'hôte dans `./config/hosts.yml` (`server:` avec
+`directory: hosts/server`). Sur une autre machine, les mêmes trois
+fichiers (copiés avec `scp`) et un dossier que le serveur lit, par exemple
+un disque partagé en NFS, déclaré dans `hosts.yml` par son chemin absolu. Ce qui ne doit pas être suivi (un fichier
 qui change tout seul) s'écrit dans `/etc/aistack-host-collector.conf`
 (`ignore = <chemin>`), comme ce qui doit l'être en plus
 (`watch = <dossier>`, `glob = <motif>`).
 
 Pour voir où en est chaque hôte — dernier passage, événements par
 sorte, hôte silencieux (plus de passage depuis une heure) ou illisible
-(disque du Raspberry non monté) :
+(disque partagé non monté) :
 
 ```
 python -m aistack.cli.hosts

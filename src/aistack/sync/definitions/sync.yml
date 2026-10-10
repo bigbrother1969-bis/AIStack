@@ -1,87 +1,37 @@
-# ADR-0022 — what GIGABYTE's contents can be sent to, and where.
-# Decided by the owner, 2026-10-09, on the inventory of the same day.
+# AIStack — what this server's contents can be sent to, and where
+# (Selection UI, ADR-0022).
 #
-# contents: a directory of this host and the kind of files it holds
-#   (audio, images, video, books, comics, documents, any). `exclude`:
+# syncthing: this server's Syncthing (installed by install.sh: it sees
+#   the host's /media as /data).
+# contents: a directory of this server and the kind of files it holds
+#   (audio, images, video, books, comics, documents, any); `exclude`:
 #   directories never offered.
-# destinations:
-#   kind: syncthing — a device paired with this host's Syncthing
-#     (`device`: its name or its id). One Syncthing folder per content,
-#     on the content's own disk (<disk>/.aistack-sync/<destination>/<content>),
-#     so the selection is hard-linked, never copied.
-#   kind: kindle / usb — a removable medium plugged into this host
-#     (tranche 4.2).
-#   quota_gb: the room the destination gives all its contents together.
+# destinations: a device paired with Syncthing (`kind: syncthing`,
+#   `device`: its name or its id); `quota_gb`: the room it gives all its
+#   contents together.
 # pairs: a (content, destination) whose folder already exists elsewhere.
+#
+# Nothing is declared on a new installation; for instance:
+#
+#   contents:
+#     music:
+#       title: {fr: Musique, en: Music}
+#       source: /media/Music
+#       kind: audio
+#   destinations:
+#     phone:
+#       title: {fr: Téléphone, en: Phone}
+#       kind: syncthing
+#       device: phone
+#       quota_gb: 64
 
 syncthing:
   url: http://127.0.0.1:8384
   api_key_env: SYNCTHING_API_KEY
   timeout_seconds: 5
-  # Syncthing runs in a container that sees the host's /media as /data.
   path_map:
     /media: /data
 
-contents:
-  music:
-    title: {fr: Musique, en: Music}
-    source: /media/TechData/Storage/Music
-    kind: audio
-  photos:
-    title: {fr: Photos, en: Photos}
-    source: /media/Multimedia/Photos
-    kind: images
-  images:
-    title: {fr: Images, en: Pictures}
-    source: /media/Multimedia/Images
-    kind: images
-  videos:
-    title: {fr: Vidéos, en: Videos}
-    source: /media/Multimedia/Videos
-    kind: video
-  films:
-    title: {fr: Films, en: Films}
-    source: /media/Films/Films
-    kind: video
-  series:
-    title: {fr: Séries, en: Series}
-    source: /media/Films/Series
-    kind: video
-  books:
-    title: {fr: Livres, en: Books}
-    source: /media/BD/Books
-    kind: books
-  bd:
-    title: {fr: BD, en: Bandes dessinées}
-    source: /media/BD/BD
-    kind: comics
-  mangas:
-    title: {fr: Mangas, en: Manga}
-    source: /media/BD/Mangas
-    kind: comics
-  comics:
-    title: {fr: Comics, en: Comics}
-    source: /media/Comics/Comics
-    kind: comics
-  documents:
-    title: {fr: Documents, en: Documents}
-    source: /media/Documents
-    kind: any
-    exclude: [restricted, lost+found, System Volume Information]
-
-destinations:
-  phone:
-    title: {fr: Téléphone (SM-A176B), en: Phone (SM-A176B)}
-    kind: syncthing
-    device: PNTJYZD-7353GUU-YLN7M6G-G3YCMBE-DZIWJ72-67XBQWQ-SXQYEJC-2ZIMWAP
-    quota_gb: 64
-  latitude:
-    title: {fr: Portable (latitude), en: Laptop (latitude)}
-    kind: syncthing
-    device: latitude
-
-pairs:
-  # The music screen's folder since 2026-09-03: kept, nothing sent again.
-  music/phone:
-    target: /media/TechData/Storage/Music-Android
-    folder: music-android
+contents: {}
+destinations: {}
+pairs: {}

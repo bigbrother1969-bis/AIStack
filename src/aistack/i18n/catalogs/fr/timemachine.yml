@@ -2,7 +2,7 @@
 
 title: "AIStack — Time Machine"
 heading: "Time Machine"
-warning: "Cette page tourne uniquement sur le LAN, jamais via aistack.persiaut-family.fr. Elle affiche l'historique complet d'AIStack — commandes, paquets, versions d'images, raisonnements IA."
+warning: "Cette page tourne uniquement sur le LAN, jamais par l'adresse publique. Elle affiche l'historique complet d'AIStack — commandes, paquets, versions d'images, raisonnements IA."
 streams_intro: "Un flux par historique projeté dans le graphe (ADR-0011)."
 empty_streams: "Aucun flux dans le graphe."
 not_built:

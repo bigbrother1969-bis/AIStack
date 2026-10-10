@@ -343,12 +343,7 @@ def test_the_real_service_categorization_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     definition = load_service_categorization_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "architecture"
-        / "definitions"
-        / "service_categorization.yml"
+        repo_root / "tests" / "reference" / "definitions" / "service_categorization.yml"
     )
 
     names = [category.name for category in definition.categories]

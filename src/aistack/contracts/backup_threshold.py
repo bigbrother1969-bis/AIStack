@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
+ANY_HOST = "*"
+
+
 @dataclass(frozen=True)
 class BackupThreshold:
     """
@@ -86,6 +89,12 @@ class BackupThresholdRegister:
     def for_host(self, hostname: str) -> tuple[BackupThreshold, ...]:
         for entry in self.hosts:
             if entry.host == hostname:
+                return entry.thresholds
+
+        # `host: "*"` (2.0.0-rc1): any host the file does not name — what
+        # a new installation ships, before it knows its own host's name.
+        for entry in self.hosts:
+            if entry.host == ANY_HOST:
                 return entry.thresholds
 
         return ()

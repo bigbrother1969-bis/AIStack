@@ -74,6 +74,7 @@ legal:
   page_title: "AIStack — Mentions légales"
   title: "Mentions légales"
   publisher_heading: "Éditeur"
+  private: "Cette installation d'AIStack est privée : la personne qui la fait tourner n'a pas déclaré d'éditeur (console_identity.yml)."
   publisher_text: "{publisher}, {legal_form}, SIREN {siren}, {city}."
   director: "Directeur de la publication : {director}."
   contact: "Contact : par le site {contact_url}."

@@ -8,7 +8,7 @@
   <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
-  <!--
+  {#
     `/explication` — gap #2 of `claude/AUDIT-TIMEMACHINE-
     REALIGNEMENT-MAQUETTES-2026-10-02.md`, read-only until 1.7's fourth
     tranche (`ADR-0015`): an administrator now writes, validates or
@@ -21,7 +21,7 @@
     own — same reasoning `reconstitute.html` already holds for its own
     `view-switch` (no `view-current` here either, for the same
     reason).
-  -->
+  #}
   {{ page_nav | safe }}
   <a class="back-link" href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.back_to_streams') }}">{{ t('timemachine.back_to_streams') }}</a>
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.conftest import REFERENCE_DEFINITIONS as REFERENCE
+
 from pathlib import Path
 
 from aistack.troubleshooting import findings
@@ -30,7 +32,6 @@ def test_a_pra_finding_cites_the_declared_mechanism_and_the_entry_to_write():
     from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
     from aistack.i18n.translator import translator_for
     from aistack.troubleshooting.facts import PRA_TESTS, Declarations, guidance
-    from aistack.web.app import PACKAGE_ROOT
 
     finding = RuntimeFinding(
         subject="gigabyte",
@@ -49,9 +50,9 @@ def test_a_pra_finding_cites_the_declared_mechanism_and_the_entry_to_write():
     )
     t = translator_for("fr")
     declared = Declarations(
-        PACKAGE_ROOT / "backup_strategy" / "definitions" / "backup_strategy.yml",
-        PACKAGE_ROOT / "pra" / "definitions" / "pra_tests.yml",
-        PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml",
+        REFERENCE / "backup_strategy.yml",
+        REFERENCE / "pra_tests.yml",
+        REFERENCE / "resource_priority.yml",
     )
 
     guide = guidance(PRA_TESTS, finding, t, declared, "test it")

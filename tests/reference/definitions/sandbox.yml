@@ -1,0 +1,94 @@
+# Sandbox restore — ADR-0018, decided by the owner 2026-10-08.
+#
+# A sandbox restore puts a service's latest backup back on its feet
+# beside the live service, never in its place: its own internal Docker
+# network (no Internet, no port), its own containers
+# (`aistack-sandbox-…`), its own throwaway credentials, files under
+# `run_root` — all removed at the end, only the report kept.
+#
+#   python -m aistack.cli.sandbox restore wordpress
+#
+# `run_root` is on the host's local disk (owner's choice, 2026-10-08).
+# Before restoring, the command checks the free space there against
+# `expansion` times the size of the backup files plus `margin_gib`,
+# and refuses when it is short.
+#
+# Each recipe names the backup files (the newest matching each pattern)
+# and the live containers whose images the restore reuses — only their
+# image is read, never their environment, volumes or secrets.
+
+run_root: /srv/aistack/sandbox
+margin_gib: 1
+expansion: 4
+
+recipes:
+  # `/srv/scripts/backup-wordpress.sh`, nightly at 03:00: a
+  # `mariadb-dump` of the WordPress database and a `tar czf` of
+  # `/srv/wordpress/wp-content`, 14 days kept.
+  wordpress:
+    kind: wordpress_mariadb
+    backup_dir: /media/BACKUP/persiaut-consulting/wordpress/
+    database_dump: "db-*.sql"
+    files_archive: "wp-content-*.tar.gz"
+    live_database_container: wordpress_db
+    live_web_container: wp_app
+    database_timeout_seconds: 900
+    web_timeout_seconds: 180
+
+  # `scripts/backup_aistack.sh`, nightly at 03:00 (aistack-backup.timer):
+  # data, declarations, environment files and the session database in
+  # one archive, 30 days kept. Restored with the image the live web
+  # container runs; the environment files (secrets) are restored and
+  # counted, never given to the sandbox's containers.
+  aistack:
+    kind: aistack_archive
+    backup_dir: /media/BACKUP/AIStack/
+    files_archive: "aistack-*.tar.gz"
+    live_web_container: aistack-web
+    web_timeout_seconds: 180
+
+  # /usr/local/sbin/backup_nextcloud_db.sh (backup-nextcloud-db.timer,
+  # 02:20): `mariadb-dump --single-transaction --databases nextcloud`,
+  # gzipped, 30 days kept. The database only: the files have no backup
+  # (measured 2026-10-08, backup_strategy.yml `nextcloud-files`).
+  nextcloud:
+    kind: nextcloud_mariadb
+    backup_dir: /media/BACKUP/SQL_BACKUPS/nextcloud/
+    database_dump: "nextcloud-*.sql.gz"
+    live_database_container: nc_db
+    expansion: 12
+    database_timeout_seconds: 1800
+    not_backed_up: >-
+      les fichiers de Nextcloud (/media/BACKUP/nextcloud/data et
+      data_directory) n'ont pas de sauvegarde : ils sont sur le disque
+      de sauvegarde lui-même et Deja Dup ne les copie pas
+
+  # /usr/local/sbin/backup_immich_db.sh (backup-immich-db.timer, 02:40):
+  # `pg_dump -d immich`, gzipped, 30 days kept. Then a few photos of the
+  # external library (/media/Multimedia/Photos, /external/photos in the
+  # container) taken back from Deja Dup and checked against the
+  # database's checksum. Uploads have no backup (`immich-uploads`).
+  immich:
+    kind: immich_postgres
+    backup_dir: /media/BACKUP/SQL_BACKUPS/immich/
+    database_dump: "immich-*.sql.gz"
+    live_database_container: immich_postgres
+    expansion: 12
+    database_timeout_seconds: 3600
+    file_sample:
+      live_prefix: /external/photos/
+      host_prefix: /media/Multimedia/Photos/
+      duplicity_target: /media/BACKUP/GIGABYTE_DAILY
+      count: 3
+      older_than_days: 8
+      # Deja Dup's own duplicity cache: without it, duplicity first
+      # rebuilds the signatures of the whole chain (the first run,
+      # 2026-10-08, was interrupted there).
+      archive_dir: ~/.cache/deja-dup
+      # Deja Dup's cache for GIGABYTE_DAILY (ls ~/.cache/deja-dup,
+      # 2026-10-08). Without it duplicity builds a second one.
+      archive_name: 1fde80a736400bfa9b8669b2b1bceca9
+    not_backed_up: >-
+      les photos téléversées (UPLOAD_LOCATION=/media/BACKUP/immich) n'ont
+      pas de sauvegarde : elles sont sur le disque de sauvegarde
+      lui-même et Deja Dup ne les copie pas

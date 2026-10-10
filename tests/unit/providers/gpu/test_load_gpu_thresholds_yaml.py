@@ -189,7 +189,7 @@ def test_the_real_gpu_thresholds_definition_loads():
     repo_root = Path(__file__).resolve().parents[4]
 
     register = load_gpu_thresholds_yaml(
-        repo_root / "src" / "aistack" / "providers" / "gpu" / "definitions" / "gpu_thresholds.yml"
+        repo_root / "tests" / "reference" / "definitions" / "gpu_thresholds.yml"
     )
 
     gigabyte = register.for_host("GIGABYTE")

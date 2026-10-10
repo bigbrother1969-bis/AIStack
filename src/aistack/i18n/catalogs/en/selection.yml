@@ -61,7 +61,7 @@ tooltip:
   select: "Include {label} (and everything in it) in the sync"
 
 all_pairs: "Every content"
-waiting: "Selection recorded: it will be applied on GIGABYTE within two minutes (the aistack-sync executor), then Syncthing will send it to the device."
+waiting: "Selection recorded: it will be applied on the server within two minutes (the aistack-sync executor), then Syncthing will send it to the device."
 recorded: "{count} folder(s) recorded for {pair}."
 share:
   reshare: "Share again"
@@ -74,7 +74,7 @@ share:
   failed: "Syncthing refused: {reason}"
 pairs:
   heading: "Sync to a device"
-  intro: "One content of GIGABYTE, one device: tick what should go, the executor on GIGABYTE applies it, Syncthing carries it. Nothing comes back to GIGABYTE."
+  intro: "One content of the server, one device: tick what should go, the executor on the server applies it, Syncthing carries it. Nothing comes back to the server."
   destination_quota: "quota {quota} GB"
   destination_no_quota: "no quota"
   selected: "{size} GB ticked"

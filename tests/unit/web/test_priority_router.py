@@ -7,6 +7,8 @@ read and written where `WebPaths` says.
 
 from __future__ import annotations
 
+from tests.conftest import REFERENCE_DEFINITIONS as REFERENCE
+
 import shutil
 from pathlib import Path
 
@@ -18,7 +20,7 @@ from tests.unit.web_signed_in import signed_in
 from aistack.i18n import Language, Languages
 from aistack.priority.discovery import DiscoveredContainer
 from aistack.priority.yaml import load_resource_priority_yaml
-from aistack.web.app import PACKAGE_ROOT, WebPaths, create_app
+from aistack.web.app import WebPaths, create_app
 from aistack.web.exposure import Listeners
 
 PUBLIC_PORT = 8183
@@ -38,7 +40,7 @@ DISCOVERED = (
 @pytest.fixture
 def definition(tmp_path: Path) -> Path:
     path = tmp_path / "resource_priority.yml"
-    shutil.copy(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml", path)
+    shutil.copy(REFERENCE / "resource_priority.yml", path)
 
     return path
 

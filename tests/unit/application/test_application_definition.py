@@ -172,7 +172,7 @@ def test_the_real_music_android_definition_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     definition = load_application_definition_yaml(
-        repo_root / "src" / "aistack" / "selection" / "definitions" / "music_android.yml"
+        repo_root / "tests" / "reference" / "definitions" / "music_android.yml"
     )
 
     assert definition.app_id == "music_android"

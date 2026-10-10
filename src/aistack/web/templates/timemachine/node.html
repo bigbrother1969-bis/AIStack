@@ -8,7 +8,7 @@
   <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
-  <!--
+  {#
     Nav partagée (aistack.renderers.nav.render_page_nav), 2026-09-30
     (constat 5) — `page_nav` porte déjà `&iri=…` (route `/node`'s own
     `_page_nav(..., extra_query=…)` call) pour que le switch de langue
@@ -22,11 +22,11 @@
     Time Machine elle-même. `extra_query` porte aussi `&q=…` depuis
     2026-10-02, quand la recherche de la colonne arbre ci-dessous est
     active (gap #1, voir plus bas).
-  -->
+  #}
   {{ page_nav | safe }}
   <a class="back-link" href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.back_to_streams') }}">{{ t('timemachine.back_to_streams') }}</a>
 
-  <!--
+  {#
     view-switch, added 2026-09-30
     (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
     constat 6, owner: "ajouter le view-switch") — streams.html/
@@ -36,7 +36,7 @@
     no `view-current` span here since /node is not itself one of the
     three views — none of the three links should read as "already
     here".
-  -->
+  #}
   <nav class="view-switch">
     <a href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_streams') }}">{{ t('timemachine.nav.streams') }}</a>
     <a href="{{ base }}/tree?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_tree') }}">{{ t('timemachine.nav.tree') }}</a>
@@ -44,7 +44,7 @@
     <a href="{{ base }}/explications?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_explications') }}">{{ t('timemachine.nav.explications') }}</a>
   </nav>
 
-  <!--
+  {#
     node-columns, added 2026-10-02 (gap #1 of `claude/AUDIT-
     TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`, cadrage "une
     première tranche contenue") — the maquette's own "arbre et ruban
@@ -69,7 +69,7 @@
     the tree (no mechanism exists today for "this is the node being
     read" inside `NetworkTreeNode`/`_to_context` — a known, named gap,
     not a silent one).
-  -->
+  #}
   <div class="node-columns">
     <aside class="node-tree-col">
       <h2 class="section-heading">{{ t('timemachine.tree.heading') }}</h2>
@@ -130,16 +130,16 @@
         {% endif %}
         <a class="band-tree-link" href="{{ base }}/ribbon?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.ribbon_full') }}">{{ t('timemachine.node_ribbon_view_full') }}</a>
         {% if node_instant %}
-          <!--
+          {#
             node_ribbon_reconstitute_link, added 2026-10-02 (gap #3,
             cadrage "tranche contenue, lecture seule, un sujet") — this
             node's own instant is the `as_of` point: both `subject`
             and `node_instant` must be known for /reconstitute to mean
             anything, so this link never appears without either.
-          -->
+          #}
           <a class="band-tree-link" href="{{ base }}/reconstitute?subject={{ ribbon_panel.subject | urlencode }}&amp;as_of={{ node_instant | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.reconstitute') }}">{{ t('timemachine.node_ribbon_reconstitute_link') }}</a>
         {% endif %}
-        <!--
+        {#
           node_ribbon_explication_link, added 2026-10-02 (gap #2,
           cadrage "tranche contenue, lecture seule") — always shown
           alongside the other two links whenever this node has a
@@ -148,7 +148,7 @@
           most real Explications are commit-scoped, not container/host
           names, so most real nodes honestly find nothing — the
           destination page says so, this link does not pre-check it).
-        -->
+        #}
         <a class="band-tree-link" href="{{ base }}/explication?subject={{ ribbon_panel.subject | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.explication') }}">{{ t('timemachine.node_ribbon_explication_link') }}</a>
       {% else %}
         <p class="empty">{{ t('timemachine.node_ribbon_no_subject') }}</p>
@@ -164,7 +164,7 @@
         <p class="node-iri">{{ t('timemachine.node_iri_label') }}: {{ iri }}</p>
       </header>
 
-      <!--
+      {#
         class="section-heading", added 2026-09-30
         (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
         constat 5, owner: "reprendre le style existant") — these five
@@ -173,7 +173,7 @@
         `.section-heading` is `ribbon.html`'s own pre-existing section
         title pattern, generalized (renamed from `.ribbon-list-heading`)
         rather than a new style invented for this page.
-      -->
+      #}
       <h2 class="section-heading">{{ t('timemachine.graph.heading') }}</h2>
       {% if provenance_graph %}
         <div id="provenance-graph">{{ t('timemachine.graph.loading') }}</div>

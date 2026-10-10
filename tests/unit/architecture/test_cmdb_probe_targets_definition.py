@@ -141,12 +141,7 @@ def test_the_real_cmdb_probe_targets_load():
     repo_root = Path(__file__).resolve().parents[3]
 
     targets = load_cmdb_probe_targets_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "architecture"
-        / "definitions"
-        / "cmdb_probe_targets.yml"
+        repo_root / "tests" / "reference" / "definitions" / "cmdb_probe_targets.yml"
     )
 
     assert len(targets) == 46

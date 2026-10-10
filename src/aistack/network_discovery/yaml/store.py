@@ -5,36 +5,35 @@ from typing import Any
 
 import yaml
 
-from aistack.network_discovery.definition import NetworkDiscoveryDefinition
+from aistack.network_discovery.definition import (
+    ALONE,
+    AUTO,
+    NetworkDiscoveryDefinition,
+    discover_cidr,
+    read_routes,
+)
 
 _REQUIRED_FIELDS = ("cidr", "ssh_key_path_env")
 
 _HEADER_COMMENT = """\
-# AIStack — network Docker discovery (claude/PLAN-J11-CONSOLE-2026-09-11.md §11)
+# AIStack — network Docker discovery
 #
-# Where AIStack looks for Docker containers on hosts other than the
-# one it runs on itself, and how it authenticates to them. Read by
-# `aistack.cli.network_docker_discover`; `ssh_usernames` is also
-# written back by the network-discovery-ui screen (LAN-only,
-# `aistack.web.network_discovery`) when the owner adds or removes a
-# candidate username there — everything else in this file stays
-# hand-edited, the same discipline `infrastructure_topology.yml`
-# already holds for facts nothing in this repository writes back.
+# Where AIStack looks for Docker containers on the other hosts of the
+# local network, and how it authenticates to them. `ssh_usernames` is
+# also written back by the Network discovery screen (local network
+# only) when an administrator adds or removes a username there.
 #
-# `cidr` is the owner's own LAN (confirmed 2026-09-12 from `ip -4
-# addr show`/`ip route` on GIGABYTE), never a wider range. Widening
-# it is a decision for the owner to make explicitly, not a default
-# this file should ever silently carry.
+# `cidr`: `auto` reads the server's own LAN from its routes (the
+# network of the interface carrying the default route); or a network
+# written by hand, for instance 192.168.0.0/24 — never wider than the
+# LAN.
 #
 # `ssh_key_path_env` names the environment variable that carries the
-# real path to an existing SSH private key — never the key or its
-# path itself (GOV-P-001).
+# path to an existing SSH private key — never the key or its path
+# itself.
 #
 # `ssh_usernames` is tried, in order, against every host the scan
-# finds live; the first that authenticates is used. Confirmed
-# 2026-09-12: the owner's own real hosts use different SSH usernames
-# from one another (`pi` on the Raspberry Pi, `pi-hole` on the
-# Pi-hole VM) — this is why a single username is not enough.
+# finds; the first that authenticates is used.
 """
 
 def load_network_discovery_yaml(path: Path) -> NetworkDiscoveryDefinition:
@@ -65,8 +64,13 @@ def load_network_discovery_yaml(path: Path) -> NetworkDiscoveryDefinition:
             f"Network discovery definition {path}: ssh_usernames must be a list"
         )
 
+    declared = str(data["cidr"]).strip()
+    automatic = declared == AUTO
+    cidr = (discover_cidr(read_routes()) or ALONE) if automatic else declared
+
     return NetworkDiscoveryDefinition(
-        cidr=data["cidr"],
+        cidr=cidr,
+        cidr_auto=automatic,
         ssh_key_path_env=data["ssh_key_path_env"],
         ssh_usernames=tuple(str(name) for name in ssh_usernames_data),
         ssh_timeout_seconds=float(data.get("ssh_timeout_seconds") or 3.0),
@@ -98,7 +102,7 @@ def save_network_discovery_yaml(
     path.parent.mkdir(parents=True, exist_ok=True)
 
     body = {
-        "cidr": definition.cidr,
+        "cidr": AUTO if definition.cidr_auto else definition.cidr,
         "ssh_key_path_env": definition.ssh_key_path_env,
         "ssh_timeout_seconds": definition.ssh_timeout_seconds,
         "ssh_usernames": list(definition.ssh_usernames),

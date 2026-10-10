@@ -93,7 +93,7 @@ class Authentication:
     sessions: SessionStore
     oidc: OidcClient
     # Where the LAN listener is reached (ADR-0014 § 4).
-    lan_base_url: str = "http://GIGABYTE:8186"
+    lan_base_url: str = "http://localhost:8186"
     failures: FailureWindow = field(default_factory=FailureWindow)
 
 

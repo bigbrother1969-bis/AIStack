@@ -60,7 +60,7 @@ status:
   nothing_applied: "No fix in progress for {subject} — start again from the list."
   not_applyable: "No automatic fix available for {subject} — only CPU consumption faults offer this button, start again from the list."
 message:
-  already_priority: "{subject} is already classified “priority” in resource_priority.yml — this assistant can only apply the “background” classification (use priority_ui, http://GIGABYTE:8182, to change a priority classification)."
+  already_priority: "{subject} is already classified “priority” in resource_priority.yml — this assistant can only apply the “background” classification (change a “priority” classification from the CPU priority screen)."
   already_background: "{subject} was already classified “background” in resource_priority.yml — nothing to write."
   added: "{subject} added to background.containers in resource_priority.yml (shared throttle: {cpus} CPU as soon as the resource-priority monitor runs)."
 help:
@@ -71,15 +71,13 @@ help:
   terminal_heading: "1. Open a terminal on your computer"
   terminal_before: "On Linux, the shortcut"
   terminal_after: "opens a terminal in most desktop environments (including Cinnamon, used by Linux Mint). If it does nothing on your machine, look for “Terminal” in the applications menu."
-  find_heading: "2. Find GIGABYTE on your local network"
-  find_address: "Address observed during this session:"
-  find_note_before: "This address may change if your router reassigns addresses (DHCP) — it is not guaranteed for life. If it no longer answers, first try the name"
-  find_note_after: "instead of the address; otherwise, check the list of connected devices in your router's interface."
+  find_heading: "2. Find the server on your local network"
+  find_address: "Its name (or address) on the local network, declared at installation:"
+  find_note: "If it does not answer, try its IP address: the list of connected devices of your router gives it. The router may change it (DHCP) unless it is reserved."
   ssh_heading: "3. Connect over SSH"
   ssh_from: "From the terminal opened in step 1:"
-  ssh_replace_before: "(replace the address with the one you found in step 2 if it changed, or try"
-  ssh_replace_middle: "). The password of the account"
-  ssh_replace_after: "on GIGABYTE is then asked for — nothing shows on screen while you type, which is normal with SSH, not a bug."
+  ssh_account: "your-account"
+  ssh_replace: "Replace “your-account” with your account on the server; its password is then asked for — nothing shows on screen while you type, which is normal with SSH, not a bug."
   paste_heading: "4. Copy and paste a command"
   paste_before: "To paste in most Linux terminals:"
   paste_keys: "Ctrl+Shift+V"
@@ -149,7 +147,7 @@ guide:
   consumption: "If {subject} does not need the processor first, the button below classes it as background: it is throttled whenever a priority application (Jellyfin, Immich) works. If it must instead go before the others, declare it under priority in resource_priority.yml."
   uncovered_state: "Once a real copy of {subject} exists somewhere other than its own disk, replace its entry in backup_strategy.yml with the block below, filled with the real engine and command. Until a copy exists the finding stays: a known risk, not an AIStack error."
   mechanism_placeholder: "the real command or timer, and where the copy goes"
-  pra_clonezilla: "{subject} is backed up by Clonezilla images: the test is to check that an image is restorable. Boot GIGABYTE from the Clonezilla key, choose device-image, then where the images are kept, then the option “chk-img-restorable” (check the image is restorable), and the latest image of {subject}. Clonezilla reads back and checks every partition without writing to any disk. Note the start and end times: the difference is the rto_minutes of the block below."
+  pra_clonezilla: "{subject} is backed up by Clonezilla images: the test is to check that an image is restorable. Boot the machine from the Clonezilla key, choose device-image, then where the images are kept, then the option “chk-img-restorable” (check the image is restorable), and the latest image of {subject}. Clonezilla reads back and checks every partition without writing to any disk. Note the start and end times: the difference is the rto_minutes of the block below."
   pra_clonezilla_note: "Clonezilla check (chk-img-restorable) of the latest image: the image is restorable; not a full restore to a disk."
 record:
   heading: "Record your test's result"
@@ -166,7 +164,7 @@ record:
 
 # Info-bulles / tooltips — 2026-10-03.
 tooltip:
-  help: "How to open a terminal and connect to GIGABYTE to apply a command"
+  help: "How to open a terminal and connect to the server to apply a command"
   start: "Open this finding: what AIStack knows of it and what you do, then the AI's opinion if you ask"
   ask: "Ask the AI model for its reasoning, an explanation and a suggestion, with the facts of step 2"
   next: "Next step"

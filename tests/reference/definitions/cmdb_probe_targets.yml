@@ -1,0 +1,145 @@
+# CMDB temps réel — cibles des sondes HTTP.
+#
+# Chargé par `load_cmdb_probe_targets_yaml`
+# (`src/aistack/architecture/yaml/cmdb_targets_store.py`), rendu en
+# section « CMDB temps réel » de `architecture.html`
+# (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1 — premier des trois
+# écarts nommés le 2026-09-13, cadré et livré le 2026-09-23).
+#
+# Écrit à la main, comme `infrastructure_topology.yml` et
+# `service_categorization.yml` — aucun provider n'observe cette liste
+# elle-même, seul `HttpProbeProvider` observe ce que chaque URL
+# répond.
+#
+# **Source réelle, pas une supposition** (`GOV-P-001`) : la seule
+# trace documentée de ce sujet était une ligne de l'ancienne page
+# architecture.html — « CMDB temps réel (11 sondes HTTP, codes de
+# statut) » — sans dire quelles cibles. Le owner a confirmé, le
+# 2026-09-23, que la liste réelle vient de la configuration Homepage
+# en service sur le Raspberry Pi
+# (`/srv/homepage/config/services.yaml`, collée dans la conversation
+# le jour même), filtrée par sa propre règle : « tout ce qui a une
+# entrée href publique ». Ce fichier reflète cette liste telle que
+# collée ce jour-là — pas `service_categorization.yml`, qui date d'une
+# capture plus ancienne (2026-09-10, retouchée le 2026-09-12) et a
+# depuis divergé (ex. ne porte pas l'entrée AIStack Console).
+#
+# Trois cas particuliers, chacun tranché explicitement avec le owner
+# le 2026-09-23 :
+#   - FreeboxOS (`persiaut-family.fr:15277`, port direct plutôt qu'un
+#     sous-domaine proxifié NPM/Cloudflare Tunnel comme le reste) :
+#     inclus.
+#   - Indy (`app.indy.fr`, SaaS tiers de facturation, hors du homelab
+#     lui-même) : inclus — un href public au sens de la règle du
+#     owner, même s'il ne dit rien de la santé de l'infra locale.
+#   - AIStack Console (`aistack.persiaut-family.fr/console.html`,
+#     future page qui affichera cette même section) : EXCLU — éviter
+#     qu'elle se sonde elle-même.
+#
+# `name` reprend le libellé exact de la configuration Homepage
+# source, y compris son éventuelle coquille (« Boostack », pas
+# « Bookstack ») — reproduit tel quel plutôt que corrigé, cette
+# correction n'ayant pas été demandée.
+
+targets:
+  # Administration, Cloud & Utilitaires
+  - name: Nginx Proxy Manager
+    url: https://npm.persiaut-family.fr
+  - name: Portainer
+    url: https://portainer.persiaut-family.fr
+  - name: Pi-hole
+    url: https://pihole.persiaut-family.fr/admin
+  - name: FreeboxOS
+    url: https://persiaut-family.fr:15277/
+  - name: Nextcloud
+    url: https://cloud.persiaut-family.fr
+  - name: Vaultwarden
+    url: https://vault.persiaut-family.fr
+  - name: Vikunja
+    url: https://tasks.persiaut-family.fr
+  - name: Stirling-PDF
+    url: https://pdf.persiaut-family.fr
+  - name: FileBrowser
+    url: https://files.persiaut-family.fr
+  - name: SyncThing
+    url: https://syncthing.persiaut-family.fr
+
+  # Supervision
+  - name: Uptime Kuma
+    url: https://uptime.persiaut-family.fr
+  - name: Beszel
+    url: https://beszel.persiaut-family.fr
+  - name: Scrutiny
+    url: https://scrutiny.persiaut-family.fr
+  - name: Gotify
+    url: https://gotify.persiaut-family.fr
+  - name: LibreSpeed
+    url: https://speed.persiaut-family.fr
+  - name: Freebox Dashboard
+    url: https://freebox.persiaut-family.fr
+  - name: Frigate
+    url: https://frigate.persiaut-family.fr
+  - name: Architecture Homelab
+    url: https://archi.persiaut-family.fr
+  - name: Home Assistant
+    url: https://ha.persiaut-family.fr
+
+  # Divertissement & Bureau
+  - name: Immich
+    url: https://immich.persiaut-family.fr
+  - name: Jellyfin
+    url: https://jellyfin.persiaut-family.fr
+  - name: Booklore
+    url: https://booklore.persiaut-family.fr
+  - name: Legal to Read
+    url: https://books.persiaut-family.fr/
+  - name: Komga
+    url: https://komga.persiaut-family.fr
+  - name: Paperless
+    url: https://paperless.persiaut-family.fr
+  - name: Boostack
+    url: https://bookstack.persiaut-family.fr
+  - name: Wordpress
+    url: https://wp.persiaut-family.fr/
+  - name: Actual Budget
+    url: https://budget.persiaut-family.fr
+  - name: Firefly III
+    url: https://firefly.persiaut-family.fr
+  - name: Indy
+    url: https://app.indy.fr/
+  - name: EmulatorJS / ROMM
+    url: https://games.persiaut-family.fr
+
+  # Téléchargements
+  - name: Seerr
+    url: https://seerr.persiaut-family.fr
+  - name: Prowlarr
+    url: https://prowlarr.persiaut-family.fr
+  - name: Radarr
+    url: https://radarr.persiaut-family.fr
+  - name: Sonarr
+    url: https://sonarr.persiaut-family.fr
+  - name: Lidarr
+    url: https://lidarr.persiaut-family.fr
+  - name: Readarr
+    url: https://readarr.persiaut-family.fr
+  - name: Mylar3
+    url: https://mylar3.persiaut-family.fr
+  - name: Bazarr
+    url: https://bazarr.persiaut-family.fr
+  - name: qBittorrent
+    url: https://qbittorrent.persiaut-family.fr
+  - name: Autobrr
+    url: https://autobrr.persiaut-family.fr
+  - name: Mularr
+    url: https://mularr.persiaut-family.fr
+
+  # Développement
+  - name: VSCode
+    url: https://vscode.persiaut-family.fr
+  - name: Gitea
+    url: https://gitea.persiaut-family.fr
+  - name: CyberChef
+    url: https://cyberchef.persiaut-family.fr
+  - name: IT-Tools
+    url: https://it-tools.persiaut-family.fr

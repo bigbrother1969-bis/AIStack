@@ -8,7 +8,7 @@
   <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
-  <!--
+  {#
     ADR-0011 §24 (1.5.1 cadrage, 2026-09-28) — a third view of this
     same mini-app, same LAN-only convention as streams.html/tree.html/
     node.html (ADR-0011 roadmap R1): direct LAN link, never the
@@ -18,7 +18,7 @@
     `extra_query`, "on finit les points ouverts avant 1.5.2") : la
     limitation nommée ici jusque-là est refermée, pas seulement
     documentée.
-  -->
+  #}
   {{ page_nav | safe }}
 
   <header>
@@ -36,7 +36,7 @@
   <div class="warning">{{ t('timemachine.warning') }}</div>
 
   {% if subject %}
-    <!--
+    {#
       ribbon-subject-filter, added 2026-09-30 ("on finit les points
       ouverts avant 1.5.2", owner: "apparier par nom, couverture
       partielle") — the tree's own half of the cross-link
@@ -44,7 +44,7 @@
       this banner says so plainly rather than leaving a silently
       narrowed ribbon unexplained, the same reasoning `tree.html`'s
       own search-clear (`tree-search-clear`) already applies.
-    -->
+    #}
     <p class="ribbon-subject-filter">
       {{ t('timemachine.ribbon.subject_filter_label') }} <strong>{{ subject }}</strong>
       <a class="tree-search-clear" href="{{ base }}/ribbon?lang={{ lang }}" title="{{ t('timemachine.tooltip.filter_all') }}">{{ t('timemachine.ribbon.filter_all') }}</a>
@@ -71,7 +71,7 @@
   {% endif %}
 
   {% if entries %}
-    <!--
+    {#
       ADR-0011 §26 (1.5.2 cadrage, 2026-09-28/29) — v2 of maquette 1's
       ruban: a real horizontal time axis, one lane per stream, plus a
       cursor that opens the nearest instant's own /node card on click
@@ -90,7 +90,7 @@
       "a table view exists" non-negotiable, and every mark's own
       accessible <a href> still works by keyboard alone with no script
       at all.
-    -->
+    #}
     <div class="ribbon-groups">
       <details class="ribbon-group" open>
         <summary title="{{ t('timemachine.tooltip.group_fold') }}">
@@ -117,7 +117,7 @@
       </details>
     </div>
     <h2 class="section-heading">{{ t('timemachine.ribbon.list_heading') }}</h2>
-    <!--
+    {#
       Grouped by stream (= by symbol: one badge per stream, assigned
       once in `ribbon_view` over every stream the graph holds — see
       `_style.html`'s own comment above `.ribbon-entry-groups`).
@@ -128,7 +128,7 @@
       change), and grouping stays a template-only concern. Within
       each group, entries keep their original (chronological) order —
       `sorted()` is stable.
-    -->
+    #}
     <div class="ribbon-entry-groups">
       {% for stream, group_entries in entries | groupby('stream') %}
         <details class="ribbon-group" open>
@@ -158,7 +158,7 @@
                   {% endif %}
                 </a>
                 {% if entry.subject %}
-                  <!--
+                  {#
                     band-tree-link, added 2026-09-30 (owner: "apparier
                     par nom, couverture partielle") — a sibling of
                     `.band-link` above, deliberately not nested inside
@@ -170,7 +170,7 @@
                     one exists; when none does, `/tree`'s existing
                     `search_empty` state already says so honestly — no
                     new plumbing needed on that side.
-                  -->
+                  #}
                   <a class="band-tree-link" href="{{ base }}/tree?q={{ entry.subject | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.view_in_tree') }}">{{ t('timemachine.ribbon.view_in_tree') }}</a>
                 {% endif %}
               </li>
@@ -180,7 +180,7 @@
       {% endfor %}
     </div>
     {% if total_pages > 1 %}
-      <!--
+      {#
         ribbon-pagination, added 2026-09-30 (owner: "la page rubans...
         c'est inutilisable en l'état pour un utilisateur", then "vraie
         pagination + filtres") — real page links, not a silent
@@ -189,7 +189,7 @@
         already does, so paging never drops the filter the visitor set.
         The SVG graphic above stays unpaginated on purpose
         (`ribbon_view`'s own docstring) — only this flat list is sliced.
-      -->
+      #}
       <nav class="ribbon-pagination">
         {% if page > 1 %}
           <a class="ribbon-pagination-link" href="{{ base }}/ribbon?lang={{ lang }}{{ filter_query }}&amp;page={{ page - 1 }}" title="{{ t('timemachine.tooltip.pagination_prev') }}">{{ t('timemachine.ribbon.pagination_prev') }}</a>

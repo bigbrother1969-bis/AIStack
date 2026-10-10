@@ -17,6 +17,9 @@ MEMORY_PERCENT = "memory_percent"
 KINDS = (TEMPERATURE_CELSIUS, UTILIZATION_PERCENT, MEMORY_PERCENT)
 
 
+ANY_HOST = "*"
+
+
 @dataclass(frozen=True)
 class GpuThreshold:
     """
@@ -93,6 +96,12 @@ class GpuThresholdRegister:
     def for_host(self, hostname: str) -> tuple[GpuThreshold, ...]:
         for entry in self.hosts:
             if entry.host == hostname:
+                return entry.thresholds
+
+        # `host: "*"` (2.0.0-rc1): any host the file does not name — what
+        # a new installation ships, before it knows its own host's name.
+        for entry in self.hosts:
+            if entry.host == ANY_HOST:
                 return entry.thresholds
 
         return ()

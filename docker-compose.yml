@@ -68,8 +68,8 @@ x-aistack: &aistack
     # its Compose projects under /srv and /opt.
     # `rslave`: a disk the host mounts after the container started (a
     # USB disk, an on-demand mount) appears inside it too; without it
-    # the container keeps the view it started with — on GIGABYTE,
-    # 2026-10-08, /media/BACKUP answered "No such device".
+    # the container keeps the view it started with — on the reference
+    # host, 2026-10-08, a backup disk answered "No such device".
     - /media:/media:ro,rslave
     - /srv:/srv:ro,rslave
     - /opt:/opt:ro,rslave
@@ -406,7 +406,7 @@ services:
 # `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.1 entry gives the
 # full account; in short, no new capability — `OPS-0009`'s own PRA
 # restore-test records catching up with real tests the owner ran the
-# same day: a real Arrstack backup gap found and closed, Raspberry's
+# same day: a real backup gap found and closed, a second host's
 # real restic backup found and proven with a genuine restore (after a
 # first attempt failed on disk space, honestly recorded as a
 # failure), and the Vikunja MariaDB backup gap closed and verified

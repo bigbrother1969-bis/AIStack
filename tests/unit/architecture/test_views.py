@@ -144,12 +144,7 @@ def test_the_real_categorization_produces_seven_views():
 
     repo_root = Path(__file__).resolve().parents[3]
     categorization = load_service_categorization_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "architecture"
-        / "definitions"
-        / "service_categorization.yml"
+        repo_root / "tests" / "reference" / "definitions" / "service_categorization.yml"
     )
 
     empty_catalog = Catalog(catalog_id="x", title="x", items=())

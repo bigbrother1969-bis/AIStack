@@ -8,7 +8,6 @@ from pathlib import Path
 
 import yaml
 
-import aistack
 from aistack.architecture.yaml import load_service_categorization_yaml
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -21,7 +20,7 @@ def test_every_compose_container_is_declared() -> None:
         for service in compose["services"].values()
         if "container_name" in service
     }
-    shipped = Path(aistack.__file__).parent / "architecture" / "definitions" / "service_categorization.yml"
+    shipped = Path(__file__).resolve().parents[2] / "reference" / "definitions" / "service_categorization.yml"
     categorization = load_service_categorization_yaml(shipped)
     text = shipped.read_text(encoding="utf-8")
     assert started

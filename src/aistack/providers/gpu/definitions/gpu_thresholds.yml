@@ -1,12 +1,11 @@
-# OPS-0007 — Declared GPU thresholds.
+# AIStack — GPU consumption thresholds (OPS-0007).
 #
-# Written by hand, read-only — every value here is the owner's own
-# declared threshold (OPS-0007 § Declared thresholds), declared against
-# real `nvidia-smi` output taken live on GIGABYTE, 2026-09-11. Nothing
-# in this codebase writes this file back.
+# Per host (`host`: its name as `hostname` prints it; "*": any host the
+# file does not name): temperature, utilisation and memory, read with
+# nvidia-smi. A host without an NVIDIA GPU is simply not measured.
 
 hosts:
-  - host: GIGABYTE
+  - host: "*"
     thresholds:
       - kind: temperature_celsius
         celsius: 80

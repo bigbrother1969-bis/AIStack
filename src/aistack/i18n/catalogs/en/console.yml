@@ -70,6 +70,7 @@ legal:
   page_title: "AIStack — Legal notice"
   title: "Legal notice"
   publisher_heading: "Publisher"
+  private: "This AIStack installation is private: the person running it declared no publisher (console_identity.yml)."
   publisher_text: "{publisher}, {legal_form}, SIREN {siren}, {city}."
   director: "Publication director: {director}."
   contact: "Contact: through the website {contact_url}."

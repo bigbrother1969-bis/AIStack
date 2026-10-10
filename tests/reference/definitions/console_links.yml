@@ -1,0 +1,315 @@
+# PLAN-J11 — Console AIStack: v1 scope, declared by the owner
+# 2026-09-11 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` § 2).
+#
+# Written by hand, read-only — same discipline
+# `service_categorization.yml` and `health_score_weights.yml` already
+# hold. Nothing in this codebase writes this file back.
+#
+# `url` is exactly how the owner reaches each service today
+# (`PLAN-J11` § 4/§ 8/§ 9), never invented (GOV-P-001):
+#   - Selection UI and Priorité CPU are separate processes on
+#     GIGABYTE (Docker Compose on :8181, systemd/uvicorn on :8182 —
+#     "next free port after Selection UI's 8181"). The console itself
+#     went live behind Nginx Proxy Manager (Raspberry) on
+#     aistack.persiaut-family.fr the same day (`PLAN-J11` § 7) —
+#     the owner first named two more subdomains for these two apps
+#     under it (selection.aistack.persiaut-family.fr,
+#     priority.aistack.persiaut-family.fr, `PLAN-J11` § 8), then
+#     found those unreachable: Cloudflare's free Universal SSL covers
+#     only a domain and its direct wildcard (persiaut-family.fr,
+#     *.persiaut-family.fr), never a second-level subdomain — the TLS
+#     handshake failed before any certificate was even offered
+#     (`PLAN-J11` § 9). Renamed to first-level subdomains instead,
+#     covered by the same wildcard that already makes
+#     aistack.persiaut-family.fr work: selection.persiaut-family.fr,
+#     priority.persiaut-family.fr. Declared here as the owner's own
+#     chosen naming, the same way aistack.persiaut-family.fr was
+#     declared before its own Proxy Host existed — reachable once the
+#     owner has added the matching Proxy Host in NPM (and the DNS
+#     record in Cloudflare), a manual step this codebase cannot do.
+#     The direct LAN address each still answers on
+#     (GIGABYTE:8181/:8182) travels in the description, not the url,
+#     so there is exactly one link to follow, not two competing ones.
+#
+#     **Reversed 2026-09-18.** The owner asked to close every page
+#     reachable from this console down to LAN-only, "y compris pour
+#     selection et priority" — these two were the only remaining
+#     public exceptions (Découverte réseau and Assistant de pannes
+#     were already LAN-only from their own first day). `url` now
+#     points at the direct LAN address for both
+#     (`http://GIGABYTE:8181`, `http://GIGABYTE:8182`), the same
+#     shape Découverte réseau and Assistant de pannes already use.
+#     The console itself, Architecture and Cockpit Santé stay public
+#     — the owner's explicit choice, not touched here. Closing the
+#     public route for real is a manual step outside this repository
+#     (removing the `selection.persiaut-family.fr` and
+#     `priority.persiaut-family.fr` Proxy Host entries in Nginx
+#     Proxy Manager on the Raspberry) — this file only decides what
+#     the console *links to*, kept, not erased, as the record of what
+#     was reversed and why (the paragraph above).
+#   - Page Architecture and Cockpit Santé are static files this
+#     console is served alongside (`reports/generated/public/`,
+#     `aistack.cli.console_render`), so their own URLs are relative —
+#     they were already reachable through
+#     aistack.persiaut-family.fr/architecture.html and /health.html
+#     the moment NPM pointed at the console (same origin, same
+#     process, `PLAN-J11` § 7) — no separate Proxy Host needed for
+#     either.
+#   - Découverte réseau (utilisateurs SSH) — added 2026-09-12
+#     (`PLAN-J11` § 11), a separate systemd/uvicorn process on
+#     GIGABYTE:8184 ("next free port after the console's 8183"),
+#     `network_discovery_ui`. Deliberately LAN-only, `http://`, never
+#     a `https://...persiaut-family.fr` subdomain and never a Proxy
+#     Host in NPM: this screen writes which SSH usernames get tried,
+#     unattended, against every host a network scan finds on the
+#     owner's own LAN — decided with the owner 2026-09-12 that this
+#     stays unreachable from the public internet, unlike every other
+#     card on this page. **Moved 2026-10-03 into AIStack's single web
+#     application** (`ADR-0012`): `service: web_lan` plus
+#     `path: /network-discovery/`, still LAN-only — its router answers
+#     only on the LAN listener, whatever NPM forwards.
+#   - Assistant de pannes — added 2026-09-18
+#     (`claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`), a
+#     separate systemd/uvicorn process on GIGABYTE:8185 ("next free
+#     port after network_discovery_ui's 8184"),
+#     `troubleshooting_assistant_ui`. LAN-only for the same reason as
+#     Découverte réseau: not a security concern here (this screen
+#     only reads real findings and calls Ollama, never SSH), but a
+#     deliberate v1 choice confirmed with the owner — reduce the
+#     exposed surface while real usage is still being discovered,
+#     widen later only if asked.
+
+#   - Time Machine — added 2026-09-27 (`ADR-0011`, roadmap
+#     `ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.3), a separate
+#     systemd/uvicorn process on GIGABYTE:8186 ("next free port after
+#     the Troubleshooting Assistant's 8185"), `timemachine_ui`.
+#     LAN-only for the same reason as Découverte réseau and Assistant
+#     de pannes, and by the same mechanism (never a Proxy Host in
+#     NPM) — a firm rule here (roadmap R1), not a v1-only reduction:
+#     this screen shows the graph `ADR-0011` projects from every
+#     historicised stream (commands, packages, image versions, AI
+#     reasoning), a reconnaissance map for an attacker, and stays
+#     LAN-only until 1.7's connection layer exists, regardless of how
+#     the other four mini-apps' own LAN choices evolve.
+#     `name` is not a mapping (not translated) — a product name, the
+#     same reasoning as "Selection UI"'s own entry above.
+#
+#   - **Localized 2026-09-27** (ADR-0010, the owner's own decision to
+#     let each user choose the interface language, French the
+#     reference, English the second). `name` and `description` are
+#     each either one string, the same in every language (a product
+#     name such as "Selection UI" is not translated), or a mapping
+#     from language code to text; `url` never is — where a service
+#     lives does not depend on who reads the card. The French text is
+#     exactly what each card said before; the console adds `?lang=` to
+#     each absolute `url` itself, so none is written here.
+#
+#   - **`description.fr` rewritten 2026-09-30**, the owner's own call:
+#     "revoir le texte des cartes pour être plus explicite et plus
+#     didactique pour les utilisateurs, en bannissant le franglais" —
+#     the previous French text named `GIGABYTE`, a port number, and a
+#     `PLAN-J*` reference on every LAN-only card, useful to the owner
+#     debugging this repository but meaningless to someone just
+#     opening the console. Every description now starts with an
+#     infinitive action verb (cadré with the owner: not a mix of verbs
+#     and noun phrases across cards), names no host, no port, no
+#     `PLAN-J*`, and no raw English word in an otherwise French
+#     sentence. `name` (the product name, e.g. "Selection UI", "Time
+#     Machine") and every `description.en` are untouched — the owner
+#     asked only about the French description text. "Accessible
+#     uniquement depuis le réseau local" is kept verbatim on every
+#     LAN-only card (the owner's explicit choice, over an
+#     English-flavoured "LAN uniquement"); Architecture and Cockpit
+#     Santé carry no such mention, unchanged, since both stay public
+#     (see below).
+#
+#   - **`scope`, added 2026-09-30** (the owner: "un bandeau de couleur
+#     différent pour les cartes accessibles sur le réseau local ou
+#     depuis internet et on regroupera les cartes 'LAN' et les cartes
+#     'Internet'"). One of `lan`/`public`
+#     (`aistack.contracts.console_link.LAN`/`PUBLIC`) — an explicit
+#     declaration, not inferred from `url`'s own shape, the same
+#     "never guessed" discipline `url` itself already holds (see its
+#     own docstring). It only turns into a field what this file's own
+#     comments already narrated by hand above: five cards LAN-only
+#     (Selection UI and Priorité CPU since the 2026-09-18 reversal;
+#     Découverte réseau, Assistant de pannes and Time Machine, never
+#     public from their own first day), two cards public (Architecture
+#     and Cockpit Santé, the owner's explicit, unchanged choice to keep
+#     these two open).
+#
+#   - **`service`, replacing `url` on every LAN card, 2026-09-30**
+#     (R10, `ROADMAP-1.2-TO-2.0-2026-09-27.md`: "GIGABYTE:8181...
+#     écrits en dur : incompatible avec un AIStack qui s'adapte au
+#     réseau découvert" — cadré with the owner the same day, scoped to
+#     AIStack's own address alone). Names one of
+#     `src/aistack/instance/definitions/instance_config.yml`'s own
+#     `service_ports` keys; `load_console_links_yaml` resolves it to
+#     `http://<lan_hostname>:<port>` through `InstanceConfig.service_
+#     url`, the exact literal each of these five cards used to carry
+#     by hand. A card declares exactly one of `url`/`service`, never
+#     both, never neither — the two public cards (Architecture,
+#     Cockpit Santé) keep `url` unchanged, since their own address is
+#     a relative path this console serves itself, not a fact
+#     `instance_config.yml` has any port for.
+
+#   - **Selection UI's own missing mention, fixed 2026-09-30** (the
+#     owner, reading the real console: "il faut rajouter 'Accessible
+#     uniquement depuis le réseau local' pour la carte Selection UI").
+#     Every other `scope: lan` card's own `description.fr` already
+#     ends with this sentence, per the 2026-09-30 rewrite documented
+#     above — Selection UI's own entry was the one card the rewrite
+#     missed, a real omission against this file's own stated rule, not
+#     a second owner decision.
+#
+#   - **The sentence leaves the descriptions, 2026-10-09** (the owner:
+#     "la phrase doit être en italique et être la dernière ligne
+#     affichée de la carte"). The console now writes it itself, in
+#     italics, on its own last line, for every `scope: lan` card — so
+#     no description carries it any more, and a copy of this file
+#     edited before still shows it once: the console removes it from
+#     the end of a description before adding its own. The English
+#     descriptions were rewritten in the same plain words as the
+#     French ones.
+#
+#   - **`ai`, 2026-10-09** (the owner: "indique les fonctionnalités qui
+#     utilisent de l'IA, pour justifier « AI » dans « AIStack »"):
+#     optional, localized like `description` — what the screen asks of
+#     AI, in one sentence, shown on its card under an "AI" mark. Only
+#     where AI is really at work: the troubleshooting assistant (the
+#     local model reasons, explains, recommends), the Time Machine (it
+#     keeps and shows the model's reasoning) and the Health Cockpit
+#     (each finding leads to the assistant).
+#
+#   - **The last two English descriptions, 2026-10-09**: Architecture
+#     and the Health cockpit still read "(PLAN-J2)", "(PLAN-J7)" in
+#     English; rewritten in the plain words of the French ones.
+
+links:
+  - name: Selection UI
+    description:
+      fr: >-
+        Choisir, contenu par contenu (musique, livres, BD, photos,
+        vidéos, documents…), ce qui part vers le téléphone ou un
+        ordinateur, et vérifier la place disponible.
+      en: >-
+        Choose, content by content (music, books, comics, photos,
+        videos, documents…), what goes to the phone or a computer, and
+        check the space available.
+    service: web_lan
+    path: /selection/
+    scope: lan
+  - name:
+      fr: Priorité CPU
+      en: CPU priority
+    description:
+      fr: >-
+        Régler quels programmes ont la priorité sur le processeur
+        quand plusieurs tournent en même temps (par exemple,
+        privilégier la lecture vidéo sur les tâches de fond).
+      en: >-
+        Set which programs get the processor first when several run at
+        once (for example, video playback before background tasks).
+    service: web_lan
+    path: /priority/
+    scope: lan
+  - name: Architecture
+    description:
+      fr: >-
+        Consulter le schéma de l'infrastructure personnelle : les
+        machines, les services, et la façon dont ils sont reliés
+        entre eux.
+      en: >-
+        See the diagram of the personal infrastructure: the machines,
+        the services, and how they are connected to each other.
+    url: /architecture.html
+    scope: public
+  - name:
+      fr: Cockpit Santé
+      en: Health cockpit
+    description:
+      fr: >-
+        Suivre la note de santé globale de l'infrastructure, et le
+        détail des anomalies détectées domaine par domaine (stockage,
+        sauvegardes, processeur graphique, tests de reprise après
+        incident...).
+      en: >-
+        Follow the overall health score of the infrastructure, and the
+        detail of the faults found domain by domain (storage, backups,
+        graphics processor, disaster recovery tests...).
+    url: /health.html
+    ai:
+      fr: >-
+        Chaque anomalie mène à l'assistant de pannes, où l'IA (Google Gemini, Ollama en secours) donne son avis.
+      en: >-
+        Each finding leads to the troubleshooting assistant, where the AI (Google Gemini, Ollama as the fallback) gives its opinion.
+    scope: public
+  - name:
+      fr: Découverte réseau
+      en: Network discovery
+    description:
+      fr: >-
+        Gérer la liste des noms d'utilisateur SSH essayés
+        automatiquement lors de la recherche des appareils présents
+        sur le réseau local.
+      en: >-
+        Manage the SSH user names tried automatically when looking for
+        the devices present on the local network.
+    service: web_lan
+    path: /network-discovery/
+    scope: lan
+  - name:
+      fr: Assistant de pannes
+      en: Troubleshooting assistant
+    description:
+      fr: >-
+        Traiter une panne réelle, pas à pas : ce qu'AIStack en sait,
+        ce que tu fais (avec la correction en un clic quand elle
+        existe), puis l'avis de l'IA si tu le demandes.
+      en: >-
+        Handle a real fault, step by step: what AIStack knows of it,
+        what you do (with the one-click fix when there is one), then
+        the AI's opinion if you ask for it.
+    service: web_lan
+    path: /troubleshooting/
+    ai:
+      fr: >-
+        AIStack établit les faits et la marche à suivre ; sur ton clic, Google Gemini donne son avis à partir de ces faits (ils sortent alors de ton réseau), avec un modèle local (Ollama) en secours ; rien ne s'applique sans ton clic.
+      en: >-
+        AIStack states the facts and what to do; on your click, Google Gemini gives its opinion from those facts (they then leave your network), with a local model (Ollama) as the fallback; nothing is applied without your click.
+    scope: lan
+  - name: Time Machine
+    description:
+      fr: >-
+        Parcourir l'historique complet de l'infrastructure — commandes
+        exécutées, mises à jour de paquets, versions des images,
+        raisonnements de l'assistant IA — sous forme de graphe
+        consultable.
+      en: >-
+        Browse the whole history of the infrastructure — commands run,
+        package updates, image versions, the AI assistant's reasoning —
+        as a graph you can explore.
+    service: web_lan
+    path: /timemachine/
+    ai:
+      fr: >-
+        Garde chaque raisonnement de l'IA, daté et relié à ce qu'il explique, pour que tu puisses le relire, le corriger ou le valider.
+      en: >-
+        Keeps every reasoning of the AI, dated and tied to what it explains, so you can read it again, correct it or validate it.
+    scope: lan
+  - name:
+      fr: Dock
+      en: Dock
+    description:
+      fr: >-
+        Mettre à jour un service de façon gouvernée : la nouvelle image
+        est proposée avec son pourquoi, validée, testée en bac à sable
+        avec la dernière sauvegarde, puis appliquée avec retour arrière
+        prêt.
+      en: >-
+        Update a service the governed way: the new image is proposed
+        with its why, validated, tested in a sandbox with the latest
+        backup, then applied with the way back ready.
+    service: web_lan
+    path: /dock/
+    scope: lan

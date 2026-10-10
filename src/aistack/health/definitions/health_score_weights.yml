@@ -1,43 +1,7 @@
-# OPS-0008 — Declared health-score weights.
-#
-# Written by hand, read-only — every value here is the owner's own
-# declared weight (OPS-0008 § Declared weights), chosen 2026-09-11
-# once all four PLAN-J7 domains were instrumented and confirmed on
-# GIGABYTE. Nothing in this codebase writes this file back.
-#
-# `Tests PRA` added 2026-09-23: PLAN-J7 § 1's domain vocabulary,
-# declared closed at four since 2026-09-11, was explicitly reopened to
-# five by the owner the same day `PLAN-J11` § 11.9.1's third and last
-# named gap ("tests PRA") was closed — a deliberate decision, not a
-# silent widening (the "Dette technique" card, closed the same day,
-# was deliberately kept out of this list for the opposite reason: it
-# is not a fifth domain). Weighted 25, the same as `Sauvegarde / PRA`
-# — the owner's own choice, 2026-09-23 ("même ordre de grandeur que le
-# domaine le plus proche en signification").
-#
-# `État persistant` added 2026-09-30 (1.6 tranche 2, R9): the domain
-# vocabulary reopened to six by the owner's own explicit decision,
-# the same deliberate-reopening discipline `Tests PRA` already
-# followed. Weighted 25, the owner's own choice, same criterion as
-# `Tests PRA` ("même ordre de grandeur que le domaine le plus proche
-# en signification").
-#
-# `Données d'AIStack` added 2026-10-09 (2.0, tranche 3, ADR-0021):
-# AIStack's own data directory against its declared disk budget.
-# Weighted 10, the same as `Stockage`, the domain closest in meaning.
-#
-# `Hôtes` added 2026-10-09 (2.0, tranche 2): the owner's decision of
-# the same day, "hôte silencieux = constat Santé" — a host collector
-# (ADR-0020) that stopped writing. Weighted 15, the same as `Services`,
-# the domain closest in meaning (something installed that stopped
-# running); the owner may change it in ./config.
-#
-# `Écarts d'inventaire` added 2026-09-30 (1.6 tranche 3, R9): the
-# domain vocabulary reopened to seven by the owner's own explicit
-# decision, the same deliberate-reopening discipline `Tests PRA`/
-# `État persistant` already followed. Weighted 25, the owner's own
-# choice, same criterion ("même ordre de grandeur que le domaine le
-# plus proche en signification").
+# AIStack — the health score's weights (OPS-0008): how many points each
+# domain of the health cockpit carries in the score out of 100. A
+# domain with nothing to measure on this installation counts for
+# nothing.
 
 weights:
   - domain: Stockage

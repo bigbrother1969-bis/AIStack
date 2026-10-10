@@ -114,7 +114,7 @@ def aide(request: Request) -> Response:
     finding (the owner's choice, 2026-09-18).
     """
 
-    return _render(request, "aide.html", {})
+    return _render(request, "aide.html", {"host": request.app.state.instance_config.lan_hostname})
 
 
 @router.get("", response_class=HTMLResponse, include_in_schema=False)

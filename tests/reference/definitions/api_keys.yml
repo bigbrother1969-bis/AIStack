@@ -1,0 +1,115 @@
+# The API keys and credentials AIStack's components read from the
+# environment, entered or replaced from Settings (the owner,
+# 2026-10-09: "toutes les clés API, même les futures"; "écriture
+# seule, 4 derniers caractères"). A new key a component reads is one
+# entry here: Settings offers it from then on.
+#
+# `name` is the environment variable the component reads; a value
+# entered in Settings is kept in the data directory
+# (`secrets/api_keys.json`, mode 0600) and wins over `.env.web`.
+# `secret: false` is a setting shown in full (an address); every other
+# value is never shown again, only its last four characters.
+# `applies`: when a change is taken into account. `test`: how Settings
+# checks the value (gemini, gotify, syncthing; absent: no test).
+#
+# `procedure` (2026-10-10, ADR-0023 § 5.5): where to get the value,
+# step by step, shown by the installation assistant and in Settings;
+# `{host}` is the server's address on the local network.
+# `prerequisite`: the software install.sh may have installed for it
+# (pocket-id, gotify, syncthing, ollama); `suggested`: a value to start
+# from, for a setting.
+#
+# Left out on purpose: the sign-in secrets (AISTACK_OIDC_CLIENT_SECRET,
+# AISTACK_WEB_ADMIN_SCRYPT) — changed from a page they guard, a mistake
+# would lock the owner out; they stay in `.env.web`, or in the
+# installation assistant's own store (step 3).
+
+keys:
+  - name: AISTACK_GEMINI_API_KEY
+    title: {fr: "Google Gemini — clé d'API", en: "Google Gemini — API key"}
+    used_by: {fr: "Avis de l'IA de l'assistant de pannes", en: "The troubleshooting assistant's AI opinion"}
+    applies: {fr: "immédiatement", en: "immediately"}
+    test: gemini
+    procedure:
+      fr:
+        - "Ouvre https://aistudio.google.com/apikey avec un compte Google."
+        - "« Create API key » (Créer une clé API) ; choisis ou crée un projet Google Cloud."
+        - "Copie la clé (elle commence par AIza) et colle-la ici. L'offre gratuite suffit."
+        - "Sans elle, l'avis de l'IA vient d'Ollama seul, sur ce serveur."
+      en:
+        - "Open https://aistudio.google.com/apikey with a Google account."
+        - "\"Create API key\"; choose or create a Google Cloud project."
+        - "Copy the key (it starts with AIza) and paste it here. The free tier is enough."
+        - "Without it, the AI's opinion comes from Ollama alone, on this server."
+  - name: AISTACK_GOTIFY_URL
+    title: {fr: "Gotify — adresse", en: "Gotify — address"}
+    used_by: {fr: "Notifications de la vigie", en: "The vigil's notifications"}
+    applies: {fr: "au prochain passage de la vigie (15 min au plus)", en: "at the vigil's next pass (15 min at most)"}
+    secret: false
+    prerequisite: gotify
+    suggested: "http://{host}:8070"
+    procedure:
+      fr:
+        - "L'adresse de Gotify vue du serveur ; installé par install.sh, c'est celle proposée."
+      en:
+        - "Gotify's address as the server sees it; installed by install.sh, it is the one suggested."
+  - name: AISTACK_GOTIFY_TOKEN
+    title: {fr: "Gotify — jeton de l'application", en: "Gotify — application token"}
+    used_by: {fr: "Notifications de la vigie", en: "The vigil's notifications"}
+    applies: {fr: "au prochain passage de la vigie (15 min au plus)", en: "at the vigil's next pass (15 min at most)"}
+    test: gotify
+    prerequisite: gotify
+    procedure:
+      fr:
+        - "Ouvre Gotify (http://{host}:8070) et connecte-toi en admin ; install.sh a mis son mot de passe dans /srv/gotify/.env."
+        - "Change ce mot de passe : la roue dentée en haut à droite."
+        - "Apps → Create Application, nom « AIStack » → copie son jeton (Token) et colle-le ici."
+        - "Sur ton téléphone : l'application Gotify, connectée à la même adresse, reçoit les messages."
+      en:
+        - "Open Gotify (http://{host}:8070) and sign in as admin; install.sh put its password in /srv/gotify/.env."
+        - "Change that password: the gear wheel at the top right."
+        - "Apps → Create Application, named \"AIStack\" → copy its Token and paste it here."
+        - "On your phone: the Gotify app, signed in to the same address, receives the messages."
+  - name: SYNCTHING_API_KEY
+    title: {fr: "Syncthing — clé d'API", en: "Syncthing — API key"}
+    used_by: {fr: "Synchronisation vers les appareils (création et relance des partages)", en: "Sync to devices (creating and re-offering shares)"}
+    applies: {fr: "immédiatement", en: "immediately"}
+    test: syncthing
+    prerequisite: syncthing
+    procedure:
+      fr:
+        - "Ouvre Syncthing (http://{host}:8384) ; à la première ouverture, définis un utilisateur et un mot de passe pour son interface."
+        - "Actions → Configuration (Settings) → onglet Général : copie la « Clé de l'API » (API Key) et colle-la ici."
+      en:
+        - "Open Syncthing (http://{host}:8384); the first time, set a user and a password for its interface."
+        - "Actions → Settings → General tab: copy the API Key and paste it here."
+  - name: JELLYFIN_API_KEY
+    title: {fr: "Jellyfin — clé d'API", en: "Jellyfin — API key"}
+    used_by: {fr: "Priorités CPU (lecture en cours)", en: "CPU priorities (playback in progress)"}
+    applies: {fr: "au redémarrage du conteneur resource-priority", en: "when the resource-priority container restarts"}
+    procedure:
+      fr:
+        - "Facultatif, si Jellyfin tourne sur ce serveur."
+        - "Jellyfin → Tableau de bord → Clés API → « + », nom « AIStack » → copie la clé et colle-la ici."
+      en:
+        - "Optional, if Jellyfin runs on this server."
+        - "Jellyfin → Dashboard → API Keys → \"+\", named \"AIStack\" → copy the key and paste it here."
+  - name: BESZEL_EMAIL
+    title: {fr: "Beszel — adresse e-mail", en: "Beszel — e-mail address"}
+    used_by: {fr: "Architecture (relevés Beszel)", en: "Architecture (Beszel readings)"}
+    applies: {fr: "au prochain rendu", en: "at the next rendering"}
+    secret: false
+    procedure:
+      fr:
+        - "Facultatif, si Beszel surveille tes machines : l'adresse e-mail d'un compte du hub Beszel (un compte en lecture suffit)."
+      en:
+        - "Optional, if Beszel watches your machines: the e-mail address of a Beszel hub account (a read-only one is enough)."
+  - name: BESZEL_PASSWORD
+    title: {fr: "Beszel — mot de passe", en: "Beszel — password"}
+    used_by: {fr: "Architecture (relevés Beszel)", en: "Architecture (Beszel readings)"}
+    applies: {fr: "au prochain rendu", en: "at the next rendering"}
+    procedure:
+      fr:
+        - "Le mot de passe de ce compte Beszel."
+      en:
+        - "That Beszel account's password."

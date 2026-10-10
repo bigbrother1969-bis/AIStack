@@ -83,12 +83,7 @@ def test_the_real_instance_config_definition_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     config = load_instance_config_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "instance"
-        / "definitions"
-        / "instance_config.yml"
+        repo_root / "tests" / "reference" / "definitions" / "instance_config.yml"
     )
 
     assert config.lan_hostname == "GIGABYTE"

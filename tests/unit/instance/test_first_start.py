@@ -33,7 +33,7 @@ def test_a_fresh_directory_still_holds_the_reference_host_s_instance_and_provide
 def test_an_edited_declaration_is_no_longer_reported(tmp_path: Path):
     init(tmp_path)
     path = tmp_path / "instance_config.yml"
-    path.write_text(path.read_text(encoding="utf-8").replace("GIGABYTE", "ELSEWHERE"), encoding="utf-8")
+    path.write_text(path.read_text(encoding="utf-8").replace("lan_hostname: localhost", "lan_hostname: ELSEWHERE"), encoding="utf-8")
 
     assert not still_shipped(tmp_path, "instance_config.yml")
     assert keys(tmp_path) == [AUTHENTICATION]

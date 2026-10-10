@@ -8,13 +8,13 @@
   <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
-  <!--
+  {#
     Nav partagée (aistack.renderers.nav.render_page_nav), 2026-09-30
     (constat 5) — l'URL du lien console/Paramètres qu'elle porte reste
     le lien direct LAN (GIGABYTE:8183), jamais l'adresse publique,
     même raisonnement que network_discovery_ui/templates/index.html :
     ce mini-app est volontairement LAN-only (ADR-0011 roadmap R1).
-  -->
+  #}
   {{ page_nav | safe }}
 
   <header>
@@ -22,12 +22,12 @@
     <p class="meta">{{ t('timemachine.streams_intro') }}</p>
   </header>
 
-  <!--
+  {#
     ADR-0011 §18 (1.4 cadrage, 2026-09-28): the network tree is a
     second view of this same mini-app, not a sixth one — this nav is
     the only thing new here, everything else on this page is
     unchanged.
-  -->
+  #}
   <nav class="view-switch">
     <span class="view-current">{{ t('timemachine.nav.streams') }}</span>
     <a href="{{ base }}/tree?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_tree') }}">{{ t('timemachine.nav.tree') }}</a>

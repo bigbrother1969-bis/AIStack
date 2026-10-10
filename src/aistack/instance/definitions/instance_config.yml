@@ -1,53 +1,21 @@
-# AIStack — instance configuration (R10, `ROADMAP-1.2-TO-2.0-
-# 2026-09-27.md`, cadré avec le owner le 2026-09-30).
+# AIStack — this installation's address on the local network.
 #
-# AIStack's own address on this deployment: the one LAN host every
-# service answers on, and each service's own port. Nothing here is
-# observed — every value was hand-confirmed the same way
-# `console_links.yml`'s own header comments already narrate it by
-# hand: `lan_hostname` is `infrastructure_topology.yml`'s own first
-# `hardware:` entry (GIGABYTE, the only host any AIStack process runs
-# on today); each port is the "next free port" the owner picked, in
-# order, as each mini-app was added — Selection UI first (Docker
-# Compose, :8181), then Priorité CPU ("next free port after Selection
-# UI's 8181", :8182), then the console itself (:8183), then Découverte
-# réseau (:8184), Assistant de pannes (:8185) and Time Machine (:8186)
-# — the exact history `console_links.yml` already kept before this
-# file existed.
+# `lan_hostname`: the name (or IP address) the local network's
+# computers reach this server by; `service_ports`: the public listener
+# (`console`, the one the reverse proxy forwards to) and the local
+# network's (`web_lan`, never behind the reverse proxy).
 #
-# Read by `aistack.console.yaml.load_console_links_yaml` (resolves a
-# `service:` entry in `console_links.yml` to its LAN address) and by
-# each mini-app's own `app.py`, in place of a hand-typed
-# `http://GIGABYTE:818X` literal — never written back by anything in
-# this repository, the same "hand-edited, read-only" discipline
-# `network_discovery.yml`'s own `cidr` already holds.
+# Filled by the installation assistant (/setup, step 1); edit it freely
+# afterwards — AIStack reads it again when it restarts.
 #
-# Moving AIStack to a different LAN host, or re-numbering a port,
-# changes exactly this file — never a search-and-replace across
-# `console_links.yml` and five separate mini-app processes.
-#
-# `web_lan`, added 2026-10-03 (`ADR-0012` § 3): the LAN listener of
-# AIStack's single web process, which also serves `console`'s port as
-# its public listener. 8186 since 2026-10-03, when the Time Machine —
-# the last screen — moved into the application and gave up that port
-# (8187 before), so that bookmark keeps answering. Never a Proxy Host
-# in Nginx Proxy Manager.
-#
-# Each screen that moves into that application leaves this list — its
-# port stops answering — and its console card names `web_lan` plus its
-# path instead: `network_discovery_ui` (8184), `priority_ui` (8182),
-# `selection_ui` (8181), `troubleshooting_assistant_ui` (8185) and
-# `timemachine_ui` (8186, now `web_lan` itself) on 2026-10-03.
+# `phase`: `development` while AIStack is being set up (an
+# administrator's Explication is validated as written, an ADR may be
+# accepted the day it is proposed); `production` once other people use
+# it (a second person validates, nothing is ever deleted). Absent means
+# `production`.
 
-lan_hostname: GIGABYTE
+lan_hostname: localhost
 service_ports:
   console: 8183
   web_lan: 8186
-
-# `phase`, added 2026-10-04 (`ADR-0016`): `development` while the owner
-# sets AIStack up and refines it — an administrator's Explication is
-# validated as written, a session's test entries can be purged, and an
-# ADR is accepted the day it is proposed; `production` brings back the
-# strict rules (a second person validates, nothing is ever deleted, an
-# ADR waits a day). Absent means `production`.
 phase: development

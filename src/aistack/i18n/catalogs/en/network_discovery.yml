@@ -3,7 +3,7 @@
 title: "AIStack — Network discovery (SSH users)"
 heading: "Network discovery — SSH users"
 meta: "Scanned subnet: {cidr} — SSH key environment variable: {key_env} — connection timeout: {timeout}s"
-warning: "This page runs on the LAN only, never through aistack.persiaut-family.fr. Every user name added here will be tried, unattended, against every host the network scan finds — only add real users you control."
+warning: "This page runs on the LAN only, never through the public address. Every user name added here will be tried, unattended, against every host the network scan finds — only add real users you control."
 list_heading: "Candidate users, tried in order"
 remove: "Remove"
 empty: "No user declared — the scan will not authenticate against any host until a name is added."

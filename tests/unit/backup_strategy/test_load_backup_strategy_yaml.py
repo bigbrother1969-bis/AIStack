@@ -154,12 +154,7 @@ def test_the_real_backup_strategy_definition_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     declarations = load_backup_strategy_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "backup_strategy"
-        / "definitions"
-        / "backup_strategy.yml"
+        repo_root / "tests" / "reference" / "definitions" / "backup_strategy.yml"
     )
 
     by_service = {d.service: d for d in declarations}

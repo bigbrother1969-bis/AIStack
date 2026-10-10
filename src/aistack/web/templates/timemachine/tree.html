@@ -8,7 +8,7 @@
   <style>{% include "timemachine/_style.html" %}</style>
 </head>
 <body>
-  <!--
+  {#
     ADR-0011 §18 (1.4 cadrage, 2026-09-28) — a second view of this
     same mini-app, same LAN-only convention as streams.html/node.html
     (ADR-0011 roadmap R1): direct LAN link, never the public address.
@@ -16,7 +16,7 @@
     `&q=…` (route `/tree`'s own `_page_nav(..., extra_query=…)` call)
     quand une recherche est active, pour ne jamais la perdre au
     changement de langue.
-  -->
+  #}
   {{ page_nav | safe }}
 
   <header>
@@ -31,11 +31,11 @@
     <a href="{{ base }}/explications?lang={{ lang }}" title="{{ t('timemachine.tooltip.nav_explications') }}">{{ t('timemachine.nav.explications') }}</a>
   </nav>
 
-  <!--
+  {#
     Cadrage 1.4, 2026-09-28: the honest gap, not a richer promise —
     real per-container history is 1.5's own collectors' job, so most
     nodes show no Historique link today.
-  -->
+  #}
   <div class="warning">{{ t('timemachine.tree.historique_notice') }}</div>
 
   <form class="tree-search" method="get" action="{{ base }}/tree">

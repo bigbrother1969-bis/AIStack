@@ -1,78 +1,12 @@
-# Resource priority definition — priority apps vs. background containers.
-#
-# Loaded by `load_resource_priority_yaml`
-# (`src/aistack/priority/yaml/store.py`), and read by the étape 4
-# monitor (`aistack.cli.resource_priority_monitor`).
-#
-# **This header and the section comments below are written by
-# `save_resource_priority_yaml` on every save, not preserved from
-# whatever was here before** — found live on GIGABYTE, 2026-09-03
-# (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`): a first
-# version of this function used a plain `yaml.safe_dump`, which has
-# no notion of comments at all, so a save from `priority_ui` was
-# silently discarding this file's entire documentation. A comment
-# that named one past decision (a date, a `docker inspect` reading,
-# a container that no longer exists) would go stale exactly when the
-# owner used `priority_ui` to change what it described, so what
-# replaced it is generic and structural rather than historical —
-# `git log` on this path is where that history now lives.
+# AIStack — CPU priorities between containers (the CPU priority
+# screen): `priority` lists the containers given more CPU while they
+# work (a `detector` says when: CPU above a threshold, or Jellyfin
+# playing), `background` the containers held back meanwhile. Written
+# by the screen; nothing is declared on a new installation.
 
-# One entry per priority app — boosted to its own `boosted_cpus`
-# while its own `detector` reports activity, restored to
-# `normal_cpus` otherwise. Each app follows only its own activity,
-# never another app's.
-priority:
-- container: immich_machine_learning
-  normal_cpus: 1.0
-  boosted_cpus: 3.0
-  detector:
-    type: cpu_threshold
-    threshold_percent: 50.0
-    sustained_seconds: 15.0
-- container: jellyfin
-  normal_cpus: 3.0
-  boosted_cpus: 4.0
-  detector:
-    type: jellyfin
-    url: http://127.0.0.1:8096
-    api_key_env: JELLYFIN_API_KEY
-    timeout_seconds: 5.0
-
-# The host's own core count. Docker cannot clear a CPU limit once
-# one has been set, so "unlimited" is written as a cap at every core
-# the host has — operationally the same thing.
+priority: []
 unlimited_cpus: 4.0
-
-# Seconds a priority app must sit idle before its background
-# containers are throttled back down — long enough to absorb a short
-# gap without thrashing, short enough that closing the app for good
-# gives the machine back promptly.
 grace_seconds: 60.0
-
-# `default_throttled_cpus` applies to every container below while
-# any priority app is active. A container's own `normal_cpus`, if
-# given, is only its resting-state value — omit it for "no limit at
-# rest". What is classified here (or as `priority` above) is an
-# owner decision made through `priority_ui`, or by hand; anything
-# Docker reports that is classified in neither place is left alone
-# entirely.
 background:
   default_throttled_cpus: 0.1
-  containers:
-  - name: autobrr
-  - name: bazarr
-  - name: booklore_db
-  - name: firefly
-  - name: gluetun
-  - name: komf
-    normal_cpus: 0.5
-  - name: lidarr
-  - name: mularr
-  - name: mylar3
-  - name: prowlarr
-  - name: qbittorrent
-  - name: radarr
-  - name: readarr
-  - name: seerr
-  - name: sonarr
-  - name: unpackerr
+  containers: []

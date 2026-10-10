@@ -72,11 +72,11 @@
     <p>{{ t('troubleshooting.index.loading') }}</p>
   </div>
 
-  <!--
+  {#
     Retour à la console servie par la même application, sur le même
     port LAN (ADR-0012) — jamais l'adresse publique : cet écran reste
     LAN-only (roadmap R1).
-  -->
+  #}
   <div class="top-links">
     <a class="back-link" href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
     <a class="back-link" href="{{ base }}/aide" title="{{ t('troubleshooting.tooltip.help') }}">{{ t('troubleshooting.help_link') }}</a>

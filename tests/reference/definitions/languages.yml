@@ -1,0 +1,40 @@
+# Interface languages — ADR-0010 (User Interface Localization).
+#
+# Declared by the owner 2026-09-27
+# (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`, decisions "Langues de
+# départ" and "Console applicative"): French is the reference language
+# — every screen this heritage already had was written in it — and
+# English is the second, the one that proves the mechanism really
+# translates rather than merely wraps French strings in a lookup.
+#
+# `reference` is the language every catalog is checked against
+# (`tests/unit/i18n/test_the_real_catalogs.py`): a key present in the
+# reference and absent from another language is a defect the suite
+# names, not a silent fallback. It is also the language served when a
+# visitor has chosen nothing.
+#
+# `name` is each language's own name for itself, never a translation
+# of it — "English", not "Anglais" — so a visitor who cannot read the
+# current language can still find their own in the list.
+#
+# `flag` names an SVG file under `flags/`, shown in every language
+# switch in place of the name (owner's request, 2026-09-27: "des
+# drapeaux au lieu du nom des langues"). A flag stands for a country,
+# not a language, so the name stays attached to it as its alternative
+# text and tooltip — what a screen reader says, and what a visitor
+# sees on hover. English uses the United Kingdom's flag. A language
+# declared without `flag` shows its name instead; nothing breaks.
+#
+# Adding a language is adding one entry here, its flag under `flags/`
+# and one directory under `catalogs/`, nothing else: no screen names a
+# language by code.
+
+reference: fr
+
+languages:
+  - code: fr
+    name: Français
+    flag: fr.svg
+  - code: en
+    name: English
+    flag: gb.svg

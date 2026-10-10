@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Accepted
   owner: Architecture
   created: 2026-10-10
@@ -147,6 +147,43 @@ rewritten around the script and the steps: what the person types, what
 they see, what each choice changes. At David's, the owner follows it
 as written; every place where it was not enough is a defect of 2.0.
 
+### 7. A new installation carries nothing of the reference host
+
+Decided by the owner, 2026-10-10, for the release candidate: "vérifier
+que la procédure d'installation installe une version propre et qui ne
+ramène aucune info de ma configuration actuelle : tout doit être
+découvert par AIStack".
+
+- **The package ships neutral declarations.** Until 2.0.0-rc1 the
+  shipped files under `src/aistack/*/definitions/` were the reference
+  host's own (GIGABYTE's services, disks, devices, domain, publisher),
+  and `config_init` copied them into every new configuration directory.
+  They now hold what a new installation can know: AIStack's own screens
+  (`console_links.yml`), its prerequisites' addresses (`sync.yml`'s
+  Syncthing, `ai_runtime.yml`), the thresholds that hold on any host
+  (`host: "*"` — the system disk, the GPU), empty lists everywhere a
+  person's infrastructure goes, each with an example in its comment.
+  `music_android.yml`, the reference host's legacy selection, is no
+  longer shipped.
+- **Discovered, not declared:** the network to scan
+  (`network_discovery.yml`, `cidr: auto` — the LAN of the interface
+  carrying the default route, from `/proc/net/route`); the containers,
+  as before, from Docker.
+- **The publisher is optional** (`console_identity.yml`): without one,
+  the legal notice says the installation is private; the software's
+  licence, sources and image stay.
+- **The reference host's declarations** live in
+  `tests/reference/definitions/`, which the test suite reads through
+  `AISTACK_REFERENCE_DIR` (between the configuration directory and the
+  package, never set in the image); `tests/unit/test_fresh_installation.py`
+  reads the package as a new installation does, and asks every page.
+- **An existing configuration directory keeps its files.** Its copies
+  were recorded as untouched copies of the reference host's values; the
+  first start of 2.0.0-rc1 makes them its owner's (`.shipped.json` and
+  `.shipped-seen.json` dropped once, `.shipped-generation` = 2), so they
+  never follow the neutral declarations. `config_init` now runs under a
+  lock: the seven containers start together.
+
 ## Implementation state
 
 | Part | State |
@@ -154,6 +191,7 @@ as written; every place where it was not enough is a defect of 2.0.
 | § 4 `install.sh` and the shipped prerequisite projects | done — `scripts/install.sh`, `deploy/prerequisites/{pocket-id,gotify,syncthing}` |
 | § 5 the guided first start | done — `/setup/step/1…6`: the installation token (`install.sh`, `aistack.cli.setup_token`), the host, the public address (the proxy hosts to create, the check), signing in (`secrets/sign_in.json`; the fallback administrator alone no longer leaves a client required), storage (`config/volumes.yml` through `COMPOSE_FILE`), the API keys with their procedures, the check of each prerequisite and the end (the token deleted, the restart command) |
 | § 6 the manual | done — *Mise en route d'une nouvelle installation* / *Setting up a new installation* rewritten around `install.sh` and the six steps (the git installation kept, for development); the README's *How to install* opens with them |
+| § 7 a neutral installation | done — neutral `definitions/`, `tests/reference/definitions/`, `cidr: auto`, `host: "*"`, optional publisher, generation 2 |
 | The test at David's | to do — after § 4–6 |
 
 ## Consequences

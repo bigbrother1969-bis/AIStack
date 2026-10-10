@@ -31,7 +31,7 @@ def test_a_missing_field_is_refused_never_left_blank(tmp_path: Path):
     path = tmp_path / "identity.yml"
     path.write_text('publisher: "X"\n', encoding="utf-8")
 
-    with pytest.raises(ValueError, match="is missing: legal_form"):
+    with pytest.raises(ValueError, match="is missing: copyright_year"):
         load_console_identity(path)
 
 

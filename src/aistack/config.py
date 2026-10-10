@@ -25,6 +25,14 @@ CONFIG_DIR_ENV = "AISTACK_CONFIG_DIR"
 # `docker-compose.yml` — for what a page tells the owner to edit: the
 # container's `/config` is not a path on the host (1.9).
 CONFIG_HOST_DIR_ENV = "AISTACK_CONFIG_HOST_DIR"
+# The reference host's own declarations (GIGABYTE's), read between the
+# configuration directory and the shipped files (2.0.0-rc1, the owner
+# 2026-10-10: a new installation "ne ramène aucune info de ma
+# configuration actuelle : tout doit être découvert par AIStack"). The
+# package ships neutral declarations; the reference values live in
+# `tests/reference/definitions/`, which the test suite and a development
+# checkout name here. Never set in the image.
+REFERENCE_DIR_ENV = "AISTACK_REFERENCE_DIR"
 PACKAGE_ROOT = Path(__file__).resolve().parent
 
 
@@ -45,14 +53,20 @@ def shown_config_dir() -> str | None:
 
 def configured(shipped: Path) -> Path:
     """The declaration to read for `shipped`: the configuration
-    directory's file of the same name when there is one, else `shipped`."""
+    directory's file of the same name when there is one, else the
+    reference directory's (development and tests), else `shipped`."""
 
-    directory = config_dir()
-    if directory is not None:
-        candidate = directory / shipped.name
-        if candidate.is_file():
-            return candidate
+    for directory in (config_dir(), reference_dir()):
+        if directory is not None:
+            candidate = directory / shipped.name
+            if candidate.is_file():
+                return candidate
     return shipped
+
+
+def reference_dir() -> Path | None:
+    value = os.environ.get(REFERENCE_DIR_ENV, "").strip()
+    return Path(value) if value else None
 
 
 def shipped_definitions() -> list[Path]:

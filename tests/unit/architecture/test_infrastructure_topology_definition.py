@@ -358,12 +358,7 @@ def test_the_real_infrastructure_topology_loads():
     repo_root = Path(__file__).resolve().parents[3]
 
     definition = load_infrastructure_topology_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "architecture"
-        / "definitions"
-        / "infrastructure_topology.yml"
+        repo_root / "tests" / "reference" / "definitions" / "infrastructure_topology.yml"
     )
 
     node_names = [node.name for node in definition.external_nodes]

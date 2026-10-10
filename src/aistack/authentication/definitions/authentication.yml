@@ -1,22 +1,22 @@
-# AIStack — how a person signs in to the web application (ADR-0013).
+# AIStack — how a person signs in (OpenID Connect, with Pocket ID or
+# another provider).
 #
-# Declared by the owner, 2026-10-03. Pocket ID's address and transport
-# were measured from GIGABYTE the same day (its discovery document's
-# `issuer` is exactly this value). The client ID and secret are not
-# here: they live in `.env.web`, read from the two variables named
-# below, and the fallback administrator's scrypt hash with them.
+# `issuer`: the identity provider's address; `public_base_url`:
+# AIStack's public address, behind the reverse proxy — both https://,
+# without a trailing /. Filled by the installation assistant (/setup,
+# step 2). The client's ID and secret, and the fallback administrator's
+# password hash, are never written here: the assistant keeps them in
+# the data directory (step 3), or `.env.web` names them.
+#
+# `admin_group`: the provider's group whose members are administrators
+# (its name, not its display name).
 
-issuer: "https://id.persiaut-family.fr"
-# The address the public listener is reached at, through Nginx Proxy
-# Manager and Cloudflare — the redirect URI is built from it, never
-# from a request header.
-public_base_url: "https://aistack.persiaut-family.fr"
+issuer: "https://id.example.org"
+public_base_url: "https://aistack.example.org"
 scopes: [openid, profile, email, groups]
 client_id_env: AISTACK_OIDC_CLIENT_ID
 client_secret_env: AISTACK_OIDC_CLIENT_SECRET
 local_admin_env: AISTACK_WEB_ADMIN_SCRYPT
-# The Pocket ID group whose members are administrators (ADR-0014 § 1):
-# its name — what the `groups` claim carries — not its display name.
 admin_group: aistack_admins
 session_idle_hours: 8
 session_absolute_days: 7

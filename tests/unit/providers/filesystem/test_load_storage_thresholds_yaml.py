@@ -207,13 +207,7 @@ def test_the_real_storage_thresholds_definition_loads():
     repo_root = Path(__file__).resolve().parents[4]
 
     register = load_storage_thresholds_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "providers"
-        / "filesystem"
-        / "definitions"
-        / "storage_thresholds.yml"
+        repo_root / "tests" / "reference" / "definitions" / "storage_thresholds.yml"
     )
 
     gigabyte = register.for_host("GIGABYTE")

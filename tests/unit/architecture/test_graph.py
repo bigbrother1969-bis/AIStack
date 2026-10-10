@@ -322,12 +322,7 @@ def test_the_real_categorization_joins_against_a_live_shaped_catalog_pair():
 
     repo_root = Path(__file__).resolve().parents[3]
     real_categorization = load_service_categorization_yaml(
-        repo_root
-        / "src"
-        / "aistack"
-        / "architecture"
-        / "definitions"
-        / "service_categorization.yml"
+        repo_root / "tests" / "reference" / "definitions" / "service_categorization.yml"
     )
 
     graph = build_architecture_graph(

@@ -148,23 +148,30 @@ def render_legal_html(
         f"{escape_text(identity.contact_url.removeprefix('https://'))}</a>"
     )
 
+    if identity.publisher:
+        publisher_lines = [
+            escape_text(
+                t(
+                    "console.legal.publisher_text",
+                    publisher=identity.publisher,
+                    legal_form=identity.legal_form,
+                    siren=identity.siren,
+                    city=identity.city,
+                )
+            )
+        ]
+        if identity.publication_director:
+            publisher_lines.append(escape_text(t("console.legal.director", director=identity.publication_director)))
+        if identity.contact_url:
+            publisher_lines.append(escape_text(t("console.legal.contact", contact_url="\0")).replace("\0", contact))
+    else:
+        # A private installation (2.0.0-rc1): nobody declared as publisher.
+        publisher_lines = [escape_text(t("console.legal.private"))]
+
     body = "\n".join(
         [
             f'  <h1>{escape_text(t("console.legal.title"))}</h1>',
-            _section(
-                t("console.legal.publisher_heading"),
-                escape_text(
-                    t(
-                        "console.legal.publisher_text",
-                        publisher=identity.publisher,
-                        legal_form=identity.legal_form,
-                        siren=identity.siren,
-                        city=identity.city,
-                    )
-                ),
-                escape_text(t("console.legal.director", director=identity.publication_director)),
-                escape_text(t("console.legal.contact", contact_url="\0")).replace("\0", contact),
-            ),
+            _section(t("console.legal.publisher_heading"), *publisher_lines),
             _section(t("console.legal.hosting_heading"), escape_text(t("console.legal.hosting_text"))),
             _section(t("console.legal.data_heading"), escape_text(t("console.legal.data_text"))),
             _section(

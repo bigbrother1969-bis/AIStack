@@ -148,7 +148,7 @@ def test_a_form_from_elsewhere_is_refused(tmp_path: Path, config: Path):
     )
 
     assert reply.status_code == 403
-    assert "lan_hostname: GIGABYTE" in (config / "instance_config.yml").read_text(encoding="utf-8")
+    assert "lan_hostname: localhost" in (config / "instance_config.yml").read_text(encoding="utf-8")
 
 
 # --------------------------------------------------------------------

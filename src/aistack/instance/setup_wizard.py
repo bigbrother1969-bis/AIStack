@@ -584,3 +584,38 @@ def read_volumes(directory: Path | None) -> list[str]:
     web = services.get("web") if isinstance(services, dict) else None
     volumes = web.get("volumes") if isinstance(web, dict) else None
     return [str(volume).split(":", 1)[0] for volume in volumes or []]
+
+
+# --------------------------------------------------------------------
+# Step 6 — the check, and the end
+# --------------------------------------------------------------------
+
+# The steps without which the assistant cannot be finished: the
+# reference host's name and addresses would stay, and nobody could sign in.
+REQUIRED_STEPS = (1, 2, 3)
+
+
+def check_ollama(host: str, port: int, model: str, ask: Any = probe) -> Check:
+    url = f"http://{host}:{port}/api/tags"
+    found: Probe = ask(url)
+    if found.status != 200:
+        return Check(url, False, found.reason if found.status is None else f"HTTP {found.status}")
+    try:
+        names = [str(item.get("name", "")) for item in json.loads(found.body).get("models", [])]
+    except (ValueError, AttributeError):
+        return Check(url, False, "not Ollama's model list")
+    wanted = model if ":" in model else f"{model}:latest"
+    if wanted not in names:
+        return Check(url, False, f"{model} missing — ollama pull {model}")
+    return Check(url, True, model)
+
+
+def missing_steps(generated: Path) -> list[int]:
+    saved = progress(generated)
+    return [step for step in REQUIRED_STEPS if step not in saved]
+
+
+def oidc_wanted(generated: Path) -> bool:
+    """False once the assistant chose the fallback administrator alone."""
+
+    return choices(generated).get("sign_in") != LOCAL_ONLY

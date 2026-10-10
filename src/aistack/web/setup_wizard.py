@@ -61,7 +61,7 @@ STEP_TITLES = {
     CHECK: "setup.step.check.title",
 }
 # The steps the pages hold today; the others are announced.
-READY = (HOST, PUBLIC, SIGN_IN, STORAGE, API_KEYS)
+READY = (HOST, PUBLIC, SIGN_IN, STORAGE, API_KEYS, CHECK)
 ERRORS = {
     "host_name": "setup.error.host_name",
     "port_range": "setup.error.port_range",
@@ -381,7 +381,61 @@ def _api_keys_values(request: Request) -> dict[str, Any]:
     return {}
 
 
+# Literal keys, so the catalog test sees every one of them.
+PREREQUISITES = {
+    "pocket_id": ("setup.step.check.item.pocket_id", "setup.step.check.lost.pocket_id"),
+    "ollama": ("setup.step.check.item.ollama", "setup.step.check.lost.ollama"),
+    "gemini": ("setup.step.check.item.gemini", "setup.step.check.lost.gemini"),
+    "gotify": ("setup.step.check.item.gotify", "setup.step.check.lost.gotify"),
+    "syncthing": ("setup.step.check.item.syncthing", "setup.step.check.lost.syncthing"),
+}
+OK, FAILED, ABSENT = "ok", "failed", "absent"
+
+
+def _run_checks(request: Request) -> list[dict[str, str]]:
+    """Each prerequisite asked once (ADR-0023 § 5.6). Gotify's test sends
+    a message to the phone: it runs on the owner's click only."""
+
+    from aistack.ai_runtime.yaml import load_ai_runtime_yaml
+    from aistack.troubleshooting.guide import AI_RUNTIME
+
+    generated = _generated(request)
+    t = _language(request).t
+    results: list[tuple[str, str, str]] = []
+    if wizard.oidc_wanted(generated):
+        answer, _errors = wizard.parse_public(**_public_values(request))
+        if answer is None:
+            results.append(("pocket_id", ABSENT, ""))
+        else:
+            found = wizard.check_pocket_id(answer, _ask(request))
+            results.append(("pocket_id", OK if found.ok else FAILED, found.detail if not found.ok else found.url))
+    runtime = load_ai_runtime_yaml(AI_RUNTIME)
+    if runtime.model:
+        ollama = wizard.check_ollama(runtime.host, runtime.port, runtime.model, _ask(request))
+        results.append(("ollama", OK if ollama.ok else FAILED, ollama.detail))
+    else:
+        results.append(("ollama", ABSENT, ""))
+    tester: Callable[[str], str | None] = request.app.state.test_api_key
+    for kind in ("gemini", "gotify", "syncthing"):
+        reason = tester(kind)
+        results.append((kind, ABSENT if reason is None else OK if reason == "" else FAILED, reason or ""))
+    return [
+        {"name": t(PREREQUISITES[kind][0]), "state": state, "detail": detail, "lost": t(PREREQUISITES[kind][1])}
+        for kind, state, detail in results
+    ]
+
+
+def _check_view(request: Request) -> dict[str, Any]:
+    generated = _generated(request)
+    install_dir = wizard.install_answers(generated).get("INSTALL_DIR") or "/srv/aistack"
+    return {
+        "missing": [STEP_TITLES[step] for step in wizard.missing_steps(generated)],
+        "install_dir": install_dir,
+    }
+
+
 VALUES = {
+    CHECK: lambda request: {},
     HOST: _host_values,
     PUBLIC: _public_values,
     SIGN_IN: _sign_in_values,
@@ -398,7 +452,7 @@ def _step_page(
     *,
     values: dict[str, Any] | None = None,
     errors: list[str] | None = None,
-    checks: list[wizard.Check] | None = None,
+    checks: list[Any] | None = None,
     status_code: int = 200,
 ) -> Response:
     if values is None:
@@ -418,7 +472,6 @@ def _step_page(
         "checks": checks,
         "next": following,
         "next_title": STEP_TITLES[following] if following is not None else "",
-        "last_ready": step == READY[-1],
     }
     if step == PUBLIC and step in saved:
         context["proxy"] = _proxy_hosts(request)
@@ -428,6 +481,8 @@ def _step_page(
         context["storage"] = _storage_view(request, values)
     if step == API_KEYS:
         context["keys"] = _keys_view(request)
+    if step == CHECK:
+        context["final"] = _check_view(request)
     return _render(request, "first_start/wizard.html", context, status_code)
 
 
@@ -448,6 +503,8 @@ def show_step(request: Request, step: int, check: str = "") -> Response:
         return _closed(request)
     if step not in READY:
         return RedirectResponse(f"{STEP_PATH}/{_first_unsaved(request)}", status_code=303)
+    if step == CHECK:
+        return _step_page(request, step, token, checks=_run_checks(request) if check else None)
     checks = None
     if check and step in (PUBLIC, SIGN_IN) and step in wizard.progress(_generated(request)):
         answer, _errors = wizard.parse_public(**_public_values(request))
@@ -497,6 +554,15 @@ async def save_step(request: Request, step: int) -> Response:
 
     if step == API_KEYS:
         return _save_key(request, values, when)
+
+    if step == CHECK:
+        if wizard.missing_steps(generated):
+            return RedirectResponse(f"{STEP_PATH}/{CHECK}", status_code=303)
+        wizard.mark_saved(generated, CHECK, when)
+        wizard.finish(generated, when)
+        response = _render(request, "first_start/wizard_finished.html", _check_view(request) | _finished_view(request))
+        response.delete_cookie(COOKIE, path="/setup")
+        return response
 
     if step == STORAGE:
         typed = values.get("typed", "")
@@ -573,3 +639,13 @@ def _save_key(request: Request, values: dict[str, str], when: datetime) -> Respo
         return back("")
     api_keys.apply_to_environ(generated, keys)
     return back(notice)
+
+
+def _finished_view(request: Request) -> dict[str, Any]:
+    definition = _definition()
+    host = _host_values(request)
+    return {
+        "public": definition.public_base_url,
+        "lan": f"http://{host['lan_hostname']}:{host['web_lan_port']}",
+        "oidc": wizard.oidc_wanted(_generated(request)),
+    }

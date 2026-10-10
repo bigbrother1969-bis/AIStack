@@ -95,15 +95,19 @@ def pending(
     client_id: str,
     client_secret: str,
     local_admin_hash: str,
+    oidc_wanted: bool = True,
 ) -> list[Pending]:
-    """What is still to declare, in the order to do it."""
+    """What is still to declare, in the order to do it. `oidc_wanted`
+    False: the installation assistant chose the fallback administrator
+    alone (ADR-0023 § 5.3) — no client is missing then, once that
+    administrator has a password."""
 
     found = []
     if directory is not None:
         for key, name in FIRST_DECLARATIONS.items():
             if still_shipped(directory, name):
                 found.append(Pending(key, required=True))
-    if not client_id or not client_secret:
+    if (not client_id or not client_secret) and (oidc_wanted or not local_admin_hash):
         found.append(Pending(SIGN_IN_SECRETS, required=True))
     if not local_admin_hash:
         found.append(Pending(FALLBACK_SECRET, required=False))

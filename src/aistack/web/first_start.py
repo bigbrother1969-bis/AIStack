@@ -14,6 +14,8 @@ environment, so nothing can change before the next restart.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, Response
 
@@ -61,7 +63,7 @@ _BADGE = (
 )
 
 
-def measured(authentication: object) -> list[Pending]:
+def measured(authentication: object, generated_dir: Path | None = None) -> list[Pending]:
     """What the application being created still lacks."""
 
     credentials = authentication.credentials  # type: ignore[attr-defined]
@@ -70,6 +72,7 @@ def measured(authentication: object) -> list[Pending]:
         client_id=credentials.client_id,
         client_secret=credentials.client_secret,
         local_admin_hash=credentials.local_admin_hash,
+        oidc_wanted=setup_wizard.oidc_wanted(generated_dir) if generated_dir is not None else True,
     )
 
 

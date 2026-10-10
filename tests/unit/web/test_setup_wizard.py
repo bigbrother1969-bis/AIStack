@@ -712,3 +712,94 @@ def test_settings_shows_each_key_s_procedure_too():
 
     for key in load_api_keys():
         assert key.steps("fr") and key.steps("en"), key.name
+
+
+# --------------------------------------------------------------------
+# Step 6 — the check, and the end
+# --------------------------------------------------------------------
+
+
+def through_step_three(tmp_path: Path):
+    app, generated, web, token = through_step_two(tmp_path)
+    save_sign_in(web, token, client_id="aistack-client", client_secret=SECRET, password=PASSWORD, again=PASSWORD)
+    app.state.test_api_key = lambda kind: {"gemini": "", "gotify": "401 Unauthorized", "syncthing": None}[kind]
+
+    def probe(url: str) -> wizard.Probe:
+        app.state.asked.append(url)
+        if url.endswith("/api/tags"):
+            return wizard.Probe(200, json.dumps({"models": [{"name": "qwen2.5:3b"}]}))
+        return wizard.Probe(200, json.dumps({"issuer": "https://id.sarfatti.fr"}))
+
+    app.state.setup_probe = probe
+    return app, generated, web, token
+
+
+def test_the_check_asks_each_prerequisite_once_and_says_what_is_lost(
+    tmp_path: Path, config: Path, no_sign_in_environment: None, no_api_keys: None
+):
+    app, _generated, web, _token = through_step_three(tmp_path)
+    app.state.asked.clear()
+
+    page = web.get("/setup/step/6?check=1&lang=fr").text
+
+    assert app.state.asked == [
+        "https://id.sarfatti.fr/.well-known/openid-configuration",
+        "http://127.0.0.1:11434/api/tags",
+    ]
+    assert page.count("✓ répond") == 3  # Pocket ID, Ollama, Gemini
+    assert "401 Unauthorized" in page and "pas de notifications de la vigie" in page
+    assert "pas configuré" in page and "pas de synchronisation vers les appareils" in page
+
+
+def test_nothing_is_asked_before_the_click(tmp_path: Path, config: Path, no_sign_in_environment: None):
+    app, _generated, web, _token = through_step_three(tmp_path)
+    app.state.asked.clear()
+
+    web.get("/setup/step/6")
+
+    assert app.state.asked == []
+
+
+def test_ollama_without_the_model_says_which_to_pull():
+    found = wizard.check_ollama("127.0.0.1", 11434, "qwen2.5:3b", lambda url: wizard.Probe(200, '{"models": []}'))
+
+    assert not found.ok and "ollama pull qwen2.5:3b" in found.detail
+
+
+def test_the_assistant_cannot_finish_before_the_first_three_steps(tmp_path: Path, config: Path):
+    _app, generated, web, token = opened(tmp_path, ANSWERS)
+
+    page = web.get("/setup/step/6?lang=fr").text
+    assert "Avant de terminer, il reste" in page and "Terminer l&#39;assistant" not in page
+
+    reply = web.post("/setup/step/6", data={"form_token": wizard.form_token(token)})
+    assert reply.status_code == 303
+    assert wizard.is_open(generated)
+
+
+def test_finishing_closes_the_assistant_and_says_how_to_restart(
+    tmp_path: Path, config: Path, no_sign_in_environment: None
+):
+    _app, generated, web, token = through_step_three(tmp_path)
+
+    reply = web.post("/setup/step/6?lang=fr", data={"form_token": wizard.form_token(token)})
+
+    assert reply.status_code == 200
+    assert "docker compose up -d --force-recreate" in reply.text
+    assert "https://aistack.sarfatti.fr" in reply.text
+    assert "http://192.168.1.53:8186/login/local" in reply.text
+    assert "aistack_setup=" in reply.headers["set-cookie"]
+    assert wizard.finished(generated) and not (generated / "setup" / "token").exists()
+    # Closed from now on, to this browser as to any other.
+    assert web.get("/setup/step/1").status_code == 403
+    assert not wizard.is_open(generated)
+
+
+def test_the_fallback_administrator_alone_is_not_nagged_for_a_client():
+    from aistack.instance.first_start import SIGN_IN_SECRETS, pending
+
+    nagged = pending(None, client_id="", client_secret="", local_admin_hash="scrypt$x", oidc_wanted=False)
+    assert SIGN_IN_SECRETS not in {item.key for item in nagged}
+    # Without its password, nobody could sign in: still required.
+    nobody = pending(None, client_id="", client_secret="", local_admin_hash="", oidc_wanted=False)
+    assert SIGN_IN_SECRETS in {item.key for item in nobody}

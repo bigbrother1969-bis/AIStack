@@ -266,15 +266,41 @@ docker compose up -d</pre>
     <input type="hidden" name="form_token" value="{{ form_token }}">
     <button type="submit" name="action" value="done" title="{{ t('setup.step.api_keys.tooltip_done') }}">{{ t('setup.step.api_keys.done') }}</button>
   </form>
+  {% elif step == 6 %}
+  <h2>{{ t('setup.step.check.title') }}</h2>
+  <p>{{ t('setup.step.check.intro') }}</p>
+  <p><a href="{{ action }}?check=1#checks" title="{{ t('setup.step.check.tooltip_run') }}">{{ t('setup.step.check.run') }}</a></p>
+  {% if checks %}
+  <table class="proxy" id="checks">
+    {% for item in checks %}
+    <tr>
+      <th>{{ item.name }}</th>
+      <td class="check {% if item.state == 'ok' %}ok{% elif item.state == 'failed' %}failed{% endif %}">
+        {% if item.state == 'ok' %}✓ {{ t('setup.step.check.state_ok') }}{% elif item.state == 'failed' %}✗ {{ t('setup.step.check.state_failed') }}{% else %}— {{ t('setup.step.check.state_absent') }}{% endif %}
+        {% if item.detail %}<br><code>{{ item.detail }}</code>{% endif %}
+        {% if item.state != 'ok' %}<br><span class="help">{{ item.lost }}</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  <h3>{{ t('setup.step.check.finish_heading') }}</h3>
+  {% if final.missing %}
+  <p class="errors">{{ t('setup.step.check.missing') }} {% for key in final.missing %}{{ t(key) }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+  {% else %}
+  <p>{{ t('setup.step.check.finish_text') }}</p>
+  <form class="step" method="post" action="{{ action }}">
+    <input type="hidden" name="form_token" value="{{ form_token }}">
+    <button type="submit" title="{{ t('setup.step.check.tooltip_finish') }}">{{ t('setup.step.check.finish') }}</button>
+  </form>
+  {% endif %}
   {% endif %}
 
   {% if saved and next %}
   <p><a href="/setup/step/{{ next }}" title="{{ t('setup.tooltip.step') }}">{{ t('setup.next', title=t(next_title)) }}</a></p>
-  {% elif saved and last_ready %}
-  <p class="done">{{ t('setup.rest_soon') }}</p>
   {% endif %}
 
-  <p class="note">{{ t('setup.restart_at_end') }}</p>
+  {% if step != 6 %}<p class="note">{{ t('setup.restart_at_end') }}</p>{% endif %}
   <a class="back" href="{{ setup_path }}?lang={{ lang }}" title="{{ t('setup.tooltip.overview') }}">{{ t('setup.overview') }}</a>
 </body>
 </html>

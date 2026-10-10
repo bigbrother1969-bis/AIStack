@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Accepted
   owner: Architecture
   created: 2026-10-10
@@ -152,7 +152,7 @@ as written; every place where it was not enough is a defect of 2.0.
 | Part | State |
 |---|---|
 | § 4 `install.sh` and the shipped prerequisite projects | done — `scripts/install.sh`, `deploy/prerequisites/{pocket-id,gotify,syncthing}` |
-| § 5 the guided first start | in progress — the installation token (`install.sh`, `aistack.cli.setup_token`), step 1 (the host) and step 2 (the public address, the proxy hosts to create, the check), step 3 (signing in: the Pocket ID procedure with the four addresses, the client's id and secret, the fallback administrator's password hashed — kept in `secrets/sign_in.json`, 0600, laid over the web process's environment at start) step 4 (storage: the host's disks listed by `install.sh`, other folders typed, `config/volumes.yml`) step 5 (every key of `api_keys.yml` with its `procedure` — also shown in Settings —, saved, tested and cleared as in Settings, same store) in `/setup/step/<n>`; step 6 to do |
+| § 5 the guided first start | done — `/setup/step/1…6`: the installation token (`install.sh`, `aistack.cli.setup_token`), the host, the public address (the proxy hosts to create, the check), signing in (`secrets/sign_in.json`; the fallback administrator alone no longer leaves a client required), storage (`config/volumes.yml` through `COMPOSE_FILE`), the API keys with their procedures, the check of each prerequisite and the end (the token deleted, the restart command) |
 | § 6 the manual | to do |
 | The test at David's | to do — after § 4–6 |
 

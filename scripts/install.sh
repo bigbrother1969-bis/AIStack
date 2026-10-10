@@ -231,10 +231,13 @@ prerequisite() {
 
 # ---------------------------------------------------------------- 4. prerequisites
 say "4. Les prérequis (chacun est facultatif)"
+WITH_POCKET_ID=no WITH_GOTIFY=no WITH_SYNCTHING=no WITH_OLLAMA=no
+domain="" id_name=""
 
 note "Pocket ID : la connexion par passkey. Sans lui, seul l'administrateur local se connecte."
 note "Il lui faut un nom de domaine et un reverse proxy en HTTPS (Nginx Proxy Manager, par exemple)."
 if ask "Installer Pocket ID ?"; then
+    WITH_POCKET_ID=yes
     domain="$(ask_value "Nom de domaine" "example.org")"
     id_name="$(ask_value "Adresse de Pocket ID" "id.$domain")"
     if prerequisite pocket-id; then
@@ -252,6 +255,7 @@ fi
 
 note "Gotify : les notifications de la vigie (santé qui baisse, Dock, hôte silencieux…)."
 if ask "Installer Gotify ?"; then
+    WITH_GOTIFY=yes
     if prerequisite gotify; then
         password="$(openssl rand -base64 18 2>/dev/null || head -c 18 /dev/urandom | base64)"
         write_file "$PREREQ_ROOT/gotify/.env" 600 <<EOF
@@ -266,6 +270,7 @@ fi
 
 note "Syncthing : la synchronisation vers les téléphones et les ordinateurs."
 if ask "Installer Syncthing ?"; then
+    WITH_SYNCTHING=yes
     if prerequisite syncthing; then
         write_file "$PREREQ_ROOT/syncthing/.env" 600 <<EOF
 PUID=$(id -u)
@@ -279,12 +284,14 @@ fi
 note "Ollama : l'IA locale, en secours de Gemini (modèle $MODEL, environ 2 Go)."
 if command -v ollama >/dev/null 2>&1; then
     note "Ollama déjà installé."
+    WITH_OLLAMA=yes
     if ! ollama list 2>/dev/null | grep -q "^$MODEL"; then
         if ask "Télécharger le modèle $MODEL ?"; then
             run ollama pull "$MODEL"
         fi
     fi
 elif ask "Installer Ollama et le modèle $MODEL ?"; then
+    WITH_OLLAMA=yes
     if [ "$DRY_RUN" -eq 1 ]; then
         note "[à faire] curl -fsSL https://ollama.com/install.sh | sh"
     else
@@ -295,8 +302,41 @@ fi
 
 # ---------------------------------------------------------------- 5. start
 say "5. Démarrer AIStack"
+# What the assistant's pages start from (ADR-0023 § 5) — never a
+# secret — and the installation token that opens them, kept until the
+# assistant is finished.
+SETUP_DIR="$DIR/data/setup"
+run mkdir -p "$SETUP_DIR"
+write_file "$SETUP_DIR/install.env" 600 <<EOF
+HOST_NAME=$(hostname)
+HOST_ADDRESS=$HOST_ADDRESS
+DOMAIN=$domain
+ID_NAME=$id_name
+POCKET_ID=$WITH_POCKET_ID
+GOTIFY=$WITH_GOTIFY
+SYNCTHING=$WITH_SYNCTHING
+OLLAMA=$WITH_OLLAMA
+EOF
+token=""
+if [ -f "$SETUP_DIR/finished" ]; then
+    note "L'assistant d'installation est déjà terminé : il reste fermé."
+elif [ -s "$SETUP_DIR/token" ]; then
+    token="$(cat "$SETUP_DIR/token")"
+elif [ "$DRY_RUN" -eq 1 ]; then
+    token="JETON"
+    note "[à faire] écrire $SETUP_DIR/token (mode 600)"
+else
+    token="$(openssl rand -hex 24 2>/dev/null || head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+    printf '%s\n' "$token" | write_file "$SETUP_DIR/token" 600
+fi
 run $DOCKER compose --project-directory "$DIR" -f "$DIR/docker-compose.yml" pull
 run $DOCKER compose --project-directory "$DIR" -f "$DIR/docker-compose.yml" up -d
 say "C'est prêt pour la suite dans le navigateur"
-note "Ouvre http://$HOST_ADDRESS:8186/setup depuis un poste du réseau local :"
-note "l'hôte, l'adresse publique, la connexion, le stockage et les clés d'API se règlent là."
+if [ -n "$token" ]; then
+    note "Ouvre cette adresse depuis un poste du réseau local (elle porte le jeton d'installation) :"
+    note "http://$HOST_ADDRESS:8186/setup/open?token=$token"
+    note "L'hôte, l'adresse publique, la connexion, le stockage et les clés d'API se règlent là."
+    note "Adresse perdue ? cd $DIR && docker compose exec web python -m aistack.cli.setup_token"
+else
+    note "Ouvre http://$HOST_ADDRESS:8186/setup depuis un poste du réseau local."
+fi

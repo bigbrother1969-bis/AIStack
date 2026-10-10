@@ -50,9 +50,15 @@ ANYONE = {
     "/notifications",
     # The console cards' pastilles (2026-10-10): nothing without a session.
     "/pending",
+    # The installation assistant (ADR-0023 § 5): its installation token
+    # answers for it, on the LAN only — tests/unit/web/test_setup_wizard.py.
+    "/setup/open",
+    "/setup/step",
+    "/setup/step/x",
 }
-# Sign-in itself, whose own checks (CSRF, password) answer for it.
-SIGN_IN_ACTIONS = {"/logout", "/login/local"}
+# Sign-in itself, whose own checks (CSRF, password) answer for it, and
+# the installation assistant, whose token does.
+SIGN_IN_ACTIONS = {"/logout", "/login/local", "/setup/step/x"}
 
 
 def build(tmp_path: Path, provider: FakeProvider | None = None):

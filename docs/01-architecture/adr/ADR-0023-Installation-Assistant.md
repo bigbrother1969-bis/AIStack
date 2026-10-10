@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-10-10
@@ -146,7 +146,7 @@ as written; every place where it was not enough is a defect of 2.0.
 | Part | State |
 |---|---|
 | § 4 `install.sh` and the shipped prerequisite projects | done — `scripts/install.sh`, `deploy/prerequisites/{pocket-id,gotify,syncthing}` |
-| § 5 the guided first start | to do |
+| § 5 the guided first start | in progress — the installation token (`install.sh`, `aistack.cli.setup_token`), step 1 (the host) and step 2 (the public address, the proxy hosts to create, the check) in `/setup/step/<n>`; steps 3–6 to do |
 | § 6 the manual | to do |
 | The test at David's | to do — after § 4–6 |
 
@@ -173,4 +173,13 @@ as written; every place where it was not enough is a defect of 2.0.
   `sarfatti.fr`, and Nginx Proxy Manager for HTTPS — Pocket ID can be
   installed there; the values are entered in the assistant (§ 5.2),
   never written in AIStack's shipped declarations.
-- The installation token's lifetime and where it is shown again if lost.
+- *Answered 2026-10-10:* the installation token lives in the data
+  directory (`setup/token`, mode 0600) until the assistant is finished;
+  `install.sh` shows the address that carries it, and
+  `docker compose exec web python -m aistack.cli.setup_token` shows it
+  again (`--new` replaces it, `--reopen` opens a finished assistant).
+  The address leaves it in a cookie for `/setup` alone (`HttpOnly`,
+  `SameSite=Strict`); each form carries a value derived from it. What
+  `install.sh` answered — the host's name and address, the domain, the
+  prerequisites installed, never a secret — is `setup/install.env`,
+  the pages' first values.

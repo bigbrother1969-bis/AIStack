@@ -30,10 +30,11 @@ from aistack.instance.first_start import (
     needs_setup,
     pending,
 )
+from aistack.instance import setup_wizard
 from aistack.renderers.console.pages import MANUAL_PATH
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import escape_text
-from aistack.web.exposure import PUBLIC
+from aistack.web.exposure import PUBLIC, arrival_port
 from aistack.web.templating import templates
 
 SETUP_PATH = "/setup"
@@ -126,6 +127,17 @@ def _file(key: str) -> str:
     return _where(FIRST_DECLARATIONS[key]) if key in FIRST_DECLARATIONS else ".env.web"
 
 
+def _assistant(request: Request) -> dict[str, object] | None:
+    """The installation assistant, when it is open (ADR-0023 § 5): said
+    on the local network only, where its pages answer."""
+
+    lan_port = request.app.state.listeners.lan_port
+    if arrival_port(request) != lan_port or not setup_wizard.is_open(request.app.state.generated_dir):
+        return None
+    opened = setup_wizard.token_matches(request.app.state.generated_dir, request.cookies.get(setup_wizard.COOKIE))
+    return {"opened": opened, "port": lan_port}
+
+
 @router.get(SETUP_PATH, response_class=HTMLResponse, include_in_schema=False)
 def setup(request: Request) -> Response:
     language = _language(request)
@@ -145,6 +157,7 @@ def setup(request: Request) -> Response:
         name="first_start/index.html",
         context={
             "items": items,
+            "assistant": _assistant(request),
             "needs_setup": needs_setup(request.app.state.first_start),
             "in_container": config_dir() is not None,
             "manual": f"{MANUAL_PATH}?lang={t.lang}#{t('first_start.manual_anchor')}",

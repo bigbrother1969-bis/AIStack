@@ -72,3 +72,13 @@ def test_shellcheck_finds_nothing():
 def test_the_shipped_prerequisites_are_the_ones_the_script_installs():
     shipped = {path.parent.name for path in (ROOT / "deploy" / "prerequisites").glob("*/compose.yml")}
     assert shipped == {"pocket-id", "gotify", "syncthing"}
+
+
+def test_it_leaves_the_assistant_its_answers_and_the_address_with_the_token(tmp_path: Path):
+    # ADR-0023 § 5: install.env (never a secret) and the token that opens /setup.
+    out = dry_run(tmp_path, LMDE).stdout
+
+    assert "data/setup/install.env (mode 600)" in out
+    assert "data/setup/token (mode 600)" in out
+    assert ":8186/setup/open?token=JETON" in out
+    assert "aistack.cli.setup_token" in out

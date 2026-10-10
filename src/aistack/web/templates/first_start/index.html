@@ -22,6 +22,18 @@
 <body>
   {{ page_nav | safe }}
   <h1>{{ t('first_start.heading') }}</h1>
+  {% if assistant %}
+  <section class="item required">
+    <h2>{{ t('setup.open_heading') }}</h2>
+    {% if assistant.opened %}
+    <p><a href="/setup/step" title="{{ t('setup.tooltip.continue') }}">{{ t('setup.open_continue') }}</a></p>
+    {% else %}
+    <p>{{ t('setup.open_token', port=assistant.port) }}</p>
+    <pre>cd /srv/aistack
+docker compose exec web python -m aistack.cli.setup_token</pre>
+    {% endif %}
+  </section>
+  {% endif %}
   {% if not items %}
   <p class="message">{{ t('first_start.all_declared') }}</p>
   {% else %}

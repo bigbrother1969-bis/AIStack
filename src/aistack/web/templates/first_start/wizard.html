@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('setup.title') }}</title>
+  <style>
+    {% include "auth/_style.html" %}
+    body { max-width: 820px; }
+    {{ page_nav_style | safe }}
+    ol.steps { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; margin: 1rem 0 1.4rem; }
+    ol.steps li { font-size: .82rem; padding: .25rem .7rem; border-radius: 999px; border: 1px solid #dde4ed; background: #fafbfc; color: #3f4a57; }
+    ol.steps li a { color: inherit; text-decoration: none; }
+    ol.steps li.current { background: #16335c; color: #fff; border-color: #16335c; }
+    ol.steps li.saved { border-color: #a5d6a7; background: #e8f5e9; }
+    ol.steps li.coming { color: #9aa5b1; border-style: dashed; }
+    form.step label { display: block; margin-top: .4rem; }
+    form.step input[type=text], form.step input[type=number] { width: 100%; max-width: 26rem; box-sizing: border-box;
+      padding: .45rem .6rem; font-size: .95rem; border: 1px solid #bbb; border-radius: 6px; }
+    form.step .help { color: #5b6b7d; font-size: .82rem; margin: .15rem 0 .2rem; }
+    form.step fieldset { border: 1px solid #dde4ed; border-radius: 6px; padding: .5rem .8rem; }
+    form.step fieldset label { font-weight: normal; }
+    .errors { background: #fdecea; border: 1px solid #f5c2c0; border-radius: 6px; padding: .6rem 1rem; }
+    .done { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px; padding: .6rem 1rem; }
+    table.proxy { border-collapse: collapse; font-size: .85rem; margin: .6rem 0; width: 100%; }
+    table.proxy th, table.proxy td { border: 1px solid #dde4ed; padding: .35rem .5rem; text-align: left; vertical-align: top; }
+    table.proxy th { background: #f4f6f9; }
+    .check.ok { color: #1b5e20; } .check.failed { color: #9b1c1c; }
+    pre { background: #f4f6f9; border: 1px solid #dde4ed; border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; white-space: pre-wrap; }
+    code { word-break: break-all; }
+  </style>
+</head>
+<body>
+  {{ page_nav | safe }}
+  <h1>{{ t('setup.heading') }}</h1>
+  <ol class="steps">
+    {% for item in steps %}
+    <li class="{% if item.current %}current{% elif item.saved %}saved{% elif not item.ready %}coming{% endif %}"
+        title="{% if item.saved %}{{ t('setup.tooltip.saved', when=item.saved) }}{% elif not item.ready %}{{ t('setup.tooltip.coming') }}{% else %}{{ t('setup.tooltip.step') }}{% endif %}">
+      {% if item.ready and not item.current %}<a href="/setup/step/{{ item.number }}">{% endif %}
+      {{ item.number }}. {{ t(item.title) }}{% if item.saved %} ✓{% endif %}
+      {% if item.ready and not item.current %}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+
+  {% if errors %}
+  <div class="errors" role="alert">
+    <strong>{{ t('setup.errors') }}</strong>
+    <ul>{% for key in errors %}<li>{{ t(key) }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  {% if step == 1 %}
+  <h2>{{ t('setup.step.host.title') }}</h2>
+  <p>{{ t('setup.step.host.intro') }}</p>
+  <form class="step" method="post" action="{{ action }}">
+    <input type="hidden" name="form_token" value="{{ form_token }}">
+    <label for="lan_hostname">{{ t('setup.step.host.lan_hostname') }}</label>
+    <p class="help">{{ t('setup.step.host.lan_hostname_help') }}{% if answers.HOST_ADDRESS %} {{ t('setup.step.host.lan_hostname_address', address=answers.HOST_ADDRESS) }}{% endif %}</p>
+    <input type="text" id="lan_hostname" name="lan_hostname" value="{{ values.lan_hostname }}" required>
+    <label for="console_port">{{ t('setup.step.host.console_port') }}</label>
+    <p class="help">{{ t('setup.step.host.console_port_help') }}</p>
+    <input type="number" id="console_port" name="console_port" value="{{ values.console_port }}" min="1024" max="65535" required>
+    <label for="web_lan_port">{{ t('setup.step.host.web_lan_port') }}</label>
+    <p class="help">{{ t('setup.step.host.web_lan_port_help') }}</p>
+    <input type="number" id="web_lan_port" name="web_lan_port" value="{{ values.web_lan_port }}" min="1024" max="65535" required>
+    <fieldset>
+      <legend>{{ t('setup.step.host.phase') }}</legend>
+      <label><input type="radio" name="phase" value="development"{% if values.phase == 'development' %} checked{% endif %}> {{ t('setup.step.host.phase_development') }}</label>
+      <label><input type="radio" name="phase" value="production"{% if values.phase == 'production' %} checked{% endif %}> {{ t('setup.step.host.phase_production') }}</label>
+    </fieldset>
+    <p class="note">{{ t('setup.written_to', file=config_file) }}</p>
+    <button type="submit" title="{{ t('setup.tooltip.save') }}">{{ t('setup.save_next') }}</button>
+  </form>
+  {% elif step == 2 %}
+  <h2>{{ t('setup.step.public.title') }}</h2>
+  <p>{{ t('setup.step.public.intro') }}</p>
+  <form class="step" method="post" action="{{ action }}">
+    <input type="hidden" name="form_token" value="{{ form_token }}">
+    <label for="domain">{{ t('setup.step.public.domain') }}</label>
+    <p class="help">{{ t('setup.step.public.domain_help') }}</p>
+    <input type="text" id="domain" name="domain" value="{{ values.domain }}" placeholder="example.org" required>
+    <fieldset>
+      <legend>{{ t('setup.step.public.proxy') }}</legend>
+      <label><input type="radio" name="proxy" value="npm"{% if values.proxy != 'other' %} checked{% endif %}> {{ t('setup.step.public.proxy_npm') }}</label>
+      <label><input type="radio" name="proxy" value="other"{% if values.proxy == 'other' %} checked{% endif %}> {{ t('setup.step.public.proxy_other') }}</label>
+    </fieldset>
+    <label for="aistack_name">{{ t('setup.step.public.aistack_name') }}</label>
+    <p class="help">{{ t('setup.step.public.aistack_name_help') }}</p>
+    <input type="text" id="aistack_name" name="aistack_name" value="{{ values.aistack_name }}" placeholder="aistack.example.org">
+    <label for="id_name">{{ t('setup.step.public.id_name') }}</label>
+    <p class="help">{{ t('setup.step.public.id_name_help') }}</p>
+    <input type="text" id="id_name" name="id_name" value="{{ values.id_name }}" placeholder="id.example.org">
+    <p class="note">{{ t('setup.written_to', file=config_file) }}</p>
+    <button type="submit" title="{{ t('setup.tooltip.save') }}">{{ t('setup.save') }}</button>
+  </form>
+
+  {% if proxy %}
+  <section id="proxy-hosts">
+    <h2>{{ t('setup.step.public.hosts_heading') }}</h2>
+    <p>{% if values.proxy == 'other' %}{{ t('setup.step.public.hosts_intro_other') }}{% else %}{{ t('setup.step.public.hosts_intro_npm') }}{% endif %}</p>
+    <table class="proxy">
+      <tr>
+        <th>{{ t('setup.step.public.column.name') }}</th>
+        <th>{{ t('setup.step.public.column.scheme') }}</th>
+        <th>{{ t('setup.step.public.column.forward') }}</th>
+        <th>{{ t('setup.step.public.column.port') }}</th>
+        <th>{{ t('setup.step.public.column.for') }}</th>
+      </tr>
+      {% for row in proxy.rows %}
+      <tr>
+        <td><code>{{ row.name }}</code></td>
+        <td>http</td>
+        <td><code>{{ proxy.address }}</code></td>
+        <td><code>{{ row.port }}</code></td>
+        <td>{% if row.what == 'aistack' %}{{ t('setup.step.public.for_aistack') }}{% else %}{{ t('setup.step.public.for_pocket_id') }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% if values.proxy != 'other' %}
+    <p class="note">{{ t('setup.step.public.npm_options') }}</p>
+    {% endif %}
+    <p class="note">{{ t('setup.step.public.dns') }}</p>
+    {% if proxy.pocket_id_url_differs %}
+    <p>{{ t('setup.step.public.app_url', url=proxy.pocket_id_url) }}</p>
+    <pre>sed -i 's|^APP_URL=.*|APP_URL={{ proxy.pocket_id_url }}|' /srv/pocket-id/.env
+docker compose --project-directory /srv/pocket-id up -d</pre>
+    {% endif %}
+    <h3>{{ t('setup.step.public.check_heading') }}</h3>
+    {% if checks %}
+    <ul>
+      {% for check in checks %}
+      <li class="check {% if check.ok %}ok{% else %}failed{% endif %}">
+        {% if check.ok %}✓{% else %}✗{% endif %} <code>{{ check.url }}</code> — {% if check.ok %}{{ t('setup.check.ok') }}{% else %}{{ t('setup.check.failed', reason=check.detail) }}{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if not (checks | selectattr('ok') | list | length == checks | length) %}
+    <p class="note">{{ t('setup.step.public.check_hint') }}</p>
+    {% endif %}
+    {% endif %}
+    <p><a href="{{ action }}?check=1#proxy-hosts" title="{{ t('setup.tooltip.check') }}">{{ t('setup.step.public.check') }}</a></p>
+    <p class="done">{{ t('setup.step.public.next_soon') }}</p>
+  </section>
+  {% endif %}
+  {% endif %}
+
+  <p class="note">{{ t('setup.restart_at_end') }}</p>
+  <a class="back" href="{{ setup_path }}?lang={{ lang }}" title="{{ t('setup.tooltip.overview') }}">{{ t('setup.overview') }}</a>
+</body>
+</html>

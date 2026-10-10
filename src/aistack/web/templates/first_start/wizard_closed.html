@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('setup.title') }}</title>
+  <style>
+    {% include "auth/_style.html" %}
+    {{ page_nav_style | safe }}
+    pre { background: #f4f6f9; border: 1px solid #dde4ed; border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  {{ page_nav | safe }}
+  <h1>{{ t('setup.heading') }}</h1>
+  {% if finished %}
+  <p class="message">{{ t('setup.closed.finished') }}</p>
+  {% else %}
+  <p class="message error">{{ t('setup.closed.token') }}</p>
+  <p>{{ t('setup.closed.again') }}</p>
+  <pre>cd /srv/aistack
+docker compose exec web python -m aistack.cli.setup_token</pre>
+  {% endif %}
+  <a class="back" href="{{ setup_path }}?lang={{ lang }}" title="{{ t('setup.tooltip.overview') }}">{{ t('setup.overview') }}</a>
+</body>
+</html>

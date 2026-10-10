@@ -52,6 +52,8 @@ from aistack.web import dock as dock_screen
 from aistack.web import health
 from aistack.web import notifications
 from aistack.web import pending as pending_screen
+from aistack.web import setup_wizard as setup_wizard_screen
+from aistack.instance.setup_wizard import probe as setup_probe
 from aistack.web.ai_jobs import AIJobs
 from aistack.instance.data_location import location_file
 from aistack.web.authentication import (
@@ -196,10 +198,14 @@ def create_app(
     # What a new installation still has to declare (ADR-0017 § 4),
     # measured once: nothing it reads changes before a restart.
     app.state.first_start = pending if pending is not None else first_start.measured(app.state.authentication)
+    # What the installation assistant asks of the public addresses
+    # (ADR-0023 § 5); replaced in tests.
+    app.state.setup_probe = setup_probe
     app.state.routers = []
 
     include(app, console.router)
     include(app, first_start.router)
+    include(app, setup_wizard_screen.router)
     include(app, storage_screen.router)
     include(app, declarations_screen.router)
     include(app, api_keys_screen.router)

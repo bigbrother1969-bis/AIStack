@@ -5,9 +5,8 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from pathlib import Path
-
-import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = ROOT / "scripts" / "install.sh"
@@ -61,9 +60,13 @@ def test_another_system_is_told_what_to_install_and_stops(tmp_path: Path):
     assert "Docker Engine et le plugin Compose" in result.stderr
 
 
-@pytest.mark.skipif(shutil.which("shellcheck") is None, reason="shellcheck not installed")
 def test_shellcheck_finds_nothing():
-    assert subprocess.run(["shellcheck", str(SCRIPT)], capture_output=True, text=True).returncode == 0
+    # From the `dev` extra (`shellcheck-py`), installed beside pytest.
+    beside = Path(sys.executable).parent / "shellcheck"
+    shellcheck = shutil.which("shellcheck") or (str(beside) if beside.exists() else None)
+    assert shellcheck, 'shellcheck missing: python -m pip install -e ".[dev]"'
+    result = subprocess.run([shellcheck, str(SCRIPT)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout
 
 
 def test_the_shipped_prerequisites_are_the_ones_the_script_installs():

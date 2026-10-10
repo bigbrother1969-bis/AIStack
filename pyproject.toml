@@ -111,6 +111,9 @@ dev = [
     # with (ADR-0012 § 4). `httpx2`, not `httpx`: Starlette 1.7 warns
     # that its test client's use of `httpx` is deprecated.
     "httpx2>=2.13",
+    # `scripts/install.sh` is checked by shellcheck in the suite
+    # (ADR-0023 § 4): a test never skipped for want of the tool.
+    "shellcheck-py>=0.10",
 ]
 
 [project.urls]

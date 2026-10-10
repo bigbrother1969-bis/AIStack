@@ -13,17 +13,23 @@ from __future__ import annotations
 
 import os
 import re
+import socket
 import sys
+import tempfile
 from pathlib import Path
 
 assert not os.environ.get("AISTACK_REFERENCE_DIR"), "the reference host's declarations must not be read"
 
 generated = Path(sys.argv[1])
 
-# The machine running the test is not the reference host: its own paths
-# (a pytest directory under /tmp named after its user, its home) are
-# what the pages show of where the data is, and say nothing shipped.
-_OWN_PATHS = re.compile(r"/tmp/pytest-of-[^/\s\"'<]+|" + re.escape(str(Path.home())))
+# What the machine running the test shows of itself says nothing shipped:
+# the test's own directory (pytest's, under whatever TMPDIR names — on
+# GIGABYTE /media/TechData/duplicity-tmp/pytest-of-big-brother/…), its
+# home, and its host name, which the pages rightly discover (GIGABYTE
+# when the suite runs there). What AIStack ships is checked for these
+# names by test_fresh_installation.py on every machine, from the files.
+_OWN = sorted({str(generated.parents[2]), str(Path(tempfile.gettempdir())), str(Path.home()), socket.gethostname()}, key=len, reverse=True)
+_OWN_PATHS = re.compile("|".join(re.escape(own) for own in _OWN if own))
 _REFERENCE = re.compile(r"GIGABYTE|persiaut|TechData|[Rr]aspberry|PNTJYZD|big-brother|192\.168\.1\.10|sarfatti")
 
 

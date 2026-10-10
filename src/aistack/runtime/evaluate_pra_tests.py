@@ -1,44 +1,10 @@
 """
-`evaluate_pra_tests` — the Tests-PRA-domain analogue of
-`evaluate_backup`, correlating an already-confirmed `PraTestGap` into
-a `RuntimeFinding` citing the three `OPS-0004` qualifications the
-owner confirmed when `PLAN-J11` § 11.9.1's third and last named gap
-("tests PRA") was reopened, 2026-09-23
-(`claude/PLAN-J11-CONSOLE-2026-09-11.md`).
+Turn `PraTestGap`s (`OPS-0009` restore tests untested, failed, stale or not
+declared) into `RuntimeFinding`s.
 
-**A reopened, declared requirement, examined the same way the fourth
-reference case was.** `OPS-0006` (2026-09-11) named periodic restore
-tests out of scope for Sauvegarde/PRA v1; the owner reopened exactly
-that boundary, on her own explicit decision, once "dette technique"
-and "CMDB temps réel" — the other two `PLAN-J11` § 11.9.1 gaps — were
-closed the same day. `GOV-P-001` applies the same way it did for the
-fourth reference case: the owner states the requirement and the
-qualifications examined against it, this module invents nothing
-beyond what she confirmed.
-
-**A separate function, not a branch inside `evaluate`.** Same
-reasoning `evaluate_backup`/`evaluate_services` already give: a
-`PraTestGap` has no second reading to correlate against — one
-declared service's own last-known test state, read once, already
-says whether it qualifies (`find_pra_test_gaps`, against `OPS-0009`).
-
-**Qualifications are fixed, not derived per finding.** Mirrors
-`evaluate_services`: always cites three — technical debt,
-sustainability anomaly, deployment misconfiguration — because that is
-what the owner confirmed for this case's full vocabulary examination
-(2026-09-23), not something re-derived per gap. Energy inefficiency
-was explicitly excluded by the owner and is never cited here — the
-same exclusion `evaluate_services` already makes for its own third
-reference incident, for the same case-by-case reason: examined and
-found not to apply, not assumed absent by analogy.
-
-**A fourth reason, an eighth reference case, the same three
-qualifications.** 1.6 tranche 4 (R9, 2026-09-30) reopened this
-domain once more to add `NOT_DECLARED`: a service `OPS-0010` already
-declares stateful but `OPS-0009`'s own file never names at all. Cadred
-separately (2026-09-30) rather than assumed by analogy with the first
-three reasons — the owner confirmed the same three qualifications
-apply, energy inefficiency staying excluded here too.
+Always cites three `OPS-0004` qualifications: technical debt, sustainability
+anomaly and deployment misconfiguration. Energy inefficiency does not apply
+to this domain.
 """
 
 from __future__ import annotations
@@ -57,45 +23,26 @@ from aistack.contracts.pra_test_gap import (
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.undeclared import UNDECLARED
 
-# `OPS-0004`'s own vocabulary — see `RuntimeFinding.QUALIFICATIONS` for
-# the full closed list.
+# `OPS-0004` vocabulary; `RuntimeFinding.QUALIFICATIONS` holds the full list.
 TECHNICAL_DEBT = "OPS-0004/technical-debt"
 SUSTAINABILITY_ANOMALY = "OPS-0004/sustainability-anomaly"
 DEPLOYMENT_MISCONFIGURATION = "OPS-0004/deployment-misconfiguration"
 
-# The three qualifications the owner confirmed when this gap was
-# reopened, 2026-09-23 — energy inefficiency was examined and
-# explicitly excluded.
 PRA_TEST_GAP_QUALIFICATIONS = (
     TECHNICAL_DEBT,
     SUSTAINABILITY_ANOMALY,
     DEPLOYMENT_MISCONFIGURATION,
 )
 
-# There is no provider behind a `PraTestReading` — it is loaded
-# directly from `OPS-0009`'s declared YAML
-# (`aistack.pra.yaml.load_pra_tests_yaml`), not collected from a live
-# system. `CitedReading.provider` still names something, the same way
-# every other citation in this heritage does; this names the loader
-# itself, the closest analogue to a `provider_id` a declared-only
-# record has.
+# A reading is loaded from YAML, not collected by a provider, so the loader
+# itself is cited as the source.
 PRA_TESTS_SOURCE = "aistack.pra.yaml.load_pra_tests_yaml"
 
-# The signature `RuntimeFinding.signature` cites — `OPS-0004` itself,
-# the register that authors this correlation, the same role it plays
-# for `evaluate_backup`/`evaluate_services`.
 SIGNATURE = "OPS-0004"
 
 
 def evaluate_pra_tests(gaps: Sequence[PraTestGap]) -> tuple[RuntimeFinding, ...]:
-    """
-    One `RuntimeFinding` per declared service `find_pra_test_gaps`
-    already found failing, citing the three qualifications the owner
-    confirmed when this gap was reopened.
-
-    Pure: gaps already found in, findings out — the same discipline
-    `evaluate_backup`/`evaluate_services` already hold.
-    """
+    """One `RuntimeFinding` per restore-test gap."""
 
     return tuple(
         RuntimeFinding(
@@ -129,11 +76,8 @@ def _interpretation(gap: PraTestGap) -> str:
     if gap.reason == STALE:
         reading = gap.reading
 
-        # `PraTestGap.__post_init__` already guarantees `reason ==
-        # STALE` implies `tested_at is not None` — but that guarantee
-        # lives on a different type, so mypy cannot see it from here.
-        # Checking it directly, rather than asserting past it, narrows
-        # it for the rest of this branch without a bare `assert`.
+            # STALE implies `tested_at` is set; check it so mypy can narrow
+            # the type.
         if reading.tested_at is None:
             return (
                 f"{service}'s last successful restore test is older than "
@@ -164,9 +108,7 @@ def _interpretation(gap: PraTestGap) -> str:
             f"misconfiguration)."
         )
 
-    # `PraTestGap.__post_init__` restricts `reason` to `REASONS`
-    # (`FAILED_REASON`/`STALE`/`NOT_DECLARED`/`UNTESTED`); the three
-    # above are each checked, so only `UNTESTED` reaches here.
+    # Only UNTESTED remains after the checks above.
     assert gap.reason == UNTESTED
 
     return (

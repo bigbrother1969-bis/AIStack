@@ -15,59 +15,23 @@ from aistack.providers.docker.events_history import (
     record_docker_events,
 )
 
-# `aistack.timemachine.projection.docker_events.STEM` redeclared here
-# the same way this module's own `DEFAULT_OUTPUT_PATH` import already
-# crosses the collector/projector boundary by value, not by importing
-# across it — the stream this monitor's own gaps are filed under.
+# Same value as `aistack.timemachine.projection.docker_events.STEM`: the
+# stream this monitor's gaps are filed under.
 STREAM_STEM = "docker-events"
 
-# Cadrage 2026-09-28 (`go 1.5`): a governed polling loop, the same
-# shape `aistack.cli.resource_priority_monitor` already established
-# as this heritage's one precedent for a long-running collector — see
-# `aistack.providers.docker.events`'s own module comment for the full
-# reasoning the owner chose this over a continuous `docker events`
-# subscription.
-#
-# Docker events are less time-sensitive than the CPU/Jellyfin
-# transitions `resource_priority_monitor`'s own `POLL_SECONDS = 5.0`
-# watches (a missed 5-second window there can mean a throttled
-# container during real playback); nothing here is watching for a
-# human-perceptible transition. Proposed at double that interval — the
-# agent's own default, not tuned against a real measurement, and the
-# owner's to change with a single edit here, the same way
-# `resource_priority_monitor.py`'s own comment already names its
-# constant as "the owner's own decision... not tuned here".
+# Polling rather than a continuous `docker events` subscription; see
+# `aistack.providers.docker.events` for why.
 POLL_SECONDS = 10.0
 
-# Found needed 2026-09-28, the day this monitor was first run by hand on
-# GIGABYTE: `./run_docker_events_monitor.sh --once --dry-run`, its own
-# `USAGE` text's stated purpose ("for a first manual check against the
-# real Docker daemon"), printed nothing at all — not an error, silence.
-# A first run with no checkpoint set `since = until = now()`, a
-# zero-width window that structurally cannot observe anything Docker has
-# ever reported, however real; `--dry-run` compounds it, since it never
-# persists a checkpoint either, so a *second* `--once --dry-run` right
-# after computes its own fresh "now" and is exactly as empty as the
-# first — two manual checks can never build on each other.
-#
-# `run_cycle`'s own first-run default now looks back this many seconds
-# instead of starting at `until` — small and bounded, not the unmeasured
-# backfill `ARC-P-006` warns this module's own docstring against; long
-# enough that `docker restart <container>` followed immediately by
-# `--once --dry-run` has a real chance of being seen, on GIGABYTE's own
-# 5-second `POLL_SECONDS`-adjacent order of magnitude. Applies to every
-# first run, looping or `--once` alike — a service started fresh, or
-# restarted after a crash, is no worse off catching the few seconds
-# before its own start than losing them outright.
+# With no checkpoint, the first window looks back this far instead of
+# being empty (`since == until`), so a manual `--once --dry-run` right
+# after `docker restart` can see the events. Small and bounded: no full
+# history backfill.
 FIRST_RUN_LOOKBACK_SECONDS = 60.0
 
 DEFAULT_CHECKPOINT_PATH = Path("reports/generated/docker-events/checkpoint.json")
 
-# `aistack.generators.collection_gap.record_collection_gap`'s own
-# `generated_dir` parameter — redeclared here the same convention
-# `aistack.timemachine.projection`'s own comment already names ("every
-# CLI module... redeclares `GENERATED_DIR`... rather than importing a
-# shared constant nothing in this heritage has ever declared").
+# Root under which `record_collection_gap` writes.
 DEFAULT_GENERATED_DIR = Path("reports/generated")
 
 USAGE = (
@@ -160,10 +124,10 @@ def parse(argv: list[str]) -> tuple[Path, Path, Path, bool, bool]:
 
 def load_checkpoint(checkpoint_path: Path) -> str | None:
     """
-    The `--since` boundary of the next poll, or `None` on a first run
-    — no checkpoint file yet, or one that fails to parse (treated the
-    same as absent: a monitor must never crash for good on a
-    corrupted checkpoint it can simply re-establish).
+    The `--since` boundary of the next poll, or None on a first run.
+
+    An unreadable checkpoint counts as absent, so the monitor never
+    crashes on a file it can re-establish.
     """
 
     try:
@@ -191,25 +155,13 @@ def run_cycle(
     noise_filter: ExecNoiseFilter | None = None,
 ) -> list[dict[str, Any]]:
     """
-    One poll: read the checkpoint (or, on a first run, default to
-    `FIRST_RUN_LOOKBACK_SECONDS` before `until` — a small, bounded
-    lookback, not the unmeasured full-history backfill `ARC-P-006`
-    warns against, but enough for a manual `--once --dry-run` check to
-    actually have a chance of observing something real; see that
-    constant's own comment for the incident that found this needed),
-    collect every event since then, enrich, and record.
+    Collect every Docker event since the checkpoint, enrich and record them.
 
-    **The checkpoint advances to `until`, not to the last event's own
-    `occurred_at`.** A cycle observing zero events must still move the
-    window forward — otherwise a quiet host would poll the same
-    ever-widening `[since, now)` range forever. This accepts one known,
-    documented edge: an event landing exactly on a previous `until`
-    boundary could in principle be seen twice, across two consecutive
-    cycles' `--since`/`--until` windows both including that instant.
-    Docker's own `--since` is inclusive; deduplicating that instant
-    would need a same-instant identity beyond what a real event
-    carries. Left as a stated trade-off, not solved for a duplicate
-    this project has not yet observed in practice (`ARC-P-006`).
+    On a first run the window starts `FIRST_RUN_LOOKBACK_SECONDS` before
+    `until`. The checkpoint advances to `until`, not to the last event,
+    so a quiet host does not poll an ever-widening window. Docker's
+    `--since` is inclusive, so an event exactly on a boundary may be
+    recorded twice; this is accepted.
     """
 
     when = now if now is not None else datetime.now(timezone.utc)
@@ -220,11 +172,9 @@ def run_cycle(
     until = when.isoformat()
 
     raw_events = collect_docker_events(since, until)
-    # Exec noise (AIStack's own package probes, declared healthchecks)
-    # left out before anything is recorded — `ExecNoiseFilter`'s own
-    # docstring. A caller looping over cycles passes one filter for its
-    # whole run, so a dropped exec's `exec_die` is recognised in the
-    # next window too; a single cycle gets a fresh one.
+    # Drop exec noise (AIStack's package probes, healthchecks). A looping
+    # caller passes one filter for its whole run, so a dropped exec's
+    # `exec_die` is recognised in the next window too.
     noise_filter = noise_filter if noise_filter is not None else ExecNoiseFilter()
     events = [enrich(event) for event in raw_events if noise_filter.keep(event)]
 
@@ -236,12 +186,7 @@ def run_cycle(
 
 
 def log_cycle(events: list[dict[str, Any]], label: str = "") -> None:
-    """
-    Printed only when there is something to read — `resource_priority
-    _monitor.log_cycle`'s own reasoning: a monitor polling every
-    `POLL_SECONDS` that logged every empty cycle would bury the one
-    line that matters.
-    """
+    """Print a line only when there are events or `label` is set, so empty cycles stay silent."""
 
     if not (events or label):
         return
@@ -255,25 +200,17 @@ def log_cycle(events: list[dict[str, Any]], label: str = "") -> None:
 
 def main(argv: list[str] | None = None) -> None:
 
-    # Line-buffer stdout under systemd — the exact defect
-    # `resource_priority_monitor.main`'s own comment documents and
-    # fixes the same way: a journal line that had already run,
-    # invisible in `journalctl` because Python block-buffers a pipe by
-    # default.
+    # Line-buffer stdout: Python block-buffers a pipe, so lines would not
+    # reach journald until the buffer fills.
     sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
     output_path, checkpoint_path, generated_dir, once, dry_run = parse(
         sys.argv[1:] if argv is None else argv
     )
 
-    # `ADR-0011` § 9 (R11) — detected once, here, before the first
-    # cycle of this process's own run: `record_collection_gap`'s own
-    # docstring is why it must be the *pre-existing* checkpoint (this
-    # process's last-known coverage before it started again), not the
-    # one `run_cycle`'s own first iteration is about to overwrite.
-    # `--dry-run` suppresses this the same way it already suppresses
-    # `run_cycle`'s own persistence — the closest side effect to
-    # suspend, applied a second time.
+    # ADR-0011 § 9 (R11): check for a gap before the first cycle, against
+    # the checkpoint the previous run left. `--dry-run` skips it, as it
+    # skips all persistence.
     if not dry_run:
         record_collection_gap(
             STREAM_STEM,
@@ -296,14 +233,7 @@ def main(argv: list[str] | None = None) -> None:
                 output_path, checkpoint_path, dry_run, noise_filter=noise_filter
             )
 
-            # `--once` always prints — the same incident
-            # `FIRST_RUN_LOOKBACK_SECONDS`'s own comment names: a manual
-            # check that stays silent on an empty cycle looks
-            # indistinguishable from one that never ran at all. The
-            # loop keeps `log_cycle`'s own "silent unless something"
-            # discipline unchanged — a service polling every
-            # `POLL_SECONDS` for days must not flood the journal with a
-            # line for every empty cycle.
+            # `--once` always prints, so a quiet manual check is not mistaken for no run.
             log_cycle(events, label="check" if once else "")
 
             if once:

@@ -5,50 +5,14 @@ from aistack.kernel.catalog.views import CatalogView, CatalogViewItem
 
 
 class MediaTreeViewEngine:
-    """
-    Order a media catalog so a human can walk it.
+    """Order a flat media catalog depth-first, each parent immediately
+    before its descendants, so a surface can render a foldable tree in one
+    pass.
 
-    The catalog is flat and, on the owner's library, 2393 entries
-    long — measured 2026-08-29. Flat and alphabetical, that is a
-    list in which `Classique/Bach/Cantates` sits between
-    `Classique/Bach` and `Classique/Berlioz` by accident of
-    spelling and not by belonging. This engine does the one thing
-    that turns it into something a person can read: **it orders
-    the entries depth-first, every parent immediately before its
-    own descendants**, and states each entry's depth.
-
-    A surface can then render an indented, foldable tree from a
-    single pass, without knowing the tree. `CatalogView.items` is
-    a list, and a list in depth-first order carries a tree
-    faithfully — which is why nothing is added to the Kernel's
-    view model for this.
-
-    **Siblings are ordered case-insensitively, and deterministic
-    with it.** Comparing Python strings compares code points, and
-    every capital letter comes before every lowercase one: in the
-    owner's library, listed that way, `soum bill` is exiled past
-    `Vidéos` to the very end, after two hundred capitalised
-    artists. The key is the case-folded label with the raw label
-    as tie-breaker, which puts it back among the S's.
-
-    No locale is consulted, and that is a limit accepted rather
-    than overlooked: `Bénabar` still sorts after `Blondie`,
-    where a French collation would place it beside `Ben Harper`.
-    A locale-aware order would be nicer to read and would differ
-    between two hosts holding the same library — ENG-TEST-0002 is
-    C3 and promises portability across environments, and
-    STD-0300 § 6 wants an unchanged input to give an identical
-    output. The nicer order is available the day it is declared
-    as governed data rather than inherited from an environment
-    variable.
-
-    **A node whose parent is absent is attached to the root, not
-    dropped.** In a catalog built by `MediaLibraryCatalogBuilder`
-    the case cannot arise: a node holds media below it, so every
-    ancestor does too, so every ancestor is a node. The engine
-    does not rely on that. A view that silently omitted what it
-    could not place would hide exactly the defect worth seeing,
-    and this heritage has paid for that shape more than once.
+    Siblings sort by case-folded label, then raw label. No locale is used,
+    so the order is identical on every host (`Bénabar` sorts after
+    `Blondie`). A node whose parent is absent is attached to the root
+    rather than dropped.
     """
 
     view_id = "media-tree"
@@ -81,10 +45,8 @@ class MediaTreeViewEngine:
             metadata={
                 "purpose": "selection",
                 "domain": "media",
-                # What the surface would otherwise recompute, and
-                # what it must be able to show: where this was
-                # read, and what the reading left out. The UI runs
-                # on a host nobody reviewing this code observes.
+                # Where the library was read and what was left out,
+                # for the surface to show.
                 "root": catalog.metadata.get("root", ""),
                 "exists": catalog.metadata.get("exists", ""),
                 "unrecognized_extensions": catalog.metadata.get(
@@ -100,15 +62,8 @@ class MediaTreeViewEngine:
         children: dict[str, list[CatalogItem]],
         ordered: list[CatalogViewItem],
     ) -> None:
-        """
-        Depth-first, iteratively.
-
-        The owner's tree is five levels deep today and recursion
-        would carry it comfortably. It is written as a stack
-        because the depth of a directory tree is an input, not a
-        property of this code, and a view that raises on a deep
-        library would fail in the surface with nothing to read.
-        """
+        """Depth-first walk with an explicit stack, so a deep tree cannot hit
+        the recursion limit."""
 
         stack = list(reversed(children.get(parent, [])))
 
@@ -128,8 +83,7 @@ class MediaTreeViewEngine:
             metadata={
                 **item.metadata,
                 "source": item.source,
-                # So the surface can draw a fold control without
-                # looking ahead in the list.
+                # Lets the surface draw a fold control without look-ahead.
                 "has_children": str(bool(children.get(item.id))),
             },
         )

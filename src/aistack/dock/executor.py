@@ -1,32 +1,29 @@
 """
-The dock executor (`ADR-0019` § 3–5): runs on the host, as the account
-AIStack runs as, and takes the proposals an administrator validated —
-one at a time, oldest first.
+The dock executor (ADR-0019 § 3–5): runs on the host, as the account
+AIStack runs as, and takes validated proposals one at a time, oldest first.
 
-For each, in this order, every operation recorded in the proposal as it
-happens (name, status, start, seconds, detail):
+Each operation is recorded in the proposal as it happens:
 
-1. **preconditions** — the service is still declared, each container
-   still runs the image the proposal was written against, carries no
-   Watchtower label, and names its compose project;
-2. **sandbox restore** — a restore of the service's latest backup has
-   succeeded within the last 24 hours, else one is run now;
-3. **fetch** — each new image is pulled by its registry digest, never
-   by a tag that could have moved since the validation;
-4. **rehearsal** — the same restore, with the new images;
-5. **keep** — each previous image is tagged `aistack-dock/<container>:
-   <proposal>`, so no clean-up removes the way back;
-6. **apply** — the image's tag is moved to the new image and the
-   container recreated with its own compose project
-   (`docker compose up -d --no-deps --pull never <service>`);
-7. **live checks** — every container of the service runs the expected
-   image, is healthy and has not restarted after a settling time, and
-   the recipe's own checks answer against the live service.
+1. **preconditions**: the service is still declared; each container still
+   runs the image the proposal was written against, has no Watchtower
+   label, and names its compose project;
+2. **sandbox restore**: a restore of the latest backup succeeded within
+   24 hours, else one is run now;
+3. **fetch**: each new image is pulled by registry digest, never by a tag
+   that may have moved since validation;
+4. **rehearsal**: the same restore, with the new images;
+5. **keep**: each previous image is tagged `aistack-dock/<container>:<proposal>`
+   so no clean-up removes the way back;
+6. **apply**: the tag is moved to the new image and the container
+   recreated (`docker compose up -d --no-deps --pull never <service>`);
+7. **live checks**: every container runs the expected image, is healthy,
+   has not restarted after a settling time, and the recipe's checks pass
+   against the live service.
 
-Any failure before *apply* stops the change with nothing live touched
-(`failed`). A failure from *apply* on puts the previous images back the
-same way and checks again (`rolled_back`); if that fails too the
-proposal says so plainly (`failed`, the live service needs a person).
+A failure before *apply* leaves nothing live touched (`failed`). A
+failure from *apply* on puts the previous images back and checks again
+(`rolled_back`); if that fails too, the proposal says the live service
+needs a person (`failed`).
 
 Docker is reached through a `Runner` and the sandbox through a
 `restorer`, so the whole run is tested without either.
@@ -78,8 +75,7 @@ def _iso(moment: datetime) -> str:
 
 
 def keep_tag(proposal_id: str, container: str) -> str:
-    """Where the previous image is kept: a repository of the dock's own,
-    so no `image prune` of dangling images removes it."""
+    """Where the previous image is kept: the dock's own repository, safe from `image prune`."""
 
     return f"{KEEP_REPOSITORY}/{container.lower()}:{proposal_id}"
 
@@ -105,8 +101,7 @@ def compose_up(change: store.ImageChange) -> list[str]:
 
 
 def recent_restore(generated_dir: Path, recipe: str, now: datetime) -> dict[str, Any] | None:
-    """The newest sandbox restore of `recipe` with the live images (not
-    a rehearsal), when it succeeded and started within `FRESH` of `now`."""
+    """The newest non-rehearsal sandbox restore of `recipe`, if it succeeded within `FRESH` of `now`."""
 
     directory = generated_dir / "sandbox"
     for path in sorted(directory.glob(f"{recipe}-*.json"), reverse=True) if directory.is_dir() else []:
@@ -139,9 +134,7 @@ def _why_not(run: Any) -> str:
 
 @dataclass
 class Change:
-    """What every operation of one change receives (the transaction's
-    payload): the proposal, what it is checked against, and what the
-    operations learn on the way."""
+    """The transaction payload shared by a change's operations; they fill in what they learn."""
 
     proposal: store.Proposal
     service: GovernedService | None
@@ -212,8 +205,8 @@ class Dock:
     sandbox: SandboxDeclaration
     restorer: Restorer
     runner: Runner = docker_runner
-    # The kernel's transaction service (`ADR-0019` § 6); the dock
-    # registers its operation kinds there.
+    # The kernel's transaction service (ADR-0019 § 6), where the dock
+    # registers its operation kinds.
     transactions: TransactionServices = field(default_factory=create_transaction_services)
     now: Callable[[], datetime] = field(default=lambda: datetime.now(timezone.utc))
     clock: Callable[[], float] = field(default=lambda: time.monotonic())
@@ -248,9 +241,10 @@ class Dock:
         return sorted(found, key=lambda p: (p.decided_at, p.id))
 
     def close_interrupted(self) -> list[str]:
-        """A proposal left `running` (the executor was stopped mid-way):
-        closed as failed, saying the live state was not checked. Called
-        with the lock held, so no other executor is at work on it."""
+        """Close as failed any proposal left `running` by a stopped executor.
+
+        Call with the lock held, so no other executor is working on it.
+        """
 
         closed = []
         for proposal in store.all_proposals(self.generated_dir):
@@ -324,8 +318,7 @@ class Dock:
         return self._close(proposal, store.ROLLED_BACK, f"{failed.error} — the previous images run again")
 
     def _close(self, proposal: store.Proposal, status: str, detail: str) -> store.Proposal:
-        """The end of an executed change: its state, then its why in the
-        Time Machine (`ADR-0019` § 2)."""
+        """Record the final state, then the change's why as an explication (ADR-0019 § 2)."""
 
         self._finish(proposal, status, detail)
         try:
@@ -437,9 +430,8 @@ class Dock:
         return shown[0], shown[1], restarts, shown[3]
 
     def live_checks(self, service: GovernedService, recipe: SandboxRecipe, expected: dict[str, str]) -> str:
-        """Every container of the service: the expected image, running,
-        healthy, and still so after `settle_seconds` with no restart;
-        then the recipe's own checks against the live service."""
+        """Check every container runs the expected image, healthy, with no
+        restart after `settle_seconds`; then run the recipe's live checks."""
 
         deadline = self.clock() + self.health_timeout_seconds
         restarts: dict[str, int] = {}

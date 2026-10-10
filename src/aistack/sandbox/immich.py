@@ -1,16 +1,13 @@
 """
-The Immich recipe (`ADR-0018` § 4): the nightly `pg_dump` of the
-`immich` database loaded into the image `immich_postgres` runs (with
-its vector extensions), on the run's internal network, then read back
-— tables, assets, users.
+The Immich recipe (ADR-0018 § 4): the `pg_dump` of the `immich` database
+loaded into the image `immich_postgres` runs (with its vector
+extensions), then read back (tables, assets, users).
 
-Then a few photos of the external library the restored database names
-are taken back from the Deja Dup backup (duplicity, on the host) and
-their SHA-1 compared with the checksum the database holds: the proof
-that the database and the files backed up agree. Uploaded photos have
-no backup on the reference host (measured 2026-10-08,
-`backup_strategy.yml` `immich-uploads`): the report counts them and
-says so.
+Then a few external-library photos the restored database names are
+fetched from the Deja Dup backup (duplicity, on the host) and checked
+against what the database records, proving database and backed-up
+files agree. When the recipe's `not_backed_up` says uploads have no
+backup, the report counts them and says so.
 """
 
 from __future__ import annotations
@@ -56,15 +53,11 @@ def _sha1(path: Path) -> str:
 
 
 def _differs(target: Path, original: str, checksum: str, size: int) -> str:
-    """'' when the restored file is the one the database names, else
-    how it differs.
+    """'' when the restored file is the one the database names, else how it differs.
 
-    Immich hashes an uploaded photo's content; for an external-library
-    photo it stores the SHA-1 of `path:<originalPath>` instead, so as
-    not to read the whole library at every scan (GIGABYTE, 2026-10-08:
-    all three sampled photos "differed" against a content hash). Such a
-    checksum proves nothing about the content: the file's size is then
-    compared with the one Immich read from it (EXIF table).
+    For external-library photos Immich stores the SHA-1 of
+    `path:<originalPath>`, not of the content; then the file size is
+    compared with the one in the EXIF table instead.
     """
 
     if not target.is_file() or target.stat().st_size == 0:
@@ -80,15 +73,13 @@ def _differs(target: Path, original: str, checksum: str, size: int) -> str:
 
 
 def _restore_one(run: SandboxRun, sample: FileSample, relative: str, target: Path) -> str:
-    """Take one file back from the duplicity backup; '' when it worked,
-    else why not."""
+    """Restore one file from the duplicity backup; '' when it worked, else why not."""
 
     cache = os.path.expanduser(sample.archive_dir) if sample.archive_dir else str(run.directory / "duplicity-cache")
     common = ["--no-encryption", "--archive-dir", cache]
     if sample.archive_dir and sample.archive_name:
-        # The cache Deja Dup keeps for this backup, by its own name: the
-        # default name (a hash of the URL) differs, and duplicity would
-        # rebuild a second cache beside it (GIGABYTE, 2026-10-08).
+        # Use Deja Dup's cache name: duplicity's default (a hash of the
+        # URL) differs and would rebuild a second cache beside it.
         common += ["--name", sample.archive_name]
     source = f"file://{sample.duplicity_target}"
     result = run.host(

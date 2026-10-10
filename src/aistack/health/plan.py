@@ -1,22 +1,13 @@
 """
-The action plan (asked by the owner, 2026-10-08: "il faudrait que le
-cartouche « action requise » soit cliquable et dirige vers une page qui
-guide et assiste l'utilisateur sur les actions à réaliser pour réduire
-la dette. Idem pour le cartouche « à surveiller » sur le score de
-santé").
+The action plan: what to do first, ranked by what it gains, computed from
+the same cockpit and weights as the two scores.
 
-What to do first, ranked by what it gains — computed from the same
-cockpit and weights the two scores are computed from, never
-estimated apart from them:
-
-- **health**: per domain carrying findings, the points the health score
-  gains once the domain is cleared (`OPS-0008`'s formula run again
-  without that domain's findings), and what clearing one finding alone
-  gains — often nothing while a domain saturates its own penalty, which
-  the page says rather than hides;
-- **debt**: per domain carrying technical debt, the points the
-  technical-debt score gains once the domain is cleared (one weight per
-  domain, `OPS-0008` § *Technical debt score*).
+- **health**: for each domain with findings, the health score points
+  gained once the domain is cleared, and by clearing one finding alone
+  (often nothing while the domain saturates its penalty, which the page
+  says);
+- **debt**: for each domain with technical debt, the technical-debt score
+  points gained once it is cleared.
 
 Pure: same inputs, same plan.
 """

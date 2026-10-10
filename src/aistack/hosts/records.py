@@ -1,11 +1,9 @@
-"""
-`hosts.yml` and the records the host collectors write (`ADR-0020`):
-`<directory>/host.json` (the last run) and `<directory>/events.jsonl`
-(one event per line, appended, never rewritten — a line's number is
-its identity).
+"""Read `hosts.yml` and the records host collectors write (`ADR-0020`).
 
-Read-only. A directory that cannot be read (the Raspberry's disk not
-mounted) is said, never taken for a host with nothing to tell.
+`<directory>/host.json` holds the last run; `<directory>/events.jsonl`
+holds one event per line, append-only, so a line's number is its
+identity. An unreadable directory (e.g. a disk not mounted) is reported
+as a problem, not taken for a host with nothing to tell.
 """
 
 from __future__ import annotations

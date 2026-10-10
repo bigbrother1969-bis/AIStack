@@ -1,10 +1,9 @@
-"""
-A small Markdown renderer for AIStack's own hand-written pages (the user
-manual) — headings with anchors, paragraphs, bullet and numbered lists,
-tables, fenced code, inline code, bold, italics. Every character of the
-source is escaped before any markup is added: nothing in a source can
-inject HTML. Not a general Markdown implementation, on purpose: it
-renders what this repository writes, and a test pins each construct.
+"""A small Markdown renderer for AIStack's hand-written pages (the user manual).
+
+Supports headings with anchors, paragraphs, bullet and numbered lists,
+tables, fenced and inline code, bold and italics. All source text is
+escaped before markup is added, so a source cannot inject HTML. Not a
+general Markdown implementation; tests pin each construct.
 """
 
 from __future__ import annotations

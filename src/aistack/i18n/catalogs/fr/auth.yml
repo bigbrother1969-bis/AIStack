@@ -1,4 +1,4 @@
-# Connexion à l'application web — ADR-0013.
+# Signing in to the web application (ADR-0013).
 
 title: "AIStack — Connexion"
 heading: "Connexion"
@@ -147,7 +147,7 @@ declarations:
   marked: "C'est noté : {name} n'est plus signalé tant que la version livrée ne change pas."
   tooltip:
     seen: "Ne plus signaler ce fichier tant que la version livrée ne change pas à nouveau ; ton fichier reste tel quel"
-# Settings' API keys section (2026-10-09).
+# Settings: API keys section.
 api_keys:
   heading: "Clés d'API"
   intro: "Les clés et accès que les composants d'AIStack utilisent. Une valeur saisie ici est gardée dans le dossier des données, lisible par AIStack seul, et passe avant celle de .env.web ; effacée, celle de .env.web revient."

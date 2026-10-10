@@ -47,7 +47,7 @@ status:
   up_to_date: "{count} selected folders, already up to date."
   changed: "{count} selected folders — {linked} created, {relinked} updated, {removed} removed, {pruned} folders emptied."
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   reshare: "Takes the device off the folder and puts it back: Syncthing sends the invitation again"
   all_pairs: "Back to every content and device"

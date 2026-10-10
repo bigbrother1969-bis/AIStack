@@ -1,9 +1,10 @@
 """
-What the dock could update now (`ADR-0019` § 1): for each container of
-a governed service, the image it runs, the registry digest it was
-pulled as, and the digest the registry publishes today for the same
-tag. Different digests: an update is available. Read-only — Docker and
-the registry are asked, nothing is pulled.
+What the dock could update now (ADR-0019 § 1).
+
+For each container of a governed service: the image it runs, the
+registry digest it was pulled as, and the digest the registry publishes
+today for that tag. Different digests mean an update is available.
+Read-only: nothing is pulled.
 """
 
 from __future__ import annotations
@@ -49,8 +50,7 @@ class Candidate:
 
 
 def _running_digest(runner: Runner, image_id: str, image: str) -> str:
-    """The registry digest this local image was pulled as, for its own
-    repository (an image can carry several)."""
+    """The registry digest this local image was pulled as, for its own repository (it may carry several)."""
 
     shown = runner(["image", "inspect", "--format", "{{json .RepoDigests}}", image_id], 30)
     try:

@@ -1,4 +1,4 @@
-# AIStack console — ADR-0010. Mirrors catalogs/fr/console.yml.
+# AIStack console (ADR-0010).
 
 title: "AIStack — Console"
 lockup_alt: "AIStack — Infrastructure Knowledge Platform"
@@ -13,8 +13,7 @@ cartouche:
 groups:
   lan_title: "Accessible from the local network"
   public_title: "Accessible from the internet"
-# Left column, help, legal notice and licence pages, tooltips —
-# requested by the owner on 2026-10-03. Mirrors catalogs/fr/console.yml.
+# Left column, help, legal notice and licence pages, tooltips.
 aside:
   intro: "AIStack watches the homelab's infrastructure, keeps its history and helps understand and fix faults."
   guide: "At the top, the health measured right now; below, the screens, grouped by whether they are reachable from the local network only or from the internet."
@@ -22,9 +21,9 @@ aside:
   legal: "Legal notice"
   license: "Licence and sources"
   copyright: "© {year} {publisher}"
-# The last line of every local-network card, in italics (owner, 2026-10-09).
+# Last line of every local-network card, in italics.
 card_scope_lan: "Reachable from the local network only."
-# The mark on a card whose screen uses AI (owner, 2026-10-09).
+# Mark on a card whose screen uses AI.
 ai_mark: "AI"
 ai_mark_title: "Feature that uses artificial intelligence"
 tooltip:
@@ -92,7 +91,7 @@ license:
   image_text: "Every published AIStack release also ships as a Docker image, on {registry}:"
   image_pull: "To fetch it, replacing <version> with a published release number (see the release notes):"
   back: "← Back to the console"
-# What waits behind a card (2026-10-10).
+# What waits behind a card.
 pending:
   dock: "{count} update(s) to validate"
   troubleshooting: "{count} finding(s) to handle"

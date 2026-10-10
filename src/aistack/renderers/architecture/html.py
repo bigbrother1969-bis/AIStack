@@ -15,53 +15,25 @@ from aistack.renderers.architecture.dependency_mermaid import render_dependency_
 from aistack.renderers.architecture.icons import load_icon_data_uri
 from aistack.renderers.architecture.mermaid import escape_text, render_mermaid
 
-# The extra `<select>` entry `render_html` adds when a `DependencyGraph`
-# carries at least one project — a plain constant rather than a name
-# derived from anything, since nothing about a dependency view is a
-# category or `FULL_VIEW` (`views.py` never produces this name, so
-# there is no real collision to guard beyond the defensive check
-# `render_html` itself makes before adding it).
+# The extra `<select>` entry added when a `DependencyGraph` has a project;
+# `views.py` never produces this name.
 _DEPENDENCY_VIEW_NAME = "dependencies"
 
 _VENDOR_PATH = Path(__file__).resolve().parent / "vendor" / "mermaid.min.js"
 
-# A vendored `<script>` block is embedded verbatim between real
-# `<script>` tags. A browser ends a script element at the first
-# literal `</script` it finds in the markup, regardless of where that
-# text sits in the JavaScript source — inside a string, a comment, a
-# regex literal, anywhere. `vendor/PROVENANCE.md` records that
-# mermaid@11.17.2's own bundle carries no such substring; `render_html`
-# checks it again at render time rather than trusting that a future
-# `npm install mermaid@<newer>` preserves it — an upgrade that ever
-# introduces one would otherwise produce a page that silently renders
-# nothing, with no error naming why.
+# A browser ends a script element at the first literal `</script`, even
+# inside a JavaScript string or comment. `vendor/PROVENANCE.md` records that
+# the vendored bundle has none; `render_html` checks again so an upgrade
+# that adds one fails loudly instead of rendering an empty page.
 _SCRIPT_TERMINATOR = "</script"
 
 
 def load_vendored_mermaid_js() -> str:
-    """
-    Read the vendored mermaid.js bundle `render_html` embeds inline.
+    """Read the vendored mermaid.js bundle that `render_html` embeds inline.
 
-    **Vendored, not CDN-linked — decided with the owner, 2026-09-10.**
-    `architecture.html` is meant to open and render with no network
-    access at all, including on a machine with no route to the
-    homelab's own network. A `<script src="https://...">` tag would
-    make every future viewing depend on a CDN staying reachable; a
-    vendored copy makes the file the same artifact tomorrow as today,
-    at the cost of a multi-megabyte inline `<script>` block and an
-    explicit upgrade step (`vendor/PROVENANCE.md`) whenever a newer
-    mermaid.js is wanted.
-
-    **Read from disk beside this module** — the same
-    `Path(__file__).resolve()`-relative convention
-    `resource_priority_monitor.py`'s `DEFAULT_DEFINITION` already
-    uses, not `importlib.resources`. Packaging this file for a real,
-    non-editable install needs exactly what that convention needs:
-    `[tool.setuptools.package-data]` in `pyproject.toml` — added the
-    same patch that added this module, after a real (non-editable)
-    `pip install .` was found to carry no `.yml`/`.js` data file at
-    all (`docs/03-governance/GOV-0002-Open-State-Register.md`,
-    `GOV-0002/OS-056`).
+    Vendored rather than loaded from a CDN so `architecture.html` renders
+    with no network access; upgrading follows `vendor/PROVENANCE.md`. Read
+    from disk beside this module, shipped as package data.
     """
 
     return _VENDOR_PATH.read_text(encoding="utf-8")
@@ -76,79 +48,18 @@ def render_html(
     lang: str | None = None,
     languages: Languages | None = None,
 ) -> str:
-    """
-    Wrap every view of an `ArchitectureGraph` into one self-contained
-    HTML page — a `<select>` switches which view's Mermaid diagram is
-    rendered, client-side, into the page.
+    """Render every `ArchitectureView` into one self-contained HTML page; a
+    `<select>` switches the Mermaid diagram client-side.
 
-    This is what names the Kernel Runtime `render` operation
-    (`docs/99-meta/roadmap/Kernel-Runtime-Roadmap.md`) for the first
-    time: this function and its sibling `render_mermaid` are the
-    first tenants of the `renderers/` package, empty since it was
-    scaffolded.
+    Pure (no wall clock): `ArchitectureHtmlArtifactGenerator` stamps when a
+    copy was produced, in the history file name. `views[0]` must be the full
+    view, as `build_all_views` produces; anything else raises.
 
-    **Pure — no wall clock.** Nothing here reads `datetime.now()`; the
-    page is a function of `views` alone, so the same graph always
-    renders to byte-identical output — the determinism
-    `ENG-TEST-0002` asks of everything this heritage generates.
-    `ArchitectureHtmlArtifactGenerator`
-    (`aistack/generators/architecture/html_artifact.py`) is what
-    stamps *when* a copy was produced, in the history filename
-    (`write_artifact_with_history`) — not in the content itself, which
-    would otherwise differ on every run for no reason a diff could
-    explain.
-
-    **Expects `views[0]` to be the full view.** `build_all_views`
-    documents exactly that order — `FULL_VIEW` first, then one per
-    category — and this relies on it rather than re-deriving it, but
-    checks rather than assumes silently: an empty or differently
-    ordered sequence raises, naming what was expected.
-
-    **`topology` is optional, added 2026-09-12**
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10) — external network
-    nodes (OVH, Cloudflare, the Freebox...) and hardware fiches
-    (GIGABYTE, Raspberry Pi), declared in
-    `infrastructure_topology.yml`, no provider observes either. `None`
-    (the default) renders the page exactly as before this addition —
-    every caller that has not been updated to load and pass a topology
-    keeps working unchanged.
-
-    **`beszel_readings` is optional too, same day** — typed snapshots
-    from `aistack.architecture.beszel_reading.build_beszel_readings`,
-    itself built from `BeszelProvider.collect()`'s raw observation. An
-    empty tuple (the default) renders no "État en direct" section at
-    all, the same "nothing to show, so show nothing" rule the topology
-    sub-blocks already follow.
-
-    **`dependency_graph` is optional too, added the same week** — a
-    `DependencyGraph` built by
-    `aistack.architecture.dependency_graph.build_dependency_graph`
-    from the Compose catalog's own `depends_on:` readings. Unlike
-    `topology`/`beszel_readings`, this does not add a static section:
-    it adds one more entry to the existing view `<select>` (only when
-    at least one project carries a real edge), rendered by
-    `render_dependency_mermaid` rather than `render_mermaid` — a
-    genuinely different diagram, not a filtered slice of the same
-    `ArchitectureGraph` every other view draws from. `None` (the
-    default) renders the page exactly as before this addition.
-
-    **`cmdb_readings` is optional too, added 2026-09-23**
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1, first of the
-    three gaps named 2026-09-13) — typed snapshots from
-    `aistack.architecture.http_probe_reading.build_http_probe_readings`,
-    itself built from `HttpProbeProvider.collect()`'s raw observation.
-    An empty tuple (the default) renders no "CMDB temps réel" section
-    at all, the same "nothing to show, so show nothing" rule
-    `beszel_readings` already follows.
-
-    **Viewport meta and favicon, added 2026-09-30**
-    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constats
-    1/3) — this page had neither, unlike Time Machine's own screens
-    which already carried a viewport tag. `MARK_DATA_URI` now comes
-    from `aistack.renderers.assets`, the same vendored mark
-    `console.html` already shows, moved up from `console/assets.py` so
-    a renderer outside the console package could reuse it without a
-    cross-renderer import.
+    Optional inputs, each rendering nothing when absent: `topology` (external
+    network nodes and hardware from `infrastructure_topology.yml`),
+    `beszel_readings` (live system snapshots), `cmdb_readings` (HTTP probe
+    snapshots) and `dependency_graph`, which adds a "dependencies" view drawn
+    by `render_dependency_mermaid` when at least one project exists.
     """
 
     if not views or views[0].name != FULL_VIEW:
@@ -194,12 +105,8 @@ def render_html(
             f'{escape_text(t("architecture.view_dependencies"))}</option>'
         )
 
-    # `</` inside a JSON string, re-serialized as `<\/`, is a valid
-    # JSON escape (parses back to `/`) and can never terminate the
-    # `<script type="application/json">` tag it sits in — the same
-    # class of hazard as the vendored bundle above, guarded the same
-    # way rather than trusted to not occur in a service or project
-    # name.
+    # `</` re-serialized as `<\/` is a valid JSON escape and cannot close the
+    # `<script type="application/json">` tag, whatever a name contains.
     data_json = json.dumps(definitions, ensure_ascii=False).replace("</", "<\\/")
 
     options = "\n".join(options_list)
@@ -268,25 +175,11 @@ def _view_label(name: str, t: Translator) -> str:
 
 
 def _render_service_index(full: ArchitectureView, t: Translator) -> str:
-    """
-    Icône + nom + lien + description, une fois par service, groupé par
-    catégorie — ajouté 2026-09-12 (`claude/PLAN-J11-CONSOLE-2026-09-11.md`
-    §10).
+    """Icon, name, link and description of every service, grouped by category.
 
-    **Toujours la vue complète, indépendamment du `<select>`.** Le
-    graphe Mermaid change de vue au clic ; cette liste ne le suit pas
-    — elle énumère `full.graph.categories` une seule fois, pas
-    `views[current]`, pour la même raison que `render_html` exige déjà
-    `views[0]` comme la vue complète : toutes les catégories n'existent
-    ensemble que là.
-
-    **Pas dans le graphe Mermaid lui-même.** Un nœud Mermaid ne peut
-    pas porter une image raster arbitraire sans convertir chaque icône
-    en pack Iconify — un chantier à part, jugé disproportionné pour ce
-    gain (décidé avec le owner). Le clic + info-bulle sur chaque nœud
-    (`click <id> href ... _blank`, `mermaid.py`) reste la façon dont
-    `href`/`description` s'expriment dans le graphe ; cette liste est
-    la façon dont l'icône s'exprime, à côté.
+    Always lists the full view, whatever the `<select>` shows. Icons are not
+    drawn inside the Mermaid nodes, which cannot carry arbitrary raster
+    images; the nodes keep their click link and tooltip (`mermaid.py`).
     """
 
     sections: list[str] = []
@@ -349,18 +242,10 @@ def _render_topology_section(
     topology: InfrastructureTopologyDefinition | None,
     t: Translator,
 ) -> str:
-    """
-    Topologie réseau externe + fiches matérielles — ajouté 2026-09-12
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, deuxième moitié du
-    même gap que `_render_service_index`).
+    """External network topology and hardware cards.
 
-    **`None` or an entirely empty topology renders nothing at all** —
-    an empty string, not an empty `<section>` — so a page built
-    without a topology file (every caller before this one was updated)
-    looks exactly as it did before. Each of the two blocks
-    (`external_nodes`, `hardware`) is independently optional within a
-    non-empty topology too: a topology declaring only one of the two
-    still renders just that block.
+    Renders nothing for `None` or an empty topology; each of the two blocks
+    is optional on its own.
     """
 
     if topology is None:
@@ -450,15 +335,9 @@ def _render_beszel_section(
     readings: tuple[BeszelSystemReading, ...],
     t: Translator,
 ) -> str:
-    """
-    « État en direct » — un instantané par système Beszel, pris au
-    moment de la génération, ajouté 2026-09-12
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, dernier tiret).
+    """"État en direct": one snapshot per Beszel system, taken at generation time.
 
-    An empty `readings` renders nothing at all — the same "nothing to
-    show" rule `_render_topology_section` already follows, so a page
-    generated without Beszel configured (or while its provider is
-    unreachable) looks exactly as it did before this section existed.
+    Renders nothing when `readings` is empty (Beszel absent or unreachable).
     """
 
     if not readings:
@@ -540,12 +419,9 @@ def _render_beszel_card(reading: BeszelSystemReading, t: Translator) -> str:
 
 
 def _format_uptime(seconds: int, t: Translator) -> str:
-    """
-    Whole days and whole hours, labelled in the page's own language
-    (`j`/`h` in French, `d`/`h` in English, ADR-0010) — the same
-    register as every other label on this page. Under a day: hours
-    and minutes instead, so a system rebooted an hour ago does not
-    read as "0 j".
+    """Uptime in whole days and hours, labelled in the page's language (ADR-0010).
+
+    Under a day, hours and minutes, so a recent reboot does not read "0 d".
     """
 
     if seconds < 0:
@@ -568,16 +444,9 @@ def _render_cmdb_section(
     readings: tuple[HttpProbeReading, ...],
     t: Translator,
 ) -> str:
-    """
-    « CMDB temps réel » — un instantané par cible HTTP, pris au moment
-    de la génération, ajouté 2026-09-23
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1, premier des trois
-    écarts nommés le 2026-09-13).
+    """"CMDB temps réel": one snapshot per HTTP target, taken at generation time.
 
-    An empty `readings` renders nothing at all — the same "nothing to
-    show" rule `_render_beszel_section` already follows, so a page
-    generated without any target configured looks exactly as it did
-    before this section existed.
+    Renders nothing when `readings` is empty.
     """
 
     if not readings:
@@ -609,14 +478,8 @@ def _render_cmdb_card(reading: HttpProbeReading, t: Translator) -> str:
 
 
 def _cmdb_status(reading: HttpProbeReading, t: Translator) -> tuple[str, str]:
-    """
-    Three states, not two — unlike Beszel's own up/other split. A
-    successful response (2xx/3xx) is `ok`; an HTTP error status the
-    server still answered with (4xx/5xx) is `error`, distinct from
-    `unreachable` (no answer came back at all) — the same distinction
-    `HttpProbeProvider._probe` already makes between an
-    `urllib.error.HTTPError` (reachable, real status) and every other
-    failure (not reachable, no status).
+    """Three states: `ok` (2xx/3xx), `error` (the server answered 4xx/5xx) and
+    `unreachable` (no answer), as `HttpProbeProvider._probe` distinguishes them.
     """
 
     if not reading.reachable:
@@ -631,19 +494,9 @@ def _cmdb_status(reading: HttpProbeReading, t: Translator) -> tuple[str, str]:
     return "cmdb-status-error", str(reading.status_code)
 
 
-# Same charte graphique retouch as `aistack.renderers.console.html`
-# (2026-09-26, see that module's own comment for the full rationale
-# and where each value comes from) — the palette, and which classes
-# stay untouched (the `swatch`/`*-status-*` families keep their
-# green/amber/red meaning, only lightly retinted), are identical
-# across all three static pages by design, not by shared code — each
-# renderer keeps its own literal `_STYLE`.
-#
-# Width, same reasoning and same value as that module's own comment
-# (ADR-0011 §26, 2026-09-29): `min(96vw, 1600px)`. This page's own
-# 1100px predated that decision and carried no stated rationale of its
-# own for being wider than the other two static pages — converged to
-# the same rule as all of them, not kept as a bespoke exception.
+# Same palette as `aistack.renderers.console.html` (see its comment); each
+# renderer keeps its own literal `_STYLE`. Status classes keep their
+# green/amber/red meaning. Width `min(96vw, 1600px)` (ADR-0011 § 26).
 _STYLE = """\
 :root { color-scheme: light; }
 body {
@@ -663,19 +516,8 @@ select { padding: .4rem .6rem; font-size: 1rem; margin: .3rem 0 1rem; }
   border: 1px solid #dde4ed; border-radius: 8px; padding: 1rem;
   background: #fafafa; overflow: auto;
 }
-/*
-  Added 2026-09-30 (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-
-  29.md`, constat 2) — measured, not guessed: rendering this page at
-  375px showed every other section reflowing correctly (the existing
-  `auto-fit`/`auto-fill` grids already stack to one column on their
-  own), but Mermaid renders its SVG with `width="100%"` and an inline
-  `max-width`, so it shrinks in step with `#diagram`'s own width —
-  proportionally, meaning its label text shrinks too, down to
-  illegible on a phone. A minimum width on the SVG itself stops that:
-  `#diagram`'s own `overflow: auto` above then scrolls the box
-  horizontally instead, keeping every label at a legible, constant
-  size regardless of viewport width.
-*/
+/* Mermaid's SVG shrinks with its box, labels included: a minimum width
+   keeps them legible and #diagram scrolls instead. */
 #diagram svg { min-width: 600px; }
 .render-error { color: #9c2b2b; white-space: pre-wrap; font-family: monospace; }
 .legend {

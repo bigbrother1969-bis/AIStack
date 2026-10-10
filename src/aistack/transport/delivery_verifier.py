@@ -10,13 +10,8 @@ from aistack.transport.contracts import (
 
 
 class DeliveryVerifier:
-    """
-    Default delivery verifier.
-
-    V1:
-    A delivery is considered successful when the destination
-    resource is observable.
-    """
+    """Default delivery verifier: a delivery succeeds when the destination
+    resource exists."""
 
     def verify(
         self,

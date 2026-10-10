@@ -16,7 +16,7 @@ status:
   removed: "Removed: {username}"
   not_found: "Not found: {username}"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   remove: "Remove {username} from the list: this name will no longer be tried"
   input: "SSH user name to try on every host the scan finds"

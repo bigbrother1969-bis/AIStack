@@ -1,14 +1,12 @@
 """
-Proposals (`ADR-0019` § 2–3): one governed change, from its why to its
-outcome, kept as one JSON file under the data directory
-(`dock/proposals/<id>.json`). Every transition is appended to the
-proposal's own history, never rewritten.
+Proposals (ADR-0019 § 2–3): one governed change, from its why to its
+outcome, kept as `dock/proposals/<id>.json` in the data directory.
+Every transition is appended to the proposal's history.
 
-States: `proposed` → `validated` | `rejected`; the dock executor takes
-a `validated` one → `running` → `applied` | `failed` | `rolled_back`.
-In production a proposal is validated by another administrator than
-the one who proposed it; in the development phase one may do both
-(`ADR-0016`).
+States: `proposed` → `validated` | `rejected`; the executor takes a
+`validated` one → `running` → `applied` | `failed` | `rolled_back`.
+In production the validator must differ from the proposer; in the
+development phase one person may do both (ADR-0016).
 """
 
 from __future__ import annotations
@@ -34,8 +32,7 @@ MIN_WHY = 10
 
 
 class ProposalRefused(ValueError):
-    """A transition the rules do not allow: `key` names the reason in
-    the `dock.refused` catalog, `values` fill it."""
+    """A refused transition: `key` names the reason in the `dock.refused` catalog, `values` fill it."""
 
     def __init__(self, key: str, **values: str) -> None:
         super().__init__(key)
@@ -53,8 +50,8 @@ class ImageChange:
     compose_project: str = ""
     compose_service: str = ""
     compose_dir: str = ""
-    # Compose's own label, comma-separated: the files the dock recreates
-    # the container with (`ADR-0019` § 5).
+    # Compose's label, comma-separated: the files the dock recreates the
+    # container with (ADR-0019 § 5).
     compose_files: str = ""
 
 
@@ -70,8 +67,8 @@ class Proposal:
     decided_by: str = ""
     decided_at: str = ""
     history: list[dict[str, str]] = field(default_factory=list)
-    # What the dock executor did, one entry per operation (`ADR-0019`
-    # § 4–6): name, status, start, seconds, detail.
+    # What the executor did, one entry per operation (ADR-0019 § 4–6):
+    # name, status, start, seconds, detail.
     operations: list[dict[str, Any]] = field(default_factory=list)
 
     def note(self, event: str, by: str, detail: str = "", at: str = "") -> None:

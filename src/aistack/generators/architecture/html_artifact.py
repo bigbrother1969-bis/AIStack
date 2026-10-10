@@ -13,34 +13,12 @@ from aistack.renderers.architecture.html import render_html
 
 class ArchitectureHtmlArtifactGenerator:
     """
-    Generate the `architecture.html` artifact from a graph's views.
+    Generate the `architecture.html` artifact, with Observation
+    History, from already-built views (`build_all_views(graph)`).
 
-    **Keeps Observation History, same as every other CLI generator**
-    (`write_artifact_with_history`) — a rendered page is as much a
-    generated artifact as the JSON catalogs the other four generators
-    write, and the same defect they were fixed for (a plain
-    `write_text` destroying the previous run) applies here just as
-    much.
-
-    Takes already-built `views` — `build_all_views(graph)`'s own
-    output — rather than a bare `ArchitectureGraph`, the same way
-    `ComposeCatalogArtifactGenerator.generate` takes an already-built
-    `Catalog`: this class is only the I/O step, not where the domain
-    object gets constructed.
-
-    `topology` (added 2026-09-12, §10) is optional and passed straight
-    through to `render_html` — this class does not load
-    `infrastructure_topology.yml` itself, the same way it does not
-    load `service_categorization.yml` itself; the CLI is where both
-    reads happen. `beszel_readings` (same day, §10 last bullet) is the
-    same story one layer further: this class never calls
-    `BeszelProvider` itself, it only carries the already-built
-    readings through. `dependency_graph` (same day, §10 third gap) is
-    the same story again: this class never calls
-    `build_dependency_graph` itself, it only carries the already-built
-    graph through. `cmdb_readings` (added 2026-09-23, §11.9.1) is the
-    same story a third time: this class never calls `HttpProbeProvider`
-    itself, it only carries the already-built readings through.
+    This class is only the I/O step: `topology`, `beszel_readings`,
+    `dependency_graph` and `cmdb_readings` are loaded or built by the
+    CLI and passed straight through to `render_html`.
     """
 
     def generate(
@@ -53,8 +31,7 @@ class ArchitectureHtmlArtifactGenerator:
         cmdb_readings: tuple[HttpProbeReading, ...] = (),
         lang: str | None = None,
     ) -> Path:
-        # `lang` (ADR-0010, 2026-09-27): the language the page is
-        # written in, the reference when `None`.
+        # `lang` (ADR-0010): the page language, the reference when `None`.
         content = render_html(
             views,
             topology,

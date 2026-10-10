@@ -1,5 +1,5 @@
 """
-`python -m aistack.cli.pra_schedule` — scheduled restore tests (2.0).
+`python -m aistack.cli.pra_schedule` — scheduled restore tests.
 
     python -m aistack.cli.pra_schedule              test every service with a sandbox
                                                     recipe not tested in the last 6 days
@@ -7,15 +7,13 @@
     python -m aistack.cli.pra_schedule wordpress    test this one now
     python -m aistack.cli.pra_schedule --list       the recorded outcomes
 
-Run on the host, from the checkout, by the account AIStack runs as —
-`aistack-pra.timer` starts it every Sunday morning
-(`deploy/systemd/aistack-pra.service`). Each test is a sandbox restore
-(`ADR-0018`): the newest backup, restored beside the live service,
-checked, timed and removed — the live service is never touched. Its
-outcome is recorded in the data directory (`pra/scheduled.jsonl`) and
-counts in the Tests PRA domain of the health cockpit; `pra_tests.yml`
-is never rewritten. Waits for the dock executor to finish, and holds
-it off while it runs.
+Run on the host, from the checkout, by the account AIStack runs as;
+`aistack-pra.timer` starts it every Sunday morning. Each test is a
+sandbox restore (ADR-0018): the newest backup is restored beside the
+live service, checked, timed and removed; the live service is never
+touched. Outcomes go to `pra/scheduled.jsonl` in the data directory and
+count in the health cockpit's Tests PRA domain; `pra_tests.yml` is never
+rewritten. Waits for the dock executor, and holds it off while running.
 """
 
 from __future__ import annotations

@@ -9,27 +9,17 @@ from typing import Any
 
 import yaml
 
-# ADR-0010 (User Interface Localization). The two files every
-# localized screen reads, resolved `Path(__file__)`-relative — the
-# same convention every other `definitions/` directory in this package
-# already holds (`console_links.yml`, `pra_tests.yml`), so a real,
-# non-editable install carries them through
-# `[tool.setuptools.package-data]`'s `**/*.yml` without anything new
-# being declared.
+# ADR-0010. Shipped beside this module and included as package data.
 DEFAULT_LANGUAGES = configured(Path(__file__).resolve().parent / "definitions" / "languages.yml")
 DEFAULT_CATALOGS = Path(__file__).resolve().parent / "catalogs"
 
 
 @dataclass(frozen=True)
 class Language:
-    """
-    One interface language, as `languages.yml` declares it.
+    """One interface language, as `languages.yml` declares it.
 
-    `flag` is the declared flag as a `data:` URI, ready for an `<img>`
-    in any page — the console's pages are single files and the
-    mini-apps serve no static files, so an image travels inside the
-    markup, the same way the console's lockup already does. Empty when
-    the language declares no flag: its switch then shows `name`.
+    `flag` is a `data:` URI so pages stay single files; empty when no flag
+    is declared, and the switch then shows `name`.
     """
 
     code: str
@@ -39,13 +29,7 @@ class Language:
 
 @dataclass(frozen=True)
 class Languages:
-    """
-    The declared interface languages and which one is the reference.
-
-    `reference` is always one of `available` — `load_languages_yaml`
-    refuses a definition where it is not, rather than let every screen
-    discover the inconsistency one request at a time.
-    """
+    """The declared interface languages; `reference` is always one of `available`."""
 
     reference: str
     available: tuple[Language, ...]
@@ -58,11 +42,7 @@ class Languages:
 
 
 def load_languages_yaml(path: Path = DEFAULT_LANGUAGES) -> Languages:
-    """
-    Load `languages.yml`. A missing key names which one and where,
-    the same discipline every hand-written definition loader in this
-    package already holds.
-    """
+    """Load `languages.yml`; a missing key is reported with its location."""
 
     data = _read_yaml(path, "language definition")
 
@@ -120,20 +100,14 @@ def load_languages_yaml(path: Path = DEFAULT_LANGUAGES) -> Languages:
 def load_catalogs(
     languages: Languages, root: Path = DEFAULT_CATALOGS
 ) -> dict[str, dict[str, str]]:
-    """
-    Every declared language's messages, flattened to dotted keys.
+    """Every declared language's messages, flattened to dotted keys.
 
-    **One directory per language, one file per screen.**
-    `catalogs/<code>/<namespace>.yml` holds nested mappings; the file
-    stem is the key's first segment, so `catalogs/fr/console.yml`'s
-    `cartouche: {title: …}` is `console.cartouche.title`. A screen's
-    messages then live in one file a translator can read top to
-    bottom, rather than scattered through one catalog every screen
-    shares.
+    `catalogs/<code>/<namespace>.yml` holds nested mappings and the file stem
+    is the first key segment: `console.yml`'s `cartouche: {title: …}` becomes
+    `console.cartouche.title`.
 
-    Values must be strings. A number or a boolean in a catalog is
-    almost always a YAML quoting slip (`yes` read as `True`), and is
-    refused here rather than rendered as `True` on a page.
+    Values must be strings: a number or boolean is almost always a YAML
+    quoting slip (`yes` read as `True`) and is refused.
     """
 
     catalogs: dict[str, dict[str, str]] = {}
@@ -180,10 +154,9 @@ _SHIPPED_FLAGS = Path(__file__).resolve().parent / "definitions" / "flags"
 
 
 def _flag_uri(definition: Path, flag: Any, label: str) -> str:
-    """
-    The declared flag file, beside the definition under `flags/`, as a
-    `data:image/svg+xml` URI. A declared flag that does not exist is
-    refused here, at load time, rather than shown as a broken image.
+    """The declared flag file under `flags/` as a `data:image/svg+xml` URI.
+
+    A missing flag file is refused at load time rather than shown broken.
     """
 
     if flag is None:
@@ -194,8 +167,8 @@ def _flag_uri(definition: Path, flag: Any, label: str) -> str:
     if "/" in name or "\\" in name or not name.endswith(".svg"):
         raise ValueError(f"{label}: flag must be an .svg file name, not {name!r}")
 
-    # Beside the definition first; a definition copied into a
-    # configuration directory (ADR-0017 § 1) keeps the shipped flags.
+    # Beside the definition first; a definition copied into a configuration
+    # directory (ADR-0017 § 1) falls back to the shipped flags.
     file = definition.parent / "flags" / name
     if not file.is_file():
         file = _SHIPPED_FLAGS / name

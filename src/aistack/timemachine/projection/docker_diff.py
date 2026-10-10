@@ -1,39 +1,16 @@
 """
-Project `docker diff` snapshots into the graph — 1.5's second
-collector (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.5), cadrage
-2026-09-28.
+Project `docker diff` snapshots into the graph.
 
-**One subdirectory per subject, not one shared batch file —
-`aistack.providers.docker.diff_history` explains why on the writer
-side.** This walk is the read side of the same contract: it finds
-every subject root under `generated_dir / "docker-diff"` by locating
-each `history/docker-diff` leaf `write_artifact_with_history` created
-under it, however deep — a subject whose own name embeds a `/` (a
-Compose `project/service` pair) nests one directory deeper, so this
-cannot assume one `iterdir()` level per subject the way
-`aistack.timemachine.projection.collection_gaps` safely can (that
-module's own stream names never carry a `/`). The subject string is
-rebuilt from the path between `generated_dir / "docker-diff"` and the
-`history/docker-diff` leaf itself — the exact inverse of
-`aistack.providers.docker.diff_history._output_path`.
+One subdirectory per subject under `generated_dir / "docker-diff"`
+(written by `aistack.providers.docker.diff_history`). A subject with a
+`/` (a Compose `project/service` pair) nests deeper, so subject roots
+are found by their `history/docker-diff` leaf at any depth, and the
+subject string is rebuilt as the inverse of `diff_history._output_path`.
 
-**`aistack:changeCount`, not every changed path, as a graph fact.**
-A `docker diff` snapshot can hold anywhere from zero to hundreds of
-paths; promoting each one to its own graph triple would turn a
-provenance graph meant to answer "when did this happen, for which
-subject" into a bulk file-change log nothing here queries that way.
-The full path list stays exactly where it was recorded — reachable
-through `aistack.cli.history_query` the same way any other stream's
-raw content already is — and `aistack:changeCount` gives the graph
-the one lightweight magnitude signal worth a fact of its own.
-
-**No `aistack:occurredAt`.** `docker diff` states only that a path
-changed *since the container's own creation*, never when — there is
-no independent instant here to state, the same restraint `ADR-0011`
-§ 4 already asks of every stream that cannot state one
-independently of recording time (`aistack.providers.docker.events
-.occurred_at_of`'s own docstring is the one stream in this package
-that can; this is not it).
+Only `aistack:changeCount` becomes a graph fact; the full path list
+stays in the recorded snapshot. No `aistack:occurredAt` (`ADR-0011`
+§ 4): `docker diff` says a path changed since the container was
+created, not when.
 """
 
 from __future__ import annotations
@@ -59,11 +36,8 @@ from aistack.timemachine.vocabulary import (
     XSD_INTEGER,
 )
 
-# `aistack.providers.docker.diff_history`'s own leaf names, redeclared
-# here the same way `aistack.timemachine.projection.docker_events
-# .STEM` already redeclares `"docker-events"` rather than importing
-# across the collector/projector boundary this package's own modules
-# each keep.
+# Leaf names of `aistack.providers.docker.diff_history`, redeclared
+# rather than imported across the writer/reader boundary.
 DIFF_DIRNAME = "docker-diff"
 STEM = "docker-diff"
 STREAM_STEM = "docker-diff"
@@ -71,9 +45,7 @@ STREAM_STEM = "docker-diff"
 
 @dataclass(frozen=True)
 class DockerDiffProjectionSummary:
-    """What one `project_docker_diff` run actually did — the same
-    measured-report shape every other stream's projection already
-    gives a caller."""
+    """What one `project_docker_diff` run did."""
 
     subjects_seen: int
     snapshots_seen: int
@@ -83,13 +55,8 @@ class DockerDiffProjectionSummary:
 
 def _subject_roots(diff_root: Path) -> list[tuple[str, Path]]:
     """
-    `(subject, subject_root)` for every subject `diff_root` actually
-    holds a recorded snapshot for — found by locating each
-    `history/docker-diff` leaf anywhere under `diff_root`, however
-    deep a subject's own `/` nests it, rather than assuming a fixed
-    depth. `subject_root.relative_to(diff_root).as_posix()` rebuilds
-    the exact subject string `aistack.providers.docker.diff_history
-    ._output_path` derived that nesting from in the first place.
+    `(subject, subject_root)` for every subject with a recorded
+    snapshot, found by its `history/docker-diff` leaf at any depth.
     """
 
     roots: list[tuple[str, Path]] = []
@@ -114,25 +81,10 @@ def project_docker_diff(
     Add every recorded `docker diff` snapshot under
     `generated_dir / "docker-diff"` to `store`.
 
-    One shared `prov:Activity` (`stream_iri("docker-diff")`) is the
-    collection activity every snapshot is `prov:wasGeneratedBy` —
-    emitted once, lazily, the first time this stream is actually
-    found to hold a snapshot, the same guard `project_docker_events`
-    already holds for the same reason (this stream lives off its own
-    dedicated root, never discovered by the generic
-    `available_stems` walk, so nothing else would otherwise write
-    this Activity fact for a collector that has never run at all).
-
-    For each snapshot: it exists (`prov:Entity`), when it was
-    recorded (`prov:generatedAtTime` — recording time; see this
-    module's own docstring for why no `aistack:occurredAt`), which
-    subject it concerns (`aistack:stableSubject`, already computed by
-    the collector — `ADR-0011` § 3's identity rule, "already present
-    in the data, not derived here"), and how many paths it reported
-    (`aistack:changeCount`).
-
-    Every candidate fact passes through the same `filter_fact` every
-    other stream's projection already uses.
+    The stream's `prov:Activity` is emitted once, only when a snapshot
+    is found. Per snapshot: a `prov:Entity` with `prov:generatedAtTime`
+    (recording time), `aistack:stableSubject` and
+    `aistack:changeCount`. Every fact goes through `filter_fact`.
     """
 
     diff_root = generated_dir / DIFF_DIRNAME

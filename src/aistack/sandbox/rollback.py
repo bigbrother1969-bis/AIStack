@@ -1,18 +1,15 @@
 """
-Rollback rehearsal (`ADR-0018`, 1.9 — owner's decision 2026-10-08):
-before going back to the image a service ran before its last upgrade,
-rehearse it in the sandbox — the latest backup restored with that
-earlier image, checked like any restore — and print the line to pin
-in the service's compose file. Going back for real stays the owner's
-act.
+Rollback rehearsal (ADR-0018): before going back to the image a service
+ran before its last upgrade, restore the latest backup with that
+earlier image in the sandbox, check it like any restore, and print the
+line to pin in the service's compose file. Going back for real stays
+the owner's act.
 
-"The image before" is read from the digest collector's own history
-(`docker-digest/<project>/<service>/history/`): the newest recorded
-digest that differs from the one the container runs now. When that
-image is no longer on the host (a Watchtower clean-up), it is fetched
-again by the registry digest the collector records since 1.9; an
-earlier record has none, and the report says the image cannot be
-fetched.
+"The image before" is the newest digest in the digest collector's
+history (`docker-digest/<project>/<service>/history/`) that differs
+from the one running now. When that image is no longer on the host
+(e.g. a Watchtower clean-up), it is pulled by its recorded registry
+digest; older records have none, and the report says it cannot be fetched.
 """
 
 from __future__ import annotations
@@ -59,8 +56,7 @@ def _value(text: str) -> str:
 
 
 def find_previous(run: SandboxRun, container: str, generated_dir: Path) -> PreviousImage | None:
-    """The image `container` ran before its last recorded upgrade, or
-    None when the history holds no earlier digest."""
+    """The image `container` ran before its last recorded upgrade, or None when there is none."""
 
     fields = "|".join(["{{.Image}}", "{{.Config.Image}}"] + [f'{{{{index .Config.Labels "{label}"}}}}' for label in _LABELS])
     shown = run.docker("inspect", "--format", fields, container).stdout.strip().split("|")
@@ -122,8 +118,7 @@ def _matching_repo_digest(previous: PreviousImage) -> str:
 
 
 def make_available(run: SandboxRun, previous: PreviousImage) -> str:
-    """The reference the sandbox can start: the local image when it is
-    still on the host, else the registry digest, pulled."""
+    """The reference the sandbox can start: the local image if present, else the registry digest, pulled."""
 
     if run.docker_try("image", "inspect", "--format", "{{.Id}}", previous.previous).returncode == 0:
         return previous.previous
@@ -145,8 +140,10 @@ def prepare_rollback(
     generated_dir: Path,
     only: str = "",
 ) -> list[PreviousImage]:
-    """Find, fetch if needed, and set the earlier images the restore
-    will start. Raises `StepFailed` when none can be rehearsed."""
+    """Find, fetch if needed, and set the earlier images the restore will start.
+
+    Raises `StepFailed` when none can be rehearsed.
+    """
 
     containers = recipe_containers(recipe)
     if only:
@@ -177,8 +174,7 @@ def prepare_rollback(
             try:
                 used = make_available(run, previous)
             except StepFailed as error:
-                # One image that cannot be had does not stop the
-                # rehearsal of the others; it is said in the report.
+                # Rehearse the others; the report names this one.
                 unavailable.append(str(error))
                 continue
             ready.append(PreviousImage(**{**previous.__dict__, "used": used}))
@@ -200,8 +196,7 @@ def prepare_rollback(
 
 
 def pin_instructions(previous: PreviousImage) -> list[str]:
-    """What the owner copies to go back for real: the compose line to
-    pin, and the command to apply it."""
+    """The compose line to pin and the command to apply it, for the owner to copy."""
 
     lines = [f"{previous.container} ({previous.subject}) :"]
     reference = _matching_repo_digest(previous)

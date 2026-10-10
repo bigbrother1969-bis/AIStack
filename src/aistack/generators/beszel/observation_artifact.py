@@ -8,13 +8,7 @@ from aistack.generators.history import write_artifact_with_history
 
 
 class BeszelObservationArtifactGenerator:
-    """
-    Generate a governed artifact from a Beszel raw observation.
-
-    Same shape as `JellyfinObservationArtifactGenerator` — a
-    provider's observation is a `dict`, and this writes it as JSON
-    plus its Observation History, nothing more.
-    """
+    """Write a Beszel raw observation as JSON, with Observation History."""
 
     def generate(
         self,

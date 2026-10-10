@@ -9,13 +9,8 @@
 </head>
 <body>
   {#
-    ADR-0011 §18 (1.4 cadrage, 2026-09-28) — a second view of this
-    same mini-app, same LAN-only convention as streams.html/node.html
-    (ADR-0011 roadmap R1): direct LAN link, never the public address.
-    Nav partagée depuis 2026-09-30 (constat 5) — `page_nav` porte déjà
-    `&q=…` (route `/tree`'s own `_page_nav(..., extra_query=…)` call)
-    quand une recherche est active, pour ne jamais la perdre au
-    changement de langue.
+    LAN-only page (direct LAN link, never the public address). `page_nav`
+    carries `&q=…` when a search is active so the language switch keeps it.
   #}
   {{ page_nav | safe }}
 
@@ -32,9 +27,8 @@
   </nav>
 
   {#
-    Cadrage 1.4, 2026-09-28: the honest gap, not a richer promise —
-    real per-container history is 1.5's own collectors' job, so most
-    nodes show no Historique link today.
+    Most nodes have no history link: per-container history comes only from the
+    Docker collectors.
   #}
   <div class="warning">{{ t('timemachine.tree.historique_notice') }}</div>
 
@@ -52,15 +46,9 @@
   </form>
 
   {#
-    `render_node`, factored out to `_tree_macro.html` 2026-10-02 (gap
-    #1 of `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02
-    .md`) — `/node`'s own new left column needs this exact macro too;
-    see that file's own docstring for the full "why". `with context`
-    is required, not optional: `t`/`lang` (`node.kind_label_key` is
-    looked up through `t`, every link below reads `lang`) are
-    per-request template variables (`PageLanguage.context()`), never
-    Jinja globals the way `favicon`/`page_nav_style` are — a plain
-    `{% import %}` would leave both undefined inside the macro.
+    `with context` is required: `t` and `lang` are per-request template
+    variables, not Jinja globals, so a plain import leaves them undefined inside
+    the macro.
   #}
   {% import "timemachine/_tree_macro.html" as tree_macro with context %}
 

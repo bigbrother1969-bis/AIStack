@@ -99,8 +99,7 @@ def create_kernel() -> Kernel:
     )
 
     # A transport is one kind of operation a transaction can hold
-    # (`ADR-0019` § 6): registered here, where the transport engine is
-    # built; the dock registers its own kinds before its changes.
+    # (ADR-0019 § 6); the dock registers its own kinds itself.
     transactions = create_transaction_services()
     transactions.registry.register(
         "transport",
@@ -131,21 +130,7 @@ def create_kernel() -> Kernel:
     return kernel
 
 
-# **No Selection Strategy is registered, and that is a decision.**
-#
-# `register_default_selection_strategies` registered
-# `ByIdsSelectionStrategy([])` under `by-ids` until 2026-08-29 — an
-# instance holding an empty list, so retrieving it yielded a
-# strategy that selects nothing. `unused-registrations` had
-# reported it as registered and never retrieved since the check
-# was written; it could not be retrieved usefully at all.
-#
-# `ByIdsSelectionStrategy` carries its identifiers in its
-# constructor, so a strategy configured per use is not a registry
-# entry: a registry of instances can only hold pre-configured
-# ones. `aistack.selection.workflow` constructs one per selection.
-#
-# The registry itself stays — it is the mechanism ADR-0003
-# decides, and `unused-registrations` reporting it empty after
-# bootstrap is the true statement to publish. Removed by the
-# owner's decision of 2026-08-29.
+# No Selection Strategy is registered on purpose: `ByIdsSelectionStrategy`
+# takes its identifiers in its constructor, so
+# `aistack.selection.workflow` builds one per selection. The registry
+# itself stays (ADR-0003) and is empty after bootstrap.

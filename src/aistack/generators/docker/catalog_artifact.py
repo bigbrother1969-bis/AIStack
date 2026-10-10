@@ -10,15 +10,8 @@ from aistack.kernel.catalog import Catalog
 
 class DockerCatalogArtifactGenerator:
     """
-    Generate a Docker catalog artifact from a governed Catalog.
-
-    Took a `dict` until 2026-08-29, because `DockerRuntimeCatalogBuilder`
-    returned one. Both moved in the same commit: a generator that
-    accepts whatever shape its producer happens to emit cannot
-    state what it writes.
-
-    **Keeps Observation History since 2026-09-03** — see
-    `write_artifact_with_history`.
+    Write a Docker `Catalog` as JSON, with Observation History
+    (see `write_artifact_with_history`).
     """
 
     def generate(self, catalog: Catalog, output_path: Path) -> Path:

@@ -1,6 +1,4 @@
-"""
-Knowledge Transaction - Transaction contract.
-"""
+"""Knowledge Transaction - Transaction contract."""
 
 from __future__ import annotations
 
@@ -12,9 +10,7 @@ from .transaction_status import TransactionStatus
 
 @dataclass(slots=True)
 class Transaction:
-    """
-    A governed transaction composed of one or more operations.
-    """
+    """A governed transaction composed of one or more operations."""
 
     operations: list[Operation] = field(default_factory=list)
 

@@ -1,12 +1,9 @@
-"""
-`plan.html` — the action plan (the owner's request, 2026-10-08): what to
-do first to raise the health score and reduce the technical debt,
-ranked by what it gains (`aistack.health.plan`). Reached from the two
-score badges of the console and the Health cockpit; `#sante` and
-`#dette` open the part each badge is about.
+"""`plan.html`: the action plan, ranked by gain (`aistack.health.plan`).
 
-Server-side HTML, like `health.html`: no script. Pure — the same plan
-renders to the same page.
+What to do first to raise the health score and reduce technical debt.
+Opened from the score badges of the console and the Health cockpit;
+`#sante` and `#dette` jump to the matching part. Server-side HTML, no
+script, pure.
 """
 
 from __future__ import annotations

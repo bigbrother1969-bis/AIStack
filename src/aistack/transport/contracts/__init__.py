@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer public contracts.
-"""
+"""Knowledge Transport Layer public contracts."""
 
 from aistack.transport.contracts.delivery_mode import DeliveryMode
 from aistack.transport.contracts.knowledge_artifact import KnowledgeArtifact

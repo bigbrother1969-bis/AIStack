@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-# Two directions, both real (owner's own choice, "les deux sens",
-# 1.6 tranche 3 cadrage, 2026-09-30) — never a third invented ahead of
-# a real case (`ARC-P-006`).
+# The two directions of a mismatch.
 DISCOVERED_UNDECLARED = "discovered_undeclared"
 DECLARED_UNDISCOVERED = "declared_undiscovered"
 KINDS = (DISCOVERED_UNDECLARED, DECLARED_UNDISCOVERED)
@@ -13,41 +11,19 @@ KINDS = (DISCOVERED_UNDECLARED, DECLARED_UNDISCOVERED)
 @dataclass(frozen=True)
 class InventoryGap:
     """
-    One mismatch between what AIStack's own inventory declares
-    (`service_categorization.yml`) and what it actually finds running
-    — 1.6 tranche 3 (R9, roadmap's own "Écarts d'inventaire → quai →
-    validation → inventaire déclaré", 2026-09-30).
+    One mismatch between the declared inventory
+    (`service_categorization.yml`) and the containers found running.
 
-    **Two kinds, symmetric, both real (the owner's own choice at
-    cadrage).** `DISCOVERED_UNDECLARED` — a container `find_inventory_
-    gaps` found running, locally via `DockerProvider` or on another
-    LAN host via the last `network_docker_discover` observation, that
-    `service_categorization.yml` names in no service. `DECLARED_
-    UNDISCOVERED` — the reverse: a declared service naming a container
-    that neither source ever found running. Neither direction is
-    treated as more authoritative than the other; each is exactly what
-    it says, no more.
+    `DISCOVERED_UNDECLARED`: a running container (local, or on a LAN host
+    from the last `network_docker_discover`) that no service declares.
+    `DECLARED_UNDISCOVERED`: a declared service whose container was not
+    found running.
 
-    **`container` is always set — it is the identity both sides are
-    joined on.** `service` is set only for `DECLARED_UNDISCOVERED`
-    (the declared service's own name — a `DISCOVERED_UNDECLARED`
-    container has no declared service by definition, that is exactly
-    what makes it a gap). `host` is set only when the discovering side
-    knows one: a remote host `network_docker_discover` observed
-    (`DISCOVERED_UNDECLARED` only) — `None` means "this machine"
-    (local, via `DockerProvider`) for a `DISCOVERED_UNDECLARED` gap, or
-    simply "not applicable" for a `DECLARED_UNDISCOVERED` one, since
-    `service_categorization.yml` itself never names a host
-    (`ServiceCategorizationDefinition`'s own docstring: "`server` alone
-    still does not travel").
+    `container` is always set. `service` is set only for
+    `DECLARED_UNDISCOVERED`. `host` is set only for a remote discovered
+    container; `None` means this machine or not applicable.
 
-    **No validation, no auto-correction.** This register is never
-    written back to `service_categorization.yml` by this codebase —
-    the roadmap's own "validation" step is the owner reading these
-    findings and editing the declared file by hand, the same
-    discipline every prior tranche has held (`GOV-P-001`: the agent
-    never pushes, and never edits a declared file on the owner's
-    behalf either).
+    Gaps are never written back to the declared file; the owner edits it.
     """
 
     kind: str

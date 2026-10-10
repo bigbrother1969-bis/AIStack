@@ -8,49 +8,19 @@ from typing import Any, Mapping
 from aistack.providers.docker.identity import stable_subject_from_labels
 
 
-# 1.5, Traçabilité passive des conteneurs (`claude/ROADMAP-1.2-TO-2.0-
-# 2026-09-27.md` § 1.5). Cadrage 2026-09-28: the owner chose `docker
-# events` as 1.5's first collector — it is the source the upgrade
-# events § 1.5 itself asks for (exec, pull, create, recreate, destroy)
-# come from — and chose a governed polling loop over a continuous
-# subscription, the same shape `aistack.cli
-# .resource_priority_monitor` already established as this heritage's
-# one precedent for a long-running collector (`ADR-0011` § *Decision*
-# 1's "point-in-time snapshot" contract every other provider's
-# `collect()` already follows, extended here to a bounded time window
-# instead of "right now" alone).
-#
-# `ARC-P-012`'s boundary (`DockerProvider.collect_logs`'s own
-# docstring: "this returns lines, never a verdict") holds here too:
-# this module returns what Docker itself reported, and derives only
-# the three facts `ADR-0011` § 3-4 already named as needing derivation
-# at collection time (`aistack:stableSubject`, `aistack:occurredAt`,
-# the action taken) — never an interpretation such as "this was an
-# upgrade". Correlating a `destroy`+`create` pair into a richer
-# "upgrade" fact is a later, separate concern (`ADR-0011` § *Open
-# Points*), not something this raw collector decides on its own.
+# Passive container traceability from `docker events`, polled over
+# bounded windows rather than through a live subscription (`ADR-0011`).
+# Returns what Docker reported, plus only the three facts derived at
+# collection time (`ADR-0011` § 3-4): stable subject, occurrence time and
+# action. No interpretation such as "this was an upgrade".
 
 
 def collect_docker_events(since: str, until: str) -> list[dict[str, Any]]:
-    """
-    Every Docker event in `[since, until)`, raw, as Docker itself
-    reports it — one bounded call, the same "point-in-time snapshot"
-    shape `DockerProvider.collect()` already holds, just parametrised
-    by a window instead of "right now" alone: a governed polling loop
-    calls this once per cycle with `since` set to its own last
-    checkpoint, never leaving a process attached to a live subscription
-    (`aistack.cli.docker_events_monitor`, the cadrage decision above).
+    """Every Docker event in `[since, until)`, raw, in one bounded call.
 
-    `--since`/`--until` accept anything Docker's own reference parses
-    (`"2026-09-28T10:00:00Z"`, a Unix timestamp); this module states no
-    format of its own, so the caller and Docker agree on the same one
-    without a translation layer here that could drift from it.
-
-    Returns `[]` on any failure — no daemon, no such command, malformed
-    output — the same convention `NvidiaGpuProvider.collect_readings`
-    and `DockerProvider.collect_cpu_readings` already hold: what could
-    not be observed is reported as nothing observed, never raised, so
-    one bad cycle does not crash a monitor meant to run for days.
+    `since`/`until` are passed to Docker unchanged (RFC 3339 or Unix
+    timestamp). Returns `[]` on any failure, so one bad cycle cannot crash
+    a long-running monitor (`aistack.cli.docker_events_monitor`).
     """
 
     try:
@@ -89,32 +59,11 @@ def collect_docker_events(since: str, until: str) -> list[dict[str, Any]]:
 
 
 def stable_subject_of(event: Mapping[str, Any]) -> str:
-    """
-    `ADR-0011` § *Decision* 3's identity rule, applied to one raw
-    Docker event: the Compose project and service name when the
-    event's own actor carries both (`compose_project/service` —
-    Compose writes these as the `com.docker.compose.project`/
-    `com.docker.compose.service` labels on every container it
-    manages, the same two labels `NetworkDockerDiscoveryProvider`
-    already reads for the same reason), falling back to the actor's
-    plain name, and, when Docker names neither, its own id — never
-    empty, since a real Docker event always carries at least
-    `Actor.ID`.
+    """Stable subject of one raw Docker event (`ADR-0011` § Decision 3).
 
-    Deliberately not the container's own Docker id as a first choice:
-    § 3 fixes this exactly to avoid it — "recreation always changes
-    it and identity by definition must not."
-
-    **A thin adapter, since 2026-09-28.** The identity rule itself
-    moved to `aistack.providers.docker.identity.stable_subject_from_
-    labels` that day, cadrage for 1.5's second collector (`docker
-    diff` périodique) — the owner's own decision to factor it out
-    before a third and fourth caller (dérive du digest, inventaire
-    des paquets) would each otherwise need their own copy. This
-    function is now only the part specific to a Docker *event*'s own
-    payload shape: pulling `attributes`/`actor_id` out of `Actor`
-    before handing them to the shared rule. Behaviour unchanged —
-    this is a refactor, not a redesign.
+    Extracts the actor's labels, name and id and applies
+    `stable_subject_from_labels`. The container id is only the last
+    resort, since recreation changes it.
     """
 
     actor = event.get("Actor")
@@ -130,29 +79,14 @@ def stable_subject_of(event: Mapping[str, Any]) -> str:
 
 
 def occurred_at_of(event: Mapping[str, Any]) -> datetime:
-    """
-    The instant Docker itself says this event happened —
-    `ADR-0011` § 4's `aistack:occurredAt`, the field that section
-    says stays unstated for every stream that cannot state it
-    independently of recording time; a real `docker events` payload
-    always can, via `timeNano` (nanoseconds since the epoch, the
-    finer of the two fields Docker emits) or, failing that, `time`
-    (whole seconds).
-
-    Falls back to the current instant only when a payload carries
-    neither — malformed input this function does not raise on, the
-    same defensive posture `stable_subject_of` holds for a payload
-    missing its actor.
-    """
+    """When Docker says the event happened (`ADR-0011` § 4
+    `aistack:occurredAt`): `timeNano`, else `time`, else now (malformed
+    payload)."""
 
     time_nano = event.get("timeNano")
     if isinstance(time_nano, (int, float)):
-        # Integer arithmetic, not `time_nano / 1_000_000_000`: a real
-        # `timeNano` (nanoseconds since the epoch, ~19 significant
-        # digits by 2026) loses precision past a `float`'s own ~15-17,
-        # which was measured here to round the last microsecond digit
-        # incorrectly on a real value — `divmod` keeps the nanosecond
-        # count exact up to the microsecond `datetime` itself can hold.
+        # Integer division: a float cannot hold ~19 digits of nanoseconds
+        # and would round the last microsecond wrongly.
         seconds, nanoseconds = divmod(int(time_nano), 1_000_000_000)
         return datetime.fromtimestamp(seconds, tz=timezone.utc).replace(
             microsecond=nanoseconds // 1000
@@ -173,14 +107,8 @@ def docker_action_of(event: Mapping[str, Any]) -> str:
 
 
 def enrich(event: Mapping[str, Any]) -> dict[str, Any]:
-    """
-    One raw Docker event, alongside the three facts `ADR-0011` §
-    3-4 asks a *collector* to state — `subject`/`occurred_at`/
-    `action` sit beside `raw`, never replacing it, so the evidence a
-    human or a future qualifier reads is never less than what Docker
-    itself reported (the same "raw stays raw" discipline
-    `DockerProvider.collect_logs` already holds for log lines).
-    """
+    """One raw Docker event with `subject`, `occurred_at` and `action`
+    (`ADR-0011` § 3-4) added beside the unchanged `raw` payload."""
 
     return {
         "subject": stable_subject_of(event),
@@ -192,25 +120,16 @@ def enrich(event: Mapping[str, Any]) -> dict[str, Any]:
 
 # --- Exec noise: AIStack's own probes and declared healthchecks ------------
 #
-# Cadrage 2026-10-02, measured on the reference host before any code:
-# one hour of this stream held 18,074 events, 97 % of them `exec_*` —
-# about 3,800 healthcheck runs (gluetun, MariaDB, frigate, curl/wget
-# probes) and 2,338 of AIStack's own `docker exec` package probes
-# (`aistack.providers.docker.packages`), three events each. Neither is
-# a trace of anything a person did, and together they buried the one
-# real fault the stream held that hour: a container restarting every
-# 17 seconds. Owner's choice: keep a human or external `docker exec`,
-# drop the two automatic kinds — never every exec, which would lose
-# exactly the manual action this collector exists to trace.
+# Healthcheck runs and AIStack's own package probes make up most `exec_*`
+# events and bury real faults. Only those two automatic kinds are
+# dropped; any other `docker exec` (e.g. by a person) is kept.
 
 _MAX_REMEMBERED_EXEC_IDS = 4096
 _MAX_CACHED_CONTAINERS = 1024
 
 
 def _aistack_probe_commands() -> frozenset[str]:
-    # Imported here, not at module top: `packages` is this collector's
-    # sibling, and naming its commands from it — rather than copying
-    # them — is what keeps the two from drifting apart.
+    # Read from `packages` rather than copied, so the two cannot drift.
     from aistack.providers.docker.packages import APK_DB_COMMAND, DPKG_QUERY_COMMAND
 
     return frozenset(
@@ -219,15 +138,11 @@ def _aistack_probe_commands() -> frozenset[str]:
 
 
 def healthcheck_commands_of(inspect_entry: Mapping[str, Any]) -> frozenset[str]:
-    """
-    The exec command line(s) Docker reports when it runs this
-    container's own declared healthcheck — the same string Docker puts
-    after `exec_create: ` / `exec_start: ` in the event's `Action`.
+    """The command line(s) Docker shows after `exec_create: ` /
+    `exec_start: ` when it runs this container's declared healthcheck.
 
-    `CMD-SHELL x` runs through the container's own shell (its
-    `Config.Shell`, `/bin/sh -c` when none is set) and so appears as
-    `/bin/sh -c x`; `CMD a b` appears as `a b`. `NONE`, or no
-    healthcheck at all, yields nothing.
+    `CMD-SHELL x` appears as `<Config.Shell or /bin/sh -c> x`; `CMD a b`
+    as `a b`. `NONE` or no healthcheck yields nothing.
     """
 
     config = inspect_entry.get("Config")
@@ -263,22 +178,14 @@ def _inspect_healthcheck(container_id: str) -> frozenset[str] | None:
 
 
 class ExecNoiseFilter:
-    """
-    Decides, event by event, whether a raw Docker event is exec noise —
-    AIStack's own package probe, or a container's own declared
-    healthcheck — and should be left out of Observation History.
+    """Decide whether a raw Docker event is exec noise (an AIStack package
+    probe or a declared healthcheck) to leave out of Observation History.
 
-    Only `exec_create` and `exec_start` name the command they ran;
-    `exec_die` carries only its `execID`. So the filter remembers the
-    `execID`s it dropped (bounded) and drops their `exec_die` too — it
-    must live as long as the monitor's loop, not one cycle, since a
-    probe's `exec_die` can land in the next poll window.
-
-    **Never drops what it cannot prove is noise.** A non-exec event is
-    always kept; an exec whose container Docker could not inspect is
-    kept; an `exec_die` whose `exec_create` this process never saw (it
-    started in between) is kept. The cost of a wrong keep is one noisy
-    line; the cost of a wrong drop is a lost trace of a human action.
+    `exec_die` carries only its `execID`, so the filter remembers the
+    `execID`s it dropped (bounded) and drops their `exec_die` too. It must
+    live as long as the monitor loop, since `exec_die` can fall in the next
+    poll window. When in doubt (uninspectable container, unseen
+    `exec_create`), the event is kept.
     """
 
     def __init__(
@@ -287,16 +194,10 @@ class ExecNoiseFilter:
         healthchecks_by_subject: Mapping[str, frozenset[str]] | None = None,
         remember_uninspectable: bool = False,
     ) -> None:
-        """
-        The two keyword arguments exist for refiltering history after
-        the fact (`aistack.cli.docker_events_refilter`), never for the
-        live monitor: an old event names a container id that may no
-        longer exist — recreated since by an image update — so
-        `healthchecks_by_subject` (the healthchecks of the containers
-        running now, by stable subject) stands in for an id Docker can
-        no longer inspect, and `remember_uninspectable` stops the
-        filter asking Docker again about an id it already could not
-        resolve, across tens of thousands of archived events.
+        """The keyword arguments are for refiltering archived history, not
+        the live monitor. `healthchecks_by_subject` stands in for container
+        ids that no longer exist; `remember_uninspectable` caches ids Docker
+        could not inspect so they are not asked again.
         """
 
         self._probe_commands = _aistack_probe_commands()
@@ -359,12 +260,9 @@ class ExecNoiseFilter:
 
 
 def current_healthchecks_by_subject() -> dict[str, frozenset[str]]:
-    """
-    The declared healthcheck command(s) of every container running now,
-    by stable subject — `ExecNoiseFilter(healthchecks_by_subject=...)`'s
-    stand-in for a container id an archived event names but Docker can
-    no longer inspect. `{}` when Docker cannot be reached.
-    """
+    """Declared healthcheck commands of every running container, by stable
+    subject (for `ExecNoiseFilter(healthchecks_by_subject=...)`). `{}` when
+    Docker cannot be reached."""
 
     from aistack.providers.docker.identity import (
         inspect_containers,

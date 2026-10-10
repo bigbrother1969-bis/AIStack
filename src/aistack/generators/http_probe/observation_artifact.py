@@ -8,13 +8,7 @@ from aistack.generators.history import write_artifact_with_history
 
 
 class HttpProbeObservationArtifactGenerator:
-    """
-    Generate a governed artifact from an HTTP probe raw observation.
-
-    Same shape as `BeszelObservationArtifactGenerator` — a provider's
-    observation is a `dict`, and this writes it as JSON plus its
-    Observation History, nothing more.
-    """
+    """Write an HTTP probe raw observation as JSON, with Observation History."""
 
     def generate(
         self,

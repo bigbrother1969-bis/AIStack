@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Knowledge Artifact contract.
-"""
+"""Knowledge Transport Layer - Knowledge Artifact contract."""
 
 from __future__ import annotations
 

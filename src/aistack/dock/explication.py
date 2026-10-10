@@ -1,17 +1,15 @@
 """
-A governed change's why, recorded as its explication (`ADR-0019` § 2):
-once the dock has executed a proposal, the reason its author wrote is
-recorded in the Time Machine for each container it changed — under the
-same stable subject the image-digest collector observes it by
-(`<compose project>/<compose service>`), so the why sits beside the
-observations the change produced.
+A governed change's why, recorded as its explication (ADR-0019 § 2).
 
-Attributed to the person who wrote it; the administrator who validated
-it, when another, is its second author (`ADR-0015` § 5). Written by a
-person and validated, so `Declared` and `Validated`; the outcome and
-the proposal are said in the text and kept in `metadata`
-(`dock_proposal`), which the provenance graph follows to tie the
-change's activity to its explication.
+Once the dock has executed a proposal, the author's reason is recorded
+for each changed container under the stable subject the digest collector
+uses (`<compose project>/<compose service>`), beside the observations
+the change produced.
+
+Attributed to its author; the validating administrator, when another
+person, is second author (ADR-0015 § 5). Status is `Declared` and
+`Validated`. `metadata["dock_proposal"]` lets the provenance graph tie
+the change's activity to its explication.
 """
 
 from __future__ import annotations

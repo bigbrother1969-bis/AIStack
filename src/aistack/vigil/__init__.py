@@ -1,1 +1,1 @@
-"""Vigilance (2.0): the health kept fresh, and Gotify told what changed."""
+"""The vigil: keeps health fresh and tells Gotify what changed."""

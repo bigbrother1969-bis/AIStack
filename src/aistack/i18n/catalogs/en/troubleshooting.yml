@@ -1,5 +1,4 @@
-# Troubleshooting assistant mini-app (troubleshooting_assistant_ui) —
-# ADR-0010. Mirrors catalogs/fr/troubleshooting.yml.
+# Troubleshooting assistant mini-app (troubleshooting_assistant_ui), ADR-0010.
 
 title: "AIStack — Troubleshooting assistant"
 title_subject: "AIStack — Troubleshooting assistant — {subject}"
@@ -162,7 +161,7 @@ record:
   or_by_hand: "Or by hand:"
   done: "Test of {subject} recorded: {status}, on {date}."
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   help: "How to open a terminal and connect to the server to apply a command"
   start: "Open this finding: what AIStack knows of it and what you do, then the AI's opinion if you ask"

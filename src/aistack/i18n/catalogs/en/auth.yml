@@ -147,7 +147,7 @@ declarations:
   marked: "Noted: {name} is no longer reported until the shipped version changes again."
   tooltip:
     seen: "Stop reporting this file until the shipped version changes again; your file stays as it is"
-# Settings' API keys section (2026-10-09).
+# Settings: API keys section.
 api_keys:
   heading: "API keys"
   intro: "The keys and credentials AIStack's components use. A value entered here is kept in the data directory, readable by AIStack only, and wins over .env.web; cleared, the .env.web value comes back."

@@ -1,41 +1,16 @@
 """
-Import the AI Runtime's own `explain` answers as Explications —
-`ADR-0011` § *Decision* 8's first real source: "already collected...
-already kept since J7", so this module writes no new collector, only
-a transform from what `aistack.ai_runtime.reasoning_history` already
-persists into `aistack.explications`' own store.
+Import the AI Runtime's `explain` answers, as persisted by
+`aistack.ai_runtime.reasoning_history`, as Explications (`ADR-0011`
+§ 8).
 
-**A real, previously uncaught gap this module's own reading depends
-on, not one it repeats.** `aistack.ai_runtime.reasoning_history`
-writes one JSON file per subject under
-`reports/generated/ai-reasoning/<subject>.json`, with its own
-timestamped history at `reports/generated/ai-reasoning/history/
-<subject>/` — a subject-keyed layout, exactly like `aistack.
-explications.store`'s own (see that module's comment on the same
-shape, corrected before this patch). `aistack.timemachine.projection
-.project_observation_history` only ever scans `generated_dir/
-history/<stem>/` directly, so it has never actually found AI
-Reasoning History there, despite `ADR-0011` § *Context*'s own table
-having claimed it does — measured while building this importer, not
-assumed from that table. Reshaping `project_observation_history`'s
-generic scan to also discover a nested, subject-keyed stream would be
-new scope this patch does not need: this importer already gives AI
-Reasoning History's `explain` answers their own real path into the
-graph, through Explications, which is the concern this ADR actually
-opened. `ADR-0011` § *Context* is corrected alongside this patch to
-say so plainly, rather than leave a claim standing that direct
-measurement does not support.
+AI Reasoning History is subject-keyed
+(`reports/generated/ai-reasoning/<subject>.json`), so
+`project_observation_history`'s generic scan never finds it; this
+importer is its path into the graph.
 
-**Idempotent by construction, not by a separate ledger.** Every
-`explain` answer already carries the instant `aistack.ai_runtime
-.reasoning_history` recorded it at; before importing one, this module
-reads every Explication already recorded for that subject
-(`aistack.explications.read_explication_history`) and skips any whose
-own `metadata["source_instant"]` already matches — the files already
-on disk are the ledger, the same principle `next_version_from_history`
-already applies for versioning itself. Running this importer twice in
-a row against unchanged AI Reasoning History records nothing new the
-second time.
+Idempotent: an answer is skipped when an Explication for the same
+subject already carries its instant in `metadata["source_instant"]`.
+The files on disk are the only ledger.
 """
 
 from __future__ import annotations
@@ -72,9 +47,8 @@ def import_explain_answers(
     output_dir: Path = DEFAULT_OUTPUT_DIR,
 ) -> ExplainImportSummary:
     """
-    Walk every subject AI Reasoning History currently holds, find
-    every `explain` answer recorded for it, and record each one that
-    is not already an Explication (by source instant) as a `Proposed`
+    Record each `explain` answer in AI Reasoning History that is not
+    already an Explication (by source instant) as a `Proposed`
     `KnowledgeArtifact` (`ADR-0011` § 7).
     """
 

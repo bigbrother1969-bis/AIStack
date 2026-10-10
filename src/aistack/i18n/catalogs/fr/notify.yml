@@ -1,4 +1,4 @@
-# Notifications Gotify de la vigie (2.0). Miroir de catalogs/en/notify.yml.
+# The vigil's Gotify notifications.
 
 title: "AIStack — {count} nouveauté(s)"
 event:

@@ -1,20 +1,13 @@
-"""
-*Time Machine* — the graph of what AIStack observed, browsed by stream,
-by network tree and on a time ribbon (`ADR-0011`; the screen
-`timemachine_ui` served on port 8186 until 2026-10-03, `ADR-0012`).
-LAN only: it shows the commands, packages and AI reasoning the host
-recorded.
+"""*Time Machine*: the graph of what AIStack observed, browsed by stream, by
+network tree and on a time ribbon (ADR-0011). LAN only: it shows recorded
+commands, packages and AI reasoning.
 
-A thin adapter over `aistack.timemachine.screen`. The graph is rebuilt
-by `aistack.cli.timemachine_rebuild`, never from here; the only writes
-are an administrator's acts on an Explication (`ADR-0015`), recorded in
-the Explications store and seen by the graph at the next rebuild. One
-collaborator reaches the routes through the application, so a test
-replaces it: `network_tree` (the live Docker and Compose discovery,
-cached for 45 s). The graph, the Explications and the last network scan
-are read under the application's generated directory, the graph opened
-read-only afresh on each request, so a rebuild is seen without a
-restart.
+A thin adapter over `aistack.timemachine.screen`. The graph is rebuilt by
+`aistack.cli.timemachine_rebuild`, never here; the only writes are an
+administrator's acts on an Explication (ADR-0015), which the graph sees at
+the next rebuild. The graph is opened read-only on each request, so a
+rebuild shows without a restart. `network_tree` (live Docker and Compose
+discovery, cached 45 s) is injected so tests can replace it.
 """
 
 from __future__ import annotations
@@ -87,8 +80,7 @@ def _render(
             "base": PREFIX,
             "favicon": MARK_DATA_URI,
             "page_nav_style": PAGE_NAV_STYLE,
-            # Relative links: the console and Settings are served by
-            # this same application, on this same port.
+            # Relative links: the console and Settings are served by this application.
             "page_nav": render_page_nav(
                 language.t,
                 request.app.state.languages,
@@ -139,8 +131,9 @@ def streams(request: Request) -> Response:
 
 @router.get("/node", response_class=HTMLResponse, include_in_schema=False)
 def node(request: Request, iri: str, q: str = "") -> Response:
-    """One node: its facts, what points at it, its provenance diagram,
-    with the network tree on its left and its own chronology beside it."""
+    """One node: its facts, incoming references, provenance diagram, network
+    tree and its own chronology.
+    """
 
     language = _language(request)
     store = open_graph(request.app.state.generated_dir)
@@ -183,8 +176,9 @@ def node(request: Request, iri: str, q: str = "") -> Response:
 
 @router.get("/tree", response_class=HTMLResponse, include_in_schema=False)
 def tree(request: Request, q: str = "") -> Response:
-    """The network tree, from the live catalogs; each node's history
-    looked up in the graph (none when it has never been built)."""
+    """The network tree from the live catalogs, with each node's history from
+    the graph (none when the graph was never built).
+    """
 
     language = _language(request)
     store = open_graph(request.app.state.generated_dir)
@@ -200,9 +194,11 @@ def ribbon(
     subject: str = "",
     page: int = Query(default=1, ge=1),
 ) -> Response:
-    """Every recorded instant on a time axis, filterable by stream and by
-    subject. The hidden `submitted` field tells a form submitted with
-    every stream unchecked (show nothing) from a bare link (show all)."""
+    """Every recorded instant on a time axis, filterable by stream and subject.
+
+    The hidden `submitted` field distinguishes a form with every stream
+    unchecked (show nothing) from a bare link (show all).
+    """
 
     language = _language(request)
     store = open_graph(request.app.state.generated_dir)
@@ -233,8 +229,9 @@ def ribbon(
 
 @router.get("/reconstitute", response_class=HTMLResponse, include_in_schema=False)
 def reconstitute(request: Request, subject: str = "", as_of: str = "") -> Response:
-    """What was known about one subject at one instant — reached from a
-    node, which supplies both; without either, nothing is guessed."""
+    """What was known about one subject at one instant; both come from a node,
+    and nothing is guessed without them.
+    """
 
     language = _language(request)
     store = open_graph(request.app.state.generated_dir)
@@ -259,8 +256,7 @@ def reconstitute(request: Request, subject: str = "", as_of: str = "") -> Respon
 
 @router.get("/explications", response_class=HTMLResponse, include_in_schema=False)
 def explications(request: Request, status: str = "", q: str = "") -> Response:
-    """Every subject with an Explication, filtered by the status of its
-    current version and by a word of its name (`ADR-0015`)."""
+    """Subjects with an Explication, filtered by current status and name (ADR-0015)."""
 
     language = _language(request)
     listing = explication_list(request.app.state.generated_dir, status, q)
@@ -276,8 +272,7 @@ def explications(request: Request, status: str = "", q: str = "") -> Response:
 
 @router.get("/explication", response_class=HTMLResponse, include_in_schema=False)
 def explication(request: Request, subject: str = "", done: str = "", refused: str = "") -> Response:
-    """Every recorded version of one subject's Explication; for an
-    administrator, the forms to write, validate or discard (`ADR-0015`)."""
+    """Every version of one subject's Explication, with administrator forms (ADR-0015)."""
 
     language = _language(request)
     store = open_graph(request.app.state.generated_dir)
@@ -289,8 +284,7 @@ def explication(request: Request, subject: str = "", done: str = "", refused: st
     is_admin = current_profile(request) == ADMIN
     development = _development(request)
     if panel and is_admin and not development and panel.get("current_author") == _person(request).source:
-        # Nobody validates their own text (ADR-0015 § 3): the button is
-        # not offered, the reason is said instead.
+        # Nobody validates their own text (ADR-0015 § 3): explain instead of offering the button.
         panel["can_validate"] = False
         panel["own_text"] = True
 
@@ -322,7 +316,7 @@ _DONE = {
 
 
 def _development(request: Request) -> bool:
-    """The development phase's rules (ADR-0016)?"""
+    """Whether the development phase's rules apply (ADR-0016)."""
 
     return bool(request.app.state.phase == "development")
 

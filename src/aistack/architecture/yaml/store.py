@@ -17,17 +17,10 @@ _REQUIRED_SERVICE_FIELDS = ("name",)
 
 def load_service_categorization_yaml(path: Path) -> ServiceCategorizationDefinition:
     """
-    Load the governed service categorization from YAML.
+    Load the service categorization from YAML.
 
-    **Written by hand, read-only** — same reasoning as
-    `load_resource_priority_yaml`: this file is typed by the owner (or
-    ported once, as it was 2026-09-10, from `homepage/services.yaml`),
-    so a missing key here is a typo, and the error names which one and
-    where. Unlike `resource_priority.yml`, nothing in this repository
-    writes this file back yet — no `save_service_categorization_yaml`
-    exists because no UI edits this categorization the way
-    `priority_ui` edits resource priority. Add one only once something
-    needs it; until then, editing is by hand, in this file, on disk.
+    The file is edited by hand (nothing writes it back); a missing key
+    raises a `ValueError` naming it and its location.
     """
 
     with path.open("r", encoding="utf-8") as stream:

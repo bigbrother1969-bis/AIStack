@@ -1,7 +1,7 @@
-# Mini-app Assistant de pannes (troubleshooting_assistant_ui) — ADR-0010.
-# Les segments *_before / *_after entourent un fragment de code ou un
-# nom (<code>, <strong>) que le gabarit insère lui-même : un message ne
-# porte jamais de balisage (ADR-0010 § 1).
+# Troubleshooting assistant mini-app (troubleshooting_assistant_ui), ADR-0010.
+# The *_before / *_after segments surround a code fragment or name
+# (<code>, <strong>) that the template inserts itself: a message never
+# carries markup (ADR-0010 § 1).
 
 title: "AIStack — Assistant de pannes"
 title_subject: "AIStack — Assistant de pannes — {subject}"
@@ -164,7 +164,7 @@ record:
   or_by_hand: "Ou à la main :"
   done: "Test de {subject} enregistré : {status}, le {date}."
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   help: "Comment ouvrir un terminal et se connecter au serveur pour appliquer une commande"
   start: "Ouvrir ce constat : ce qu'AIStack en sait et ce que tu fais, puis l'avis de l'IA si tu le demandes"

@@ -1,13 +1,10 @@
 """
-The one fix the Troubleshooting Assistant knows how to make
-(`ADR-0012` § 4; scoped with the owner 2026-09-18).
+The one fix the Troubleshooting Assistant can apply (`ADR-0012` § 4):
+declaring a finding's subject a `background` container in the
+resource-priority definition, as the *Priorité CPU* screen does.
 
-Declaring a finding's subject a `background` container in the governed
-resource-priority definition — the same write the *Priorité CPU* screen
-performs, for one container. **Never `priority`**, which needs a
-detector and CPU thresholds a single click cannot safely default; and
-**never anything derived from the AI's `recommend` text**: this is one
-fixed, hand-written change the owner triggers with its own click.
+Never `priority`, which needs a detector and thresholds a click cannot
+safely default, and never anything derived from the AI's text.
 """
 
 from __future__ import annotations
@@ -36,9 +33,9 @@ def class_as_background(
     definition: ResourcePriorityDefinition, subject: str
 ) -> BackgroundDecision:
     """
-    Refused when the subject is already a priority application — that
-    classification is the owner's judgement, never overwritten by a
-    click; nothing to write when it is already in the background list.
+    Add `subject` to the background containers. Refused when it is a
+    priority app (a user decision a click never overwrites); nothing to
+    write when it is already in the background list.
     """
 
     if any(app.container == subject for app in definition.priority):

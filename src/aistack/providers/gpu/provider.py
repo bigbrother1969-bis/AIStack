@@ -5,52 +5,27 @@ from datetime import datetime, timezone
 
 from aistack.contracts.gpu_reading import GpuReading
 
-# The exact fields this provider asks `nvidia-smi` for, and in this
-# order — `noheader,nounits` gives one clean comma-separated line per
-# GPU with no units to strip and no header row to skip, confirmed live
-# against GIGABYTE's Quadro P400, 2026-09-11.
-#
-# **No `power.draw`/`power.limit`.** Both read `[N/A]` on this
-# hardware — confirmed the same day — so asking for them would only
-# ever produce a field this provider could never parse as a number.
-# `GpuReading` carries no power field for the same reason.
+# Field order matters: one comma-separated line per GPU. No
+# `power.draw`/`power.limit`: they read `[N/A]` on consumer/entry cards
+# such as the Quadro P400.
 _QUERY_FIELDS = "name,utilization.gpu,memory.used,memory.total,temperature.gpu"
 
 _EXPECTED_FIELD_COUNT = 5
 
 
 class NvidiaGpuProvider:
-    """
-    Observe the host's own NVIDIA GPU via `nvidia-smi`, and conclude
-    nothing.
+    """Observe the host's NVIDIA GPUs via `nvidia-smi`, without drawing
+    conclusions (`OPS-0007`).
 
-    `PLAN-J7`'s fifth domain (GPU) — the owner's own stated
-    requirement to monitor GPU/CPU consumption (`OPS-0007`). The same
-    boundary (`ARC-P-012`) `StorageProvider`/`HostProvider` already
-    hold: this is what `nvidia-smi` reported, concluding nothing about
-    whether it is a problem.
-
-    **Never raises**, the same convention `HostProvider
-    .collect_temperatures` already holds for `sensors`: no `nvidia-smi`
-    binary on the host (a GPU-less host, or an AMD/Intel GPU with no
-    NVIDIA tooling), no NVIDIA driver loaded, or a malformed line —
-    each reads as nothing to report rather than a failure worth
-    stopping the whole diagnosis for.
+    Never raises: no `nvidia-smi`, no driver, or a malformed line yields
+    nothing to report.
     """
 
     provider_id = "aistack.provider.gpu.nvidia"
     provider_name = "NVIDIA GPU Provider"
 
     def collect_readings(self) -> tuple[GpuReading, ...]:
-        """
-        Every GPU `nvidia-smi` reports, in one call.
-
-        One line of CSV per GPU. The owner's own host (GIGABYTE)
-        carries exactly one (a Quadro P400) — this provider does not
-        assume that: a host with several GPUs reports several
-        readings, unchanged by anything this domain's v1 scope
-        declares only one host's threshold for.
-        """
+        """One reading per GPU `nvidia-smi` reports."""
 
         try:
             result = subprocess.run(
@@ -94,11 +69,7 @@ class NvidiaGpuProvider:
                     )
                 )
             except ValueError:
-                # A field `nvidia-smi` reported as `[N/A]` or similar
-                # rather than a number — the same "skip what cannot be
-                # trusted rather than crash the whole read" choice
-                # `collect_freshness` makes for an unreadable file
-                # `stat()`.
+                # A field reported as `[N/A]` rather than a number.
                 continue
 
         return tuple(readings)

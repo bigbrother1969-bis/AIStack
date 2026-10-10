@@ -5,71 +5,26 @@ from typing import Any, MutableMapping
 
 from aistack.providers.docker.identity import identities_of, list_running_container_names
 
-# The two commands this collector runs inside every container it
-# inventories, declared once so `aistack.providers.docker.events` can
-# recognise its own probes in the `docker events` stream and leave them
-# out (cadrage 2026-10-02: AIStack's own `docker exec` probes made up
-# 38 % of the stream's exec events, healthchecks the rest — neither is
-# a trace of anything a person did).
+# Declared once so `aistack.providers.docker.events` can recognise these
+# `docker exec` probes and leave them out of the event stream.
 DPKG_QUERY_COMMAND: tuple[str, ...] = ("dpkg-query", "-W", "-f=${Package}\t${Version}\n")
 APK_DB_COMMAND: tuple[str, ...] = ("cat", "/lib/apk/db/installed")
 
-# 1.5's fourth and last named collector (inventaire des paquets),
-# explicitly deferred past 1.5.0 (`ADR-0011` § 22's own closing note)
-# and cadré for 1.5.1, 2026-09-28. Three decisions, confirmed with the
-# owner (`AskUserQuestion`) before any code, grounded in real research
-# (`ARC-P-006`) rather than assumed from either tool's own display
-# output:
-#
-# 1. **`docker exec` + `dpkg-query` first.** Verified against `dpkg-
-#    query(1)`'s own manual page (man7.org): `-W` ("list") with a
-#    custom `-f` format string prints exactly what this collector
-#    needs, one package per line, with no parsing of a human-oriented
-#    table required — `-f='${Package}\t${Version}\n'`, passed as a
-#    single argv entry (`subprocess.run` never goes through a shell,
-#    on either side of `docker exec`, so dpkg-query itself resolves
-#    the `${...}` placeholders — nothing here needs to escape them).
-# 2. **`/lib/apk/db/installed`, not `apk info -v`, as the Alpine
-#    fallback.** Verified against the Alpine wiki's own `Apk_spec`
-#    page: the installed-package database is a plain, documented,
-#    line-prefixed, blank-line-separated record format (`P:` the
-#    package name, `V:` its version, among other fields this collector
-#    does not need). `apk info -v`'s own display output was considered
-#    and rejected: it concatenates a package's name and version into
-#    one string with no declared separator contract, and splitting it
-#    back apart reliably is exactly the kind of guess `ARC-P-006`
-#    forbids when a structured, documented alternative already exists.
-# 3. **Neither mechanism answering is itself recorded as a fact**
-#    (`mechanism = "none"`), never silently treated as "zero packages"
-#    — a container with no package manager this collector knows how to
-#    query is a different observation from one a real inventory found
-#    empty, the same restraint `aistack.providers.docker.digest`'s own
-#    module already holds for an absent `.Image` (skipped, never
-#    recorded as `""`) — here there is nothing to skip (`mechanism` is
-#    always known), but the two cases stay distinguishable in the
-#    stream itself rather than collapsed.
-#
-# **Running containers only, the shared identity module, unchanged —**
-# the same restriction and the same shared `aistack.providers.docker
-# .identity` module every 1.5 collector already holds, for the same
-# reasons those modules' own comments already give.
+# Package inventory of running containers:
+# 1. `dpkg-query -W -f=...` first. No shell is involved on either side of
+#    `docker exec`, so the `${...}` placeholders need no escaping.
+# 2. Alpine fallback: read `/lib/apk/db/installed` (documented `P:`/`V:`
+#    records) rather than parse `apk info -v`, which joins name and
+#    version with no reliable separator.
+# 3. When neither answers, `mechanism` is `"none"`, distinct from an
+#    inventory that found zero packages.
 
 
 def _dpkg_packages(name: str) -> list[dict[str, str]] | None:
-    """
-    `docker exec <name> dpkg-query -W -f='${Package}\\t${Version}\\n'`,
-    parsed into `{"name", "version"}` entries, sorted by name for a
-    deterministic write-on-change comparison — the same reasoning
-    `aistack.providers.docker.diff.collect_docker_diff`'s own sort
-    already gives, applied here from the start rather than found as a
-    production incident later, since nothing in dpkg-query's own
-    contract promises a stable listing order either.
+    """Packages listed by `dpkg-query` in the container, as
+    `{"name", "version"}` entries sorted by name (for stable comparisons).
 
-    `None` — not `[]` — on any failure (no daemon, no such container,
-    dpkg-query not installed in it): a real, empty inventory (`[]`)
-    and "this mechanism did not answer, try the next one" are
-    different outcomes this collector's own caller needs to tell
-    apart.
+    `None`, not `[]`, on any failure, meaning "try the next mechanism".
     """
 
     try:
@@ -98,18 +53,9 @@ def _dpkg_packages(name: str) -> list[dict[str, str]] | None:
 
 
 def _parse_apk_installed(content: str) -> list[dict[str, str]]:
-    """
-    Alpine's own `/lib/apk/db/installed` format (the Alpine wiki's own
-    `Apk_spec` page): one record per package, each line prefixed by a
-    single-letter field code, records separated by a blank line. Only
-    `P:` (package name) and `V:` (version) are read; every other field
-    this format carries (`A:`, `S:`, `I:`, ...) is not this collector's
-    concern. A record missing either field is skipped rather than
-    recorded with an empty name or version — the same restraint this
-    module's own module comment gives for an unresolved mechanism as a
-    whole, applied here to one malformed record within an otherwise
-    real answer.
-    """
+    """Parse Alpine's `/lib/apk/db/installed`: blank-line-separated
+    records of `X:` fields. Only `P:` (name) and `V:` (version) are read;
+    a record missing either is skipped."""
 
     packages: list[dict[str, str]] = []
     current_name: str | None = None
@@ -136,14 +82,8 @@ def _parse_apk_installed(content: str) -> list[dict[str, str]]:
 
 
 def _apk_packages(name: str) -> list[dict[str, str]] | None:
-    """
-    `docker exec <name> cat /lib/apk/db/installed`, parsed by
-    `_parse_apk_installed`. `None` — not `[]` — on any failure, the
-    same distinction `_dpkg_packages` already draws and for the same
-    reason: this container may simply have no such file (it is not
-    Alpine-based, or uses neither package manager this collector
-    knows), which is "try the next mechanism," not "zero packages."
-    """
+    """Packages from the container's apk database; `None`, not `[]`, on any
+    failure (e.g. not Alpine)."""
 
     try:
         result = subprocess.run(
@@ -161,13 +101,8 @@ def _apk_packages(name: str) -> list[dict[str, str]] | None:
 
 
 def collect_package_inventory(name: str) -> dict[str, Any]:
-    """
-    One container's own package inventory: `dpkg-query` tried first,
-    `/lib/apk/db/installed` as the fallback, `"none"` — with an empty
-    list — when neither answered. `{"mechanism": "dpkg" | "apk" |
-    "none", "packages": [{"name", "version"}, ...]}` — cadrage
-    decisions 1, 2, and 3 above, applied together, in that order.
-    """
+    """One container's inventory: `{"mechanism": "dpkg" | "apk" | "none",
+    "packages": [{"name", "version"}, ...]}`."""
 
     dpkg_packages = _dpkg_packages(name)
     if dpkg_packages is not None:
@@ -181,15 +116,8 @@ def collect_package_inventory(name: str) -> dict[str, Any]:
 
 
 def collect_running_container_packages() -> list[dict[str, Any]]:
-    """
-    One cycle: every running container's own stable identity (§ 3)
-    paired with its own current package inventory —
-    `{"subject": ..., "mechanism": ..., "packages": [...]}` per
-    container `docker inspect` could still resolve at the moment this
-    ran (`identities_of`'s own contract, the same race every other 1.5
-    collector already documents: a container that stopped between
-    `docker ps` and here is simply absent, never an error).
-    """
+    """One cycle: `{"subject", "mechanism", "packages"}` for each running
+    container `docker inspect` could still resolve."""
 
     names = list_running_container_names()
     identities = identities_of(names)
@@ -211,31 +139,15 @@ def collect_running_container_packages() -> list[dict[str, Any]]:
 def collect_packages_on_image_change(
     seen_digests: MutableMapping[str, str],
 ) -> list[dict[str, Any]]:
-    """
-    `collect_running_container_packages`, restricted to the containers
-    whose image changed since this caller last inventoried them —
-    owner's cadrage, 2026-10-02: a container's packages come from its
-    image, so an inventory is taken once per (subject, image digest)
-    rather than every poll. `seen_digests` maps a stable subject to
-    the image digest it was last inventoried at, and is updated in
-    place; a caller passing an empty mapping (a monitor that just
-    started) gets every running container inventoried once — the
-    startup pass.
+    """Like `collect_running_container_packages`, but only for containers
+    whose image digest changed since they were last inventoried.
 
-    Before this, every running container got a `docker exec` per
-    collector cycle (every 10 s), which the docker-events collector
-    then dutifully recorded: about 2,300 `exec_create` per hour on the
-    reference host, three events each, and the heaviest of the four
-    1.5 monitors by CPU.
-
-    A container whose `docker inspect` reported no image digest at all
-    is inventoried every time, as before — nothing proves its image
-    did not change, so it is never skipped on an assumption.
-
-    **What this gives up, stated rather than discovered later:** a
-    package installed by hand inside a running container, without an
-    image change, is no longer seen until that container's image
-    changes or the monitor restarts.
+    Packages come from the image, so this avoids a `docker exec` per
+    container on every poll. `seen_digests` (subject -> digest) is updated
+    in place; an empty mapping inventories every container once. A
+    container with no digest is inventoried every time. Trade-off: a
+    package installed by hand without an image change is not seen until
+    the image changes or the monitor restarts.
     """
 
     names = list_running_container_names()

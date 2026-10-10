@@ -1,24 +1,16 @@
-"""
-Which port a route answers on (`ADR-0012` § 3).
+"""Which port a route answers on (ADR-0012 § 3).
 
-Until 1.7's login exists, roadmap `R1` keeps every screen that shows
-history or acts on a host off the public address. The process listens
-on two ports: the **public** one, the only one Nginx Proxy Manager
-points at, and the **LAN** one, which no Proxy Host ever names.
+The process listens on two ports: the public one, the only one the
+reverse proxy points at, and the LAN one, which no proxy host names.
 
-**The decision is made on the port the request arrived on** —
-`request.scope["server"]`, the local socket address uvicorn reports
-per connection — never on a header the proxy sets or a client could
-forge. A request whose port is neither is refused: a socket this
-application did not declare is not one it trusts.
+The decision uses the port the request arrived on
+(`request.scope["server"]`), never a header a client could forge. A
+request on any other port is refused.
 
-Exposure is declared **per router**, once: `include` refuses a router
-whose dependencies carry anything but exactly one of `PUBLIC` or
-`LAN_ONLY`, and is the only way `create_app` adds routes.
-`tests/unit/web/test_every_route_declares_its_exposure.py` then asks
-every registered route, on a port the application did not declare and
-on the public port, and proves the guard actually ran — so a new route
-cannot be published by forgetting to say where.
+Each router declares exactly one of `PUBLIC` or `LAN_ONLY`; `include`
+enforces this and is the only way `create_app` adds routes.
+`tests/unit/web/test_every_route_declares_its_exposure.py` checks that
+every route's guard actually runs.
 """
 
 from __future__ import annotations

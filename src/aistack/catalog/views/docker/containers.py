@@ -5,24 +5,12 @@ from aistack.kernel.catalog.views import CatalogView, CatalogViewItem
 
 
 class DockerContainerViewEngine:
-    """
-    Build a selection-oriented view of the containers of a Docker
-    runtime catalog.
+    """Build a selection-oriented view of the containers of a Docker
+    runtime catalog (`ADR-0002`).
 
-    **This is the producer ADR-0002 decided and nothing
-    implemented.** Until 2026-08-29 the live Docker path built a
-    `SelectionCatalog` — a v0 type carrying no view identity, no
-    link back to its catalog, and satisfying no contract — while
-    `CatalogViewEngine` was satisfied only by a music engine
-    nothing retrieved. GOV-0002/OS-042, qualified 2026-08-29:
-    `CatalogView` is the Catalog View.
-
-    **It filters on `kind`, and that is the whole reason the
-    filter exists.** The runtime catalog holds four families in
-    one flat list; identifiers are unique within a family and not
-    across them. A view holds one family, so within a view an
-    identifier is unambiguous and a Selection Strategy can select
-    by it.
+    It filters on `kind` because the runtime catalog mixes four families
+    whose identifiers are unique only within a family; a single-family view
+    lets a Selection Strategy select by identifier.
     """
 
     KIND = "container"

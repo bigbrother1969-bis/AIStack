@@ -1,7 +1,5 @@
-"""
-The templates of every screen in AIStack's single web application
-(`ADR-0012` § 1), one directory per screen under `templates/`, shipped
-inside the package (`pyproject.toml` `[tool.setuptools.package-data]`).
+"""Jinja templates of every screen, one directory per screen under `templates/`,
+shipped as package data.
 """
 
 from __future__ import annotations

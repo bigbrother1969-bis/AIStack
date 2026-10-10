@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Transport Result contract.
-"""
+"""Knowledge Transport Layer - Transport Result contract."""
 
 from __future__ import annotations
 
@@ -11,9 +9,7 @@ from aistack.transport.contracts.transport_status import TransportStatus
 
 @dataclass(frozen=True, slots=True)
 class TransportResult:
-    """
-    Result returned by a Knowledge Transport Layer operation.
-    """
+    """Result returned by a Knowledge Transport Layer operation."""
 
     transaction_id: str
 

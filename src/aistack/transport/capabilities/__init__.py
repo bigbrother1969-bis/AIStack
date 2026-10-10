@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer capabilities.
-"""
+"""Knowledge Transport Layer capabilities."""
 
 from aistack.transport.capabilities.filesystem_transport_capability import (
     FilesystemTransportCapability,

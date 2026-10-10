@@ -8,10 +8,8 @@ from aistack.kernel.catalog import Catalog
 @dataclass(frozen=True)
 class ContainerDependencyEdge:
     """
-    One `depends_on:` relationship, already resolved to the two
-    container names it names — never the two Compose *service* names
-    it was declared with (`ComposeRuntimeCatalogBuilder` is where that
-    resolution happens; this dataclass only carries the result).
+    One `depends_on:` relationship, resolved to container names (not
+    Compose service names) by `ComposeRuntimeCatalogBuilder`.
     """
 
     from_container: str
@@ -21,18 +19,11 @@ class ContainerDependencyEdge:
 @dataclass(frozen=True)
 class ComposeProjectDependencies:
     """
-    One Compose project's real dependency picture.
+    One Compose project's dependency picture.
 
-    **`containers` is every container this project observed running,
-    not only the ones named by an edge.** Decided with the owner
-    2026-09-12: most of the real `depends_on` edges GIGABYTE's own
-    files declare point at sidecar containers (a project's own `_db`,
-    `redis`, or `gluetun`) that `service_categorization.yml` does not
-    curate as services of their own — restricting this graph to
-    already-declared services would leave almost nothing to draw an
-    edge to. So a project's full, real container membership is the
-    node set; `service_categorization.yml`'s own curation is what the
-    *other* views in this page already show.
+    `containers` lists every container of the project, not only those on
+    an edge: most real edges point at sidecars (databases, redis, VPN) that
+    the service categorization does not list.
     """
 
     project: str
@@ -43,14 +34,8 @@ class ComposeProjectDependencies:
 @dataclass(frozen=True)
 class DependencyGraph:
     """
-    Every Compose project that declares at least one real dependency
-    — never all of them. A project with no `depends_on:` anywhere in
-    its compose file (most of GIGABYTE's 33 projects, confirmed
-    2026-09-12) has nothing this graph exists to show; the same
-    "nothing observed, nothing rendered" rule the topology and Beszel
-    sections already follow, so `render_dependency_mermaid` never
-    draws an isolated, edge-less subgraph purely for the sake of
-    completeness.
+    The Compose projects that declare at least one dependency; projects with
+    no `depends_on:` are left out.
     """
 
     projects: tuple[ComposeProjectDependencies, ...] = ()
@@ -58,22 +43,10 @@ class DependencyGraph:
 
 def build_dependency_graph(compose_catalog: Catalog) -> DependencyGraph:
     """
-    Read `ComposeRuntimeCatalogBuilder`'s own `dependency_edges`/
-    `containers` metadata off each compose-project `CatalogItem` and
-    turn it into a typed, deterministic `DependencyGraph`.
+    Build a `DependencyGraph` from the `dependency_edges`/`containers`
+    metadata of each compose-project catalog item, sorted by project name.
 
-    **Tolerant, not strict** — same reasoning as
-    `build_beszel_readings`: this reads a governed `Catalog`, not a
-    hand-written file a typo in is the owner's own mistake to fix, so
-    a missing or oddly-shaped `dependency_edges` value degrades to
-    "this project has no edges" rather than raising.
-
-    **Sorted by project name.** `Catalog.items`' own order follows
-    whichever order `docker ps` first listed a project's containers
-    in — the same instability `ComposeRuntimeCatalogBuilder` already
-    sorts `containers`/`dependency_edges` against internally; the
-    project-level order this function returns needed the same
-    treatment, since nothing upstream of this function ever sorts it.
+    Tolerant: a missing or malformed `dependency_edges` means no edges.
     """
 
     projects: list[ComposeProjectDependencies] = []

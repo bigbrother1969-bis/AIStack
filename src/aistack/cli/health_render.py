@@ -54,15 +54,8 @@ from aistack.runtime.uncovered_state_gap import find_uncovered_state
 from aistack.renderers.plan.html import PLAN_PAGE, render_plan
 from aistack.vigil.snapshot import take as take_snapshot, write as write_snapshot
 
-# `OPS-0005`'s own declared thresholds — the same file
-# `aistack.cli.runtime_diagnose.DEFAULT_STORAGE_THRESHOLDS` reads.
-# Declared again here rather than imported from that module: no CLI
-# in this package imports another (`architecture_render.py` composes
-# `DockerRuntimeCatalogBuilder`/`ComposeRuntimeCatalogBuilder` itself
-# rather than importing `docker_catalog.main`), so each command keeps
-# its own copy of the one path both happen to need, the same
-# `Path(__file__).resolve()`-relative convention every other
-# `DEFAULT_*` constant in this package already uses.
+# Declared thresholds (OPS-0005). No CLI imports another, so each keeps
+# its own copy of the paths it needs.
 DEFAULT_STORAGE_THRESHOLDS = (
     configured(Path(__file__).resolve().parents[1]
     / "providers"
@@ -71,16 +64,7 @@ DEFAULT_STORAGE_THRESHOLDS = (
     / "storage_thresholds.yml")
 )
 
-# `OPS-0006`'s own declared thresholds — the same file
-# `aistack.cli.runtime_diagnose.DEFAULT_BACKUP_THRESHOLDS` reads,
-# declared again here for the same reason `DEFAULT_STORAGE_THRESHOLDS`
-# is: no CLI in this package imports another. Unlike
-# `DEFAULT_STORAGE_THRESHOLDS`'s own loading function
-# (`storage_thresholds_for_host`, imported above rather than
-# duplicated a third time), there was never a duplicated
-# `backup_thresholds` function here to begin with — `backup_thresholds
-# _for_host` (`aistack.providers.filesystem.thresholds`) has been the
-# only implementation from the start, imported by both CLIs alike.
+# OPS-0006.
 DEFAULT_BACKUP_THRESHOLDS = (
     configured(Path(__file__).resolve().parents[1]
     / "providers"
@@ -89,10 +73,7 @@ DEFAULT_BACKUP_THRESHOLDS = (
     / "backup_thresholds.yml")
 )
 
-# `OPS-0007`'s own declared thresholds — the same file
-# `aistack.cli.runtime_diagnose.DEFAULT_GPU_THRESHOLDS` reads, declared
-# again here for the same reason `DEFAULT_BACKUP_THRESHOLDS` is: no CLI
-# in this package imports another.
+# OPS-0007.
 DEFAULT_GPU_THRESHOLDS = (
     configured(Path(__file__).resolve().parents[1]
     / "providers"
@@ -101,10 +82,7 @@ DEFAULT_GPU_THRESHOLDS = (
     / "gpu_thresholds.yml")
 )
 
-# `OPS-0008`'s own declared health-score weights. Not scoped by host,
-# unlike the three `DEFAULT_*_THRESHOLDS` above: a health score weighs
-# whichever domains this host's own cockpit instruments, but the
-# weight a domain costs is the same wherever this runs.
+# Health-score weights (OPS-0008); unlike the thresholds, not scoped by host.
 DEFAULT_HEALTH_SCORE_WEIGHTS = (
     configured(Path(__file__).resolve().parents[1]
     / "health"
@@ -112,19 +90,12 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
     / "health_score_weights.yml")
 )
 
-# `OPS-0009`'s own declared PRA test records — not scoped by host, the
-# same reason `DEFAULT_HEALTH_SCORE_WEIGHTS` is not: a restore test is
-# a fleet-wide fact the owner records by hand, not a threshold that
-# varies by which host renders the page.
+# PRA test records (OPS-0009): fleet-wide facts, not scoped by host.
 DEFAULT_PRA_TESTS = (
     configured(Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml")
 )
 
-# `OPS-0010`'s own declared backup-strategy records — not scoped by
-# host, the same reason `DEFAULT_PRA_TESTS` is not: which engine (if
-# any) covers a service's persistent state is a fleet-wide fact the
-# owner records by hand, not a threshold that varies by which host
-# renders the page.
+# Backup-strategy records (OPS-0010): fleet-wide facts, not scoped by host.
 DEFAULT_BACKUP_STRATEGY = (
     configured(Path(__file__).resolve().parents[1]
     / "backup_strategy"
@@ -132,10 +103,6 @@ DEFAULT_BACKUP_STRATEGY = (
     / "backup_strategy.yml")
 )
 
-# The same file `aistack.cli.architecture_render.DEFAULT_CATEGORIZATION`
-# reads — declared again here rather than imported, the same "no CLI
-# in this package imports another" convention every other `DEFAULT_*`
-# constant in this module already holds.
 DEFAULT_CATEGORIZATION = (
     configured(Path(__file__).resolve().parents[1]
     / "architecture"
@@ -143,28 +110,13 @@ DEFAULT_CATEGORIZATION = (
     / "service_categorization.yml")
 )
 
-# `network_docker_discover.py`'s own output path — the last observation
-# it wrote, read here rather than collected live: that command is
-# never triggered automatically (`NetworkDockerDiscoveryProvider`'s own
-# docstring, decided with the owner 2026-09-12), so this domain reads
-# whatever it last found, exactly like every other `reports/generated/`
-# artifact this heritage reads back rather than regenerates on render.
-# A plain `Path("reports/generated/...")`, the same cwd-relative
-# convention `network_docker_discover.main` itself already uses for
-# this exact file, not the `Path(__file__).resolve()`-relative
-# convention the constants above hold — this one names an *output*,
-# not a shipped definition.
+# The last output of `network_docker_discover`, which only runs on demand;
+# cwd-relative because it is an output, not a shipped definition.
 DEFAULT_NETWORK_DOCKER_OBSERVATION = Path(
     "reports/generated/network-docker-observation.json"
 )
 
-# R10, 2026-09-30 — resolves the Troubleshooting Assistant's own LAN
-# address for `render_html`'s new `troubleshooting_base_url`
-# parameter (see that function's own docstring), the exact same
-# convention `aistack.cli.console_render.DEFAULT_INSTANCE_CONFIG`
-# already uses for its own `console_links.yml` `service:` entries —
-# declared explicitly here rather than left to a loader's own internal
-# fallback, the same reasoning that module's own comment gives.
+# Resolves the Troubleshooting Assistant's LAN address.
 DEFAULT_INSTANCE_CONFIG = (
     configured(Path(__file__).resolve().parents[1]
     / "instance"
@@ -172,35 +124,20 @@ DEFAULT_INSTANCE_CONFIG = (
     / "instance_config.yml")
 )
 
-# Where the assistant sits on the web application's LAN listener since
-# 2026-10-03 (`ADR-0012`, `aistack.web.troubleshooting.PREFIX`).
+# The assistant's prefix on the web application's LAN listener
+# (ADR-0012, `aistack.web.troubleshooting.PREFIX`).
 TROUBLESHOOTING_PATH = "/troubleshooting"
 
-# `PLAN-J7` § 1 (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`): the
-# domain vocabulary the owner named before any code — "stockage,
-# services, backup/PRA, GPU" — not this module's own invention, closed
-# at four from 2026-09-11 until `PLAN-J11` § 11.9.1's third and last
-# named gap ("tests PRA") reopened it to five, on the owner's own
-# explicit decision, 2026-09-23. All five reference cases have since
-# named a domain (Storage `PLAN-J7` § 6, Services § 8, Sauvegarde/PRA
-# § 9, GPU § 10, Tests PRA — `OPS-0009`, 2026-09-23) — this note stays
-# declared for a host where a domain's own check still reports nothing
-# to observe (no threshold file, no `nvidia-smi`, Docker unreachable,
-# no PRA test definition), never a false "healthy" (`FDN-0003` Article
-# 12).
+# A domain with nothing to observe on this host (no threshold file, Docker
+# unreachable, no definition) is `instrumented=False` with a note, never
+# a false "healthy".
 
 
 def storage_domain(hostname: str) -> HealthDomain:
     """
-    `PLAN-J7` § 6's own domain, built from the same primitives
-    `aistack.cli.runtime_diagnose` already wires into its own report:
-    `storage_thresholds_for_host` narrows the fleet-wide file to this
-    host, `StorageProvider` reads it, `find_storage_shortage` decides
-    which mounts crossed `OPS-0005`, `evaluate_storage` states the
-    finding. A host with nothing declared, or a missing/unreadable
-    definition, is `instrumented=False` with the same note
-    `storage_thresholds_for_host` already names — the same absence,
-    stated the same way, whichever command asks.
+    Storage: mounts of this host that crossed their OPS-0005 thresholds.
+
+    Not instrumented when this host declares nothing or the file is unreadable.
     """
 
     thresholds, note = storage_thresholds_for_host(
@@ -222,21 +159,9 @@ def storage_domain(hostname: str) -> HealthDomain:
 
 def services_domain() -> HealthDomain:
     """
-    `PLAN-J7` § 8's own domain: `OPS-0004`'s third reference incident
-    (restart loops / unhealthy containers after a power outage),
-    detected the same instantaneous-only way `find_container_distress`
-    documents — no config file to be missing, unlike storage: Docker
-    is either observable from this host or it is not, and that is
-    what the note names when it is not.
+    Services: restarting, unhealthy or crash-looping containers (OPS-0004).
 
-    **GIGABYTE only, by construction, not by a declared scope check
-    here.** `DockerProvider` talks to whatever `docker` binary is on
-    the machine this process runs on — there is no Docker provider for
-    the Raspberry (a limitation `PLAN-J2` already documented), so
-    running this on any host without a reachable Docker daemon —
-    the Raspberry included — reads as not instrumented, the same
-    honest absence storage already shows on a host with nothing
-    declared for it.
+    Uses the local Docker daemon only; a host without one reads as not instrumented.
     """
 
     try:
@@ -256,32 +181,17 @@ def services_domain() -> HealthDomain:
     return HealthDomain(
         name="Services",
         instrumented=True,
-        # Instantaneous state (restarting/unhealthy), plus restart loops
-        # counted from the docker-events history — the second catches a
-        # container that reads `running` between two crashes (mularr,
-        # 2026-10-02, `aistack.runtime.restart_loop`).
+        # Instantaneous state plus restart loops from the docker-events
+        # history, which catch a container that reads `running` between crashes.
         findings=evaluate_services(distress) + restart_loop_findings(),
     )
 
 
 def backup_domain(hostname: str) -> HealthDomain:
     """
-    `PLAN-J7` § 9's own domain: `OPS-0004`'s fourth reference case —
-    the owner's own stated requirement to verify a backup actually
-    exists, is functional, and is not too old. Built from the same
-    primitives `aistack.cli.runtime_diagnose` already wires into its
-    own report: `backup_thresholds_for_host` narrows the fleet-wide
-    file to this host, `BackupProvider` reads it, `find_backup_gaps`
-    decides which paths are missing or stale against `OPS-0006`,
-    `evaluate_backup` states the finding.
+    Backup: declared backup paths of this host that are missing or stale (OPS-0006).
 
-    Existence and freshness only (the owner's chosen v1 scope,
-    2026-09-11) — periodic restore tests and documentation currency
-    are named out of scope, `OPS-0006` § *Out of scope*. A host with
-    nothing declared, or a missing/unreadable definition, is
-    `instrumented=False` with the same note `backup_thresholds_for_host`
-    already names — the same absence, stated the same way, whichever
-    command asks.
+    Existence and freshness only; restore tests are `pra_tests_domain`.
     """
 
     thresholds, note = backup_thresholds_for_host(
@@ -303,26 +213,9 @@ def backup_domain(hostname: str) -> HealthDomain:
 
 def gpu_domain(hostname: str) -> HealthDomain:
     """
-    `PLAN-J7` § 10's own domain: `OPS-0004`'s fifth reference case —
-    the owner's own stated requirement to verify GPU delegation and
-    monitor the CPU/GPU duo's consumption. Built from the same
-    primitives `aistack.cli.runtime_diagnose` already wires into its
-    own report: `gpu_thresholds_for_host` narrows the fleet-wide file
-    to this host, `NvidiaGpuProvider` reads it, `find_gpu_anomalies`
-    decides which readings crossed `OPS-0007`, `evaluate_gpu` states
-    the finding.
+    GPU: readings that crossed this host's OPS-0007 thresholds.
 
-    Consumption monitoring only (the owner's chosen v1 scope,
-    2026-09-11) — per-service delegation verification is named out of
-    scope, `OPS-0007` § *Out of scope*. A host with nothing declared,
-    or a missing/unreadable definition, is `instrumented=False` with
-    the same note `gpu_thresholds_for_host` already names — the same
-    absence, stated the same way, whichever command asks. A host with
-    thresholds declared but no `nvidia-smi` reading anything (no card,
-    no driver) reads as instrumented with nothing to report — the same
-    "declared but currently clean" state every other domain already
-    allows, since `find_gpu_anomalies` on an empty reading tuple
-    produces no anomaly.
+    Thresholds declared but no `nvidia-smi` reading reads as instrumented and clean.
     """
 
     thresholds, note = gpu_thresholds_for_host(DEFAULT_GPU_THRESHOLDS, hostname)
@@ -338,41 +231,11 @@ def gpu_domain(hostname: str) -> HealthDomain:
 
 def pra_tests_domain() -> HealthDomain:
     """
-    `PLAN-J11` § 11.9.1's third and last named gap ("tests PRA"),
-    reopened and closed 2026-09-23: `OPS-0004`'s reopened requirement
-    to demonstrate, on a real cadence, that a restore actually works —
-    not only that a backup file exists (`Sauvegarde / PRA`'s own v1
-    scope, unchanged). `load_pra_tests_yaml` reads `OPS-0009`'s
-    declared record of every service the owner tests and each one's
-    own last-known outcome, `find_pra_test_gaps` decides which
-    services are untested, stale, or already recorded as failed
-    against `OPS-0009`'s declared threshold, `evaluate_pra_tests`
-    states the finding.
+    Restore tests: services untested, stale or failed against OPS-0009.
 
-    **Not host-scoped, unlike every other domain function here.** A
-    restore test is a fleet-wide fact the owner records by hand, not
-    a per-host observation `StorageProvider`/`DockerProvider`/
-    `NvidiaGpuProvider` each collect from the machine this process
-    happens to run on — so this domain reads the same result
-    wherever `main()` runs, the same way `DEFAULT_PRA_TESTS` is not
-    scoped by host either.
-
-    A missing or unreadable definition is `instrumented=False` with a
-    note naming why — the same absence, stated the same way, every
-    other domain already holds for its own declared file.
-
-    **Since 1.6 tranche 4 (R9, 2026-09-30, `OPS-0004`'s eighth
-    reference case)**: `find_undeclared_pra_tests` also compares
-    `OPS-0010`'s own declared stateful services (`backup_strategy.yml`,
-    `has_state: true`) against the set `pra_tests.yml` actually names,
-    citing the ones missing entirely as `NOT_DECLARED`. Unlike
-    `DEFAULT_PRA_TESTS`, `DEFAULT_BACKUP_STRATEGY` is optional here,
-    the same "supplementary, best-effort" role
-    `network-docker-observation.json` already plays for `inventory_gap
-    _domain`: its absence or corruption narrows this render to the
-    three reasons `find_pra_test_gaps` alone already detects, never
-    making the whole domain `instrumented=False` over a second file
-    this check alone needs.
+    Not host-scoped. Also flags covered stateful services of
+    `backup_strategy.yml` (OPS-0010) with no restore test at all; that
+    file is optional here.
     """
 
     if not DEFAULT_PRA_TESTS.exists():
@@ -387,7 +250,7 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         readings, thresholds = load_pra_tests_yaml(DEFAULT_PRA_TESTS)
-        # The scheduled restore tests' outcomes, when more recent (2.0).
+        # The scheduled restore tests' outcomes, when more recent.
         readings = with_scheduled(readings)
     except (ValueError, OSError) as error:
         return HealthDomain(
@@ -404,7 +267,7 @@ def pra_tests_domain() -> HealthDomain:
     try:
         declarations = load_backup_strategy_yaml(DEFAULT_BACKUP_STRATEGY)
         # A state no engine covers has nothing to restore-test: the
-        # uncovered-state finding already names it (2026-10-08).
+        # uncovered-state finding already names it.
         stateful_services = [d.service for d in declarations if d.has_state and d.covered]
         declared_services = [reading.service for reading in readings]
         observed_at = readings[0].observed_at if readings else None
@@ -417,10 +280,8 @@ def pra_tests_domain() -> HealthDomain:
                 observed_at,
             )
     except (ValueError, OSError):
-        # `backup_strategy.yml` is optional, best-effort data for this
-        # one check — its absence or corruption narrows this render to
-        # the three reasons `find_pra_test_gaps` alone already
-        # detects, never failing the whole domain.
+        # `backup_strategy.yml` is optional here: without it, only
+        # `find_pra_test_gaps` runs.
         pass
 
     return HealthDomain(
@@ -430,22 +291,9 @@ def pra_tests_domain() -> HealthDomain:
 
 def uncovered_state_domain() -> HealthDomain:
     """
-    1.6 tranche 2's own domain (R9, 2026-09-30): `OPS-0004`'s sixth
-    reference case — every stateful service already named in this
-    session's real PRA history, confronted against the backup engine
-    (if any) actually confirmed to cover it. `load_backup_strategy_yaml`
-    reads `OPS-0010`'s declared record, `find_uncovered_state` decides
-    which declared services hold state with no known engine,
-    `evaluate_uncovered_state` states the finding.
+    Persistent state: declared stateful services no backup engine covers (OPS-0010).
 
-    **Not host-scoped, the same reason `pra_tests_domain` is not.** A
-    backup strategy declaration is a fleet-wide fact the owner records
-    by hand, not a per-host observation a live Provider collects from
-    the machine this process happens to run on.
-
-    A missing or unreadable definition is `instrumented=False` with a
-    note naming why — the same absence, stated the same way, every
-    other domain already holds for its own declared file.
+    Not host-scoped.
     """
 
     if not DEFAULT_BACKUP_STRATEGY.exists():
@@ -481,26 +329,11 @@ def uncovered_state_domain() -> HealthDomain:
 
 def inventory_gap_domain() -> HealthDomain:
     """
-    1.6 tranche 3's own domain (R9, 2026-09-30): `OPS-0004`'s seventh
-    reference case — `service_categorization.yml`'s own declared
-    containers, joined against what is actually found running.
-    `load_service_categorization_yaml` reads the declared inventory,
-    `DockerRuntimeCatalogBuilder`/`DockerProvider` observe this host's
-    own containers live, `network_docker_discover`'s last observation
-    (if any) adds every other LAN host it last found, `find_inventory_
-    gaps` decides which containers are declared nowhere or found
-    nowhere, `evaluate_inventory_gap` states the finding.
+    Inventory: containers declared in `service_categorization.yml` but not
+    found running, or running but not declared.
 
-    **A missing or unreadable `service_categorization.yml` is
-    `instrumented=False`** — the same absence, stated the same way,
-    every other domain already holds for its own declared file. A
-    missing or unreadable `network-docker-observation.json` is *not*
-    the same kind of absence: that file is optional, best-effort,
-    supplementary data (`network_docker_discover` "only runs when
-    invoked explicitly" — most renders will not have a fresh one) —
-    its absence silently narrows this domain to a local-only
-    reconciliation rather than declaring the whole domain
-    uninstrumented over a file nothing here requires to exist.
+    Local containers come from Docker; other LAN hosts from the last
+    `network_docker_discover` output, which is optional.
     """
 
     if not DEFAULT_CATEGORIZATION.exists():
@@ -533,9 +366,7 @@ def inventory_gap_domain() -> HealthDomain:
             if item.kind == "container"
         }
     except (subprocess.SubprocessError, OSError):
-        # The same tolerant absence `services_domain` already holds for
-        # an unreachable local Docker daemon — local containers are
-        # simply not added, never treated as "none exist".
+        # Docker unreachable: local containers are not added.
         discovered = {}
 
     if DEFAULT_NETWORK_DOCKER_OBSERVATION.exists():
@@ -545,9 +376,7 @@ def inventory_gap_domain() -> HealthDomain:
             )
             discovered.update(discovered_containers_from_network_observation(observation))
         except (ValueError, OSError):
-            # The last network discovery is optional, best-effort data
-            # — a corrupt or unreadable file narrows this render to a
-            # local-only reconciliation rather than failing the domain.
+            # Optional: an unreadable file narrows this to local containers.
             pass
 
     gaps = find_inventory_gaps(categorization, discovered)
@@ -580,33 +409,11 @@ def technical_debt_score(
     weights: HealthScoreWeights | None,
 ) -> tuple[TechnicalDebtScore | None, str]:
     """
-    `PLAN-J11` § 11.9.1's "dette technique scorée" gap, closed
-    2026-09-23: a dedicated card, not a fifth `HealthDomain` —
-    `OPS-0004/technical-debt` is a qualification any of the four
-    domains' own `evaluate_*` may already cite (so far Services,
-    Sauvegarde/PRA and GPU each do, on their own reference incidents),
-    not a fifth thing to instrument. Findings are gathered from every
-    domain in `cockpit`, not only Services — the owner's real case
-    (containers stuck after a power outage) is Services', but
-    restricting this card to that one domain would silently miss a
-    stale backup or a hot GPU already carrying the same qualification,
-    the same `FDN-0003` Article 12 discipline every other honest count
-    in this package already holds.
+    Score the technical-debt findings of every domain in `cockpit`.
 
-    `weights.for_domain("Services")` is `OPS-0008`'s own declared
-    weight for the Services domain, reused rather than a new weight
-    declared for this card — the owner's own choice, 2026-09-23 ("même
-    poids que le domaine Services actuel"). `weights is None` (no
-    declared weights file at all) is the same honest absence
-    `compute_health_score` is never even reached for; a declared file
-    missing a "Services" entry is instead the same configuration
-    defect `compute_health_score` itself raises on, since `OPS-0008`
-    is expected to cover the domain this card reuses.
-
-    Two-branch return, mirroring `health_score_weights`'s own shape:
-    `(None, note)` when nothing can be computed, `(score, "")` when it
-    can — the same idiom `_render_score`/`_render_technical_debt`
-    already read to decide between a real score and a stated absence.
+    Uses the Services weight of OPS-0008. Returns `(None, note)` without
+    weights, `(score, "")` otherwise; raises when the weights lack a
+    Services entry.
     """
 
     if weights is None:
@@ -631,27 +438,11 @@ def technical_debt_score(
 
 def main() -> None:
     """
-    `PLAN-J7` § 6.4/6.5/§ 11: the cockpit visuel, now scored.
-    `render findings first, decide the score model once there is
-    something real to weigh` was the owner's own sequencing
-    (2026-09-11) — four domains were instrumented and confirmed on
-    GIGABYTE before `OPS-0008` declared a single weight, so the score
-    this prints is never earlier than the findings it is built from.
+    Render the health cockpit, its scores, the action plan and the vigil snapshot.
 
-    **Also writes the "Dette technique" card, added 2026-09-23**
-    (`PLAN-J11` § 11.9.1) — computed from the same cockpit and the
-    same `OPS-0008` weights the health score already reads, never a
-    second load of either.
-
-    **Also resolves the Troubleshooting Assistant's own LAN address,
-    added 2026-09-30** — the owner's own "Élargir + relier" cadrage:
-    every finding this page shows should link into that assistant's
-    guided `reason`/`explain`/`recommend` chain. Resolved once, from
-    the declared instance config, the same `service_url(...)` call
-    `console_render.py` already makes for its own links — `None` (the
-    v1 shape every call before this existed) if that config is
-    missing or unreadable, which renders every finding exactly as
-    before rather than failing the whole page over one optional link.
+    The health and technical-debt scores share one cockpit and one load
+    of the OPS-0008 weights. Each finding links to the Troubleshooting
+    Assistant when the instance config gives its address.
     """
 
     cockpit = build_cockpit(socket.gethostname())
@@ -661,25 +452,16 @@ def main() -> None:
     debt_score, debt_score_note = technical_debt_score(cockpit, weights)
 
     try:
-        # The assistant lives under a prefix of the web application's
-        # LAN listener since 2026-10-03 (ADR-0012), no longer on a port
-        # of its own.
         troubleshooting_base_url: str | None = (
             load_instance_config_yaml(DEFAULT_INSTANCE_CONFIG).service_url("web_lan")
             + TROUBLESHOOTING_PATH
         )
     except (ValueError, OSError):
-        # Optional, best-effort — the same tolerant absence every
-        # other `DEFAULT_*` definition in this module already holds
-        # for its own file: a missing or unreadable instance config
-        # narrows this render to no "Diagnostiquer" button anywhere,
-        # never a failed page.
+        # Optional: without it, findings get no "Diagnostiquer" button.
         troubleshooting_base_url = None
 
-    # ADR-0010 § 5 (2026-09-27): one page per declared language, the
-    # reference keeping `health.html` and its history stream. The
-    # cockpit is built once — the host does not change with the
-    # language it is read in.
+    # ADR-0010 § 5: one page per declared language from the same cockpit;
+    # the reference language keeps `health.html`.
     languages = default_languages()
     generated_dir = Path("reports/generated")
     output_path = generated_dir / "health.html"
@@ -701,7 +483,7 @@ def main() -> None:
         if language.code == languages.reference:
             output_path = written
 
-    # The vigil (2.0) compares this render with the one before.
+    # The vigil compares this render with the one before.
     write_snapshot(
         take_snapshot(
             cockpit,
@@ -756,11 +538,10 @@ def write_plan(
     languages: Languages,
 ) -> Path:
     """
-    `plan.html`, the action plan the two score badges open (the owner's
-    request, 2026-10-08), one page per language, from the same cockpit,
-    weights as the scores. Written plainly, not with
-    `write_artifact_with_history`: it is a view of `health.html`'s own
-    run, not one more history stream for the Time Machine.
+    Write `plan.html`, the action plan the score badges open, once per language.
+
+    Written plainly, not with `write_artifact_with_history`: it is a view
+    of this run, not a history stream. Returns the reference-language path.
     """
 
     weight = (weights.for_domain("Services") or 0) if weights is not None else 0

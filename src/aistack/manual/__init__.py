@@ -1,8 +1,6 @@
-"""
-The user manual (asked by the owner, 2026-10-04): one Markdown source
-per declared language, `manual.<code>.md`, rendered to a page the
-console's Help leads to. The reference language's text is the fallback
-for a language that has none yet.
+"""The user manual: one Markdown source per language, `manual.<code>.md`.
+
+A language without its own manual falls back to the reference language.
 """
 
 from __future__ import annotations

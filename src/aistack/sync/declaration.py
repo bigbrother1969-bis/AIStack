@@ -1,6 +1,6 @@
 """
-`sync.yml` (`ADR-0022`): the contents of this host, the destinations
-they can be sent to, and where each pair's files are kept.
+`sync.yml` (ADR-0022): this host's contents, the destinations they can
+be sent to, and where each pair's files are kept.
 """
 
 from __future__ import annotations

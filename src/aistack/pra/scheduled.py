@@ -1,18 +1,15 @@
 """
-Scheduled restore tests (2.0, tranche 2; the owner, 2026-10-09: "tests
-PRA planifiés", and, for the record, "enregistrée seule").
+Scheduled restore tests and their recorded outcomes.
 
-Every week, `aistack-pra.timer` restores each service that has a
-sandbox recipe (`ADR-0018`), with the newest backup, in the sandbox —
-never touching the live service. Each outcome is recorded here, by
-AIStack, in the data directory: `pra/scheduled.jsonl`, one line per
-run, appended, never rewritten.
+Every week `aistack-pra.timer` restores each service with a sandbox
+recipe (ADR-0018) from its newest backup, never touching the live
+service. Each outcome is appended to `pra/scheduled.jsonl` in the data
+directory.
 
-`pra_tests.yml` stays the owner's hand-written file, comments
-included: AIStack never rewrites it. The Tests PRA domain reads both
-and keeps, per service, the more recent outcome — so a scheduled
-success refreshes a service's date, and a scheduled failure is the
-newest word on it until a later run succeeds.
+`pra_tests.yml` stays the owner's hand-written file and is never
+rewritten. The Tests PRA domain reads both and keeps, per service, the
+more recent outcome: a scheduled success refreshes the date, a scheduled
+failure stands until a later run succeeds.
 """
 
 from __future__ import annotations

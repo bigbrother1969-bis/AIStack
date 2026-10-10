@@ -11,33 +11,15 @@ from aistack.renderers.health.html import render_html
 
 class HealthHtmlArtifactGenerator:
     """
-    Generate the `health.html` artifact from a `HealthCockpit`
-    snapshot and, once `OPS-0008`'s weights are available, its
-    `HealthScore`.
+    Generate the `health.html` artifact, with Observation History,
+    from an already-built `HealthCockpit` and optional scores.
 
-    Mirrors `ArchitectureHtmlArtifactGenerator` exactly: Observation
-    History (`write_artifact_with_history`) applies here the same way
-    it applies to every other generated artifact this heritage
-    writes — a rendered cockpit is as disposable and as worth keeping
-    every run of as `architecture.html` is.
-
-    Takes an already-built `HealthCockpit` and an already-computed
-    `HealthScore` — `aistack.cli.health_render` is where each domain
-    is constructed and `aistack.health.score.compute_health_score` is
-    where the score is derived from it — the same "this class is only
-    the I/O step" split every other generator in this package already
-    holds. `score`/`score_note` default to the pre-`OPS-0008` shape
-    (no score, no note) so a caller with nothing to weigh yet renders
-    exactly as it always has. `technical_debt_score`/
-    `technical_debt_note` default the same way for the "Dette
-    technique" card added 2026-09-23 (`PLAN-J11` § 11.9.1). `lang`
-    (ADR-0010, 2026-09-27) is the language the page is written in, the
-    reference when `None`. `troubleshooting_base_url` (2026-09-30,
-    `PLAN-J7`'s own cockpit findings made clickable into the
-    Troubleshooting Assistant, see `aistack.renderers.health.html
-    .render_html`'s own docstring) defaults to `None` the same way —
-    no "Diagnostiquer" button on any finding until a caller hands one
-    in.
+    This class is only the I/O step: `aistack.cli.health_render` builds
+    the cockpit and `aistack.health.score.compute_health_score` the
+    score (`OPS-0008`). Without `score` or `technical_debt_score` the
+    matching card is left out. `lang` (ADR-0010) is the page language,
+    the reference when `None`. `troubleshooting_base_url`, when given,
+    adds a "Diagnostiquer" button to each finding.
     """
 
     def generate(

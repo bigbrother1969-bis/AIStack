@@ -23,15 +23,10 @@ _REQUIRED_SYNCTHING_FIELDS = (
 
 
 def load_application_definition_yaml(path: Path) -> ApplicationDefinition:
-    """
-    Load a governed application definition from YAML.
+    """Load an application definition from YAML.
 
-    **Written by hand, not generated.** `load_catalog_yaml` and
-    `load_selection_yaml` read artefacts a program wrote, so a
-    missing key there is corruption and a bare `KeyError` says
-    enough. This file is typed by the owner, so a missing key here
-    is a typo, and the error names which one rather than pointing
-    at a line inside this module.
+    The file is written by hand, so a missing key is reported by name
+    (`ValueError`) rather than as a bare `KeyError`.
     """
 
     with path.open("r", encoding="utf-8") as stream:

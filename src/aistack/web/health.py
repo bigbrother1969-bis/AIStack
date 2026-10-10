@@ -1,12 +1,7 @@
-"""
-`/healthz` — is the web process answering (1.10): what Docker's
-healthcheck asks (`python -m aistack.cli.healthcheck`), so `docker ps`,
-and a dashboard reading Docker such as Homepage, show the container
-`healthy` rather than only `running`.
+"""`/healthz`: the probe behind Docker's healthcheck (`aistack.cli.healthcheck`).
 
-On the local-network listener only, no session: it says `ok` when the
-data directory the screens read is there, `503` when it is not (a
-moved or unmounted `AISTACK_DATA_DIR`) — nothing else about the host.
+LAN listener only, no session. Answers `ok` when the data directory exists,
+`503` when it does not (e.g. an unmounted `AISTACK_DATA_DIR`).
 """
 
 from __future__ import annotations

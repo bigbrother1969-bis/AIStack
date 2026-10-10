@@ -10,38 +10,14 @@ _USER_AGENT = "AIStack-HttpProbeProvider/1.0"
 
 
 class HttpProbeProvider:
-    """
-    Ask each configured HTTP endpoint for its status code, right now.
+    """Ask each configured HTTP endpoint for its status code.
 
-    `claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1, first of the
-    three gaps named 2026-09-13, scoped and built 2026-09-23. A
-    provider observes and does not qualify — same rule as
-    `BeszelProvider`/`JellyfinProvider`/`SyncthingProvider`. The
-    status code travels exactly as the server answered it; deciding
-    what a 404 or a 500 means for the homelab is not this class's
-    job.
+    Observes only; the status code is reported as answered. Unreachable is
+    a state, not an exception: any HTTP answer (including 4xx/5xx) is
+    `reachable`, only no answer at all is not. No credentials are used.
 
-    **"Injoignable" is a state, not an exception** — same reasoning
-    every other network provider in this project already applies: a
-    timeout, a DNS failure, a connection refused are all ordinary for
-    a homelab-sized fleet of ~46 endpoints, not exceptional. An HTTP
-    error status (4xx/5xx) is different from being unreachable: the
-    server answered, so `reachable` is `True` and `status_code`
-    carries whatever it said — only a request that never got an
-    answer at all sets `reachable` to `False`.
-
-    **No credentials.** These are the same public URLs already
-    declared in this project (`service_categorization.yml`'s own
-    `href` fields, `cmdb_probe_targets.yml` here) — unlike
-    `BeszelProvider`/`JellyfinProvider`/`SyncthingProvider` there is
-    nothing to authenticate, so `collect()` never reads `environ`.
-
-    **An explicit `User-Agent` on every request** — the same fix
-    `BeszelProvider` needed 2026-09-12, for the identical reason: most
-    of these targets are `*.persiaut-family.fr` names fronted by the
-    same Cloudflare, which refuses `urllib.request`'s own default
-    signature with a bare 403 (`error code: 1010`). Applied here from
-    the start rather than rediscovered against the real targets.
+    Every request sends an explicit `User-Agent`: Cloudflare rejects
+    urllib's default one with a 403 (`error code: 1010`).
     """
 
     provider_id = "aistack.provider.http_probe"
@@ -80,8 +56,7 @@ class HttpProbeProvider:
             return self._unreachable(name, url, self._timed_out(url))
 
         except urllib.error.HTTPError as error:
-            # The server answered — with an error status, but it
-            # answered. Reachable, same as a 2xx.
+            # An error status is still an answer: reachable.
             return self._reachable(name, url, error.code)
 
         except urllib.error.URLError as error:

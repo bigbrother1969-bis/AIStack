@@ -1,6 +1,6 @@
-# Santé du homelab — messages partagés par la console (cartouche) et
-# le Cockpit Santé. Les identifiants (buckets, noms de domaine) sont
-# traduits via aistack.health.labels, jamais construits à la volée.
+# Homelab health: messages shared by the console summary and the Health
+# cockpit. Identifiers (buckets, domain names) are translated through
+# aistack.health.labels, never built on the fly.
 
 bucket:
   excellent: "excellent"
@@ -41,7 +41,7 @@ page:
   evidence: "{count} élément(s) de preuve"
   diagnose: "Diagnostiquer avec l'assistant IA →"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   diagnose: "Ouvrir ce constat dans l'assistant de pannes, qui le fait analyser pas à pas par\
   \ le modèle IA (réseau local uniquement)"

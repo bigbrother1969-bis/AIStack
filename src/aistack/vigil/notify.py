@@ -1,21 +1,16 @@
 """
-What the vigil tells the owner, and how (2.0, tranche 2; the owner,
-2026-10-09).
+What the vigil tells the owner, and how.
 
-Since 2.0's tranche 3, also AIStack's own data nearing (or past) its
-disk budget (ADR-0021), urgent past it.
-
-Four kinds of event, chosen by the owner: the health going down, the
-dock (a proposal waiting, a change applied, rolled back or failed), a
-silent host, a failed restore test. "1 par événement, regroupé": each
-event is said once — a finding that stays is not said again until it
-has gone and come back — and the events of one pass go out as one
-message. The first pass of a fresh install only takes note of what is
-already there: no burst of old news.
+Events: health going down, the dock (a proposal waiting, a change
+applied, rolled back or failed), a silent host, a failed restore test,
+and AIStack's data nearing or past its disk budget (ADR-0021; urgent
+past it). Each event is said once: a finding that stays is not repeated
+until it has gone and come back. The events of one pass go out as one
+message. The first pass of a fresh install only records what is there.
 
 Sent to Gotify (`AISTACK_GOTIFY_URL`, `AISTACK_GOTIFY_TOKEN` in
-`.env.web`, never shown). Without them the vigil still keeps its state,
-and says that notifications are off.
+`.env.web`). Without them the vigil still keeps its state and says that
+notifications are off.
 """
 
 from __future__ import annotations
@@ -180,9 +175,8 @@ def compose(t: Translator, found: Sequence[Event]) -> Message | None:
 Post = Callable[[str, bytes, dict[str, str]], Any]
 
 
-# Python's own "Python-urllib/3.x" is refused by Cloudflare's bot
-# protection in front of a self-hosted Gotify (HTTP 403, GIGABYTE,
-# 2026-10-09): AIStack says who it is.
+# Cloudflare's bot protection in front of a self-hosted Gotify refuses
+# the default "Python-urllib/3.x" agent with HTTP 403.
 USER_AGENT = "AIStack-vigil (+https://codeberg.org/bigbrother1969/AIStack)"
 
 

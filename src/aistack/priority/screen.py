@@ -1,13 +1,9 @@
 """
 What the *Priorité CPU* screen shows and saves (`ADR-0012` § 4).
 
-Computed in `priority_ui/app.py` at the repository root until
-2026-10-03, outside the governed suite; the route in
-`aistack.web.priority` now only reads the request and calls these.
-
-Decision 2 of `claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`:
-the file this screen edits is the one
-`aistack.cli.resource_priority_monitor` reads.
+The route in `aistack.web.priority` reads the request and calls these. The
+file this screen edits is the one `aistack.cli.resource_priority_monitor`
+reads.
 """
 
 from __future__ import annotations
@@ -32,15 +28,10 @@ Discover = Callable[[], tuple[DiscoveredContainer, ...]]
 
 def discover_containers() -> tuple[DiscoveredContainer, ...]:
     """
-    What Docker reports right now.
+    What Docker reports right now, or nothing if the daemon is unreachable.
 
-    **A Docker daemon this screen cannot reach reads as "nothing
-    discovered", not an error page.** `DockerProvider` predates this
-    project's "unreachable is a state, not an exception" convention and
-    raises when the daemon is down; changing its contract is out of
-    scope, so this is the one call site absorbing it — the owner can
-    still load the screen and see the governed classification on a day
-    Docker itself is unreachable.
+    `DockerProvider` raises when the daemon is down; this call absorbs it so
+    the screen still shows the saved classification.
     """
 
     try:
@@ -67,14 +58,10 @@ def priority_rows(
     discovered: tuple[DiscoveredContainer, ...],
 ) -> list[PriorityRow]:
     """
-    Every discovered container joined to the governed definition, by
-    name.
+    Every discovered or declared container joined to the definition, by name.
 
-    **A container the definition names but Docker does not report is
-    still shown** (`running` is `None`): stopped, or typed by hand and
-    no longer matching anything — the owner should see it and decide,
-    not lose track of it because `docker ps -a` did not list it this
-    second.
+    A container the definition names but Docker does not report is still
+    shown, with `running` set to `None`.
     """
 
     priority_by_name = {app.container: app for app in definition.priority}
@@ -116,16 +103,14 @@ def definition_from_form(
     form: Mapping[str, str],
 ) -> ResourcePriorityDefinition:
     """
-    The definition the screen's form describes, for the containers it
+    Build the definition the screen's form describes, for the containers it
     showed.
 
-    **One classification per name, read from fields namespaced by
-    container** (`classification__<name>`, `normal_cpus__<name>`, …):
-    the set of containers is whatever Docker reported, not a schema
-    known in advance. **Ignored is every name absent from both lists**
-    — decision 3: there is no "delete" distinct from not classifying a
-    container. Everything the form does not carry (`unlimited_cpus`,
-    `grace_seconds`, the default throttle) is kept from `current`.
+    Fields are namespaced by container (`classification__<name>`,
+    `normal_cpus__<name>`, ...). A container classified neither priority nor
+    throttled is ignored; there is no separate "delete". Values the form does
+    not carry (`unlimited_cpus`, `grace_seconds`, the default throttle) are
+    kept from `current`.
     """
 
     priority_entries: list[PriorityAppDefinition] = []
@@ -178,10 +163,8 @@ def _background_container_from_form(
 ) -> ContainerPriorityDefinition:
     raw = str(form.get(f"throttled_normal_cpus__{name}", "")).strip()
 
-    # Unlike the fields below, a value that is not a number is not
-    # replaced by a default here — the old screen raised on it, and
-    # silently falling back to "the default throttle" would change what
-    # the owner meant. Kept as it was; the move changes no behaviour.
+    # Unlike the other fields, a non-numeric value raises instead of falling
+    # back to a default, which would change what the user meant.
     return ContainerPriorityDefinition(name=name, normal_cpus=float(raw) if raw else None)
 
 

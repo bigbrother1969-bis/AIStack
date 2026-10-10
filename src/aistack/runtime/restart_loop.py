@@ -1,8 +1,6 @@
 """
-Restart loops, counted from the docker-events history — the Services
-domain's second check, alongside `find_container_distress`'s
-instantaneous one (`aistack.contracts.restart_loop.RestartLoop`'s own
-docstring for why, 2026-10-02).
+Restart loops counted from the docker-events history, complementing the
+instantaneous check of `find_container_distress`.
 """
 
 from __future__ import annotations
@@ -28,10 +26,8 @@ from aistack.runtime.evaluate_services import (
     SIGNATURE,
 )
 
-# Declared, not tuned against a measurement beyond the one case that
-# motivated it: mularr died 216 times an hour. Five in an hour is far
-# below that and far above a normal update (`docker compose up -d`
-# recreates a container once) or a manual restart or two.
+# An estimate: a loop seen in practice reached hundreds of deaths an hour,
+# while a normal update or a manual restart dies once or twice.
 RESTART_LOOP_WINDOW_MINUTES = 60
 RESTART_LOOP_THRESHOLD = 5
 
@@ -44,11 +40,9 @@ def find_restart_loops(
     threshold: int = RESTART_LOOP_THRESHOLD,
 ) -> tuple[RestartLoop, ...]:
     """
-    Every subject with at least `threshold` `die` events whose own
-    `occurred_at` falls within the last `window_minutes` before `now`.
-    Pure: recorded events in, confirmed loops out, sorted by subject.
-    An event with no readable `occurred_at` is not counted — never
-    placed in the window by assumption.
+    Return every subject with at least `threshold` `die` events in the last
+    `window_minutes` before `now`, sorted by subject. Events without a
+    readable `occurred_at` are not counted.
     """
 
     since = now - timedelta(minutes=window_minutes)
@@ -79,10 +73,8 @@ def find_restart_loops(
 
 def evaluate_restart_loops(loops: Iterable[RestartLoop]) -> tuple[RuntimeFinding, ...]:
     """
-    One `RuntimeFinding` per loop, citing the same `OPS-0004`
-    signature and the same three qualifications the Services domain's
-    instantaneous check already cites — it is the same reference
-    incident, measured over time.
+    One `RuntimeFinding` per loop, with the same signature and qualifications
+    as the instantaneous Services check.
     """
 
     return tuple(
@@ -134,11 +126,9 @@ def restart_loop_findings(
     events_output_path: Path = DEFAULT_OUTPUT_PATH,
 ) -> tuple[RuntimeFinding, ...]:
     """
-    The one call every Services domain (health, console, assistant)
-    adds to its instantaneous findings: read the recent docker-events
-    history, find loops, evaluate them. Best-effort, like the
-    inventory-gap domain's own network observation: no history yet, or
-    an unreadable batch, means no loop found — never a failed domain.
+    Read the recent docker-events history and return restart-loop findings.
+    Best-effort: a missing or unreadable history yields no findings, not an
+    error.
     """
 
     when = now if now is not None else datetime.now(timezone.utc)

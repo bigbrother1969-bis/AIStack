@@ -1,13 +1,13 @@
 """
 `python -m aistack.cli.data_budget` — AIStack's data against its disk budget (ADR-0021).
 
-    python -m aistack.cli.data_budget                       what the data takes, by directory,
-                                                            its pace, and when the budget is reached
-    python -m aistack.cli.data_budget --compress --dry-run  what compressing the old observations
+    python -m aistack.cli.data_budget                       size by directory, pace,
+                                                            and when the budget is reached
+    python -m aistack.cli.data_budget --compress --dry-run  what compressing old observations
                                                             would gain
     python -m aistack.cli.data_budget --compress            compress them now (nothing is deleted)
 
-The vigil compresses once a day on its own. In the Docker installation:
+The vigil also compresses once a day. In the Docker installation:
 `docker compose exec web python -m aistack.cli.data_budget`.
 """
 

@@ -9,23 +9,10 @@
 </head>
 <body>
   {#
-    `/reconstitute` — gap #3 of `claude/AUDIT-TIMEMACHINE-
-    REALIGNEMENT-MAQUETTES-2026-10-02.md` ("le curseur du ruban
-    n'ouvre que le /node de l'instant le plus proche — il ne
-    « reconstitue » rien"), cadrage 2026-10-02: a contained, read-only
-    first slice of the validated maquette's own "reconstituer un état
-    passé en 3 clics" — see `app.py`'s own `_reconstitution` docstring
-    for the full scope line. Reached only from `/node`'s own center
-    column (`node_ribbon_reconstitute_link`), never a top-level view
-    of its own — same reasoning `node.html` already holds for its own
-    `view-switch` (no `view-current` here either, for the same reason).
-
-    Deliberately **not** built here, named rather than silently
-    missing: a then/now comparison table across domains (the
-    maquette's own "Alors et maintenant"), a causal timeline into
-    Évolution, and a "Restaurer en bac à sable" button — that last one
-    is a write, and this screen's own architecture decision forbids
-    writing outright (`ADR-0011` § *Decision* 10).
+    /reconstitute: read-only view of one subject's state at a past instant (see
+    `_reconstitution` in app.py). Reached only from /node's center column, so no
+    `view-current`. Restoring to a sandbox is not offered: this screen never
+    writes (ADR-0011, Decision 10).
   #}
   {{ page_nav | safe }}
   <a class="back-link" href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.back_to_streams') }}">{{ t('timemachine.back_to_streams') }}</a>

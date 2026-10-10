@@ -1,9 +1,9 @@
 """
-Where AIStack's declarations are read from (`ADR-0017` § 1).
+Where AIStack's declarations are read from (ADR-0017 § 1).
 
 Every declaration ships inside the package, under
-`src/aistack/<area>/definitions/<name>.yml`, with the values of the
-reference host. When the environment names a configuration directory —
+`src/aistack/<area>/definitions/<name>.yml`, with neutral values. When
+the environment names a configuration directory —
 `AISTACK_CONFIG_DIR`, `/config` in the container — a file of the same
 name there replaces the shipped one, file by file; a file it does not
 hold keeps the shipped value. `python -m aistack.cli.config_init` copies
@@ -21,17 +21,14 @@ import os
 from pathlib import Path
 
 CONFIG_DIR_ENV = "AISTACK_CONFIG_DIR"
-# The same directory as the host names it — `./config` beside
-# `docker-compose.yml` — for what a page tells the owner to edit: the
-# container's `/config` is not a path on the host (1.9).
+# The same directory as the host names it (`./config` beside
+# `docker-compose.yml`), shown on pages: the container's `/config` is
+# not a path on the host.
 CONFIG_HOST_DIR_ENV = "AISTACK_CONFIG_HOST_DIR"
-# The reference host's own declarations (GIGABYTE's), read between the
-# configuration directory and the shipped files (2.0.0-rc1, the owner
-# 2026-10-10: a new installation "ne ramène aucune info de ma
-# configuration actuelle : tout doit être découvert par AIStack"). The
-# package ships neutral declarations; the reference values live in
-# `tests/reference/definitions/`, which the test suite and a development
-# checkout name here. Never set in the image.
+# The reference host's declarations, read between the configuration
+# directory and the shipped files. They live in
+# `tests/reference/definitions/`, named here by the test suite and a
+# development checkout. Never set in the image.
 REFERENCE_DIR_ENV = "AISTACK_REFERENCE_DIR"
 PACKAGE_ROOT = Path(__file__).resolve().parent
 

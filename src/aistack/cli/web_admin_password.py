@@ -1,12 +1,10 @@
 """
-`python -m aistack.cli.web_admin_password` — the fallback
-administrator's line for `.env.web` (`ADR-0013` § 5).
+`python -m aistack.cli.web_admin_password` — print the fallback administrator's line for `.env.web` (ADR-0013 § 5).
 
-Asks the password twice, without echo, and prints the scrypt hash as a
-shell assignment, single-quoted: `run_web.sh` loads `.env.web` with
-`source`, and an unquoted `$` would be read as a variable. The password
-itself is never printed nor written anywhere. Typical use, appending
-the line without showing it:
+Asks the password twice without echo and prints the scrypt hash as a
+single-quoted shell assignment: `run_web.sh` sources `.env.web`, so an
+unquoted `$` would be read as a variable. The password itself is never
+printed or stored. Typical use:
 
     python -m aistack.cli.web_admin_password >> .env.web
 """

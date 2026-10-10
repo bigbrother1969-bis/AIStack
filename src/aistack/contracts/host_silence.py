@@ -1,6 +1,6 @@
 """
-A traced host whose collector has stopped writing (`ADR-0020`; 2.0,
-the owner, 2026-10-09: "hôte silencieux = constat Santé").
+A traced host whose collector has stopped writing (ADR-0020); reported
+as a Health finding.
 """
 
 from __future__ import annotations
@@ -13,9 +13,9 @@ class HostSilence:
     """
     One host `hosts.yml` traces and nothing recent was read from.
 
-    `minutes` is how long since its collector's last run; `None` when
-    no run was read at all — no `host.json`, an unreadable one, or the
-    disk that holds it not mounted (`problem` then says which).
+    `minutes` is the time since its collector's last run; `None` when
+    no run was read (no `host.json`, unreadable, or disk not mounted),
+    and `problem` then says which.
     """
 
     host: str

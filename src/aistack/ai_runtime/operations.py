@@ -4,57 +4,17 @@ from aistack.ai_runtime.engine import AIEngine
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
 
-# `ARCH-0003-AI-Runtime-Architecture.md` § Operations names six;
-# `claude/PLAN-TRAJECTOIRE-2026-09-04.md` J6 asks for three of them —
-# `summarize`/`validate_with_context`/`generate_draft_artifact` are
-# named there but not built here, per the owner's own scoping
-# decision 2026-09-13. Each function below is a separate prompt over
-# the same finding, not three code paths through one prompt, so a
-# fourth operation is a fourth function added beside these, not a
-# branch inside one.
+# Three operations, each a separate prompt over the same finding. Every
+# prompt states the finding as established fact: the model reasons about the
+# deterministic qualification (`aistack.runtime`, `OPS-0004`), it never
+# judges whether it is true.
 #
-# **Every prompt states the finding as already-established fact,
-# never asks the model to judge whether it is correct.** `ARCH-0003`'s
-# own principle — "AI is a reasoning assistant, never a source of
-# truth" — means the deterministic Runtime's own qualification
-# (`aistack.runtime.evaluate`, `OPS-0004`) is the one thing here that
-# is not up for the model's own opinion; what the model adds is
-# reasoning *about* it, in language, not a second verdict on whether
-# it is true.
-#
-# **The answer must come back in `target_language`, not always in
-# French — corrected 2026-09-27.** The original design (2026-09-18,
-# `claude/PLAN-TROUBLESHOOTING-ASSISTANT-UI-2026-09-18.md`) asked
-# every prompt for French unconditionally, for the whole patrimoine
-# (CLI and the guided UI alike). The owner's own real use of the
-# guided UI found the opposite of what that design assumed:
-# `deepseek-r1:1.5b` does not reliably follow a French-only
-# instruction — the answers came back in English regardless — which
-# also made the README/RELEASE-NOTES 1.2.0 claim ("the AI Runtime's
-# own answers stay in French") false the day it was published. The
-# owner's fix, chosen over a stricter prompt or a different model
-# (2026-09-27): keep asking the model in its prompt, but *enforce* the
-# target language with a second, fast translation pass
-# (`qwen2.5:0.5b` — already confirmed installed, `ai_runtime.yml`'s
-# own `ollama list` note, 2026-09-18) whenever the target is not
-# English — and skip that pass for English, since the model's own
-# unprompted behaviour already satisfies it. `target_language` is the
-# *display* language the caller is answering for: the CLI keeps the
-# original French-for-the-whole-patrimoine default (it has no
-# "display" of its own to follow), and the guided UI now passes
-# whatever language the visitor is reading the page in
-# (`aistack.web.troubleshooting`'s own `_language(request)`),
-# not a language hardcoded here.
-#
-# Deliberately not extended to the finding's own `interpretation`/
-# `remediation` text — that is the governed `OPS-0004` rule's own
-# declared wording (`aistack.runtime.evaluate`), not something this
-# module produces, and the owner chose to leave it as the rule states
-# it (English), everywhere it already appears (CLI, Cockpit Santé).
-# The directive lives at the end of each template, after the
-# finding's own fields — asking last, once the model has already read
-# what it is reasoning about, is the same ordering QUAL-0001 found
-# more reliable for small models than a leading instruction.
+# The answer must come back in `target_language`. Small models often ignore
+# a language instruction, so for a non-English target an optional second,
+# fast `translator` engine translates the answer. The finding's own
+# `interpretation`/`remediation` text is not translated. The language
+# directive sits at the end of each template, which small models follow
+# more reliably than a leading instruction.
 
 _MODEL_NOT_CONFIGURED = (
     "no model is configured (aistack.ai_runtime.definitions."
@@ -62,32 +22,20 @@ _MODEL_NOT_CONFIGURED = (
     "this points at and set it before asking the AI Runtime anything"
 )
 
-# One entry per language `aistack.i18n.definitions.languages.yml`
-# declares today (fr, en) — asking for a language this dict does not
-# name is refused rather than silently asking for nothing, the same
-# "undeclared is refused, never guessed" convention
-# `aistack.i18n.catalog._flag_uri` already holds for a language's own
-# flag. Adding a third declared language means adding its own line
-# here and to `_LANGUAGE_NAME` below, not a fallback that pretends
-# every unlisted code is fine.
+# One entry per declared UI language. An undeclared language is refused,
+# never guessed; adding a language means adding it here and to
+# `_LANGUAGE_NAME`.
 _LANGUAGE_DIRECTIVE: dict[str, str] = {
     "fr": (
         "\nRéponds uniquement en français, même si tout ce qui "
         "précède est en anglais.\n"
     ),
-    # No directive at all — the model's own unprompted behaviour is
-    # already English often enough that the owner's own real use
-    # found no French-only instruction reliably changes it either;
-    # asking for what it already tends to do adds nothing, and the
-    # translation pass below is skipped for English for the same
-    # reason (2026-09-27).
+    # No directive: models already answer in English, and the translation
+    # pass is skipped for English too.
     "en": "",
 }
 
-# Only used for a non-English target — see `_ask`'s own translation
-# step. "fr" is the only one in real use today (English never reaches
-# `_translate`), kept alongside it so a third declared language adds
-# one line here too, not a guess at how to name itself in English.
+# Language names for the translation prompt (non-English targets only).
 _LANGUAGE_NAME: dict[str, str] = {
     "fr": "French",
     "en": "English",
@@ -104,25 +52,13 @@ def reason(
     context: str = "",
 ) -> AIRuntimeAnswer:
     """
-    Ask the AI Runtime to reason about one `RuntimeFinding` — what it
-    means, read alongside what it cites.
+    Ask the engine to reason about one `RuntimeFinding`: what it means,
+    read alongside what it cites.
 
-    **`model` may be `None`, and that is answered here rather than
-    left to the caller** — `aistack.ai_runtime.definition
-    .AIRuntimeDefinition.model` is `None` until the owner fills it
-    in, and every one of `reason`/`explain`/`recommend` would
-    otherwise repeat the same guard. `engine` is still asked for
-    nothing in that case — no request is sent naming a model nobody
-    confirmed is installed.
-
-    **`target_language`/`translator`** — see this module's own
-    docstring, 2026-09-27: `target_language` names the language the
-    answer must come back in (default `"fr"`, the CLI's own
-    unchanged choice); `translator` is a second `AIEngine` — a fast
-    model's own connection, never `engine` again — asked to translate
-    into `target_language` when it is not `"en"`. Left `None`, no
-    translation is attempted and the raw answer is returned exactly
-    as `engine` gave it, the same as before this parameter existed.
+    With `model` `None` (not configured), nothing is sent and the answer is
+    marked unreachable. `target_language` is the language the answer must
+    come back in; `translator`, if given, translates a non-English answer.
+    `context` adds the facts collected on the host to the prompt.
     """
 
     return _ask(
@@ -141,10 +77,8 @@ def explain(
     context: str = "",
 ) -> AIRuntimeAnswer:
     """
-    Ask the AI Runtime to explain one `RuntimeFinding` in plain
-    language, for the owner rather than for another rule.
-
-    `target_language`/`translator` — see `reason`'s own docstring.
+    Ask the engine to explain one `RuntimeFinding` in plain language for the
+    user. Parameters as in `reason`.
     """
 
     return _ask(
@@ -163,17 +97,9 @@ def recommend(
     context: str = "",
 ) -> AIRuntimeAnswer:
     """
-    Ask the AI Runtime to suggest a next step for one `RuntimeFinding`.
-
-    **A suggestion, stated as one in the prompt itself, never an
-    instruction the AI Runtime could be mistaken for having
-    authority to carry out.** `claude/PLAN-TRAJECTOIRE-2026-09-04.md`
-    J8 — the assistant this operation eventually feeds — states the
-    same rule for its own recommendation: "jamais exécutée seule."
-    Nothing about that changes because J8 is not built yet; the
-    prompt says so from this operation's first real call.
-
-    `target_language`/`translator` — see `reason`'s own docstring.
+    Ask the engine to suggest a next step for one `RuntimeFinding`. The
+    prompt states that the answer is a suggestion, never an instruction to
+    carry out. Parameters as in `reason`.
     """
 
     return _ask(
@@ -218,21 +144,9 @@ def _ask(
     )
     text, reason_ = engine.complete(prompt)
 
-    # Enforce `target_language` rather than trust the instruction
-    # already inside `prompt` — 2026-09-27, this module's own
-    # docstring. Skipped for English (nothing to enforce that the
-    # model does not already do on its own) and whenever no
-    # `translator` was given (the caller declared none configured;
-    # the raw answer travels unchanged, exactly as before this
-    # feature existed — never blocked on a second model nobody
-    # confirmed is installed, the same reasoning `model` itself
-    # already gets).
-    #
-    # **Best-effort, not verified.** A translation call that fails
-    # (`translator.complete` returns no text) leaves `text` exactly
-    # as `engine` gave it — still a real, reachable answer, just not
-    # provably in `target_language`; nothing here re-checks the
-    # language of what came back, from either engine.
+    # Enforce the target language with the translator, except for English
+    # or when no translator is configured. Best-effort: if translation fails,
+    # the original answer is kept, and its language is not re-checked.
     if text and translator is not None and target_language != "en":
         translated, _reason = translator.complete(
             _TRANSLATE_PROMPT.format(
@@ -272,10 +186,8 @@ def _describe(finding: RuntimeFinding) -> dict[str, str]:
     }
 
 
-# The facts AIStack measured or declared on the host (the assistant's
-# step 2), sent with the question so the answer is about this host
-# (the owner, 2026-10-09: "on envoie les faits pour mieux cibler la
-# réponse"). Empty: the prompts are exactly as before.
+# Facts AIStack measured or declared on the host, sent with the question so
+# the answer is about this host. Empty context leaves the prompt unchanged.
 _CONTEXT_BLOCK = """
 What AIStack measured or declared on the host about this finding — \
 also established fact, to build on, never to contradict:

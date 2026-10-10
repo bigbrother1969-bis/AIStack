@@ -5,36 +5,13 @@ import subprocess
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-# 1.5's second collector (`docker diff` periodic), cadrage 2026-09-28 —
-# the owner's own decision: factor the identity rule out of
-# `aistack.providers.docker.events` (built for 1.5's first collector,
-# cabled to a Docker *event*'s own `Actor.Attributes` shape) into a
-# shared module the same day, before `docker diff`, dérive du digest,
-# and inventaire des paquets would each otherwise have needed their own
-# copy of the same rule against a different input shape (`docker
-# inspect`'s own `Config.Labels`, a plain dict, not an event's actor).
+# Container identity shared by the Docker collectors (diff, digest,
+# packages), read from one `docker inspect` call.
 #
-# `image_digest` added 2026-09-28 alongside 1.5's third collector
-# (`aistack.providers.docker.digest`, cadrage the same day): the
-# owner's own decision was to extend `ContainerIdentity` here rather
-# than have that collector run its own second `docker inspect` — this
-# module already reads every field `docker inspect` reports for a
-# container in one call, and a container's own `.Image` (its current
-# image's own *configuration* digest, a `sha256:...` id) is already
-# right there in the same JSON entry `mount_destinations` is built
-# from. Verified 2026-09-28 (GitHub issue search, `pmdroid/barkvisor`
-# #642, and Moby's own v27.5.1 behaviour it cites): this is a
-# different digest from an image's own `RepoDigests` (a *manifest*
-# digest, comparable only to what a registry itself reports, and not
-# reliably present on a container inspect at all) — the two are not
-# interchangeable, so this module states plainly which one it captures
-# rather than calling it just "the digest". Cadrage decision 4 for
-# `docker diff` already fixed the scope this needs: a purely local
-# comparison against the last digest observed for the same
-# `aistack:stableSubject`, never a registry call — `.Image` is exactly
-# the field that comparison needs, and the only one two successive
-# `docker inspect` calls on this project's own hosts can compare
-# without a network fetch on either side.
+# `image_digest` is the container's `.Image`: the image *configuration*
+# digest (a local `sha256:...` id). It is not a `RepoDigests` manifest
+# digest, which only a registry can compare against; the local id is
+# enough to detect an upgrade without a network call.
 
 
 def stable_subject_from_labels(
@@ -43,16 +20,10 @@ def stable_subject_from_labels(
     name: str = "",
     container_id: str = "",
 ) -> str:
-    """
-    `ADR-0011` § *Decision* 3's identity rule, generalised off any
-    source of Compose labels — `aistack.providers.docker.events
-    .stable_subject_of`'s own logic, unchanged, just no longer cabled
-    to a Docker event's own `Actor.Attributes` shape: the Compose
-    project and service name when both labels are present
-    (`com.docker.compose.project`/`com.docker.compose.service`, the
-    same two labels `NetworkDockerDiscoveryProvider` already reads for
-    the same reason), falling back to `name`, then `container_id`,
-    never empty.
+    """Stable subject of a container (`ADR-0011` § Decision 3).
+
+    `project/service` from the Compose labels when both are present, else
+    `name`, else `container_id`, else `"unknown"`. Never empty.
     """
 
     project = labels.get("com.docker.compose.project")
@@ -71,32 +42,21 @@ def stable_subject_from_labels(
 
 @dataclass(frozen=True)
 class ContainerIdentity:
-    """
-    What every 1.5 monitor that enumerates running containers needs
-    to know about one of them — its own stable identity (§ 3) and its
-    declared mount destinations, the one real, per-container fact `R2`
-    (excluding user-data volumes) can be checked against, rather than
-    guessed at from a path's own name.
-    """
+    """What the Docker monitors need about one running container: its
+    stable subject, mount destinations (to exclude user-data volumes) and
+    image."""
 
     name: str
     stable_subject: str
     mount_destinations: tuple[str, ...]
     image_digest: str = ""
-    # The image name the container was started from (`Config.Image`,
-    # e.g. `wordpress:latest`) — what a rollback pins, by digest
-    # (`ADR-0018`, 1.9).
+    # `Config.Image`, e.g. `wordpress:latest`: what a rollback pins by
+    # digest (`ADR-0018`).
     image_name: str = ""
 
 
 def list_running_container_names() -> list[str]:
-    """
-    Every container `docker ps` reports as currently running, by name
-    — `[]` on any failure (no daemon, no such command, malformed
-    output), the same convention `aistack.providers.docker.events
-    .collect_docker_events` already holds: what could not be observed
-    is reported as nothing observed, never raised.
-    """
+    """Names of running containers (`docker ps`); `[]` on any failure."""
 
     try:
         result = subprocess.run(
@@ -114,14 +74,10 @@ def list_running_container_names() -> list[str]:
 
 
 def inspect_containers(names: list[str]) -> list[dict[str, Any]]:
-    """
-    `docker inspect <name...>`, every container in one call rather
-    than one subprocess per name — `docker inspect` already accepts
-    more than one reference and returns one JSON array, so a cycle
-    polling a dozen containers pays for one process, not a dozen.
+    """`docker inspect` of all `names` in a single subprocess.
 
-    `[]` on any failure, or when `names` is empty (`docker inspect`
-    with no argument is a usage error, not "nothing to inspect").
+    `[]` on any failure, or when `names` is empty (`docker inspect` with
+    no argument is a usage error).
     """
 
     if not names:
@@ -148,15 +104,10 @@ def inspect_containers(names: list[str]) -> list[dict[str, Any]]:
 
 
 def identities_of(names: list[str]) -> list[ContainerIdentity]:
-    """
-    `inspect_containers(names)`, normalised into what every caller
-    actually needs — never one-to-one with `names` itself: a
-    container removed between `docker ps` and this call is simply
-    absent from `docker inspect`'s own answer (Docker itself reports
-    an error only when the *whole* command fails, handled by
-    `inspect_containers` returning `[]`), so this returns exactly the
-    identities Docker could actually still resolve, matched by each
-    entry's own `Name` field — not `names` echoed back uninspected.
+    """Identities of the containers `docker inspect` could resolve.
+
+    Not one-to-one with `names`: a container removed since `docker ps` is
+    absent from the result.
     """
 
     identities: list[ContainerIdentity] = []

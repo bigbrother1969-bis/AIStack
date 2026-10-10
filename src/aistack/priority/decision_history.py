@@ -10,33 +10,10 @@ from aistack.kernel.time import Provenance, VersionId, next_version_from_history
 from aistack.priority.apply import ApplyReport
 
 
-# CPU decision history — the fourth historisation dimension of the
-# workstream the owner opened 2026-09-03, scoped 2026-09-03 against
-# the gap `claude/ROADMAP-SYNTHESIS-2026-09-03.md` § 2 names:
-# `resource_priority_monitor` logs boost/normal transitions to
-# stdout (journald) and nothing else — no governed record survives
-# the process. This module is that record, decided against two real
-# trade-offs put to the owner rather than guessed at:
-#
-# **Cadence: on change only, not every poll.** The monitor polls
-# every `aistack.cli.resource_priority_monitor.POLL_SECONDS` (5s).
-# Writing every cycle, kept indefinitely (Observation History's own
-# retention decision, reused here on purpose for one queryable
-# `aistack.cli.history_query` surface across every historicised
-# artifact kind), would be tens of thousands of identical entries a
-# day for one that changed. `ApplyReport.changed` is the same
-# condition `log_cycle` already prints on — reused, not
-# reimplemented, so the two triggers cannot drift apart.
-#
-# **Content: state and report, not a raw detector reading.** The
-# roadmap gap gestures at "why (which detector, what reading)", but
-# `aistack.priority.detectors.base.Detector` exposes only
-# `is_active() -> bool` — no reading survives past either detector's
-# own internals. Answering "what reading" would mean extending that
-# shared Protocol and both its implementations
-# (`CpuThresholdDetector`, `JellyfinDetector`); the owner chose to
-# ship what today's shape already computes — which app, boosted or
-# not, and what applying it did — and leave the Protocol alone.
+# History of CPU priority decisions. Written only when `ApplyReport.changed`,
+# not on every poll, to avoid thousands of identical entries a day. Records
+# each app's boosted state and the apply report; detectors expose only
+# `is_active()`, so the raw reading behind a decision is not available.
 DEFAULT_OUTPUT_PATH = Path("reports/generated/resource-priority-decision.json")
 
 
@@ -48,33 +25,11 @@ def serialize_decision(
     provenance: Provenance,
 ) -> dict[str, Any]:
     """
-    The JSON-safe shape one resource-priority decision is
-    persisted as.
+    The JSON-safe shape one resource-priority decision is persisted as.
 
-    Every field here is already computed by `aistack.cli
-    .resource_priority_monitor.run_cycle` before this is called —
-    nothing is read or derived beyond what the monitor already
-    holds in hand. `boosted` names every priority app by its own
-    state, the same convention `log_cycle` uses for its printed
-    line; `report`'s four outcome buckets are carried through
-    unchanged rather than collapsed, so a reader can tell "already
-    correct" from "just changed" from "gone" from "Docker refused"
-    without re-deriving it.
-
-    **No `observed_at` field any more — J3, Time Foundation
-    (`claude/PLAN-J3-TIME-FOUNDATION-2026-09-10.md`).** This was the
-    one inconsistency that plan's own research found between the
-    two file-backed historisation streams: `ExecutionTrace` never
-    carried a timestamp in its content, deliberately, because the
-    history filename `write_artifact_with_history` writes already
-    states the instant; this module's own `observed_at` duplicated
-    exactly that fact, and could in principle drift from it. Removed
-    here to align with the rule `ExecutionTrace` already followed,
-    not to add a new one. `version`/`provenance` are new instead —
-    the two governed facts J3 asks every historicised stream to
-    carry, supplied by the caller (`record_decision`) rather than
-    computed here, the same separation `serialize_execution_trace`
-    keeps.
+    The four report buckets are kept separate so a reader can tell "already
+    correct", "changed", "gone" and "Docker refused" apart. There is no
+    timestamp field: the history filename already records the instant.
     """
 
     return {
@@ -101,24 +56,12 @@ def record_decision(
     output_path: Path = DEFAULT_OUTPUT_PATH,
 ) -> Path | None:
     """
-    Persist one resource-priority decision to history, only when
-    `report.changed` — the same condition that already decides
-    whether `log_cycle` prints a line. Returns the path written
-    (the stable "latest" path, `write_artifact_with_history`'s own
-    return convention), or `None` when nothing changed this cycle
-    and nothing was written — a caller in a tight poll loop can
-    call this every cycle without checking first, the same way it
-    already calls `log_cycle` every cycle unconditionally.
+    Persist one decision to history when `report.changed`; otherwise do
+    nothing and return `None`. Returns the "latest" path written.
 
-    **`version`/`provenance` — J3, absorbed here as the second proof
-    of life.** `version` comes from `aistack.kernel.time
-    .next_version_from_history`, counting this subject's own history
-    under `output_path`'s directory — the same durable, no-second-
-    counter approach `FileTraceRepository.save()` uses.
-    `provenance.origin` names the monitor loop that is the only
-    producer this history has ever had; `causality` stays `None` —
-    nothing today models a `Request` that causes a CPU decision, so
-    there is nothing honest to put there yet.
+    `version` counts this subject's existing history under `output_path`'s
+    directory. `provenance.causality` stays `None`: no request causes a CPU
+    decision.
     """
 
     if not report.changed:

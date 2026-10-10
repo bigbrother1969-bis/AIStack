@@ -1,5 +1,5 @@
-# Mini-app Selection UI (selection_ui) — ADR-0010. Le titre de la page
-# vient de la définition de l'application (donnée déclarée), pas d'ici.
+# Selection UI mini-app (selection_ui), ADR-0010. The page title comes from
+# the application's definition (declared data), not from here.
 
 heading: "Synchroniser vers un appareil"
 meta: "{title} — {count} nœuds — bibliothèque : {root}"
@@ -47,7 +47,7 @@ status:
   up_to_date: "{count} répertoires sélectionnés, déjà à jour."
   changed: "{count} répertoires sélectionnés — {linked} créés, {relinked} mis à jour, {removed} retirés, {pruned} répertoires vidés."
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   reshare: "Retire l'appareil du dossier puis l'y remet : Syncthing lui renvoie l'invitation"
   all_pairs: "Revenir à la liste des contenus et des appareils"

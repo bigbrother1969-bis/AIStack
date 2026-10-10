@@ -16,9 +16,7 @@ from aistack.transport.interfaces.transport_registry import TransportRegistry
 
 
 class DefaultTransportEngine(TransportEngine):
-    """
-    Default implementation of the Knowledge Transport Layer.
-    """
+    """Default implementation of the Knowledge Transport Layer."""
 
     def __init__(
         self,

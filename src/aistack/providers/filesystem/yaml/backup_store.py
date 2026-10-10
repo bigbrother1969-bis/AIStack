@@ -18,34 +18,18 @@ _HOURS_PER_DAY = 24
 
 
 def load_backup_thresholds_yaml(path: Path) -> BackupThresholdRegister:
-    """
-    Load `OPS-0006`'s declared backup thresholds from YAML.
+    """Load the declared backup thresholds (`OPS-0006`) from YAML.
 
-    Mirrors `load_storage_thresholds_yaml` field for field: written by
-    hand, read-only (every value here is the owner's own declared
-    threshold — `OPS-0006` § *Declared thresholds* — so a missing key
-    is a typo, and the error names which one and where; nothing
-    writes this file back), and scoped by host the same way (`hosts
-    []. host` is what `aistack.cli.runtime_diagnose` matches against
-    `socket.gethostname()`).
-
-    A threshold entry states `max_age_days` in the file — the unit
-    the owner declared it in ("7 jours") — and this loader converts
-    it to hours once, the unit `BackupThreshold.max_age_hours` stores,
-    the same single-point conversion `load_storage_thresholds_yaml`
-    already holds for `free_gb` → bytes.
+    The file is written by hand, so errors name the missing key and where.
+    `hosts[].host` is matched against `socket.gethostname()`.
+    `max_age_days` is converted once to `BackupThreshold.max_age_hours`.
     """
 
     with path.open("r", encoding="utf-8") as stream:
         try:
             data = yaml.safe_load(stream)
         except yaml.YAMLError as error:
-            # `load_storage_thresholds_yaml` folds a YAML syntax error
-            # into the same `ValueError` a missing field already
-            # produces, for the same reason: this loader's own caller
-            # (`aistack.providers.filesystem.thresholds
-            # .backup_thresholds_for_host`) is documented never to
-            # raise anything but `ValueError`/`OSError`.
+            # `backup_thresholds_for_host` only catches ValueError/OSError.
             raise ValueError(
                 f"Backup threshold definition {path} is not valid YAML: "
                 f"{error}"

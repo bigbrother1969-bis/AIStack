@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Resource Reference contract.
-"""
+"""Knowledge Transport Layer - Resource Reference contract."""
 
 from __future__ import annotations
 

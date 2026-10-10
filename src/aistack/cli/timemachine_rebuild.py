@@ -25,105 +25,19 @@ from aistack.timemachine.projection import (
 
 def main() -> None:
     """
-    Rebuild the Time Machine's graph from whatever Observation
-    History and Explications currently hold — `ADR-0011` § *Decision*
-    1 and 10: a full rebuild every time, on demand, never incremental.
+    Rebuild the Time Machine's graph from the data directory (ADR-0011 § 1 and 10).
 
-    The first real caller of `project_observation_history` —
-    everything before this module was contract and mechanism with
-    nothing to invoke it. `generated_dir` takes the one optional
-    argument every other CLI in this package already accepts this
-    way (`aistack.cli.knowledge_integrity`'s own bundle override);
-    the store always lives at `<generated_dir>/timemachine/graph`,
-    inside the same tree the four source streams already occupy and
-    `.gitignore` already excludes wholesale (`FDN-0003`: a generated
-    artifact is disposable, and the graph is one, exactly like the
-    streams it is built from) — a second, separate directory for it
-    would split one already-unified, already-governed disposable area
-    into two for no real benefit.
+    A full rebuild every time, never incremental. The optional argument is
+    the data directory; the store lives at `<dir>/timemachine/graph`.
+    AI `explain` answers and dated `pra_tests.yml` comments are first
+    imported as Proposed Explications (each importer skips what it already
+    recorded). Projections then run in order on the same store: links
+    such as upgrade correlations come after the streams they connect,
+    collection gaps after every stream's activity node exists, and dock
+    changes after the Explications they link to.
 
-    **`project_explications` runs second, against the same store,
-    never clearing it again** — Explications is the fifth source
-    stream `project_observation_history`'s own docstring already
-    named ("soon five"), added to the one rebuild pass rather than a
-    second, independent graph. Two sources are imported just
-    before (2.0.0-rc2): the AI's `explain` answers and the dated
-    comments of `pra_tests.yml` become Proposed Explications, waiting for
-    an administrator. Both importers skip what they already recorded, so
-    every rebuild runs them; until rc2 they ran only from commands
-    nothing scheduled.
-
-    **`project_docker_events` runs third, against the same store, for
-    the same reason** — 1.5's first collector
-    (`aistack.cli.docker_events_monitor`, cadrage 2026-09-28), a sixth
-    source stream with its own dedicated projector (`aistack
-    .timemachine.projection.docker_events`'s own docstring says why a
-    dedicated one, not a branch inside the generic walk).
-
-    **`project_docker_diff` runs fourth, against the same store, for
-    the same reason** — 1.5's second collector
-    (`aistack.cli.docker_diff_monitor`, cadrage 2026-09-28), a
-    seventh source stream with its own dedicated projector
-    (`aistack.timemachine.projection.docker_diff`'s own docstring
-    says why a dedicated one, not a branch inside the generic walk —
-    the same reasoning `project_docker_events` already gives).
-
-    **`project_docker_digest` runs fifth, against the same store, for
-    the same reason** — 1.5's third collector
-    (`aistack.cli.docker_digest_monitor`, cadrage 2026-09-28), an
-    eighth source stream with its own dedicated projector
-    (`aistack.timemachine.projection.docker_digest`'s own docstring
-    says why a dedicated one, not a branch inside the generic walk).
-
-    **`project_docker_packages` runs sixth, against the same store,
-    for the same reason** — 1.5's fourth and last named collector
-    (`aistack.cli.docker_packages_monitor`, cadré 2026-09-28, deferred
-    past 1.5.0 and shipped in 1.5.1), a ninth source stream with its
-    own dedicated projector (`aistack.timemachine.projection
-    .docker_packages`'s own docstring says why a dedicated one, not a
-    branch inside the generic walk).
-
-    **`project_upgrade_correlation` runs seventh, against the same
-    store, for a different reason than every pass before it.** 1.5.1's
-    GUI cadrage (`ADR-0011` § 22's own closing note, design finished
-    2026-09-28) — it links, never collects: `aistack
-    :upgradeCorrelatesWith` connects two `docker-packages` entities
-    that `project_docker_packages` (sixth, above) already wrote, so it
-    must run after that pass, not alongside it as a new source stream
-    (`aistack.timemachine.projection.upgrade_correlation`'s own
-    docstring says why no new `prov:Activity` is minted here).
-
-    **`project_collection_gaps` runs eighth, against the same store,
-    last on purpose.** `ADR-0011` § 9 (R11), built 2026-09-28 as a
-    mechanism shared by every 1.5 monitor rather than per-collector —
-    it links a recorded gap to a stream's own activity node
-    (`aistack.timemachine.iri.stream_iri`), which that stream's own
-    pass (third, above, for docker-events; fourth, for docker-diff;
-    fifth, for docker-digest; sixth, for docker-packages) is what
-    actually creates as a `prov:Activity` fact. Running after every
-    stream's own projection pass, in the same rebuild, means that node
-    already exists by the time a gap tries to link to it, for every
-    stream this rebuild knows how to project — never a second,
-    competing activity node minted here for one this module does not
-    own.
-
-    **`project_dock_changes` runs ninth** (1.10, `ADR-0019` § 6): each
-    governed change the dock executed, as an activity tied to its
-    people, the images it changed and the explication of its why —
-    after `project_explications`, whose nodes it links to.
-
-    **`project_host_changes` runs tenth** (1.11, `ADR-0020` § 7): what
-    the host collectors recorded, one stream per host declared in
-    `hosts.yml`; a host whose records cannot be read is named.
-
-    **The leaf directory, created here, not assumed.** `pyoxigraph
-    .Store`'s own documented behaviour creates the directory its
-    `path` names if it is missing — measured, 2026-09-27, to create
-    only that leaf, never its parents (`FileNotFoundError` on a
-    freshly emptied tree otherwise, since `reports/generated/` itself
-    may not exist yet on a host that has never run a provider
-    generator). `mkdir(parents=True, exist_ok=True)` closes that gap
-    before `OxigraphGraphStore` ever opens the store.
+    `pyoxigraph.Store` creates only the leaf directory, not its parents,
+    hence the `mkdir(parents=True)`.
     """
 
     generated_dir = (

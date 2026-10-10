@@ -13,17 +13,11 @@ from aistack.generators.filesystem.hardlink import MaterialisationReport
 @dataclass(frozen=True)
 class LastGeneration:
     """
-    A `MaterialisationReport`, with the one fact it cannot know
-    about itself: when it ran.
+    A `MaterialisationReport` with the time it ran.
 
-    `materialise_by_hardlink` is pure with respect to time — it
-    reports what it did, not when. A POST answers the request that
-    triggered it; the screen the owner opens afterwards has no
-    request left to read that answer from. Decided 2026-09-03 for
-    step 8: *the result of the last generation* is part of what
-    the screen owes on every load, so it is saved beside the
-    selection rather than carried only in a redirect's query
-    string, which the next navigation discards.
+    Saved beside the selection so the screen can show the last
+    generation's result on every load, not only in the redirect that
+    follows the POST.
     """
 
     report: MaterialisationReport
@@ -52,10 +46,8 @@ def save_last_generation_yaml(
 
 def load_last_generation_yaml(path: Path) -> LastGeneration | None:
     """
-    Load the last generation result, or `None` if the screen has
-    never generated anything yet — a fact the screen must be able
-    to say plainly, not paper over with zeros that would read as a
-    generation that ran and changed nothing.
+    Load the last generation result, or `None` if nothing was ever
+    generated (distinct from a generation that changed nothing).
     """
 
     if not path.exists():

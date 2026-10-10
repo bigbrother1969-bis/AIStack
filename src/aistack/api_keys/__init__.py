@@ -1,18 +1,14 @@
-"""
-API keys entered from Settings (the owner, 2026-10-09): which keys
-exist (`api_keys.yml`), where the entered values are kept, and how a
-process takes them into its environment.
+"""API keys entered from Settings: which keys exist (`api_keys.yml`), where
+entered values are stored, and how a process loads them.
 
-Every component reads its key from the environment, as it did from
-`.env.web`. A value entered in Settings is kept in the data directory,
-`secrets/api_keys.json`, readable by AIStack's user only (0600), and
-laid over the environment by `apply_to_environ` — at the web
-application's start and after each change, at each pass of the vigil,
-at the start of the resource-priority monitor. It wins over `.env.web`;
-cleared, the `.env.web` value comes back.
+Components read keys from the environment. A value entered in Settings is
+stored in `secrets/api_keys.json` in the data directory (mode 0600) and
+laid over the environment by `apply_to_environ`: at web start and after
+each change, on each vigil pass, and when the resource-priority monitor
+starts. It overrides `.env.web`; clearing it restores the `.env.web` value.
 
-A value is never shown again: `state` gives where it comes from and its
-last four characters only.
+A value is never shown again: `state` exposes its source and last four
+characters only.
 """
 
 from __future__ import annotations
@@ -101,9 +97,11 @@ def read_store(generated_dir: Path, store: Path = STORE) -> dict[str, str]:
 
 
 def write_value(generated_dir: Path, name: str, value: str | None, store: Path = STORE) -> None:
-    """Keep `value` for `name` (None or empty: forget it), atomically, mode 0600;
-    `store` is another file of the same kind (the installation assistant's
-    sign-in secrets, `aistack.instance.setup_wizard`)."""
+    """Store `value` for `name` atomically with mode 0600; `None` or empty removes it.
+
+    `store` selects another file of the same kind (e.g. the sign-in secrets
+    of `aistack.instance.setup_wizard`).
+    """
 
     stored = read_store(generated_dir, store)
     if value:
@@ -124,8 +122,8 @@ def write_value(generated_dir: Path, name: str, value: str | None, store: Path =
         raise
 
 
-# What the environment held before a Settings value was laid over it,
-# so a value cleared in Settings gives `.env.web`'s back.
+# Environment values before a Settings value replaced them, so clearing
+# the Settings value restores the `.env.web` one.
 _ORIGINAL: dict[str, str | None] = {}
 
 
@@ -147,7 +145,7 @@ def apply_to_environ(
 
 
 def state(key: ApiKey, generated_dir: Path, environ: MutableMapping[str, str] | None = None) -> tuple[str, str]:
-    """(where the value comes from, what may be shown of it)."""
+    """(source of the value, what may be shown of it)."""
 
     env = os.environ if environ is None else environ
     stored = read_store(generated_dir)

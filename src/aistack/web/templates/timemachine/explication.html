@@ -9,18 +9,10 @@
 </head>
 <body>
   {#
-    `/explication` — gap #2 of `claude/AUDIT-TIMEMACHINE-
-    REALIGNEMENT-MAQUETTES-2026-10-02.md`, read-only until 1.7's fourth
-    tranche (`ADR-0015`): an administrator now writes, validates or
-    discards; every act is one more version, seen by the graph at the
-    next rebuild. Still not built: proposing a translation, a coloured
-    diff, a link "see in the graph".
-
-    Reached only from `/node`'s own center column
-    (`node_ribbon_explication_link`), never a top-level view of its
-    own — same reasoning `reconstitute.html` already holds for its own
-    `view-switch` (no `view-current` here either, for the same
-    reason).
+    /explication: the Explication history of one subject (ADR-0015). An
+    administrator can write, validate or discard; each act adds a version that
+    the graph sees at the next rebuild. Reached only from /node's center column,
+    so no `view-current`.
   #}
   {{ page_nav | safe }}
   <a class="back-link" href="{{ base }}/?lang={{ lang }}" title="{{ t('timemachine.tooltip.back_to_streams') }}">{{ t('timemachine.back_to_streams') }}</a>

@@ -1,6 +1,4 @@
-"""
-AIStack Knowledge Transport Layer.
-"""
+"""AIStack Knowledge Transport Layer."""
 
 from aistack.transport.contracts import (
     DeliveryMode,

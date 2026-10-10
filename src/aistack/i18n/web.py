@@ -20,17 +20,11 @@ class LanguageOption:
 
 @dataclass(frozen=True)
 class PageLanguage:
-    """
-    Everything a web screen needs to answer one request in the right
-    language — ADR-0010, for the four mini-apps.
+    """What a web screen needs to answer one request in the right language (ADR-0010).
 
-    **Framework-free on purpose** (roadmap R5, 2026-09-27: logic in
-    `src/`, tested; web layers thin). A mini-app reads `?lang=` and its
-    cookie off its own request object, hands both here, puts
-    `context()` into its template, and — only when `cookie` is not
-    `None` — adds it as a `Set-Cookie` header. Nothing here imports
-    FastAPI, so all of it is covered by the governed suite even though
-    the mini-apps themselves are not (decision #9, 2026-08-29).
+    Framework-free: the caller passes `?lang=` and the cookie, puts
+    `context()` into its template and sets `cookie` as `Set-Cookie` when it
+    is not `None`.
     """
 
     lang: str
@@ -49,12 +43,10 @@ def page_language(
     remembered: str | None,
     languages: Languages | None = None,
 ) -> PageLanguage:
-    """
-    Negotiate one request's language (ADR-0010 § 3) and build what the
-    page needs from it: its translator, its language switch, and the
-    cookie to set when the request itself chose the language — how the
-    language a visitor picked on the console, carried here in the link
-    (`?lang=`), is remembered by this mini-app for its own host.
+    """Negotiate a request's language (ADR-0010 § 3) and build its `PageLanguage`.
+
+    `cookie` is set only when the request itself chose the language
+    (`?lang=`), so a choice made on the console is remembered here too.
     """
 
     declared = languages if languages is not None else default_languages()

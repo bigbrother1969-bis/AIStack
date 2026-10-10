@@ -1,5 +1,4 @@
-# Console server responses when it has no page to serve — ADR-0010.
-# Mirrors catalogs/fr/server.yml.
+# Console server responses when it has no page to serve (ADR-0010).
 
 not_found_title: "Page not found"
 not_found: "This address matches no page of the console."

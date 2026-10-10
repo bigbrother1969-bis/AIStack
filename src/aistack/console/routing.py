@@ -28,27 +28,14 @@ from aistack.renderers.console.pages import (
 from aistack.renderers.console.settings import render_settings_html
 from aistack.renderers.text import escape_text
 
-# ADR-0010 § 5, revised by ADR-0012 (2026-10-02). The console was a
-# directory served by the standard library's `http.server`
-# (`run_console.sh`, `PLAN-J11` § 4), then, from 2026-09-27, a
-# standard-library server of its own so a page could carry a language.
-# Since ADR-0012 it is one router of AIStack's single web application
-# (`aistack.web.console`), and this module keeps what was always the
-# whole of it: `respond`, a pure function of the request line, its
-# cookie and the generated directory. The router only adapts it.
-#
-# **Three generated pages and Settings, nothing else.** The same
-# closed list `PUBLIC_DIR` used to expose (`aistack.cli.console_render`
-# `_SERVED_ARTIFACTS`): `reports/generated/` also holds internal JSON
-# catalogs and each artifact's own `history/`, and no path outside this
-# list is ever mapped to a file — a request cannot name one.
-# `plan.html`, the action plan the two score badges open (2026-10-08).
+# ADR-0010 § 5, ADR-0012. `respond` is a pure function of the request line,
+# its cookie and the generated directory; `aistack.web.console` adapts it.
+# Only these pages and Settings are served: the generated directory also
+# holds internal JSON and history, and no other path maps to a file.
 PAGES = ("console.html", "architecture.html", "health.html", "plan.html")
 SETTINGS_PATH = "/settings"
 
-# The three reading pages the console's left column links to
-# (2026-10-03), rendered per request like Settings: help, legal
-# notice, licence and sources.
+# Reading pages linked from the console's left column, rendered per request.
 READING_PATHS = (HELP_PATH, MANUAL_PATH, LEGAL_PATH, LICENSE_PATH)
 
 
@@ -68,21 +55,13 @@ def respond(
     generated_dir: Path,
     languages: Languages | None = None,
 ) -> Response:
-    """
-    Answer one request — the whole server, as a pure function of the
-    request line, its cookie and the generated directory, so every
-    route is tested without opening a socket.
+    """Answer one request as a pure function, so routes are tested without a socket.
 
-    The language is negotiated once (ADR-0010 § 3: `?lang=`, then the
-    cookie, then the reference) and a response to a request that named
-    a language sets the cookie, whatever the route — following a
-    language link and submitting the Settings form are one mechanism.
-
-    **A page not generated in the chosen language is served in the
-    reference language rather than refused** — `architecture_render`
-    and `health_render` run on their own schedule, and a page one of
-    them has not yet regenerated since a language was added is still
-    worth reading. A page not generated at all is a 404 that names it.
+    The language is negotiated once (ADR-0010 § 3); a request that names a
+    language sets the cookie, whatever the route. A page not generated in
+    the chosen language falls back to the reference language, since
+    renderers run on their own schedule; a page not generated at all is a
+    404 naming it.
     """
 
     declared = languages if languages is not None else default_languages()
@@ -155,8 +134,7 @@ def _html(
     headers = (
         ("Content-Type", "text/html; charset=utf-8"),
         ("Content-Length", str(len(body))),
-        # The same URL answers in two languages: no cache may keep one
-        # language's copy for the other's visitor.
+        # The same URL answers in several languages: no cache may share one copy.
         ("Cache-Control", "no-cache"),
         ("Vary", "Cookie"),
         ("X-Content-Type-Options", "nosniff"),

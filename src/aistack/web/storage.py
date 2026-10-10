@@ -1,12 +1,10 @@
-"""
-Settings' "Disks and mounts" section, for an administrator (asked by
-the owner, 2026-10-04): every real mount the host sees, its size, free
-space and access, and which of AIStack's own components lives on it.
+"""Settings' "Disks and mounts" section, for administrators.
 
-Below it, where AIStack's data lives (1.8, decided by the owner
-2026-10-04): `reports/generated` as one block, a directory to move it
-to, and — once chosen — the commands that move it. AIStack records the
-choice and never moves anything itself (`aistack.instance.data_location`).
+Lists every real mount the host sees (size, free space, access) and
+which AIStack components live on it. Below it, where AIStack's data
+lives, a directory to move it to, and the commands that move it: AIStack
+records the choice and never moves anything itself
+(`aistack.instance.data_location`).
 """
 
 from __future__ import annotations
@@ -232,7 +230,7 @@ def location_section(request: Request, t: Translator, rows: list[MountRow]) -> s
 
 @router.post(LOCATION_PATH, include_in_schema=False, dependencies=[ADMIN_ACTION])
 def choose_location(request: Request, mount: str = Form(""), action: str = Form("save")) -> Response:
-    """Record where the data is to go — or forget the choice."""
+    """Record where the data is to go, or forget the choice."""
 
     path: Path = request.app.state.paths.data_location
     if action == "clear":

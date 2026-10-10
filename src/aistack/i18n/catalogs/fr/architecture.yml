@@ -1,7 +1,5 @@
-# Page Architecture — ADR-0010. Le texte français est exactement celui
-# que la page affichait avant la localisation. Les noms de services,
-# catégories, nœuds et fiches matérielles sont des données déclarées :
-# ils restent tels qu'écrits (ADR-0010 § 4).
+# Architecture page (ADR-0010). Service, category, node and hardware names
+# are declared data and are not translated.
 
 title: "AIStack — Architecture"
 heading: "Architecture — AIStack"
@@ -45,7 +43,7 @@ cmdb:
   heading: "CMDB temps réel"
   unreachable: "Injoignable"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   view_select: "Choisir la vue du schéma à afficher"
   service_link: "Ouvrir {name} dans un nouvel onglet"

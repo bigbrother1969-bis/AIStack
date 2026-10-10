@@ -12,22 +12,10 @@ def find_storage_shortage(
     thresholds: Sequence[StorageThreshold],
 ) -> tuple[StorageShortage, ...]:
     """
-    Which mounts have crossed the threshold `OPS-0005` declares for
-    them.
+    Return the mounts that cross the threshold declared for them (`OPS-0005`).
 
-    Mirrors `find_unexplained_consumption`: given readings already
-    collected and thresholds already declared, decides which ones are
-    actually short — it never proposes a threshold itself.
-
-    A reading for a mount with no declared threshold is silently not
-    evaluated, not treated as healthy — the same "not measured is not
-    zero" convention `TemperatureReading`'s absent limits already
-    hold: a mount `OPS-0005` has not been asked about yet is outside
-    what this call can state anything about, not thereby fine.
-
-    Pure: readings and thresholds already collected in, shortages
-    out — the same discipline `find_unexplained_consumption` and
-    `evaluate` already hold.
+    A reading for a mount with no declared threshold is skipped, not treated
+    as healthy.
     """
 
     by_mount = {threshold.mount: threshold for threshold in thresholds}

@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-# The two threshold kinds `OPS-0005` declares — no more without the
-# owner naming a third, the same discipline `OPS-0004`'s vocabulary
-# holds for qualifications, applied here to threshold *shape* rather
-# than to qualification names.
+# The threshold kinds OPS-0005 declares.
 FREE_BYTES = "free_bytes"
 PERCENT_USED = "percent_used"
 
@@ -18,23 +15,12 @@ ANY_HOST = "*"
 @dataclass(frozen=True)
 class StorageThreshold:
     """
-    One volume's own declared alert threshold — `OPS-0005`, not a
-    value this heritage chose. `GOV-P-001`: the owner states the
-    number; this type only shapes it so `find_storage_shortage` can
-    compare a reading against it without inventing what "too full"
-    means for a volume no case has named a value for.
+    One volume's declared alert threshold (OPS-0005).
 
-    Two kinds, because a percentage does not mean the same thing on
-    every volume — `OPS-0005` § *Why two kinds of threshold* is the
-    reasoning this type encodes: `FREE_BYTES` for a volume where
-    absolute headroom is what matters (an OS volume — the Raspberry's
-    15G root and GIGABYTE's 212G root both read "72% occupied" while
-    leaving twenty times less room on one of them), `PERCENT_USED`
-    for one where relative occupancy is (a media volume).
-
-    `value` is in bytes for `FREE_BYTES`, in percent (0-100) for
-    `PERCENT_USED` — never both, and the caller states which by
-    naming `kind`, not by the magnitude of the number.
+    `FREE_BYTES` (value in bytes) suits a volume where absolute headroom
+    matters, such as an OS root; `PERCENT_USED` (value 0-100) suits a
+    media volume. The same percentage leaves very different room on a
+    small and a large disk.
     """
 
     mount: str
@@ -63,16 +49,9 @@ class StorageThreshold:
 @dataclass(frozen=True)
 class HostStorageThresholds:
     """
-    One host's own declared storage thresholds.
-
-    `OPS-0005` scopes every threshold to the host it was declared
-    for — GIGABYTE and the Raspberry mount different volumes at
-    different sizes, and the same `mount` string (`/`) means a
-    different threshold on each. `host` is matched against
-    `socket.gethostname()` by the caller
-    (`aistack.cli.runtime_diagnose`), not by this type — the same
-    "the caller says what to look at" split `find_storage_shortage`
-    already holds for which mounts a `StorageProvider` reads.
+    One host's declared storage thresholds; the same mount (`/`) can
+    have a different threshold on each host. The caller matches `host`
+    against the local hostname.
     """
 
     host: str
@@ -88,17 +67,10 @@ class HostStorageThresholds:
 @dataclass(frozen=True)
 class StorageThresholdRegister:
     """
-    Every host's declared storage thresholds, as `OPS-0005`'s YAML
-    file loads it
-    (`aistack.providers.filesystem.yaml.load_storage_thresholds_yaml`).
+    Every host's declared storage thresholds, as loaded by
+    `aistack.providers.filesystem.yaml.load_storage_thresholds_yaml`.
 
-    `for_host` is this type's own query, mirroring `StorageReading
-    .percent_used` — a pure derivation from data the type already
-    holds, not a second copy kept elsewhere by the caller. A host
-    with no entry returns `()`: "not declared for this host", not
-    "declared as nothing to check" — the same `FDN-0003` Article 12
-    absence `find_storage_shortage` already holds for a mount with no
-    threshold at all.
+    `for_host` returns `()` for a host with no entry and no `"*"` entry.
     """
 
     hosts: tuple[HostStorageThresholds, ...]
@@ -108,8 +80,8 @@ class StorageThresholdRegister:
             if entry.host == hostname:
                 return entry.thresholds
 
-        # `host: "*"` (2.0.0-rc1): any host the file does not name — what
-        # a new installation ships, before it knows its own host's name.
+        # `host: "*"` matches any host the file does not name; a new
+        # installation ships it before it knows its own hostname.
         for entry in self.hosts:
             if entry.host == ANY_HOST:
                 return entry.thresholds

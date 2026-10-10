@@ -3,28 +3,18 @@ from __future__ import annotations
 from aistack.i18n import Languages, Translator
 from aistack.renderers.text import escape_text
 
-# ADR-0010. The one strip of navigation every page the console serves
-# carries: the way back to the console (on every page but the console
-# itself), the link to Settings, and a direct switch between the
-# declared languages.
-#
-# **Shared, not duplicated, the same way `escape_text` is.** Each
-# renderer in this package keeps its own `_STYLE` and imports nothing
-# from another renderer; this module is not a renderer — it is one
-# piece of markup three renderers must agree on exactly, since a
-# visitor moving from the console to Architecture must find the same
-# switch in the same place. Three copies of it would be three places
-# for that agreement to drift. Its style travels with it
-# (`PAGE_NAV_STYLE`), appended by each page to its own `_STYLE`.
+# ADR-0010. The navigation strip every console-served page carries: back to
+# the console, the Settings link and the language switch. Shared rather than
+# copied into each renderer so every page shows the same switch in the same
+# place; each page appends `PAGE_NAV_STYLE` to its own `_STYLE`.
 
 
-# Where the web application writes who is signed in (`ADR-0013` § 7):
-# a comment, so a page served without it — a generated file opened
-# straight from disk — shows nothing in its place.
+# Where the web application writes who is signed in (ADR-0013 § 7). An HTML
+# comment, so a generated file opened from disk shows nothing there.
 SESSION_MARKER = "<!--aistack:session-->"
 # Inside every form that changes something: the session's CSRF token
-# (ADR-0014 § 3). And where Settings shows the profile, the open
-# sessions and the sign-in journal (ADR-0014 § 6).
+# (ADR-0014 § 3). Where Settings shows profile, sessions and sign-in journal
+# (ADR-0014 § 6).
 CSRF_MARKER = "<!--aistack:csrf-->"
 SETTINGS_MARKER = "<!--aistack:settings-->"
 
@@ -38,48 +28,19 @@ def render_page_nav(
     console_base_url: str = "",
     extra_query: str = "",
 ) -> str:
-    """
-    The way back to the console, the Settings link and the language
-    switch, for a page served in `current`.
+    """Back-to-console link, Settings link and language switch for a page in `current`.
 
-    `back_to_console` is `False` on the console alone: every other page
-    it serves (Architecture, the Health cockpit, Settings) is reached
-    from it and must lead back to it without the browser's own Back
-    button — the owner's finding on the first real use, 2026-09-27. The
-    link carries `?lang=`, the same way the console's own links to the
-    mini-apps do, so the way back never changes the language.
+    `back_to_console` is `False` only on the console itself. The back link
+    carries `?lang=` so it keeps the language.
 
-    Each language is shown by its declared flag (owner's request,
-    2026-09-27), with its own name for itself ("English", not
-    "Anglais") as the flag's alternative text and tooltip — a flag
-    names a country, not a language, and a visitor who cannot read the
-    current language can still find theirs. The switch links carry only `?lang=`: relative
-    to the page being read, so the same markup works on the console,
-    Architecture and the Health cockpit alike, and the server answers
-    each with the same page in the other language.
+    Each language shows its flag with its own name ("English", not
+    "Anglais") as alt text and tooltip: a flag names a country, not a
+    language. Switch links carry only `?lang=`, relative to the current page.
 
-    **`console_base_url`, added 2026-09-30** (`claude/AUDIT-CONSOLE-
-    ARCHITECTURE-HEALTH-2026-09-29.md`, constat 5) — empty by default,
-    which reproduces the exact markup this function always emitted:
-    the console and Settings links stay relative (`/console.html?...`,
-    `/settings`), correct only when the caller is served by the same
-    process as the console itself (console/architecture/health/
-    settings, still true today). A caller served from a different
-    process on a different port — `timemachine_ui`, on its own FastAPI
-    instance — passes its own console origin here (the same `http://
-    GIGABYTE:8183` its five screens already hardcoded before this
-    field existed) so both links resolve correctly across the port
-    boundary; the language switch itself is untouched by this
-    parameter, since it must always stay on the CURRENT page.
-
-    **`extra_query`, added 2026-09-30, same constat** — appended
-    verbatim (already encoded by the caller) after each language
-    switch's own `?lang=<code>`. Empty by default, so every existing
-    caller's switch links are byte-identical to before. `timemachine_
-    ui`'s `/node` screen is the one caller that needs this: its
-    language switch must keep the `iri` of the node being read, or
-    switching language would silently drop the visitor back to an
-    unparented `/node` request.
+    `console_base_url` prefixes the console and Settings links for a caller
+    served from another origin; empty keeps them relative. `extra_query` is
+    appended, already encoded, after each switch's `?lang=<code>`, e.g. so
+    `/node` keeps its `iri` when the language changes.
     """
 
     switches = []
@@ -119,10 +80,9 @@ def render_page_nav(
 
 
 def language_label(flag: str, escaped_name: str) -> str:
-    """
-    What a language switch shows for one language: its flag, with the
-    name as the image's alternative text — or the name itself when the
-    language declares no flag. `escaped_name` is already escaped.
+    """A language's flag with its name as alt text, or the name when it has no flag.
+
+    `escaped_name` must already be escaped.
     """
 
     if not flag:

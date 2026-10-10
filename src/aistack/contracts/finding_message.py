@@ -1,19 +1,15 @@
 """
 What a finding says, as catalog keys rather than finished sentences
-(ADR-0010 § 4, revised 2026-10-03).
+(ADR-0010 § 4).
 
 A `RuntimeFinding` keeps its English `interpretation` and
-`remediation` — they are what the AI Runtime is prompted with, what
-the reasoning history records and what the CLIs print, "copied from
-the signature at the moment of qualification". Beside them, an
-evaluator that knows its own sentences can attach a `FindingMessage`:
-the same sentences as catalog keys and the values that fill them, so a
-page renders them in the reader's language. Each English catalog entry
-renders to exactly the evaluator's own English text — the suite holds
-the two to the same words.
+`remediation` (used by the AI Runtime, the history and the CLIs). A
+`FindingMessage` carries the same sentences as catalog keys plus
+values, so a page renders them in the reader's language. Each English
+catalog entry must render to exactly the evaluator's English text;
+tests enforce it.
 
-A sentence is a sequence of parts joined by a space: some evaluators
-build theirs from a statement and optional clauses.
+A sentence is a sequence of parts joined by a space.
 """
 
 from __future__ import annotations

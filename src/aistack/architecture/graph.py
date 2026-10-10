@@ -9,37 +9,16 @@ from aistack.kernel.catalog import Catalog
 
 class ServiceStatus(Enum):
     """
-    What AIStack's own catalogs can say about one categorized service.
+    What the Docker and Compose catalogs can say about a categorized
+    service. Checked in this order:
 
-    **Four states, checked in this order, not three.** The old
-    system's RPI/GIGA/VPN split (`claude/PLAN-J2-ARCHITECTURE-HTML-
-    2026-09-10.md`, "Une réduction de périmètre assumée") is not
-    reconstructed — AIStack has no provider for a Raspberry Pi's own
-    Docker or compose files. What it does have is two catalogs, and
-    the honest thing they can say about a service is only ever one of
-    these:
-
-    - `IN_COMPOSE_PROJECT` — its container belongs to a project the
-      Compose Catalog observed. Checked first: a project's own
-      `docker-compose.yml` naming this container is a stronger fact
-      than `docker ps` alone, and settles the question even if the
-      container happens to be stopped when the Docker Catalog was
-      built (`docker ps -a` — `DockerRuntimeCatalogBuilder` observes
-      stopped containers too, so this is about project membership,
-      not liveness).
-    - `OBSERVED` — no compose project claims it, but the Docker
-      Catalog has it directly (a container run by hand, or a compose
-      project this repository does not track).
-    - `DECLARED_NOT_OBSERVED` — the categorization names a container
-      neither catalog has ever seen. Most often the Raspberry Pi's own
-      services (Pi-hole, Uptime Kuma, Homepage, NPM itself) — real,
-      but outside what AIStack's one Docker provider (GIGABYTE) can
-      observe.
-    - `NO_CONTAINER` — the categorization itself names no container at
-      all (`ServiceDefinition.container is None`) — hardware AIStack
-      has no provider for (the Freebox), or a service reached without
-      being a container of its own (Architecture Homelab, Indy, Music
-      Sync). There is nothing to look up.
+    - `IN_COMPOSE_PROJECT`: its container belongs to an observed Compose
+      project (running or stopped).
+    - `OBSERVED`: the Docker catalog has the container, but no tracked
+      Compose project claims it.
+    - `DECLARED_NOT_OBSERVED`: neither catalog has seen the container,
+      typically a service on a host without a Docker provider.
+    - `NO_CONTAINER`: the categorization names no container.
     """
 
     IN_COMPOSE_PROJECT = "in_compose_project"
@@ -53,18 +32,8 @@ class ServiceNode:
     """
     One categorized service, joined against what the catalogs observed.
 
-    **`compose_project` is set only for `ServiceStatus.IN_COMPOSE_PROJECT`**
-    — every other status has nothing to name here, so it stays `None`
-    rather than being pressed into meaning something else (an empty
-    string would still need a caller to know which status makes it
-    meaningful).
-
-    **`icon`/`href`/`description` carry straight from `ServiceDefinition`,
-    unexamined** (added 2026-09-12, `claude/PLAN-J11-CONSOLE-2026-09-11.md`
-    §10) — unlike `container`, nothing here joins them against a catalog:
-    there is no "observed href", only a declared one, so this is a plain
-    pass-through rather than a status computation like the rest of this
-    function.
+    `compose_project` is set only for `IN_COMPOSE_PROJECT`.
+    `icon`/`href`/`description` pass through from `ServiceDefinition`.
     """
 
     name: str
@@ -79,13 +48,7 @@ class ServiceNode:
 
 @dataclass(frozen=True)
 class CategoryGraph:
-    """
-    One category and the service nodes placed in it.
-
-    The unit step 4's per-category views (`generate_mermaid_views.py`'s
-    own transformation, generalized) filter `ArchitectureGraph.categories`
-    on.
-    """
+    """One category and its service nodes; the unit views filter on."""
 
     name: str
     services: tuple[ServiceNode, ...] = ()
@@ -94,18 +57,8 @@ class CategoryGraph:
 @dataclass(frozen=True)
 class ArchitectureGraph:
     """
-    The whole homelab, classified — not yet Mermaid.
-
-    **Structured, not textual.** `generate_mermaid.py` wrote `.mmd`
-    text directly from `services.yaml` and the compose files it
-    parsed; this builder stops one step short of that, the same way
-    the Kernel Runtime separates `generate` from `render`
-    (`docs/99-meta/roadmap/Kernel-Runtime-Roadmap.md`). What this
-    builds is testable on its own — "is Jellyfin's status
-    `IN_COMPOSE_PROJECT`" is an assertion about data, not about
-    Mermaid syntax — and step 5
-    (`claude/PLAN-J2-ARCHITECTURE-HTML-2026-09-10.md`) is what turns
-    it into `.mmd` text and wraps it in HTML.
+    The whole homelab, classified, as data rather than Mermaid text, so it can
+    be tested on its own; rendering to `.mmd` and HTML happens later.
     """
 
     categories: tuple[CategoryGraph, ...] = ()
@@ -117,17 +70,12 @@ def build_architecture_graph(
     compose_catalog: Catalog,
 ) -> ArchitectureGraph:
     """
-    Join the declared categorization against what GIGABYTE's own
-    catalogs observed.
+    Join the declared categorization against the observed catalogs.
 
-    **Reads two catalogs shaped by their own builders, not raw
-    observations.** `docker_catalog` is `DockerRuntimeCatalogBuilder`'s
-    output (container items, `id` the container's own name —
-    `_identity`'s own `Names`/`Name`/`ID` fallback); `compose_catalog`
-    is `ComposeRuntimeCatalogBuilder`'s (compose-project items, each
-    carrying a `containers` metadata field —
-    `PLAN-TRAJECTOIRE-2026-09-04` J2's own step 1, without which this
-    function could not tell a service's Compose project at all).
+    `docker_catalog` comes from `DockerRuntimeCatalogBuilder` (container
+    items keyed by name); `compose_catalog` comes from
+    `ComposeRuntimeCatalogBuilder` (project items with a `containers`
+    metadata field).
     """
 
     observed_containers = {

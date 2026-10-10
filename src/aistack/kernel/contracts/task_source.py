@@ -11,13 +11,8 @@ class TaskSource(Protocol):
 
     Resolution depends on a capability, not on a storage implementation.
 
-    `task_id` is positional-only, and that is a statement rather
-    than a style: the contract requires a lookup by identifier
-    and does not require implementations to agree on what to
-    call it. Declared as a keyword parameter, it silently made
-    `source.get(task_id=...)` part of the contract, which the
-    implementation — `Registry.get(self, identifier)` — does not
-    honour.
+    `task_id` is positional-only because implementations name the
+    parameter differently (`Registry.get(self, identifier)`).
     """
 
     def get(self, task_id: str, /) -> Task:

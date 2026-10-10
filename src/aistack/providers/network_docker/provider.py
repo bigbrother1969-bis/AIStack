@@ -13,43 +13,16 @@ CommandRunner = Callable[..., "subprocess.CompletedProcess[str]"]
 
 
 class NetworkDockerDiscoveryProvider:
-    """
-    Observe Docker containers on hosts other than the one this
-    process runs on — `claude/PLAN-J11-CONSOLE-2026-09-11.md` §11,
-    the gap `DockerProvider` itself already names as a known
-    limitation (only ever the local `docker`/socket).
+    """Observe Docker containers on other hosts of the declared LAN.
 
-    **Two real actions, in sequence, both scoped and confirmed with
-    the owner before this was written (`GOV-P-001`/`ARC-P-006`).**
-    First, an `nmap` ping sweep of the owner's own declared LAN
-    (never a wider range — see `NetworkDiscoveryDefinition.cidr`'s
-    own docstring) finds which hosts are live right now. Second,
-    every live host that is not this machine itself is tried, in
-    order, against each declared SSH username with the declared
-    key, running the exact same `docker ps -a --format '{{json .}}'`
-    `DockerProvider.collect()` already runs locally — a host that
-    authenticates against none of them, or that authenticates but
-    has no Docker at all, is simply absent from the result
-    (`ARC-P-012`: no container is asserted where none was actually
-    observed), never an error and never a partial guess.
+    An `nmap` ping sweep of the declared CIDR finds live hosts; each one
+    that is not this machine is tried with each declared SSH username and
+    key, running `docker ps -a --format '{{json .}}'`. A host that accepts
+    no user or has no Docker is absent from the result, not an error.
 
-    **Never triggered automatically.** Decided with the owner
-    2026-09-12: unlike `DockerProvider`/`ComposeProvider`/
-    `BeszelProvider`, this collector is not wired into
-    `architecture_render` — a network scan and a set of SSH
-    connection attempts against the owner's own machines is an
-    action, not a passive read, so it only runs when
-    `aistack.cli.network_docker_discover` is invoked explicitly.
-
-    **`run_command` is injectable, defaulting to `subprocess.run`.**
-    Both `nmap` and `ssh` are external processes this class does not
-    control the presence, version or behaviour of on a real host —
-    every test in this heritage that reaches an external command
-    this way (`DockerProvider`, `ComposeProvider`'s own
-    `docker inspect`) stubs at that same boundary, never the
-    daemon/network itself. Passing a fake here lets every test
-    exercise the real parsing logic against canned `nmap`/`ssh`
-    output, with no real subprocess ever spawned.
+    This is an action, not a passive read, so it runs only from
+    `aistack.cli.network_docker_discover`. `run_command` (default
+    `subprocess.run`) is injectable for tests.
     """
 
     provider_id = "aistack.provider.network_docker"
@@ -105,28 +78,11 @@ class NetworkDockerDiscoveryProvider:
         }
 
     def _discover_live_hosts(self) -> list[str]:
-        """
-        A ping sweep, not a port scan — `nmap -sn` never touches any
-        port on a live host, it only asks "is anything there". Which
-        hosts turn out to run Docker (or accept the declared SSH
-        usernames at all) is answered afterwards, per host, by
-        actually trying — decided with the owner 2026-09-12 in
-        preference to pre-filtering by an open SSH port, so that a
-        host running SSH on a non-standard port is not silently
-        skipped.
+        """Live hosts from an `nmap -sn` ping sweep (no port scan).
 
-        `-oG -` (grepable output, to stdout) rather than the default
-        human-readable report: one `Host: <ip> (...)  Status: Up`
-        line per live host, trivial to parse without depending on
-        `nmap`'s XML output or a third-party parser.
-
-        Absent `nmap`, a non-zero exit, or any other failure to run
-        it at all reads as "no live hosts found" — the same
-        tolerant-provider convention `ComposeProvider._read_depends_on`
-        already holds for a compose file that cannot be read: nothing
-        observed, nothing to report, never a raised exception from a
-        collector this heritage otherwise never lets fail a whole
-        run.
+        Not pre-filtered on port 22, so SSH on a non-standard port is still
+        tried. Parses grepable output (`-oG -`). Any failure to run `nmap`
+        returns `[]`.
         """
 
         try:
@@ -181,15 +137,8 @@ class NetworkDockerDiscoveryProvider:
             "-o",
             "BatchMode=yes",
             "-o",
-            # ssh's own ConnectTimeout only accepts a whole number of
-            # seconds — a real-world defect found 2026-09-12: this
-            # class stores the declared timeout as a float
-            # (`NetworkDiscoveryDefinition.ssh_timeout_seconds`), and
-            # f"{3.0}" renders "3.0", which ssh rejects outright
-            # ("invalid time value") before it ever attempts a
-            # connection. round(), not int(), so a declared 2.5s
-            # rounds to the nearer whole second rather than always
-            # truncating down.
+            # ssh's ConnectTimeout only accepts whole seconds ("3.0" is
+            # rejected as an invalid time value).
             f"ConnectTimeout={round(self._timeout_seconds)}",
             f"{username}@{ip}",
             "docker ps -a --format '{{json .}}'",
@@ -219,19 +168,10 @@ class NetworkDockerDiscoveryProvider:
         return containers
 
     def _detect_local_ips(self) -> frozenset[str]:
-        """
-        This machine's own LAN address(es), so a host discovered by
-        the scan is never also SSH'd into as if it were remote —
-        `DockerProvider` already observes this machine directly and
-        far more cheaply.
+        """This machine's addresses, so it is not SSH'd into as a remote host.
 
-        A UDP "connect" to a non-routed address never sends a
-        packet — it only asks the kernel which local interface
-        would carry it — so this never touches the network itself,
-        the same reasoning that makes it a standard, dependency-free
-        way to find a host's own primary outbound address. Any
-        failure (no network at all) leaves only the loopback address
-        excluded, never raises.
+        A UDP `connect` sends no packet; it only asks the kernel which local
+        address would be used. On failure only loopback is returned.
         """
 
         local_ips = {"127.0.0.1"}

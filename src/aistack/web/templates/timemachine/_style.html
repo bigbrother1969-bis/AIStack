@@ -1,68 +1,16 @@
 {#
-  Shared inline style for the three Time Machine pages — repeated per
-  template rather than factored through Jinja `{% include %}` for
-  <head>, the same self-contained-per-file convention every other
-  mini-app's own templates already hold (no shared base template
-  exists across `priority_ui`/`selection_ui`/`network_discovery_ui`
-  either). This one file exists only so the three pages do not drift
-  from each other by hand-copied edits; it is `{% include %}`d inside
-  each page's own <style> block, not linked as a stylesheet.
+  Shared inline style for the Time Machine pages, included inside each page's
+  <style> block so the pages do not drift apart. Each mini-app keeps its own
+  self-contained templates; there is no shared base template.
 
-  Mobile layout (R12, roadmap `ROADMAP-1.2-TO-2.0-2026-09-27.md`) is
-  the point of the two @media blocks below: every list of rows here —
-  streams, instants, facts, incoming references — is already a single
-  column of stacked cards above 700px width where a wider table would
-  otherwise fit two, and below 480px the cards' own internal
-  label/value pairs stack too, so nothing is ever clipped or requires
-  horizontal scrolling on a phone. This is the first real mobile
-  layout in this heritage — no earlier screen declares a viewport
-  meta tag or a media query (measured 2026-09-27) — so it is written
-  from R12's own wording ("bandes empilées") rather than adapted from
-  a precedent that does not exist yet.
+  The @media blocks give the mobile layout: rows are stacked cards, and below
+  480px the label/value pairs inside a card stack too, so nothing needs
+  horizontal scrolling.
 
-  Charte graphique PERSIAUT (ADR-0011 §26, 1.5.2 cadrage, 2026-09-29):
-  this mini-app did not exist yet when `SESSION-2026-09-26-charte-
-  graphique-persiaut-1.1.1.md` retinted console.html/architecture.html/
-  health.html to navy `#16335c`/Georgia — the accent colour below was
-  still the pre-charte generic blue `#1f6feb` until now. Values copied
-  from the same source every other renderer's own charte block already
-  cites (`aistack.renderers.console.html`'s own comment, pixel-sampled
-  + DevTools-confirmed from persiaut-consulting.eu), not re-sampled
-  here.
-
-  Width (ADR-0011 §26, third slice, 2026-09-29): `max-width` was
-  900px, a fixed narrow column no wider on a wide monitor than on a
-  laptop — the owner's own finding, the same day the ribbon's own
-  `_VIEWBOX_WIDTH` grew from 900 to 1600 to use that room. `min(96vw,
-  1600px)` adapts to the real window instead of sitting fixed, while
-  still capping line length on text-heavy content (the flat
-  `.band-list`) on an ultra-wide monitor. The same rule is applied to
-  `console.html`/`architecture.html`/`health.html` (each keeps its own
-  literal `_STYLE`, not a shared file) — the owner's own broader
-  decision, "toute l'appli", not this mini-app alone.
-
-  Residual pre-charte grey, fixed 2026-09-30
-  (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constat
-  4): the 2026-09-29 retint above changed the accent colour and the
-  headings, but left five secondary-text rules
-  (`.meta`/`.empty`/`.band-row .k`/the IRI caption/
-  `.tree-historique--unlinked`) on the pre-charte `#666`, next to
-  three SVG rules already on the charted `#5b6b7d` — found by
-  comparing this file against `console.html`/`architecture.html`/
-  `health.html`, which had no `#666` left. All eight now read
-  `#5b6b7d`.
-
-  Structural charte values, fixed 2026-09-30
-  (`claude/AUDIT-TIMEMACHINE-STREAMS-TREE-NODE-2026-09-30.md`,
-  constats 1-3, owner: "lot mécanique") — the retints above (accent,
-  headings, secondary grey) never touched the more structural values
-  `console.html`/`architecture.html`/`health.html` already carried
-  since the same 2026-09-26 charte pass: the page's own background
-  colour, `color-scheme`, and the system font stack. `body` here had
-  none of the three — plain white background (no `background`
-  declared at all), no `color-scheme`, and the bare CSS keyword
-  `sans-serif` instead of the named stack. All three copied verbatim
-  from the three static pages' own `_STYLE`, not re-derived.
+  Colours, background, color-scheme and font stack follow the PERSIAUT charter
+  used by the console renderers (`aistack.renderers.console`). Width is
+  `min(96vw, 1600px)`: it follows the window and still caps line length on
+  ultra-wide screens.
 #}
 :root { color-scheme: light; }
 body {

@@ -1,14 +1,11 @@
 """
-The Nextcloud recipe (`ADR-0018` § 4): the nightly
-`mariadb-dump --databases nextcloud` loaded into the image `nc_db`
-runs, on the run's internal network, then read back — tables, users,
-the file index.
+The Nextcloud recipe (ADR-0018 § 4): the `mariadb-dump --databases nextcloud`
+dump loaded into the image `nc_db` runs, then read back (tables, users,
+file index).
 
-Nextcloud's files have no backup on the reference host (measured
-2026-10-08, `backup_strategy.yml` `nextcloud-files`): the run restores
-the database only and its report says so. Starting Nextcloud itself
-would need its live `config.php` and its secrets, which a sandbox never
-reads.
+Only the database is restored; when the recipe's `not_backed_up` says
+the files have no backup, the report says so. Starting Nextcloud itself
+would need its live `config.php` and secrets, which a sandbox never reads.
 """
 
 from __future__ import annotations

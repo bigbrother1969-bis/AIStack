@@ -104,10 +104,8 @@ def author_of(artifact: KnowledgeArtifact) -> str:
 def _a_second_of_its_own(history: list[Version]) -> datetime:
     """
     The instant the new version is recorded at, strictly after the last
-    one's second. Since 1.9 two versions written in one second both read
-    back (`aistack.history.every_version`); an act still takes a second
-    of its own, so its recorded time is never the same as the version it
-    acts on. A person's acts are seconds apart; when one is not, it waits.
+    one's second, so an act never shares its recorded time with the
+    version it acts on. Waits for the next second when needed.
     """
 
     while True:
@@ -185,8 +183,7 @@ def write(
 
     history = _current(subject, output_dir, expected)
     if history and status_of(history[-1].artifact) != DISCARDED and history[-1].artifact.content == text:
-        # Recording the same text again says nothing new (measured on
-        # GIGABYTE, 2026-10-03: two identical versions in a row).
+        # Recording the same text again says nothing new.
         raise ExplicationRefused("timemachine.explication.refused.unchanged")
     _record(
         history[-1] if history else None,
@@ -257,10 +254,9 @@ def validate(
 def validate_declared(person: Person, output_dir: Path) -> list[str]:
     """
     Validate every subject whose current version is a person's text
-    still waiting (`Declared`, `Proposed`) — the owner's decision of
-    2026-10-04 for the development phase (`ADR-0016`). Returns the
-    subjects validated. Imported versions (`Proposed` confidence) are
-    left to be read one by one.
+    still waiting (`Declared`, `Proposed`), for the development phase
+    (`ADR-0016`). Returns the subjects validated. Imported versions
+    (`Proposed` confidence) are left to be read one by one.
     """
 
     from aistack.history import available_stems

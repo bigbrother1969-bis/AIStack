@@ -1,11 +1,9 @@
-"""
-OpenID Connect against Pocket ID (`ADR-0013` § 2): Authorization Code
-with PKCE (`S256`), a confidential client, and an ID token believed
-only once its signature has been verified against the provider's
-published keys.
+"""OpenID Connect against Pocket ID (ADR-0013 § 2).
 
-The network is a collaborator (`Http`), so the suite runs every step
-against a fake provider whose keys it generates.
+Authorization Code with PKCE (`S256`), a confidential client, and an ID
+token trusted only after its signature is verified against the
+provider's published keys. The network is a collaborator (`Http`), so
+tests run every step against a fake provider.
 """
 
 from __future__ import annotations
@@ -49,12 +47,11 @@ class Http(Protocol):
 
 
 def user_agent() -> str:
-    """How AIStack names itself to the provider.
+    """The User-Agent AIStack sends to the provider.
 
-    Never Python's default `Python-urllib/3.x`: Cloudflare, in front of
-    Pocket ID, refuses that one as a robot — measured 2026-10-03, when
-    `/login` failed on GIGABYTE while `curl` from the same host read
-    the same document."""
+    Never Python's default `Python-urllib/3.x`: Cloudflare in front of
+    Pocket ID refuses it as a robot.
+    """
 
     try:
         version = importlib.metadata.version("aistack")
@@ -64,8 +61,7 @@ def user_agent() -> str:
 
 
 class UrllibHttp:
-    """The real network, with the standard library — no other HTTP
-    client is a dependency of the heritage."""
+    """The real network through the standard library, to avoid an HTTP client dependency."""
 
     def get_json(self, url: str) -> dict[str, Any]:
         request = urllib.request.Request(
@@ -128,8 +124,7 @@ class OidcClient:
     # -- the provider --------------------------------------------------
 
     def discovery(self) -> dict[str, Any]:
-        """The discovery document, whose `issuer` must be the configured
-        one exactly; cached for an hour."""
+        """The discovery document, cached for an hour; its `issuer` must match exactly."""
 
         if self._discovery is not None and self.clock() - self._discovery[0] < CACHE_SECONDS:
             return self._discovery[1]
@@ -174,10 +169,11 @@ class OidcClient:
     def start(
         self, next_path: str, redirect_uri: str | None = None, listener: str = "public"
     ) -> tuple[str, str, Pending]:
-        """The authorization URL, the `state` naming this attempt, and
-        what must be kept server-side until the callback — the redirect
-        URI of the listener the attempt started on included, so the code
-        is exchanged with the same one (ADR-0014 § 4)."""
+        """The authorization URL, the attempt's `state`, and what to keep until the callback.
+
+        The pending data includes the redirect URI of the listener the attempt
+        started on, so the code is exchanged with the same one (ADR-0014 § 4).
+        """
 
         endpoint = str(self.discovery()["authorization_endpoint"])
         state = secrets.token_urlsafe(32)
@@ -203,8 +199,7 @@ class OidcClient:
         return f"{endpoint}?{query}", state, pending
 
     def finish(self, code: str, issuer_parameter: str | None, pending: Pending) -> Identity:
-        """The person the provider vouches for, once every check has
-        passed — or `SignInError`."""
+        """The identity the provider vouches for once every check passes, else `SignInError`."""
 
         document = self.discovery()
 
@@ -254,8 +249,7 @@ class OidcClient:
         )
 
     def verify(self, id_token: str, nonce: str) -> dict[str, Any]:
-        """The ID token's claims, believed only after its signature,
-        issuer, audience, lifetime and nonce have been checked."""
+        """The ID token's claims after checking signature, issuer, audience, lifetime and nonce."""
 
         try:
             header = jwt.get_unverified_header(id_token)
@@ -291,8 +285,7 @@ class OidcClient:
         return claims
 
     def logout_url(self, id_token: str, after_logout_uri: str | None = None) -> str | None:
-        """Where to send the browser to end the provider's session too;
-        `None` when the provider cannot be reached or names no endpoint."""
+        """URL that also ends the provider's session; `None` when unreachable or unsupported."""
 
         try:
             endpoint = self.discovery().get("end_session_endpoint")

@@ -1,19 +1,16 @@
 """
-The AIStack recipe (`ADR-0018` § 4): AIStack's own nightly archive
+The AIStack recipe (ADR-0018 § 4): AIStack's nightly archive
 (`scripts/backup_aistack.sh`) restored with the image the live web
-container runs — what `scripts/restore_aistack.sh` does by hand, run
-the same way every time.
+container runs, as `scripts/restore_aistack.sh` does by hand.
 
-Checked as the hand test was: the session database's integrity, every
-Explication readable, the history streams and declarations present;
-then the Time Machine graph — left out of the archive — rebuilt from
-the restored files, and the web application started on them, on the
-run's internal network, answering with the console it rendered.
+Checks the session database's integrity, that every Explication is
+readable, and that history streams and declarations are present; then
+rebuilds the Time Machine graph (not in the archive) and starts the web
+application on the restored files, expecting it to serve the console.
 
-The archive's environment files hold the live secrets: they are
-restored (the archive is whole or it is not) and counted, never given
-to a sandbox container. Without them, sign-in is unavailable in the
-sandbox — the console, which needs none, is what is checked.
+The archive's environment files hold live secrets: they are restored
+and counted, never given to a sandbox container. Sign-in is therefore
+unavailable in the sandbox; the console, which needs none, is checked.
 """
 
 from __future__ import annotations

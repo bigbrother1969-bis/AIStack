@@ -1,4 +1,4 @@
-# The vigil's Gotify notifications (2.0). Mirrors catalogs/fr/notify.yml.
+# The vigil's Gotify notifications.
 
 title: "AIStack — {count} new event(s)"
 event:

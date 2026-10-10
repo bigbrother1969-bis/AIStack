@@ -1,20 +1,13 @@
 """
-Google Gemini as an `AIEngine` (the owner, 2026-10-09, UAT of 2.0:
-"Gemini d'abord et Ollama en solution de secours").
+Google Gemini as an `AIEngine`, asked before the local Ollama.
 
-On GIGABYTE (Phenom II, Quadro P400 of 2 GB) the local models took 25
-to 34 minutes for one finding and answered in broken French; a model
-of Gemini's size answers in seconds and can use the facts AIStack
-sends with the question. What it costs: the question leaves the
-house — the finding and the facts of step 2 (host names, paths,
-service names, backup mechanisms; never a secret: no fact carries
-one). The assistant says so before the owner's click.
+Using it sends the finding and the collected facts (host names, paths,
+service names, backup mechanisms; never a secret) outside the house; the
+assistant says so before the user's click.
 
-One request, the API's documented generation endpoint
-(`POST /v1beta/models/<model>:generateContent`), the key in the
-`x-goog-api-key` header — never in the URL, so no error message, log
-line or recorded reason can carry it. Tolerant like `OllamaEngine`:
-every failure is a sentence, never an exception.
+One `POST /v1beta/models/<model>:generateContent` request. The key goes in
+the `x-goog-api-key` header, never in the URL, so no error message or log
+line can carry it. Every failure is returned as a sentence, never raised.
 """
 
 from __future__ import annotations

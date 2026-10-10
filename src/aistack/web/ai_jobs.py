@@ -1,17 +1,10 @@
-"""
-What the AI is working on for whom, and which answers are ready
-(owner, 2026-10-09: "une notification cliquable apparaît quand les
-moteurs d'IA ont terminé leur réponse, pour basculer directement
-dessus sans avoir à attendre la réponse").
+"""AI jobs per user and which answers are ready.
 
-An assistant that hands work to the AI starts a job here, in the name
-of the person who asked, and says each time an answer is ready, with
-the page that shows it. Every page then asks `/notifications` what is
-ready and not yet seen, and shows it as a clickable notice; opening the
-answer's page marks it seen.
+An assistant starts a job in the name of the person who asked and reports
+each answer with the page that shows it. Pages poll `/notifications` for
+ready, unseen answers; opening the answer's page marks it seen.
 
-In memory, like the assistants' own sessions: a restart forgets what
-was pending, never what was recorded.
+In memory only: a restart forgets pending jobs, never recorded answers.
 """
 
 from __future__ import annotations

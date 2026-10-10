@@ -19,16 +19,9 @@ from aistack.providers.docker.packages_history import (
     record_package_inventory,
 )
 
-# `aistack.timemachine.projection.docker_packages.STREAM_STEM`
-# redeclared here — the same cross-boundary convention every other
-# monitor in this package already names.
+# Same value as `aistack.timemachine.projection.docker_packages.STREAM_STEM`.
 STREAM_STEM = "docker-packages"
 
-# Cadrage 2026-09-28 (1.5's fourth and last named collector, shipped
-# in 1.5.1): the same governed polling loop every other 1.5 monitor
-# already established, unchanged — not tuned against a real
-# measurement, the owner's own decision to change with a single edit
-# here if it ever needs to.
 POLL_SECONDS = 10.0
 
 DEFAULT_CHECKPOINT_PATH = Path("reports/generated/docker-packages/checkpoint.json")
@@ -40,8 +33,7 @@ USAGE = (
     "  Takes every running container's own package inventory once at\n"
     "  startup, then again only when its image digest changes\n"
     "  (`docker exec` + `dpkg-query`, falling back to\n"
-    "  `/lib/apk/db/installed` — `aistack.providers.docker.packages`'s\n"
-    "  own comment explains the cadrage behind both) and records a\n"
+    "  `/lib/apk/db/installed`) and records a\n"
     "  subject's own observation to Observation History only when it\n"
     "  differs from what was last recorded for it.\n"
     "\n"
@@ -115,12 +107,9 @@ def parse(argv: list[str]) -> tuple[Path, Path, bool, bool]:
 
 def load_checkpoint(checkpoint_path: Path) -> str | None:
     """
-    The instant this monitor's own last cycle actually ran, or `None`
-    on a first run — the same contract every other 1.5 monitor's own
-    `load_checkpoint` already holds, for the same reason: this monitor
-    polls current state each cycle, with no window to bound, so this
-    checkpoint exists solely so R11 (`record_collection_gap`) has a
-    "last known coverage" instant to measure a restart against.
+    When this monitor's last cycle ran, or None on a first run or unreadable file.
+
+    Used only by R11 (`record_collection_gap`) to measure a restart gap.
     """
 
     try:
@@ -148,35 +137,17 @@ def run_cycle(
     seen_digests: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """
-    One poll: every running container's current package inventory
-    (`aistack.providers.docker.packages
-    .collect_running_container_packages`), recorded per subject only
-    where it actually changed.
+    Record each running container's package inventory where it changed.
 
-    **The checkpoint advances every non-dry-run cycle, whether or not
-    anything changed** — the same reasoning every other 1.5 monitor's
-    own `run_cycle` docstring already gives for its own checkpoint: a
-    quiet cycle must still move this monitor's own "last known
-    coverage" forward, or a later restart's R11 gap-check would
-    measure from stale, arbitrarily old state instead.
-
-    Returns one entry per subject that actually changed this cycle
-    (`{"subject", "mechanism", "package_count"}`, deliberately not the
-    full package list itself — this monitor's own console log is a
-    human-facing summary, the same restraint `aistack.timemachine
-    .projection.docker_packages`'s own module comment gives for the
-    graph) — in both dry-run and normal mode, so a manual `--once
-    --dry-run` check reports exactly what a real run would have
-    recorded, without writing anything itself.
+    The checkpoint advances on every non-dry-run cycle, even a quiet one,
+    so R11 measures gaps from the last real coverage. Returns
+    `{"subject", "mechanism", "package_count"}` per changed subject, in
+    dry-run mode too.
     """
 
     when = now if now is not None else datetime.now(timezone.utc)
-    # Cadrage 2026-10-02: a caller looping over cycles passes the
-    # digests it has already inventoried, and only containers whose
-    # image changed since are probed again
-    # (`collect_packages_on_image_change`). With no mapping — a single
-    # `--once` cycle, or a test — every running container is probed,
-    # exactly as before.
+    # With `seen_digests`, only containers whose image changed are probed
+    # again; without it every running container is.
     inventories = (
         collect_packages_on_image_change(seen_digests)
         if seen_digests is not None
@@ -217,12 +188,7 @@ def run_cycle(
 
 
 def log_cycle(changed: list[dict[str, Any]], label: str = "") -> None:
-    """
-    Printed only when there is something to read — the same reasoning
-    every other 1.5 monitor's own `log_cycle` already holds: a monitor
-    polling every `POLL_SECONDS` that logged every quiet cycle (most
-    of them) would bury the one line that matters.
-    """
+    """Print a line only when something changed or `label` is set, so quiet cycles stay silent."""
 
     if not (changed or label):
         return
@@ -236,20 +202,15 @@ def log_cycle(changed: list[dict[str, Any]], label: str = "") -> None:
 
 def main(argv: list[str] | None = None) -> None:
 
-    # Line-buffer stdout under systemd — the same defect every other
-    # 1.5 monitor's own comment documents and fixes.
+    # Line-buffer stdout so each line reaches journald at once.
     sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
     checkpoint_path, generated_dir, once, dry_run = parse(
         sys.argv[1:] if argv is None else argv
     )
 
-    # `ADR-0011` § 9 (R11) — detected once, here, before the first
-    # cycle of this process's own run, the same placement every other
-    # 1.5 monitor's own comment already explains: this must read the
-    # *pre-existing* checkpoint (this process's last-known coverage
-    # before it started again), not the one `run_cycle`'s own first
-    # iteration is about to overwrite.
+    # ADR-0011 § 9 (R11): check for a gap before the first cycle, against
+    # the checkpoint the previous run left.
     if not dry_run:
         record_collection_gap(
             STREAM_STEM,
@@ -264,9 +225,8 @@ def main(argv: list[str] | None = None) -> None:
     if not once:
         signal.signal(signal.SIGTERM, handle_sigterm)
 
-    # Empty at start: this process's first cycle inventories every
-    # running container once (the startup pass), later cycles only the
-    # ones whose image digest changed.
+    # Empty at start: the first cycle inventories every running container,
+    # later cycles only those whose image digest changed.
     seen_digests: dict[str, str] = {}
 
     try:
@@ -275,10 +235,7 @@ def main(argv: list[str] | None = None) -> None:
                 generated_dir, checkpoint_path, dry_run, seen_digests=seen_digests
             )
 
-            # `--once` always prints — the same incident every other
-            # 1.5 monitor's own comment names: a manual check that
-            # stays silent on a quiet cycle looks indistinguishable
-            # from one that never ran at all.
+            # `--once` always prints, so a quiet manual check is not mistaken for no run.
             log_cycle(changed, label="check" if once else "")
 
             if once:

@@ -1,16 +1,13 @@
 """
-Sandbox ↔ live comparison (`ADR-0018` § 7, owner's decisions
-2026-10-08): what the restored backup holds next to what the service
-holds now — rows per table, files per folder — as numbers, never as a
-verdict. A backup taken last night is always a little behind; the
-report shows by how much, the owner judges.
+Sandbox ↔ live comparison (ADR-0018 § 7): rows per table and files per
+folder, backup next to live, as numbers, never as a verdict. A backup
+from last night is always a little behind; the owner judges by how much.
 
 Read-only on the live side:
 - files are walked on the host, never opened for writing;
-- a database is asked `SELECT COUNT(*)` from inside its own live
-  container, with that container's own environment — the password
-  stays in the container, never on a command line AIStack builds, never
-  in a report.
+- a database is asked `SELECT COUNT(*)` from inside its live container,
+  with that container's environment, so the password never appears on
+  a command line AIStack builds or in a report.
 """
 
 from __future__ import annotations
@@ -156,8 +153,7 @@ def live_mount_source(run: SandboxRun, container: str, destination: str) -> Path
 
 
 def compare(run: SandboxRun, parts: Iterable[tuple[str, Callable[[], dict[str, Any]]]]) -> None:
-    """Run each comparison in one step; a part that cannot be compared
-    is said in the report, the others still are."""
+    """Run each comparison in one step; a part that fails is reported as not compared."""
 
     if not run.compare:
         return

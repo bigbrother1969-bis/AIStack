@@ -1,6 +1,4 @@
-"""
-Knowledge Transaction Manager - Transaction Status.
-"""
+"""Knowledge Transaction Manager - Transaction Status."""
 
 from __future__ import annotations
 
@@ -8,9 +6,7 @@ from enum import Enum
 
 
 class TransactionStatus(str, Enum):
-    """
-    Lifecycle of a governed transaction.
-    """
+    """Lifecycle of a governed transaction."""
 
     CREATED = "created"
 

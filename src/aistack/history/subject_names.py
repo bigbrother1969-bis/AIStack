@@ -1,19 +1,14 @@
 """
 One subject, one file name — never a path.
 
-AI Reasoning History and the Explications stream keep one file per
-subject, `<output_dir>/<subject>.json`. A subject is whatever a
-finding names: a container (`booklore_db`), but also a filesystem
-path (`/media/BACKUP/nextcloud` for a backup finding). Joined as is,
-an absolute subject replaces `output_dir` altogether
-(`Path("a") / "/media/x.json"` is `/media/x.json`), and a subject
-holding `/` or `..` lands outside it — found 2026-10-03 when the
-suite, on GIGABYTE, tried to write `/media/BACKUP/nextcloud.json`.
+Some histories keep one file per subject, `<output_dir>/<subject>.json`.
+A subject can be a filesystem path (`/media/BACKUP/nextcloud`); joined as
+is, an absolute subject replaces `output_dir` (`Path("a") / "/media/x"`
+is `/media/x`) and `/` or `..` escapes it.
 
-The stem keeps every subject that was already a plain name exactly as
-it was, so existing histories keep their file; only `%` and `/` (and
-a stem that would be `.` or `..`) are percent-encoded, which
-`subject_for_stem` reverses.
+A plain name is kept unchanged; only `%`, `/`, `\\` (and a stem that
+would be `.` or `..`) are percent-encoded, which `subject_for_stem`
+reverses.
 """
 
 from __future__ import annotations

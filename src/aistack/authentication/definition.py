@@ -1,6 +1,4 @@
-"""
-`authentication.yml` — how a person signs in (`ADR-0013` § 2, § 3).
-"""
+"""`authentication.yml`: how a person signs in (ADR-0013 § 2, § 3)."""
 
 from __future__ import annotations
 

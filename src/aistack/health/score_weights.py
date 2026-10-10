@@ -8,15 +8,8 @@ from aistack.health.yaml import load_health_score_weights_yaml
 
 def health_score_weights(path: Path) -> tuple[HealthScoreWeights | None, str]:
     """
-    Read `path`'s declared health-score weights, or `None` with a note
-    explaining why — never raises.
-
-    Mirrors `storage_thresholds_for_host`/`backup_thresholds_for_host`/
-    `gpu_thresholds_for_host`'s own two-branch shape (missing file,
-    unreadable file), minus the third branch none of those three
-    needed here either: `OPS-0008` is not scoped by host, so there is
-    no "declared for some hosts but not this one" state to name —
-    only "the file exists and reads" or it does not.
+    Read the health-score weights at `path`, or return `None` with a note
+    saying why (missing or unreadable file). Never raises.
     """
 
     if not path.exists():

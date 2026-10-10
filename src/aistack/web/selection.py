@@ -1,6 +1,4 @@
-"""
-*Selection* — what each content of this host is sent to each device
-(`ADR-0012`; generalized by `ADR-0022`, 2026-10-09). LAN only.
+"""*Selection*: which content of this host is sent to each device (ADR-0022). LAN only.
 
     /selection/                         every content × device, its state
     /selection/<content>--<device>/     the content's tree, boxes to tick
@@ -8,10 +6,9 @@
     …/share                             creates the Syncthing folder (administrator)
     …/syncthing-status                  polled by the page
 
-The screen only records: the host executor (`aistack-sync.timer`,
-`aistack.cli.sync_apply`) applies. Syncthing is the one host-touching
-reader the application injects (`create_app(syncthing=…)`), so a test
-replaces it.
+The screen only records; the host executor (`aistack-sync.timer`,
+`aistack.cli.sync_apply`) applies. The Syncthing reader is injected
+(`create_app(syncthing=…)`) so tests can replace it.
 """
 
 from __future__ import annotations
@@ -155,9 +152,9 @@ def pair_page(request: Request, pair: str) -> Response:
 
 
 def _folder_state(declaration: SyncDeclaration, pair: str, language: PageLanguage) -> dict[str, Any]:
-    """`share`: the folder to create, when Syncthing answers and does not
-    have it; `reshare`: True when it has it, so the offer can be sent
-    again."""
+    """`share`: the folder to create when Syncthing answers without it;
+    `reshare`: `True` when it exists, so the offer can be sent again.
+    """
 
     if declaration.syncthing is None:
         return {"share": None, "reshare": False}

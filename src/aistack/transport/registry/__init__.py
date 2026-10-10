@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer registry implementations.
-"""
+"""Knowledge Transport Layer registry implementations."""
 
 from aistack.transport.registry.in_memory_transport_registry import (
     InMemoryTransportRegistry,

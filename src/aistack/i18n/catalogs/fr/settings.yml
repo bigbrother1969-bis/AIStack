@@ -1,4 +1,4 @@
-# Page Paramètres de la console — ADR-0010.
+# Console Settings page (ADR-0010).
 
 title: "Paramètres"
 page_title: "AIStack — Paramètres"
@@ -10,7 +10,7 @@ language:
   hint: "Ce choix est mémorisé dans ce navigateur. Il s'applique à la console, à Architecture, au Cockpit Santé et aux mini-apps ouvertes depuis la console."
 back: "← Retour à la console"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   lockup: "Revenir à la console"
   language: "Afficher l'interface en {name}"

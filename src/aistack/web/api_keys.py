@@ -1,17 +1,10 @@
-"""
-Settings' "API keys" section (the owner, 2026-10-09: "dans les
-paramètres, il faudrait pouvoir également accéder aux clés API";
-every key, the future ones included; write-only, the last four
-characters shown). For an administrator, on both listeners (the owner,
-2026-10-10: "partout pour les administrateurs"): behind the sign-in,
-HTTPS on the public address and each form's token; a key is written,
-never read back.
+"""Settings' "API keys" section, for administrators on both listeners.
 
-The keys are declared in `api_keys.yml` (`aistack.api_keys`); a value
-entered here is kept in the data directory and laid over the
-environment at once, so the web application uses it immediately; the
-vigil and the resource-priority monitor take it as `applies` says.
-A value is never sent back to the browser.
+Keys are declared in `api_keys.yml` (`aistack.api_keys`). Values are
+write-only: only the last four characters are shown, and a value is never
+sent back to the browser. A saved value is stored in the data directory
+and applied to the environment at once; the vigil and the
+resource-priority monitor pick it up as `applies` says.
 """
 
 from __future__ import annotations

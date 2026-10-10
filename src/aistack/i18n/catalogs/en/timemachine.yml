@@ -18,21 +18,15 @@ empty_instants: "No instant observed for this stream."
 empty_facts: "No known fact about this node."
 empty_referenced_by: "Nothing references this node."
 node_iri_label: "Node identifier"
-# Gap #1, added 2026-10-02 (`claude/AUDIT-TIMEMACHINE-REALIGNEMENT-
-# MAQUETTES-2026-10-02.md`, cadrage "a contained first slice") — the
-# new three-column `/node`'s own center column: this node's own
-# chronology, filtered by its own `aistack:stableSubject` when it
-# asserts one. `timemachine.ribbon.subject_empty`/`group_docker`/
-# `group_observation` are reused as-is for the rest of this panel —
-# same concept, not a duplicate key.
+# /node center column: the node's chronology, filtered by its
+# `aistack:stableSubject`. Also reuses timemachine.ribbon.subject_empty,
+# group_docker and group_observation.
 node_ribbon_heading: "This subject's chronology"
 node_ribbon_no_subject: "No stable subject for this node — nothing to filter in the ribbon."
 node_ribbon_view_full: "View full ribbon"
-# Gap #3, added 2026-10-02 (cadrage: a contained slice, read-only, one
-# subject) — the link to `/reconstitute` from /node's center column.
+# Link from /node to /reconstitute.
 node_ribbon_reconstitute_link: "Reconstitute at this instant"
-# Gap #2, added 2026-10-02 (cadrage: a contained slice, read-only) —
-# the link to `/explication` from /node's center column.
+# Link from /node to /explication.
 node_ribbon_explication_link: "See the why"
 graph:
   heading: "Graph"
@@ -97,10 +91,7 @@ ribbon:
   pagination_summary: "Page {page} of {total_pages} ({total} events)"
   cluster_popover_heading: "Events in this group"
   cluster_popover_close: "Close"
-# Gap #3, added 2026-10-02 — a contained slice, read-only, one subject
-# (see app.py's own `_reconstitution`). Never a then/now comparison,
-# never a real restore: ADR-0011 § Decision 10 ("read-only, never a
-# writer") forbids it.
+# /reconstitute: read-only, one subject; never a real restore (ADR-0011).
 reconstitute:
   heading: "Reconstitution"
   intro: "For a chosen subject and instant, what is known on each stream at or before that instant — never a comparison between two instants, never a real restore: AIStack never touches the real container from this screen."
@@ -110,9 +101,8 @@ reconstitute:
   empty_streams: "No stream known for this subject."
   no_observation: "No observation known at or before this instant, for this stream."
   view_node: "View this node"
-# Gap #2 (2026-10-02), then 1.7 tranche 4 (ADR-0015): an
-# administrator writes, validates or discards; the graph sees it at
-# the next `timemachine_rebuild`.
+# /explication: an administrator writes, validates or discards (ADR-0015);
+# the graph sees it at the next `timemachine_rebuild`.
 explication:
   heading: "Why"
   intro: "What has been recorded, for a subject, about why something was done — every version kept. An administrator can write, validate or discard; the graph sees it at the next rebuild."

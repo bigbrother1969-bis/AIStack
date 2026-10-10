@@ -1,6 +1,6 @@
 """
-Project the dock's governed changes into the graph (1.10, `ADR-0019`
-§ 6): one stream, `dock`, and one `prov:Entity` per executed proposal
+Project the dock's governed changes into the graph (`ADR-0019` § 6):
+one stream, `dock`, and one `prov:Entity` per executed proposal
 (`dock_change_iri(<proposal>)`), from `generated_dir/dock/proposals/`,
 so a change sits on the Time Machine's ribbon like any other record.
 

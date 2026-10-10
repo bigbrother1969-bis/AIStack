@@ -1,6 +1,6 @@
 """
 What AIStack's data directory takes on its disk, against its declared
-budget (`ADR-0021`, 2026-10-09).
+budget (ADR-0021).
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ class DataUsageReading:
     budget_bytes: int
     warn_percent: int
     files: int
-    # What was written over the last seven days, a day on average;
-    # None when nothing could say it.
+    # Average bytes written per day over the last seven days; None when
+    # unknown.
     daily_bytes: int | None = None
     # The biggest directories, (name, bytes), largest first.
     largest: tuple[tuple[str, int], ...] = ()

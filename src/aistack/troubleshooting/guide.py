@@ -1,20 +1,11 @@
 """
-The AI half of a guided diagnosis (`ADR-0012` § 4): `reason`,
-`explain` and `recommend` over one real finding, in the reader's
-language — the three calls `aistack.cli.ai_reason` makes.
+The AI half of a guided diagnosis (`ADR-0012` § 4): `reason`, `explain` and
+`recommend` over one finding, in the reader's language.
 
-**One operation at a time, in the background (2026-10-03).** With
-`deepseek-r1:1.5b` on GIGABYTE's CPU a single call takes several
-minutes (`QUAL-0001`), so the screen no longer holds a request open
-for all three: `/start` hands `run_diagnosis` to a background worker
-and the steps show each answer as soon as it exists. The three answers
-are still recorded together, as one AI Reasoning History entry, once
-the last one arrives (J7 decision #2).
-
-**The declared `timeout` reaches the engine.** The screen built its
-engines without it from the day `ai_runtime.yml` declared
-`timeout: 900` — the CLI passed it, the screen fell back to the
-engine's 120 s and reported a slow model as an unreachable one.
+A local model can take minutes per call, so the screen runs the operations
+in a background worker and shows each answer as it arrives; the three are
+recorded together as one reasoning history entry. Engines are built with
+the declared `timeout`, otherwise a slow model would read as unreachable.
 """
 
 from __future__ import annotations
@@ -39,8 +30,8 @@ from aistack.contracts.runtime_finding import RuntimeFinding
 AI_RUNTIME = configured(Path(__file__).resolve().parents[1] / "ai_runtime" / "definitions" / "ai_runtime.yml")
 
 OPERATIONS = ("reason", "explain", "recommend")
-# 1 the finding, 2 the facts, 3 what to do — AIStack's own, at once;
-# 4 the AI's opinion, asked on the owner's click (2026-10-09).
+# Steps 1-3 (the finding, the facts, what to do) come from AIStack at once;
+# step 4, the AI's opinion, is asked on the user's click.
 STEP_COUNT = 4
 AI_STEP = 4
 
@@ -76,11 +67,10 @@ def ask_ai_runtime(
     finding: RuntimeFinding, operation: str, target_language: str, context: str = ""
 ) -> AIRuntimeAnswer:
     """
-    One answer: from Gemini when it is declared and has its key, with
-    the facts of the assistant's step 2; from the Ollama model
-    `ai_runtime.yml` declares when Gemini is not declared or does not
-    answer (the owner, 2026-10-09). An Ollama answer given in Gemini's
-    place says so, and why, in its `model`.
+    One answer: from Gemini when declared and its key is set, with the
+    collected facts; otherwise, or when Gemini does not answer, from the
+    declared Ollama model. An Ollama answer given in Gemini's place says why
+    in its `model`.
     """
 
     definition = load_ai_runtime_yaml(AI_RUNTIME)
@@ -109,10 +99,9 @@ def ask_ollama(
     definition: AIRuntimeDefinition | None = None,
 ) -> AIRuntimeAnswer:
     """
-    One answer from the model `ai_runtime.yml` declares, within its
-    declared `timeout`. A second, fast model translates into
-    `target_language` whenever it is not English, and only when
-    `translator_model:` is declared (`aistack.ai_runtime.operations`).
+    One answer from the declared Ollama model, within the declared
+    `timeout`. When `translator_model` is declared, a non-English answer is
+    translated (see `aistack.ai_runtime.operations`).
     """
 
     definition = definition or load_ai_runtime_yaml(AI_RUNTIME)
@@ -153,10 +142,8 @@ def run_diagnosis(
     context: str = "",
 ) -> None:
     """
-    Ask the three operations in order, storing each answer in `answers`
-    the moment it arrives — then telling `on_answer`, which a page uses
-    to say the answer is ready (2026-10-09) — and record the three
-    together.
+    Ask the three operations in order, storing each answer in `answers` as
+    it arrives and calling `on_answer`, then record the three together.
     """
 
     for operation in OPERATIONS:
@@ -168,10 +155,8 @@ def run_diagnosis(
     record(finding, tuple(answers[operation] for operation in OPERATIONS))
 
 
-# What `OllamaEngine` and `aistack.ai_runtime.operations` say when no
-# answer came back, read into a catalog key and its parameters so the
-# screen says it in the reader's language. Anything not recognised is
-# shown as the engine wrote it, never guessed into a category.
+# Engine failure messages mapped to catalog keys, so the screen words them
+# in the reader's language. Unrecognised messages are shown as written.
 _TIMEOUT = re.compile(r"did not answer within (?P<seconds>[\d.]+) seconds")
 _REFUSED = re.compile(r"refused the request with status (?P<status>\d+)")
 _UNREACHABLE = re.compile(r"could not be reached: (?P<detail>.*)")

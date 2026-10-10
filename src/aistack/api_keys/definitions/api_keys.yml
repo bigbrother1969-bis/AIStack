@@ -1,8 +1,6 @@
-# The API keys and credentials AIStack's components read from the
-# environment, entered or replaced from Settings (the owner,
-# 2026-10-09: "toutes les clés API, même les futures"; "écriture
-# seule, 4 derniers caractères"). A new key a component reads is one
-# entry here: Settings offers it from then on.
+# AIStack — the API keys and credentials AIStack's components read from the
+# environment, entered or replaced from Settings. Add one entry here for a
+# new key a component reads, and Settings offers it.
 #
 # `name` is the environment variable the component reads; a value
 # entered in Settings is kept in the data directory
@@ -12,16 +10,16 @@
 # `applies`: when a change is taken into account. `test`: how Settings
 # checks the value (gemini, gotify, syncthing; absent: no test).
 #
-# `procedure` (2026-10-10, ADR-0023 § 5.5): where to get the value,
-# step by step, shown by the installation assistant and in Settings;
-# `{host}` is the server's address on the local network.
+# `procedure` (ADR-0023 § 5.5): where to get the value, step by step,
+# shown by the installation assistant and in Settings; `{host}` is the
+# server's address on the local network.
 # `prerequisite`: the software install.sh may have installed for it
 # (pocket-id, gotify, syncthing, ollama); `suggested`: a value to start
 # from, for a setting.
 #
-# Left out on purpose: the sign-in secrets (AISTACK_OIDC_CLIENT_SECRET,
-# AISTACK_WEB_ADMIN_SCRYPT) — changed from a page they guard, a mistake
-# would lock the owner out; they stay in `.env.web`, or in the
+# The sign-in secrets (AISTACK_OIDC_CLIENT_SECRET, AISTACK_WEB_ADMIN_SCRYPT)
+# are left out on purpose: changed from a page they guard, a mistake would
+# lock the administrator out. They stay in `.env.web`, or in the
 # installation assistant's own store (step 3).
 
 keys:

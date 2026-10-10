@@ -16,11 +16,8 @@ from aistack.providers.docker.log_normalization import (
 
 
 class DockerProvider:
-    """Minimal Docker Knowledge Provider.
-
-    This provider observes the local Docker runtime and returns
-    governed raw observations without interpretation.
-    """
+    """Observe the local Docker runtime and return raw observations,
+    without interpretation."""
 
     provider_id = "aistack.provider.docker"
     provider_name = "Docker Provider"
@@ -69,38 +66,14 @@ class DockerProvider:
         depth: int,
         state: str,
     ) -> RuntimeObservation:
-        """
-        Read what one container printed, and conclude nothing.
+        """Read the last `depth` lines one container printed, without
+        drawing conclusions.
 
-        ARC-P-012 places the boundary here: this returns lines,
-        never a verdict. The experimenter this replaces called
-        `container.logs()` and drew conclusions from the result
-        in the same function, which is why its code does not
-        migrate and its knowledge does.
-
-        `depth` comes from the catalogue — `SignatureCatalogue.deepest`
-        — so collection happens once at the deepest declared
-        window and each signature then evaluates its own. One
-        Docker call, not one per rule.
-
-        `--timestamps` is passed so that every line carries its
-        age regardless of what the container prints. Without it,
-        a finding's evidence has a date only when the service
-        happens to write one — which is how a report of eleven
-        connection refusals eighteen hours old read as current on
-        2026-08-22.
-
-        `state` is supplied by the caller rather than observed
-        here, because the caller has just read it from
-        `collect()` and asking Docker again for every container
-        would double the calls to say the same thing. It is
-        passed through, not invented.
-
-        Standard error is merged into standard output. A great
-        many containers log there and nowhere else; reading only
-        stdout would return an empty observation for a service
-        that had been reporting a failure for hours, and the
-        qualifier could not tell that from silence.
+        `depth` is the deepest window any signature needs, so one call
+        serves every rule.
+        `--timestamps` gives every line an age even when the service
+        writes none. `state` is passed through from the caller's
+        `collect()`. Stderr is merged in: many containers log only there.
         """
 
         if depth <= 0:
@@ -133,27 +106,11 @@ class DockerProvider:
         )
 
     def collect_cpu_readings(self) -> tuple[ContainerCpuReading, ...]:
-        """
-        Every running container's own CPU usage, in one call.
+        """CPU usage of every running container (`docker stats`, one call).
 
-        No container is named. `docker stats` with no argument
-        reports every container Docker knows of, the same family of
-        call `CpuThresholdDetector._read_cpu_percent` already makes
-        for one — this is that call without the trailing name,
-        which is the mechanism `STD-0300` § VS-4 criterion 4.1 asks
-        for: detection without being pointed at a service.
-
-        **Docker's field here is `Name`, singular — not `Names`,
-        which is what `docker ps` prints for the same container.**
-        Reading the wrong one would silently return no readings at
-        all rather than an error, so it is named explicitly here
-        rather than assumed to match `collect()`'s own containers.
-
-        An unreadable `CPUPerc` is folded to `0.0`, the convention
-        `CpuThresholdDetector` already carries: what could not be
-        measured must never be read as busy. A line naming no
-        container at all is dropped — there is nothing to attach a
-        reading to.
+        `docker stats` names the field `Name`, singular, unlike `docker ps`
+        (`Names`). An unreadable `CPUPerc` reads as `0.0`, never as busy;
+        a line with no name is dropped.
         """
 
         result = subprocess.run(
@@ -193,28 +150,11 @@ class DockerProvider:
         return tuple(readings)
 
     def collect_container_states(self) -> tuple[ContainerStateReading, ...]:
-        """
-        Every container's own state and health, in one call —
-        `PLAN-J7`'s Services domain, `OPS-0004`'s third reference
-        incident (restart loops / unhealthy containers after a power
-        outage).
+        """State and health of every container, in one call (Services
+        domain, `OPS-0004`).
 
-        **A dedicated call, the same choice `collect_commands` and
-        `collect_cpu_readings` already made**, rather than widening
-        `containers()` in `aistack.cli.runtime_diagnose` — that
-        function returns `container -> state`, a mapping this
-        heritage's log-signature pipeline already relies on; adding
-        health there would either duplicate the field this method
-        already carries or change a return shape another caller
-        depends on. A container missing its `Names` field is dropped,
-        the same convention `collect_commands` already holds — there
-        is nothing to attach a reading to.
-
-        `state` falls back to `'unknown'` rather than an empty string
-        when Docker reports none — `ContainerStateReading` refuses an
-        empty state outright (`FDN-0003` Article 12: the absence is
-        named, never silent). `health` is `health_of(Status)`, already
-        parsed rather than left for a caller to re-derive.
+        A container with no `Names` is dropped. A missing state becomes
+        `'unknown'`, since `ContainerStateReading` refuses an empty one.
         """
 
         entries = self._run_json_lines(
@@ -238,23 +178,10 @@ class DockerProvider:
         return tuple(readings)
 
     def collect_commands(self) -> dict[str, str]:
-        """
-        Every container's own launch command, untruncated.
+        """Every container's launch command, untruncated.
 
-        `docker ps` truncates `Command` by default — under
-        `--format '{{json .}}'` exactly as it does in the table
-        view — so a flag appearing past the truncation point would
-        be invisible to anything reading the field. `--no-trunc` is
-        what makes this call different from `collect()`'s own
-        `docker ps`, which never reads `Command` at all today; a
-        second, dedicated call is made here rather than widening
-        `collect()`'s output — and its own tested determinism —
-        for a field only this caller needs.
-
-        `STD-0300` § VS-4 criterion 4.3 is what this exists for:
-        the reference incident's `--reload` is a property of the
-        command a container was started with, not of anything it
-        prints afterward.
+        `docker ps` truncates `Command` even in JSON format, hiding late
+        flags such as `--reload`; hence `--no-trunc`.
         """
 
         entries = self._run_json_lines(
@@ -268,31 +195,13 @@ class DockerProvider:
         }
 
     def collect_process(self, container: str) -> str:
-        """
-        What is actually running inside one container's own PID
-        namespace, right now.
+        """The `CMD` of the first process running in one container
+        (`docker top`).
 
-        `docker top <container>` requires a name — unlike
-        `collect_cpu_readings`, this cannot sweep every container in
-        one call, which is exactly why `STD-0300` § VS-4 criterion
-        4.2 only calls it for a container a prior check already
-        named: correlating a finding, not sweeping the host a second
-        time.
-
-        **Independent of `collect_commands`, on purpose.** That read
-        is what Docker recorded the container was *configured* to
-        run; this is what its own process table says is *actually*
-        running — a shell wrapper, a supervisor, a re-exec with
-        different arguments could make the two diverge, and 4.2 asks
-        for both, each citing where it came from.
-
-        Returns the first process's own `CMD` column, plain text —
-        docker's own table output, not JSON; column widths are not
-        fixed, so the header's own position of `CMD` is read first
-        and every line is split up to that many fields, leaving the
-        command itself — which can contain spaces — intact as the
-        remainder. Empty on any failure: no daemon, no such
-        container, no process found. Never raises.
+        Unlike `collect_commands` (the configured command), this is what
+        actually runs; a wrapper or re-exec can make them differ. The table
+        is split up to the `CMD` column so a command with spaces stays
+        whole. Returns `""` on any failure; never raises.
         """
 
         try:

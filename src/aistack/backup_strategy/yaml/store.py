@@ -12,16 +12,12 @@ _REQUIRED_SERVICE_FIELDS = ("name", "host", "has_state")
 
 def load_backup_strategy_yaml(path: Path) -> tuple[BackupStrategyDeclaration, ...]:
     """
-    Load `OPS-0010`'s declared backup-strategy records from YAML:
-    every service this domain checks, whether it holds persistent
-    state, and which real backup engine(s) (if any are confirmed)
-    cover it.
+    Load the `OPS-0010` backup-strategy declarations from YAML: each
+    service, whether it holds persistent state, and the confirmed backup
+    engines covering it, if any.
 
-    Mirrors `load_pra_tests_yaml` field for field (written by hand,
-    read-only — every value here is the owner's own declared record,
-    or an explicit "not confirmed" where this session could not
-    ground one — so a missing required key is a typo, and the error
-    names which one and where; nothing writes this file back).
+    The file is edited by hand; a missing required key raises a
+    `ValueError` naming it.
     """
 
     with path.open("r", encoding="utf-8") as stream:

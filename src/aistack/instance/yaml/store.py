@@ -9,11 +9,8 @@ from aistack.contracts.instance_config import InstanceConfig
 
 def load_instance_config_yaml(path: Path) -> InstanceConfig:
     """
-    Load AIStack's own declared instance configuration from YAML —
-    same shape and error discipline as
-    `load_network_discovery_yaml`/`load_console_links_yaml`: a
-    missing key names which one and where, never a silent default for
-    a fact this heritage has never observed for itself (R10).
+    Load AIStack's instance configuration from YAML. A missing required key
+    raises a `ValueError` naming it, never a silent default.
     """
 
     with path.open("r", encoding="utf-8") as stream:

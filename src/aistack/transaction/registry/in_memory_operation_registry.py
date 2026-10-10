@@ -1,6 +1,4 @@
-"""
-Knowledge Transaction - In-memory Operation Registry.
-"""
+"""Knowledge Transaction - In-memory Operation Registry."""
 
 from __future__ import annotations
 
@@ -9,9 +7,7 @@ from aistack.transaction.interfaces.operation_registry import OperationRegistry
 
 
 class InMemoryOperationRegistry(OperationRegistry):
-    """
-    Simple in-memory registry of operation engines.
-    """
+    """Simple in-memory registry of operation engines."""
 
     def __init__(self) -> None:
         self._engines: dict[str, OperationEngine] = {}

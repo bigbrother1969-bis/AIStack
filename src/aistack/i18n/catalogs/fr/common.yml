@@ -1,6 +1,6 @@
-# Messages partagés par tous les écrans — ADR-0010.
-# Langue de référence : chaque clé ici doit exister dans chaque autre
-# langue déclarée (tests/unit/i18n/test_the_real_catalogs.py).
+# Messages shared by every screen (ADR-0010). Reference language: every key
+# here must exist in every other declared language
+# (tests/unit/i18n/test_the_real_catalogs.py).
 
 language:
   switch_label: "Langue de l'interface"
@@ -10,12 +10,12 @@ settings:
 console:
   back: "← Retour à la console"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   back_to_console: "Revenir à la console, la page d'accueil d'AIStack"
   external: "Ouvre un site extérieur : {url}"
 
-# The notice shown on every page when an AI answer is ready (2026-10-09).
+# Notice shown on every page when an AI answer is ready.
 notice:
   ready: "Réponse de l'IA prête — {label} : {subject}"
   open: "Ouvrir cette réponse"

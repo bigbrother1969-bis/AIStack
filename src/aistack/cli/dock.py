@@ -1,14 +1,13 @@
 """
-`python -m aistack.cli.dock` — the dock executor (`ADR-0019` § 3–5).
+`python -m aistack.cli.dock` — the dock executor (ADR-0019 § 3–5).
 
     python -m aistack.cli.dock run         execute the validated proposals, oldest first
     python -m aistack.cli.dock list        every proposal and its state
     python -m aistack.cli.dock show <id>   one proposal: its why, its history, its operations
 
-Run on the host, from the checkout, by the account AIStack runs as —
-`aistack-dock.timer` starts `run` every two minutes
-(`deploy/systemd/aistack-dock.service`). One executor at a time: a
-second `run` while one works says so and leaves.
+Run on the host, from the checkout, by the account AIStack runs as;
+`aistack-dock.timer` starts `run` every two minutes. One executor at a
+time: a second `run` says so and exits.
 """
 
 from __future__ import annotations
@@ -82,8 +81,7 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
             sandbox=load_sandbox_declaration(),
             restorer=restore,
             runner=runner,
-            # The kernel's transaction service: the change runs through
-            # its executor, its operations registered by kind (ADR-0019 § 6).
+            # The change runs through the kernel's transaction executor (ADR-0019 § 6).
             transactions=create_kernel().services.transactions,
             progress=lambda line: print(line, flush=True),
         )

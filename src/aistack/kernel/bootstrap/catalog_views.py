@@ -19,12 +19,9 @@ def register_default_catalog_views(kernel: Kernel) -> None:
         DockerContainerViewEngine(),
     )
 
-    # Registered, where `MediaLibraryProvider` is not, and the
-    # difference is the one the `by-ids` removal drew on
-    # 2026-08-29: this engine carries no configuration, so a
-    # single instance serves every caller. The provider carries a
-    # root and a list of extensions, which travel in the
-    # application definition, so it is constructed per use.
+    # This engine has no configuration, so one instance serves every
+    # caller; `MediaLibraryProvider` is configured per application and
+    # is built per use instead of registered.
     kernel.registries.catalog_views.register(
         MediaTreeViewEngine.view_id,
         MediaTreeViewEngine(),

@@ -1,12 +1,11 @@
-"""
-`/notifications` — the AI answers ready for the signed-in person and
-not yet opened (`aistack.web.ai_jobs`), for the notice every page shows
-(owner, 2026-10-09). LAN only, like every screen that asks the AI.
+"""`/notifications`: AI answers ready for the signed-in person and not yet opened.
+
+Feeds the notice every page shows. LAN only, like every screen that uses the AI.
 
     {"running": 1, "ready": [{"id": "...", "text": "...", "href": "..."}]}
 
-`running` tells the page how soon to ask again: every 10 s while an
-answer is still coming, every 30 s otherwise.
+`running` sets the polling rate: every 10 s while an answer is coming,
+every 30 s otherwise.
 """
 
 from __future__ import annotations
@@ -25,8 +24,7 @@ from aistack.web.exposure import LAN_ONLY
 
 PATH = "/notifications"
 POLL_SECONDS = 10
-# Nothing coming: asked again now and then, so a tab opened before a
-# diagnosis started still hears of its answers.
+# Still polled when idle so a tab opened before a diagnosis started hears of it.
 IDLE_SECONDS = 30
 
 router = APIRouter(dependencies=[LAN_ONLY])
@@ -66,10 +64,8 @@ def notifications(request: Request) -> JSONResponse:
     })
 
 
-# The notice every page carries on the local-network listener, for a
-# signed-in person: a corner of the page, and a few lines of script that
-# ask `/notifications` — every 10 s while an answer is coming, every
-# 30 s otherwise.
+# The notice on every LAN page for a signed-in person; its script polls
+# `/notifications`.
 SNIPPET = """<div id="aistack-notices" aria-live="polite"></div>
 <style>
 #aistack-notices { position: fixed; right: 1rem; bottom: 1rem; z-index: 1000; display: flex; flex-direction: column; gap: .5rem; max-width: 26rem; }
@@ -112,8 +108,10 @@ SNIPPET = """<div id="aistack-notices" aria-live="polite"></div>
 
 
 def snippet(t: Callable[..., str]) -> str:
-    """The notice, its two words in the reader's language — as JSON
-    strings, so no text can end the script."""
+    """The notice with its labels in the reader's language.
+
+    Labels are inserted as JSON strings so no text can end the script.
+    """
 
     return (
         SNIPPET.replace("__PATH__", PATH)

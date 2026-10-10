@@ -11,24 +11,12 @@ def render_settings_html(
     languages: Languages | None = None,
     saved: bool = False,
 ) -> str:
-    """
-    The console's Settings page — ADR-0010, the owner's own decision of
-    2026-09-27 ("une section paramètres de la console").
+    """The console's Settings page (ADR-0010).
 
-    One setting in this version: the interface language, remembered
-    per browser. The form submits with `GET` to `/settings?lang=…` —
-    the same request a language link makes — so choosing a language
-    here and following a switch link are one mechanism, not two, and
-    the server sets the cookie the same way for both. `saved` is
-    `True` when this very request is the one that chose the language,
-    and shows a confirmation.
-
-    Nothing here pretends a setting that does not exist yet: users,
-    profiles and a per-user language arrive with their own version and
-    are added to this page then, not announced on it now.
-
-    Pure, like every renderer in this package — same arguments,
-    byte-identical output.
+    The language form submits `GET /settings?lang=…`, the same request a
+    language link makes, so the server sets the cookie the same way for
+    both. `saved` is `True` when this request chose the language and shows
+    a confirmation. Pure: same arguments, same output.
     """
 
     t = translator_for(lang)
@@ -96,10 +84,8 @@ def _flag(flag: str) -> str:
     return f'<img class="flag" src="{flag}" alt="" width="24" height="16">'
 
 
-# Same palette and type as the console itself (see
-# `aistack.renderers.console.html._STYLE`, 2026-09-26): this page is
-# reached from the console and returns to it, and must read as part
-# of it.
+# Same palette and type as the console (`aistack.renderers.console.html._STYLE`):
+# this page must read as part of it.
 _STYLE = """\
 :root { color-scheme: light; }
 body {

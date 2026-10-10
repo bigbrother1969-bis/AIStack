@@ -19,16 +19,10 @@ _REQUIRED_BESZEL_FIELDS = ("url", "email_env", "password_env")
 
 def load_infrastructure_topology_yaml(path: Path) -> InfrastructureTopologyDefinition:
     """
-    Load the governed infrastructure topology from YAML.
+    Load the infrastructure topology from YAML.
 
-    **Written by hand, read-only** — same reasoning as
-    `load_service_categorization_yaml`: nothing in this repository
-    observes a registrar, a CDN, or a machine's own BIOS, so there is
-    no provider to reconcile this against and no UI that writes it
-    back. Both top-level keys are optional and default to an empty
-    list — a file declaring only `hardware:`, or only
-    `external_nodes:`, is not malformed, it is simply not filled in
-    yet.
+    The file is edited by hand. Every top-level key is optional, so a file
+    declaring only `hardware:` is valid.
     """
 
     with path.open("r", encoding="utf-8") as stream:

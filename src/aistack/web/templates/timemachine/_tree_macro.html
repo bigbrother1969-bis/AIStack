@@ -1,26 +1,12 @@
 {#
-  `render_node`, factored out of `tree.html` 2026-10-02 (gap #1 of
-  `claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`,
-  cadrage "une première tranche contenue" — `/node` becomes a
-  three-column page reusing the tree exactly as it already renders,
-  not a second tree implementation) — `node.html`'s own left column
-  needs the exact same recursive macro `tree.html` already defined
-  inline, so it is imported (`{% import "timemachine/_tree_macro.html" as
-  tree_macro %}`) by both rather than copy-pasted a second time.
-  Same `{% include "timemachine/_style.html" %}` reasoning as every other shared
-  piece in this mini-app: one file so the two pages cannot drift from
-  each other by a hand-made edit to only one of them.
+  `render_node`: shared by tree.html and node.html's left column, imported by
+  both so the two cannot drift apart.
 
-  Unchanged from `tree.html`'s own original docstring: one recursive
-  macro over the nested tree the route already built from the flat,
-  depth-first `NetworkTreeNode` list (`aistack.timemachine.tree`'s own
-  contract, ADR-0011 §18) — nesting is a template-side concern only,
-  not a second data model. Native <details>/<summary title="{{ t('timemachine.tooltip.tree_fold') }}"> gives the
-  "arbre pliable" the roadmap asks for with no JavaScript: every node
-  is open except a "stack" (the one real folding boundary, containers
-  hidden behind one click) — a non-blank search forces everything
-  open, since the filtered set already holds only matches and their
-  ancestors and nothing here should stay hidden from a search result.
+  One recursive macro over the nested tree the route builds from the flat,
+  depth-first `NetworkTreeNode` list (ADR-0011): nesting is a template concern
+  only. Native <details>/<summary> folds without JavaScript. Every node is open
+  except a stack (containers behind one click); a non-blank search opens
+  everything, since the filtered set holds only matches and their ancestors.
 #}
 {% macro render_node(node, force_open) %}
   <details class="tree-node tree-node--{{ node.kind }}"{% if force_open or node.kind != 'stack' %} open{% endif %}>

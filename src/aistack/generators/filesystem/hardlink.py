@@ -10,13 +10,8 @@ from aistack.selection.capacity import CapacityVerdict
 from aistack.selection.subtree import SubtreeResolution
 
 
-# What belongs to the synchronisation tool rather than to the
-# selection, at any depth of the target.
-#
-# `.stfolder` is how Syncthing recognises a folder it manages;
-# removing it makes the folder stop syncing. The previous
-# generator preserved it by name and nothing else, which was
-# enough because it never descended.
+# Syncthing's own files, preserved at any depth of the target.
+# Removing `.stfolder` makes the folder stop syncing.
 SYNC_ARTEFACTS = frozenset({".stfolder", ".stignore", ".stversions"})
 
 
@@ -29,28 +24,10 @@ def _lock_for(target_root: Path) -> threading.Lock:
     One lock per target, so two materialisations never write to the
     same folder at once.
 
-    The Selection UI's `/save` route is synchronous, and Starlette
-    runs a synchronous route in a thread pool: two clicks on
-    "Synchroniser" close enough together — the screen gives no
-    feedback while a run is in flight, so a second click is not a
-    misuse — run this function in two threads at the same time.
-    `_link` and `_unlink` below are check-then-act, not atomic, so
-    two threads reconciling the same target can each act on the
-    other's half-finished work: `os.link` raising `FileExistsError`
-    because the other thread already relinked the path, `unlink`
-    raising `FileNotFoundError` because the other thread already
-    removed it.
-
-    Found on the owner's own screen, 2026-09-03: a clean run and a
-    428-failure run of the same click, minutes apart in log terms
-    but overlapping on disk, and only the slower one's report was
-    still there to read — `save_last_generation_yaml` is called
-    unconditionally by whichever thread finishes last, so the
-    banner shown and the report saved were answers to two different
-    runs.
-
-    Keyed by target rather than global: a dry run assembling one
-    application's page should not wait on a write to another's.
+    Starlette runs the synchronous `/save` route in a thread pool, so
+    two quick clicks run concurrently, and `_link`/`_unlink` are
+    check-then-act. Keyed by target so a dry run for one target does
+    not wait on a write to another.
     """
 
     key = str(target_root)
@@ -66,19 +43,11 @@ def _lock_for(target_root: Path) -> threading.Lock:
 @dataclass(frozen=True)
 class MaterialisationReport:
     """
-    What the materialisation did, or refused to do.
+    What the materialisation did, or refused to do, for the screen to
+    display.
 
-    Returned rather than printed. The previous generator printed
-    `COPY`, `LINK` and `SKIP` lines to standard output, which on
-    the reference host means the log of a web application nobody
-    reads — and the screen that ordered the work had nothing to
-    show for it. The UI runs on a host that cannot be observed
-    from where this code is reviewed; what it displays is the only
-    instrument shared by both sides.
-
-    `refused` is a sentence and not a flag. When it is non-empty
-    nothing was written, and the sentence says why in terms the
-    owner can act on.
+    `refused` is a sentence, not a flag: when non-empty, nothing was
+    written and it says why in terms the owner can act on.
     """
 
     linked: tuple[str, ...] = ()
@@ -101,66 +70,19 @@ def materialise_by_hardlink(
     dry_run: bool = False,
 ) -> MaterialisationReport:
     """
-    Bring the target folder to exactly what the selection designates.
+    Bring the target folder to exactly what the selection designates,
+    using hard links.
 
-    **Incremental, and that is not an optimisation.** The
-    generator this replaces held `clean=True`: it emptied the
-    target and copied the whole selection back, every time. On the
-    owner's library that is 118 Gio erased and rewritten at each
-    click — and Syncthing, doing its job, would propagate the
-    deletion to the phone and then the re-appearance, over a VPN.
-    The target folder was last written on 2026-07-13 and holds the
-    first nine identifiers of the selection file: a run that
-    emptied the folder, started rewriting it in file order, and
-    stopped at the ninth. Repairing that button without changing
-    its shape would have replayed it at scale.
+    Incremental: create what is missing, remove what is no longer
+    designated, leave the rest untouched, so an unchanged selection
+    causes no write for Syncthing to propagate. A file present in the
+    target is relinked when it no longer shares its source's inode (a
+    tag editor may replace a file instead of editing it in place).
 
-    So: create what is missing, remove what is no longer
-    designated, leave everything else untouched. A selection that
-    did not change costs no write, and Syncthing sees nothing.
-
-    **Hard links, decided 2026-08-29 by the owner.** Source and
-    target sit on the same filesystem — `/dev/sdb1` on the
-    reference host — so a link costs no bytes and no copy time.
-    Syncthing reads a linked file as any other file: the phone
-    receives real bytes and keeps them when the server is off.
-
-    That decision has one failure mode, and this closes it. A tag
-    editor that *replaces* a file rather than editing it in place
-    leaves the target pointing at the old content, silently. Every
-    file already present is therefore checked by inode, and
-    relinked when it no longer shares one with its source. Two
-    stats per file, against a library where a full traversal takes
-    1,4 s.
-
-    **The filesystem is verified before anything is written.**
-    Hard links cannot cross filesystems, and the error a failed
-    link raises names a file rather than the reason. The check
-    names the reason, refuses, and writes nothing — the day the
-    owner moves either directory to another disk, that is what he
-    will read.
-
-    **The capacity is a parameter and not an option**, so that
-    materialising without having weighed the selection is not
-    something a caller can express. The verdict comes in already
-    made; this refuses when it does not fit, and says by how much.
-
-    The screen is where a human sees the weight, long before
-    clicking. This is where the machine refuses to write it. The
-    two are the same rule enforced at two moments, and only the
-    second one is impossible to forget: the owner's saved
-    selection weighed 118 Gio against a 64 Go quota on
-    2026-08-29, and materialising it would have filled the phone
-    until Syncthing reported write errors — seven weeks later,
-    with nothing on the screen to explain why.
-
-    **Serialised per target, for the same reason.** Nothing here
-    stops two calls from overlapping — a second click on the
-    screen while the first is still running reaches this function
-    a thread away from the first. `_lock_for` closes that: the
-    body below runs for one caller at a time per target, so the
-    snapshot `_present` takes and the writes `_reconcile` makes
-    from it are never invalidated by another run in between.
+    Refuses, writing nothing, when the selection exceeds `capacity`,
+    or when source and target are on different filesystems (hard links
+    cannot cross them, and the raw error would not say so). Runs under
+    a per-target lock (`_lock_for`).
     """
 
     with _lock_for(target_root):
@@ -186,17 +108,12 @@ def _refuse(
     dry_run: bool,
 ) -> str:
     """
-    Everything checked before a single byte is written.
+    Return why materialisation must not run, or `""`.
 
-    The capacity comes first, because it is the refusal a human
-    can act on: the other two describe a machine that is not set
-    up as expected, this one describes a choice that has to be
-    revised.
-
-    The filesystem comparison is made against the nearest existing
-    ancestor of the target, so a dry run answers it too — and so
-    the answer arrives before a directory is created on a disk
-    that could never have held the links anyway.
+    Capacity is checked first, as the refusal a human can act on. The
+    filesystem is compared against the target's nearest existing
+    ancestor, so a dry run checks it too and no directory is created
+    on a disk that could not hold the links.
     """
 
     if not capacity.fits:
@@ -247,14 +164,9 @@ def _desired(
     """
     Every media file the selection designates, by target path.
 
-    Read from the filesystem rather than from the observation: the
-    catalog carries counts, not names, and carrying 25 586 file
-    names through it to save one directory listing per selected
-    node would be a projection nobody asked for.
-
-    The nodes are `covered`, so each file appears once — a node
-    contributes only what lies directly inside it, and covered
-    nodes do not overlap.
+    Read from the filesystem, since the catalog carries counts, not
+    names. Covered nodes do not overlap and each contributes only its
+    direct files, so each file appears once.
     """
 
     sources = {item.id: item.source for item in catalog.items}
@@ -287,14 +199,8 @@ def _desired(
 
 def _present(target_root: Path, preserve_names: frozenset[str]) -> set[str]:
     """
-    Every file already in the target, minus what belongs to the
-    synchronisation tool.
-
-    Preserved by name at any depth, not only at the top. The
-    previous generator preserved `.stfolder` at the root because
-    it never went deeper; this one walks the whole target, and a
-    rule that held by accident is a rule that breaks when the
-    accident stops.
+    Every file already in the target, minus `preserve_names` at any
+    depth.
     """
 
     present: set[str] = set()
@@ -415,33 +321,12 @@ def _unlink(target: Path) -> str:
 
 def _prune(target_root: Path, dry_run: bool) -> list[str]:
     """
-    Directories left empty by a removal.
+    Remove directories left empty, bottom-up, never the target root.
 
-    A folder emptied of its tracks but still present is a node the
-    phone keeps showing and the screen no longer knows about.
-    Removed bottom-up, and only when empty — nothing here decides
-    that a directory is unwanted, it only notices that nothing is
-    left in it.
-
-    Not attempted in a dry run, and the report says so by leaving
-    the list empty: nothing was removed, so nothing is empty that
-    was not already, and reporting the directories that happen to
-    be empty today as *would be pruned* would be a claim about a
-    state that does not exist.
-
-    **Emptiness is read from the disk at the moment each directory
-    is visited, not from the tuple `os.walk` handed back.** With
-    `topdown=False`, `os.walk` still reports the subdirectories a
-    parent had when it first descended into it — before the walk
-    pruned any of them. A chain two levels deep left `AC  DC`
-    behind, empty and still on the target, because the walk's own
-    record of `AC  DC` still listed `Back in Black` after this
-    function had already removed it earlier in the same pass.
-    Found materialising the Selection UI's own smoke test,
-    2026-09-03, a case the single-directory fixture this function
-    already had could not exercise.
-
-    Never the target root itself.
+    Skipped in a dry run (empty list). Emptiness is read from disk at
+    each visit, not from `os.walk`'s tuple: with `topdown=False` that
+    tuple still lists subdirectories already removed earlier in the
+    pass.
     """
 
     if dry_run:

@@ -1,11 +1,11 @@
 """
-One sandbox run (`ADR-0018` § 2, 3, 5): its names, its isolation, its
-throwaway credentials, its steps and checks, its teardown, its report.
+One sandbox run (ADR-0018 § 2, 3, 5): its names, isolation, throwaway
+credentials, steps and checks, teardown and report.
 
-Every Docker call goes through a `Runner`, so the whole run can be
-tested without Docker. Every container the run starts carries the
-label `aistack.sandbox=<run id>`, joins the run's own `internal`
-network or none, and publishes no port.
+Every Docker call goes through a `Runner`, so a run can be tested
+without Docker. Every container the run starts carries the label
+`aistack.sandbox=<run id>`, joins the run's `internal` network or none,
+and publishes no port.
 """
 
 from __future__ import annotations
@@ -91,23 +91,21 @@ class SandboxRun:
     run_root: Path
     runner: Runner = docker_runner
     host: Runner = host_runner
-    # Where each step is announced as it starts (the command prints it;
-    # a long step — a big dump, a photo from Deja Dup — is then visibly
-    # at work, not stuck).
+    # Announces each step as it starts, so a long one is visibly at work.
     progress: Callable[[str], None] = field(default=lambda line: None)
     clock: Callable[[], float] = field(default=lambda: time.monotonic())
     started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     steps: list[Step] = field(default_factory=list)
     checks: list[Check] = field(default_factory=list)
     facts: dict[str, Any] = field(default_factory=dict)
-    # Rollback rehearsal (`ADR-0018`, 1.9): the image to run instead of
-    # the live container's own, by live container name.
+    # Images to run instead of the live ones, by live container name
+    # (rollback rehearsal, dock rehearsal).
     image_overrides: dict[str, str] = field(default_factory=dict)
     # Set for a rollback rehearsal from its start, even if it stops
     # before any earlier image is found.
     rehearsal: bool = False
     # Compare the restored backup with the live service before teardown
-    # (`ADR-0018` § 7).
+    # (ADR-0018 § 7).
     compare: bool = False
     # The earlier images found for a rollback rehearsal
     # (`aistack.sandbox.rollback.PreviousImage`), for the summary.
@@ -127,8 +125,7 @@ class SandboxRun:
     # -- images ----------------------------------------------------------
 
     def image_for(self, container: str, live_image: str) -> str:
-        """The image this run starts for `container`: the live one,
-        unless a rollback rehearsal named an earlier one."""
+        """The image this run starts for `container`: the live one unless overridden."""
 
         chosen = self.image_overrides.get(container, live_image)
         if chosen != live_image:
@@ -222,8 +219,7 @@ class SandboxRun:
 
     def make_directory(self, helper_image: str) -> None:
         self.directory.mkdir(parents=True, exist_ok=False)
-        # What teardown, or a later cleanup, removes the root-owned
-        # restored files with.
+        # The image teardown or a later cleanup uses to remove root-owned files.
         (self.directory / HELPER_IMAGE_FILE).write_text(helper_image + "\n", encoding="utf-8")
 
     def create_network(self) -> None:
@@ -232,8 +228,10 @@ class SandboxRun:
     # -- teardown --------------------------------------------------------
 
     def teardown(self) -> None:
-        """Containers, network, files: everything the run made, whatever
-        happened before. Never raises; what it could not remove is noted."""
+        """Remove everything the run made, whatever happened before.
+
+        Never raises; what could not be removed is noted in the steps.
+        """
 
         started = self.clock()
         left = remove_run(self.run_id, self.directory, self.runner)
@@ -256,9 +254,10 @@ class SandboxRun:
         }
 
     def proposed_entry(self) -> str:
-        """`pra_tests.yml`'s entry for this run — proposed, never written
-        (`ADR-0018` § 5). A rollback rehearsal proposes none: it tests
-        an earlier image, not the service as it runs."""
+        """The `pra_tests.yml` entry for this run, proposed, never written (ADR-0018 § 5).
+
+        A rehearsal proposes none: it tests another image, not the service as it runs.
+        """
 
         if self.rehearsal or self.image_overrides:
             return ""
@@ -293,8 +292,7 @@ def rto_minutes(seconds: float) -> int:
 
 
 def remove_run(run_id: str, directory: Path, runner: Runner) -> list[str]:
-    """Remove one run's containers, network and files. Returns what
-    could not be removed."""
+    """Remove one run's containers, network and files; return what could not be removed."""
 
     left: list[str] = []
     listed = runner(["ps", "-aq", "--filter", f"label={LABEL}={run_id}"], 60)
@@ -309,7 +307,7 @@ def remove_run(run_id: str, directory: Path, runner: Runner) -> list[str]:
         image = marker.read_text(encoding="utf-8").strip() if marker.is_file() else ""
         if image:
             # The restored files belong to the containers' users (root,
-            # mysql, www-data): removed from inside a container, as root.
+            # mysql, www-data), so remove them from inside a container.
             runner(
                 ["run", "--rm", "--network", "none", "--label", f"{LABEL}={run_id}",
                  "--entrypoint", "sh", "-v", f"{directory}:/run-dir", image,
@@ -323,8 +321,10 @@ def remove_run(run_id: str, directory: Path, runner: Runner) -> list[str]:
 
 
 def cleanup(run_root: Path, runner: Runner) -> list[str]:
-    """Every run an interruption may have left: by label, and by
-    directory under `run_root`. Returns one line per run handled."""
+    """Remove every run an interruption may have left, found by label and by directory.
+
+    Returns one line per run handled.
+    """
 
     done: list[str] = []
     runs: set[str] = set()

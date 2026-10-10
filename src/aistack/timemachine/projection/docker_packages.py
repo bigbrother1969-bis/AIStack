@@ -1,37 +1,16 @@
 """
-Project package-inventory snapshots into the graph — 1.5's fourth and
-last named collector (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md` §
-1.5), deferred past 1.5.0 (`ADR-0011` § 22's own closing note) and
-cadré for 1.5.1, 2026-09-28.
+Project package-inventory snapshots into the graph.
 
-**One subdirectory per subject, not one shared batch file — the same
-reasoning `aistack.timemachine.projection.docker_digest` already gives
-for its own write side (`aistack.providers.docker.packages_history`
-explains it there).** This walk is the read side of the same
-contract: it finds every subject root under `generated_dir /
-"docker-packages"` by locating each `history/docker-packages` leaf,
-however deep a subject's own `/` nests it, and rebuilds the subject
-string the exact inverse way `aistack.providers.docker.packages_history
-._output_path` derived it.
+One subdirectory per subject under `generated_dir / "docker-packages"`
+(written by `aistack.providers.docker.packages_history`). Each subject
+root is found by its `history/docker-packages` leaf, however deep the
+subject's `/` nests it, and the subject string is rebuilt as the
+inverse of `packages_history._output_path`.
 
-**`aistack:packageCount` and `aistack:packageMechanism`, not every
-package, as graph facts.** A package inventory can hold anywhere from
-zero to thousands of entries; promoting each one to its own graph
-triple would turn a provenance graph meant to answer "when did this
-happen, for which subject" into a bulk package manifest nothing here
-queries that way — the same reasoning `aistack.timemachine.projection
-.docker_diff`'s own module already gives for `aistack:changeCount`,
-doubled here. The full name/version list stays exactly where it was
-recorded — reachable through `aistack.cli.history_query` the same way
-any other stream's raw content already is — and this stream's own two
-lightweight facts (how many packages, which mechanism answered) are
-what a graph fact is worth stating.
-
-**No `aistack:occurredAt`, the same restraint every other 1.5 stream
-in this package already documents for the same reason.** A package
-inventory observed this cycle states only what is installed *now*,
-never when any one package was itself installed or upgraded — there
-is no independent instant here to state.
+Only `aistack:packageCount` and `aistack:packageMechanism` become graph
+facts; the full package list, possibly thousands of entries, stays in
+the recorded snapshot. No `aistack:occurredAt`: a snapshot says what is
+installed now, not when.
 """
 
 from __future__ import annotations
@@ -58,10 +37,8 @@ from aistack.timemachine.vocabulary import (
     XSD_INTEGER,
 )
 
-# `aistack.providers.docker.packages_history`'s own leaf names,
-# redeclared here — the same cross-boundary convention every other
-# projector in this package already redeclares its own stream's leaf
-# name under.
+# Leaf names of `aistack.providers.docker.packages_history`, redeclared
+# rather than imported across the writer/reader boundary.
 PACKAGES_DIRNAME = "docker-packages"
 STEM = "docker-packages"
 STREAM_STEM = "docker-packages"
@@ -69,9 +46,7 @@ STREAM_STEM = "docker-packages"
 
 @dataclass(frozen=True)
 class DockerPackagesProjectionSummary:
-    """What one `project_docker_packages` run actually did — the same
-    measured-report shape every other stream's projection already
-    gives a caller."""
+    """What one `project_docker_packages` run did."""
 
     subjects_seen: int
     snapshots_seen: int
@@ -80,13 +55,7 @@ class DockerPackagesProjectionSummary:
 
 
 def _subject_roots(packages_root: Path) -> list[tuple[str, Path]]:
-    """
-    `(subject, subject_root)` for every subject `packages_root`
-    actually holds a recorded observation for — the same `rglob`-based
-    walk every other write-on-change stream's projector in this
-    package already holds, unchanged in shape, against this stream's
-    own leaf name.
-    """
+    """`(subject, subject_root)` for every subject with a recorded snapshot."""
 
     roots: list[tuple[str, Path]] = []
 
@@ -110,21 +79,11 @@ def project_docker_packages(
     Add every recorded package-inventory snapshot under
     `generated_dir / "docker-packages"` to `store`.
 
-    One shared `prov:Activity` (`stream_iri("docker-packages")`) is
-    the collection activity every snapshot is `prov:wasGeneratedBy` —
-    emitted once, lazily, the first time this stream is actually found
-    to hold a snapshot, the same guard every other dedicated projector
-    in this package already holds.
-
-    For each snapshot: it exists (`prov:Entity`), when it was recorded
-    (`prov:generatedAtTime` — recording time; see this module's own
-    docstring for why no `aistack:occurredAt`), which subject it
-    concerns (`aistack:stableSubject`), how many packages it reported
-    (`aistack:packageCount`), and which mechanism answered
-    (`aistack:packageMechanism`).
-
-    Every candidate fact passes through the same `filter_fact` every
-    other stream's projection already uses.
+    The stream's `prov:Activity` is emitted once, only when a snapshot
+    is found. Per snapshot: a `prov:Entity` with `prov:generatedAtTime`
+    (recording time), `aistack:stableSubject`, `aistack:packageCount`
+    and `aistack:packageMechanism`. Every fact goes through
+    `filter_fact`.
     """
 
     packages_root = generated_dir / PACKAGES_DIRNAME

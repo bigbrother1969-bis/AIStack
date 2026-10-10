@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Transport transaction lifecycle.
-"""
+"""Knowledge Transport Layer - Transport transaction lifecycle."""
 
 from enum import Enum
 

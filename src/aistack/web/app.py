@@ -1,13 +1,10 @@
-"""
-`create_app` — AIStack's single web application (`ADR-0012` § 1).
+"""`create_app`: AIStack's single web application (ADR-0012 § 1).
 
-Everything the application reads from its host arrives as an argument,
-so the suite builds it with a temporary directory and fakes, and every
-route is exercised in process, never over a socket.
+Everything read from the host is an argument, so tests build the app
+with a temporary directory and fakes and exercise routes in process.
 
-FastAPI's own `/docs`, `/redoc` and `/openapi.json` are switched off:
-they are routes too, and none of them declares an exposure — left on,
-they would describe every LAN route on the public port.
+FastAPI's `/docs`, `/redoc` and `/openapi.json` are off: they declare no
+exposure and would describe every LAN route on the public port.
 """
 
 from __future__ import annotations
@@ -83,7 +80,7 @@ class WebPaths:
         configured(PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml")
     )
     resource_priority: Path = configured(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml")
-    # What the troubleshooting assistant states of a finding (2026-10-09).
+    # Read by the troubleshooting assistant to describe a finding.
     backup_strategy: Path = configured(PACKAGE_ROOT / "backup_strategy" / "definitions" / "backup_strategy.yml")
     pra_tests: Path = configured(PACKAGE_ROOT / "pra" / "definitions" / "pra_tests.yml")
     selection: Path = configured(PACKAGE_ROOT / "selection" / "definitions" / "music_android.yml")
@@ -92,11 +89,10 @@ class WebPaths:
     topology: Path = (
         configured(PACKAGE_ROOT / "architecture" / "definitions" / "infrastructure_topology.yml")
     )
-    # What a definition's relative paths (`selection_file`) resolve
-    # against: the configuration directory when there is one (the
-    # container, ADR-0017), else the checkout the application runs from.
+    # Base for relative paths in definitions (`selection_file`): the
+    # configuration directory in the container (ADR-0017), else the checkout.
     repository_root: Path = config_dir() or PACKAGE_ROOT.parents[1]
-    # Where the data is to be moved (1.8): chosen from Settings.
+    # Where the data is to be moved, chosen from Settings.
     data_location: Path = location_file(config_dir(), PACKAGE_ROOT.parents[1])
 
 
@@ -127,21 +123,20 @@ def create_app(
         redoc_url=None,
         openapi_url=None,
     )
-    # No automatic `/screen` → `/screen/` redirect: the router answers
-    # it before any route — and so before any exposure guard — runs,
-    # and a redirect on the public port would tell apart a LAN screen
-    # from a path that does not exist. Each screen declares both forms.
+    # No automatic `/screen` → `/screen/` redirect: it would run before the
+    # exposure guard and reveal LAN screens on the public port. Each screen
+    # declares both forms.
     app.router.redirect_slashes = False
     app.state.generated_dir = generated_dir
-    # What waits behind each console card (2026-10-10).
+    # What waits behind each console card.
     app.state.pending_counts = pending_counts if pending_counts is not None else pending_screen.counts
-    # The API keys entered from Settings, laid over the environment
-    # (2026-10-09); `api_keys` and `test_api_key` are replaced in tests.
+    # API keys entered from Settings, laid over the environment; both
+    # callables are replaced in tests.
     app.state.api_keys = api_keys if api_keys is not None else load_api_keys
     app.state.test_api_key = test_api_key if test_api_key is not None else api_keys_screen.test_key
     apply_to_environ(generated_dir, app.state.api_keys())
     app.state.listeners = listeners
-    # The host's disks and mounts, for Settings (2026-10-04).
+    # The host's disks and mounts, for Settings.
     app.state.storage = storage if storage is not None else live_storage
     app.state.instance_config = load_instance_config_yaml(INSTANCE_CONFIG)
     # Development or production (ADR-0016): which Explication rules apply.
@@ -150,30 +145,29 @@ def create_app(
     app.state.paths = paths if paths is not None else WebPaths()
     # Host-touching collaborators (ADR-0012 § 4): what Docker reports.
     app.state.discover_containers = discover
-    # ... and what Syncthing reports for the Selection UI's folder.
+    # ... and what Syncthing reports for the Selection folder.
     app.state.syncthing = syncthing
     app.state.kernel = kernel if kernel is not None else create_kernel()
-    # ... the host's findings, and the AI Runtime, for the assistant.
+    # ... the host's findings and the AI runtime, for the assistant.
     app.state.collect_findings = collect_findings
     app.state.ask_ai = ask_ai
-    # Where the AI's question goes, said before the click (2026-10-09).
+    # Where the AI's question goes, shown before the click.
     app.state.ai_destination = destination
     app.state.troubleshooting_sessions = {}
-    # The CPU findings the list last showed, and when: a reading is an
-    # instant, so the one the owner clicked may be gone a second later.
+    # The CPU findings last listed: a reading is an instant, so the one
+    # clicked may be gone a second later.
     app.state.troubleshooting_listed = {}
-    # What the AI is working on, for whom: the notice on every page
-    # when an answer is ready (2026-10-09).
+    # AI jobs per person, for the "answer ready" notice.
     app.state.ai_jobs = AIJobs()
-    # One worker: the model answers one call at a time on this host,
-    # and a diagnosis must not hold a request open for minutes.
+    # One worker: the model answers one call at a time on this host, and a
+    # diagnosis must not hold a request open for minutes.
     app.state.run_in_background = (
         run_in_background
         if run_in_background is not None
         else ThreadPoolExecutor(max_workers=1, thread_name_prefix="aistack-ai").submit
     )
-    # ... and the live network tree the Time Machine draws, rebuilt at
-    # most every 45 s: live Docker discovery is slow per request.
+    # ... and the live network tree, rebuilt at most every 45 s because
+    # live Docker discovery is slow.
     app.state.network_tree = (
         network_tree
         if network_tree is not None
@@ -186,11 +180,10 @@ def create_app(
             )
         ).get
     )
-    # The sign-in secrets the installation assistant kept (ADR-0023 § 5),
-    # laid over the environment before the sign-in reads it.
+    # Sign-in secrets kept by the installation assistant (ADR-0023 § 5),
+    # applied to the environment before authentication reads it.
     apply_sign_in(generated_dir)
-    # Who is signed in (ADR-0013): Pocket ID, the sessions on disk
-    # under the generated directory, the fallback administrator.
+    # Sign-in (ADR-0013): Pocket ID, sessions on disk, fallback administrator.
     app.state.authentication = (
         auth
         if auth is not None
@@ -199,11 +192,10 @@ def create_app(
             app.state.instance_config.service_url("web_lan"),
         )
     )
-    # What a new installation still has to declare (ADR-0017 § 4),
-    # measured once: nothing it reads changes before a restart.
+    # What a new installation still has to declare (ADR-0017 § 4), measured
+    # once: nothing it reads changes before a restart.
     app.state.first_start = pending if pending is not None else first_start.measured(app.state.authentication, generated_dir)
-    # What the installation assistant asks of the public addresses
-    # (ADR-0023 § 5); replaced in tests.
+    # The installation assistant's probe of the public addresses (ADR-0023 § 5).
     app.state.setup_probe = setup_probe
     app.state.routers = []
 
@@ -227,28 +219,25 @@ def create_app(
 
     @app.middleware("http")
     async def _who_is_signed_in(request: Request, call_next: Any) -> Response:
-        # Every HTML page carries the navigation's session marker;
-        # this writes the signed-in person — or the way to sign in —
-        # into it, generated pages and screens alike (ADR-0013 § 7).
+        # Fills the navigation's session marker on every HTML page with the
+        # signed-in person or the sign-in link (ADR-0013 § 7).
         response: Response = await call_next(request)
-        # A HEAD answer has no body to fill: its headers stay those of
-        # the page as generated.
+        # A HEAD answer has no body to fill.
         if request.method == "HEAD" or not response.headers.get("content-type", "").startswith(
             "text/html"
         ):
             return response
 
         body = b"".join([chunk async for chunk in response.body_iterator])  # type: ignore[attr-defined]
-        # While something required is undeclared, every page leads to
-        # what (ADR-0017 § 4), just before the way to sign in.
+        # While something required is undeclared, every page links to /setup
+        # (ADR-0017 § 4), just before the sign-in link.
         marker = SESSION_MARKER.encode("ascii")
         if marker in body:
             body = body.replace(marker, first_start.badge(request).encode("utf-8") + marker, 1)
         filled = fill_markers(request, body)
         filled = _with_notices(request, filled)
         rebuilt = Response(content=filled, status_code=response.status_code)
-        # Every header as it was — each `set-cookie` on its own — but the
-        # length, which the filled body changes.
+        # Keep every header (each `set-cookie` separately) except the length.
         rebuilt.raw_headers = [
             (name, value) for name, value in response.raw_headers if name.lower() != b"content-length"
         ] + [(b"content-length", str(len(filled)).encode("ascii"))]
@@ -260,9 +249,8 @@ def create_app(
 
     @app.exception_handler(StarletteHTTPException)
     async def _localized_error(request: Request, error: StarletteHTTPException) -> Response:
-        # A path no router knows, and a route refused on this port, are
-        # the same answer: the console's own localized 404 — a refused
-        # route must not be told apart from one that does not exist.
+        # An unknown path and a route refused on this port get the same localized
+        # 404, so a refused route cannot be told apart from a missing one.
         if error.status_code == 404:
             return console.answer(request, console.NOT_FOUND_PATH)
 
@@ -272,9 +260,10 @@ def create_app(
 
 
 def _with_notices(request: Request, body: bytes) -> bytes:
-    """The AI notice (`aistack.web.notifications`) before `</body>`, on
-    the local-network listener and for a signed-in person only — the
-    screens that ask the AI answer there and nowhere else."""
+    """Insert the badges script, and on the LAN listener the AI notice, before `</body>`.
+
+    Signed-in sessions only; AI screens answer on the LAN listener only.
+    """
 
     listeners: Listeners = request.app.state.listeners
     if current_session(request) is None:
@@ -282,7 +271,7 @@ def _with_notices(request: Request, body: bytes) -> bytes:
     end = body.rfind(b"</body>")
     if end < 0:
         return body
-    # The cards' pastilles, on both listeners (2026-10-10).
+    # The cards' badges, on both listeners.
     added = pending_screen.SNIPPET
     if arrival_port(request) == listeners.lan_port:
         language = page_language(

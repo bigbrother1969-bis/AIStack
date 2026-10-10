@@ -1,8 +1,9 @@
 """
-The "Données d'AIStack" domain of the health cockpit (`ADR-0021`): one
-finding when AIStack's data passes `warn_percent` of its budget, a more
-pressing one past the budget itself. Written once for the three places
-that build the cockpit.
+The "Données d'AIStack" domain of the health cockpit (ADR-0021).
+
+One finding when AIStack's data passes `warn_percent` of its budget, a
+more pressing one past the budget. Shared by every place that builds
+the cockpit.
 """
 
 from __future__ import annotations

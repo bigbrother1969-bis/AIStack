@@ -9,21 +9,11 @@ from aistack.contracts.storage_threshold import FREE_BYTES, KINDS
 @dataclass(frozen=True)
 class StorageShortage:
     """
-    One volume whose occupancy has already been found to cross the
-    threshold `OPS-0005` declares for it.
+    A volume whose occupancy crosses its OPS-0005 threshold; the
+    constructor checks it.
 
-    Mirrors `UnexplainedConsumption`: the reading and the threshold it
-    was already found to cross, enforced here rather than only in the
-    caller — the same reasoning `UnexplainedConsumption`'s own
-    docstring gives for validating in the constructor. `evaluate_storage`
-    (`aistack.runtime.evaluate_storage`) only ever receives a shortage
-    already confirmed to be one; it does not re-derive "too full" from
-    a bare reading.
-
-    `threshold_kind`/`threshold_value` are copied from the
-    `StorageThreshold` that fired, not re-looked-up later — the same
-    "state what fired, not what fires today" `RuntimeFinding.signature`
-    already holds.
+    `threshold_kind`/`threshold_value` are copied from the threshold
+    that fired, so the shortage states what fired then.
     """
 
     reading: StorageReading

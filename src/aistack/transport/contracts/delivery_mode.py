@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Delivery modes.
-"""
+"""Knowledge Transport Layer - Delivery modes."""
 
 from enum import Enum
 

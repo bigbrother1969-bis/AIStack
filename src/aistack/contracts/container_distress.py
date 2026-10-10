@@ -5,9 +5,7 @@ from dataclasses import dataclass
 from aistack.contracts.container_health import ContainerHealth
 from aistack.contracts.container_state_reading import ContainerStateReading
 
-# The two conditions `OPS-0004`'s third reference incident names —
-# closed the same way `StorageThreshold.KINDS` is: no third reason
-# without a real case naming one (`GOV-P-001`).
+# Closed set of distress reasons (OPS-0004).
 RESTARTING = "restarting"
 UNHEALTHY = "unhealthy"
 
@@ -17,22 +15,10 @@ REASONS = (RESTARTING, UNHEALTHY)
 @dataclass(frozen=True)
 class ContainerDistress:
     """
-    One container already found to be in a state `OPS-0004`'s third
-    reference incident names as a problem — restart-looping, or
-    Docker's own healthcheck declaring it unhealthy.
+    A container found restarting or unhealthy (OPS-0004).
 
-    Mirrors `StorageShortage`: the reading, and the reason(s) it was
-    already found to cross into distress, enforced here rather than
-    only in the caller — `find_container_distress`
-    (`aistack.runtime.container_distress`) only ever constructs one
-    already confirmed; it does not re-derive "in distress" from a
-    bare reading handed to it from elsewhere.
-
-    `reasons` may carry both at once — a container can be restarting
-    *and* declared unhealthy in the same instant — but never neither;
-    an instance naming no reason is not what this type states, the
-    same "a shortage that is not actually short cannot be
-    constructed" discipline `StorageShortage` already holds.
+    `reasons` holds one or both, never none; the constructor checks each
+    against the reading.
     """
 
     reading: ContainerStateReading
@@ -58,8 +44,8 @@ class ContainerDistress:
             raise ValueError(
                 f"{self.reading.container} cites {unknown} as a distress "
                 f"reason; only {REASONS} are detected in this scope "
-                f"(instantaneous state only — no restart-loop counting, "
-                f"the owner's chosen v1 scope, 2026-09-11)"
+                f"(instantaneous state only; restart loops are counted "
+                f"apart)"
             )
 
         if RESTARTING in self.reasons and self.reading.state != RESTARTING:

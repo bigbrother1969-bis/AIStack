@@ -9,16 +9,10 @@ from aistack.providers.gpu.yaml import load_gpu_thresholds_yaml
 def gpu_thresholds_for_host(
     path: Path, hostname: str
 ) -> tuple[tuple[GpuThreshold, ...], str]:
-    """
-    Read `path`'s declared GPU thresholds for `hostname`, or an empty
-    tuple with a note explaining why — never raises.
+    """Return `path`'s GPU thresholds for `hostname`, or an empty tuple and
+    a note explaining why. Never raises.
 
-    Mirrors `storage_thresholds_for_host`/`backup_thresholds_for_host`
-    exactly (same three branches, same message shape), and — like
-    `backup_thresholds_for_host` — is imported directly by both
-    `aistack.cli.runtime_diagnose` and `aistack.cli.health_render` from
-    the start: neither carried GPU-checking code of its own before this
-    domain existed, so there is no prior duplicate to preserve.
+    Same branches and messages as `storage_thresholds_for_host`.
     """
 
     if not path.exists():

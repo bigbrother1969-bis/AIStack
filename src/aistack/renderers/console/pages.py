@@ -1,9 +1,7 @@
-"""
-The console's three reading pages (2026-10-03): help, legal notice,
-licence and sources — reached from the console's left column, served
-by the console in the visitor's language, every text from the
-catalogs and every publisher detail from the declared
-`ConsoleIdentity`. Pure, like every renderer in this package.
+"""The console's reading pages: help, manual, legal notice, licence and sources.
+
+Text comes from the catalogs and publisher details from the declared
+`ConsoleIdentity`. Pure.
 """
 
 from __future__ import annotations
@@ -110,8 +108,7 @@ def render_help_html(lang: str | None = None, languages: Languages | None = None
 
 
 def render_manual_html(lang: str | None = None, languages: Languages | None = None) -> str:
-    """The user manual, in the reader's language (the reference
-    language's text when a language has none), with its contents."""
+    """The user manual in the reader's language, with a table of contents."""
 
     from aistack.manual import manual_source
     from aistack.renderers.markdown import render
@@ -165,7 +162,7 @@ def render_legal_html(
         if identity.contact_url:
             publisher_lines.append(escape_text(t("console.legal.contact", contact_url="\0")).replace("\0", contact))
     else:
-        # A private installation (2.0.0-rc1): nobody declared as publisher.
+        # A private installation: no publisher declared.
         publisher_lines = [escape_text(t("console.legal.private"))]
 
     body = "\n".join(

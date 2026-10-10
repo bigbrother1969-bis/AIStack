@@ -1,13 +1,9 @@
-"""
-The disks and mounts the AIStack host sees, and which of them holds
-each thing AIStack keeps (asked by the owner, 2026-10-04: from Settings,
-see every disk and mount reachable from the server, to choose later
-where each component goes — choosing is 1.8's).
+"""The disks and mounts the AIStack host sees, and which of them holds
+each component AIStack keeps (shown in Settings).
 
-Read from `/proc/self/mounts` and `os.statvfs`, never from a command:
-pseudo filesystems and Docker's own layers are left out. A network
-mount that does not answer within two seconds is shown as such, never
-waited on.
+Read from `/proc/self/mounts` and `os.statvfs`, never from a command.
+Pseudo filesystems and Docker's layers are left out. A mount that does
+not answer `statvfs` within two seconds is shown without usage.
 """
 
 from __future__ import annotations
@@ -130,13 +126,10 @@ def disks_and_mounts(
     """Every real mount, its size and free space, and which of
     `components` (label → path) it holds.
 
-    **A single file bound in is not a mount to show** (1.9, the owner's
-    2026-10-04 screenshot): in the container, the NVIDIA runtime binds
-    its tools one file at a time — `/usr/bin/nvidia-debugdump`,
-    `nvidia-smi`, its libraries — and `/proc/self/mounts` lists each.
-    Nobody keeps anything on a file. A network share is never asked:
-    a share that does not answer would hang the page on that question,
-    and a share is always a directory."""
+    Single-file bind mounts (e.g. the NVIDIA runtime binds `nvidia-smi`
+    and its libraries one by one) are skipped. Network mounts are never
+    `is_file`-checked, since a share that does not answer would hang.
+    """
 
     mounts = [
         mount

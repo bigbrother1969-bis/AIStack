@@ -1,15 +1,11 @@
-"""
-The guided first start (`ADR-0017` § 4): a page, `/setup`, saying what a
-new installation still has to declare, and a link to it at the top of
-every page while something required is missing.
+"""The guided first start (ADR-0017 § 4): `/setup` lists what a new
+installation still has to declare, and every page links to it while
+something required is missing.
 
-Public, like the console: on a new installation nobody can sign in yet —
-signing in is one of the things to declare. It shows declaration file
-names, variable names and the values in use, never a secret.
-
-What is missing is measured once, when the application is created: the
-declarations are read at start and the secrets come from the process's
-environment, so nothing can change before the next restart.
+Public, since nobody can sign in yet on a new installation. Shows file
+names, variable names and values in use, never a secret. Measured once
+when the application is created: declarations and secrets are only
+read at start.
 """
 
 from __future__ import annotations
@@ -98,8 +94,7 @@ def badge(request: Request) -> str:
 
 
 def _where(name: str) -> str:
-    # Where the owner edits it: `./config/…` on the host, never the
-    # container's `/config/…` (1.9).
+    # The host path the owner edits (`./config/…`), not the container's `/config/…`.
     directory = shown_config_dir()
     return f"{directory}/{name}" if directory is not None else name
 
@@ -120,8 +115,8 @@ def _values(request: Request, key: str, missing: str) -> list[tuple[str, str]]:
             ("admin_group", definition.admin_group),
         ]
     if key == SIGN_IN_SECRETS:
-        # Only the names: a secret present is never shown, and an item
-        # is listed here because one is missing.
+        # Names only: a present secret is never shown, and this item is listed
+        # because one is missing.
         return [(definition.client_id_env, missing), (definition.client_secret_env, missing)]
     return [(definition.local_admin_env, missing)]
 
@@ -131,8 +126,7 @@ def _file(key: str) -> str:
 
 
 def _assistant(request: Request) -> dict[str, object] | None:
-    """The installation assistant, when it is open (ADR-0023 § 5): said
-    on the local network only, where its pages answer."""
+    """The installation assistant's state when open (ADR-0023 § 5), LAN only."""
 
     lan_port = request.app.state.listeners.lan_port
     if arrival_port(request) != lan_port or not setup_wizard.is_open(request.app.state.generated_dir):

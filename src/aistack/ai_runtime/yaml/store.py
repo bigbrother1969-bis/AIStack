@@ -11,31 +11,12 @@ _REQUIRED_FIELDS = ("host", "port")
 
 def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
     """
-    Load the governed AI Runtime definition from YAML.
+    Load the AI Runtime definition from YAML.
 
-    **Written by hand, not generated** — same reasoning as
-    `load_resource_priority_yaml`: this file is typed by the owner,
-    so a missing key here is a typo, and the error names which one
-    and where.
-
-    **`model` is optional and defaults to `None`, never to a guessed
-    string.** A file that has not yet had its `model:` line filled in
-    (or spells it `model: null`/omits it) loads exactly as "no model
-    configured" — `aistack.ai_runtime.definition.AIRuntimeDefinition`'s
-    own docstring explains why that is a real state, not a gap this
-    loader papers over.
-
-    **`timeout` is optional and defaults to
-    `AIRuntimeDefinition.timeout`'s own default** (`OllamaEngine`'s
-    120s) when absent — a file written before 2026-09-25 has no
-    `timeout:` line at all, and that means "use the ordinary default,"
-    the same backward-compatible reading `model`'s own absence already
-    gets, not an error.
-
-    **`translator_model` is optional and defaults to `None`, the same
-    reading as `model`'s own absence** — a file written before
-    2026-09-27 has no `translator_model:` line at all, and that means
-    "no translation pass configured," not an error.
+    `host` and `port` are required; a missing key raises a `ValueError`
+    naming it. `model`, `translator_model` and `timeout` are optional:
+    an absent model means "not configured", never a guessed name. A
+    `gemini:` block must name a `model`.
     """
 
     with path.open("r", encoding="utf-8") as stream:

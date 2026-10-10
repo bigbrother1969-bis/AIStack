@@ -1,19 +1,13 @@
 """
-What the assistant says itself, from real data, before any AI
-(owner, 2026-10-09, UAT on GIGABYTE: "Faits d'abord, IA ensuite").
+What the assistant states itself, from real data, before asking any AI.
 
-The first real use of the assistant on a backup gap (`nextcloud-files`,
-État persistant) took 25 minutes and gave a recommendation with no
-fact of the host in it: a 1.5 B model, on a Phenom II, given only the
-finding's sentence, talked about energy savings and logs. A model of
-this size cannot know the host; AIStack does. So the assistant states
-first what it measured and what was declared (the finding's evidence,
-and the declarations naming its subject), then what to do — the
-domain's how-to, the finding's remediation, the block to write and
-where, the command that shows it worked. The AI's opinion is asked
-only afterwards, on the owner's click, and shown as an opinion.
+A small local model cannot know the host; AIStack can. So the assistant
+first lists what it measured and what is declared about the finding's
+subject, then what to do: the domain's how-to, the remediation, the block
+to write and where, and a command to verify. The AI's opinion comes after,
+on the user's click.
 
-Pure but for reading the declarations it is given.
+Pure apart from reading the declaration files it is given.
 """
 
 from __future__ import annotations
@@ -37,8 +31,7 @@ CONSUMPTION = "Consommation CPU"
 PRA_TESTS = "Tests PRA"
 UNCOVERED_STATE = "État persistant"
 
-# The cockpit's domain names → the plan's how-to (`plan.how_to.*`),
-# the same text the action plan shows for the domain.
+# Cockpit domain names mapped to the action plan's how-to keys (`plan.how_to.*`).
 HOW_TO = {
     "Stockage": "storage",
     "Services": "services",
@@ -67,9 +60,8 @@ class Guidance:
     snippet_file: str = ""
     # A command that shows the fix worked; empty when none.
     verify: str = ""
-    # The result of a test the owner made can be recorded from the page
-    # (a PRA test, 2026-10-09: "pas de bouton Appliquer"); the method
-    # proposed for the record.
+    # True when the result of a test the user ran (e.g. a PRA test) can be
+    # recorded from the page; `record_method` is the method proposed.
     record: bool = False
     record_method: str = ""
 
@@ -99,8 +91,7 @@ def _value(t: Translate, field: str, value: Any) -> str:
     if isinstance(value, float):
         return f"{value:.1f}"
     if isinstance(value, datetime):
-        # The zone said: in the container it is UTC, two hours from the
-        # owner's clock in summer (UAT, 2026-10-09: "16:52" read at 18:53).
+        # Show the time zone: in the container it is UTC, not local time.
         return (value.strftime("%Y-%m-%d %H:%M ") + (value.tzname() or "")).strip()
     if isinstance(value, date):
         return value.isoformat()
@@ -199,9 +190,9 @@ def guidance(
     if domain == PRA_TESTS:
         declared = _declared_backup(subject, declarations.backup_strategy, t)
         facts += declared
-        # A host imaged by Clonezilla: the owner's test, 2026-10-09 —
-        # Clonezilla checks the image is restorable without a disk to
-        # write it to. Not a full restore, and said so in the entry.
+        # A host imaged by Clonezilla: its check proves the image is
+        # restorable without writing it to a disk. Not a full restore, and
+        # the snippet says so.
         clonezilla = any("clonezilla" in fact.value.lower() for fact in declared)
         if clonezilla:
             steps.insert(0, t("troubleshooting.guide.pra_clonezilla", subject=subject))

@@ -13,15 +13,10 @@ _CRIT = re.compile(r"crit\s*=\s*([+-]?\d+\.\d+)°C")
 
 
 def parse_sensors_output(text: str) -> tuple[TemperatureReading, ...]:
-    """
-    `sensors`' (lm-sensors) own human-readable output, read into
-    typed readings — never a subprocess call here, so this is
-    tested directly against real captured text rather than only
-    live, the same split `extract_dockerfile_command` already holds
-    between parsing and the host-touching call around it.
+    """Parse the human-readable output of `sensors` (lm-sensors) into
+    temperature readings. Pure: no subprocess call.
 
-    A chip's own block looks like this, read live on GIGABYTE,
-    2026-09-04:
+    A chip block looks like this:
 
     ```
     k10temp-pci-00c3
@@ -30,22 +25,11 @@ def parse_sensors_output(text: str) -> tuple[TemperatureReading, ...]:
                            (crit = +72.0°C, hyst = +70.0°C)
     ```
 
-    The first line of a block (after a blank line, or at the very
-    start of the text) is the chip's own name; an `Adapter:` line is
-    skipped; a reading is any further top-level line naming a value
-    in `°C` — a fan speed or a voltage line does not match and is
-    silently not recorded, since this reads temperatures only.
-
-    **Indentation is what tells a continuation line from a new
-    reading**, not blank lines — `crit`/`hyst` commonly wrap onto
-    their own indented line, still describing the reading just
-    above. A line that is *not* indented always starts something
-    new, whether or not it turns out to be a temperature: whatever
-    was pending is closed off before it is read.
-
-    The sensor name returned combines the chip and the label
-    (`k10temp-pci-00c3/temp1`) — a bare `temp1` is not unique across
-    chips, and a citable reading needs to be.
+    The first line of a block is the chip name; `Adapter:` is skipped; any
+    other top-level line with a `°C` value is a reading (fans and voltages
+    are ignored). An indented line continues the previous reading
+    (`crit`/`hyst` often wrap). The sensor name is `chip/label`, since a
+    bare `temp1` is not unique across chips.
     """
 
     readings: list[TemperatureReading] = []

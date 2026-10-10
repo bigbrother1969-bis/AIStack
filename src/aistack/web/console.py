@@ -1,17 +1,8 @@
-"""
-The console's routes inside AIStack's single web application
-(`ADR-0012` § 1, `ADR-0010` § 5).
+"""Console routes (ADR-0012 § 1, ADR-0010 § 5).
 
-A thin adapter: every answer is computed by
-`aistack.console.routing.respond`, a pure function the suite already
-tests route by route; this router only hands it the request line and
-the cookie and copies its status, headers and body onto the wire. The
-paths are the ones the standard-library server answered since
-2026-09-27, so the Nginx Proxy Manager entry for
-`aistack.persiaut-family.fr` and every bookmark keep working.
-
-Every route here is `PUBLIC`: the console, its two generated pages and
-Settings are what the public port exists for.
+A thin adapter over `aistack.console.routing.respond`, which computes
+every answer. The paths are stable because the reverse proxy and
+bookmarks point at them. All routes are `PUBLIC`.
 """
 
 from __future__ import annotations
@@ -37,10 +28,10 @@ NOT_FOUND_PATH = "/.not-found"
 
 
 def answer(request: Request, path: str | None = None) -> Response:
-    """
-    `respond`, for this request, as a Starlette response — for `path`
-    instead of the request's own when one is given, keeping the query
-    so a `?lang=` still chooses the language of the answer.
+    """`respond` for this request as a Starlette response.
+
+    `path` overrides the request path; the query is kept so `?lang=`
+    still chooses the language.
     """
 
     target = path if path is not None else request.url.path

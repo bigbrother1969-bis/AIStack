@@ -1,12 +1,9 @@
 """
 Adding and removing a candidate SSH username (`ADR-0012` § 4).
 
-What the *Découverte réseau* screen used to compute in its own
-`app.py` at the repository root, outside the governed suite. Every
-name here is later tried, unattended, against every live host a scan
-of the owner's LAN finds (`aistack.cli.network_docker_discover`), so
-each change is one explicit, auditable edit — never a bulk rewrite of
-the list — and the screen only ever reports what happened.
+Every name is later tried, unattended, against every live host a LAN scan
+finds (`aistack.cli.network_docker_discover`), so each change is one
+explicit edit, never a bulk rewrite of the list.
 """
 
 from __future__ import annotations
@@ -42,9 +39,8 @@ class UsernameOutcome:
 
 def add_username(definition: NetworkDiscoveryDefinition, submitted: str) -> UsernameOutcome:
     """
-    Append one name to the declared, ordered list — a no-op, not an
-    error, when it is blank or already present, so a form submitted
-    twice never makes a name be tried twice against every host.
+    Append one name to the ordered list. Blank or already present is a
+    no-op, not an error, so a form submitted twice adds nothing.
     """
 
     username = submitted.strip()

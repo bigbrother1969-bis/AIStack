@@ -1,5 +1,4 @@
-# Homelab health — messages shared by the console (cartouche) and the
-# Health cockpit. Mirrors catalogs/fr/health.yml key for key.
+# Homelab health: messages shared by the console summary and the Health cockpit.
 
 bucket:
   excellent: "excellent"
@@ -40,7 +39,7 @@ page:
   evidence: "{count} piece(s) of evidence"
   diagnose: "Diagnose with the AI assistant →"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   diagnose: "Open this finding in the troubleshooting assistant, which has the AI model analyse\
   \ it step by step (local network only)"

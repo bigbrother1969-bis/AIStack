@@ -9,24 +9,12 @@ from aistack.generators.history import write_artifact_with_history
 
 class MediaLibraryObservationArtifactGenerator:
     """
-    Generate a governed artifact from a Media Library raw observation.
+    Write a Media Library raw observation as JSON, with Observation
+    History.
 
-    Same shape as `DockerObservationArtifactGenerator`,
-    `JellyfinObservationArtifactGenerator` and
-    `SyncthingObservationArtifactGenerator` — kept as its own class
-    for the same reason all three are: a generator that accepts
-    whatever shape its producer happens to emit cannot state what
-    it writes.
-
-    **Keeps Observation History since 2026-09-03**
-    (`write_artifact_with_history`) — extended to a new on-demand
-    command (`aistack.cli.media_library_discover`) rather than
-    `selection_ui`'s own per-page-view call to
-    `MediaLibraryProvider`, whose volume "keep everything,
-    indefinitely" was not decided for. `MediaLibraryProvider.
-    collect()` itself costs on the order of 1,4 s on the owner's
-    real library (its own docstring's measurement) — on demand is
-    the only cadence that stays cheap.
+    Used by the on-demand `aistack.cli.media_library_discover` command
+    only: `MediaLibraryProvider.collect()` is slow on a large library,
+    so it is not recorded on every page view.
     """
 
     def generate(

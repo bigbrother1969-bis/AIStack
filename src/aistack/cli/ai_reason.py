@@ -18,18 +18,6 @@ from aistack.providers.host.provider import HostProvider
 from aistack.runtime.evaluate import evaluate
 from aistack.runtime.idle_consumption import find_unexplained_consumption
 
-# **Duplicated from `aistack.cli.runtime_diagnose`, not imported —
-# the same choice, for the same reason, `aistack.cli.console_render`
-# already documents for its own four domain functions against
-# `aistack.cli.health_render`: "no CLI in this package imports
-# another." `runtime_diagnose.py` produces eleven different kinds of
-# finding across five domains and never persists any of them; this
-# command needs only the one narrow slice the owner chose as J6's
-# real subject (2026-09-13) — the `evaluate()` correlation J5 already
-# built and closed (`claude/PLAN-J5-EVALUATE-QUALIFIED-FINDING-2026
-# -09-11.md`) — so it collects exactly what that correlation needs
-# and nothing else `runtime_diagnose.py` also collects. A drift-guard
-# test compares this path against `runtime_diagnose`'s own.
 DEFAULT_RESOURCE_PRIORITY = (
     configured(Path(__file__).resolve().parents[1]
     / "priority"
@@ -37,8 +25,6 @@ DEFAULT_RESOURCE_PRIORITY = (
     / "resource_priority.yml")
 )
 
-# Same convention as every other CLI's own `DEFAULT_*` constant in
-# this package — a `Path(__file__).resolve()`-relative default.
 DEFAULT_AI_RUNTIME = (
     configured(Path(__file__).resolve().parents[1]
     / "ai_runtime"
@@ -50,7 +36,7 @@ DEFAULT_AI_RUNTIME = (
 def resource_priority_definition(
     path: Path,
 ) -> tuple[ResourcePriorityDefinition | None, str]:
-    """Mirrors `aistack.cli.runtime_diagnose.resource_priority_definition` exactly."""
+    """Load the resource-priority definition; (None, reason) when absent or unreadable."""
 
     if not path.exists():
         return None, (
@@ -69,13 +55,10 @@ def resource_priority_definition(
 
 def qualified_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
     """
-    Every `RuntimeFinding` `aistack.runtime.evaluate.evaluate` can
-    produce right now, freshly collected — J6's declared real subject
-    (2026-09-13), the same correlation J5 already closed.
+    Collect what `aistack.runtime.evaluate.evaluate` needs and return its findings.
 
-    Returns the findings and a note explaining why there may be none —
-    no resource-priority definition declared, or CPU readings that
-    could not be collected — never raises.
+    Returns the findings and a note explaining why there may be none (no
+    resource-priority definition, or CPU readings not collected); never raises.
     """
 
     definition, note = resource_priority_definition(DEFAULT_RESOURCE_PRIORITY)
@@ -93,9 +76,7 @@ def qualified_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
 
     consumption = find_unexplained_consumption(readings, definition)
 
-    # `HostProvider.collect_temperatures` is documented never to
-    # raise, the same convention `runtime_diagnose.py` already relies
-    # on for the same call.
+    # Never raises.
     temperatures = HostProvider().collect_temperatures()
 
     return evaluate(consumption, temperatures), ""
@@ -132,16 +113,9 @@ def main() -> None:
         print("No qualified finding to reason about right now.")
         return
 
-    # Built even when `model` is empty — `aistack.ai_runtime
-    # .operations._ask` returns before ever calling `engine.complete`
-    # in that case (`AIRuntimeDefinition.model`'s own docstring), so
-    # this engine is constructed but never actually asked anything.
-    #
-    # `timeout` is passed through from the declaration rather than
-    # left at `OllamaEngine`'s own default — a slower, more reliable
-    # model (`deepseek-r1:1.5b`, `AIRuntimeDefinition.timeout`'s own
-    # docstring) needs its declared, longer timeout honored here, not
-    # silently reset to 120s on every real call.
+    # Built even when `model` is empty: the operations then return before
+    # asking it. The declared timeout is passed on, since slower models
+    # need more than `OllamaEngine`'s default.
     engine = OllamaEngine(
         host=ai_runtime_definition.host,
         port=ai_runtime_definition.port,
@@ -149,14 +123,8 @@ def main() -> None:
         timeout=ai_runtime_definition.timeout,
     )
 
-    # A second engine, a second (fast) model — never `engine` again —
-    # asked to translate into French whenever `engine`'s own answer
-    # is not already there (`aistack.ai_runtime.operations`'s own
-    # docstring, 2026-09-27). `None` when the owner has not declared
-    # `translator_model:` yet, the same "nothing is asked for
-    # unconfirmed" guard `model`'s own absence already gets — every
-    # answer then travels exactly as it did before this feature
-    # existed.
+    # A second, fast model translates answers into French when they are
+    # not already; None when no `translator_model:` is declared.
     translator = (
         OllamaEngine(
             host=ai_runtime_definition.host,
@@ -175,11 +143,7 @@ def main() -> None:
             recommend(finding, engine, ai_runtime_definition.model, translator=translator),
         )
 
-        # J7, AI Reasoning History — traced unconditionally, even
-        # when every answer above is `reachable=False`: an engine
-        # that could not be reached is itself a real outcome worth
-        # keeping (`aistack.ai_runtime.reasoning_history`'s own
-        # docstring), not a case to skip persisting.
+        # Recorded even when no answer was reachable: that is an outcome too.
         record_ai_reasoning(finding, answers)
 
         report(finding, answers)

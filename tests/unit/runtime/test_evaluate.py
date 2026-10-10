@@ -254,7 +254,7 @@ def test_quiet_logs_confirm_the_consumption_as_idle():
     )
 
     assert "no incoming HTTP requests" in findings[0].interpretation
-    assert "criterion 4.1" in findings[0].interpretation
+    assert "remain unchecked" in findings[0].interpretation
 
 
 def test_a_real_request_line_says_the_consumption_may_be_real_work():

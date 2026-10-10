@@ -1,6 +1,4 @@
-"""
-Knowledge Transaction - Transport Operation Engine adapter.
-"""
+"""Knowledge Transaction - Transport Operation Engine adapter."""
 
 from __future__ import annotations
 

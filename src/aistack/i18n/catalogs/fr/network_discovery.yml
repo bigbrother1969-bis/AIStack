@@ -1,4 +1,4 @@
-# Mini-app Découverte réseau (network_discovery_ui) — ADR-0010.
+# Network discovery mini-app (network_discovery_ui), ADR-0010.
 
 title: "AIStack — Découverte réseau (utilisateurs SSH)"
 heading: "Découverte réseau — utilisateurs SSH"
@@ -16,7 +16,7 @@ status:
   removed: "Retiré : {username}"
   not_found: "Introuvable : {username}"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   remove: "Retirer {username} de la liste : ce nom ne sera plus essayé"
   input: "Nom d'utilisateur SSH à essayer sur chaque hôte que le scan trouve"

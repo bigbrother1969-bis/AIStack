@@ -9,45 +9,16 @@ from aistack.providers.docker import DockerProvider
 
 
 class ComposeProvider:
-    """Docker Compose Knowledge Provider.
+    """Derive Compose project observations from container labels.
 
-    This provider derives Compose project observations from the Docker
-    runtime labels exposed by running or stopped containers.
+    Also reads each project's compose file(s), named by the
+    `com.docker.compose.project.config_files` label (possibly
+    comma-separated), to extract each service's `depends_on:` as a flat
+    tuple of service names. `ComposeRuntimeCatalogBuilder` turns them into
+    container edges.
 
-    **Also reads each project's own `docker-compose.yml`, added
-    2026-09-12** (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, third
-    gap). Until then this class read only the labels Docker itself
-    attaches to a container — enough to know a project's name,
-    working directory and member containers, never what one service
-    inside it declares about another. `com.docker.compose.project.
-    config_files` already names the real file on disk (confirmed
-    2026-09-12 against GIGABYTE's own 33 real projects: always one
-    path, never Compose's documented comma-separated multi-file
-    form, but this reads that general form anyway rather than
-    assuming the single-file case seen so far is the only one that
-    will ever exist) — this reads it and extracts each service's own
-    `depends_on:`, the one real, owner-authored dependency fact this
-    heritage did not previously observe at all.
-
-    **Read, not parsed into a graph — same discipline as the rest of
-    this class.** A service's raw `depends_on:` (Compose allows a
-    plain list, or a mapping with `condition:` keys — GIGABYTE's own
-    files use both, confirmed 2026-09-12) is normalized here to a
-    flat tuple of the service names it names, and nothing more.
-    Turning those service names into container-to-container edges
-    belongs to `ComposeRuntimeCatalogBuilder`, the same boundary this
-    class already keeps for `container_name`/`compose_project`.
-
-    **Tolerant, never raising.** A project's compose file can be
-    absent, unreadable, or shaped in a way this does not expect — the
-    same "an ordinary state, not an exceptional one" rule
-    `BeszelProvider` follows for a hub it does not control the shape
-    of. Here the file is local, not a network call, but the same
-    reasoning applies: a stale label pointing at a file GIGABYTE has
-    since moved or deleted must not break every other project's
-    observation. That project's services then simply carry no
-    `depends_on` — `ComposeRuntimeCatalogBuilder` already treats
-    "nothing declared" as ordinary for every other field here.
+    Never raises: a missing or unreadable compose file just leaves that
+    project's services without `depends_on`.
     """
 
     provider_id = "aistack.provider.compose"
@@ -122,19 +93,11 @@ class ComposeProvider:
     def _read_depends_on(
         self, config_files: str | None
     ) -> dict[str, tuple[str, ...]]:
-        """
-        Read the real compose file(s) `config_files` names, and
-        return each service's own `depends_on:`, normalized to a flat
-        tuple of service names regardless of which of Compose's two
-        forms declared it.
+        """Each service's `depends_on:` service names from the compose
+        file(s) `config_files` names.
 
-        **Later files win, matching Compose's own merge order** — the
-        documented meaning of a comma-separated `config_files` (`-f`
-        given more than once). A later file mentioning a service
-        without a `depends_on:` of its own does not clear an earlier
-        file's — Compose does not document override-by-absence
-        either, and GOV-P-001 favours under-asserting over guessing
-        at a merge rule never observed.
+        Later files win, as with Compose's `-f` merge order; a later file
+        without `depends_on:` for a service does not clear an earlier one.
         """
 
         result: dict[str, tuple[str, ...]] = {}
@@ -171,15 +134,8 @@ class ComposeProvider:
         return result
 
     def _normalize_depends_on(self, depends_on: Any) -> tuple[str, ...]:
-        """
-        Compose accepts `depends_on:` as a plain list of service
-        names, or a mapping of service name to a `condition:` block
-        (`service_healthy`, etc.) — GIGABYTE's own files use both
-        (`booklore`/`romm` the mapping form, most others the plain
-        list). Only the names matter to this heritage; a condition is
-        Compose's own startup-ordering concern, not a fact this
-        observes.
-        """
+        """Service names from `depends_on:`, given either as a list or as a
+        mapping to `condition:` blocks (conditions are ignored)."""
 
         if isinstance(depends_on, list):
             return tuple(name for name in depends_on if isinstance(name, str))

@@ -1,13 +1,10 @@
-"""
-Knowledge Transaction - Default Transaction Executor.
+"""Default transaction executor.
 
 Runs a transaction's operations in order, each through the engine
-registered for its kind, and keeps their statuses: the first operation
-that raises is `failed` (its message kept in `error`), the ones after
-it `skipped`, the transaction `failed`; otherwise every operation and
-the transaction `succeeded` (1.10, `ADR-0019` § 6 — the dock's first
-real transactions). A listener, when given, is told as each operation
-starts and ends, so a caller can record progress as it happens.
+registered for its kind. The first operation that raises is `failed`
+(message in `error`), the ones after it `skipped`, and the transaction
+`failed`; otherwise everything is `succeeded` (`ADR-0019` § 6). An
+optional listener is told as each operation starts and ends.
 """
 
 from __future__ import annotations
@@ -30,9 +27,7 @@ class TransactionListener(Protocol):
 
 
 class DefaultTransactionExecutor:
-    """
-    Default implementation of a transaction executor.
-    """
+    """Default implementation of a transaction executor."""
 
     def __init__(
         self,
@@ -45,10 +40,8 @@ class DefaultTransactionExecutor:
         transaction: Transaction,
         listener: TransactionListener | None = None,
     ) -> Transaction:
-        """
-        Execute the operations in order; stop at the first failure.
-        Returns the transaction, its statuses set.
-        """
+        """Execute the operations in order, stopping at the first failure;
+        return the transaction with its statuses set."""
 
         transaction.status = TransactionStatus.RUNNING
         failed = False

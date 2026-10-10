@@ -1,6 +1,6 @@
 """
-Project what changes on the hosts into the graph (1.11, `ADR-0020`
-§ 7): one stream per host (`host-<name>`), one `prov:Entity` per event
+Project what changes on the hosts into the graph (`ADR-0020` § 7):
+one stream per host (`host-<name>`), one `prov:Entity` per event
 its collector recorded — a package installed or upgraded, an apt run, a
 file added, removed or modified, a unit enabled or disabled, the first
 run's baseline.

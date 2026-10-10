@@ -27,11 +27,6 @@ from aistack.kernel.bootstrap import create_kernel
 from aistack.providers.beszel import BeszelProvider
 from aistack.providers.http_probe import HttpProbeProvider
 
-# Same convention as `resource_priority_monitor.py`'s own
-# `DEFAULT_DEFINITION` — a `Path(__file__).resolve()`-relative default,
-# not `importlib.resources`. `GOV-0002/OS-056` is what makes this safe
-# to rely on from a real, installed distribution and not only an
-# editable one.
 DEFAULT_CATEGORIZATION = (
     configured(Path(__file__).resolve().parents[1]
     / "architecture"
@@ -39,8 +34,6 @@ DEFAULT_CATEGORIZATION = (
     / "service_categorization.yml")
 )
 
-# Added 2026-09-12 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10) — same
-# convention, alongside `service_categorization.yml`.
 DEFAULT_TOPOLOGY = (
     configured(Path(__file__).resolve().parents[1]
     / "architecture"
@@ -48,8 +41,6 @@ DEFAULT_TOPOLOGY = (
     / "infrastructure_topology.yml")
 )
 
-# Added 2026-09-23 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §11.9.1,
-# first of the three gaps named 2026-09-13) — same convention again.
 DEFAULT_CMDB_TARGETS = (
     configured(Path(__file__).resolve().parents[1]
     / "architecture"
@@ -60,48 +51,14 @@ DEFAULT_CMDB_TARGETS = (
 
 def main(environ: Mapping[str, str] | None = None) -> None:
     """
-    J2 step 6 (`claude/PLAN-J2-ARCHITECTURE-HTML-2026-09-10.md`): the
-    CLI wiring steps 3-5 built and tested against fixtures, run for
-    real against GIGABYTE's own Docker and Compose catalogs.
+    Render `architecture.html` from the Docker and Compose catalogs and the categorization.
 
-    **Two providers, one categorization, one graph.** Both catalogs
-    are built the same way their own single-purpose CLIs
-    (`docker_catalog.py`, `compose_catalog.py`) already build them —
-    this command does not duplicate that logic, it composes it with
-    `build_architecture_graph`, which is what step 3 exists for.
-
-    **A third, optional provider, added 2026-09-12** (§10, last
-    bullet): if `infrastructure_topology.yml` declares a `beszel:`
-    block, its two env var names are read from `environ` (real
-    `os.environ` by default, injectable for tests — same convention
-    `jellyfin_discover.main`/`syncthing_discover.main` already use)
-    and handed to `BeszelProvider`. Unlike the Docker/Compose
-    providers, Beszel being unreachable or unconfigured is never
-    fatal: `build_beszel_readings` on an empty/failed observation's
-    `systems` list is simply `()`, and `render_html` renders no
-    "État en direct" section at all — the same "nothing to show"
-    degradation the topology sub-blocks already have.
-
-    **A dependency graph, same day** (§10, third gap): `ComposeProvider`
-    itself now reads each project's real `depends_on:`, so no
-    additional provider call is needed here — `build_dependency_graph`
-    reads it straight off the already-built `compose_catalog`. A
-    project with no `depends_on:` anywhere is simply absent from the
-    graph; `render_html` adds no "Dépendances" view at all when the
-    graph carries no project — the same "nothing to show" degradation.
-
-    **A fourth provider, added 2026-09-23** (§11.9.1, first of the
-    three gaps named 2026-09-13 — "CMDB temps réel"): `cmdb_probe_
-    targets.yml` names the public HTTP endpoints the owner confirmed,
-    2026-09-23, from the live Homepage configuration on the Raspberry
-    Pi. Unlike Beszel, there are no credentials to resolve from
-    `environ` — `HttpProbeProvider` is built directly from the loaded
-    target list and probed synchronously, once per render, the same
-    "temps réel means as of the last render" snapshot discipline
-    every other live section on this page already has. An empty
-    target list means the provider is never even constructed, the
-    same "nothing to show" degradation `topology.beszel is None`
-    already gets.
+    Optional live sections: Beszel, when `infrastructure_topology.yml`
+    declares a `beszel:` block (credentials read from `environ` under
+    the names it gives), and HTTP probes of the targets in
+    `cmdb_probe_targets.yml`. An unreachable or undeclared source is
+    never fatal; its section is simply left out, as is the dependency
+    view when no Compose project declares `depends_on:`.
     """
 
     environ = os.environ if environ is None else environ
@@ -157,10 +114,8 @@ def main(environ: Mapping[str, str] | None = None) -> None:
             http_probe_observation["http_probe"]["targets"]
         )
 
-    # ADR-0010 § 5 (2026-09-27): one page per declared language, from
-    # the same views and readings — observed once, written once per
-    # language. The reference keeps `architecture.html` and its
-    # history stream.
+    # ADR-0010 § 5: one page per declared language from the same readings;
+    # the reference language keeps `architecture.html`.
     languages = default_languages()
     generated_dir = Path("reports/generated")
     written: list[str] = []

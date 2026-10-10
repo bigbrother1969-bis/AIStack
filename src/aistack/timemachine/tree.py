@@ -1,36 +1,16 @@
 """
-The network tree — 1.4's own contribution to the Time Machine
-(`ADR-0011` § 18, roadmap `ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.4,
-"Plan des rayonnages" in the library analogy).
+The network tree of the Time Machine (`ADR-0011` § 18): Réseau → Hôte
+→ Stack → Conteneur.
 
-**Réseau → Hôte → Stack → Conteneur, from the same real catalogs
-every other screen already reads — not from the graph.** `timemachine_
-ui`'s node/stream views read `OxigraphGraphStore` because a stream's
-own history is exactly what the graph projects; the Docker/Compose
-hierarchy is not itself in the graph (`ADR-0011` § *Open Points*
-leaves the raw streams' own business schema, container-level
-structure included, to 1.5) — it already exists as real, live,
-governed data via `DockerRuntimeCatalogBuilder`/
-`ComposeRuntimeCatalogBuilder`, the same builders `architecture_
-render` already calls. This module takes their output — a `Catalog`,
-built by the caller exactly the way `architecture_render.main` already
-builds one — and orders it into a tree, the same "flat, depth-first,
-every parent immediately before its own descendants" idiom
-`MediaTreeViewEngine` already established for a foldable list a
-surface can render in one pass without knowing the tree shape.
+Built from the Docker and Compose catalogs, not from the graph, which
+does not hold that hierarchy. The result is flat and depth-first, each
+parent immediately before its descendants, for a foldable list.
+Whether a name has history is answered from the graph by
+`historique_names`.
 
-**Historique is a separate concern, answered from the graph** — see
-`historique_names` below — because whether a name has real history to
-show is a fact about the *graph*, not about the catalog this module
-orders.
-
-**No Stack level for a remote host, ever** (owner's decision,
-2026-09-28, 1.4 cadrage): a remote host is known only through an
-explicit `network_docker_discover` scan, itself only `docker ps`, no
-compose file read over SSH — inventing a Stack grouping there from
-nothing observed would be exactly the guessed infrastructure
-`ARC-P-006` forbids. A remote host's containers attach directly to
-their host node.
+A remote host has no Stack level: it is known only from a
+`network_docker_discover` scan (`docker ps`, no compose file read), so
+its containers attach directly to the host.
 """
 
 from __future__ import annotations
@@ -47,11 +27,8 @@ from aistack.timemachine.vocabulary import AISTACK_EXPLAINS, AISTACK_STABLE_SUBJ
 @dataclass(frozen=True)
 class NetworkTreeNode:
     """
-    One row of the flat, depth-first ordering `build_network_tree`
-    returns — same shape and same reasoning as
-    `aistack.catalog.views.media.tree.CatalogViewItem`'s own
-    `has_children` field: a surface draws a fold control without
-    looking ahead in the list.
+    One row of `build_network_tree`'s flat ordering. `has_children`
+    lets a surface draw a fold control without looking ahead.
     """
 
     id: str
@@ -64,10 +41,8 @@ class NetworkTreeNode:
 
 @dataclass(frozen=True)
 class RemoteHost:
-    """One host `parse_remote_hosts` found in a stored scan — a real
-    IP address (or hostname, whatever the scan's own `host` field
-    said) and the container names `docker ps` reported there, never a
-    stack grouping (no compose file read over SSH)."""
+    """A host from a stored scan (address or hostname, as scanned) and
+    the container names `docker ps` reported there."""
 
     host: str
     containers: tuple[str, ...]
@@ -75,21 +50,11 @@ class RemoteHost:
 
 def parse_remote_hosts(observation: dict[str, Any]) -> tuple[RemoteHost, ...]:
     """
-    `NetworkDockerDiscoveryProvider.collect()`'s own JSON shape,
-    exactly as `NetworkDockerObservationArtifactGenerator` wrote it
-    and `aistack.history` hands back the latest snapshot of — never
-    a live scan triggered from here (that collector is deliberately
-    "never triggered automatically", `NetworkDockerDiscoveryProvider`'s
-    own docstring). A container without a resolvable name (`docker ps
-    --format '{{json .}}'`'s own `Names` field, blank or absent) is
-    skipped and never invented.
+    Remote hosts from a stored `NetworkDockerDiscoveryProvider`
+    observation (never a live scan), sorted by host.
 
-    Tolerant, not strict — the same reasoning
-    `aistack.architecture.dependency_graph.build_dependency_graph`
-    already gives for reading a governed `Catalog`: a missing or
-    oddly-shaped section degrades to "nothing observed here" rather
-    than raising, since this reads a machine-written artifact, not a
-    hand-edited file whose typo is the owner's own mistake to fix.
+    Tolerant: a missing or malformed section yields nothing rather than
+    raising, and a container without a `Names` value is skipped.
     """
 
     network_docker = observation.get("network_docker")
@@ -148,14 +113,9 @@ def build_network_tree(
     `Réseau ⊃ Hôte ⊃ Stack ⊃ Conteneur`, flat and depth-first, ready
     for a foldable list.
 
-    `docker_catalog`/`compose_catalog` are built by the caller exactly
-    as `architecture_render.main` already builds them (live
-    `DockerRuntimeCatalogBuilder`/`ComposeRuntimeCatalogBuilder`, this
-    module never collects anything itself) — the local host's own real
-    Stack/Container structure. A local container that belongs to no
-    Compose project (started by hand, or by a tool nothing here
-    curates) attaches directly under the local host, same "no
-    invented grouping" rule the remote hosts already follow.
+    The caller builds `docker_catalog`/`compose_catalog` (as
+    `architecture_render.main` does). A local container in no Compose
+    project attaches directly under the local host.
     """
 
     nodes: list[NetworkTreeNode] = [
@@ -279,24 +239,11 @@ def _split(raw: str) -> tuple[str, ...]:
 
 def historique_names(store: GraphStore, candidate_names: frozenset[str]) -> frozenset[str]:
     """
-    Which of `candidate_names` (a host, stack or container label) has
-    at least one real fact attached in the graph today — either as an
-    `aistack:stableSubject` on some observation entity (the CPU
-    priority decisions for `jellyfin` are today's one real case), or
-    as the subject an Explication `aistack:explains` (a commit scope,
-    a `pra_tests.yml` entry, an `explain` answer, a `claude/` note).
+    Which of `candidate_names` (host, stack or container labels) has
+    at least one fact in the graph, either as an `aistack:stableSubject`
+    or as the subject an Explication `aistack:explains`.
 
-    **Honestly narrow today, by design** (1.4 cadrage, 2026-09-28):
-    per-container passive collectors are 1.5's own work, so most
-    container names will not appear here yet — the caller shows that
-    plainly rather than hiding the gap, the same discipline
-    `timemachine_ui`'s v1 already holds against the four richer
-    maquettes (`ADR-0011` § *Open Points*).
-
-    **Two batched queries, never one per name** — `VALUES` lets the
-    whole candidate set travel in a single `SELECT`, the same reason
-    `explications_import_commits`/`pra_tests` importers batch their
-    own idempotency checks rather than querying per subject.
+    Two batched `VALUES` queries, never one per name.
     """
 
     if not candidate_names:
@@ -331,21 +278,12 @@ def historique_names(store: GraphStore, candidate_names: frozenset[str]) -> froz
 
 def historique_entity_iri(store: GraphStore, name: str) -> str | None:
     """
-    A real entity IRI to link `name` to, once `historique_names` has
-    already said it has one — never called for the full candidate set
-    (that is exactly the per-name querying `historique_names` itself
-    avoids); the caller invokes this only for the small number of
-    names a prior `historique_names` call already confirmed match
-    (in practice today, zero or one).
+    An entity IRI to link `name` to, for a name `historique_names`
+    already matched (one query per name, so not for the full set).
 
-    Checks the same two predicates, in the same order, and returns the
-    first entity either finds — `aistack:stableSubject` (a literal
-    match) before `aistack:explains` (an IRI match via `subject_iri`).
-    `None` only if the store changed between the two calls (a rebuild
-    landing mid-request, `ADR-0011` § *Decision* 13's own read-only
-    handle is opened fresh per request but not held across two calls
-    of this module) — the caller degrades to an unlinked label rather
-    than treating this as an error.
+    Tries `aistack:stableSubject` then `aistack:explains`. `None` only
+    if a rebuild changed the store between the two calls; the caller
+    then shows an unlinked label.
     """
 
     stable_rows = list(

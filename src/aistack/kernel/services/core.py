@@ -22,17 +22,7 @@ from aistack.transport.registry.in_memory_transport_registry import (
 
 @dataclass(frozen=True, slots=True)
 class KernelServices:
-    """
-    Immutable aggregate of composed Kernel services.
-
-    Carried a `knowledge: KnowledgeServices` field until
-    2026-09-18 (`GOV-0002/OS-058`) — a repository wrapping the
-    second, unwired `KnowledgeArtifact` definition, never called
-    from any CLI or generator, its only persistence an in-memory
-    dict that never survived a process. Removed along with that
-    definition rather than retyped against the production one:
-    nothing here ever consumed it.
-    """
+    """Immutable aggregate of composed Kernel services."""
 
     transport_registry: InMemoryTransportRegistry
     delivery_verifier: DeliveryVerifier
@@ -40,6 +30,6 @@ class KernelServices:
 
     execution: ExecutionServices
 
-    # Since 1.10 (`ADR-0019` § 6): the operation registry and the
-    # executor the dock's changes run through.
+    # ADR-0019 § 6: the operation registry and the executor the dock's
+    # changes run through.
     transactions: TransactionServices

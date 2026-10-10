@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Transport Request contract.
-"""
+"""Knowledge Transport Layer - Transport Request contract."""
 
 from __future__ import annotations
 
@@ -13,9 +11,7 @@ from aistack.transport.contracts.transport_endpoint import TransportEndpoint
 
 @dataclass(frozen=True, slots=True)
 class TransportRequest:
-    """
-    Request submitted to the Knowledge Transport Layer.
-    """
+    """Request submitted to the Knowledge Transport Layer."""
 
     source_resource: ResourceReference
 

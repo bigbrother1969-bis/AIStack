@@ -13,11 +13,11 @@ from aistack.transaction.registry.in_memory_operation_registry import (
 @dataclass(frozen=True, slots=True)
 class TransactionServices:
     """
-    The transaction service (`ADR-0019` § 6, 1.10): the registry of
-    operation engines, by kind, and the executor that runs a
-    transaction's operations through them. Bootstrap registers the
-    `transport` engine; a caller that brings its own operations — the
-    dock — registers its engines here before executing.
+    The transaction service (ADR-0019 § 6): the registry of operation
+    engines by kind, and the executor that runs a transaction's
+    operations through them. Bootstrap registers the `transport` engine;
+    a caller with its own operations (the dock) registers its engines
+    here before executing.
     """
 
     registry: InMemoryOperationRegistry

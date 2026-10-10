@@ -2,31 +2,10 @@
 The findings the Troubleshooting Assistant can guide someone through
 (`ADR-0012` § 4), collected fresh from the host on each request.
 
-Moved from `troubleshooting_assistant_ui/app.py` on 2026-10-03, where
-it sat outside the governed suite; the route in
-`aistack.web.troubleshooting` now receives `collect_findings` as a
-collaborator, and `qualify` — the collision-safe routing key — is a
-pure function the suite tests on its own.
-
-**The cockpit's seven domain builders are still duplicated from
-`aistack.cli.health_render`, not imported** — the "no UI imports a CLI
-module" choice the screen made on 2026-09-18 and kept on 2026-09-30
-(`aistack.cli.console_render` holds a third copy). Moving them is not
-what this change is for; folding the three copies into one is a
-separate piece of work.
-
-**`/finding/{key}/apply` (2026-09-18).** One fixed, code-known action —
-declaring a subject a `background` container in the governed
-resource-priority definition, `aistack.troubleshooting.apply` — never
-anything derived from the AI's own `recommend` text, and only for a
-`CONSUMPTION_DOMAIN` finding (`APPLYABLE_DOMAINS`).
-
-**Widened to the full Cockpit Santé, 2026-09-30** (the owner: "les
-findings en rouge doivent être cliquables et doivent diriger vers une
-explication en français... avec la possibilité de résoudre le problème
-de façon accompagnée par les modules d'IA"): every domain
-`build_cockpit` assembles reaches the assistant's `reason` / `explain`
-/ `recommend` chain, not only the original CPU/consumption check.
+Covers the CPU consumption check plus every Cockpit Santé domain. The
+domain builders duplicate those of `aistack.cli.health_render` (and
+`aistack.cli.console_render`) because no UI imports a CLI module. Only a
+consumption finding can be applied (`aistack.troubleshooting.apply`).
 """
 
 from __future__ import annotations
@@ -116,14 +95,9 @@ class FindingSources:
     categorization: Path = (
         configured(PACKAGE_ROOT / "architecture" / "definitions" / "service_categorization.yml")
     )
-    # The data directory the application serves, else the checkout's.
-    # Anchored on the checkout alone until 2026-10-09, it pointed inside
-    # site-packages in the Docker image (`/usr/local/lib/python3.13/
-    # reports/...`): the assistant never read the last network discovery
-    # and listed every container of the Raspberry as declared but
-    # running nowhere, while the cockpit, reading the data directory,
-    # had nothing to report (UAT, GIGABYTE). Optional, best-effort data
-    # either way.
+    # The data directory the application serves, else the checkout's;
+    # anchoring on the checkout alone points inside site-packages in the
+    # Docker image. Optional data.
     network_docker_observation: Path = field(default_factory=lambda: _network_observation())
 
 
@@ -151,13 +125,8 @@ def resource_priority_definition(
 
 def _consumption_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
     """
-    Every `RuntimeFinding` `aistack.runtime.evaluate.evaluate` can
-    produce right now, freshly collected — same real subject as
-    `aistack.cli.ai_reason.qualified_findings`, duplicated rather than
-    imported (see module docstring above). Formerly this module's own
-    `qualified_findings()`, renamed 2026-09-30 when that name became
-    the widened union below: this is now only the CPU/temperature
-    half of it, tagged `CONSUMPTION_DOMAIN`.
+    The CPU/temperature findings of `aistack.runtime.evaluate`, freshly
+    collected, as in `aistack.cli.ai_reason.qualified_findings`.
     """
 
     definition, note = resource_priority_definition(SOURCES.resource_priority)
@@ -179,13 +148,8 @@ def _consumption_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
     return evaluate(consumption, temperatures), ""
 
 
-# The seven domain-builder functions and `build_cockpit` below mirror
-# `aistack.cli.health_render`'s own exactly (same primitives, same
-# findings) — duplicated, not imported, per this module's own docstring
-# above. Trimmed to a one-line "mirrors" docstring each, the same
-# convention `aistack.cli.console_render`'s own duplicate copies
-# already use — the full rationale for each domain lives once, in
-# `health_render.py`.
+# The domain builders below mirror `aistack.cli.health_render`, where each
+# domain is documented.
 
 
 def storage_domain(hostname: str) -> HealthDomain:
@@ -228,10 +192,9 @@ def services_domain() -> HealthDomain:
     return HealthDomain(
         name="Services",
         instrumented=True,
-        # Instantaneous state (restarting/unhealthy), plus restart loops
-        # counted from the docker-events history — the second catches a
-        # container that reads `running` between two crashes (mularr,
-        # 2026-10-02, `aistack.runtime.restart_loop`).
+        # Instantaneous state plus restart loops counted from the
+        # docker-events history, which catch a container that reads
+        # `running` between two crashes.
         findings=evaluate_services(distress) + restart_loop_findings(),
     )
 
@@ -283,7 +246,7 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         readings, thresholds = load_pra_tests_yaml(SOURCES.pra_tests)
-        # The scheduled restore tests' outcomes, when more recent (2.0).
+        # The scheduled restore tests' outcomes, when more recent.
         readings = with_scheduled(readings)
     except (ValueError, OSError) as error:
         return HealthDomain(
@@ -299,8 +262,8 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         declarations = load_backup_strategy_yaml(SOURCES.backup_strategy)
-        # A state no engine covers has nothing to restore-test: the
-        # uncovered-state finding already names it (2026-10-08).
+        # A state no engine covers has nothing to restore-test; the
+        # uncovered-state finding already names it.
         stateful_services = [d.service for d in declarations if d.has_state and d.covered]
         declared_services = [reading.service for reading in readings]
         observed_at = readings[0].observed_at if readings else None
@@ -313,10 +276,8 @@ def pra_tests_domain() -> HealthDomain:
                 observed_at,
             )
     except (ValueError, OSError):
-        # `backup_strategy.yml` is optional, best-effort data for this
-        # one check — its absence or corruption narrows this render to
-        # the three reasons `find_pra_test_gaps` alone already
-        # detects, never failing the whole domain.
+        # `backup_strategy.yml` is optional here: without it, only the
+        # undeclared-service check is skipped.
         pass
 
     return HealthDomain(
@@ -389,9 +350,8 @@ def inventory_gap_domain() -> HealthDomain:
             item.id: None for item in docker_catalog.items if item.kind == "container"
         }
     except (subprocess.SubprocessError, OSError):
-        # The same tolerant absence `services_domain` already holds for
-        # an unreachable local Docker daemon — local containers are
-        # simply not added, never treated as "none exist".
+        # Docker unreachable: local containers are not added, never read
+        # as "none exist".
         discovered = {}
 
     if SOURCES.network_docker_observation.exists():
@@ -403,9 +363,8 @@ def inventory_gap_domain() -> HealthDomain:
                 discovered_containers_from_network_observation(observation)
             )
         except (ValueError, OSError):
-            # The last network discovery is optional, best-effort data
-            # — a corrupt or unreadable file narrows this render to a
-            # local-only reconciliation rather than failing the domain.
+            # Optional data: an unreadable file limits the check to
+            # local containers.
             pass
 
     gaps = find_inventory_gaps(categorization, discovered)
@@ -435,50 +394,21 @@ def build_cockpit(hostname: str) -> HealthCockpit:
     )
 
 
-# The pseudo-domain name for `_consumption_findings()`'s own output —
-# `find_unexplained_consumption`/`evaluate` predate `PLAN-J7`'s cockpit
-# and are never one of `build_cockpit`'s seven `HealthDomain`s, so this
-# assistant gives their findings the same French, human-facing label
-# the cockpit's own seven domains already carry, rather than leaving
-# them domain-less. Never written to any `HealthDomain.name` anywhere
-# else — this assistant's own vocabulary, not the cockpit's.
+# Label for the CPU consumption findings, which come from no cockpit domain.
 CONSUMPTION_DOMAIN = "Consommation CPU"
 
-# Only a `CONSUMPTION_DOMAIN` finding may reach `/finding/{key}/apply`
-# — the owner's explicit confirmation, unchanged by this widening, that
-# the apply button "reste réservé à son action fixe déjà cadrée" (see
-# `apply()`'s own docstring below). A `frozenset`: membership only.
+# Only consumption findings may be applied (`/finding/{key}/apply`).
 APPLYABLE_DOMAINS = frozenset({CONSUMPTION_DOMAIN})
 
 
 class QualifiedFinding(NamedTuple):
     """
-    One finding `qualified_findings()` assembled, tagged with its
-    domain of origin and a routing key that is *not* always
-    `finding.subject`.
+    One finding with its domain and routing key.
 
-    **Why a separate `key`.** `RuntimeFinding.subject` is drawn from
-    each domain's own identifier space — a service name, a container
-    name, a mount path, a GPU name — and nothing stops two different
-    domains from naming the same subject: confirmed 2026-09-30,
-    "gigabyte", "nextcloud" and "immich" are each flagged *today* by
-    both Tests PRA (`evaluate_pra_tests`) and État persistant
-    (`evaluate_uncovered_state`). Routing on the bare subject alone
-    (`next(f for f in findings if f.subject == subject)`, this
-    module's own pattern before this widening) would silently pick
-    only the first match, hiding the second real, distinct anomaly —
-    exactly the "jamais un faux sain" `FDN-0003` Article 12 already
-    forbids elsewhere in this codebase. `key` is `finding.subject`
-    unchanged when it is unique across this call's own assembled set
-    (the ordinary case, and the whole set before this widening), and
-    `f"{domain}::{finding.subject}"` only when it collides — paid only
-    where it is actually needed, every existing URL for an
-    already-unique subject stays exactly as it was.
-
-    `finding.subject` itself is never mutated — `reason`/`explain`/
-    `recommend`'s own prompts and `apply()`'s own
-    `ContainerPriorityDefinition(name=...)` write both still need the
-    real subject, not this routing key.
+    Two domains can flag the same subject (e.g. a service in both Tests PRA
+    and État persistant), so routing on the subject alone would hide one of
+    them. `key` is the subject when unique in the set, else
+    `"<domain>::<subject>"`. `finding.subject` itself is never changed.
     """
 
     key: str
@@ -492,24 +422,11 @@ class QualifiedFinding(NamedTuple):
 
 def qualified_findings() -> tuple[tuple[QualifiedFinding, ...], str]:
     """
-    Every `RuntimeFinding` this assistant can currently guide someone
-    through, freshly collected — `_consumption_findings()`'s own CPU/
-    temperature check (tagged `CONSUMPTION_DOMAIN`), unioned with
-    every domain `build_cockpit(socket.gethostname())` assembles
-    (tagged with that domain's own real `HealthDomain.name`), the
-    2026-09-30 widening the owner cadred as "Élargir + relier" (see
-    module docstring above). An uninstrumented cockpit domain (no
-    threshold file, `nvidia-smi` unreachable, and so on) simply
-    contributes no findings here, the same honest absence
-    `health.html`/`console.html` already state for it in their own,
-    separate domain-status rendering — this page's own job is only to
-    list findings ready to be guided, not to restate instrumentation
-    status a second time.
+    Every finding the assistant can guide someone through: the CPU
+    consumption check plus every domain of `build_cockpit`, each tagged
+    with its domain. Uninstrumented domains contribute nothing.
 
-    `note` keeps its pre-widening meaning: a hard stop before any
-    finding could be computed at all (no resource-priority definition,
-    Docker unreachable for the CPU check) — never a per-domain
-    absence note, which stays `health.html`'s own to state.
+    `note` is set only when the consumption check could not run at all.
     """
 
     consumption_findings, note = _consumption_findings()

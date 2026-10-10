@@ -6,48 +6,19 @@ import urllib.request
 
 _USER_AGENT = "AIStack-AIRuntime/1.0"
 
-# Ollama generation is not a sub-second HTTP call — GIGABYTE's own
-# GPU (`Quadro P400`, 2 GB VRAM, confirmed real hardware,
-# `claude/PLAN-J11-CONSOLE-2026-09-11.md` § 10.1) is small enough
-# that a real model may run partly or wholly on CPU. 5 seconds
-# (`BeszelProvider`'s own default, a plain read against an already-
-# computed API) would time out a real generation before it produced
-# anything. Chosen as a first, generous number to revise once a real
-# call has been timed against the real instance, the same way the
-# 50 %/15 s CPU-threshold numbers were chosen as a starting guess
-# (`CpuThresholdDetectorDefinition`'s own docstring).
+# Generation on a small GPU or on CPU can take minutes; this is a generous
+# first estimate, not a measured value.
 DEFAULT_TIMEOUT_SECONDS = 120.0
 
 
 class OllamaEngine:
     """
-    Ask a real Ollama instance to complete a prompt —
-    `aistack.ai_runtime.engine.AIEngine`'s only implementation today
-    (J6, `claude/PLAN-TRAJECTOIRE-2026-09-04.md`).
+    Ask an Ollama instance to complete a prompt via `POST /api/generate`
+    (`stream: false`, so the answer comes back as one JSON object).
 
-    One request, Ollama's own documented generation endpoint
-    (`POST /api/generate`, `stream: false` so the whole answer comes
-    back as one JSON object rather than a stream of partial ones —
-    this class has no caller yet that would consume a stream, and
-    consuming one only to concatenate it here would be the same
-    shape as `stream: false` with extra steps).
-
-    **Unreachable is a state, not an error — the same reasoning
-    `BeszelProvider`/`NetworkDockerDiscoveryProvider` already hold.**
-    No Ollama at this host/port, a model not pulled
-    (`aistack.ai_runtime.definition.AIRuntimeDefinition.model` naming
-    one Ollama has never heard of), a generation that outlives
-    `timeout` are all ordinary, not exceptional — `complete` reports
-    each into the same kind of sentence those two providers already
-    use, never raises.
-
-    **No `User-Agent` lesson assumed away.** `BeszelProvider` found,
-    2026-09-12, that a fronting proxy can reject `urllib`'s own
-    default string outright; nothing here is known to front Ollama on
-    a bare LAN host, but declaring one explicitly costs nothing and
-    keeps this class consistent with every other network client this
-    heritage writes, rather than relying on today's absence of a
-    proxy to stay true.
+    An unreachable host, an unknown model or a timeout are reported as a
+    reason, never raised. An explicit `User-Agent` is sent because some
+    proxies reject `urllib`'s default.
     """
 
     def __init__(

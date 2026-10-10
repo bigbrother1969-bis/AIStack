@@ -1,10 +1,10 @@
 """
-`python -m aistack.cli.healthcheck` — Docker's healthcheck of the web
-container (1.10, `docker-compose.yml`): asks `/healthz` on the
-local-network port `instance_config.yml` declares (`web_lan`), on this
-host. Exit 0 when it answers `ok`, 1 otherwise, with the reason on one
-line (`docker inspect` keeps it). Light on purpose — it runs every 30 s:
-it reads one declaration and opens one connection, nothing more.
+`python -m aistack.cli.healthcheck` — Docker healthcheck of the web container.
+
+Requests `/healthz` on the local-network port declared as `web_lan` in
+`instance_config.yml`. Exits 0 when it answers `ok`, 1 otherwise, printing
+the reason on one line for `docker inspect`. It runs every 30 s, so it
+reads one declaration and opens one connection, nothing more.
 """
 
 from __future__ import annotations

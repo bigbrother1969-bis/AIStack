@@ -7,106 +7,42 @@ name = "aistack"
 version = "2.0.0-rc1"
 description = "AIStack Knowledge Operating System"
 readme = "README.md"
-# The interpreter AIStack is verified on.
-#
-# It was ">=3.11" until 2026-08-23, and three versions were
-# declared supported while one was ever run — whichever the
-# machine happened to have. That was not free: the contract
-# inventory reported 20 orphan contracts on 3.11 and 22 on 3.12
-# and 3.13, at the same commit, and it was found because two
-# people ran the same command on two machines rather than
-# because anything checked (GOV-0002/OS-019).
-#
-# 3.13 is what the published images run and what the SPOT host
-# runs. Narrowing the range gives up a portability nothing
-# verified, and `tests/unit/test_declared_interpreter.py` refuses
-# to let the claim drift from the interpreter in use.
-#
-# It caught the agent within the hour. The commit that introduced
-# it asserted that 3.13 was also what the owner's laptop ran —
-# read off a `python3 -VV` that had in fact executed on the SPOT
-# host. The laptop was 3.12, the suite went red on the machine
-# that runs it, and the owner aligned the laptop to 3.13 on
-# 2026-08-23 rather than widen the range back.
+# The one interpreter AIStack is verified on, the one the image runs;
+# tests/unit/test_declared_interpreter.py keeps the two in step.
 requires-python = ">=3.13"
 dependencies = [
     "PyYAML>=6.0",
-    # The Time Machine's graph engine (ADR-0011). Declared here, not
-    # in an optional extra, so `pip install .` — what `Dockerfile`
-    # runs — always carries it: the owner's requirement, 2026-09-27,
-    # that the published container be self-sufficient the moment it
-    # is pulled from DockerHub, with no separate install step for
-    # anyone who runs it. Pinned to the exact version confirmed
-    # 2026-09-27 on GIGABYTE's own Phenom X4 (no AVX2) — the fact
-    # ADR-0011 § Context was written to establish before this
-    # dependency existed anywhere, not assumed from the library's own
-    # claims.
+    # The Time Machine's graph engine (ADR-0011). A required dependency so
+    # the image is complete; verified on a CPU without AVX2.
     "pyoxigraph>=0.5.11",
-    # AIStack's single web application (ADR-0012, 2026-10-02). Lower
-    # bounds are the versions the suite was first run against on
-    # 2026-10-03; FastAPI 0.142 is also where `include_router` stopped
-    # copying routes into the application, which
-    # `tests/unit/web/test_every_route_declares_its_exposure.py`
-    # relies on.
+    # The web application (ADR-0012). FastAPI 0.142 is where
+    # `include_router` stopped copying routes into the application, which
+    # tests/unit/web/test_every_route_declares_its_exposure.py relies on.
     "fastapi>=0.142",
     "uvicorn>=0.54",
     "jinja2>=3.1",
     "python-multipart>=0.0.32",
-    # Signing in (ADR-0013, 2026-10-03): the ID token Pocket ID sends is
-    # believed only once its RS256 signature has been verified against
-    # the provider's published keys — PyJWT with `cryptography` for the
-    # RSA, decided 2026-10-02. Lower bound: the version the suite was
-    # first run against.
+    # Sign-in (ADR-0013): the ID token's RS256 signature is verified
+    # against the provider's published keys.
     "PyJWT[crypto]>=2.15.1",
 ]
-
 authors = [
     { name = "Fabrice Persiaut" }
 ]
-
 license = { text = "AGPL-3.0-or-later" }
 
-# The canonical public location of the Single Point Of Truth.
-#
-# This is a project fact, identical on every machine, and it is
-# already published inside every Context Bundle. It is not a
-# machine address: the git remote of a given clone may be a
-# tunnel or a loopback, and the export refuses to publish those.
-# What the governed test command needs, and did not declare.
-#
-# `pytest` was configured in this file — `[tool.pytest.ini_options]`
-# below, carrying STD-0002's testpaths — and declared as a dependency
-# nowhere. It was installed by hand on the laptop, by hand on the
-# agent's container, and nothing said which version either had.
-#
-# ENG-TEST-0002 is C3 and promises reproducibility and deterministic
-# execution. An undeclared tool cannot deliver either: two machines
-# running the same governed command on the same commit could run two
-# pytest versions and nothing would report it. That is the shape of
-# GOV-0002/OS-019, where the same measurement gave 20 orphan contracts
-# on one interpreter and 22 on another, minus the warning that caught
-# it.
-#
-# A floor, not a pin. There is no lock file yet, so this declares what
-# the suite needs rather than what one machine happens to hold —
-# recorded under GOV-0002/OS-025 rather than implied.
-#
-# This table sits after every key of `[project]` on purpose. A TOML
-# table header ends the table above it, so placing it beside
-# `dependencies` moved `authors` and `license` into it. Caught by
-# parsing the file rather than reading it.
+# Keep this table after every key of [project]: a table header ends the
+# table above it.
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
     "ruff>=0.15",
     "mypy>=1.20",
     "types-PyYAML>=6.0",
-    # The in-process client FastAPI's TestClient drives every route
-    # with (ADR-0012 § 4). `httpx2`, not `httpx`: Starlette 1.7 warns
-    # that its test client's use of `httpx` is deprecated.
+    # FastAPI's TestClient; `httpx2`, since Starlette warns that `httpx` is
+    # deprecated for its test client.
     "httpx2>=2.13",
-    # `scripts/install.sh` is checked by shellcheck in the suite
-    # (ADR-0023 § 4): a test never skipped for want of the tool.
+    # scripts/install.sh is checked by shellcheck in the suite (ADR-0023 § 4).
     "shellcheck-py>=0.10",
 ]
 
@@ -119,146 +55,31 @@ aistack = "aistack.__main__:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-# STD-0002 (Test Artifact Isolation) says a project's test run
-# covers that project's tests and nothing else. It was enforced
-# by nobody: a bare `pytest` at the repository root walked into
-# `tests/item`, `tests/transaction` and `tests/evidence` — which
-# belong to other work that happens to live in this tree — and
-# reported 220 passing tests for a project that has 209.
-#
-# A number nobody can attribute is not a measurement. Declaring
-# the paths makes `pytest` and `pytest tests/unit tests/integration`
-# the same run, so the standard holds without anyone remembering
-# it.
+# Without these, `pip install .` (what the Dockerfile runs) would package
+# the Python modules only: every declaration, catalog, template and
+# vendored file is read from the installed package at run time.
+[tool.setuptools.package-data]
+aistack = ["**/*.yml", "**/*.js", "**/*.png", "**/*.svg", "**/*.html", "**/*.md"]
+
+# `pytest`, `mypy` and `ruff check src tests` take their scope from here, so
+# the commands carry no path. A path given to mypy replaces `files`.
 [tool.pytest.ini_options]
 testpaths = [
     "tests/unit",
     "tests/integration",
 ]
 
-# STD-0002 (Test Artifact Isolation) declares `testpaths` below so a
-# bare `pytest` and the governed run are the same command, "so the
-# standard holds without anyone remembering it" — that reasoning had
-# never been extended to `ruff`/`mypy` themselves, and it showed:
-# `ruff check .` and `mypy .`, run from the repository root on
-# 2026-09-11 for the first time in this project's history, both found
-# real findings that every prior "0 issue" report had never actually
-# seen, because every prior run had been typed by hand with whatever
-# scope happened to be on the command line that day.
-#
-# Adopted 2026-09-10, after evaluating both against this codebase:
-# on the very first run, before any of this configuration existed,
-# mypy found two real defects (an incompatible method override in
-# ContractRegistry, and two builders passing a list where Catalog
-# declares a tuple — both fixed the same day) and ruff found a
-# genuine zip() truncation risk and four regex-escaping ambiguities
-# in test assertions.
-#
-# `select` names only what stayed worth seeing on every future
-# patch, not everything ruff can check. A first pass with a fuller
-# rule set (import sorting, line length, Python-3.11-to-3.13
-# modernization idioms) returned 328 findings, and all but a
-# handful were mechanical, one-time noise rather than ongoing
-# signal — the kind a bulk `--fix` clears once, not the kind a gate
-# should hold a future patch to. Complexity (`C90`) is deliberately
-# not selected yet either: three functions already exceed the
-# default threshold, and deciding whether to refactor them or raise
-# the threshold is its own decision, not a side effect of adopting
-# a linter. Revisit either omission as a separate, named choice —
-# not by widening `select` quietly.
-[tool.ruff.lint]
-select = ["F", "B", "RUF043"]
-# B011 (`assert False` instead of `raise AssertionError()`) and B024
-# (an ABC with no abstract method) are both a deliberate idiom this
-# heritage already uses throughout its own contract tests —
-# `ArtifactBuilder()` must refuse instantiation, and the test states
-# that by asserting the attempt never returns. Ignored here rather
-# than rewritten, since rewriting would touch a dozen files for a
-# style preference this project already settled the other way.
-ignore = ["B011", "B024"]
-
-# `selection_ui/app.py`'s own `/save` route takes `Form(default=[])`
-# as an argument default — FastAPI's own idiom: the marker object
-# *is* the declaration that a field is form data, not a mutable
-# default a caller could corrupt (`fastapi.Form` returns a fresh,
-# framework-owned object each call; it does not accumulate state the
-# way `def f(x=[])` genuinely risks). B008 has no way to tell that
-# apart from the real hazard it exists to catch, so `Form` is named
-# here as one of the calls this project has actually decided are
-# safe in that position — not a blanket disabling of B008 itself,
-# which stays selected and catches every other case.
-#
-# `fastapi.Query`, added 2026-09-28 alongside the Time Machine's
-# ribbon route (`ADR-0011` §24, `aistack.web.timemachine` since 2026-10-03): the same reasoning as `Form`
-# above, applied to the marker FastAPI uses to bind a repeated query
-# parameter (`streams: list[str] = Query(default=[])`) — a fresh,
-# framework-owned object each call, not a mutable default a caller
-# could corrupt.
-[tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Form", "fastapi.Query"]
-
-# python_version pins mypy's own understanding of the language to
-# what `pyproject.toml`'s own `requires-python` already declares —
-# the same reasoning `requires-python` itself carries above: one
-# declared version, checked, rather than whichever interpreter a
-# machine happens to have.
-#
-# `files` is what STD-0002 already declares for pytest as
-# `[tool.pytest.ini_options] testpaths`, extended to mypy: "a
-# project's [check] covers that project's [code] and nothing else."
-# `mypy .`, run unscoped from the repository root for the first time
-# in this project's history on 2026-09-11 (after `archive/`'s and
-# `build/`'s duplicate-module conflicts — see git history — stopped
-# blocking it from finishing), swept into `tests/`, `examples/`,
-# `tools/qualification_runner.py`, `priority_ui/` and `selection_ui/`
-# and returned 67 findings there, in 29 files, none of them in
-# `src/aistack/` itself (`mypy src/aistack` alone was already clean).
-# The owner's own choice, given that finding: mypy checks the package
-# this project ships, `src/aistack/`, declared here rather than left
-# to whatever scope a command line happens to carry — the rest is a
-# deliberate, named exclusion, not an oversight, exactly as `archive/`
-# already was one line up. `archive/` and `build/` need no exclusion
-# of their own any more: `files` never walks into either.
-#
-# **The governed command is `mypy`, with no path argument.** A path
-# given on the command line overrides `files` here entirely — `mypy
-# .` still walks the whole repository, `archive/`/`build/` conflicts
-# and all, exactly as before this section existed. Confirmed both
-# ways 2026-09-11: bare `mypy` matches `mypy src/aistack` findings
-# exactly; `mypy .` does not.
 [tool.mypy]
 python_version = "3.13"
 files = ["src/aistack"]
 
-# GOV-0002/OS-056, 2026-09-10. `[tool.setuptools.packages.find]`
-# above discovers Python modules; it says nothing about anything
-# else, and until this line nothing did. A real, non-editable
-# `pip install .` — what `Dockerfile` runs, deliberately, so
-# `importlib.metadata` can answer (`test_the_image_declares_what_it_
-# ships.py`) — silently built a wheel with every `.py` file and not
-# one `.yml` or `.js`: `resource_priority.yml`,
-# `service_categorization.yml`, and the mermaid.js this same patch
-# vendors were all absent, and every reader that opens one by a
-# `Path(__file__)`-relative path (`resource_priority_monitor.py`'s
-# `DEFAULT_DEFINITION`, `renderers/architecture/html.py`'s
-# `load_vendored_mermaid_js`) would raise `FileNotFoundError` the
-# first time it ran from an installed image rather than an editable
-# checkout.
-#
-# Found only because vendoring a new data file for J2 step 5 raised
-# the question of whether the existing ones were even packaged —
-# an editable install (`pip install -e .`, what every developer and
-# this session's own verification clones run) can never surface
-# this: it points straight at `src/`, where the files already exist
-# regardless of what setuptools declares.
-#
-# `**/*.png`/`**/*.svg` added 2026-09-12 alongside
-# `renderers/architecture/vendor/icons/` (`claude/PLAN-J11-CONSOLE-
-# 2026-09-11.md` §10) — the exact defect this table exists to prevent
-# would otherwise repeat itself for every vendored icon the same way
-# it once did for `resource_priority.yml` and `mermaid.min.js`.
-#
-# `**/*.html` added 2026-10-03 with the first screen whose templates
-# moved under `src/aistack/web/templates/` (ADR-0012).
-[tool.setuptools.package-data]
-aistack = ["**/*.yml", "**/*.js", "**/*.png", "**/*.svg", "**/*.html", "**/*.md"]
+[tool.ruff.lint]
+select = ["F", "B", "RUF043"]
+# B011 (`assert False`) and B024 (an ABC without abstract methods) are
+# idioms the contract tests use on purpose.
+ignore = ["B011", "B024"]
+
+# FastAPI's `Form(...)` and `Query(...)` defaults are declarations, not
+# mutable defaults.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Form", "fastapi.Query"]

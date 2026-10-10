@@ -10,9 +10,6 @@ from aistack.generators.network_docker import NetworkDockerObservationArtifactGe
 from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.network_docker import NetworkDockerDiscoveryProvider
 
-# Same convention as `DEFAULT_TOPOLOGY`/`DEFAULT_CATEGORIZATION` in
-# `architecture_render.py` — a `Path(__file__).resolve()`-relative
-# default, not `importlib.resources`.
 DEFAULT_DEFINITION = (
     configured(Path(__file__).resolve().parents[1]
     / "network_discovery"
@@ -23,28 +20,12 @@ DEFAULT_DEFINITION = (
 
 def main(environ: Mapping[str, str] | None = None) -> None:
     """
-    `claude/PLAN-J11-CONSOLE-2026-09-11.md` §11: a network Docker
-    discovery, run on demand — never wired into `architecture_render`
-    (decided with the owner 2026-09-12: a network scan plus a set of
-    SSH connection attempts is an action, not a passive read, so it
-    only happens when this command is invoked explicitly).
+    Scan the network for Docker hosts and write a separate JSON report.
 
-    **A separate report, not (yet) integrated into
-    `architecture.html`** — decided with the owner the same day. A
-    service `service_categorization.yml` already declares (Nginx
-    Proxy Manager, Vaultwarden, Vikunja...) that this run discovers
-    actually running on the Raspberry Pi or the Pi-hole VM stays
-    shown as "déclaré, non observé" there for now; wiring this
-    observation into that status is future work, not this command's
-    job.
-
-    The real SSH key's path is read from `environ` (real
-    `os.environ` by default, injectable for tests — the same
-    convention `architecture_render.main` already uses for Beszel's
-    own credentials) under the environment variable name
-    `NetworkDiscoveryDefinition.ssh_key_path_env` names; never the
-    path itself, which is never written into any governed file
-    (`GOV-P-001`).
+    Run on demand only, never from `architecture_render`: a network scan
+    with SSH attempts is an action, not a passive read. Its findings do
+    not feed `architecture.html`. The SSH key path is read from `environ`
+    under the variable `ssh_key_path_env` names, and never written to a file.
     """
 
     environ = os.environ if environ is None else environ

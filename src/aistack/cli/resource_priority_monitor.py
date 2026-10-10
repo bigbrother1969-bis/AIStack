@@ -21,17 +21,8 @@ from aistack.priority.targets import resolve_resource_targets
 from aistack.priority.yaml import load_resource_priority_yaml
 
 
-# Étape 4 of claude/PLAN-RESOURCE-PRIORITY-2026-09-03.md — the loop
-# that ties étapes 1-3 together: ask every priority app's detector,
-# decide, apply. Generalised 2026-09-03 from one hardcoded detector
-# (Jellyfin's own `/Sessions`) to any number, per
-# claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md.
-#
-# Polling is the owner's own decision of 2026-09-03, not tuned here.
-# The grace period moved into the governed definition the same day
-# (`ResourcePriorityDefinition.grace_seconds`) — it was already the
-# owner's decision, just not yet written where the rest of this
-# feature's decisions live.
+# Each cycle asks every priority app's detector, decides, and applies CPU
+# ceilings. The grace period is `ResourcePriorityDefinition.grace_seconds`.
 POLL_SECONDS = 5.0
 
 DEFAULT_DEFINITION = (
@@ -101,11 +92,7 @@ def parse(argv: list[str]) -> tuple[Path, bool, bool]:
 def build_detectors(
     definition: ResourcePriorityDefinition,
 ) -> dict[str, Detector]:
-    """
-    One detector per priority app, keyed by container name — built
-    once at startup and reused every poll, the same lifetime
-    `JellyfinProvider` itself already had in the single-app monitor.
-    """
+    """One detector per priority app, keyed by container name; built once and reused every poll."""
 
     return {
         app.container: build_detector(app) for app in definition.priority
@@ -119,16 +106,10 @@ def run_cycle(
     dry_run: bool,
 ) -> tuple[dict[str, bool], dict[str, GraceState], ApplyReport]:
     """
-    One poll, one decision per priority app, one application —
-    everything the loop below repeats, in a shape a caller can also
-    run once.
+    One poll: decide per priority app, then apply the resulting ceilings.
 
-    **Each priority app's own `GraceState` advances independently,**
-    from its own detector's `is_active()` alone — decision 4 of
-    `claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`. All of
-    them are read against the same `now`, so two apps active at
-    once share one grace clock reading, not two separately-taken
-    ones a few milliseconds apart.
+    Each app's `GraceState` advances independently from its own detector,
+    all read against the same `now`.
     """
 
     now = time.monotonic()
@@ -158,33 +139,11 @@ def log_cycle(
     boosted: Mapping[str, bool], report: ApplyReport, label: str = ""
 ) -> None:
     """
-    Printed, not silent, but only when there is something to read.
+    Print a timestamped line when `report.changed` or `label` is set.
 
-    A monitor polling every 5 seconds that logged every poll would
-    bury the one line that matters under thousands that do not —
-    printed only when something changed, or on the explicit
-    shutdown line `label` carries.
-
-    **Timestamped, so a transition can be checked against the grace
-    period rather than guessed at.** Found needed 2026-09-03: the
-    owner watched a restore that looked faster than 60 seconds, and
-    there was no timestamp on either the "boosted" or the "normal"
-    line to check it against. Wall-clock (`datetime.now`), not
-    `time.monotonic()`: this is for a human reading a terminal
-    against their own watch, not for the grace-period arithmetic
-    itself, which stays on the monotonic clock in `grace.py`.
-
-    **`state=` now names every priority app, not one implied
-    boolean.** With any number of priority apps possible since
-    2026-09-03, a single `state=boosted`/`state=normal` no longer
-    says which app that was about.
-
-    **The print condition is `report.changed`, not reimplemented
-    here.** CPU decision history (`aistack.priority
-    .decision_history.record_decision`, 2026-09-03) persists on the
-    same condition — kept as one property on `ApplyReport` so what
-    a human sees in the journal and what history keeps cannot say
-    different things about the same cycle.
+    `report.changed` is also what `record_decision` persists on, so the
+    journal and the history agree. The timestamp is wall-clock, for a
+    human; the grace arithmetic stays on the monotonic clock.
     """
 
     if not (report.changed or label):
@@ -207,44 +166,17 @@ def log_cycle(
 
 def main(argv: list[str] | None = None) -> None:
 
-    # Under systemd, stdout is a pipe to journald, not a terminal —
-    # and Python block-buffers a pipe by default, only flushing on a
-    # full buffer or process exit. This process runs for hours and
-    # prints one short line per state change, so the default buffer
-    # (several KB) can sit unflushed indefinitely: a `docker update`
-    # already ran, correctly, with nothing in the journal to show
-    # for it.
-    #
-    # Found needed 2026-09-03: a confirmed state transition — verified
-    # independently via `docker inspect` on the affected containers —
-    # produced no journal line at all, 28 minutes after the fact,
-    # with the service still `active (running)`. Reproduced and fixed
-    # live in a disposable sandbox before touching this file: a
-    # script printing two lines a few seconds apart, run with stdout
-    # redirected to a file and `PYTHONUNBUFFERED` unset (matching
-    # this project's systemd unit, which does not set it), left that
-    # file empty seconds after both prints had executed; the same
-    # script with `line_buffering=True` wrote both lines immediately.
-    #
-    # Line buffering costs nothing here — this process never writes a
-    # partial line — and makes every `print()` reach the journal as
-    # soon as it is written, matching what running this by hand in a
-    # terminal already looked like. Host-touching (it reconfigures
-    # this process's own stdout stream), so verified live rather than
-    # in the governed suite, per decision #9.
-    #
-    # `reconfigure` is declared on `io.TextIOWrapper`, not on the
-    # narrower `TextIO` protocol `sys.stdout` is typed as — real at
-    # process start, where `sys.stdout` always is a `TextIOWrapper`,
-    # but not something the type alone states. `mypy` named the gap
-    # 2026-09-10; the ignore is of the call, not a claim it never fails.
+    # Under systemd stdout is a pipe, which Python block-buffers: a state
+    # change could stay out of the journal indefinitely. Line buffering
+    # sends each line at once. (`reconfigure` exists on `TextIOWrapper`,
+    # not on the `TextIO` type of `sys.stdout`, hence the ignore.)
     sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
     definition_path, once, dry_run = parse(
         sys.argv[1:] if argv is None else argv
     )
 
-    # The keys entered from Settings (2026-10-09): Jellyfin's, read once here.
+    # Keys entered from Settings (Jellyfin's), read once here.
     apply_to_environ(Path("reports/generated"))
     definition = load_resource_priority_yaml(definition_path)
     detectors = build_detectors(definition)
@@ -278,13 +210,8 @@ def main(argv: list[str] | None = None) -> None:
         pass
 
     finally:
-        # A stopped monitor should not be the reason the background
-        # containers stay throttled, nor a priority app stay at its
-        # boosted ceiling — decision #4's own reasoning ("a
-        # supervision failure must not starve them indefinitely")
-        # applies as much to this process dying as to a detector
-        # becoming unreachable. Best-effort and never raised: a
-        # failure here must not hide why the process actually exited.
+        # A stopped monitor must not leave containers throttled or boosted.
+        # Best-effort: a failure here must not hide why the process exited.
         if not once and any(boosted.values()):
             try:
                 release = apply_resource_priority(

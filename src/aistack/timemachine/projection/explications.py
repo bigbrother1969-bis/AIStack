@@ -1,27 +1,12 @@
 """
-Project Explications into the graph — `ADR-0011` § *Decision* 7-8,
-the fifth source stream `project_observation_history`'s own docstring
-already promised ("soon five").
+Project Explications into the graph (`ADR-0011` § 7-8).
 
-**A separate function, not a branch inside `project_observation_history`
-— on purpose.** That function's two-tier fact model (generic baseline
-+ the `version`/`provenance` envelope) is shaped for a *collector*
-observing a live system repeatedly; an Explication is a *document*
-about something, with its own distinct shape
-(`aistack.contracts.artifact.KnowledgeArtifact`, no `version`/
-`provenance` pair at all — see that module's own comment on why).
-Forcing Explications through the existing envelope parser would
-either silently produce nothing (the shapes do not match) or require
-bending that parser to recognise a second envelope shape it was never
-about — the same "fifth mechanism where a fourth one does not
-actually fit" the AI Reasoning History's own patch notes warned
-against for a different case.
+Separate from `project_observation_history`: an Explication is a
+`KnowledgeArtifact` document, not a collector observation with a
+`version`/`provenance` envelope.
 
-**Does not clear the store.** `project_observation_history` already
-does that once per rebuild (`ADR-0011` § *Decision* 10); this function
-is the second half of the same rebuild pass, called after it
-(`aistack.cli.timemachine_rebuild.main`), adding Explications' own
-facts on top rather than starting a second, independent graph.
+Does not clear the store: `project_observation_history` does that once
+per rebuild, and this runs after it in the same pass.
 """
 
 from __future__ import annotations
@@ -53,9 +38,7 @@ from aistack.timemachine.vocabulary import (
 
 @dataclass(frozen=True)
 class ExplicationProjectionSummary:
-    """What one `project_explications` run actually did — the same
-    measured-report shape `ProjectionSummary` already gives a caller
-    for the four existing streams."""
+    """What one `project_explications` run did."""
 
     subjects_seen: int
     explications_seen: int
@@ -69,29 +52,15 @@ def project_explications(
     user_data_roots: Iterable[str] = (),
 ) -> ExplicationProjectionSummary:
     """
-    Add every recorded Explication under
-    `generated_dir/explications/` to `store` — every subject that has
-    ever had one, every version ever recorded for it (`ADR-0011` § 7:
-    "nothing already written is edited or removed", so a correction is
-    one more Explication entity, not a replacement of the last).
+    Add every recorded version of every Explication under
+    `generated_dir/explications/` to `store` (a correction is one more
+    entity, `ADR-0011` § 7).
 
-    For each Explication: it exists (`prov:Entity`), when it was
-    recorded (`prov:generatedAtTime`, `artifact.created_at` — the
-    Explication's own recording time, the same "recording time only"
-    honesty `project_observation_history` already keeps), what it
-    explains (`aistack:explains`, `subject_iri` — a bare reference, not
-    a claim about what kind of thing the subject is), its `STD-0100`
-    confidence (`aistack:confidence`) and, when recorded, its workflow
-    position (`aistack:explicationStatus`, from
-    `artifact.metadata["explication_status"]` — absent rather than
-    guessed when an importer has not set it), and who or what produced
-    it (`prov:wasAttributedTo` an Agent named by `artifact.source`,
-    the same `agent_iri` construction the four existing streams'
-    `provenance.origin` already uses).
-
-    Every candidate fact passes through the same `filter_fact` the
-    four existing streams already do, so `user_data_roots` reaches
-    Explications too without this function's own logic changing.
+    Per version: a `prov:Entity` with `prov:generatedAtTime`
+    (`created_at`), `aistack:explains` (the subject's IRI),
+    `aistack:confidence`, `aistack:explicationStatus` when set, and
+    `prov:wasAttributedTo` the agent named by `artifact.source`. Every
+    fact goes through `filter_fact`.
     """
 
     explications_dir = generated_dir / "explications"
@@ -114,8 +83,8 @@ def project_explications(
         subjects_seen += 1
         explained = subject_iri(subject)
 
-        # Every version, two written in the same second included: each
-        # has its own node, named by its file (1.9).
+        # Every version, including two written in the same second: each
+        # has its own node, named by its file.
         for observation in every_version(explications_dir, stem):
             explications_seen += 1
             artifact = deserialize_explication(json.loads(observation.read()))

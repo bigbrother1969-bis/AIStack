@@ -1,13 +1,7 @@
-"""
-*Priorité CPU* — which containers are boosted, throttled or left alone
-(`ADR-0012`; the screen `priority_ui` served on port 8182 until
-2026-10-03). LAN only, like every screen that acts on the host.
+"""*Priorité CPU*: which containers are boosted, throttled or left alone. LAN only.
 
-A thin adapter: the join of Docker's containers with the governed
-definition, and the definition the form describes, are
-`aistack.priority.screen`, tested on their own. What Docker reports
-reaches the route through `app.state.discover_containers`, so a test
-replaces it; the route never builds a provider itself.
+A thin adapter over `aistack.priority.screen`. Docker containers come from
+`app.state.discover_containers` so tests can replace it.
 """
 
 from __future__ import annotations

@@ -12,26 +12,15 @@ _REQUIRED_WEIGHT_FIELDS = ("domain", "points")
 
 def load_health_score_weights_yaml(path: Path) -> HealthScoreWeights:
     """
-    Load `OPS-0008`'s declared health-score weights from YAML.
-
-    Mirrors `load_gpu_thresholds_yaml` field for field (written by
-    hand, read-only, a missing key names which one and where) but not
-    in shape: there is no `hosts` wrapper here — a health score is
-    computed for whichever host `aistack.cli.health_render` is running
-    on, over domains a cockpit already scopes to that host itself, so
-    this register declares one flat list of domain weights rather than
-    a per-host one.
+    Load the `OPS-0008` health-score weights from YAML: one flat list of
+    domain weights. A missing key raises a `ValueError` naming it.
     """
 
     with path.open("r", encoding="utf-8") as stream:
         try:
             data = yaml.safe_load(stream)
         except yaml.YAMLError as error:
-            # Folded into the same `ValueError` a missing field already
-            # produces, the same reasoning `load_gpu_thresholds_yaml`
-            # gives: this loader's own caller
-            # (`aistack.health.score_weights.health_score_weights`) is
-            # documented never to raise anything but `ValueError`/`OSError`.
+            # Raised as `ValueError`, which is all the caller catches.
             raise ValueError(
                 f"health-score weight definition {path} is not valid YAML: {error}"
             ) from error

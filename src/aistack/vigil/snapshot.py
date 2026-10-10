@@ -40,8 +40,7 @@ class Snapshot:
 
 
 def finding_key(domain: str, subject: str, kind: str) -> str:
-    """Stable across renders; a finding that changes kind (a PRA test
-    from stale to failed) is a new finding."""
+    """Stable across renders; a finding that changes kind (e.g. stale to failed) gets a new key."""
 
     return f"{domain}::{subject}::{kind}"
 

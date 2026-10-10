@@ -1,5 +1,4 @@
-# Console AIStack — ADR-0010. Le texte français est exactement celui
-# que la console affichait avant la localisation.
+# AIStack console (ADR-0010).
 
 title: "AIStack — Console"
 lockup_alt: "AIStack — Infrastructure Knowledge Platform"
@@ -14,11 +13,7 @@ cartouche:
 groups:
   lan_title: "Accessible depuis le réseau local"
   public_title: "Accessible depuis internet"
-# Colonne de gauche, pages d'aide, de mentions légales et de licence,
-# info-bulles — demandés par le owner le 2026-10-03 (« du texte
-# explicatif et des liens (copyright, mentions légales, aide...) [...]
-# pour meubler et améliorer l'appropriation » ; « prévoir aussi des
-# info-bulles partout »).
+# Left column, help, legal notice and licence pages, tooltips.
 aside:
   intro: "AIStack observe l'infrastructure du homelab, en garde l'historique et aide à comprendre et corriger les pannes."
   guide: "En haut, l'état de santé mesuré à l'instant ; en dessous, les écrans, regroupés selon qu'ils sont accessibles depuis le réseau local seulement ou depuis internet."
@@ -26,9 +21,9 @@ aside:
   legal: "Mentions légales"
   license: "Licence et sources"
   copyright: "© {year} {publisher}"
-# The last line of every local-network card, in italics (owner, 2026-10-09).
+# Last line of every local-network card, in italics.
 card_scope_lan: "Accessible uniquement depuis le réseau local."
-# The mark on a card whose screen uses AI (owner, 2026-10-09).
+# Mark on a card whose screen uses AI.
 ai_mark: "IA"
 ai_mark_title: "Fonctionnalité qui utilise l'intelligence artificielle"
 tooltip:
@@ -96,7 +91,7 @@ license:
   image_text: "Chaque version publiée d'AIStack est aussi livrée en image Docker, sur {registry} :"
   image_pull: "Pour la récupérer, en remplaçant <version> par le numéro d'une version publiée (voir les notes de version) :"
   back: "← Retour à la console"
-# What waits behind a card (2026-10-10).
+# What waits behind a card.
 pending:
   dock: "{count} mise(s) à jour à valider"
   troubleshooting: "{count} constat(s) à traiter"

@@ -1,18 +1,10 @@
-"""
-The Hosts domain of the health cockpit (2.0; the owner, 2026-10-09:
-"hôte silencieux = constat Santé").
+"""The Hosts domain of the health cockpit.
 
-`ADR-0020` traces what changes on each host through a collector run
-every 15 minutes. A collector that stops writing — its timer disabled,
-the host down, the Raspberry's disk not mounted — leaves a gap in the
-record that nothing used to say outside `python -m aistack.cli.hosts`.
-Here each traced host with no run for longer than `hosts.yml`'s
-`silent_after_minutes` becomes a finding, on the cockpit, in the score
-and in the troubleshooting assistant.
-
-One module for the three places that build the cockpit
-(`aistack.cli.health_render`, `aistack.cli.console_render`,
-`aistack.troubleshooting.findings`), so the domain is written once.
+Each host collector (`ADR-0020`) runs every 15 minutes. A traced host with
+no run for longer than `hosts.yml`'s `silent_after_minutes` (timer
+disabled, host down, disk not mounted) becomes a finding. Shared by
+`aistack.cli.health_render`, `aistack.cli.console_render` and
+`aistack.troubleshooting.findings`.
 """
 
 from __future__ import annotations
@@ -31,8 +23,7 @@ from aistack.hosts.records import HostRecords, load_hosts_declaration, now_utc, 
 DOMAIN = "Hôtes"
 SIGNATURE = "ADR-0020"
 SOURCE = "aistack.hosts.records.read_host"
-# A collector that stopped writing is a deployment that no longer does
-# what it was installed for; it is not debt, nor a waste of energy.
+# A silent collector is a deployment fault, not debt or energy waste.
 QUALIFICATIONS = ("OPS-0004/deployment-misconfiguration",)
 GENERATED_DIR = Path("reports/generated")
 

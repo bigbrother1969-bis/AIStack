@@ -5,33 +5,13 @@ from datetime import datetime
 @dataclass(frozen=True)
 class LogEntry:
     """
-    One line of a container's log, carrying its position.
+    One line of a container's log, with its position so a finding can
+    cite it.
 
-    The position is what makes a finding citable. STD-0300 § VS-4
-    criterion 4.9 requires that no finding be emitted without at
-    least one evidence reference, and a reference to "the logs"
-    references nothing. `offset` counts back from the newest line
-    read: 0 is the most recent, 1 the one before it.
-
-    The text is kept verbatim. Normalization here means giving
-    each line an identity, not rewriting it — a signature that
-    matched a line the heritage had already reworded would be
-    citing something that never appeared on the host.
-
-    `timestamp` is when the line was written, and it is separate
-    from the text on purpose: Docker supplies it with
-    `--timestamps`, and folding it into `text` would make every
-    signature compare against a prefix no container printed.
-
-    It is optional because a line can carry none — a malformed
-    prefix, or evidence assembled by a test. `None` says the age
-    is unknown, which is a state; a fabricated timestamp would
-    say something false.
-
-    The first real run of this chain, on 2026-08-22, reported
-    eleven connection-refused lines that were eighteen hours old,
-    and the only reason anyone could tell was that the container
-    happened to print its own timestamps. Another would not have.
+    `offset` counts back from the newest line read (0 is the most
+    recent). `text` is verbatim. `timestamp` comes from Docker's
+    `--timestamps`, kept out of `text` so signatures match what the
+    container printed; `None` when unknown.
     """
 
     offset: int
@@ -49,30 +29,15 @@ class LogEntry:
 @dataclass(frozen=True)
 class RuntimeObservation:
     """
-    What was observed of one running subject, in canonical form.
+    What was observed of one running subject, in canonical form. A
+    provider produces it and concludes nothing.
 
-    ARC-P-013 requires that evaluation consume canonical
-    knowledge models and never raw technical output. The
-    experimenter this replaces matched substrings against an
-    undifferentiated blob of text; a qualifier reading this model
-    receives identified entries it can point back at.
+    `state` is the runtime's state (`running`, `exited`, ...); each
+    signature declares the states in which it applies, since a
+    container shutting down prints harmless connection refusals.
 
-    ARC-P-012 places the boundary: a provider produces this and
-    concludes nothing. No field here says whether anything is
-    wrong.
-
-    `state` is what the runtime says of the subject — `running`,
-    `exited`, and the rest. It is observed, never judged: a
-    stopped container is a fact, not a fault. Whether a signature
-    means anything in a given state is declared by the signature,
-    because a container shutting down prints connection refusals
-    that mean nothing at all.
-
-    `depth` is the number of lines that were read, and it is
-    recorded rather than assumed. A signature declaring a window
-    deeper than what was collected cannot fire, and the
-    difference between *absent* and *out of range* is only
-    visible if the depth travelled with the observation.
+    `depth` is the number of lines read, so a signature whose window is
+    deeper than what was collected can tell "absent" from "out of range".
     """
 
     subject: str

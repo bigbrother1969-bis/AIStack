@@ -1,152 +1,26 @@
-"""
-The time ribbon's second slice — v2 (`ADR-0011` § 26, 1.5.2 cadrage,
-2026-09-29). `ADR-0011` § 24 named two real gaps in the v1 ribbon
-rather than leaving them to discover: it was "a full, filterable,
-chronological list" with no real time axis, and it had no "curseur
-d'instant, pas-à-pas" at all. This module is the first of those two
-closed — a real horizontal time axis, one lane per stream, instead of
-a flat `<ul>`.
+"""The Time Machine's time ribbon as SVG (ADR-0011 § 26): a horizontal time
+axis with one lane per stream.
 
-**The owner's own cadrage, 2026-09-29, before this module existed**:
-SVG + inline vanilla JS, no vendored library and no CDN — the same
-self-contained-per-page discipline every Time Machine screen already
-holds (`_style.html`'s own docstring), extended here rather than
-reaching for a second JS dependency alongside the one `mermaid.min.js`
-already vendors (`aistack.renderers.architecture.html`). And the
-cursor drives real navigation — click or drag selects the nearest
-instant and opens its `/node` card — rather than a decorative control
-with nothing behind it: maquette 3's own reconstitution
-("reconstituer en trois clics") has no backend at all yet, and
-`ARC-P-006` forbids building toward a screen that does not exist.
-Dragging the cursor previews a position; releasing it (or a plain
-click) is what navigates — never on every `mousemove`, which would
-spam the browser with navigations mid-drag.
+SVG plus a little inline JavaScript, no library: the page stays
+self-contained. Clicking or releasing a drag of the cursor opens the
+nearest instant's `/node` card; dragging only previews, so the browser is
+not asked to navigate on every `mousemove`. Hover uses SVG's native
+`<title>` tooltips.
 
-**Hover uses SVG's own native `<title>` element, not custom JS.** A
-`<title>` inside an SVG `<a>`/`<text>` is a real, correctly-positioned
-browser tooltip for free, in every browser, on hover or on a
-screen-reader's own accessible-name computation — safer than
-hand-rolled JS positioning this session cannot pixel-test across
-browsers, and it already satisfies the `dataviz` skill's own hover
-layer requirement without inventing one.
+Dense lanes are handled in three steps:
 
-**Real production data (2026-09-29, the owner's own screenshot of
-`/ribbon` in use) found a second real gap this module did not yet
-handle: clustering.** Roughly twenty real streams exist today, not
-the five to six this module was designed against, and several close
-instants on the same lane rendered as one illegible, overlapping
-smear (`docker-events` in particular). A fresh cadrage (`AskUserQuestion`)
-settled two decisions before any code:
+1. Marks too close to tell apart merge into a counted cluster (`"●3"`)
+   whose tooltip lists every member and whose script data lets the page
+   unfold it into a list of links.
+2. Clusters whose labels would overlap are merged again, using an
+   estimated label width (no browser is available to measure text).
+3. A lane still too dense (one huge cluster, or labels that cannot fit
+   the plot width) becomes a single summary badge: total count and
+   first/last instant, placed at the middle of the lane's span.
 
-1. **Streams group by category, foldable** — the owner's own choice,
-   over leaving every stream flat or hiding the least-active ones by
-   default. The grouping this module and its caller use is not
-   invented: the only two kinds of stream this graph's own code
-   distinguishes today are the four 1.5 Docker collectors, each its
-   own dedicated projector module declaring its own `STEM` constant
-   (`docker_events`/`docker_diff`/`docker_digest`/`docker_packages`),
-   and everything else — every other stream shares the exact same
-   generic `project_observation_history` walk and the exact same IRI
-   scheme (`aistack.timemachine.iri.stream_iri`), so there is no real,
-   already-existing distinction to subdivide it further without
-   inventing a taxonomy nothing in this graph states
-   (`ARC-P-006`). `aistack.timemachine.screen.ribbon_page` builds one
-   `RibbonSvg` per category by calling `render_ribbon_svg` twice —
-   this module itself stays generic, with no notion of "Docker" or
-   "observation" anywhere in it, the same reasoning `iri.py`'s own
-   docstring already states for staying prefix-agnostic.
-2. **Marks too close together to tell apart merge into one counted
-   cluster** — the owner's own choice, over a zoomable axis (real
-   interaction state to build and test) or a non-linear axis
-   (compressing real time proportions would contradict "rien de
-   deviné, tout mesuré"). `_cluster_lane` below groups consecutive
-   same-lane marks whose pixel distance falls under
-   `_CLUSTER_MIN_GAP_PX` and renders them as one glyph with a count
-   suffix (`"●3"`), never dropping data: the merged mark's own
-   `<title>` lists every member instant, and the merged mark's own
-   `href` still opens a real `/node` card (the earliest member's).
-   **Narrower than the option's own "qui se déplie" wording, named
-   here rather than left to discover**: this v1 does not unfold a
-   cluster back into its individual marks in place — the same
-   restraint already applied to the cursor's own real-but-narrower
-   scope (never the reconstruction maquette 3 would need). Every
-   clustered instant remains fully visible, unclustered, in the flat
-   `.band-list` this page already keeps beneath the graphic.
-
-**Third slice, 2026-09-29 — production, applied, found two more real
-gaps within hours of the second slice above.** The owner's own
-screenshots of `/ribbon` after applying it: the whole page sits in a
-900px-wide column no matter how wide the browser window is (a
-heritage-wide convention, `console.html`/`architecture.html`/
-`health.html` all cap themselves the same way — real, but not this
-module's own doing), and — the one this module does own —
-`docker-events` alone carried 49125 real instants in a ~4-hour window,
-which the second slice's own clustering chained into a single glyph
-labelled `"●49125"`, and `resource-priority-decision`'s own dozens of
-smaller clusters sat close enough that their own multi-digit count
-labels (`"22"`, `"3353"`) visually ran into each other even though the
-underlying marks were already more than `_CLUSTER_MIN_GAP_PX` apart.
-The owner read the second symptom as broken timestamps at first,
-understandably — they are cluster counts, not instants, colliding.
-
-Two real causes, not one: (1) `_CLUSTER_MIN_GAP_PX` was tuned against
-a bare single glyph's own width, with no way to anticipate that a
-cluster's own label grows wider once a multi-digit count is appended
-to it; (2) nothing capped how large a single cluster could grow, so a
-stream running two, three, four orders of magnitude denser than the
-five-to-six-stream case this was designed against (§ above) collapses
-into one glyph carrying a number, not a picture — the axis genuinely
-has nothing more to say about `docker-events`' own shape at that
-density, only about its total count and its own real first/last
-instant.
-
-The owner's own cadrage (`AskUserQuestion`, 2026-09-29) settled both,
-together, as one patch: **(1) space clusters by their own real label
-footprint**, not a fixed pixel gap — `_cluster_lane` now runs a second,
-label-aware coalescing pass on top of its own first, position-only one
-(unchanged), repeatedly merging adjacent clusters whose own estimated
-rendered widths (`_estimated_label_width`, a deliberately conservative
-per-character estimate — this module has no browser to ask for real
-text metrics, the same "logic in `src/`, tested" constraint that keeps
-this module framework-free) would still overlap once drawn. **(2) a
-lane whose own clusters still cannot fit side by side inside the
-available plot width even after that** — `docker-events`' own case —
-renders as one honest summary badge instead: its real total count and
-its real earliest/latest instant, still linking to a real `/node` (the
-earliest member's), never a fabricated position and never a dead link.
-Named here rather than left to discover: the summary badge's own `x`
-is the midpoint of that lane's own real span, not a claim about where
-"most" of its instants actually sit — at this density there is no
-single honest point to draw.
-
-Alongside this, `_VIEWBOX_WIDTH` grows from 900 to 1600 (the owner's
-own broader decision, "toute la mini-app" — every Time Machine screen,
-plus `console.html`/`architecture.html`/`health.html`, adapts to the
-available window width rather than sitting in a fixed narrow column;
-this module's own share of that is simply more logical drawing room
-for every lane, directly easing the ordinary case this slice's own
-label-footprint fix does not by itself reach).
-
-**All the geometry lives here, pure and deterministic** (same
-`RibbonMark`/`href`-arrives-pre-built contract
-`aistack.renderers.timemachine.provenance_mermaid.ProvenanceNeighbor`
-already holds), so it is testable by the governed suite without a
-browser (`R5`: "toute la logique dans `src/`, testée ; couches web
-minces"). `aistack.timemachine.screen.ribbon_svgs` calls
-`render_ribbon_svg` with the same already-built `filtered` entries it
-already renders as a flat list — kept, unremoved: the `dataviz`
-skill's own non-negotiable, "a table view exists".
-
-**Deliberately still narrower than the validated maquette** (re-measured
-`claude/AUDIT-TIMEMACHINE-REALIGNEMENT-MAQUETTES-2026-10-02.md`, which
-closed the fourth of four named gaps — cluster unfold, directly above
-— one at a time with the owner, the remaining three kept open on
-purpose, not forgotten): the network tree shown paired alongside the
-ribbon (`/tree` stays a separate view — merging the two is real future
-design); the event card's own "panneau Pourquoi" (1.7's own concern,
-`ADR-0011` § 24 already named it); and the cursor itself only ever
-opens the nearest instant's existing `/node` drill-down — it does not
-reconstruct anything.
+Pure and deterministic; `href`s arrive pre-built. The caller
+(`aistack.timemachine.screen`) keeps a flat list of the same entries
+beneath the graphic as the accessible table view.
 """
 
 from __future__ import annotations
@@ -165,53 +39,27 @@ _LANE_HEIGHT = 34
 _AXIS_LABEL_HEIGHT = 24
 _MARK_FONT_SIZE = 15
 
-# A glyph at `_MARK_FONT_SIZE` is comfortably wider than this on every
-# font this heritage's own charte already relies on (system sans-serif
-# — `_style.html`'s own `body { font-family: sans-serif; }`) — two
-# marks closer together than this on the same lane are the "illegible
-# smear" the owner's own screenshot showed for `docker-events`, not a
-# real visual gap between two distinguishable marks. This is the
-# first, position-only clustering pass; the second, label-aware pass
-# below (`_estimated_label_width`/`_LABEL_PADDING_PX`) is what actually
-# keeps a cluster's own rendered count from overlapping its neighbour.
+# First clustering pass: marks on one lane closer than this cannot be told
+# apart at `_MARK_FONT_SIZE`. The label-aware pass below keeps cluster
+# counts from overlapping.
 _CLUSTER_MIN_GAP_PX = 14.0
 
-# No browser is available to this pure module to ask for a cluster's
-# own real rendered text width (`R5`: logic in `src/`, tested without
-# one) — this is a deliberately conservative per-character estimate
-# for this heritage's own shared sans-serif stack at `_MARK_FONT_SIZE`,
-# wide enough to be a safe over-, not under-, bound rather than a
-# pixel-exact measurement.
+# Conservative per-character width estimate for the sans-serif stack at
+# `_MARK_FONT_SIZE`; an over-estimate on purpose, since no browser can measure.
 _LABEL_CHAR_WIDTH_FACTOR = 0.62
 _LABEL_PADDING_PX = 4.0
 
-# See `_lane_needs_summary`'s own docstring: a single cluster this much
-# larger than any close-in-time burst tested before 2026-09-29 (the
-# largest deliberately tested, still one ordinary point, was 6; the
-# smallest real production count cleanly on the other side of this
-# line, found the same day, was 49125) no longer means a real pixel
-# position, only a real total count.
+# A cluster larger than this no longer stands for a pixel position, only a
+# count; see `_lane_needs_summary`.
 _LANE_SUMMARY_MEMBER_THRESHOLD = 50
 
 
 @dataclass(frozen=True)
 class RibbonMark:
-    """
-    One already-decided instant to place on the ribbon — exactly one
-    row of `ribbon_view`'s existing `filtered` list, unpacked into the
-    fields this renderer draws. `href` and `color`/`shape` arrive
-    pre-built (the caller's existing badge assignment and
-    `_node_href`), the same "hrefs arrive pre-built" contract
-    `ProvenanceNeighbor` already holds — this module draws a picture
-    from already-decided data, never a router itself.
+    """One instant to place on the ribbon; `href`, `color` and `shape` arrive pre-built.
 
-    `instant` is the `str` `ribbon_view` already carries — always a
-    `datetime.isoformat()` lexical form, because every projector that
-    writes `prov:generatedAtTime`/`aistack:occurredAt` agrees on that
-    one shape (`docker_events.py`, `docker_diff.py`, `docker_digest.py`,
-    `docker_packages.py`, `collection_gaps.py`, `explications.py`,
-    `projection/__init__.py`) — `datetime.fromisoformat` is this
-    format's own exact inverse, not a looser general parser.
+    `instant` is a `datetime.isoformat()` string, the form every projector
+    writes, so `datetime.fromisoformat` parses it exactly.
     """
 
     href: str
@@ -226,10 +74,7 @@ class RibbonMark:
 
 @dataclass(frozen=True)
 class RibbonSvg:
-    """The rendered picture, plus the one count the template needs to
-    decide whether to show it at all — `ribbon_view` already knows
-    `bool(entries)`, this exists only so a future caller need not
-    recount `marks` itself."""
+    """The rendered SVG markup and how many marks it holds."""
 
     markup: str
     mark_count: int
@@ -237,8 +82,7 @@ class RibbonSvg:
 
 @dataclass(frozen=True)
 class _Positioned:
-    """One mark, already placed on the time axis — the unit
-    `_cluster_lane` groups."""
+    """One mark placed on the time axis; the unit `_cluster_lane` groups."""
 
     x: float
     instant: datetime
@@ -250,11 +94,10 @@ def _parse(instant: str) -> datetime:
 
 
 def _cluster_label_text(cluster: list[_Positioned]) -> str:
-    """A cluster's own rendered glyph, its count suffix appended once
-    there is more than one member — the exact text `_render_cluster`
-    draws, shared here so the label-aware merge pass below reasons
-    about the same string it will actually render, never a separate
-    guess at what that string will be."""
+    """The glyph a cluster renders, with its member count when there are several.
+
+    Shared with the overlap check so both reason about the same text.
+    """
 
     first = cluster[0].mark
     if len(cluster) > 1:
@@ -263,8 +106,7 @@ def _cluster_label_text(cluster: list[_Positioned]) -> str:
 
 
 def _estimated_label_width(text: str) -> float:
-    """See `_LABEL_CHAR_WIDTH_FACTOR`'s own docstring: a conservative
-    per-character estimate, not a real text metric."""
+    """Conservative estimated width of a label, not a real text metric."""
 
     return len(text) * _MARK_FONT_SIZE * _LABEL_CHAR_WIDTH_FACTOR
 
@@ -274,12 +116,7 @@ def _cluster_anchor_x(cluster: list[_Positioned]) -> float:
 
 
 def _clusters_would_overlap(a: list[_Positioned], b: list[_Positioned]) -> bool:
-    """Would `a`'s own rendered label run into `b`'s once both are
-    drawn at their own anchor — real production data (2026-09-29)
-    found this happening between clusters already more than
-    `_CLUSTER_MIN_GAP_PX` apart by raw position, once each one's own
-    multi-digit count made its label wider than that fixed gap ever
-    anticipated."""
+    """Whether `a`'s and `b`'s labels would overlap at their anchors."""
 
     gap = abs(_cluster_anchor_x(b) - _cluster_anchor_x(a))
     required = (
@@ -291,26 +128,13 @@ def _clusters_would_overlap(a: list[_Positioned], b: list[_Positioned]) -> bool:
 
 
 def _cluster_lane(positioned: list[_Positioned]) -> list[list[_Positioned]]:
-    """
-    Group one lane's own marks, already sorted by `x`, into clusters —
-    two chained passes, not one.
+    """Group one lane's marks, sorted by `x`, into clusters in two passes.
 
-    **First pass, position-only**: a run of consecutive marks each
-    within `_CLUSTER_MIN_GAP_PX` of the previous one joins the same
-    cluster, so three marks 5px apart each become one cluster of three
-    even though the first and third are 28px apart — the same "too
-    close to the one right next to it" reading a viewer's own eye would
-    apply, not a fixed window around one fixed centre.
-
-    **Second pass, label-aware** (2026-09-29): the first pass has no
-    way to anticipate that a cluster's own rendered label grows wider
-    once a multi-digit count is appended to it — two clusters can sit
-    far enough apart by raw position to stay separate, yet still
-    overlap once each one's own label text is actually drawn. This
-    pass repeatedly merges adjacent clusters whose own estimated label
-    footprints (`_clusters_would_overlap`) would still collide, until
-    a full pass makes no further change — the same chained-merge idea
-    as the first pass, one level up, on clusters instead of marks.
+    First pass, position only: consecutive marks each within
+    `_CLUSTER_MIN_GAP_PX` of the previous join the same cluster (chained,
+    not a fixed window). Second pass: adjacent clusters whose estimated
+    labels would overlap are merged repeatedly until nothing changes, since
+    a multi-digit count widens a label beyond the first pass's gap.
     """
 
     if not positioned:
@@ -339,31 +163,11 @@ def _cluster_lane(positioned: list[_Positioned]) -> list[list[_Positioned]]:
 
 
 def _lane_needs_summary(clusters: list[list[_Positioned]], plot_width: float) -> bool:
-    """
-    Does this lane's own picture stop being honest, even after both
-    clustering passes above? Two independent reasons, either one
-    enough on its own — real production data (2026-09-29) found one of
-    each, on the same page, the same day:
+    """Whether a lane must be drawn as a summary badge instead of clusters.
 
-    - **A single cluster has swallowed an abnormal share of the whole
-      lane** (`_LANE_SUMMARY_MEMBER_THRESHOLD`). `docker-events`
-      collapsed 49125 real instants into one glyph — a short,
-      unremarkable-looking label (`"●49125"` is six characters; it
-      fits the plot width many times over), which is exactly the
-      trap: a short label reads as fine, but a single pixel position
-      claiming to represent 49125 instants means nothing at that
-      density. Counting each cluster's own label width can never catch
-      this — digit count grows far slower than member count — so this
-      is checked directly, on the raw member count, against a
-      threshold far beyond any close-in-time burst this heritage
-      tested before that (the largest deliberately tested, and still
-      a single ordinary point, was 6).
-    - **The lane's own clusters, laid out at their own minimum label
-      spacing, no longer fit side by side** inside the available plot
-      width. `resource-priority-decision`'s own case, the same day:
-      dozens of individually small clusters whose own multi-digit
-      count labels still ran into their neighbours' once there were
-      enough of them.
+    Either one cluster exceeds `_LANE_SUMMARY_MEMBER_THRESHOLD` members (its
+    label stays short, but one position for thousands of instants means
+    nothing), or the clusters' labels do not fit side by side in `plot_width`.
     """
 
     if not clusters:
@@ -382,19 +186,11 @@ def _lane_needs_summary(clusters: list[list[_Positioned]], plot_width: float) ->
 def _render_lane_summary(
     lane_positioned: list[_Positioned], y: float, plot_left: float, plot_right: float
 ) -> tuple[str, str]:
-    """
-    One lane, too dense to plot honestly as individual points or
-    clusters (`_lane_needs_summary`) — a single summary badge
-    instead: the real total count and the real earliest/latest
-    instant, drawn as a pill (a `<rect>` behind the `<text>`, the same
-    "this is a count, not a position" visual language the ribbon's own
-    foldable group counts already use) rather than a plain glyph, so it
-    reads as clearly different from an ordinary mark or cluster. Its
-    own `x` is the midpoint of this lane's own real span — not a claim
-    that "most" instants sit there, simply where this lane's own data
-    actually starts and ends on the shared axis. `href` still opens a
-    real `/node` (the earliest member's) — never a fabricated position,
-    never a dead link.
+    """One lane too dense to plot, drawn as a summary badge.
+
+    A pill with the total count and the first/last instants, at the middle
+    of the lane's real span (not a claim about where most instants sit).
+    It links to the earliest member's `/node`.
     """
 
     first = lane_positioned[0].mark
@@ -429,15 +225,8 @@ def _render_lane_summary(
         f'font-size="{_MARK_FONT_SIZE - 2}">'
         f"<title>{tooltip}</title>{escape_text(label)}</text></a>"
     )
-    # No `members` key here — deliberate, unchanged from the cadrage
-    # that created this function (2026-09-29): a summary badge already
-    # stands for a count too large to plot honestly point by point
-    # (`_lane_needs_summary`'s own docstring, "a single pixel position
-    # claiming to represent 49125 instants means nothing"); unfolding
-    # it into a clickable list would reproduce exactly the illegible
-    # density this badge exists to replace. Scoped out of the 2026-10-02
-    # cluster-unfold cadrage (`AskUserQuestion`, "laisser tels quels"),
-    # named here rather than left to discover.
+    # No `members` list here: unfolding a summary badge would bring back the
+    # density it replaces.
     cursor_point = json.dumps(
         {"x": round(x, 2), "y": round(y, 2), "href": first.href},
         separators=(",", ":"),
@@ -446,27 +235,13 @@ def _render_lane_summary(
 
 
 def _render_cluster(cluster: list[_Positioned], y: float) -> tuple[str, str]:
-    """
-    One cluster's own `<a><text>...` element, plus its own JSON cursor
-    point. A single-member cluster renders exactly as § 24's original
-    single-mark case; a multi-member cluster keeps the lane's own
-    colour/shape (every member shares it — one lane is one stream) and
-    appends its own count, never averaging or dropping a member's own
-    instant out of the tooltip.
+    """One cluster's `<a><text>` element and its JSON cursor point.
 
-    **"Déplier sur place" (2026-10-02, owner cadrage, `AskUserQuestion`:
-    "liste déroulante au clic", not a spatial fan-out on the axis) —
-    the cursor point a multi-member cluster hands the page's own script
-    now carries its own `members` list, one entry per instant, each with
-    its own real `href` (never only the earliest member's, unlike the
-    glyph's own `<a>` above, kept unchanged for the no-JS case). The
-    script draws these as a small list next to the glyph instead of
-    navigating straight to the earliest member — the same "never a
-    fabricated position, never a dead link" discipline this module
-    already holds, extended to every member, not only the first. A
-    single-member cluster carries no `members` key at all — nothing to
-    unfold, the same restraint `_render_lane_summary` already applies
-    for the opposite reason (too many members to unfold honestly).
+    A multi-member cluster keeps the lane's colour and shape, appends its
+    count, and lists every member in its tooltip. Its cursor point carries a
+    `members` list, each with its own `href`, which the page script shows as
+    a list on click; the `<a>` still opens the earliest member without
+    JavaScript. A single-member cluster has no `members` key.
     """
 
     first = cluster[0].mark
@@ -517,21 +292,10 @@ def _render_cluster(cluster: list[_Positioned], y: float) -> tuple[str, str]:
 
 
 def render_ribbon_svg(marks: tuple[RibbonMark, ...], streams: tuple[str, ...]) -> RibbonSvg:
-    """
-    Render every mark on a real horizontal time axis, one lane per
-    stream, in the caller's own given order (`ribbon_view`'s already-
-    sorted `all_streams`, or one category's own subset of it) — a
-    lane's row never reshuffles when a filter hides another stream,
-    the same stable-badge guarantee `ribbon_view`'s own docstring
-    already states for colour/shape.
+    """Render every mark on a time axis, one lane per stream in the given order.
 
-    Deterministic given the same input, the same discipline
-    `render_provenance_mermaid` already holds.
-
-    An empty `marks` tuple (every stream filtered out, a real state
-    `ribbon_view`'s own all-boxes-unchecked submission already lets
-    happen) still renders a real axis line and the lane rows
-    themselves — never a crash, and never a fabricated instant.
+    Lanes never reorder when a filter hides another stream. Deterministic.
+    An empty `marks` still renders the axis and the lanes.
     """
 
     lane_y = {

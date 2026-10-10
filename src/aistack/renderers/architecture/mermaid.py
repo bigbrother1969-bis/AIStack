@@ -8,12 +8,9 @@ from aistack.renderers.text import escape_text
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 
-# One line per `ServiceStatus` value (`graph.py` docstring names all
-# four) — the class name is `service.status.value` itself, so no
-# separate name mapping exists to fall out of sync with the enum.
-# Confirmed/observed statuses both read green: the difference between
-# `IN_COMPOSE_PROJECT` and `OBSERVED` is already visible from nesting
-# (a project subgraph or a loose node), not from colour.
+# One class per `ServiceStatus`, named by its value so no mapping can drift.
+# Compose and observed services are both green; nesting in a project
+# subgraph already tells them apart.
 _CLASS_DEFS = (
     "    classDef in_compose_project fill:#dff6dd,stroke:#116329,color:#116329;",
     "    classDef observed fill:#dff6dd,stroke:#116329,color:#116329;",
@@ -25,30 +22,14 @@ _CLASS_DEFS = (
 
 
 def render_mermaid(view: ArchitectureView) -> str:
-    """
-    Render one `ArchitectureView` as Mermaid `flowchart` text.
+    """Render one `ArchitectureView` as Mermaid `flowchart` text.
 
-    **No arrows.** Nothing in `ArchitectureGraph` records that one
-    service depends on another — only which category it belongs to,
-    and, when observed, which Compose project. Drawing an edge here
-    would assert a relationship AIStack never observed (ARC-P-012), so
-    the only structure this renders is containment: a category
-    subgraph holding a project subgraph holding its services, or a
-    standalone service node placed directly in its category.
-
-    **Every id carries a running index, not only a slug.** Nothing in
-    `ServiceCategorizationDefinition` forbids two categories naming a
-    same-titled service, and a slug alone would collide silently in
-    that case — Mermaid would silently merge two distinct services
-    into one node. The index makes every id unique on its own; the
-    slug beside it is what keeps the raw `.mmd` text legible to a
-    human reading it directly. Neither survives alone.
-
-    **Deterministic.** Categories, and services within a category,
-    are walked in the order `view.graph` already carries — the
-    categorization file's own declared order (`views.py`,
-    `available_view_names`) — so the same view always renders to the
-    same text, byte for byte.
+    No arrows: the graph records categories and Compose projects, not
+    dependencies, so the only structure is containment (category, then
+    project, then service). Ids carry a running index as well as a slug
+    because two categories may name the same service and Mermaid would
+    silently merge colliding ids. Walks the declared order, so output is
+    deterministic.
     """
 
     lines: list[str] = ["flowchart TD", ""]
@@ -124,23 +105,10 @@ def _service_line(service: ServiceNode, index: int) -> str:
 
 
 def _click_line(service: ServiceNode, index: int) -> str | None:
-    """
-    One `click <id> href "<url>" "<tooltip>" _blank` directive per
-    service that declares an `href` — added 2026-09-12
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10). `None` when the
-    service has no `href`, the same "nothing to add" convention
-    `ServiceNode.compose_project` already uses for a status that has
-    nothing to name.
+    """`click` directive for a service with an `href`, or `None` without one.
 
-    **`_blank`, always.** Every `href` this heritage declares points
-    at another homelab service, never at a page a link inside this
-    Mermaid diagram would otherwise navigate away from and lose;
-    opening a new tab keeps `architecture.html` itself in place.
-
-    **Tooltip falls back to the service's own name** when
-    `description` is absent, rather than to an empty string — a click
-    target with no tooltip at all reads as a Mermaid rendering defect
-    before it reads as "this service has no description."
+    Opens in `_blank` so `architecture.html` stays open. The tooltip falls
+    back to the service name, since an empty one looks like a rendering bug.
     """
 
     if not service.href:

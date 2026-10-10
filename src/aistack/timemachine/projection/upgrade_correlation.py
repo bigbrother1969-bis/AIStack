@@ -1,52 +1,20 @@
 """
-Project the "upgrade correlation" the 1.5.1 GUI cadrage named —
-`ADR-0011` § 22's own closing note left the trigger cadré but the
-design open; cadré and built here, 2026-09-28.
+Project the upgrade correlation: link the package snapshots taken
+before and after each image-digest change.
 
-**Trigger: an image-digest change alone — cadrage decision 4
-(`AskUserQuestion`, this segment's earlier turn).** No destroy+create
-event pair is required. `aistack.providers.docker.digest_history
-.record_image_digest` already writes only on change (write-on-change,
-the same contract every 1.5 stream holds — see that module's own
-docstring). So every recorded `docker-digest` instant for a subject
-*after* its own first is, by that write-on-change contract alone,
-already a genuine digest change. This module never re-opens a digest
-observation's own value to compare it against the previous one — the
-comparison already happened once, at collection time, and repeating
-it here would only re-derive a fact `digest_history` already
-established.
+Trigger: `digest_history.record_image_digest` writes only on change,
+so every recorded `docker-digest` instant after a subject's first is a
+digest change; values are not compared again here.
 
-**Pairing: nearest on each side, no time window — cadrage decision 5
-(`AskUserQuestion`, this segment).** For each digest-change instant,
-the "before" packages snapshot is the last one recorded at or before
-that instant; "after" is the first one recorded strictly after it —
-always the nearest, however large the real gap turns out to be.
-`ARC-P-006`: inventing a bounded window (a day, an hour) with no real
-measured data yet to size it would be exactly the speculative
-infrastructure that rule forbids. An unusually large real gap stays a
-visible, measurable fact once the graph is queried (the two entities'
-own `prov:generatedAtTime` subtract), never a threshold silently
-hiding it.
+Pairing: the last packages snapshot at or before the change and the
+first one strictly after it, with no time window; a large gap stays
+visible through the two entities' `prov:generatedAtTime`.
 
-**One new predicate, no new entity or activity — cadrage decision 1.**
-`aistack:upgradeCorrelatesWith` links one already-projected
-`docker-packages` entity (the "before" snapshot) to another (the
-"after" snapshot) — both already exist as `prov:Entity` facts from
-`project_docker_packages`, which this module's own caller must
-therefore run first. No new `prov:Activity` is minted: this is a
-relationship between two already-collected facts, not a new
-collection stream of its own — the same restraint `aistack
-:partOf`/`aistack:explains` already hold for a predicate that links
-existing entities rather than announcing a new kind of collection.
-
-**Only a snapshot this module can itself validate is ever
-referenced.** The same shapes `project_docker_digest` and
-`project_docker_packages` themselves require before emitting an
-entity (`{"digest": str}`; `{"mechanism": str, "packages": list}`)
-are re-checked here before an instant is treated as a candidate — the
-same redundant-validation convention every projector in this package
-already holds, so this module never links to an IRI the stream's own
-projector declined to emit.
+Only `aistack:upgradeCorrelatesWith` is written, between two
+`docker-packages` entities that `project_docker_packages` already
+emitted (run it first). Observations are re-validated with the same
+shape checks as the digest and packages projectors, so no link points
+at an entity they skipped.
 """
 
 from __future__ import annotations
@@ -63,10 +31,8 @@ from aistack.timemachine.iri import docker_packages_iri
 from aistack.timemachine.projection.filter import filter_fact
 from aistack.timemachine.vocabulary import AISTACK_UPGRADE_CORRELATES_WITH
 
-# Cross-boundary redeclarations, the same convention every other
-# projector in this package already holds against its own stream's
-# leaf names (`aistack.providers.docker.digest_history`/
-# `.packages_history` own both).
+# Leaf names of `aistack.providers.docker.digest_history` and
+# `.packages_history`, redeclared rather than imported.
 DIGEST_DIRNAME = "docker-digest"
 DIGEST_STEM = "docker-digest"
 PACKAGES_DIRNAME = "docker-packages"
@@ -75,9 +41,7 @@ PACKAGES_STEM = "docker-packages"
 
 @dataclass(frozen=True)
 class UpgradeCorrelationProjectionSummary:
-    """What one `project_upgrade_correlation` run actually did — the
-    same measured-report shape every other projection in this package
-    already gives a caller."""
+    """What one `project_upgrade_correlation` run did."""
 
     subjects_seen: int
     digest_changes_seen: int
@@ -88,15 +52,8 @@ class UpgradeCorrelationProjectionSummary:
 
 def _subject_roots(root: Path, stem: str) -> dict[str, Path]:
     """
-    `{subject: subject_root}` for every subject `root` actually holds
-    a recorded observation for — the same `rglob`-based walk every
-    other write-on-change stream's projector in this package already
-    holds, parameterised over `stem` so one function serves both the
-    digest and the packages side rather than two near-identical
-    copies (neither of which this module owns — see
-    `aistack.timemachine.projection.docker_digest._subject_roots` and
-    `.docker_packages._subject_roots` for the two originals this
-    generalises).
+    `{subject: subject_root}` for every subject under `root` with a
+    recorded `stem` observation, found by its `history/<stem>` leaf.
     """
 
     roots: dict[str, Path] = {}
@@ -113,13 +70,7 @@ def _subject_roots(root: Path, stem: str) -> dict[str, Path]:
 
 
 def _valid_digest_instants(subject_root: Path) -> list[datetime]:
-    """
-    Every instant this subject's own `docker-digest` history holds a
-    validly-shaped observation for (`{"digest": str}`) — the same
-    parse `aistack.timemachine.projection.docker_digest` itself
-    requires before emitting an entity. Oldest first
-    (`available_instants`'s own documented contract).
-    """
+    """Instants of valid `{"digest": str}` observations, oldest first."""
 
     instants: list[datetime] = []
     for observation in latest_observations(subject_root, DIGEST_STEM):
@@ -139,12 +90,8 @@ def _valid_digest_instants(subject_root: Path) -> list[datetime]:
 
 def _valid_packages_instants(subject_root: Path) -> list[datetime]:
     """
-    Every instant this subject's own `docker-packages` history holds a
-    validly-shaped snapshot for (`{"mechanism": str, "packages":
-    list}`) — the same parse `aistack.timemachine.projection
-    .docker_packages` itself requires before emitting an entity.
-    Oldest first, the same contract `_valid_digest_instants` already
-    relies on.
+    Instants of valid `{"mechanism": str, "packages": list}` snapshots,
+    oldest first.
     """
 
     instants: list[datetime] = []
@@ -195,18 +142,12 @@ def project_upgrade_correlation(
 ) -> UpgradeCorrelationProjectionSummary:
     """
     Add `aistack:upgradeCorrelatesWith` between the nearest
-    `docker-packages` snapshot before and after each detected
-    `docker-digest` change, for every subject both streams hold
-    observations for.
+    `docker-packages` snapshot before and after each `docker-digest`
+    change, for every subject both streams hold.
 
-    **Must run after both `project_docker_digest` and
-    `project_docker_packages`** in any rebuild — see this module's
-    own docstring for why: the two entities a correlation links
-    already have to exist as `prov:Entity` facts before this module
-    can link them.
-
-    Every candidate fact passes through the same `filter_fact` every
-    other stream's projection already uses.
+    Must run after `project_docker_digest` and
+    `project_docker_packages`, which emit the linked entities. Every
+    fact goes through `filter_fact`.
     """
 
     digest_root = generated_dir / DIGEST_DIRNAME

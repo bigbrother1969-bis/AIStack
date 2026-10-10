@@ -6,17 +6,12 @@ from aistack.i18n.catalog import Languages
 
 
 def pick_localized(value: Any, lang: str | None, languages: Languages, label: str) -> str:
-    """
-    One declared field's text in `lang` — ADR-0010, for a definition
-    the owner writes by hand (`console_links.yml`), not a catalog.
+    """Text of one hand-written localized field (e.g. in `console_links.yml`) in `lang`.
 
-    A field is either a plain string, the same in every language (a
-    product name like "Selection UI" is not translated), or a mapping
-    from language code to text. A mapping must carry the reference
-    language — it is the one served when nothing else fits — and may
-    only name declared languages, so a typo (`eng:`) is refused rather
-    than silently never shown. `lang` absent from the mapping falls
-    back to the reference, the same rule a catalog key follows.
+    A field is a plain string (same in every language) or a mapping from
+    language code to text. A mapping must include the reference language and
+    only declared languages, so a typo like `eng:` is refused. A missing
+    `lang` falls back to the reference.
     """
 
     if isinstance(value, str):
@@ -48,12 +43,10 @@ def pick_localized(value: Any, lang: str | None, languages: Languages, label: st
 
 
 def missing_languages(value: Any, languages: Languages) -> tuple[str, ...]:
-    """
-    The declared languages a localized field does not carry — empty
-    for a plain string, which is the same in every language by design.
-    Used to hold a real definition to every declared language in the
-    governed suite, without making the loader itself refuse a field
-    the reference alone can still serve.
+    """Declared languages a localized field lacks; empty for a plain string.
+
+    Lets tests require every language without making the loader refuse
+    a field the reference alone can serve.
     """
 
     if isinstance(value, str):

@@ -9,44 +9,15 @@ from typing import Any
 
 
 class SyncthingProvider:
-    """
-    Observe what Syncthing knows about one folder and one device.
+    """Observe what Syncthing knows about one folder and one device.
 
-    A provider observes and does not qualify. Everything here is
-    passed through as the daemon reported it; deciding what a
-    given state means for the screen belongs to whatever composes
-    this with the selection.
+    Data is passed through as the daemon reported it. `/rest/db/status`
+    describes the folder on this server; `/rest/db/completion` describes
+    how much of it has reached the device, which is a different question.
 
-    **Two questions, and the second is the one the screen was
-    missing.** `/rest/db/status` describes the folder *on this
-    server* — its state, what it holds, what it still needs.
-    `/rest/db/completion` describes how much of it has reached the
-    named device. Until 2026-09-03 the Selection UI asked only the
-    first and labelled the answer as progress toward the phone.
-    On 2026-08-29 that folder read `idle` with nothing pending
-    while 159 selected artists had never been materialised at all:
-    the number was right, the word above it was wrong, and the
-    screen had shown it for seven weeks.
-
-    **Unreachable is a state, not an error.** The phone answers
-    only through a tunnel, and Android runs one VPN at a time, so
-    its address changes and its absence is ordinary — measured
-    2026-08-29. The daemon itself can be down, restarting, or
-    behind a key that has been rotated. None of that is
-    exceptional enough to raise: this returns `reachable: false`
-    with the reason as a sentence, and the surface says so plainly
-    instead of showing a stack trace or, worse, a stale figure.
-
-    **The key is a value, never a lookup.** This class reads no
-    environment and no file. The definition names where the key
-    lives; the surface reads it and passes it here. So this is
-    testable against a real HTTP server, and no secret can reach a
-    governed artifact through it.
-
-    **What is absent is absent.** Fields the daemon did not return
-    are not defaulted to zero — a folder that answers without
-    `needBytes` and a folder with nothing left to transfer are
-    different facts, and only one of them is good news.
+    Unreachable is a state (`reachable: false` plus a reason), not an
+    exception. The API key is passed in by the caller; this class reads no
+    environment or file. Missing fields are not defaulted to zero.
     """
 
     provider_id = "aistack.provider.syncthing"
@@ -112,9 +83,7 @@ class SyncthingProvider:
         )
 
         if reason:
-            # The daemon answered once and not twice. That is not
-            # unreachable — what was read stays read, and the
-            # missing half says why it is missing.
+            # The folder status was read; only the device half is missing.
             state["device"] = {"unavailable_reason": reason}
             return observation
 
@@ -125,15 +94,10 @@ class SyncthingProvider:
     def _get(
         self, path: str, parameters: dict[str, str]
     ) -> tuple[dict[str, Any], str]:
-        """
-        One call, and every failure turned into a sentence.
+        """One GET; every failure becomes a reason sentence shown on screen.
 
-        The sentence is what a human reads on the screen when the
-        phone is off or the key has been rotated, so it names what
-        was tried. `URLError` covers a refused connection, a DNS
-        failure and a timeout; `HTTPError` covers a rejected key,
-        which is the one that looks like a network problem and is
-        not.
+        `HTTPError` covers a rejected key; `URLError` covers refused
+        connections, DNS failures and timeouts.
         """
 
         query = urllib.parse.urlencode(parameters)
@@ -169,20 +133,10 @@ class SyncthingProvider:
             return {}, f"Syncthing answered {path} with something unreadable: {error}"
 
     def _timed_out(self) -> str:
-        """
-        A timeout reads differently from a refused connection.
+        """Reason for a timeout, distinct from a refused connection.
 
-        The screen is rendered on request: a daemon that hangs
-        would hang the page, and the two failures lead to
-        different actions — one is a daemon that is not there, the
-        other one that is there and struggling.
-
-        Both spellings are caught. A connection that times out
-        arrives wrapped in `URLError`; a read that times out after
-        the connection succeeded raises `TimeoutError` directly.
-        Found by pointing the provider at a deliberately slow
-        server on 2026-09-03 rather than by reading the standard
-        library.
+        A connect timeout arrives wrapped in `URLError`; a read timeout
+        raises `TimeoutError` directly. Both are caught.
         """
 
         return (

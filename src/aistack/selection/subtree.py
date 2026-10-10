@@ -8,39 +8,16 @@ from aistack.kernel.catalog import Catalog
 
 @dataclass(frozen=True)
 class SubtreeResolution:
-    """
-    What a set of ticked nodes actually designates.
+    """What a set of ticked nodes designates.
 
-    Five statements, and each answers a question the screen or the
-    generator would otherwise have to answer by guessing.
-
-    `roots` are the ticked nodes with no ticked ancestor. They are
-    the selection, minimally expressed: their subtrees are
-    disjoint by construction, which is what makes `media_bytes`
-    exact rather than approximately right.
-
-    `covered` is every node the selection reaches, ticked or
-    inherited. The screen needs it to show a node as taken because
-    an ancestor was ticked, which is the whole point of ticking at
-    the height you mean — decided 2026-08-29 by the owner.
-
-    `redundant` are ticked nodes already covered by a ticked
-    ancestor. Ticking `Classique` then `Classique/Bach` is not an
-    error and nothing is dropped; but it is worth saying, because
-    unticking `Classique` would then leave Bach behind and the
-    human should be able to see that coming.
-
-    `absent` are ticked identifiers the catalog no longer holds.
-    The library is scanned at every request — decided 2026-08-29 —
-    so a directory deleted on the server disappears from the
-    catalog while remaining in the saved selection. It must be
-    shown as *selected but absent*, never ignored in silence and
-    never left to fail later in the generator.
-
-    `media_files` and `media_bytes` count each file once. A parent
-    and its child both ticked is the case that makes a naive sum
-    wrong, and a capacity bar that double-counts on a 64 Go quota
-    is worse than no capacity bar.
+    - `roots`: ticked nodes with no ticked ancestor; their subtrees are
+      disjoint.
+    - `covered`: every node reached, ticked or inherited from an ancestor.
+    - `redundant`: ticked nodes already covered by a ticked ancestor.
+    - `absent`: ticked ids the catalog no longer holds (deleted since the
+      selection was saved), shown rather than ignored.
+    - `media_files`/`media_bytes`: summed over `roots`, so each file
+      counts once.
     """
 
     roots: tuple[str, ...]
@@ -54,22 +31,11 @@ class SubtreeResolution:
 def resolve_subtrees(
     catalog: Catalog, selected_ids: Iterable[str]
 ) -> SubtreeResolution:
-    """
-    Resolve ticked identifiers against the catalog that offers them.
+    """Resolve ticked identifiers against the catalog.
 
-    **A ticked identifier designates a subtree**, not a directory
-    and not a file — the owner's decision of 2026-08-29, taken
-    because his tree is five levels deep and holds media at all
-    five. So resolving is not a lookup: it is deciding which ticks
-    still exist, which ones cover which, and what the whole
-    designates.
-
-    Pure, and deliberately so. It touches no filesystem: the
-    catalog carries what the walk observed, so this can be tested
-    on a catalog built by hand, and the generator that follows can
-    be handed a resolution rather than a list of ticks to
-    re-interpret. Two consumers interpreting the same ticks
-    differently is the shape this heritage keeps removing.
+    A ticked identifier designates a whole subtree. Pure (no filesystem
+    access), so the screen and the generator share one interpretation of
+    the ticks.
     """
 
     known = {item.id: item for item in catalog.items}
@@ -120,27 +86,11 @@ def _has_ticked_ancestor(
     known: Mapping[str, object],
     ticked: set[str],
 ) -> bool:
-    """
-    Walk up by the declared parent, not by splitting the path.
+    """Whether an ancestor of `node` is ticked, walking the declared
+    `parent` metadata rather than splitting the id (ids need not be paths).
 
-    **`known` is a `Mapping`, not a `dict`, in this signature.** The
-    caller holds a `dict[str, CatalogItem]`, and `dict` is invariant
-    in its value type — `mypy` refused passing it where `dict[str,
-    object]` was declared, even though `CatalogItem` is an `object`,
-    because a `dict[str, object]` parameter would let this function
-    write a plain `object` into a caller's `dict[str, CatalogItem]`.
-    `Mapping` makes the real promise: this function only reads
-    `known`, so its value type only needs to be covariant. Found by
-    `mypy`, 2026-09-10; nothing about the call site changed — a
-    `dict` already satisfies `Mapping`.
-
-    The identifier is a relative path and splitting it on the
-    separator would agree with the parent metadata in every case
-    this library has produced. It would stop agreeing the day an
-    identifier is not a path — the catalog builder for a different
-    source is the second member of the family the owner decided on
-    2026-08-29 — and it would fail silently, on the one screen
-    whose subject is what is taken and what is left.
+    `known` is a `Mapping` (covariant) so a `dict[str, CatalogItem]` can be
+    passed.
     """
 
     seen = {node}
@@ -150,15 +100,8 @@ def _has_ticked_ancestor(
     while current:
 
         if current in seen:
-            # A parent chain that closes on itself is not
-            # something this catalog can produce, and not
-            # something worth hanging an interface for.
-            #
-            # Tested before it was written the right way round: the
-            # first version asked whether the ancestor was ticked
-            # before asking whether it had already been visited,
-            # so a node whose chain came back round to itself was
-            # its own ancestor and disappeared from the roots.
+            # A cyclic parent chain: stop. Checked before `ticked`, or a
+            # node in a cycle would count as its own ancestor.
             return False
 
         if current in ticked:
@@ -205,12 +148,8 @@ def _parent_of(item: object) -> str:
 
 
 def _number(value: str | None) -> int:
-    """
-    `CatalogItem.metadata` is `dict[str, str]`, so a count arrives
-    as text. A malformed one is read as zero rather than raising:
-    the screen must still render, and a weight that is wrong is
-    visible where a stack trace is not.
-    """
+    """Parse a count stored as text; a malformed value reads as zero so the
+    screen still renders."""
 
     try:
         return int(value or 0)

@@ -27,27 +27,15 @@ def filter_fact(
     user_data_roots: Iterable[str] = (),
 ) -> bool:
     """
-    `ADR-0011` § *Decision* 6's projection filter — the pass the ADR
-    names `aistack.timemachine.projection.filter`. `True` keeps a
-    fact, `False` drops it outright before it ever reaches the
-    store: masking a user-data path still proves it exists and
-    roughly where; dropping does not.
+    The projection filter (`ADR-0011` § 6): `True` keeps a fact,
+    `False` drops it before it reaches the store. Dropping, not
+    masking, since a masked path still reveals that it exists.
 
-    A fact is dropped when its subject, or an IRI it points at as
-    its object, names a path under a declared user-data root — R2's
-    own example, a Nextcloud or Immich file path, never configuration
-    or binaries. A `Literal` object is never itself a path (nothing
-    this projection writes puts a filesystem path in a literal
-    value), so only a bare `str` object is checked.
-
-    `user_data_roots` is empty by default because nothing in this
-    codebase states one yet, measured 2026-09-27: none of the streams
-    `aistack.timemachine.projection.project_observation_history`
-    walks today collects a fact whose subject or object is a user's
-    own file — `NextcloudProvider`'s own WebDAV observations are not
-    wired into Observation History at all. A caller passes real roots
-    once a collector that is (1.5's concern, `ADR-0011` § *Open
-    Points*) states what shape its subjects take.
+    A fact is dropped when its subject, or its IRI object, is a path
+    under a user-data root (a Nextcloud or Immich file, never
+    configuration or binaries). `Literal` objects are not checked.
+    `user_data_roots` is empty by default: no projected stream collects
+    users' files yet.
     """
 
     if is_user_data_path(subject, user_data_roots):

@@ -14,32 +14,16 @@ from aistack.renderers.console.html import render_html
 
 class ConsoleHtmlArtifactGenerator:
     """
-    Generate the `console.html` artifact from the owner's declared
-    `ConsoleLink`s and, since 2026-09-13, a `HealthCockpit` snapshot
-    for the health cartouche
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` § 11.9).
+    Generate the `console.html` artifact, with Observation History,
+    from the declared `ConsoleLink`s and an optional `HealthCockpit`
+    snapshot for the health cartouche.
 
-    Mirrors `HealthHtmlArtifactGenerator`/
-    `ArchitectureHtmlArtifactGenerator` exactly: Observation History
-    (`write_artifact_with_history`) applies here the same way it
-    applies to every other generated artifact this heritage writes —
-    a rendered console is as disposable and as worth keeping every
-    run of as `architecture.html`/`health.html` are.
-
-    Takes an already-loaded tuple of `ConsoleLink`s —
-    `aistack.cli.console_render` is where `console_links.yml` is
-    loaded — the same "this class is only the I/O step" split every
-    other generator in this package already holds. `cockpit`/`score`/
-    `score_note` default to the pre-cartouche shape (`None`, `None`,
-    `""`) so a caller with nothing to summarize renders exactly as it
-    always has — the same optional-parameter idiom `HealthHtml
-    ArtifactGenerator.generate` already holds for `score`/`score_note`.
-    `technical_debt_score`/`technical_debt_note` default the same way
-    for the "Dette technique" card added 2026-09-23 (`PLAN-J11`
-    § 11.9.1). `lang` (ADR-0010, 2026-09-27) is the language the page
-    is written in, the reference when `None`. `version` (2026-10-09)
-    is shown under the lockup: the installed distribution's own
-    (`aistack.__main__.declared_version`) when `None`.
+    This class is only the I/O step: `aistack.cli.console_render` loads
+    `console_links.yml`. Without `cockpit`, `score` or
+    `technical_debt_score` the matching part is left out. `lang`
+    (ADR-0010) is the page language, the reference when `None`.
+    `version` is shown under the lockup; when `None`, the installed
+    distribution's (`aistack.__main__.declared_version`).
     """
 
     def generate(

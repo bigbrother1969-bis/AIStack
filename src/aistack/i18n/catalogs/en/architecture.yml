@@ -1,6 +1,5 @@
-# Architecture page — ADR-0010. Mirrors catalogs/fr/architecture.yml.
-# Service, category, node and hardware names are declared data and
-# stay as written (ADR-0010 § 4).
+# Architecture page (ADR-0010). Service, category, node and hardware names
+# are declared data and are not translated.
 
 title: "AIStack — Architecture"
 heading: "Architecture — AIStack"
@@ -44,7 +43,7 @@ cmdb:
   heading: "Real-time CMDB"
   unreachable: "Unreachable"
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   view_select: "Choose which view of the diagram to show"
   service_link: "Open {name} in a new tab"

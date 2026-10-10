@@ -1,9 +1,9 @@
 """
-The digest a registry publishes for an image tag, now (`ADR-0019` § 1):
-what `docker pull <tag>` would fetch, asked without pulling anything —
-one `HEAD` on the manifest, with the anonymous token the registry hands
-out for public images (Docker Hub, GitHub's registry, any registry that
-answers a 401 with a Bearer challenge).
+The digest a registry publishes for an image tag now (ADR-0019 § 1).
+
+What `docker pull <tag>` would fetch, asked without pulling: one `HEAD`
+on the manifest, with the anonymous token the registry hands out for
+public images (any registry that answers 401 with a Bearer challenge).
 """
 
 from __future__ import annotations
@@ -34,8 +34,7 @@ class ImageReference:
 
     @property
     def short_repository(self) -> str:
-        """The name `docker` itself shows in RepoDigests: `wordpress`
-        for an official Docker Hub image, `ghcr.io/x/y` elsewhere."""
+        """The name `docker` shows in RepoDigests: `wordpress` for an official Hub image, else `ghcr.io/x/y`."""
 
         if self.registry == DOCKER_HUB:
             return self.repository.removeprefix("library/")
@@ -77,8 +76,7 @@ def _challenge(header: str) -> dict[str, str]:
 
 
 def published_digest(image: str, *, opener: Opener = _open, timeout: float = 15) -> str:
-    """The registry's current digest for `image`'s tag. Raises
-    `LookupError` with the reason when the registry does not say."""
+    """The registry's current digest for `image`'s tag; raises `LookupError` with the reason otherwise."""
 
     reference = parse_reference(image)
     url = f"https://{reference.registry}/v2/{reference.repository}/manifests/{reference.tag}"

@@ -1,8 +1,7 @@
-"""
-Who publishes the console (2026-10-03): the values its left column, its
-legal notice and its licence page show, declared by the owner in
-`definitions/console_identity.yml` — never discovered, never guessed.
-A missing field is an error, not a blank on a public legal page.
+"""Who publishes the console: the values shown in its left column, legal
+notice and licence page, declared in `definitions/console_identity.yml`.
+
+A missing required field is an error, not a blank on a public legal page.
 """
 
 from __future__ import annotations
@@ -19,9 +18,8 @@ from aistack.i18n import Languages, default_languages, pick_localized
 
 DEFAULT_IDENTITY = configured(Path(__file__).resolve().parent / "definitions" / "console_identity.yml")
 
-# Who publishes this installation's pages is optional (2.0.0-rc1): a
-# new installation is a private one, and its legal notice says so
-# until the person running it declares themselves.
+# Publisher fields are optional: until the operator declares themselves,
+# the legal notice describes a private installation.
 _REQUIRED = (
     "copyright_year",
     "license",
@@ -38,8 +36,7 @@ class Repository:
 
 @dataclass(frozen=True)
 class ContainerImage:
-    """A published container image: its name, the registry that serves
-    it and that registry's page for it."""
+    """A published container image: name, registry and the registry's page for it."""
 
     name: str
     registry: str

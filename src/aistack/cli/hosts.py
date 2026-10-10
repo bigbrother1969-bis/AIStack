@@ -1,8 +1,9 @@
 """
-`python -m aistack.cli.hosts` — the traced hosts (`ADR-0020`): for each
-host `hosts.yml` declares, when its collector last ran, how many events
-it recorded and of which kinds, whether it is silent (no run for longer
-than `silent_after_minutes`) and any problem it reported.
+`python -m aistack.cli.hosts` — status of the traced hosts (ADR-0020).
+
+For each host in `hosts.yml`: when its collector last ran, how many
+events it recorded and of which kinds, whether it is silent (no run for
+longer than `silent_after_minutes`) and any problem it reported.
 
     python -m aistack.cli.hosts            every host
     python -m aistack.cli.hosts --last 10  … and its ten latest events

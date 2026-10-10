@@ -29,12 +29,9 @@ class RetrievalSite:
     """
     One place that asks a Kernel registry for something.
 
-    `identifier` is the literal the site names, or `None` when the
-    site computes it — `self.tasks.get(context.request.task_id)`.
-    A computed identifier is **not an absence**: it is a
-    retrieval whose target this measurement cannot name, and
-    recording it as `None` is what keeps *nothing retrieves this*
-    apart from *something might*.
+    `identifier` is the literal the site names, or `None` when the site
+    computes it (`self.tasks.get(context.request.task_id)`): a retrieval
+    whose target cannot be named statically, not an absence.
     """
 
     registry: str
@@ -57,35 +54,16 @@ class RetrievalSite:
 @dataclass(frozen=True)
 class RegistryInventory:
     """
-    What the Kernel registers at bootstrap, and what asks for it.
+    What the Kernel registers at bootstrap, and which source sites ask
+    for it (ADR-0004 § Discovery Model: extension by registration).
 
-    ADR-0004 § *Discovery Model*, restated by ARCH-0007: *the
-    Kernel is extended by registration, not by modification*, and
-    *application code requests capabilities from the Kernel
-    Context instead of instantiating implementations directly*.
-    Both halves of that sentence are facts about running code, and
-    until 2026-08-28 nothing in this heritage measured either.
+    `measured` is separate from the lists being empty, so "nobody
+    looked" never reads as "nothing found".
 
-    GOV-0002/OS-001 named three dimensions that place a contract —
-    what implements it, what consumes it, what governs it — and
-    said any one alone gives a confident wrong answer. The
-    contract inventory measures the first. **This measures the
-    second**, for the one form of consumption the Kernel makes
-    explicit: a capability registered under an identifier and
-    resolved by that identifier.
-
-    `measured` is separate from every list being empty, for the
-    reason `ContractInventory.declarations_measured` is: a
-    projection taken before this existed carries nothing, and
-    *nobody looked* must not print as *nothing found*.
-
-    **What it does not see is stated rather than discovered.** A
-    registry bound to a local name before being asked
-    (`r = kernel.registries.providers; r.get("docker")`) is
-    invisible to it, and an attribute that merely shares a
-    registry's name is counted. Both are consequences of reading
-    the source rather than running it, and running it would
-    measure one execution instead of the repository.
+    Measured by reading source, not running it: a registry bound to a
+    local name first (`r = kernel.registries.providers; r.get("docker")`)
+    is missed, and an attribute that merely shares a registry's name is
+    counted.
     """
 
     registries: tuple[str, ...] = field(default_factory=tuple)
@@ -118,11 +96,8 @@ class RegistryInventory:
     @property
     def computed_registries(self) -> frozenset[str]:
         """
-        Registries some site asks with a computed identifier.
-
-        Anything registered there is beyond this measurement: the
-        site may resolve it and may not, and the difference is not
-        in the source.
+        Registries some site asks with a computed identifier; their
+        entries cannot be judged retrieved or not.
         """
 
         return frozenset(
@@ -133,15 +108,7 @@ class RegistryInventory:
 
     @property
     def empty_registries(self) -> tuple[str, ...]:
-        """
-        Registries the Kernel Context carries and bootstrap leaves
-        empty.
-
-        `TaskRegistry` was one on 2026-08-27, with a resolver
-        asking it at every request: GOV-0002/OS-041 — *the
-        dimension is not merely uncalled, it has nothing to
-        execute*.
-        """
+        """Registries the Kernel Context carries and bootstrap leaves empty."""
 
         filled = {entry.registry for entry in self.registered}
 
@@ -154,11 +121,8 @@ class RegistryInventory:
     @property
     def unretrieved(self) -> tuple[RegisteredEntry, ...]:
         """
-        Registrations no site names.
-
-        A registry asked with a computed identifier is left out
-        entirely: nothing there can be called unretrieved without
-        asserting what that site resolves to.
+        Registrations no site names. Registries asked with a computed
+        identifier are left out.
         """
 
         named = {
@@ -179,12 +143,8 @@ class RegistryInventory:
     @property
     def retrieved_only_in_tests(self) -> tuple[RegisteredEntry, ...]:
         """
-        Registrations named by tests and by nothing that ships.
-
-        *0 callers, 0 tests* and *0 callers, tests only* are
-        different conditions, and GOV-0002/OS-041 turns on the
-        difference: `KernelRuntime.boot()` is called by tests, and
-        the entry says so rather than saying it is dead.
+        Registrations named by tests and by nothing that ships, kept
+        apart from registrations nothing names at all.
         """
 
         shipped = {

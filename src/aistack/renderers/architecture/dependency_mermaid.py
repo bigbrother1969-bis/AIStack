@@ -9,38 +9,13 @@ _SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 
 def render_dependency_mermaid(graph: DependencyGraph) -> str:
-    """
-    Render a `DependencyGraph` as Mermaid `flowchart` text — a
-    genuinely different diagram from `render_mermaid`'s own, added
-    2026-09-12 (`claude/PLAN-J11-CONSOLE-2026-09-11.md` §10, third
-    gap).
+    """Render a `DependencyGraph` as a Mermaid `flowchart`.
 
-    **The one Mermaid renderer in this heritage that draws arrows.**
-    `render_mermaid`'s own docstring states why it never has: nothing
-    `ArchitectureGraph` carried ever named one service depending on
-    another, so drawing an edge there would assert a relationship
-    never observed (`ARC-P-012`). That gap is exactly what
-    `ComposeProvider`'s new `depends_on:` reading closes — a real
-    `-->` here is not asserted, it is the same discipline satisfied
-    with evidence that did not exist before.
-
-    **One subgraph per Compose project, containers as plain nodes —
-    not services.** This graph is built from `ComposeProjectDependencies`
-    (`dependency_graph.py`), not `ArchitectureGraph`/`ServiceNode`: a
-    node here is any container the project observed running, whether
-    or not `service_categorization.yml` curates it as a service of
-    its own (decided with the owner 2026-09-12 — most real edges point
-    at uncurated sidecars, `bookstack_db`/`redis`/`gluetun` and the
-    like). No status colouring, no click-through — those are facts
-    about a *declared service*, and a bare container name here may not
-    be one.
-
-    **Deterministic.** `DependencyGraph.projects` is already sorted by
-    project name (`build_dependency_graph`); within a project,
-    `containers`/`edges` arrive pre-sorted from
-    `ComposeRuntimeCatalogBuilder`'s own CSV. Node ids are assigned in
-    that same walk order, so the same graph always renders to the
-    same text, byte for byte.
+    Unlike `render_mermaid`, this diagram draws arrows: each one comes from
+    an observed Compose `depends_on:`. One subgraph per Compose project; nodes
+    are containers, not declared services (most edges point at uncurated
+    sidecars), so no status colours or links. Output is deterministic: inputs
+    arrive sorted and node ids follow that order.
     """
 
     lines: list[str] = ["flowchart TD", ""]

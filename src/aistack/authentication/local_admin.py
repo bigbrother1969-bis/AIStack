@@ -1,7 +1,7 @@
-"""
-The local fallback administrator (`ADR-0013` § 5): one password, kept
-only as an scrypt hash, tried on the LAN port only, and refused for a
-while after five failures.
+"""The local fallback administrator (ADR-0013 § 5).
+
+One password, stored only as an scrypt hash, accepted on the LAN port
+only, and locked for a while after five failures.
 """
 
 from __future__ import annotations
@@ -19,8 +19,7 @@ SCHEME = "scrypt"
 N, R, P = 2**15, 8, 1
 SALT_BYTES = 16
 KEY_BYTES = 32
-# scrypt needs 128 * n * r bytes; the default 32 MiB cap is exactly
-# that, so give it headroom rather than fail on a cap at the boundary.
+# scrypt needs 128 * n * r bytes, exactly the default 32 MiB cap: leave headroom.
 MAXMEM = 64 * 1024 * 1024
 
 MAX_FAILURES = 5

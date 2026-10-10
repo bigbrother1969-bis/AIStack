@@ -1,9 +1,8 @@
 """
-`sandbox.yml` (`ADR-0018` § 3–4): where sandboxes are restored, how
-much room they need, and one recipe per service.
+`sandbox.yml` (ADR-0018 § 3–4): where sandboxes are restored, how much
+room they need, and one recipe per service.
 
-Written by hand, read-only: a missing or mistyped key is an error that
-names it.
+Hand-written and read-only: a missing or mistyped key raises an error naming it.
 """
 
 from __future__ import annotations
@@ -31,18 +30,17 @@ _NEEDS = {
 
 @dataclass(frozen=True)
 class FileSample:
-    """A few files the restored database names, taken back from a
-    Deja Dup (duplicity) backup and compared with what the database
-    says of them (`ADR-0018` § 4, owner's choice 2026-10-08)."""
+    """A few files the restored database names, fetched from a Deja Dup
+    (duplicity) backup and compared with the database's record (ADR-0018 § 4)."""
 
     live_prefix: str
     host_prefix: str
     duplicity_target: Path
     count: int = 3
     older_than_days: int = 8
-    # duplicity's local cache of the backup's signatures and manifests.
-    # Deja Dup's own keeps duplicity from rebuilding it from the whole
-    # chain at every run; empty means a fresh one inside the run.
+    # duplicity's local cache of signatures and manifests. Reusing Deja
+    # Dup's avoids rebuilding it from the whole chain; empty means a fresh
+    # one inside the run.
     archive_dir: str = ""
     # The name of Deja Dup's cache for this backup inside archive_dir.
     archive_name: str = ""

@@ -1,29 +1,19 @@
 """
-A declaration the repository changes, and the copy a host already has
-(`ADR-0017` open point, decided by the owner 2026-10-05: "auto +
-signalement").
+Keeping a host's copies of the shipped declarations in step with new
+versions (`ADR-0017`).
 
 `config_init` copies each shipped declaration into the configuration
-directory once and never overwrites it. A later version that changes
-a shipped declaration therefore never reached a host that already had
-the file — on 2026-10-04, AIStack's own six containers had to be copied
-into GIGABYTE's `./config` by hand.
+directory once and never overwrites it, so a later shipped change would
+never reach an existing host. Therefore:
 
-**A copy nobody edited follows the shipped file.** `config_init` keeps
-each copy's fingerprint (`.shipped.json`); a file still holding exactly
-what was copied was never touched by the owner, and is replaced by the
-new shipped version at the next start. So is a file holding exactly the
-shipped version recorded as seen (`.shipped-seen.json`), since
-2026-10-09: a copy made by hand, or before `.shipped.json` existed, that
-the owner never edited.
-
-**A file the owner edited, or put there himself, is never touched** —
-but when the shipped version changes, Settings says so and shows the
-difference, until the owner marks it as seen. What was seen is kept per
-file in `.shipped-seen.json`: the fingerprint of the shipped version the
-owner last had in front of him (the one copied, the one his file equals,
-or the one he marked as seen). The first start with this rule takes the
-current shipped versions as seen: only later changes are reported.
+- A copy nobody edited follows the shipped file and is replaced at the next
+  start. "Unedited" means it still matches the fingerprint recorded at copy
+  time (`.shipped.json`), or exactly the shipped version last seen
+  (`.shipped-seen.json`), which covers copies made by hand.
+- A file the user edited or placed is never touched; when its shipped
+  version changes, Settings shows the difference until the user marks it
+  as seen. On the first start with this rule, the current shipped versions
+  count as seen.
 """
 
 from __future__ import annotations
@@ -44,7 +34,7 @@ MAX_DIFF_LINES = 200
 
 @dataclass(frozen=True)
 class Divergence:
-    """A shipped declaration that changed since the owner last saw it,
+    """A shipped declaration that changed since the user last saw it,
     and how it differs from the file in use."""
 
     name: str
@@ -77,8 +67,8 @@ def _copy(source: Path, target: Path) -> None:
 
 def follow(directory: Path, shipped: list[Path]) -> list[str]:
     """
-    Bring every untouched copy to its shipped version, and note what the
-    owner has seen; returns the names of the copies replaced. Run after
+    Bring every untouched copy to its shipped version and record what the
+    user has seen; return the names of the copies replaced. Run after
     `config_init` copied what was missing.
     """
 
@@ -93,12 +83,9 @@ def follow(directory: Path, shipped: list[Path]) -> list[str]:
         current = fingerprint(source)
         in_use = fingerprint(target)
         recorded = copies.get(name)
-        # Untouched: still what was copied, or — for a copy made before
-        # `.shipped.json` existed, or by hand — byte for byte the
-        # shipped version the owner last had (GIGABYTE, 2026-10-09:
-        # `health_score_weights.yml`, identical to 1.11's, never
-        # followed 2.0's new domain, and the score could not be
-        # computed).
+        # Untouched: still what was copied, or (for a copy made by hand or
+        # before `.shipped.json` existed) exactly the shipped version last
+        # seen.
         untouched = (recorded is not None and in_use == recorded) or in_use == seen.get(name)
         if untouched and current != in_use:
             _copy(source, target)
@@ -114,7 +101,7 @@ def follow(directory: Path, shipped: list[Path]) -> list[str]:
 
 
 def divergences(directory: Path, shipped: list[Path]) -> list[Divergence]:
-    """The shipped declarations that changed since the owner last saw
+    """The shipped declarations that changed since the user last saw
     them, each with its difference from the file in use."""
 
     seen = _read(directory / SEEN_RECORD)
@@ -155,7 +142,7 @@ def _under_package(source: Path) -> str:
 
 
 def mark_seen(directory: Path, shipped: list[Path], name: str) -> bool:
-    """Record that the owner saw the shipped version of `name`; False
+    """Record that the user saw the shipped version of `name`; False
     when no shipped declaration has that name."""
 
     source = next((path for path in shipped if path.name == name), None)

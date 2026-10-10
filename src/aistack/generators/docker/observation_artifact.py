@@ -9,13 +9,9 @@ from aistack.generators.history import write_artifact_with_history
 
 class DockerObservationArtifactGenerator:
     """
-    Generate a governed artifact from Docker raw observations.
-
-    **Keeps Observation History since 2026-09-03**
-    (`write_artifact_with_history`) — every run used to overwrite
-    the one file this generator writes, discarding the previous
-    observation. `output_path` still carries the latest observation
-    exactly as before; a timestamped copy now survives beside it.
+    Write Docker raw observations as JSON, with Observation History:
+    `output_path` holds the latest observation and a timestamped copy
+    is kept beside it (see `write_artifact_with_history`).
     """
 
     def generate(

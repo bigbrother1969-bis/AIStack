@@ -1,5 +1,4 @@
-# Réponses du serveur de la console quand il n'a pas de page à servir
-# — ADR-0010.
+# Console server responses when it has no page to serve (ADR-0010).
 
 not_found_title: "Page introuvable"
 not_found: "Cette adresse ne correspond à aucune page de la console."

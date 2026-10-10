@@ -1,6 +1,4 @@
-"""
-Knowledge Transaction - Operation contract.
-"""
+"""Knowledge Transaction - Operation contract."""
 
 from __future__ import annotations
 
@@ -11,14 +9,11 @@ from .operation_status import OperationStatus
 
 @dataclass(slots=True)
 class Operation:
-    """
-    A governed unit of work executed within a transaction.
+    """A unit of work executed within a transaction.
 
-    The payload is opaque to the orchestrator and is interpreted only by
-    the specialized engine responsible for the operation kind.
-
-    `result` holds what the engine returned, `error` why it failed —
-    set by the executor (1.10, `ADR-0019` § 6).
+    The payload is opaque to the executor; only the engine registered for
+    `kind` interprets it. The executor sets `result` (what the engine
+    returned) and `error` (why it failed); see `ADR-0019` § 6.
     """
 
     name: str

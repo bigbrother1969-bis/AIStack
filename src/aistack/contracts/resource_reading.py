@@ -4,21 +4,10 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ContainerCpuReading:
     """
-    One container's own CPU usage, at one point in time.
+    One container's CPU usage at one point in time, from `docker stats`.
 
-    ARC-P-012's boundary applies here exactly as it does to
-    `RuntimeObservation`: this is what `docker stats` reported,
-    concluding nothing. Whether a reading is "abnormal" is a
-    question for something that reads a collection of these against
-    a declared policy — `aistack.runtime.idle_consumption`, not this
-    type.
-
-    `cpu_percent` is Docker's own `CPUPerc`, already parsed from its
-    `"12.34%"` string form — the same reading
-    `CpuThresholdDetector._read_cpu_percent` takes for one named
-    container, here taken for every container in one call instead,
-    which is the mechanism `STD-0300` § VS-4 criterion 4.1 asks for:
-    detection without being pointed at a service.
+    A reading, not a verdict: `aistack.runtime.idle_consumption` judges
+    it. `cpu_percent` is Docker's `CPUPerc`, parsed from `"12.34%"`.
     """
 
     container: str

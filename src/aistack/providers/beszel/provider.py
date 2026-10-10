@@ -11,65 +11,19 @@ _USER_AGENT = "AIStack-BeszelProvider/1.0"
 
 
 class BeszelProvider:
-    """
-    Observe what Beszel's own hub knows about the systems it
-    monitors, right now.
+    """Observe the systems Beszel's hub monitors.
 
-    A provider observes and does not qualify — same rule as
-    `JellyfinProvider`/`SyncthingProvider`. Each item in `systems`
-    travels exactly as Beszel's REST API answered it (a PocketBase
-    `systems` collection record, `info` sub-object abbreviated keys
-    included) — deciding what those abbreviations mean and turning
-    them into something a page can display belongs to
-    `aistack.architecture.beszel_reading.build_beszel_readings`, not
-    to this class.
+    Each item in `systems` is the raw PocketBase record;
+    `aistack.architecture.beszel_reading` interprets it. Two requests:
+    email/password authentication returns a token, then the systems list
+    is fetched with that token as the raw `Authorization` value (no
+    `Bearer ` prefix).
 
-    **Two requests, not one.** Beszel's hub is PocketBase underneath
-    (`beszel.dev/guide/rest-api`), and PocketBase authenticates a
-    regular user with email+password against
-    `/api/collections/users/auth-with-password`, returning a token —
-    there is no static API key to hand this class the way
-    `JellyfinProvider`/`SyncthingProvider` take one. The token from
-    step one is then sent as the literal `Authorization` header value
-    on step two (`/api/collections/systems/records`) — verified
-    2026-09-12 against the owner's real hub that PocketBase here wants
-    the raw token, not a `Bearer `-prefixed one; several PocketBase
-    versions differ on this, so this is not assumed from the generic
-    docs, it is what the owner's own `curl` against the real hub
-    proved.
-
-    **Unreachable is a state, not an error** — same reasoning as the
-    other two network providers: a wrong password, a hub restarting,
-    a expired/rotated credential are all ordinary, not exceptional.
-    Both requests report their own failure into the same
-    `unreachable_reason` sentence, naming which step failed.
-
-    **The credentials are values, never a lookup.** This class reads
-    no environment and no file; `infrastructure_topology.yml`'s
-    `beszel:` block names which env vars hold them
-    (`email_env`/`password_env`), and the caller
-    (`aistack.cli.architecture_render`) reads those and passes the
-    actual values here — `GOV-P-001`, the same handling as the
-    Jellyfin/Syncthing keys.
-
-    **Read-only by the account itself, not by this code.** The
-    dedicated `aistack-readonly@persiaut-family.fr` Beszel account
-    (role `readonly`, 2026-09-12) is what keeps this provider from
-    being able to write anything, whatever it were asked to do —
-    this class only ever calls the two `GET`/auth endpoints above.
-
-    **Both requests carry an explicit `User-Agent`.** Found the hard
-    way, 2026-09-12: `urllib.request`'s default (`Python-urllib/3.x`)
-    was refused by Cloudflare — which fronts this hub, the same way
-    it fronts every other `*.persiaut-family.fr` name — with a bare
-    `403` and body `error code: 1010` (Cloudflare's own "banned based
-    on your browser's signature"). The exact same request with
-    `curl`'s own default User-Agent, and separately with this class's
-    own `_USER_AGENT`, both succeeded against the real hub — so this
-    is Cloudflare fingerprinting the default urllib string
-    specifically, not a credentials or code defect. Confirmed on the
-    real credentials, which authenticated successfully once this
-    header was added.
+    Unreachable is a state (`reachable: false` plus a reason naming the
+    failed step), not an exception. Credentials are passed in by the
+    caller; use a Beszel account with the `readonly` role. Every request
+    sends an explicit `User-Agent`: Cloudflare rejects urllib's default one
+    with a 403 (`error code: 1010`).
     """
 
     provider_id = "aistack.provider.beszel"
@@ -128,13 +82,8 @@ class BeszelProvider:
         return observation
 
     def _authenticate(self) -> tuple[str, str]:
-        """
-        `POST /api/collections/users/auth-with-password`, the generic
-        PocketBase auth endpoint Beszel's own docs point at via the
-        SDK-level `pb.collection('users').authWithPassword(...)`.
-
-        Returns the token, or an empty string and a reason.
-        """
+        """`POST /api/collections/users/auth-with-password`; return the token,
+        or an empty string and a reason."""
 
         body = json.dumps(
             {"identity": self.email, "password": self.password}
@@ -183,14 +132,8 @@ class BeszelProvider:
         return token, ""
 
     def _get(self, path: str, token: str) -> tuple[Any, str]:
-        """
-        One call, and every failure turned into a sentence — same
-        shape as `JellyfinProvider._get`/`SyncthingProvider._get`.
-        Beszel's own paginated list envelope (`{"items": [...], ...}`)
-        is unwrapped to just `items` here — the caller wants the
-        systems, not the pagination metadata this hub never needs
-        more than one page of for a homelab-sized fleet.
-        """
+        """One GET; every failure becomes a reason sentence. Returns the
+        `items` of the first page of PocketBase's list envelope."""
 
         request = urllib.request.Request(
             f"{self.url}{path}",

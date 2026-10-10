@@ -1,4 +1,4 @@
-# Mini-app Priorité CPU (priority_ui) — ADR-0010.
+# CPU priority mini-app (priority_ui), ADR-0010.
 
 title: "AIStack — Priorité des containers"
 heading: "Priorité des containers"
@@ -27,7 +27,7 @@ field:
 status:
   saved: "{priority} appli(s) prioritaire(s), {throttled} conteneur(s) au ralenti."
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   save: "Enregistrer le classement de tous les conteneurs de la page dans resource_priority.yml"
   ignored: "Laisser {name} tel quel : aucune limite, aucune priorité"

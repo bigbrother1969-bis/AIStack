@@ -12,20 +12,10 @@ _REQUIRED_TARGET_FIELDS = ("name", "url")
 
 def load_cmdb_probe_targets_yaml(path: Path) -> tuple[CmdbProbeTargetDefinition, ...]:
     """
-    Load the governed CMDB probe target list from YAML.
+    Load the CMDB probe target list from YAML.
 
-    **Written by hand, read-only** — same reasoning as
-    `load_infrastructure_topology_yaml`/`load_service_categorization_yaml`:
-    this file is typed by the owner, so a missing key here is a typo,
-    and the error names which one and where. Nothing in this
-    repository writes it back.
-
-    A single top-level `targets:` key, unlike
-    `infrastructure_topology.yml`'s several independently-optional
-    blocks — there is only one kind of thing this file declares, so
-    a missing or empty `targets:` simply means "nothing to probe yet"
-    rather than an error, the same "not filled in yet, not malformed"
-    stance `infrastructure_topology.yml`'s own optional keys take.
+    The file is written by hand; a missing key raises a `ValueError` naming
+    it. A missing or empty `targets:` means nothing to probe.
     """
 
     with path.open("r", encoding="utf-8") as stream:

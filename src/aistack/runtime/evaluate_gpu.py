@@ -1,34 +1,6 @@
 """
-`evaluate_gpu` — the GPU-domain analogue of `evaluate_storage`/
-`evaluate_backup`, correlating an already-confirmed `GpuAnomaly` into a
-`RuntimeFinding` citing all four `OPS-0004` qualifications the owner
-confirmed for the fifth reference case: the owner's own stated
-requirement to verify that services delegating compute to the GPU
-actually do, and to monitor the CPU/GPU duo's consumption
-(`OPS-0004` § *Fifth reference case*, `PLAN-J7`,
-`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md`).
-
-**Not an incident — a declared requirement, examined the same way as
-the fourth.** Mirrors `evaluate_backup`'s own distinction: the owner
-did not describe a past GPU failure, but stated a standing requirement,
-examined once against `OPS-0004`'s full closed vocabulary the same way
-an incident would be (`GOV-P-001`).
-
-**A separate function, not a branch inside `evaluate`.** Same reasoning
-`evaluate_storage`/`evaluate_backup` already give: a `GpuAnomaly` has no
-second reading to correlate against — one GPU reading, checked against
-a declared threshold, already says whether it qualifies
-(`find_gpu_anomalies`, against `OPS-0007`).
-
-**All four qualifications, fixed rather than derived per finding.**
-Unlike every prior domain — each of which the owner found to carry a
-strict subset of `OPS-0004`'s vocabulary — the owner examined this
-fifth case and found it to carry technical debt, energy inefficiency,
-sustainability anomaly, *and* deployment misconfiguration together,
-none excluded. This is the first domain-specific evaluator to cite
-`energy inefficiency`: `OPS-0004` § *What this register does not do*
-had named it, until this case, as the one qualification `evaluate()`
-alone (the original CPU/temperature correlation) had ever cited.
+Turn `GpuAnomaly`s (`OPS-0007` thresholds crossed) into `RuntimeFinding`s
+carrying all four `OPS-0004` qualifications.
 """
 
 from __future__ import annotations
@@ -46,15 +18,12 @@ from aistack.contracts.gpu_threshold import (
 from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.undeclared import UNDECLARED
 
-# `OPS-0004`'s own vocabulary — see `RuntimeFinding.QUALIFICATIONS` for
-# the full closed list.
+# `OPS-0004` vocabulary; `RuntimeFinding.QUALIFICATIONS` holds the full list.
 TECHNICAL_DEBT = "OPS-0004/technical-debt"
 ENERGY_INEFFICIENCY = "OPS-0004/energy-inefficiency"
 SUSTAINABILITY_ANOMALY = "OPS-0004/sustainability-anomaly"
 DEPLOYMENT_MISCONFIGURATION = "OPS-0004/deployment-misconfiguration"
 
-# All four qualifications the owner confirmed for the fifth reference
-# case — none excluded, unlike every domain before it.
 GPU_ANOMALY_QUALIFICATIONS = (
     TECHNICAL_DEBT,
     ENERGY_INEFFICIENCY,
@@ -65,9 +34,6 @@ GPU_ANOMALY_QUALIFICATIONS = (
 # The `provider_id` `NvidiaGpuProvider.provider_id` declares.
 GPU_PROVIDER = "aistack.provider.gpu.nvidia"
 
-# The signature `RuntimeFinding.signature` cites — `OPS-0004` itself,
-# the register that authors this correlation, the same role it plays
-# for every other domain evaluator.
 SIGNATURE = "OPS-0004"
 
 _KIND_LABELS = {
@@ -84,14 +50,7 @@ _KIND_UNITS = {
 
 
 def evaluate_gpu(anomalies: Sequence[GpuAnomaly]) -> tuple[RuntimeFinding, ...]:
-    """
-    One `RuntimeFinding` per GPU anomaly `find_gpu_anomalies` already
-    found, citing all four qualifications the owner confirmed for
-    `OPS-0004`'s fifth reference case.
-
-    Pure: anomalies already found in, findings out — the same
-    discipline every other domain evaluator holds.
-    """
+    """One `RuntimeFinding` per GPU anomaly."""
 
     return tuple(
         RuntimeFinding(
@@ -156,8 +115,8 @@ def _remediation(anomaly: GpuAnomaly) -> str:
     )
 
 
-# One sentence per measured kind: the label and its unit are words the
-# reader's language has to choose, never values slotted into English.
+# One catalog key per measured kind, so each language words its own label
+# and unit.
 _KIND_KEYS = {
     TEMPERATURE_CELSIUS: "findings.gpu.temperature",
     UTILIZATION_PERCENT: "findings.gpu.utilization",

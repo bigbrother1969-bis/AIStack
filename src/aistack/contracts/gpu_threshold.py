@@ -2,14 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-# The three threshold kinds `OPS-0007` declares — no more without the
-# owner naming a fourth, the same discipline `OPS-0005`'s two kinds
-# hold for storage. Unlike `StorageThreshold` (keyed to one `mount`
-# among several on a host) or `BackupThreshold` (keyed to one `path`
-# among several), a `GpuThreshold` names no card of its own: the
-# owner's v1 scope is one GPU per host, so every declared threshold
-# applies to every `GpuReading` `find_gpu_anomalies` is handed for
-# that host.
+# The threshold kinds OPS-0007 declares. A `GpuThreshold` names no card:
+# one GPU per host is assumed, so each threshold applies to every
+# reading of that host.
 TEMPERATURE_CELSIUS = "temperature_celsius"
 UTILIZATION_PERCENT = "utilization_percent"
 MEMORY_PERCENT = "memory_percent"
@@ -23,21 +18,11 @@ ANY_HOST = "*"
 @dataclass(frozen=True)
 class GpuThreshold:
     """
-    One host's own declared GPU alert threshold — `OPS-0007`, not a
-    value this heritage chose. `GOV-P-001`: the owner states the
-    number; this type only shapes it so `find_gpu_anomalies` can
-    compare a reading against it without inventing what "too hot",
-    "too busy" or "too full" means for a GPU no case has named a value
-    for.
+    One declared GPU alert threshold (OPS-0007).
 
-    Three kinds, declared against real `nvidia-smi` output taken live
-    from GIGABYTE's Quadro P400, 2026-09-11 (`OPS-0007` § *Provenance*):
-    `TEMPERATURE_CELSIUS` (°C), `UTILIZATION_PERCENT` (sustained
-    utilization, 0-100), `MEMORY_PERCENT` (VRAM occupied, 0-100). All
-    three read "at or above this value is anomalous" — the same
-    direction `StorageThreshold.PERCENT_USED` already holds — never
-    "too low", since an idle GPU is never itself a problem this domain
-    detects.
+    Kinds: `TEMPERATURE_CELSIUS` (°C), `UTILIZATION_PERCENT` (0-100),
+    `MEMORY_PERCENT` (VRAM used, 0-100). A reading at or above the value
+    is anomalous; an idle GPU is never a problem.
     """
 
     kind: str
@@ -59,14 +44,8 @@ class GpuThreshold:
 @dataclass(frozen=True)
 class HostGpuThresholds:
     """
-    One host's own declared GPU thresholds.
-
-    Mirrors `HostStorageThresholds`/`HostBackupThresholds`: `OPS-0007`
-    scopes every threshold to the host it was declared for — GIGABYTE
-    is the only host with a GPU the owner has confirmed exploitable
-    (`OPS-0007` § *Declared thresholds*). `host` is matched against
-    `socket.gethostname()` by the caller (`aistack.cli.runtime_diagnose`),
-    not by this type.
+    One host's declared GPU thresholds. The caller matches `host`
+    against the local hostname.
     """
 
     host: str
@@ -80,15 +59,10 @@ class HostGpuThresholds:
 @dataclass(frozen=True)
 class GpuThresholdRegister:
     """
-    Every host's declared GPU thresholds, as `OPS-0007`'s YAML file
-    loads it (`aistack.providers.gpu.yaml.load_gpu_thresholds_yaml`).
+    Every host's declared GPU thresholds, as loaded by
+    `aistack.providers.gpu.yaml.load_gpu_thresholds_yaml`.
 
-    `for_host` mirrors `StorageThresholdRegister.for_host`/
-    `BackupThresholdRegister.for_host` exactly: a pure derivation from
-    data already held, and a host with no entry returns `()` — "not
-    declared for this host", not "declared as nothing to check" — the
-    same `FDN-0003` Article 12 absence `find_gpu_anomalies` already
-    holds for a threshold kind never declared at all.
+    `for_host` returns `()` for a host with no entry and no `"*"` entry.
     """
 
     hosts: tuple[HostGpuThresholds, ...]
@@ -98,8 +72,8 @@ class GpuThresholdRegister:
             if entry.host == hostname:
                 return entry.thresholds
 
-        # `host: "*"` (2.0.0-rc1): any host the file does not name — what
-        # a new installation ships, before it knows its own host's name.
+        # `host: "*"` matches any host the file does not name; a new
+        # installation ships it before it knows its own hostname.
         for entry in self.hosts:
             if entry.host == ANY_HOST:
                 return entry.thresholds

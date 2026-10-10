@@ -20,37 +20,16 @@ def load_console_links_yaml(
     languages: Languages | None = None,
     instance: InstanceConfig | None = None,
 ) -> tuple[ConsoleLink, ...]:
-    """
-    Load `PLAN-J11`'s declared console links from YAML.
+    """Load the declared console links from YAML.
 
-    Mirrors `load_health_score_weights_yaml` field for field (written
-    by hand, read-only, a missing key names which one and where) and
-    in shape: one flat list, no per-host wrapper.
+    `name`, `description` and `ai` may be localized (ADR-0010): a plain
+    string or a mapping from language code to text, resolved for `lang`.
+    `url` and `scope` are never localized.
 
-    **`name` and `description` may be localized, since 2026-09-27**
-    (ADR-0010): either a plain string, the same in every language, or
-    a mapping from language code to text, resolved here for `lang`
-    (the reference language when `lang` is `None`). `url` is never
-    localized — where a service lives does not depend on who reads
-    the card.
-
-    **`scope`, added 2026-09-30, is never localized either** — same
-    reason as `url`: whether a card is LAN-only or public does not
-    depend on who reads the card, so it is read as a plain string, not
-    passed through `pick_localized`.
-
-    **`url` vs `service`, 2026-09-30 (R10)** — an entry declares
-    exactly one. `url` still carries a literal exactly as the owner
-    typed it (a relative path such as `/health.html`, for the two
-    cards this console serves itself). `service` names a key in
-    `instance` (`aistack.contracts.instance_config.InstanceConfig`,
-    defaulting to the real `instance_config.yml` when `instance` is
-    not given, the same "a caller may supply its own, tests do"
-    convention `languages` already follows above) — resolved to
-    `InstanceConfig.service_url(service)`, the same
-    `http://<host>:<port>` shape these five cards used to hand-type.
-    Declaring both, or neither, is refused: one card, one real
-    address, never two disagreeing sources for it.
+    Each entry declares exactly one of `url` (a literal, e.g. `/health.html`)
+    or `service`, a key of `instance` resolved through
+    `InstanceConfig.service_url`, optionally followed by `path`. `instance`
+    defaults to the shipped `instance_config.yml`.
     """
 
     declared = languages if languages is not None else default_languages()
@@ -82,11 +61,7 @@ def load_console_links_yaml(
 
 
 def _default_instance() -> InstanceConfig:
-    # Deferred import: `aistack.instance.yaml` is a separate small
-    # package (definitions/instance_config.yml, its own loader),
-    # imported here rather than at module level so a caller that
-    # always supplies its own `instance` (every test above) never
-    # pays for reading a second file it does not need.
+    # Deferred so callers that pass their own `instance` never read this file.
     from aistack.instance.yaml import load_instance_config_yaml
 
     default_path = (
@@ -134,9 +109,8 @@ def _load_link(
         except ValueError as error:
             raise ValueError(f"{label}: {error}") from error
 
-        # ADR-0012: a screen inside AIStack's single web application
-        # lives under a prefix of the LAN listener (`service: web_lan`,
-        # `path: /network-discovery/`) rather than on a port of its own.
+        # ADR-0012: a screen of the single web application lives under a path on
+        # the LAN listener (`service: web_lan`, `path: /network-discovery/`).
         if "path" in data:
             path_part = str(data["path"])
 
@@ -154,7 +128,7 @@ def _load_link(
         ),
         url=url,
         scope=data["scope"],
-        # Optional (2026-10-09): what the screen asks of AI.
+        # Optional: what the screen asks of the AI.
         ai=(
             pick_localized(data["ai"], lang, languages, f"{label}.ai")
             if data.get("ai")

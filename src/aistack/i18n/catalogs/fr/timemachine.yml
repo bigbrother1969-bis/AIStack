@@ -18,24 +18,15 @@ empty_instants: "Aucun instant observé pour ce flux."
 empty_facts: "Aucun fait connu sur ce nœud."
 empty_referenced_by: "Rien ne référence ce nœud."
 node_iri_label: "Identifiant du nœud"
-# Gap #1, ajoutés 2026-10-02 (`claude/AUDIT-TIMEMACHINE-REALIGNEMENT-
-# MAQUETTES-2026-10-02.md`, cadrage "une première tranche contenue")
-# — la colonne centrale du nouveau `/node` à trois colonnes : la
-# chronologie de ce nœud, filtrée sur son propre `aistack:
-# stableSubject` quand il en porte un. `timemachine.ribbon.
-# subject_empty`/`group_docker`/`group_observation` sont réutilisés
-# tels quels pour le reste de ce panneau — même concept, pas de
-# doublon de clé.
+# /node center column: the node's chronology, filtered by its
+# `aistack:stableSubject`. Also reuses timemachine.ribbon.subject_empty,
+# group_docker and group_observation.
 node_ribbon_heading: "Chronologie de ce sujet"
 node_ribbon_no_subject: "Pas de sujet stable pour ce nœud — rien à filtrer dans le ruban."
 node_ribbon_view_full: "Voir le ruban complet"
-# Gap #3, ajoutée 2026-10-02 (cadrage : tranche contenue, lecture
-# seule, un sujet) — le lien vers `/reconstitute` depuis la colonne
-# centrale de `/node`.
+# Link from /node to /reconstitute.
 node_ribbon_reconstitute_link: "Reconstituer à cet instant"
-# Gap #2, ajoutée 2026-10-02 (cadrage : tranche contenue, lecture
-# seule) — le lien vers `/explication` depuis la colonne centrale de
-# `/node`.
+# Link from /node to /explication.
 node_ribbon_explication_link: "Voir le pourquoi"
 graph:
   heading: "Graphe"
@@ -100,10 +91,7 @@ ribbon:
   pagination_summary: "Page {page} sur {total_pages} ({total} événements)"
   cluster_popover_heading: "Événements de ce groupe"
   cluster_popover_close: "Fermer"
-# Gap #3, ajoutée 2026-10-02 — tranche contenue, lecture seule, un
-# sujet (voir `app.py`'s own `_reconstitution`). Jamais une
-# comparaison alors/maintenant, jamais une restauration réelle :
-# ADR-0011 § Décision 10 (« read-only, jamais un writer ») l'interdit.
+# /reconstitute: read-only, one subject; never a real restore (ADR-0011).
 reconstitute:
   heading: "Reconstitution"
   intro: "Pour un sujet et un instant choisis, ce qui est connu dans chaque flux à cet instant ou avant — jamais une comparaison entre deux instants, jamais une restauration réelle : AIStack ne touche jamais au conteneur réel depuis cet écran."
@@ -113,9 +101,8 @@ reconstitute:
   empty_streams: "Aucun flux connu pour ce sujet."
   no_observation: "Aucune observation connue à cet instant ou avant, pour ce flux."
   view_node: "Voir ce nœud"
-# Gap #2 (2026-10-02), puis 1.7 tranche 4 (ADR-0015) : un
-# administrateur rédige, valide ou écarte ; le graphe le voit au
-# prochain `timemachine_rebuild`.
+# /explication: an administrator writes, validates or discards (ADR-0015);
+# the graph sees it at the next `timemachine_rebuild`.
 explication:
   heading: "Pourquoi"
   intro: "Ce qui a été enregistré, pour un sujet, sur pourquoi une chose a été faite — chaque version gardée. Un administrateur peut rédiger, valider ou écarter ; le graphe le voit au prochain rebuild."

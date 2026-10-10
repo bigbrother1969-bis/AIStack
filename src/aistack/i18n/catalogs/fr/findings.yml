@@ -1,7 +1,6 @@
-# Ce que dit un constat (ADR-0010 § 4, révisé le 2026-10-03). Le
-# catalogue anglais reproduit mot pour mot le texte de chaque
-# évaluateur ; celui-ci en est la traduction de référence. Les valeurs
-# arrivent déjà formatées par l'évaluateur.
+# What a finding says (ADR-0010 § 4). The English catalog repeats each
+# evaluator's text word for word; this is its reference translation.
+# Values arrive already formatted.
 
 confidence:
   measured: "Mesuré"
@@ -84,7 +83,7 @@ consumption:
     interpretation: "{container} a consommé {cpu} % de CPU, au niveau ou au-dessus du seuil de {threshold} %, sans aucune attente de ressources déclarée dans resource_priority.yml — une ressource consommée sans bénéfice fonctionnel déclaré ({qualification})."
     remediation: "Classer {container} dans resource_priority.yml (prioritaire ou au ralenti) pour que cette consommation soit attendue ou plafonnée ; chercher pourquoi il tourne sans explication."
   quiet:
-    interpretation: "Ses propres journaux, lus au même moment, ne montrent aucune requête HTTP entrante — ce qui va dans le sens d'une ressource consommée au repos, même si une session active et toute forme de travail hors HTTP restent non vérifiées (STD-0300 § VS-4, critère 4.1)."
+    interpretation: "Ses propres journaux, lus au même moment, ne montrent aucune requête HTTP entrante — ce qui va dans le sens d'une ressource consommée au repos, même si une session active et toute forme de travail hors HTTP restent non vérifiées."
   busy:
     interpretation: "Ses propres journaux, lus au même moment, montrent bien des requêtes HTTP entrantes sur cette période — cette consommation peut refléter un vrai travail plutôt qu'une activité à vide ; c'est toujours son classement dans resource_priority.yml qui manque."
   hot:

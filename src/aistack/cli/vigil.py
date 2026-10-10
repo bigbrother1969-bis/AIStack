@@ -1,5 +1,5 @@
 """
-`python -m aistack.cli.vigil` — the vigil (2.0, tranche 2).
+`python -m aistack.cli.vigil` — the vigil: watch health and the dock, notify Gotify of changes.
 
     python -m aistack.cli.vigil                one pass
     python -m aistack.cli.vigil --every 900    a pass every 15 minutes, for ever
@@ -7,10 +7,10 @@
     python -m aistack.cli.vigil --test         send a test message to Gotify
 
 A pass renders the health cockpit and the console again (so their score
-is never older than one pass), compares the health and the dock's
-proposals with the previous pass, and sends what changed to Gotify in
-one message (`aistack.vigil.notify`). In the Docker installation it is
-the `vigil` service, run every 15 minutes.
+is never older than one pass), compares health and the dock's proposals
+with the previous pass, and sends what changed to Gotify in one message
+(`aistack.vigil.notify`). In Docker it is the `vigil` service, run every
+15 minutes.
 """
 
 from __future__ import annotations
@@ -35,10 +35,9 @@ INSTANCE_CONFIG = configured(Path(__file__).resolve().parents[1] / "instance" / 
 RENDERS = ("aistack.cli.health_render", "aistack.cli.console_render")
 
 
-# Made once, when missing (2.0.0-rc1): on a new installation nothing
-# else renders the Architecture page or builds the Time Machine's graph,
-# and both are what AIStack discovers on its own. Each is then rebuilt
-# on demand, as before.
+# Rendered once, when missing: on a new installation nothing else renders
+# the Architecture page or builds the Time Machine's graph. Afterwards each
+# is rebuilt on demand.
 FIRST_RENDERS = (
     ("aistack.cli.architecture_render", Path("architecture.html")),
     ("aistack.cli.timemachine_rebuild", Path("timemachine") / "graph"),
@@ -67,8 +66,7 @@ def _render(generated: Path = GENERATED_DIR) -> None:
 
 
 def _compact(generated: Path) -> None:
-    """Once a day, the observations older than the data budget's window
-    are compressed (ADR-0021)."""
+    """Compress observations older than the data budget's window, once a day (ADR-0021)."""
 
     try:
         done = compact_if_due(generated, load_data_budget())
@@ -126,7 +124,7 @@ def main(argv: list[str] | None = None, generated: Path = GENERATED_DIR) -> int:
     parser.add_argument("--no-render", action="store_true", help="compare only, without rendering again")
     args = parser.parse_args(argv)
 
-    # The keys entered from Settings (2026-10-09), then each pass again.
+    # Apply the keys entered from Settings now, then again at each pass.
     apply_to_environ(generated)
     gotify = notify.Gotify.from_environment()
     if args.test:

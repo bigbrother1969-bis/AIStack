@@ -7,43 +7,19 @@ from datetime import datetime
 @dataclass(frozen=True)
 class BackupReading:
     """
-    One backup location's own state, at one point in time: whether any
-    backup file was found under it, and how recently.
+    One backup directory at one point in time: whether any backup file
+    was found under it, and how recent the newest one is.
 
-    `PLAN-J7`'s fourth domain (Sauvegarde / PRA) — the owner's own
-    stated requirement: "Vérifier qu'il existe réellement une
-    sauvegarde, qu'elle est fonctionnelle et que les backup ne sont
-    pas trop vieux." `ARC-P-012`'s boundary applies here exactly as it
-    does to `StorageReading`/`ContainerStateReading`: this is what the
-    filesystem reported, concluding nothing about whether it is a
-    problem. Whether a backup is missing or stale is a question for
-    something that reads a collection of these against a declared
-    threshold (`aistack.runtime.backup_gap.find_backup_gaps`), not
-    this type.
-
-    `path` names the directory checked — the same "this is what the
-    threshold is declared against" role `StorageReading.mount` already
-    holds. `observed_at` is when this reading was taken;
-    `newest_file_mtime` is the most recent modification time among the
-    files found under `path`, or `None` when the directory holds no
-    file at all — whether because it does not exist, or exists and has
-    never received one. Either way, no backup was found, which is the
-    fact this type states.
-
-    **A reading, not a verdict.** `newest_file_mtime is None` states
-    "no backup file found"; it does not itself say whether that is a
-    problem — a fresh install with a first backup still pending reads
-    the same way a genuinely broken backup job does. `find_backup_gaps`
-    is where that distinction, against a declared threshold, is made.
+    A reading, not a verdict: `aistack.runtime.backup_gap.find_backup_gaps`
+    judges it against a declared threshold. `newest_file_mtime` is `None`
+    when no file was found (directory absent or empty).
     """
 
     path: str
     observed_at: datetime
     newest_file_mtime: datetime | None = None
-    # Why the path could not be read at all (an error's own text), or
-    # "" when it was. Seen on GIGABYTE, 2026-10-08: a disk the host
-    # mounts on demand answers "No such device" inside the container
-    # while unmounted — not "no backup", not "no such path" (1.9).
+    # The error text when the path could not be read, else "". A disk
+    # mounted on demand answers "No such device" while unmounted.
     unreachable: str = ""
 
     def __post_init__(self) -> None:

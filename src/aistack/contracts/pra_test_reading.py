@@ -12,46 +12,14 @@ STATUSES = (SUCCESS, FAILED)
 @dataclass(frozen=True)
 class PraTestReading:
     """
-    One declared service's own last-known restore-test state, as of
-    one render.
+    One service's last recorded restore test (OPS-0009).
 
-    `PLAN-J11` § 11.9.1's third and last named gap ("tests PRA"),
-    closed 2026-09-23 — the owner's own stated requirement, restated
-    when this gap was reopened: "effectuer des tests à intervalles
-    réguliers qui démontrent que les systèmes de backup fonctionnent."
-    `OPS-0006` (2026-09-11) had named this out of scope for v1
-    ("periodic restore tests... are named out of scope") — this type
-    is what reopens it, on the owner's own explicit decision
-    (2026-09-23), not a silent widening of that boundary.
+    Not a live observation: restore tests are done by hand and recorded
+    in a YAML file, loaded by `aistack.pra.yaml.load_pra_tests_yaml`. A
+    reading, not a verdict: `find_pra_test_gaps` judges it.
 
-    **Not a live observation — a declared record, read as one.**
-    Every other `*Reading` this heritage holds (`StorageReading`,
-    `ContainerStateReading`, `BackupReading`, `GpuReading`) is
-    collected from a real system a Provider actually reached at
-    render time. A restore test is not: the owner performs it by
-    hand, and there is no automatic artifact left behind by the act
-    of restoring — so, on the owner's own explicit choice (2026-09-23,
-    "AIStack observe/qualifie un fichier tenu à la main"), this
-    reading is loaded directly from `OPS-0009`'s declared YAML
-    (`aistack.pra.yaml.load_pra_tests_yaml`) rather than collected by
-    a `Provider` class reaching a live system — there is nothing live
-    for one to reach. `ARC-P-012`'s boundary still applies exactly:
-    this type states what the file says, and concludes nothing about
-    whether it is a problem — that is `find_pra_test_gaps`'s job,
-    against `OPS-0009`'s declared threshold, the same separation
-    `BackupReading`/`find_backup_gaps` already hold.
-
-    `status is None` states "this service has never been tested" —
-    the same "absence stated as a fact, not smoothed into a verdict"
-    `BackupReading.newest_file_mtime is None` already holds for "no
-    backup file found". `status` otherwise names which of
-    `OPS-0009`'s two possible outcomes the owner recorded
-    (`SUCCESS`/`FAILED`) — the same closed, already-real vocabulary
-    the legacy `homelab_documentation` engine's own
-    `runtime/pra_tests.json` already carries (`status: success|failed`
-    — found and read, not invented, 2026-09-23), reused here rather
-    than declared afresh. `tested_at`/`rto_minutes` are only ever set
-    together with a `status`; a service never tested carries neither.
+    `status is None` means never tested. Otherwise it is `SUCCESS` or
+    `FAILED`, and `tested_at` (with optional `rto_minutes`) is set.
     """
 
     service: str

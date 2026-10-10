@@ -7,11 +7,6 @@ from aistack.kernel.execution import Request
 
 @dataclass(frozen=True, slots=True)
 class ResolutionContext:
-    """
-    Context provided to the Resolution Layer.
-
-    The context is intentionally minimal in the first version.
-    Additional resolution inputs will be introduced progressively.
-    """
+    """Context provided to the Resolution Layer."""
 
     request: Request

@@ -1,7 +1,8 @@
 """
-Syncthing's configuration, read and — on the owner's click only —
-added to (`ADR-0022` § 5): the devices paired with this host, whether a
-folder exists, and a new send-only folder shared with one device.
+Syncthing's configuration, read, and added to only on the owner's click (ADR-0022 § 5).
+
+Lists the devices paired with this host, checks whether a folder exists,
+and creates a send-only folder shared with one device.
 """
 
 from __future__ import annotations
@@ -69,11 +70,10 @@ class SyncthingConfig:
 
     def reshare(self, folder_id: str, device_id: str) -> None:
         """
-        Offer the folder to the device again: the device is taken off
-        the folder's list and put back, so Syncthing sends it a new
-        offer at its next connection (the owner, 2026-10-09: the phone
-        missed the first one). A folder ignored on the device itself
-        stays ignored until it is un-ignored there.
+        Offer the folder to the device again by removing and re-adding it.
+
+        Syncthing then sends a new offer at the next connection. A folder
+        ignored on the device itself stays ignored until un-ignored there.
         """
 
         from urllib.parse import quote

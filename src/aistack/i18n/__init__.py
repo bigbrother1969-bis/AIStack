@@ -1,18 +1,12 @@
-"""
-User interface localization — ADR-0010.
+"""User interface localization (ADR-0010).
 
-Every screen AIStack serves reads its words from `catalogs/<code>/`
-through a `Translator` (conventionally named `t` wherever it is used,
-which is what lets `tests/unit/i18n/test_the_real_catalogs.py` find
-every key a screen asks for). `languages.yml` declares which
-languages exist and which one is the reference; `negotiate_language`
-decides which one a request is served in.
+Screens read their words from `catalogs/<code>/` through a `Translator`,
+always named `t` so the catalog tests can find every key in use.
+`languages.yml` declares the languages and the reference one;
+`negotiate_language` picks one per request.
 
-What is translated is the interface itself — headings, labels,
-buttons, the sentences a screen writes around its data. What a screen
-*displays* is not: a container's name, a finding's own text, an AI
-answer or a declared note stay in the language they were produced in
-(ADR-0010 § Scope).
+Only the interface is translated. Displayed data (container names,
+finding text, AI answers, declared notes) stays in its own language.
 """
 
 from aistack.i18n.catalog import (

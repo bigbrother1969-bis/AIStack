@@ -26,11 +26,8 @@ from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import domain_slug, escape_text
 from aistack.renderers.plan.html import DEBT_ANCHOR, HEALTH_ANCHOR, plan_link
 
-# Duplicated from `aistack.renderers.health.html._BUCKET_BADGE_CLASS`
-# rather than imported: each renderer in this package is pure and
-# independently testable, the same self-containment `_STYLE` already
-# holds for every one of them (no shared stylesheet, no cross-renderer
-# import) — a three-entry mapping is a small enough price for that.
+# Copied from `aistack.renderers.health.html` rather than imported: renderers
+# do not import each other.
 _BUCKET_BADGE_CLASS = {
     EXCELLENT: "badge-clean",
     TO_WATCH: "badge-watch",
@@ -50,82 +47,21 @@ def render_html(
     identity: ConsoleIdentity | None = None,
     version: str = "",
 ) -> str:
-    """
-    Wrap the owner's declared `ConsoleLink`s into one self-contained
-    HTML page — `PLAN-J11`'s console
-    (`claude/PLAN-J11-CONSOLE-2026-09-11.md` § 2), the third tenant of
-    the `renderers/` package after `aistack.renderers.architecture`
-    and `aistack.renderers.health`.
+    """Render the console: the declared `ConsoleLink`s as one self-contained page.
 
-    **A landing page, not a fifth domain.** Unlike `health.html`,
-    there is no finding to qualify and no absence to name honestly —
-    every link here is a routing decision the owner already made
-    (`ConsoleLink.__post_init__` only checks it is well-formed, never
-    whether the target is actually reachable right now — this
-    renderer has no provider of its own and reaches out to nothing,
-    the same "render what it's handed" discipline every renderer in
-    this package already holds).
+    Links are routing decisions the owner declared; nothing here checks
+    whether a target is reachable. With a `cockpit`, a summary banner shows
+    the health score, the technical-debt card and one badge per domain;
+    details stay on `/health.html`. Without one, no banner.
 
-    **`cockpit`/`score`/`score_note` are optional, added
-    2026-09-13** (`claude/PLAN-J11-CONSOLE-2026-09-11.md` § 11.9, the
-    owner's own gap analysis against the historical `architecture.html`
-    reference page's "SANTÉ HOMELAB" cartouche) — the same
-    `None`-renders-exactly-as-before idiom
-    `aistack.renderers.architecture.html.render_html` already holds
-    for `topology`/`beszel_readings`/`dependency_graph`. `cockpit is
-    None` renders the page exactly as it did before this cartouche
-    existed. When a real `HealthCockpit` is handed in, this renders a
-    summary banner above the link grid — the score and one badge per
-    domain, reusing `aistack.health.cockpit.HealthCockpit` and
-    `aistack.contracts.health_score.HealthScore` exactly as
-    `aistack.renderers.health.html.render_html` already does, never a
-    second scoring model invented for this page. Deliberately *not* a
-    repeat of `health.html`'s own per-finding detail — this is a
-    summary a viewer glances at, the full detail stays one click away
-    at `/health.html`.
+    The lockup and mark are embedded data URIs, so the page renders without
+    internet access. Pure (no wall clock): `ConsoleHtmlArtifactGenerator`
+    stamps when a copy was produced.
 
-    **`technical_debt_score`/`technical_debt_note`, added 2026-09-23**
-    (`PLAN-J11` § 11.9.1) — the same "Dette technique" card
-    `aistack.renderers.health.html.render_html` shows, summarized here
-    right after the global score line, the placement the owner named
-    when this card was scoped ("juste après le score santé global").
-    Same `None`-renders-nothing-before-this-card idiom `score`/
-    `score_note` already holds.
-
-    **The lockup and the mark carry the branding, not this
-    function.** The embedded lockup
-    (`aistack.renderers.assets.LOCKUP_DATA_URI`) is the header
-    banner, the mark (`MARK_DATA_URI`) is the favicon — both the
-    owner's own charte graphique, vendored inline: no CDN, no external
-    network access, matching `architecture.html`'s mermaid.js and
-    `health.html`'s script-free page alike, so this page renders
-    correctly with no outbound internet, the normal state of the LAN
-    it lives on.
-
-    Pure — no wall clock: the same links, cockpit and score always
-    render to byte-identical output, so `ConsoleHtmlArtifactGenerator`
-    (`aistack/generators/console/html_artifact.py`) is what stamps
-    *when* a copy was produced, via `write_artifact_with_history`, not
-    this function.
-
-    **`lang`, added 2026-09-27** (ADR-0010): the page is written in
-    `lang`, the reference language when `None` — whose output is
-    exactly what this page said before localization, apart from the
-    navigation strip (Settings link, language switch) every served
-    page now carries. `links` are expected already resolved for the
-    same language (`load_console_links_yaml(..., lang=...)`); each
-    absolute link carries `?lang=` so the language follows the visitor
-    to a mini-app on another host, where the cookie cannot.
-
-    **Grouped by `ConsoleLink.scope` since 2026-09-30** (the owner:
-    "on regroupera les cartes 'LAN' et les cartes 'Internet'") — see
-    `_render_link_groups` below.
-
-    **`version`, added 2026-10-09** (the owner: "mettre le numéro de
-    version en cours sous le logo AIStack sur la page console"): the
-    version the installed AIStack declares, one line under the lockup;
-    nothing when it is empty or unknown. Passed in, never read here, so
-    the function stays pure.
+    `lang` selects the language (ADR-0010); `links` must already be resolved
+    for it, and absolute links carry `?lang=` because the cookie does not
+    cross hosts. Cards are grouped by `ConsoleLink.scope`. `version` is shown
+    under the lockup when known.
     """
 
     t = translator_for(lang)
@@ -181,13 +117,8 @@ def _render_version(t: Translator, version: str) -> str:
 
 
 def _render_aside_text(t: Translator, identity: ConsoleIdentity | None) -> str:
-    """
-    What the left column says between the lockup and the language
-    switch (the owner, 2026-10-03: "du texte explicatif et des liens
-    (copyright, mentions légales, aide...) [...] pour meubler et
-    améliorer l'appropriation"): two sentences on what AIStack and this
-    page are, the help, legal-notice and licence pages, and the
-    copyright line when the publisher is declared.
+    """The left column's text: what AIStack and this page are, links to help,
+    legal notice and licence, and the copyright line when a publisher is declared.
     """
 
     copyright_line = (
@@ -311,16 +242,9 @@ def _render_domain_badge(domain: HealthDomain, t: Translator) -> str:
             f'{escape_text(t("health.domain_state.clean", domain=name))}</span>'
         )
 
-    # A link, not a plain span, since 2026-09-30 — the owner, reading
-    # this exact badge: "les findings en rouge doivent être cliquables
-    # et doivent diriger vers une explication". `console.html` only
-    # shows a domain's count, never its individual findings — the
-    # detail lives at `health.html`, this anchors straight to that
-    # domain's own section there (`aistack.renderers.health.html`'s
-    # own `id="domain-<slug>"`, the same `domain_slug` computed the
-    # same way on both sides). Only the alert state links: a clean or
-    # not-instrumented domain has nothing further to read there that
-    # this badge does not already say.
+    # Only the alert state links, to the domain's section of `health.html`
+    # (`id="domain-<slug>"`, same `domain_slug` on both sides). Clean and
+    # not-instrumented badges already say everything.
     return (
         f'  <a class="domain-badge badge-alert" href="/health.html#domain-{domain_slug(domain.name)}" '
         f'title="{escape_text(t("console.tooltip.badge_alert", domain=name))}">'
@@ -330,27 +254,9 @@ def _render_domain_badge(domain: HealthDomain, t: Translator) -> str:
 
 
 def _render_link_groups(links: tuple[ConsoleLink, ...], t: Translator) -> str:
-    """
-    Split the declared cards into two foldable groups by
-    `ConsoleLink.scope` — added 2026-09-30, the owner's own request
-    ("on regroupera les cartes 'LAN' et les cartes 'Internet'").
+    """Two foldable groups of cards, LAN and public, open by default.
 
-    Same `<details open><summary>title <span class="…-count">N</span>
-    </summary>…</details>` disclosure `timemachine_ui/templates/
-    ribbon.html` already established for its own two categories
-    (ADR-0011 §26, patch 0082) — open by default here too (this page
-    has 7 cards total across the two groups, not Time Machine's dozens
-    of streams, so there is nothing to hide by default). Coded
-    independently in this module rather than imported: each renderer
-    in this package keeps its own `_STYLE`, "no shared stylesheet, no
-    cross-renderer import" (see this module's own docstring above),
-    and the same holds for the markup that pairs with it.
-
-    A group with no cards is not rendered at all — the same
-    None/empty-renders-nothing idiom `_render_health_cartouche`
-    already holds for a cockpit with no domains. `console_links.yml`
-    declares at least one card of each scope today, but nothing here
-    assumes that stays true.
+    A group with no cards is not rendered.
     """
 
     groups = [
@@ -392,20 +298,10 @@ def _render_link_group(
 
 
 def _render_link(link: ConsoleLink, t: Translator) -> str:
-    """
-    The card shows the name and description only — no visible URL
-    text, since 2026-09-26 (the owner's own call: the target still
-    lives in the `href`, so the card is exactly as clickable as
-    before, it just stops repeating a raw hostname the description
-    already conveys in French).
+    """One card: name and description, no visible URL (the target is in `href`).
 
-    **`card-{link.scope}` added 2026-09-30** — the owner's "bandeau de
-    couleur différent" for a LAN vs a public card, a left-edge accent
-    stripe (`_STYLE` below) deliberately not drawn from the
-    `badge-clean`/`badge-watch`/`badge-alert` health-state colors
-    already used elsewhere on this page: a LAN card is not "healthy"
-    and a public card is not "in alert", so reusing that triptych here
-    would misuse a meaning it already carries.
+    `card-{scope}` adds a left accent stripe for LAN vs public, deliberately
+    not the health-state colours, which mean something else.
     """
 
     tooltip = t(
@@ -430,8 +326,8 @@ def _render_link(link: ConsoleLink, t: Translator) -> str:
     </a>"""
 
 
-# What a description written before 2026-10-09 still ends with: the
-# console now says it on the card's own last line (the owner's call).
+# Scope sentences older `console_links.yml` descriptions still end with; the
+# card now writes that line itself.
 _OLD_SCOPE_ENDINGS = (
     re.compile(r"\s*Accessible\s+uniquement\s+depuis\s+le\s+réseau\s+local\.?\s*$"),
     re.compile(r"\s*[—.,]?\s*AIStack web application,\s+LAN\s+listener\s+only(\s*\(ADR-\d+\))?\.?\s*$"),
@@ -444,17 +340,13 @@ def _path_of(url: str) -> str:
     return urlsplit(url).path or "/"
 
 
-# What waits for the owner behind a card (2026-10-10): the card carries
-# its screen's path in `data-pending`; the script the web application
-# adds for a signed-in person (`aistack.web.pending`) asks `/pending`
-# and draws the pastille.
-# The page itself stays script-free.
+# LAN cards carry their screen's path in `data-pending`; the script the web
+# application adds for a signed-in person (`aistack.web.pending`) draws the
+# badges. The page itself stays script-free.
 
 
 def _without_scope_sentence(description: str, scope_line: str) -> str:
-    """The description without the scope sentence at its end — a
-    `console_links.yml` copied before the console wrote that line
-    itself still carries it, and the card would say it twice."""
+    """The description without a trailing scope sentence, which the card adds itself."""
 
     text = description.rstrip()
     if text.endswith(scope_line):
@@ -465,12 +357,8 @@ def _without_scope_sentence(description: str, scope_line: str) -> str:
 
 
 def _link_href(url: str, lang: str) -> str:
-    """
-    An absolute link — a mini-app on another host — carries the
-    current language in its query string (ADR-0010: the cookie never
-    crosses host names). A relative link stays as declared: it is
-    served by this same console, which already knows the language
-    from its own cookie.
+    """Absolute links get `?lang=` (ADR-0010: the cookie never crosses hosts);
+    relative links are served by this console and stay as declared.
     """
 
     if url.startswith(("http://", "https://")):
@@ -479,29 +367,11 @@ def _link_href(url: str, lang: str) -> str:
     return url
 
 
-# Palette and type sourced 2026-09-26 from persiaut-consulting.eu (the
-# owner's own consulting site) rather than invented: navy #16335c and
-# the muted slate #5b6b7d are the exact `color: rgb(...)` values Chrome
-# DevTools reports computed on that site's `<h1 class="hero-title">`
-# and `<p class="hero-subtitle">`; the border/background tones are
-# pixel-sampled from its hero section. The heading typeface (Georgia)
-# and body stack (the system-ui family) are that same page's own
-# computed `font-family`, copied as-is — both are system fonts, so
-# this page keeps rendering with no network access at all, the same
-# constraint the vendored mark/lockup above already meets. Decided
-# with the owner (three static pages — this one, `architecture.html`,
-# `health.html` — share the same retouch; the AIStack mark itself is
-# kept unchanged; the health-status badges below keep their
-# green/amber/red meaning, only lightly retinted to sit next to navy
-# rather than pure primary blue).
-#
-# Width (ADR-0011 §26, 1.5.2 graphic-debt cadrage, 2026-09-29): a
-# fixed 900px column, no wider on a wide monitor than on a laptop —
-# the owner's own finding, from the Time Machine ribbon's own
-# crowding, extended here at the owner's own broader request ("toute
-# l'appli") to this page too, not just the mini-app that found it.
-# `min(96vw, 1600px)` adapts to the real window instead of sitting
-# fixed, while still capping line length on an ultra-wide monitor.
+# Palette and type from the owner's consulting site (navy #16335c,
+# slate #5b6b7d, Georgia headings, system-ui body), shared by the three static
+# pages. System fonts only, so the page works offline. Health badges keep
+# their green/amber/red meaning. Width `min(96vw, 1600px)` (ADR-0011 § 26):
+# adapts to the window and caps line length on wide screens.
 _STYLE = """\
 :root { color-scheme: light; }
 body {
@@ -510,9 +380,7 @@ body {
   max-width: min(96vw, 1600px); margin: 1.5rem auto;
   color: #1f2933; background: #f7f9fc; padding: 0 1rem;
 }
-/* Two columns, 2026-10-03 (the owner: "le logo en haut prend trop de
-   place : je préférerais le mettre à gauche et réorganiser la page à
-   droite"). The lockup, the language switch and Settings sit in a left
+/* Two columns. The lockup, the language switch and Settings sit in a left
    column that stays in view while the right one scrolls; under 900px
    the column becomes a compact band above the content. */
 .console-layout {
@@ -595,11 +463,8 @@ body {
   background: #16335c; color: #ffffff; vertical-align: 1px;
 }
 .card .card-scope { margin: .4rem 0 0; font-size: .85rem; color: #3d5a73; }
-/* Scope accent, 2026-09-30 (the owner's "bandeau de couleur
-   différent") — a left-edge stripe, deliberately not the health
-   triptych above: blue-gray for a LAN-only card, amber-gold for a
-   public one, values distinct from badge-watch's own amber
-   (#8a6100/#faf1d8) so the two are never mistaken for one meaning. */
+/* Scope accent: a left-edge stripe, blue-gray for a LAN-only card,
+   amber-gold for a public one, distinct from badge-watch's amber. */
 .card-lan { border-left: 4px solid #3d5a73; }
 .card-public { border-left: 4px solid #a3791a; }
 .health-cartouche {

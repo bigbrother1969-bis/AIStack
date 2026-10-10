@@ -1,13 +1,11 @@
 """
 Database restores shared by the recipes whose backup is a SQL dump
-(`ADR-0018` § 4): Nextcloud (MariaDB) and Immich (PostgreSQL).
+(ADR-0018 § 4): Nextcloud (MariaDB) and Immich (PostgreSQL).
 
-The dump is mounted into the database container's
-`/docker-entrypoint-initdb.d/`, so the image loads it at its first
-start — the way both official images restore a dump, compressed or
-not. The run waits for the server to answer over TCP: during its
-initialisation each image listens on its socket only, so a TCP answer
-means the dump is loaded.
+The dump is mounted into `/docker-entrypoint-initdb.d/`, so the official
+image loads it at first start, compressed or not. During initialisation
+each image listens on its socket only, so a TCP answer means the dump
+is loaded.
 """
 
 from __future__ import annotations
@@ -20,8 +18,7 @@ from aistack.sandbox.run import SandboxRun, StepFailed
 
 
 def live_image(run: SandboxRun, container: str, role: str) -> tuple[str, list[str]]:
-    """The live container's image id and command — what the sandbox
-    reruns. Nothing else is read from it."""
+    """The live container's image and command, the only things the sandbox reads from it."""
 
     shown = run.docker("inspect", "--format", "{{.Image}} {{.Config.Image}}", container).stdout.split()
     if len(shown) < 2:

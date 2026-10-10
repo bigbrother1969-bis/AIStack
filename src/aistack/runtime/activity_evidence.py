@@ -13,32 +13,11 @@ _HTTP_REQUEST_LINE = re.compile(
 
 def no_incoming_requests(observation: RuntimeObservation) -> bool:
     """
-    Whether the observed log window carries no evidence of an
-    incoming HTTP request.
+    Return True when no log line in the observed window looks like an incoming
+    HTTP request in the common ("combined") access-log format.
 
-    `STD-0300` § VS-4's reference incident lists "no incoming HTTP
-    requests" among the evidence that made `aistack-selection-ui`'s
-    permanent `--reload` energy inefficiency rather than legitimate
-    work (`OPS-0004`) — this makes that evidence checkable rather
-    than asserted.
-
-    The pattern matched is the common ("combined") HTTP access-log
-    line format nginx, Apache and most application servers emit
-    alike — the exact shape `firefly`'s own log carried when
-    `OPS-0004`'s reference case was investigated. `GOV-P-001` does
-    not govern this: it is a published logging convention, not an
-    owner's operational fact, the same standing `extract_dockerfile_
-    command`'s `CMD` parsing already holds.
-
-    **What this does not prove.** A container logging nothing in
-    this shape within the observed window is not proof no request
-    arrived — a service that logs requests differently, or not at
-    all, reads the same way. What this confirms is narrower and
-    purely observed: no line in this window matches the shape an
-    incoming HTTP request takes in the overwhelming majority of
-    web-serving containers. It says nothing about an active browser
-    session, which the reference incident also lists and which this
-    function does not check.
+    This does not prove that no request arrived: a service that logs requests
+    differently, or not at all, reads the same way.
     """
 
     return not any(

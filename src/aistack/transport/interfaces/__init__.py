@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer interfaces.
-"""
+"""Knowledge Transport Layer interfaces."""
 
 from aistack.transport.interfaces.delivery_verifier import DeliveryVerifier
 from aistack.transport.interfaces.receiver import Receiver

@@ -1,11 +1,9 @@
-"""
-*Quai* — governed changes (`ADR-0019` § 3). LAN only, signed in; the
-actions — propose, validate, reject — for an administrator, bound to
-the session. Nothing here changes a service: a validated proposal is
-executed by the dock on the host.
+"""*Quai*: governed changes (ADR-0019 § 3). LAN only, signed in.
 
-Docker and the registry reach the route through `app.state`
-(`dock_runner`, `dock_publisher`), so a test replaces them.
+Propose, validate and reject are administrator actions bound to the
+session. Nothing here changes a service: the dock on the host executes a
+validated proposal. Docker and the registry come from `app.state`
+(`dock_runner`, `dock_publisher`) so tests can replace them.
 """
 
 from __future__ import annotations

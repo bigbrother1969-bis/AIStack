@@ -1,7 +1,7 @@
-"""
-A finding's sentences in the reader's language (ADR-0010 § 4, revised
-2026-10-03): its `FindingMessage` rendered through the catalogs when
-the evaluator declared one, its English text otherwise.
+"""A finding's sentences in the reader's language (ADR-0010 § 4).
+
+Uses the finding's `FindingMessage` through the catalogs when present,
+its English text otherwise.
 """
 
 from __future__ import annotations

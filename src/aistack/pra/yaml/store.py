@@ -20,30 +20,11 @@ def load_pra_tests_yaml(
     path: Path,
 ) -> tuple[tuple[PraTestReading, ...], PraTestThresholdRegister]:
     """
-    Load `OPS-0009`'s declared PRA test records from YAML: every
-    service this render checks, and each one's own last-known
-    restore-test outcome.
+    Load the declared PRA test records (OPS-0009): one reading per service and its threshold.
 
-    Mirrors `load_backup_thresholds_yaml`/`load_console_links_yaml`
-    field for field (written by hand, read-only — every value here is
-    the owner's own declared record, `OPS-0009` § *Declared services
-    and threshold* — so a missing key is a typo, and the error names
-    which one and where; nothing writes this file back).
-
-    **Two results, not one**, unlike `load_console_links_yaml`: this
-    file declares both the reading (`services[].last_test`, this
-    render's own observation of what the owner last recorded) and the
-    threshold every service is checked against (`max_age_days`, one
-    flat value for all — the owner's own choice, 2026-09-23, over a
-    per-service value `PraTestThreshold` still leaves room for). Both
-    are read from the one file in one call, the same "load once, use
-    twice" shape `aistack.cli.health_render.build_cockpit` already
-    expects of every other domain's own loader.
-
-    `observed_at` is stamped as this call is made — the same "as of
-    the last render" convention `BackupProvider.collect_freshness`
-    already holds, even though nothing here is actually collected
-    live.
+    The file is hand-written and read-only, so a missing key raises a
+    ValueError naming it and where. `max_age_days` is one value applied
+    to every service. `observed_at` is the time of this call.
     """
 
     with path.open("r", encoding="utf-8") as stream:

@@ -1,7 +1,7 @@
 """
-`dock.yml` (`ADR-0019` § 1): the services only the dock may update, the
+`dock.yml` (ADR-0019 § 1): the services only the dock may update, the
 sandbox recipe that rehearses each, and the live containers it may
-recreate. Written by hand, read-only: a missing key is named.
+recreate. Hand-written and read-only: a missing key is named.
 """
 
 from __future__ import annotations

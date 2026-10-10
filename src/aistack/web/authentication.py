@@ -1,22 +1,20 @@
-"""
-Signing in, profiles and rights (`ADR-0013`, `ADR-0014`).
+"""Signing in, profiles and rights (ADR-0013, ADR-0014).
 
 Two routers, because the two ways in are not exposed alike:
 
 - `router` (`PUBLIC`, both listeners): `GET /login`, `GET /auth/callback`,
-  `POST /logout` — OpenID Connect against Pocket ID, the redirect URI
-  being the one of the listener the sign-in started on — and
-  `POST /settings/sessions/close`, an administrator's action.
-- `lan_router` (`LAN_ONLY`): `GET`/`POST /login/local` — the fallback
+  `POST /logout` (OpenID Connect against Pocket ID, with the redirect URI
+  of the listener the sign-in started on) and
+  `POST /settings/sessions/close`, an administrator action.
+- `lan_router` (`LAN_ONLY`): `GET`/`POST /login/local`, the fallback
   administrator, never served on the public port.
 
-Rights (`ADR-0014` § 1, § 2): a route declares what it needs next to its
-exposure — `SIGNED_IN` to read, `ADMIN_ACTION` to change something (the
-admin profile and the session's CSRF token). Without a session the
-answer is a redirect to sign in; without the profile, a `403`.
+Rights (ADR-0014 § 1, § 2): a route declares `SIGNED_IN_ONLY` to read or
+`ADMIN_ACTION` to change something (admin profile plus the session's CSRF
+token). No session redirects to sign-in; no right answers `403`.
 
-`fill_markers` writes, into every HTML page the application serves, who
-is signed in, each form's CSRF token and the Settings sections.
+`fill_markers` writes the signed-in person, each form's CSRF token and
+the Settings sections into every HTML page.
 """
 
 from __future__ import annotations

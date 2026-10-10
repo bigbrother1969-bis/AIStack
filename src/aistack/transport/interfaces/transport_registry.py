@@ -9,15 +9,11 @@ if TYPE_CHECKING:
 
 
 class TransportRegistry(Protocol):
-    """
-    Registry of transport capabilities.
-    """
+    """Registry of transport capabilities."""
 
     def get(
         self,
         endpoint_type: str,
     ) -> "TransportCapability":
-        """
-        Return the capability associated with an endpoint type.
-        """
+        """Return the capability associated with an endpoint type."""
         ...

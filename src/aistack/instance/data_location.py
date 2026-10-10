@@ -1,21 +1,16 @@
 """
-Where AIStack keeps its data — `reports/generated`, as one block — and
-where the owner chose to move it (1.8, decided by the owner 2026-10-04:
-one choice for the whole directory; AIStack records it and says what to
-run, it never moves anything itself).
+Where AIStack keeps its data (`reports/generated`, as one block) and where
+the user chose to move it. AIStack records the choice and shows the
+commands to run; it never moves anything itself.
 
-The choice is a small file next to the declarations —
-`data_location.yml` in the configuration directory, else at the
-checkout's root (ignored by git: it says where this host's data goes,
-not how AIStack works). It names the directory chosen, who chose it and
-when.
+The choice is stored in `data_location.yml` in the configuration
+directory, else at the checkout's root (ignored by git): the target
+directory, who chose it and when.
 
-**Done or planned.** A git installation reads its data through
-`reports/generated`; once moved, that path is a link to the chosen
-directory, so the move is done when the path resolves there. In the
-container the application always sees `/app/reports/generated`; the
-host directory behind it is `AISTACK_DATA_DIR`, which `docker-compose.yml`
-mounts and passes in: the move is done when it names the chosen one.
+The move is done when, in a git installation, `reports/generated` resolves
+to the chosen directory (it becomes a link), and in the container, when
+`AISTACK_DATA_DIR` (mounted on `/app/reports/generated` by
+`docker-compose.yml`) names it.
 """
 
 from __future__ import annotations
@@ -31,9 +26,8 @@ import yaml
 from aistack.host.mounts import MountRow
 
 FILE_NAME = "data_location.yml"
-# Where the data goes on the disk chosen: AIStack's own directory at
-# its root, the data in it (the owner's choice, 2026-10-04), so the
-# directory can hold more of AIStack's later.
+# The data goes into AIStack's own directory at the root of the chosen disk,
+# so that directory can hold more of AIStack later.
 DATA_FOLDER = "AIStack/data"
 # A container's own mounts, never offered.
 CONTAINER_OWN = ("/config", "/app", "/var/run", "/etc")
@@ -134,12 +128,11 @@ def mount_of(path: Path, points: list[str]) -> str | None:
 
 def candidates(rows: list[MountRow], generated_dir: Path, in_container: bool) -> list[MountRow]:
     """
-    The disks the data may be moved to, as the list Settings offers:
-    every real mount the process can write to — in the container, every
-    host directory it mounts, read-only there but not on the host —
-    except a network share (the sessions are a SQLite file, which a
-    network share does not keep safely), the disk the data is already
-    on, and the container's own mounts.
+    The disks Settings offers for the data: every real mount the process can
+    write to (in the container, every host directory it mounts, read-only
+    there but not on the host), except network shares (the SQLite sessions
+    file is not safe on one), the disk the data is already on, and the
+    container's own mounts.
     """
 
     points = [row.mount.point for row in rows]
@@ -208,7 +201,7 @@ def commands(
     environment: dict[str, str],
     owner: str,
 ) -> list[str]:
-    """What the owner runs to move the data, in order."""
+    """What the user runs to move the data, in order."""
 
     target = location.target
     if in_container:

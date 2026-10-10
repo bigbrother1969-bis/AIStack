@@ -6,45 +6,12 @@ from aistack.kernel.catalog import Catalog, CatalogItem
 
 
 class ComposeRuntimeCatalogBuilder:
-    """Build a governed catalog from Docker Compose observations.
+    """Build a catalog of Compose projects from Docker Compose observations.
 
-    **Keeps the project's own membership, not only its count.**
-    Until 2026-09-10 this builder reduced `project["services"]` —
-    the container names `ComposeProvider.collect()` already
-    resolves, one per service — to `service_count`, a number. The
-    raw observation always carried the edge a knowledge graph of
-    the infrastructure needs (which containers belong to which
-    project); this builder discarded it before it ever reached a
-    governed `Catalog`. Named while scoping `PLAN-TRAJECTOIRE-
-    2026-09-04` jalon J2 — rendering the reconstructed
-    `architecture.html` groups containers by their Compose
-    project, which this gap made impossible to do from the
-    Catalog alone.
-
-    **Sorted, not passed through in insertion order.** A `dict`
-    iterates in the order its keys were first set, which for
-    `project["services"]` is the order `docker ps` listed
-    containers in — the same instability `DockerRuntimeCatalogBuilder`
-    already sorts `mounts` and `images` against (`ARC-P-006`: this
-    family showed it, so only this family is sorted).
-
-    **`items` is a tuple, matching what `Catalog` declares.** Until
-    2026-09-10 this method built it as a list comprehension —
-    `Catalog.items: tuple[CatalogItem, ...]` accepted it without
-    complaint at runtime, since a dataclass field's declared type is
-    not enforced, but `mypy` named the mismatch on its first run
-    against this codebase.
-
-    **`dependency_edges`, added 2026-09-12** (`claude/PLAN-J11-
-    CONSOLE-2026-09-11.md` §10, third gap) — `ComposeProvider` now
-    reads each service's own `depends_on:` from the real compose
-    file, naming *service* names; this builder is where those become
-    *container*-to-container edges, the same boundary it already
-    keeps for `containers` (service → container_name). An edge
-    survives only when both ends resolve to a container this same
-    project actually observed — a `depends_on` naming a service that
-    is not (or no longer) running is not asserted as an edge to a
-    node nothing here has ever seen (`ARC-P-012`).
+    Each project keeps its member containers and its `depends_on` edges,
+    translated from service names to container names. An edge is kept only
+    when both ends are observed containers. Both lists are sorted, since
+    `docker ps` order is not stable.
     """
 
     def build(self, observation: dict[str, Any]) -> Catalog:

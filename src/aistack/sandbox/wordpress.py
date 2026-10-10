@@ -1,13 +1,13 @@
 """
-The WordPress recipe (`ADR-0018` § 4): a `mariadb-dump` of the
-database and a `tar czf` of `wp-content`, as
-`/srv/scripts/backup-wordpress.sh` writes them on the reference host.
+The WordPress recipe (ADR-0018 § 4): a `mariadb-dump` of the database
+and a `tar czf` of `wp-content`, as `/srv/scripts/backup-wordpress.sh`
+writes them on the reference host.
 
-Restored with the images the live containers run, on the run's own
-internal network: MariaDB loads the dump at its first start, WordPress
-serves `wp-content` restored from the archive. Then checked from inside
-the network — the tables are there, WordPress reads its own address
-from them, the home page and the login page answer.
+Restored with the images the live containers run, on the run's
+internal network: MariaDB loads the dump at first start, WordPress
+serves the restored `wp-content`. Checked from inside the network: the
+tables exist, WordPress reads its address from them, and the home and
+login pages answer.
 """
 
 from __future__ import annotations
@@ -24,9 +24,9 @@ from aistack.sandbox.run import SandboxRun, StepFailed
 
 DATABASE = "wordpress"
 
-# Fetches one path from the WordPress container itself, as the address
+# Fetches one path from inside the WordPress container, under the address
 # it believes it has: status, Location, size, whether a login form is
-# there. No curl needed: the image runs PHP.
+# there. PHP, since the image has no curl.
 _FETCH = r"""
 $c = stream_context_create(["http" => ["ignore_errors" => true, "follow_location" => 0, "timeout" => 20,
   "header" => "Host: " . getenv("AISTACK_HOST") . "\r\nX-Forwarded-Proto: https\r\n"]]);
@@ -40,8 +40,7 @@ echo ($p[1] ?? "0"), "\n", $loc, "\n", strlen($b), "\n", (strpos($b, "user_login
 
 
 def newest(directory: Path, pattern: str) -> Path | None:
-    """The newest file matching `pattern` — by name, which carries the
-    backup's date and time, then by modification time."""
+    """The newest file matching `pattern`, by name (which carries the date), then mtime."""
 
     found = [path for path in directory.glob(pattern) if path.is_file()]
     if not found:

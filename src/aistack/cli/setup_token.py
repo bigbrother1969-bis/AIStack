@@ -1,11 +1,11 @@
 """
-`python -m aistack.cli.setup_token` — the address that opens the
-installation assistant, again (`ADR-0023` § 5), when the one install.sh
-showed was lost. With Docker:
+`python -m aistack.cli.setup_token` — print the installation assistant's address again (ADR-0023 § 5).
+
+Use it when the address install.sh showed was lost. With Docker:
 
     docker compose exec web python -m aistack.cli.setup_token
 
-Shows the token there is, or makes one when there is none; `--new`
+Shows the current token, or makes one when there is none; `--new`
 replaces it (the old address stops working), `--reopen` opens a
 finished assistant again.
 """

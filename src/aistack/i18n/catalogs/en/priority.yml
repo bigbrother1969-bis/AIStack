@@ -27,7 +27,7 @@ field:
 status:
   saved: "{priority} priority app(s), {throttled} throttled container(s)."
 
-# Info-bulles / tooltips — 2026-10-03.
+# Tooltips.
 tooltip:
   save: "Save the classification of every container on the page to resource_priority.yml"
   ignored: "Leave {name} as it is: no cap, no priority"

@@ -5,18 +5,9 @@ from importlib.metadata import PackageNotFoundError, version
 
 def declared_version() -> str:
     """
-    The version the installed distribution declares.
-
-    **Read rather than repeated.** This module printed a literal
-    `version 0.1.0` until 2026-08-29, three months after
-    `pyproject.toml` started declaring the same number: two
-    declarations of one fact, which drift. The literal was still
-    right, and it was right by luck — nothing compared them, and
-    the bump to 0.2.0 would have left it saying 0.1.0.
-
-    A source tree that is not installed has no metadata to read,
-    and that is reported as `unknown` rather than guessed. FDN-0003
-    Article 12: the absence of a fact is a state, not a default.
+    The version the installed distribution declares, read from package
+    metadata so it cannot drift from `pyproject.toml`; `unknown` when
+    the source tree is not installed.
     """
 
     try:

@@ -17,26 +17,11 @@ def find_gpu_anomalies(
     thresholds: Sequence[GpuThreshold],
 ) -> tuple[GpuAnomaly, ...]:
     """
-    Which GPU readings have crossed a threshold `OPS-0007` declares.
+    Return the GPU readings that cross a threshold declared under `OPS-0007`.
 
-    Mirrors `find_storage_shortage`: given readings already collected
-    and thresholds already declared, decides which ones actually
-    qualify — it never proposes a threshold itself.
-
-    **Every reading is checked against every declared threshold kind**
-    — unlike `find_storage_shortage`, which keys a threshold to one
-    `mount` among several, a `GpuThreshold` names no card of its own
-    (`GpuThreshold`'s own docstring: v1 scope is one GPU per host), so
-    there is no per-reading key to match on. A threshold kind never
-    declared for this host is simply never checked — the same "not
-    measured is not zero" convention `find_storage_shortage` already
-    holds for a mount with no declared threshold.
-
-    A reading may produce zero, one, two or three anomalies — one per
-    threshold kind it crosses, independent of the others.
-
-    Pure: readings and thresholds already collected in, anomalies out
-    — the same discipline `find_storage_shortage` already holds.
+    A `GpuThreshold` names no card (one GPU per host), so every reading is
+    checked against every declared threshold kind. A kind not declared is
+    never checked. A reading yields one anomaly per threshold kind it crosses.
     """
 
     anomalies: list[GpuAnomaly] = []

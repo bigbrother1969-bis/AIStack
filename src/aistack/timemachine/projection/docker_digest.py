@@ -1,28 +1,15 @@
 """
-Project image-digest observations into the graph — 1.5's third
-collector (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md` § 1.5), cadrage
-2026-09-28.
+Project image-digest observations into the graph.
 
-**One subdirectory per subject, not one shared batch file — the same
-reasoning `aistack.timemachine.projection.docker_diff` already gives
-for its own write side (`aistack.providers.docker.digest_history`
-explains it there).** This walk is the read side of the same
-contract, unchanged from that module's own: it finds every subject
-root under `generated_dir / "docker-digest"` by locating each
-`history/docker-digest` leaf, however deep a subject's own `/` nests
-it, and rebuilds the subject string the exact inverse way
-`aistack.providers.docker.digest_history._output_path` derived it.
+One subdirectory per subject under `generated_dir / "docker-digest"`
+(written by `aistack.providers.docker.digest_history`). Each subject
+root is found by its `history/docker-digest` leaf, however deep the
+subject's `/` nests it, and the subject string is rebuilt as the
+inverse of `digest_history._output_path`.
 
-**`aistack:imageDigest`, the one fact this stream states.** Unlike
-`docker diff`, which reports a whole list of changed paths a graph
-fact would have to summarise (`aistack:changeCount`), an image-digest
-observation is already a single value — the current digest itself is
-exactly the fact worth stating, with no summarising needed.
-
-**No `aistack:occurredAt`, the same restraint `docker_diff`'s own
-module already documents for the same reason.** A digest observed
-this cycle states only that this is the digest *now*, not when it
-last changed — there is no independent instant here to state.
+Each observation states one fact, `aistack:imageDigest`. No
+`aistack:occurredAt`: an observation says what the digest is now, not
+when it changed.
 """
 
 from __future__ import annotations
@@ -47,10 +34,8 @@ from aistack.timemachine.vocabulary import (
     XSD_DATE_TIME,
 )
 
-# `aistack.providers.docker.digest_history`'s own leaf names,
-# redeclared here — the same cross-boundary convention
-# `aistack.timemachine.projection.docker_diff`'s own module already
-# redeclares `"docker-diff"` for.
+# Leaf names of `aistack.providers.docker.digest_history`, redeclared
+# rather than imported across the writer/reader boundary.
 DIGEST_DIRNAME = "docker-digest"
 STEM = "docker-digest"
 STREAM_STEM = "docker-digest"
@@ -58,9 +43,7 @@ STREAM_STEM = "docker-digest"
 
 @dataclass(frozen=True)
 class DockerDigestProjectionSummary:
-    """What one `project_docker_digest` run actually did — the same
-    measured-report shape every other stream's projection already
-    gives a caller."""
+    """What one `project_docker_digest` run did."""
 
     subjects_seen: int
     snapshots_seen: int
@@ -69,13 +52,7 @@ class DockerDigestProjectionSummary:
 
 
 def _subject_roots(digest_root: Path) -> list[tuple[str, Path]]:
-    """
-    `(subject, subject_root)` for every subject `digest_root` actually
-    holds a recorded observation for — the same `rglob`-based walk
-    `aistack.timemachine.projection.docker_diff._subject_roots`
-    already holds, unchanged in shape, against this stream's own leaf
-    name.
-    """
+    """`(subject, subject_root)` for every subject with a recorded observation."""
 
     roots: list[tuple[str, Path]] = []
 
@@ -99,22 +76,10 @@ def project_docker_digest(
     Add every recorded image-digest observation under
     `generated_dir / "docker-digest"` to `store`.
 
-    One shared `prov:Activity` (`stream_iri("docker-digest")`) is the
-    collection activity every observation is `prov:wasGeneratedBy` —
-    emitted once, lazily, the first time this stream is actually found
-    to hold an observation, the same guard `project_docker_diff`
-    already holds for the same reason (this stream lives off its own
-    dedicated root, never discovered by the generic `available_stems`
-    walk).
-
-    For each observation: it exists (`prov:Entity`), when it was
-    recorded (`prov:generatedAtTime` — recording time; see this
-    module's own docstring for why no `aistack:occurredAt`), which
-    subject it concerns (`aistack:stableSubject`), and its own current
-    image digest (`aistack:imageDigest`).
-
-    Every candidate fact passes through the same `filter_fact` every
-    other stream's projection already uses.
+    The stream's `prov:Activity` is emitted once, only when an
+    observation is found. Per observation: a `prov:Entity` with
+    `prov:generatedAtTime` (recording time), `aistack:stableSubject`
+    and `aistack:imageDigest`. Every fact goes through `filter_fact`.
     """
 
     digest_root = generated_dir / DIGEST_DIRNAME

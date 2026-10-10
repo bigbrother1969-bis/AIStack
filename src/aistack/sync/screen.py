@@ -1,16 +1,14 @@
 """
-The generalized sync's screen and executor (`ADR-0022`): what a pair
+The generalized sync's screen and executor (ADR-0022): what a pair
 (content, destination) shows, what the screen records, and what the
 host executor applies.
 
-**The screen records, the host applies** (§ 6). The web application
-writes only the selection, in the data directory
-(`sync/selections/<pair>.yml`); the executor, on the host, brings the
-pair's folder to it and records what it did (`sync/applied/<pair>.json`).
-A hard link between the two read-only and read-write bind mounts of the
-web container fails ("Invalid cross-device link", GIGABYTE,
-2026-10-09): the music screen's saves had been failing since the Docker
-installation.
+The screen records, the host applies (§ 6). The web application writes
+only the selection (`sync/selections/<pair>.yml` in the data
+directory); the host executor brings the pair's folder to it and
+records what it did (`sync/applied/<pair>.json`). The web container
+cannot do it: a hard link between its read-only and read-write bind
+mounts fails with "Invalid cross-device link".
 """
 
 from __future__ import annotations
@@ -67,8 +65,7 @@ def read_applied(generated: Path, pair: str) -> dict[str, Any] | None:
 
 
 def load_selection(generated: Path, pair: str, legacy: Path | None = None) -> Selection | None:
-    """The recorded selection; for the music, the old screen's file until
-    the first save on this one."""
+    """The recorded selection, else `legacy` (the old music screen's file) until the first save."""
 
     path = selection_file(generated, pair)
     if path.exists():

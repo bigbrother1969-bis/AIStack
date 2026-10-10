@@ -9,11 +9,8 @@
 </head>
 <body>
   {#
-    Nav partagée (aistack.renderers.nav.render_page_nav), 2026-09-30
-    (constat 5) — l'URL du lien console/Paramètres qu'elle porte reste
-    le lien direct LAN (GIGABYTE:8183), jamais l'adresse publique,
-    même raisonnement que network_discovery_ui/templates/index.html :
-    ce mini-app est volontairement LAN-only (ADR-0011 roadmap R1).
+    The console link in `page_nav` is the direct LAN link, never the public
+    address: this mini-app is LAN-only.
   #}
   {{ page_nav | safe }}
 
@@ -23,10 +20,7 @@
   </header>
 
   {#
-    ADR-0011 §18 (1.4 cadrage, 2026-09-28): the network tree is a
-    second view of this same mini-app, not a sixth one — this nav is
-    the only thing new here, everything else on this page is
-    unchanged.
+    Switch between the streams, tree and ribbon views.
   #}
   <nav class="view-switch">
     <span class="view-current">{{ t('timemachine.nav.streams') }}</span>

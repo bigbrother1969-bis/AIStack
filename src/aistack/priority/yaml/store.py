@@ -27,20 +27,11 @@ _REQUIRED_JELLYFIN_DETECTOR_FIELDS = ("url",)
 
 def load_resource_priority_yaml(path: Path) -> ResourcePriorityDefinition:
     """
-    Load the governed resource-priority definition from YAML.
+    Load the resource-priority definition from YAML.
 
-    **Written by hand, not generated** — same reasoning as
-    `load_application_definition_yaml`: this file is typed by the
-    owner (or, from `priority_ui`, rewritten by code that already
-    respects this same shape), so a missing key here is a typo, and
-    the error names which one and where, rather than pointing at a
-    line inside this module.
-
-    **`priority:` is a list now, not a singular `jellyfin:` block.**
-    Reshaped 2026-09-03 by
-    `claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md` — the
-    generic feature can have any number of priority apps, each
-    carrying its own `detector:`, tagged by `type:`.
+    The file is edited by hand or by the priority screen; a missing key
+    raises a `ValueError` naming the key and the file. `priority:` is a list
+    of apps, each with a `detector:` tagged by `type:`.
     """
 
     with path.open("r", encoding="utf-8") as stream:
@@ -188,21 +179,11 @@ _HEADER_COMMENT = """\
 # Resource priority definition — priority apps vs. background containers.
 #
 # Loaded by `load_resource_priority_yaml`
-# (`src/aistack/priority/yaml/store.py`), and read by the étape 4
+# (`src/aistack/priority/yaml/store.py`), and read by the
 # monitor (`aistack.cli.resource_priority_monitor`).
 #
-# **This header and the section comments below are written by
-# `save_resource_priority_yaml` on every save, not preserved from
-# whatever was here before** — found live on GIGABYTE, 2026-09-03
-# (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`): a first
-# version of this function used a plain `yaml.safe_dump`, which has
-# no notion of comments at all, so a save from `priority_ui` was
-# silently discarding this file's entire documentation. A comment
-# that named one past decision (a date, a `docker inspect` reading,
-# a container that no longer exists) would go stale exactly when the
-# owner used `priority_ui` to change what it described, so what
-# replaced it is generic and structural rather than historical —
-# `git log` on this path is where that history now lives.
+# This header and the section comments below are rewritten on every
+# save from the CPU priority screen: edits to comments are not kept.
 
 """
 
@@ -241,33 +222,15 @@ def save_resource_priority_yaml(
     definition: ResourcePriorityDefinition, path: Path
 ) -> Path:
     """
-    Save a governed resource-priority definition to YAML — the write
-    side `aistack.web.priority`'s own `/save` uses, symmetric to
+    Save a resource-priority definition to YAML, the inverse of
     `load_resource_priority_yaml`.
 
-    **Built explicitly, not `dataclasses.asdict` on the whole
-    tree.** `DetectorDefinition` is a tagged union with no `type:`
-    field on the dataclass itself — `_load_detector` switches on
-    which YAML keys are present, `build_detector`
-    (`aistack.priority.detectors.factory`) on `isinstance`. This is
-    the one place the `type:` tag is written back, so a file this
-    function writes still names it — `_dump_detector` mirrors
-    `build_detector`'s own `isinstance` check for exactly that
-    reason.
-
-    A background container's `normal_cpus` is omitted entirely when
-    `None`, never written as `normal_cpus: null` — YAML's own
-    absence, which `_load_container`'s `data.get("normal_cpus")`
-    already reads back as "unlimited", the same convention this
-    whole feature carries throughout.
-
-    **Written section by section, each with its own static comment,
-    rather than one `yaml.safe_dump` over the whole tree.** PyYAML
-    carries no comments at all — a single combined dump was found
-    live discarding this file's entire documentation on every
-    `priority_ui` save (see `_HEADER_COMMENT`). Splitting the dump
-    per top-level key is what lets a comment sit above each one,
-    the same shape this file has always had.
+    Built explicitly rather than with `dataclasses.asdict`, so the
+    detector's `type:` tag is written back. A background container's
+    `normal_cpus` is omitted when `None` (unlimited). Each top-level key is
+    dumped separately with a static comment above it, because PyYAML
+    drops comments and the file would otherwise lose its documentation on
+    every save.
     """
 
     path.parent.mkdir(parents=True, exist_ok=True)

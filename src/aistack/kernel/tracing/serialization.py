@@ -14,42 +14,14 @@ def serialize_execution_trace(
     provenance: Provenance,
 ) -> dict[str, Any]:
     """
-    An `ExecutionTrace` as a JSON-safe `dict` — the shape
+    An `ExecutionTrace` as a JSON-safe `dict`, the shape
     `FileTraceRepository` persists.
 
-    **`resolution.task` is not serialized — it cannot be.**
-    `ResolutionResult.task` holds the live `Task` object that
-    executed, an executable, not data (`kernel/resolution/result.py`).
-    What is written instead is exactly what the trace itself needs to
-    explain a resolution: the task's own `task_id`/`task_name`,
-    `resolver`, `reason` — everything `ADR-0008`'s roadmap asks a
-    Runtime Operation History entry to carry ("applied rules")
-    except the executable itself, which a JSON file was never going
-    to hold.
-
-    **No `timestamp` field is written here, and none is missing.**
-    Neither `ExecutionTrace` nor `ExecutionTraceEvent` carries one —
-    the roadmap's own required field
-    (`docs/99-meta/roadmap/AIStack-Medium-Term-Development-Roadmap.md`
-    § *Runtime Operation History*) is instead the instant already
-    encoded in the history filename `write_artifact_with_history`
-    gives this content, the same convention every other historicised
-    artifact already relies on (`aistack.history.query`). Adding a
-    second, independent timestamp inside the content would be one
-    more fact that can drift from the one the filename already
-    states.
-
-    **`version` and `provenance` are new, J3 (Time Foundation,
-    `claude/PLAN-J3-TIME-FOUNDATION-2026-09-10.md`).** Both are
-    supplied by the caller rather than computed here —
-    `FileTraceRepository.save()` is what knows where this trace is
-    about to be written (so it can ask `aistack.kernel.time
-    .next_version_from_history` how many came before) and what
-    caused it (`trace.request.request_id`); this function stays a
-    pure, easily-tested mapping from an `ExecutionTrace` plus those
-    two governed facts to a JSON-safe `dict`, the same separation of
-    concerns it already kept between serialization and the I/O
-    `FileTraceRepository` performs.
+    The live `Task` in `resolution.task` is not data; only its
+    `task_id`/`task_name`, the resolver and the reason are written.
+    There is no timestamp: the history filename states the instant.
+    `version` and `provenance` are supplied by the caller, keeping this
+    a pure mapping.
     """
 
     return {

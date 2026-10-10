@@ -1,9 +1,8 @@
-"""
-Settings' "Shipped declarations" section, for an administrator, in the
-container only (`ADR-0017` open point, decided by the owner 2026-10-05):
-which shipped declarations changed since the owner's copy, with the
-difference, and a way to say "seen, I keep mine". The rules are
-`aistack.instance.declarations`'.
+"""Settings' "Shipped declarations" section (administrators, container only).
+
+Shows which shipped declarations changed since the owner's copy, with the
+diff, and lets the owner mark one as seen. The rules live in
+`aistack.instance.declarations`.
 """
 
 from __future__ import annotations

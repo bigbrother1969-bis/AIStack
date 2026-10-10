@@ -1,17 +1,12 @@
-"""
-The installation assistant's pages (`ADR-0023` § 5): `/setup/step/<n>`,
-one step after the other, each saved from the page.
+"""The installation assistant's pages (ADR-0023 § 5): `/setup/step/<n>`,
+one step after another, each saved from its page.
 
-On the local network only, and only with the installation token
-(`aistack.instance.setup_wizard`): `install.sh` shows the address
-`/setup/open?token=…`, which leaves the token in a cookie for these
-pages alone (`path=/setup`, `SameSite=Strict`) and is then forgotten by
-the address bar. Every form also carries a value derived from the
-token, so a page from elsewhere cannot post one.
-
-Nobody can sign in yet on a new installation: the token, not a session,
-answers for these pages — the way the sign-in forms answer for
-themselves.
+LAN only, and only with the installation token
+(`aistack.instance.setup_wizard`). `install.sh` prints
+`/setup/open?token=…`, which moves the token into a cookie scoped to
+these pages (`path=/setup`, `SameSite=Strict`). Every form also carries a
+value derived from the token, so another page cannot post one. The token
+stands in for a session, since nobody can sign in yet.
 """
 
 from __future__ import annotations
@@ -163,8 +158,9 @@ def _current(shipped: Path) -> dict[str, Any]:
 
 
 def _personal(request: Request, step: int, name: str) -> bool:
-    """The declaration already holds this installation's values: saved
-    here, or never the shipped copy."""
+    """Whether the declaration already holds this installation's values:
+    saved here, or no longer the shipped copy.
+    """
 
     if step in wizard.progress(_generated(request)):
         return True
@@ -263,8 +259,9 @@ def _sign_in_values(request: Request) -> dict[str, str]:
 
 
 def _sign_in_view(request: Request) -> dict[str, Any]:
-    """What step 3 says around its form: never a secret, only whether
-    there is one and its last four characters."""
+    """What step 3 shows around its form: whether a secret exists and its last
+    four characters, never the secret.
+    """
 
     definition = _definition()
     stored = wizard.sign_in_values(_generated(request))
@@ -337,8 +334,9 @@ KEY_NOTICES = {
 
 
 def _keys_view(request: Request) -> list[dict[str, Any]]:
-    """Every key of `api_keys.yml`, with its procedure: never a value,
-    only where it comes from and the last four characters."""
+    """Every key of `api_keys.yml` with its procedure; values are never shown,
+    only their source and last four characters.
+    """
 
     generated = _generated(request)
     t = _language(request).t
@@ -393,8 +391,11 @@ OK, FAILED, ABSENT = "ok", "failed", "absent"
 
 
 def _run_checks(request: Request) -> list[dict[str, str]]:
-    """Each prerequisite asked once (ADR-0023 § 5.6). Gotify's test sends
-    a message to the phone: it runs on the owner's click only."""
+    """Check each prerequisite once (ADR-0023 § 5.6).
+
+    Runs only on the owner's click, since the Gotify test sends a message to
+    the phone.
+    """
 
     from aistack.ai_runtime.yaml import load_ai_runtime_yaml
     from aistack.troubleshooting.guide import AI_RUNTIME
@@ -604,8 +605,7 @@ async def save_step(request: Request, step: int) -> Response:
 
 
 def _save_key(request: Request, values: dict[str, str], when: datetime) -> Response:
-    """One key saved, cleared or tested — as in Settings, same store —
-    or the step marked done."""
+    """Save, clear or test one key (same store as Settings), or mark the step done."""
 
     generated = _generated(request)
     action = values.get("action", "save")

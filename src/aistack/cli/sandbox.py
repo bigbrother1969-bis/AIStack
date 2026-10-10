@@ -1,5 +1,5 @@
 """
-`python -m aistack.cli.sandbox` — sandbox restore (`ADR-0018`).
+`python -m aistack.cli.sandbox` — sandbox restore (ADR-0018).
 
     python -m aistack.cli.sandbox recipes            the services it knows
     python -m aistack.cli.sandbox restore wordpress  restore, check, time, remove
@@ -12,10 +12,10 @@
                                                      upgrade, then print the line to pin
 
 Run on the host, from the checkout (`source scripts/dev-env.sh`), by a
-user allowed to run `docker`. Never touches a live container: it reads
-their image, nothing else. The report is written to the data directory
-(`AISTACK_DATA_DIR` from `.env`, else `reports/generated`), under
-`sandbox/`, and printed with the `pra_tests.yml` entry it proposes.
+user allowed to run `docker`. Never touches a live container; it only
+reads its image. The report goes to `sandbox/` in the data directory
+(`AISTACK_DATA_DIR` from `.env`, else `reports/generated`) and is printed
+with the `pra_tests.yml` entry it proposes.
 """
 
 from __future__ import annotations
@@ -75,8 +75,7 @@ def restore(
         raise SystemExit(f"No sandbox recipe for `{service}` (known: {known}).")
     run = SandboxRun(service, declaration.run_root, runner, host, progress=progress)
     run.compare = compare_live
-    # The dock's rehearsal (`ADR-0019` § 4): the new image instead of
-    # the live container's, by container name.
+    # The dock's rehearsal (ADR-0019 § 4): new images by container name.
     run.image_overrides.update(image_overrides or {})
     try:
         if rollback:

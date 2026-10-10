@@ -1,21 +1,16 @@
 """
-AIStack's data directory against its disk budget, and the compaction of
-old observations (`ADR-0021`; the owner, 2026-10-09: a budget of 2 GB,
-observations older than 90 days compressed, in place).
+AIStack's data directory against its disk budget, and compaction of old observations (ADR-0021).
 
-**Measured, never estimated.** `measure` walks the data directory and
-adds up what is there; the pace is what the observation histories gained
-over the last seven days (by the instant in each name), so the date the
-budget would be reached
-is a projection from a measurement, said as such.
+`measure` adds up what is in the data directory; the pace, and so the
+date the budget would be reached, is a projection from the last seven
+days of observations.
 
-**Compressed, never deleted.** `compress_old` turns an observation file
-older than the window into `<name>.gz` beside it, checks that the
-compressed copy gives back exactly the same bytes, and only then
-removes the plain file. `aistack.history` reads both the same way, so
-the Time Machine rebuilds the same graph. The latest file of each
-stream (the one beside `history/`) is never touched, nor anything
-outside a `history/<stem>/` directory.
+`compress_old` turns an observation older than the window into
+`<name>.gz` beside it, checks the copy gives back the same bytes, and
+only then removes the plain file. `aistack.history` reads both forms,
+so the Time Machine rebuilds the same graph. Only files inside a
+`history/<stem>/` directory are touched, never the latest file of a
+stream. Nothing is deleted.
 """
 
 from __future__ import annotations
@@ -66,13 +61,11 @@ def load_data_budget(path: Path | None = None) -> DataBudget:
 
 def measure(generated_dir: Path, budget: DataBudget, now: datetime | None = None) -> DataUsageReading:
     """
-    Every file added up. The pace is what the observation histories
-    gained over the last seven days, by the instant each observation
-    carries in its name — not by modification time: the graph and the
-    pages are rewritten whole at every rebuild, which is no growth
-    (GIGABYTE, 2026-10-09: 45 MB a day by modification time, the graph
-    alone counting 87 MB a week, against about 20 MB a day of new
-    observations).
+    Add up every file in `generated_dir`, and the daily pace over the last seven days.
+
+    The pace counts history files by the instant in their name, not by
+    modification time: the graph and pages are rewritten whole at every
+    rebuild, which is not growth.
     """
 
     moment = now or datetime.now(timezone.utc)

@@ -6,13 +6,9 @@ from typing import Any
 
 from aistack.generators.history import write_artifact_with_history
 
-# One subdirectory per subject, the same write-on-change shape
-# `aistack.providers.docker.digest_history` and `.diff_history` already
-# hold, applied here to a `{mechanism, packages}` pair instead of a
-# single string or a list of changes: a package inventory is a single
-# current snapshot, not individually-novel the way a Docker event is,
-# so "did it change" needs the same stable "latest" file
-# `write_artifact_with_history` already keeps per subject.
+# One subdirectory per subject, written on change like `diff_history`:
+# the new `{mechanism, packages}` snapshot is compared with the subject's
+# "latest" file.
 DEFAULT_GENERATED_DIR = Path("reports/generated")
 
 PACKAGES_DIRNAME = "docker-packages"
@@ -20,26 +16,15 @@ STEM = "docker-packages"
 
 
 def _output_path(subject: str, generated_dir: Path) -> Path:
-    """
-    `generated_dir / "docker-packages" / <subject> / "docker-packages.json"`
-    — the same nesting `aistack.providers.docker.digest_history
-    ._output_path` already holds for a subject that may itself embed a
-    `/` (a Compose `project/service` pair, § 3); `aistack.timemachine
-    .projection.docker_packages`'s own walk reverses it the same way
-    that stream's own projector already does.
-    """
+    """`generated_dir/docker-packages/<subject>/docker-packages.json`; a
+    `project/service` subject nests one directory deeper."""
 
     return generated_dir / PACKAGES_DIRNAME / subject / f"{STEM}.json"
 
 
 def _read_previous(output_path: Path) -> dict[str, Any] | None:
-    """
-    Whatever `{"mechanism", "packages"}` this subject's own stable
-    "latest" file last held, or `None` — no such file yet, or its
-    content does not parse as this stream's own shape. Not
-    distinguished from each other by the caller, the same restraint
-    every other write-on-change stream in this package already holds.
-    """
+    """The `{"mechanism", "packages"}` last recorded for the subject, or
+    `None` when the file is missing or unreadable."""
 
     try:
         parsed = json.loads(output_path.read_text(encoding="utf-8"))
@@ -64,20 +49,12 @@ def has_changed(
     *,
     generated_dir: Path = DEFAULT_GENERATED_DIR,
 ) -> bool:
-    """
-    `True` when `(mechanism, packages)` differs from whatever was last
-    recorded for `subject` — the read-only half of
-    `record_package_inventory`'s own comparison, exposed on its own so
-    a caller (`aistack.cli.docker_packages_monitor`'s own `--dry-run`)
-    can report what *would* be recorded without writing anything, the
-    same distinction every other stream in this package already draws.
+    """True when `(mechanism, packages)` differs from what was last
+    recorded for `subject`. Read-only; used by `docker_packages_monitor
+    --dry-run`.
 
-    A mechanism change alone (e.g. `"dpkg"` to `"none"`, a container
-    whose own package database became unreadable) counts as a change
-    even when `packages` happens to compare equal (both empty) — the
-    mechanism that answered is itself part of what this stream states,
-    the same reasoning `aistack.providers.docker.packages`'s own
-    module comment gives for recording it at all.
+    A mechanism change alone (e.g. `"dpkg"` to `"none"`) counts as a
+    change.
     """
 
     previous = _read_previous(_output_path(subject, generated_dir))
@@ -94,15 +71,8 @@ def record_package_inventory(
     *,
     generated_dir: Path = DEFAULT_GENERATED_DIR,
 ) -> Path | None:
-    """
-    Persist one subject's current package inventory to history — but
-    only when `has_changed` says it actually differs from what was
-    last recorded for that same subject.
-
-    Returns `None`, writing nothing, when the new observation is
-    identical to the previous one — the same "write on change" economy
-    every other stream in this package already holds.
-    """
+    """Persist a subject's package inventory to history when it changed;
+    otherwise write nothing and return `None`."""
 
     if not has_changed(subject, mechanism, packages, generated_dir=generated_dir):
         return None

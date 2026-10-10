@@ -1,8 +1,7 @@
-# What a finding says (ADR-0010 § 4, revised 2026-10-03). Each entry
-# renders to exactly the English text its evaluator writes into
-# `RuntimeFinding.interpretation` / `.remediation` —
-# `tests/unit/i18n/test_finding_messages.py` holds them to the same
-# words. Values arrive already formatted by the evaluator.
+# What a finding says (ADR-0010 § 4). Each entry renders exactly the English
+# text its evaluator writes into `RuntimeFinding.interpretation` /
+# `.remediation` (checked by tests/unit/i18n/test_finding_messages.py).
+# Values arrive already formatted.
 
 confidence:
   measured: "Measured"
@@ -85,7 +84,7 @@ consumption:
     interpretation: "{container} used {cpu}% CPU, at or above the {threshold}% threshold, with no declared resource expectation in resource_priority.yml — resource consumed for no declared functional benefit ({qualification})."
     remediation: "Classify {container} in resource_priority.yml (priority or background) so this consumption is either expected or capped; investigate why it runs unexplained."
   quiet:
-    interpretation: "Its own logs, read in the same run, show no incoming HTTP requests — consistent with resource used at rest, though an active session and every non-HTTP shape of work remain unchecked (STD-0300 § VS-4 criterion 4.1)."
+    interpretation: "Its own logs, read in the same run, show no incoming HTTP requests — consistent with resource used at rest, though an active session and every non-HTTP shape of work remain unchecked."
   busy:
     interpretation: "Its own logs, read in the same run, do show incoming HTTP requests in this window — this consumption may reflect real work rather than idling; classification in resource_priority.yml is still what is missing."
   hot:

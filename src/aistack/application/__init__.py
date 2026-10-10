@@ -1,11 +1,5 @@
-"""
-Application definition adapters.
+"""Application definition adapters (YAML persistence).
 
-The model itself — `ApplicationDefinition`, `SyncthingDefinition`
-— lives in `aistack.kernel.application`. Import it from there.
-
-This package holds what adapts that model to something outside
-the kernel: YAML persistence, as `aistack.selection.yaml` does. This file stays, without re-exports,
-because `packages.find` needs it for `aistack.application.yaml` to
-be packaged at all.
+The model lives in `aistack.kernel.application`. This file has no
+re-exports; `packages.find` needs it to package `aistack.application.yaml`.
 """

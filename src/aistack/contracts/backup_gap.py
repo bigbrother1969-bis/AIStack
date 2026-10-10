@@ -4,18 +4,11 @@ from dataclasses import dataclass
 
 from aistack.contracts.backup_reading import BackupReading
 
-# The two conditions this domain's v1 scope detects — closed the same
-# way `ContainerDistress.REASONS` is: no third reason without a real
-# case naming one (`GOV-P-001`). A path `OPS-0006` declares a
-# threshold for is either missing its backup entirely, or has one
-# that is older than the threshold allows — there is no third state
-# in "existence and freshness only" (periodic restore tests and
-# documentation currency are named out of scope, `OPS-0006` § *Out of
-# scope*).
+# Closed set of reasons: the scope checks existence and freshness only
+# (OPS-0006).
 MISSING = "missing"
 STALE = "stale"
-# The declared path could not be read at all (1.9, 2026-10-08): neither
-# missing nor stale is known, and saying either would be a guess.
+# The declared path could not be read: neither missing nor stale is known.
 UNREACHABLE = "unreachable"
 
 REASONS = (MISSING, STALE, UNREACHABLE)
@@ -24,20 +17,11 @@ REASONS = (MISSING, STALE, UNREACHABLE)
 @dataclass(frozen=True)
 class BackupGap:
     """
-    One backup location already found to have failed the check
-    `OPS-0006` declares for it: no backup file found at all, or the
-    newest one found is older than the declared threshold allows.
+    A backup location that failed its OPS-0006 check: missing, stale or
+    unreachable. The constructor checks the reason against the reading.
 
-    Mirrors `StorageShortage`/`ContainerDistress`: the reading and the
-    reason it was already found to fail, enforced here rather than
-    only in the caller — `find_backup_gaps`
-    (`aistack.runtime.backup_gap`) only ever constructs a `BackupGap`
-    already confirmed to be one; it does not re-derive "missing or
-    stale" from a bare reading handed to it from elsewhere.
-
-    `max_age_hours` is copied from the `BackupThreshold` that fired,
-    not re-looked-up later — the same "state what fired, not what
-    fires today" `StorageShortage.threshold_value` already holds.
+    `max_age_hours` is copied from the threshold that fired, so the gap
+    states what fired then, not what the threshold says today.
     """
 
     reading: BackupReading
@@ -49,8 +33,7 @@ class BackupGap:
             raise ValueError(
                 f"{self.reading.path} cites {self.reason!r} as a backup "
                 f"gap reason; only {REASONS} are detected in this scope "
-                f"(existence and freshness only — the owner's chosen v1 "
-                f"scope, 2026-09-11)"
+                f"(existence and freshness only)"
             )
 
         if (self.reason == UNREACHABLE) != bool(self.reading.unreachable):

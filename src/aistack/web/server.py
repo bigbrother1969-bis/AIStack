@@ -1,16 +1,10 @@
-"""
-`python -m aistack.web.server` — AIStack's single web process
-(`ADR-0012` § 3).
+"""`python -m aistack.web.server`: AIStack's single web process (ADR-0012 § 3).
 
-One uvicorn server, two sockets bound before it starts: the public
-port and the LAN port, both read from `instance_config.yml`
-(`service_ports.console` and `service_ports.web_lan`), never typed
-here. uvicorn reports, per connection, the local address the request
-arrived on, which is what `aistack.web.exposure` decides on.
-
-`proxy_headers` is off: nothing this process decides depends on a
-header the proxy sets, and the client address it would rewrite is not
-used.
+One uvicorn server on two pre-bound sockets, the public and LAN ports
+from `instance_config.yml` (`service_ports.console`,
+`service_ports.web_lan`). `aistack.web.exposure` decides on the port each
+request arrived on. `proxy_headers` is off: nothing here depends on
+proxy headers.
 """
 
 from __future__ import annotations
@@ -63,8 +57,10 @@ def bind(host: str, port: int) -> socket.socket:
 
 
 class HideTokens(logging.Filter):
-    """The access log never shows the installation token (ADR-0023 § 5):
-    `/setup/open?token=…` is logged as `token=…`."""
+    """Access-log filter that masks the installation token (ADR-0023 § 5).
+
+    `/setup/open?token=…` is logged as `token=…`.
+    """
 
     def filter(self, record: logging.LogRecord) -> bool:
         if record.args and isinstance(record.args, tuple):

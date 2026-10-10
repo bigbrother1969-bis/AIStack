@@ -6,9 +6,7 @@ from aistack.transport.contracts.resource_reference import ResourceReference
 
 
 class Writer(Protocol):
-    """
-    Persists a governed resource from a binary stream.
-    """
+    """Persists a governed resource from a binary stream."""
 
     def exists(
         self,

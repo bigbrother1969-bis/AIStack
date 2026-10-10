@@ -6,26 +6,13 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class RestartLoop:
     """
-    One container found dying and restarting over and over within a
-    recent window — the restart loop `OPS-0004`'s third reference
-    incident names, measured over time rather than at one instant.
+    A container that died and restarted repeatedly within a recent
+    window (OPS-0004), counted from recorded Docker `die` events.
 
-    **Why it exists — 2026-10-02.** `arrstack/mularr` crashed at
-    startup every ~17 seconds for three weeks (SQLite on NFS, 1,537
-    restarts) and the Health Cockpit never flagged it: the Services
-    domain reads each container's state at one instant
-    (`ContainerStateReading`, the owner's v1 scope of 2026-09-11), and
-    between two crashes mularr read as `running`. The docker-events
-    collector had recorded every `die`/`start` all along. Owner's
-    cadrage the same day: count recent restarts from that history,
-    against a declared threshold.
-
-    `container` is the event's stable subject (`compose_project/
-    service`), `restarts` the number of `die` events Docker recorded for
-    it within the last `window_minutes`, `threshold` the declared count
-    it reached. A loop below its own threshold cannot be constructed —
-    the same "a confirmed condition, not a bare reading" discipline
-    `ContainerDistress` holds.
+    An instant reading misses this: between two crashes the container
+    reads as `running`. `container` is `compose_project/service`;
+    `restarts` counts `die` events in the last `window_minutes`. A loop
+    below its `threshold` cannot be constructed.
     """
 
     container: str

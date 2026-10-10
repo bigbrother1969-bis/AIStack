@@ -1,17 +1,12 @@
-"""
-`/pending` — what waits for the owner behind each console card (the
-owner, 2026-10-10: "des petites pastilles de couleur sur les cartes
-pour lesquelles il y a des actions en attente"). LAN only, signed in:
-the console asks it and puts a pastille on the card whose screen has
-something to do.
+"""`/pending`: how many actions wait behind each console card, for the badges.
+
+Signed-in sessions only; anyone else gets `{}`.
 
     {"/dock/": {"count": 1, "text": "1 mise à jour à valider"}, ...}
 
-Counted live, from what the screens themselves read:
-- the dock: proposals waiting for an administrator's validation;
-- the troubleshooting assistant: the Health Cockpit's findings, as the
-  vigil's last pass saw them (`health-state.json`);
-- the Time Machine: Explications proposed and not yet validated.
+Counted live from what the screens read: dock proposals awaiting
+validation, the findings of the vigil's last pass (`health-state.json`),
+and Time Machine Explications proposed but not validated.
 """
 
 from __future__ import annotations
@@ -84,10 +79,9 @@ def pending(request: Request) -> JSONResponse:
     )
 
 
-# Added before `</body>` of every page for a signed-in person, on both
-# listeners: on a page with console cards, it asks `/pending` and draws
-# the pastilles; elsewhere it does nothing. The console page itself
-# stays script-free.
+# Injected before `</body>` for a signed-in person on both listeners: on a
+# page with console cards it fetches `/pending` and draws the badges,
+# elsewhere it does nothing. The console page itself stays script-free.
 SNIPPET = """<style>
 .card[data-pending] { position: relative; }
 .pending-mark { position: absolute; top: .55rem; right: .6rem; min-width: 1.4rem; height: 1.4rem; padding: 0 .35rem; box-sizing: border-box; border-radius: .7rem; background: #c2410c; color: #fff; font: 700 .78rem/1.4rem system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 2px #fff; }

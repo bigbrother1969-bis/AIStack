@@ -6,9 +6,7 @@ from aistack.transport.contracts.resource_reference import ResourceReference
 
 
 class Receiver(Protocol):
-    """
-    Opens a governed resource for streaming.
-    """
+    """Opens a governed resource for streaming."""
 
     def open(
         self,

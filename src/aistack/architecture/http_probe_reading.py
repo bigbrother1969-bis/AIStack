@@ -7,17 +7,10 @@ from typing import Any
 @dataclass(frozen=True)
 class HttpProbeReading:
     """
-    One HTTP probe target, as a snapshot at render time — not a live,
-    in-browser-updating value. Same "temps réel means as of the last
-    `architecture_render` run" discipline `BeszelSystemReading`
-    already documents (`architecture/beszel_reading.py`).
+    One HTTP probe target, as of the last render.
 
-    `status_code` is `None` exactly when `reachable` is `False` — the
-    two travel together the same way `HttpProbeProvider._probe`
-    produces them: a request that got any HTTP response at all
-    (2xx-5xx) is `reachable`, whatever the status was; only a request
-    that never got an answer (timeout, connection refused, DNS
-    failure) is not.
+    `reachable` is True when any HTTP response came back, whatever its
+    status; `status_code` is `None` exactly when `reachable` is False.
     """
 
     name: str
@@ -29,16 +22,8 @@ class HttpProbeReading:
 
 def build_http_probe_readings(raw_targets: Any) -> tuple[HttpProbeReading, ...]:
     """
-    Turn `HttpProbeProvider.collect()["http_probe"]["targets"]` into
-    typed readings.
-
-    **Tolerant, not strict** — same reasoning as
-    `build_beszel_readings`: unlike `load_cmdb_probe_targets_yaml`,
-    which raises on a malformed hand-written file, this reads this
-    project's own provider output — a missing or oddly-typed field is
-    skipped rather than raising, so a defect here degrades to "that
-    one reading is missing", never to a page that fails to render at
-    all.
+    Turn `HttpProbeProvider.collect()["http_probe"]["targets"]` into typed
+    readings. Tolerant: malformed entries or fields are skipped.
     """
 
     if not isinstance(raw_targets, list):

@@ -3,23 +3,15 @@ What a new installation still has to declare before it is used
 (`ADR-0017` § 4).
 
 A configuration directory filled by `config_init` holds the reference
-host's values: its host name, its ports, its identity provider, its
-public address. AIStack starts on them — it never fails on them — and
-says what to declare first, until it is declared.
+host's values (host name, ports, identity provider, public address).
+AIStack starts on them and says what to declare first.
 
-**Which declarations are still the shipped ones.** `config_init` keeps,
-next to the files it copies, the fingerprint of each copy
-(`.shipped.json`); a first declaration whose file still has that
-fingerprint was never edited. A file the owner put in the directory
-himself — GIGABYTE's own, at its move — was never copied, so it is
-never reported: comparing with the shipped values instead would report
-the reference host as unconfigured on the reference host.
-
-**Which secrets are missing.** Read from the environment the web
-process started with: no client ID or secret, no sign-in.
-
-Without a configuration directory (a git installation), only the
-secrets are checked.
+A first declaration is pending while its file still has the fingerprint
+recorded when `config_init` copied it (`.shipped.json`). A file placed by
+the user was never copied, so it is never reported; comparing with the
+shipped values instead would flag the reference host itself. Missing
+sign-in secrets are read from the web process environment. Without a
+configuration directory (a git installation), only secrets are checked.
 """
 
 from __future__ import annotations
@@ -74,8 +66,8 @@ def remember_copies(directory: Path, names: list[str]) -> None:
     record = read_record(directory)
     for name in names:
         record[name] = fingerprint(directory / name)
-    # Six services start together and each runs `config_init`: write
-    # whole, never half a file another one would read.
+    # Several services start together and each runs `config_init`: write
+    # the whole file atomically.
     temporary = directory / f"{SHIPPED_RECORD}.{os.getpid()}"
     temporary.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     temporary.replace(directory / SHIPPED_RECORD)
@@ -97,10 +89,10 @@ def pending(
     local_admin_hash: str,
     oidc_wanted: bool = True,
 ) -> list[Pending]:
-    """What is still to declare, in the order to do it. `oidc_wanted`
-    False: the installation assistant chose the fallback administrator
-    alone (ADR-0023 § 5.3) — no client is missing then, once that
-    administrator has a password."""
+    """What is still to declare, in the order to do it. With `oidc_wanted`
+    False (the installation assistant chose the fallback administrator
+    alone, ADR-0023 § 5.3), no client is missing once that administrator
+    has a password."""
 
     found = []
     if directory is not None:

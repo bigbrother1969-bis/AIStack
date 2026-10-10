@@ -1,10 +1,8 @@
 """
 What the Time Machine screen shows, computed without a web framework
-(`ADR-0012` § 4) — moved out of `timemachine_ui/app.py` on 2026-10-03,
-when the screen joined AIStack's single web application under
-`/timemachine` (`aistack.web.timemachine`).
+(`ADR-0012` § 4); the routes live in `aistack.web.timemachine`.
 
-The screen is read-only, never a writer (`ADR-0011` § *Decision* 10):
+The screen is read-only (`ADR-0011` § 10):
 the graph is rebuilt on demand by `aistack.cli.timemachine_rebuild`,
 and every function here only reads it, the Explications store, or the
 last stored network-discovery snapshot.
@@ -119,14 +117,13 @@ RIBBON_PALETTE: tuple[dict[str, str], ...] = (
     {"color": "#3f8fa8", "shape": "▶"},
 )
 
-# The flat list's page size (owner's cadrage, 2026-09-30: "50-100 par page").
+# The flat list's page size.
 RIBBON_PAGE_SIZE = 100
 
-# The hosts' streams (1.11, `ADR-0020`): `host-<name>`, one per host.
+# The hosts' streams (`ADR-0020`): `host-<name>`, one per host.
 HOST_STEM_PREFIX = "host-"
 
-# The ribbon's two real categories (`ADR-0011` § 26): the four 1.5
-# Docker collectors, each with its own projector, and every other stream.
+# The Docker collectors' streams, grouped on their own ribbon (`ADR-0011` § 26).
 DOCKER_COLLECTOR_STREAMS: frozenset[str] = frozenset(
     {DOCKER_DIFF_STEM, DOCKER_DIGEST_STEM, DOCKER_EVENTS_STEM, DOCKER_PACKAGES_STEM}
 )
@@ -431,9 +428,8 @@ def tree_context(
 
 @dataclass
 class ExpiringValue:
-    """A value recomputed at most once per `ttl_seconds` — the tree is
-    built from live Docker discovery, measured "très longue" per
-    request; the owner chose a ~45 s staleness over it (2026-09-30)."""
+    """A value recomputed at most once per `ttl_seconds`: the tree comes
+    from live Docker discovery, too slow to run on every request."""
 
     compute: Callable[[], Any]
     ttl_seconds: float = 45.0
@@ -548,7 +544,7 @@ def ribbon_group(stream: str) -> str:
 
 
 def ribbon_svgs(marks: list[RibbonMark], lane_streams: list[str]) -> tuple[RibbonSvg, RibbonSvg, RibbonSvg]:
-    """The Docker-collector ribbon, the hosts' ribbon (1.11, `ADR-0020`)
+    """The Docker-collector ribbon, the hosts' ribbon (`ADR-0020`)
     and the observation ribbon, each with its own time axis
     (`ADR-0011` § 26)."""
 
@@ -672,9 +668,8 @@ def reconstitution(
     if it answered "what was true then". Instants compare as strings:
     every one is the same ISO-8601 `Z` shape.
 
-    Read-only and one subject (owner's cadrage, 2026-10-02): no
-    then/now comparison, no restore into a sandbox — a write this
-    screen may not make (`ADR-0011` § *Decision* 10).
+    Read-only and one subject: no then/now comparison and no restore,
+    which would be a write (`ADR-0011` § 10).
     """
 
     about = [entry for entry in entries if _about(entry, subject)]

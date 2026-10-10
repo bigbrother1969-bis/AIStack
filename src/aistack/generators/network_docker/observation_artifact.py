@@ -9,12 +9,8 @@ from aistack.generators.history import write_artifact_with_history
 
 class NetworkDockerObservationArtifactGenerator:
     """
-    Generate a governed artifact from a network Docker discovery raw
-    observation.
-
-    Same shape as `BeszelObservationArtifactGenerator` — a
-    provider's observation is a `dict`, and this writes it as JSON
-    plus its Observation History, nothing more.
+    Write a network Docker discovery raw observation as JSON, with
+    Observation History.
     """
 
     def generate(

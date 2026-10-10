@@ -38,13 +38,9 @@ _HEADER_COMMENT = """\
 
 def load_network_discovery_yaml(path: Path) -> NetworkDiscoveryDefinition:
     """
-    Load the governed network-discovery definition from YAML.
-
-    `ssh_usernames` defaults to an empty tuple when the key is
-    absent — a freshly created file with no usernames declared yet
-    is not malformed, it simply authenticates against nothing until
-    the owner adds one (by hand, or through the network-discovery-ui
-    screen).
+    Load the network-discovery definition from YAML. `cidr: auto` is
+    resolved from the host's routes. A missing `ssh_usernames` means an
+    empty list: nothing to authenticate with yet.
     """
 
     with path.open("r", encoding="utf-8") as stream:
@@ -81,22 +77,12 @@ def save_network_discovery_yaml(
     definition: NetworkDiscoveryDefinition, path: Path
 ) -> Path:
     """
-    Save a governed network-discovery definition to YAML — the write
-    side `aistack.web.network_discovery`'s own add/remove-username
-    action uses, symmetric to `load_network_discovery_yaml`.
+    Save a network-discovery definition to YAML, the inverse of
+    `load_network_discovery_yaml`.
 
-    **Only `ssh_usernames` is ever expected to change through this
-    function in practice** (the screen this exists for edits nothing
-    else), but every field is written, the same "no silent partial
-    file" discipline `save_resource_priority_yaml` already holds —
-    a save that only wrote the one field it changed would produce a
-    file whose shape depends on which function last touched it.
-
-    Written with a static header comment, the same reasoning
-    `save_resource_priority_yaml` documents: PyYAML's own dump
-    carries no comments, so a single `yaml.safe_dump` over the whole
-    mapping would discard this file's own documentation on every
-    save from the UI.
+    Every field is written, even though the screen changes only
+    `ssh_usernames`. A static header comment is written first, because
+    PyYAML drops comments.
     """
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -111,11 +97,8 @@ def save_network_discovery_yaml(
     with path.open("w", encoding="utf-8") as stream:
         stream.write(_HEADER_COMMENT)
         stream.write("\n")
-        # `yaml.safe_dump`, not hand-formatted lines: a username or
-        # key-path-env name containing a character YAML treats
-        # specially (a colon, a leading `-`) is quoted correctly
-        # rather than producing a file this same module's own
-        # `load_network_discovery_yaml` cannot parse back.
+        # `yaml.safe_dump` rather than hand-written lines, so values with
+        # YAML-special characters are quoted and load back correctly.
         yaml.safe_dump(body, stream, sort_keys=False, allow_unicode=True)
 
     return path

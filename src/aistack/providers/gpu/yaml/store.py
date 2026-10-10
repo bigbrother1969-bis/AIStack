@@ -18,36 +18,19 @@ _REQUIRED_THRESHOLD_FIELDS = ("kind",)
 
 
 def load_gpu_thresholds_yaml(path: Path) -> GpuThresholdRegister:
-    """
-    Load `OPS-0007`'s declared GPU thresholds from YAML.
+    """Load the declared GPU thresholds (`OPS-0007`) from YAML.
 
-    Mirrors `load_storage_thresholds_yaml`/`load_backup_thresholds_yaml`
-    field for field: written by hand, read-only (every value here is
-    the owner's own declared threshold — `OPS-0007` § *Declared
-    thresholds*, itself declared against live `nvidia-smi` output taken
-    on GIGABYTE — so a missing key here is a typo, and the error names
-    which one and where; nothing writes this file back), and scoped by
-    host the same way (`hosts[].host` is what `aistack.cli
-    .runtime_diagnose` matches against `socket.gethostname()`).
-
-    A `temperature_celsius` entry states `celsius` in the file — the
-    unit the owner declared it in ("80°C") — a `utilization_percent` or
-    `memory_percent` entry states `percent` — both already the unit
-    `GpuThreshold.value` stores for their kind, so unlike
-    `load_storage_thresholds_yaml`'s `free_gb` → bytes conversion,
-    there is no unit conversion to perform here.
+    The file is written by hand, so errors name the missing key and where.
+    `hosts[].host` is matched against `socket.gethostname()`. A
+    `temperature_celsius` entry gives `celsius`; the percent kinds give
+    `percent`. No unit conversion.
     """
 
     with path.open("r", encoding="utf-8") as stream:
         try:
             data = yaml.safe_load(stream)
         except yaml.YAMLError as error:
-            # Folded into the same `ValueError` a missing field already
-            # produces, the same reasoning `load_storage_thresholds_yaml`
-            # gives: this loader's own caller
-            # (`aistack.providers.gpu.thresholds.gpu_thresholds_for_host`)
-            # is documented never to raise anything but
-            # `ValueError`/`OSError`.
+            # `gpu_thresholds_for_host` only catches ValueError/OSError.
             raise ValueError(
                 f"GPU threshold definition {path} is not valid YAML: {error}"
             ) from error

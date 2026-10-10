@@ -1,15 +1,14 @@
 """
-`python -m aistack.cli.explications_admin` — what the development phase
-allows on Explications from the host itself (`ADR-0016`):
+`python -m aistack.cli.explications_admin` — development-phase acts on Explications (ADR-0016).
 
     python -m aistack.cli.explications_admin purge wordpress
     python -m aistack.cli.explications_admin validate-declared
 
-`purge` deletes every version of one subject's Explication — test
-entries made while AIStack is set up; `validate-declared` validates
-every person's text still waiting for a second person. Both refuse
-outside the development phase (`instance_config.yml`'s `phase`), and
-both are seen by the graph at the next `timemachine_rebuild`.
+`purge` deletes every version of one subject's Explication (test entries
+made while setting AIStack up); `validate-declared` validates every
+person's text still waiting for a second person. Both refuse outside the
+development phase (`phase` in `instance_config.yml`); the graph sees
+their effect at the next `timemachine_rebuild`.
 """
 
 from __future__ import annotations

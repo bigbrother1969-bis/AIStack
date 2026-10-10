@@ -8,14 +8,8 @@ from aistack.contracts.backup_strategy_declaration import BackupStrategyDeclarat
 @dataclass(frozen=True)
 class UncoveredStateGap:
     """
-    One declared service already found to hold persistent state with
-    no known backup engine covering it — `OPS-0010`'s own "état
-    persistant non couvert" constat (R9).
-
-    Mirrors `PraTestGap`/`BackupGap`: constructed only once
-    `find_uncovered_state` (`aistack.runtime.uncovered_state_gap`) has
-    already confirmed the condition; it does not re-derive "has state,
-    not covered" from a bare declaration handed to it from elsewhere.
+    A service declared stateful with no backup engine covering it
+    (OPS-0010). The constructor checks the declaration.
     """
 
     declaration: BackupStrategyDeclaration

@@ -40,93 +40,23 @@ def render_html(
     languages: Languages | None = None,
     troubleshooting_base_url: str | None = None,
 ) -> str:
-    """
-    Wrap a `HealthCockpit` snapshot into one self-contained HTML
-    page — `PLAN-J7`'s cockpit visuel
-    (`claude/PLAN-J7-HEALTH-COCKPIT-2026-09-11.md` § 6.4/6.5), the
-    second tenant of the `renderers/` package after
-    `aistack.renderers.architecture`.
+    """Render a `HealthCockpit` snapshot as one self-contained HTML page.
 
-    **A score, once four domains gave it something to weigh against**
-    (`OPS-0008`, decided 2026-09-11): `score` is
-    `aistack.health.score.compute_health_score`'s own result, computed
-    by this function's caller from `OPS-0008`'s declared weights —
-    this function only displays it, never derives it, the same split
-    `_render_domain` already holds for a `RuntimeFinding` it did not
-    qualify itself. `score=None` with a non-empty `score_note` renders
-    the same honest absence a not-instrumented domain already does
-    (`FDN-0003` Article 12: weights that failed to load are named, not
-    silently dropped); `score=None` with an empty note (every existing
-    call this function had before `OPS-0008` existed) renders no score
-    section at all, keeping every prior domain-only test unaffected.
+    `score` and `technical_debt_score` are computed by the caller (OPS-0008,
+    OPS-0004) and only displayed here. Each is optional: `None` with a note
+    shows the reason it is unavailable, `None` without a note shows nothing.
+    The technical-debt card sits right after the global score because it
+    spans domains.
 
-    **A dedicated "Dette technique" card, added 2026-09-23**
-    (`PLAN-J11` § 11.9.1) — `technical_debt_score` is
-    `aistack.health.technical_debt.compute_technical_debt_score`'s own
-    result, rendered right after the score paragraph above, the
-    placement the owner named ("juste après le score santé global")
-    when this card was scoped, never folded into a per-domain section:
-    `OPS-0004/technical-debt` cuts across domains, this card does too.
-    Same optional-parameter, same two-branch idiom `score`/
-    `score_note` already holds: `None` with a note is an honest
-    absence, `None` with no note renders nothing, keeping every call
-    from before this card existed unaffected.
+    No client-side script: findings are already text. Pure (no wall clock),
+    so `HealthHtmlArtifactGenerator` stamps when a copy was produced.
 
-    **No client-side script, unlike `architecture.html`.** That page
-    renders a Mermaid diagram, which needs a browser to draw; a
-    domain's findings are already text — `interpretation`,
-    `remediation`, the evidence count — so this page is server-side
-    HTML only, plain text on load, nothing to fail to execute.
-
-    Pure — no wall clock, the same discipline `render_html` for
-    architecture already holds: the same cockpit and score always
-    render to byte-identical output, so `HealthHtmlArtifactGenerator`
-    (`aistack/generators/health/html_artifact.py`) is what stamps
-    *when* a copy was produced, via `write_artifact_with_history`, not
-    this function.
-
-    **Viewport meta and favicon, added 2026-09-30**
-    (`claude/AUDIT-CONSOLE-ARCHITECTURE-HEALTH-2026-09-29.md`, constats
-    1/3) — this page had neither. `MARK_DATA_URI` comes from
-    `aistack.renderers.assets`, the same vendored mark `console.html`
-    already shows.
-
-    **`troubleshooting_base_url`, added 2026-09-30** (the owner,
-    reading this page's own real findings: "les findings en rouge
-    doivent être cliquables et doivent diriger vers... la possibilité
-    de résoudre le problème de façon accompagnée par les modules
-    d'IA"). `None` (every call this function had before this
-    feature existed) renders every finding exactly as before — no
-    "Diagnostiquer" button — the same "absent parameter changes
-    nothing" idiom `score`/`technical_debt_score` already hold. A
-    real base URL (`aistack.cli.health_render.main` resolves it via
-    `service_url("web_lan")` plus `/troubleshooting` since 2026-10-03, the R10 pattern
-    `console_render.py` already uses for its own links) adds one
-    small `<form method="post" action="{base_url}/finding/{key}
-    /start">` per finding, pointing at that LAN-only assistant —
-    still pure: the base URL is handed in, never looked up here.
-
-    **The routing `key` a finding's button submits to is not always
-    `finding.subject`** — the same collision-safe composite key
-    `aistack.troubleshooting.findings.QualifiedFinding` computes for
-    its own routing (see that module's docstring for the full
-    reasoning and the confirmed real collision — "gigabyte",
-    "nextcloud", "immich" each named today by both Tests PRA and État
-    persistant), computed independently here from `cockpit.domains`
-    alone since this renderer never imports that FastAPI app (`aistack
-    .renderers` imports nothing outside itself and the packages it
-    already depended on). **A known, accepted narrowing**: this
-    renderer's own collision set only spans `cockpit.domains` — the
-    assistant's own CPU/consumption check (`CONSUMPTION_DOMAIN`, never
-    part of `HealthCockpit`) is outside what this pure function can
-    see, so a finding whose subject *also* happens to be flagged for
-    CPU consumption right now could, in the rare case, submit to a key
-    the assistant resolves differently. That failure mode is a plain
-    "not found, start again from the list" redirect at the
-    assistant — never a wrong write, never a silently mismatched
-    finding — so it is accepted rather than solved by duplicating the
-    CPU-consumption check a fourth time into this renderer, a scope
-    this feature was never cadred to take on.
+    With `troubleshooting_base_url`, each finding links to the LAN
+    troubleshooting assistant. The routing key is the subject, or
+    `<domain>::<subject>` when several domains name it, matching
+    `aistack.troubleshooting.findings.QualifiedFinding`. The assistant's own
+    CPU-consumption findings are not visible here, so a rare collision ends
+    in a "not found" redirect there, never a wrong action.
     """
 
     t = translator_for(lang)
@@ -270,10 +200,8 @@ def _render_finding(
     domain_name: str,
     subject_counts: dict[str, int],
 ) -> str:
-    """
-    Only the labels around a finding are translated (ADR-0010 § 4): its
-    subject, signature, interpretation, remediation, confidence and
-    grounding are shown exactly as the runtime qualified them.
+    """Only the labels around a finding are translated (ADR-0010 § 4); its own
+    fields are shown exactly as the runtime qualified them.
     """
 
     qualifications = (
@@ -291,8 +219,8 @@ def _render_finding(
             else f"{domain_name}::{finding.subject}"
         )
         # A link, not a form (ADR-0014 § 3): starting a diagnosis is an
-        # administrator's action of the Troubleshooting screen itself,
-        # on the LAN listener, with that screen's own session and token.
+        # administrator action on the Troubleshooting screen itself, with its own
+        # session and token.
         diagnose = (
             f'<a class="diagnose" '
             f'href="{escape_text(troubleshooting_base_url)}/#finding-{quote(key, safe="")}" '
@@ -337,13 +265,9 @@ def _evidence_summary(
     )
 
 
-# Same charte graphique retouch as `aistack.renderers.console.html`
-# (2026-09-26, see that module's own comment for the full rationale
-# and where each value comes from) — identical across the three
-# static pages by design, not by shared code. The `.domain-*`/
-# `.badge-*` state tints keep their meaning, only lightly retinted.
-# Width, same reasoning and same value as that module's own comment
-# (ADR-0011 §26, 2026-09-29): `min(96vw, 1600px)`, not a fixed 900px.
+# Same palette as `aistack.renderers.console.html` (see its comment), kept
+# identical across the static pages by design, not shared code. Width
+# `min(96vw, 1600px)` as there (ADR-0011 § 26).
 _STYLE = """\
 :root { color-scheme: light; }
 body {

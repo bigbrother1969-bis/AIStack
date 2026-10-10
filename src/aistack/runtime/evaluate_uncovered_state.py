@@ -1,30 +1,6 @@
 """
-`evaluate_uncovered_state` — the État-persistant-domain analogue of
-`evaluate_pra_tests`/`evaluate_backup`, correlating an
-already-confirmed `UncoveredStateGap` into a `RuntimeFinding` citing
-the `OPS-0004` qualifications the owner confirmed for 1.6 tranche 2's
-own sixth reference case (R9, 2026-09-30).
-
-**A sixth reference case, not an incident.** Like the fourth
-(Sauvegarde/PRA) and fifth (GPU) reference cases, this one names no
-past failure the owner described after the fact — it examines a
-condition against `OPS-0004`'s vocabulary before any real instance of
-it was necessarily observed (`GOV-P-001`: the owner states the
-knowledge, this module invents nothing beyond it).
-
-**All four qualifications, none excluded** — the second reference
-case, after GPU, to carry the complete vocabulary. Examined against
-`OPS-0004`'s four terms, 2026-09-30, the owner confirmed all four
-apply to a stateful service with no known backup engine: technical
-debt, deployment misconfiguration, energy inefficiency, and
-sustainability anomaly.
-
-**A separate function, not a branch inside `evaluate`.** Same
-reasoning `evaluate_backup`/`evaluate_pra_tests` already give: an
-`UncoveredStateGap` has no second reading to correlate against — a
-declared service's own state/engine declaration, read once, already
-says whether it qualifies (`find_uncovered_state`, against
-`OPS-0010`).
+Turn `UncoveredStateGap`s (stateful services with no backup engine, `OPS-0010`)
+into `RuntimeFinding`s carrying all four `OPS-0004` qualifications.
 """
 
 from __future__ import annotations
@@ -37,16 +13,12 @@ from aistack.contracts.runtime_finding import CitedReading, RuntimeFinding
 from aistack.contracts.uncovered_state_gap import UncoveredStateGap
 from aistack.contracts.undeclared import UNDECLARED
 
-# `OPS-0004`'s own vocabulary — see `RuntimeFinding.QUALIFICATIONS` for
-# the full closed list.
+# `OPS-0004` vocabulary; `RuntimeFinding.QUALIFICATIONS` holds the full list.
 TECHNICAL_DEBT = "OPS-0004/technical-debt"
 DEPLOYMENT_MISCONFIGURATION = "OPS-0004/deployment-misconfiguration"
 ENERGY_INEFFICIENCY = "OPS-0004/energy-inefficiency"
 SUSTAINABILITY_ANOMALY = "OPS-0004/sustainability-anomaly"
 
-# All four qualifications the owner confirmed for this sixth reference
-# case, 2026-09-30 — none excluded, the same shape the GPU domain's
-# own fifth reference case took.
 UNCOVERED_STATE_QUALIFICATIONS = (
     TECHNICAL_DEBT,
     DEPLOYMENT_MISCONFIGURATION,
@@ -54,31 +26,17 @@ UNCOVERED_STATE_QUALIFICATIONS = (
     SUSTAINABILITY_ANOMALY,
 )
 
-# There is no provider behind a `BackupStrategyDeclaration` — it is
-# loaded directly from `OPS-0010`'s declared YAML
-# (`aistack.backup_strategy.yaml.load_backup_strategy_yaml`), not
-# collected from a live system. `CitedReading.provider` still names
-# something, the same way `PRA_TESTS_SOURCE` names the loader itself
-# for `PraTestReading`.
+# A declaration is loaded from YAML, not collected by a provider, so the
+# loader itself is cited as the source.
 BACKUP_STRATEGY_SOURCE = "aistack.backup_strategy.yaml.load_backup_strategy_yaml"
 
-# The signature `RuntimeFinding.signature` cites — `OPS-0004` itself,
-# the register that authors this correlation, the same role it plays
-# for `evaluate_backup`/`evaluate_pra_tests`.
 SIGNATURE = "OPS-0004"
 
 
 def evaluate_uncovered_state(
     gaps: Sequence[UncoveredStateGap],
 ) -> tuple[RuntimeFinding, ...]:
-    """
-    One `RuntimeFinding` per declared service `find_uncovered_state`
-    already found failing, citing all four `OPS-0004` qualifications
-    the owner confirmed for this sixth reference case.
-
-    Pure: gaps already found in, findings out — the same discipline
-    `evaluate_backup`/`evaluate_pra_tests` already hold.
-    """
+    """One `RuntimeFinding` per gap, citing all four `OPS-0004` qualifications."""
 
     return tuple(
         RuntimeFinding(

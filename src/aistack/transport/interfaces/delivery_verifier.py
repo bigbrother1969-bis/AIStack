@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Delivery Verifier interface.
-"""
+"""Knowledge Transport Layer - Delivery Verifier interface."""
 
 from __future__ import annotations
 
@@ -14,9 +12,7 @@ from aistack.transport.contracts.transport_result import TransportResult
 
 
 class DeliveryVerifier(Protocol):
-    """
-    Verifies the integrity of a transport result.
-    """
+    """Verifies the integrity of a transport result."""
 
     def verify(
         self,
@@ -24,7 +20,5 @@ class DeliveryVerifier(Protocol):
         request: TransportRequest,
         result: TransportResult,
     ) -> bool:
-        """
-        Return True if the delivery is valid.
-        """
+        """Return True if the delivery is valid."""
         ...

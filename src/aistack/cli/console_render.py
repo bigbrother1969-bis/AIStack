@@ -53,9 +53,6 @@ from aistack.runtime.pra_test_gap import find_pra_test_gaps, find_undeclared_pra
 from aistack.runtime.storage_shortage import find_storage_shortage
 from aistack.runtime.uncovered_state_gap import find_uncovered_state
 
-# Same convention as `architecture_render.py`'s own
-# `DEFAULT_CATEGORIZATION` — a `Path(__file__).resolve()`-relative
-# default, not `importlib.resources`.
 DEFAULT_CONSOLE_LINKS = (
     configured(Path(__file__).resolve().parents[1]
     / "console"
@@ -63,12 +60,7 @@ DEFAULT_CONSOLE_LINKS = (
     / "console_links.yml")
 )
 
-# R10, 2026-09-30 — resolves `DEFAULT_CONSOLE_LINKS`'s own `service:`
-# entries. Declared explicitly here, the same as every other default
-# above and below, rather than left to `load_console_links_yaml`'s own
-# internal fallback (which exists for a convenience caller — a
-# mini-app's `app.py`, a test — not for this CLI, which already names
-# every one of its other inputs by its own path).
+# Resolves the `service:` entries of `console_links.yml`.
 DEFAULT_INSTANCE_CONFIG = (
     configured(Path(__file__).resolve().parents[1]
     / "instance"
@@ -76,22 +68,9 @@ DEFAULT_INSTANCE_CONFIG = (
     / "instance_config.yml")
 )
 
-# **Duplicated from `aistack.cli.health_render`, not imported —
-# deliberately, added 2026-09-13** (`claude/PLAN-J11-CONSOLE
-# -2026-09-11.md` § 11.9, the health cartouche closing the owner's own
-# gap analysis against the historical `architecture.html` reference
-# page). This is the exact same choice `health_render.py` itself
-# already made and documents for `DEFAULT_STORAGE_THRESHOLDS`/
-# `DEFAULT_BACKUP_THRESHOLDS`/`DEFAULT_GPU_THRESHOLDS` against
-# `runtime_diagnose.py`: "no CLI in this package imports another" — a
-# `HealthCockpit` snapshot is cheap enough to build twice (this
-# console generates once, on demand, not on a hot path) and the
-# alternative is a third CLI importing a second CLI's `main()`-adjacent
-# helpers, which this heritage has never done. `test_console_render.py`
-# carries the same drift-guard tests `test_health_render.py` already
-# has against `runtime_diagnose.py`, extended to check this module's
-# four threshold paths and its weights path against
-# `aistack.cli.health_render`'s own.
+# The defaults and domain functions below duplicate `aistack.cli.health_render`
+# on purpose: no CLI imports another. `test_console_render.py` guards
+# against drift between the two.
 DEFAULT_STORAGE_THRESHOLDS = (
     configured(Path(__file__).resolve().parents[1]
     / "providers"
@@ -123,11 +102,7 @@ DEFAULT_HEALTH_SCORE_WEIGHTS = (
     / "health_score_weights.yml")
 )
 
-# `OPS-0009`'s own declared PRA test records — not scoped by host, the
-# same reason `DEFAULT_HEALTH_SCORE_WEIGHTS` is not. Mirrors
-# `aistack.cli.health_render.DEFAULT_PRA_TESTS` exactly — this module
-# never imports the other, per this file's own "no CLI in this
-# package imports another" convention (see the comment above).
+# OPS-0009's declared PRA test records; not scoped by host.
 DEFAULT_PRA_TESTS = (
     configured(Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml")
 )
@@ -139,9 +114,6 @@ DEFAULT_BACKUP_STRATEGY = (
     / "backup_strategy.yml")
 )
 
-# Mirrors `aistack.cli.health_render.DEFAULT_CATEGORIZATION` exactly —
-# this module never imports the other, per this file's own "no CLI in
-# this package imports another" convention (see the comment above).
 DEFAULT_CATEGORIZATION = (
     configured(Path(__file__).resolve().parents[1]
     / "architecture"
@@ -149,14 +121,7 @@ DEFAULT_CATEGORIZATION = (
     / "service_categorization.yml")
 )
 
-# Mirrors `aistack.cli.health_render.DEFAULT_NETWORK_DOCKER_OBSERVATION`
-# exactly — the cwd-relative convention `network_docker_discover.main`
-# itself uses for this same output path, not the
-# `Path(__file__).resolve()`-relative convention the constants above
-# hold, since this names an output, not a shipped definition. A plain
-# literal, not `GENERATED_DIR / ...`: that constant is declared much
-# further down this module, next to `main()`, and every domain
-# function above it already runs before `main` does.
+# Cwd-relative: an output of `network_docker_discover`, not a shipped definition.
 DEFAULT_NETWORK_DOCKER_OBSERVATION = Path(
     "reports/generated/network-docker-observation.json"
 )
@@ -202,10 +167,8 @@ def services_domain() -> HealthDomain:
     return HealthDomain(
         name="Services",
         instrumented=True,
-        # Instantaneous state (restarting/unhealthy), plus restart loops
-        # counted from the docker-events history — the second catches a
-        # container that reads `running` between two crashes (mularr,
-        # 2026-10-02, `aistack.runtime.restart_loop`).
+        # Instantaneous state plus restart loops from the docker-events
+        # history, which catch a container that reads `running` between crashes.
         findings=evaluate_services(distress) + restart_loop_findings(),
     )
 
@@ -259,7 +222,7 @@ def pra_tests_domain() -> HealthDomain:
 
     try:
         readings, thresholds = load_pra_tests_yaml(DEFAULT_PRA_TESTS)
-        # The scheduled restore tests' outcomes, when more recent (2.0).
+        # The scheduled restore tests' outcomes, when more recent.
         readings = with_scheduled(readings)
     except (ValueError, OSError) as error:
         return HealthDomain(
@@ -276,7 +239,7 @@ def pra_tests_domain() -> HealthDomain:
     try:
         declarations = load_backup_strategy_yaml(DEFAULT_BACKUP_STRATEGY)
         # A state no engine covers has nothing to restore-test: the
-        # uncovered-state finding already names it (2026-10-08).
+        # uncovered-state finding already names it.
         stateful_services = [d.service for d in declarations if d.has_state and d.covered]
         declared_services = [reading.service for reading in readings]
         observed_at = readings[0].observed_at if readings else None
@@ -289,10 +252,8 @@ def pra_tests_domain() -> HealthDomain:
                 observed_at,
             )
     except (ValueError, OSError):
-        # `backup_strategy.yml` is optional, best-effort data for this
-        # one check — its absence or corruption narrows this render to
-        # the three reasons `find_pra_test_gaps` alone already
-        # detects, never failing the whole domain.
+        # `backup_strategy.yml` is optional here: without it, only
+        # `find_pra_test_gaps` runs.
         pass
 
     return HealthDomain(
@@ -431,23 +392,14 @@ def technical_debt_score(
     return compute_technical_debt_score(groups, points), ""
 
 
-# `console.html` is generated the same way every other artifact in
-# `reports/generated/` already is (`write_artifact_with_history`) —
-# a plain sibling of `architecture.html`/`health.html`, not inside
-# `PUBLIC_DIR` itself: `write_artifact_with_history` also writes a
-# `history/<stem>/` subdirectory beside whatever it is handed, and
-# that subdirectory must never be reachable over HTTP (`PLAN-J11`
-# § 4 — the whole reason `PUBLIC_DIR` exists rather than serving
-# `reports/generated/` directly is to keep this heritage's own
-# internal diagnostics, `history/` included, off the LAN).
+# `console.html` is written beside `architecture.html` and `health.html`,
+# not inside `PUBLIC_DIR`: each artifact gets a `history/` sibling that
+# must never be reachable over HTTP. `PUBLIC_DIR` only links the pages.
 GENERATED_DIR = Path("reports/generated")
 PUBLIC_DIR = GENERATED_DIR / "public"
 
-# The three pages the console links to that this repository itself
-# generates — `PLAN-J11` § 2's v1 scope narrowed to the two static
-# ones. Selection UI and Priorité CPU are separate running services,
-# reached directly (`console_links.yml`'s own `url`), not files this
-# command serves.
+# The generated pages exposed in `PUBLIC_DIR`; other console links are
+# separate services reached by their own URL.
 _SERVED_ARTIFACTS = ("console.html", "architecture.html", "health.html")
 
 _INDEX_HTML = """\
@@ -467,53 +419,15 @@ _INDEX_HTML = """\
 
 def main() -> None:
     """
-    `PLAN-J11` § 2/§ 4: the console, generated the same way every
-    other artifact this heritage produces is, then made reachable —
-    the gap `PLAN-J11` § 4 named: nothing before this command ever
-    served `reports/generated/` over HTTP at all, `architecture.html`
-    and `health.html` included (both, until today, only ever read by
-    SSHing into GIGABYTE and opening the file directly).
+    Render the console page with its health and technical-debt scores.
 
-    **`PUBLIC_DIR` exposes three pages, not the whole directory.**
-    `reports/generated/` also holds internal JSON catalogs (Docker
-    Observation, Compose Catalog, Architecture Views) and each
-    artifact's own `history/` — none of it meant for a browser.
-    Relative symlinks (`_ensure_public_symlink`) keep `console.html`,
-    `architecture.html` and `health.html` reachable from `PUBLIC_DIR`
-    without copying them — a copy would drift stale the moment either
-    of the other two commands regenerates its own file; a symlink
-    cannot.
-
-    **Serving the pages is not this command's job** —
-    `deploy/systemd/aistack-web.service` runs AIStack's single web
-    application (`ADR-0012`; `aistack-console.service` and its static
-    file server before 2026-10-03, `PLAN-J11` § 4), and pointing a reverse-proxy Host at that server is a manual Nginx
-    Proxy Manager step this codebase has no way to reach
-    (`GOV-P-001`: NPM here is GUI-configured only).
-
-    **Builds and passes a `HealthCockpit`/`HealthScore`, added
-    2026-09-13** (`PLAN-J11` § 11.9) — the same score `health_render
-    .main()` computes, from the same declared `OPS-0008` weights,
-    handed to `ConsoleHtmlArtifactGenerator.generate` so the console
-    shows a summary cartouche above its link grid instead of naming
-    the score model twice. `weights is None` (no declared weights
-    file) renders the score as an honest note, not a silent omission —
-    the same branch `health_render.main` already takes.
-
-    **Also builds and passes a `TechnicalDebtScore`, added 2026-09-23**
-    (`PLAN-J11` § 11.9.1) — the same "Dette technique" card
-    `health_render.main()` writes, from the same cockpit and weights,
-    never a second load of either.
-
-    **One console per declared language, since 2026-09-27** (ADR-0010
-    § 5). The cockpit and its scores are computed once — the host is
-    the same whatever language the page is read in — and the page is
-    written once per language: the reference keeps `console.html` and
-    its history stream, every other language adds
-    `console.<code>.html` beside it. `aistack.web.console` picks one
-    per request. `PUBLIC_DIR` keeps its reference-language symlinks: the
-    new server does not read it, but a host that has to fall back to the
-    old `http.server` launcher still finds the three pages there.
+    The cockpit and scores (OPS-0008 weights, as in `health_render`) are
+    computed once, then the page is written once per declared language
+    (ADR-0010 § 5): the reference keeps `console.html`, others get
+    `console.<code>.html`. Missing weights render as a note, not an
+    omission. Serving is `aistack.web.server`'s job (ADR-0012);
+    `PUBLIC_DIR` keeps relative symlinks to the reference pages for a
+    plain static-file fallback.
     """
 
     languages = default_languages()
@@ -568,16 +482,9 @@ def main() -> None:
 
 def _ensure_public_symlink(link_path: Path, target: Path) -> None:
     """
-    Create, or leave alone, a relative symlink at `link_path` pointing
-    at `target` — idempotent, so re-running `console_render` does not
-    fail on a symlink it already made.
+    Make `link_path` a relative symlink to `target`; idempotent.
 
-    **A real file at `link_path` is a defect this command names, not
-    silently overwrites** (`FDN-0003` Article 12: an unexpected state
-    is stated, never healed past) — nothing else in this codebase
-    writes into `PUBLIC_DIR`, so a plain file there means someone put
-    it there by hand, and clobbering it would destroy work this
-    command has no way to know is disposable.
+    A real file there was put by hand, so it raises rather than overwrite it.
     """
 
     if link_path.is_symlink():

@@ -9,15 +9,8 @@
 </head>
 <body>
   {#
-    ADR-0011 §24 (1.5.1 cadrage, 2026-09-28) — a third view of this
-    same mini-app, same LAN-only convention as streams.html/tree.html/
-    node.html (ADR-0011 roadmap R1): direct LAN link, never the
-    public address. Nav partagée depuis 2026-09-30 (constat 5) — ce
-    switch de langue conserve désormais le filtre `streams`/
-    `submitted`/`subject` au changement de langue (`ribbon_view`'s own
-    `extra_query`, "on finit les points ouverts avant 1.5.2") : la
-    limitation nommée ici jusque-là est refermée, pas seulement
-    documentée.
+    Ribbon view: a LAN-only page (direct LAN link, never the public address).
+    The language switch keeps the streams/submitted/subject filter.
   #}
   {{ page_nav | safe }}
 
@@ -37,13 +30,8 @@
 
   {% if subject %}
     {#
-      ribbon-subject-filter, added 2026-09-30 ("on finit les points
-      ouverts avant 1.5.2", owner: "apparier par nom, couverture
-      partielle") — the tree's own half of the cross-link
-      (`tree.html`'s `tree-ribbon` link) lands here with `?subject=`;
-      this banner says so plainly rather than leaving a silently
-      narrowed ribbon unexplained, the same reasoning `tree.html`'s
-      own search-clear (`tree-search-clear`) already applies.
+      Explains the ?subject= filter set by the tree's cross-link, so a narrowed
+      ribbon is never left unexplained.
     #}
     <p class="ribbon-subject-filter">
       {{ t('timemachine.ribbon.subject_filter_label') }} <strong>{{ subject }}</strong>
@@ -72,24 +60,11 @@
 
   {% if entries %}
     {#
-      ADR-0011 §26 (1.5.2 cadrage, 2026-09-28/29) — v2 of maquette 1's
-      ruban: a real horizontal time axis, one lane per stream, plus a
-      cursor that opens the nearest instant's own /node card on click
-      or on releasing a drag (never on every mousemove). Hover uses
-      SVG's own native <title> element inside each mark — a real,
-      correctly-positioned browser tooltip, not hand-rolled JS.
-
-      Second slice (2026-09-29, grounded in the owner's own production
-      screenshot): the graph splits into its own two real categories —
-      the four 1.5 Docker collectors, and everything else — each its
-      own foldable group with its own independent time axis
-      (`ribbon_svg.py`'s own docstring), and marks too close together
-      to tell apart merge into one counted, still-navigable cluster.
-
-      The flat list below is kept, unremoved: the dataviz skill's own
-      "a table view exists" non-negotiable, and every mark's own
-      accessible <a href> still works by keyboard alone with no script
-      at all.
+      Time axis with one lane per stream; Docker collectors and other streams are
+      separate foldable groups (see ribbon_svg.py). Marks too close together merge
+      into a counted cluster. The cursor opens the nearest instant's /node on click
+      or drag release. Hover uses native SVG <title>. The flat list below stays as
+      the accessible, script-free table view.
     #}
     <div class="ribbon-groups">
       <details class="ribbon-group" open>
@@ -118,16 +93,9 @@
     </div>
     <h2 class="section-heading">{{ t('timemachine.ribbon.list_heading') }}</h2>
     {#
-      Grouped by stream (= by symbol: one badge per stream, assigned
-      once in `ribbon_view` over every stream the graph holds — see
-      `_style.html`'s own comment above `.ribbon-entry-groups`).
-      Jinja's `groupby` filter sorts by the given attribute before
-      grouping, so this needs no pre-sorting on the Python side: the
-      backend keeps handing over `entries` in chronological order
-      (unchanged, same paginated `page_entries` as before this
-      change), and grouping stays a template-only concern. Within
-      each group, entries keep their original (chronological) order —
-      `sorted()` is stable.
+      Grouped by stream (one badge per stream, assigned in `ribbon_view`).
+      `groupby` sorts by attribute; within a group entries keep their
+      chronological order because the sort is stable.
     #}
     <div class="ribbon-entry-groups">
       {% for stream, group_entries in entries | groupby('stream') %}
@@ -159,17 +127,9 @@
                 </a>
                 {% if entry.subject %}
                   {#
-                    band-tree-link, added 2026-09-30 (owner: "apparier
-                    par nom, couverture partielle") — a sibling of
-                    `.band-link` above, deliberately not nested inside
-                    it: `.band-link` already wraps the whole card in
-                    one `<a>`, and an anchor inside an anchor is
-                    invalid HTML with inconsistent browser behaviour.
-                    `/tree`'s own `q` (substring search,
-                    `_filter_tree`) finds this subject's own node when
-                    one exists; when none does, `/tree`'s existing
-                    `search_empty` state already says so honestly — no
-                    new plumbing needed on that side.
+                    Sibling of `.band-link`, not nested: `.band-link` wraps the whole card in an
+                    <a>, and an anchor inside an anchor is invalid HTML. /tree?q= finds the
+                    subject's node or shows its own empty-search state.
                   #}
                   <a class="band-tree-link" href="{{ base }}/tree?q={{ entry.subject | urlencode }}&amp;lang={{ lang }}" title="{{ t('timemachine.tooltip.view_in_tree') }}">{{ t('timemachine.ribbon.view_in_tree') }}</a>
                 {% endif %}
@@ -181,14 +141,8 @@
     </div>
     {% if total_pages > 1 %}
       {#
-        ribbon-pagination, added 2026-09-30 (owner: "la page rubans...
-        c'est inutilisable en l'état pour un utilisateur", then "vraie
-        pagination + filtres") — real page links, not a silent
-        recent-N cutoff: `filter_query` carries the same
-        streams/submitted/subject state every other link on this page
-        already does, so paging never drops the filter the visitor set.
-        The SVG graphic above stays unpaginated on purpose
-        (`ribbon_view`'s own docstring) — only this flat list is sliced.
+        Pagination of the flat list only; the SVG above stays unpaginated.
+        `filter_query` keeps the streams/submitted/subject filter across pages.
       #}
       <nav class="ribbon-pagination">
         {% if page > 1 %}

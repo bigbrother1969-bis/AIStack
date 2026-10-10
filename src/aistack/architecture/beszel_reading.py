@@ -7,30 +7,11 @@ from typing import Any
 @dataclass(frozen=True)
 class BeszelSystemReading:
     """
-    One Beszel-monitored system, as a snapshot at render time — not a
-    live, in-browser-updating value. `architecture.html` is a static
-    page (`render_html` is pure, no wall clock); "temps réel"
-    (`PLAN-J11-CONSOLE-2026-09-11.md` §10) means "as of the last time
-    `architecture_render` ran", the same snapshot discipline every
-    other status in this page already has (a service's
-    observed/declared split is exactly as current as the last Docker
-    Catalog build, never live either).
+    One Beszel-monitored system, as of the last render (the page is static).
 
-    Every numeric field is optional — Beszel's own `info` object omits
-    a key it has nothing to report for (`omitempty`/`omitzero` on
-    almost every field, confirmed against
-    `github.com/henrygd/beszel@v0.19.0/internal/entities/system`'s own
-    `Info` struct) — `None` here means "not reported", never a
-    fabricated zero.
-
-    **Field selection, decided with the owner 2026-09-12**: `status`,
-    `cpu_pct`, `mem_pct`, `disk_pct`, `temp_c`, `load_avg` and
-    `uptime_seconds` travel; `g` (GPU%), `p` (Podman), `os` (OS enum)
-    and `bb` (bandwidth bytes) do not — `g` in particular reads `0` on
-    every system today, which almost certainly means GPU monitoring
-    is not enabled on the agent side rather than a real idle GPU, so
-    displaying it would look like a fact this project verified and
-    is not.
+    Numeric fields are `None` when Beszel omits them, never a made-up zero.
+    The GPU field (`g`) is not carried: it reads 0 when GPU monitoring is not
+    enabled on the agent, which would look like a verified idle GPU.
     """
 
     name: str
@@ -46,17 +27,10 @@ class BeszelSystemReading:
 
 def build_beszel_readings(raw_systems: Any) -> tuple[BeszelSystemReading, ...]:
     """
-    Turn `BeszelProvider.collect()["beszel"]["systems"]` (Beszel's own
-    REST API records, unqualified) into typed readings.
+    Turn `BeszelProvider.collect()["beszel"]["systems"]` into typed readings.
 
-    **Tolerant, not strict** — unlike
-    `load_infrastructure_topology_yaml`, which raises on a malformed
-    hand-written file (a typo there is the owner's own mistake to
-    fix), this reads a live third-party API response: a missing or
-    oddly-typed field is skipped rather than raising, so a Beszel
-    version bump that adds, removes or reshapes a field degrades to
-    "that one reading is missing", never to a page that fails to
-    render at all.
+    Tolerant: this reads a third-party API, so a missing or oddly typed
+    field is skipped rather than raised, and the page still renders.
     """
 
     if not isinstance(raw_systems, list):

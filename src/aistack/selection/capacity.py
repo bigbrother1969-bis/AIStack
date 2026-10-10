@@ -7,28 +7,12 @@ from aistack.selection.subtree import SubtreeResolution
 
 @dataclass(frozen=True)
 class CapacityVerdict:
-    """
-    Whether what is designated fits in the capacity that was declared.
+    """Whether the designated media fit in the declared capacity.
 
-    **`declared` is the field that keeps this honest.** The
-    capacity is a number the owner writes in the application
-    definition, not a measurement of the device: the Syncthing API
-    exposes no free space, measured on 2026-08-29 on both the
-    server and the phone, and the owner decided that day to
-    declare a quota rather than approximate one. A screen that
-    printed *61 Go free* would be inventing; a screen that prints
-    *61 Go left of the 64 Go you declared* is telling the truth.
-
-    So a verdict where nothing was declared says so, and says
-    `fits` — an undeclared quota constrains nothing. It does not
-    pretend to a capacity of zero, which would refuse everything,
-    and it does not silently behave as if a quota existed.
-
-    `remaining_bytes` goes negative on overflow rather than
-    clamping at zero. *How far over* is the number the owner acts
-    on: it says how much has to come off, and the owner's saved
-    selection was 118 Gio against 64 Go on 2026-08-29 — nearly
-    double, which is a selection to halve and not a line to nudge.
+    The capacity is a quota declared in the application definition, not a
+    device measurement: the Syncthing API exposes no free space. With no
+    quota declared, `declared` is False and the verdict `fits`.
+    `remaining_bytes` goes negative on overflow, to show how much must go.
     """
 
     declared: bool
@@ -48,24 +32,11 @@ class CapacityVerdict:
 def assess_capacity(
     resolution: SubtreeResolution, declared_bytes: int
 ) -> CapacityVerdict:
-    """
-    Weigh a resolution against the declared capacity.
+    """Weigh a resolution against the declared capacity.
 
-    Pure, and separate from the materialisation on purpose: the
-    screen has to show this on every display, long before anyone
-    clicks anything. A guard that only existed inside the write
-    would answer the question at the one moment it is too late to
-    be useful — after the human has chosen.
-
-    It is *also* enforced at the write, and that is a different
-    concern: see `materialise_by_hardlink`, which takes a verdict
-    rather than a number so that materialising without having
-    weighed is not something a caller can express.
-
-    A declared capacity of zero or less means *not declared*. The
-    definition is written by hand; an absent line and a line
-    reading `0` are the same accident, and neither should quietly
-    become a quota that refuses everything.
+    Pure, so the screen can show it before anything is written;
+    `materialise_by_hardlink` also takes the verdict to enforce it at write
+    time. A declared capacity of zero or less means "not declared".
     """
 
     selected = resolution.media_bytes

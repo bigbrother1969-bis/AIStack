@@ -1,19 +1,12 @@
-"""
-*Découverte réseau* — the candidate SSH usernames a LAN scan tries
-(`ADR-0012`; the screen `network_discovery_ui` served on port 8184
-until 2026-10-03).
+"""*Découverte réseau*: the SSH usernames a LAN scan tries.
 
-**LAN-only, on purpose (decided with the owner 2026-09-12).** Every
-name declared here is later tried, unattended, against every live host
-`aistack.cli.network_docker_discover` finds on the owner's LAN: a wrong
-or malicious entry changes what credentials are tried against real
-machines. The whole router is `LAN_ONLY`; it must never answer through
-`aistack.persiaut-family.fr`.
+LAN only on purpose: every name declared here is tried unattended against
+every live host `aistack.cli.network_docker_discover` finds, so this
+router must never answer on the public address.
 
-A thin adapter: the change itself is `aistack.network_discovery
-.usernames`, tested on its own; this router reads the form, writes the
-definition only when something changed, and redirects with the
-localized outcome.
+A thin adapter over `aistack.network_discovery.usernames`: it reads the
+form, writes the definition only when something changed and redirects
+with the localized outcome.
 """
 
 from __future__ import annotations
@@ -45,8 +38,7 @@ PREFIX = "/network-discovery"
 
 router = APIRouter(dependencies=[LAN_ONLY, SIGNED_IN_ONLY])
 
-# Spelled out, not built from the enum's value, so the suite's catalog
-# check finds every key this screen asks for.
+# Spelled out, not built from the enum value, so the catalog test finds every key.
 STATUS_KEYS: dict[UsernameChange, str] = {
     UsernameChange.ADDED: "network_discovery.status.added",
     UsernameChange.ALREADY: "network_discovery.status.already",

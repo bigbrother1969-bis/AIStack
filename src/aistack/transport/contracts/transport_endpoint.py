@@ -1,6 +1,4 @@
-"""
-Knowledge Transport Layer - Transport Endpoint contract.
-"""
+"""Knowledge Transport Layer - Transport Endpoint contract."""
 
 from __future__ import annotations
 
@@ -10,9 +8,7 @@ from typing import Any, Mapping
 
 @dataclass(frozen=True, slots=True)
 class TransportEndpoint:
-    """
-    Technology-neutral transport endpoint.
-    """
+    """Technology-neutral transport endpoint."""
 
     endpoint_id: str
 

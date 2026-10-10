@@ -17,19 +17,8 @@ from aistack.contracts.storage_reading import StorageReading
 from aistack.contracts.temperature_reading import TemperatureReading
 
 
-# STD-0300 § VS-4 criterion 4.5's own vocabulary, authored by the
-# owner in `OPS-0004` and closed there — "no more may be added
-# without the owner naming a fifth." Declared here, next to the type
-# that cites it, rather than in `aistack.runtime.evaluate`, so every
-# caller validates against the one list rather than trusting each
-# other to spell it the same way.
-#
-# Each entry is a citation, `{register}/{term}` — the same shape
-# `ground_findings` already writes for `grounding`
-# (`OPS-0003/frigate`) — not the bare English term, so a
-# `RuntimeFinding.qualifications` entry is traceable to where it was
-# authored on sight, the same discipline `signature` already holds
-# for the rule that produced the finding.
+# The closed qualification vocabulary declared in OPS-0004. Each entry
+# is a citation `{register}/{term}`, so it is traceable to its source.
 QUALIFICATIONS = (
     "OPS-0004/technical-debt",
     "OPS-0004/energy-inefficiency",
@@ -43,26 +32,12 @@ class MatchedLine:
     """
     One log line, and where in it the signature was found.
 
-    The position lives here rather than on `LogEntry` because it
-    is not a property of the line. It is a property of the
-    *encounter* between a declared rule and that line: the same
-    line matched by two signatures has two positions, and a line
-    a provider collected has none at all. `ARC-P-012` puts the
-    provider on the far side of that boundary — it observes and
-    concludes nothing, so it has nothing to say about a match.
+    The position belongs to the match, not the line: two signatures
+    can match one line at two positions.
 
-    **`match_at` may be `None`, and it means one specific
-    thing:** the pattern was found and its position in the
-    original text could not be determined. That happens when a
-    case-insensitive comparison folds characters whose folded
-    length differs from the original — `ß` folds to `ss` — so an
-    index into the folded text points somewhere else in the line
-    the container printed. Reporting that index would centre an
-    extract on the wrong characters and call it evidence.
-
-    It is `None` rather than zero, because zero is a real
-    position. FDN-0003 Article 12: the undetermined is declared,
-    not replaced by a plausible default.
+    `match_at` is `None` when the pattern was found but its position in
+    the original text is unknown: case folding can change length (`ß`
+    folds to `ss`), so an index into folded text would point elsewhere.
     """
 
     entry: LogEntry
@@ -90,49 +65,11 @@ class MatchedLine:
 @dataclass(frozen=True)
 class CitedReading:
     """
-    One reading — CPU or temperature — cited as technical evidence
-    for a `RuntimeFinding`, from a source that is not a log line.
+    A reading (not a log line) cited as evidence for a `RuntimeFinding`.
 
-    J5 — `evaluate`, the Evidence and Observation Foundation's first
-    real consumer (`claude/PLAN-TRAJECTOIRE-2026-09-04.md`). STD-0300
-    § VS-4 criterion 4.4 asks for technical evidence "collected and
-    attached to the finding, down to system-call level or
-    equivalent." `MatchedLine` already satisfies that for a log line
-    — the line itself, and where in it a pattern was found.
-    `CitedReading` is the same discipline for a reading
-    `DockerProvider.collect_cpu_readings` or `HostProvider
-    .collect_temperatures` produced: `provider` names which one, the
-    same `provider_id` convention `RuntimeObservation` already
-    carries, so a finding cites exactly what collected the evidence
-    — `docker stats`, `sensors` — not a description of what it means.
-
-    `reading` is one of ten named types — `ContainerCpuReading`,
-    `TemperatureReading`, `StorageReading` (`PLAN-J7`'s storage
-    domain), `ContainerStateReading` (`PLAN-J7`'s Services domain),
-    `BackupReading` (`PLAN-J7`'s Sauvegarde/PRA domain), `GpuReading`
-    (`PLAN-J7`'s GPU domain), `PraTestReading` (`PLAN-J11` § 11.9.1's
-    Tests PRA domain, `OPS-0009`, 2026-09-23), `BackupStrategyDeclaration`
-    (1.6 tranche 2's État-persistant domain, `OPS-0010`, 2026-09-30), and,
-    since 1.6 tranche 3's Écarts-d'inventaire domain (2026-09-30),
-    `InventoryGap`, plus, since 2026-10-02, `RestartLoop` (the Services
-    domain's restart-loop check, counted over time), and, since 2026-10-09, `HostSilence` (the Hosts domain, a
-    collector that stopped writing, `ADR-0020`) and `DataUsageReading`
-    (AIStack's data against its budget, `ADR-0021`) — spelled out directly rather than
-    imported from `aistack.kernel.evidence.Evidence`:
-    `aistack.contracts` is the heritage's foundational layer, and
-    importing `aistack.kernel.evidence` from it would read the
-    dependency backwards — `kernel.evidence` is built on these
-    contracts, not the other way round.
-
-    **`Evidence` itself still names only the first two.** Nothing in
-    the Kernel Runtime's collection pipeline touches storage yet —
-    the same reason `aistack.runtime.evaluate` is a plain function
-    outside that machinery, per its own docstring, and
-    `aistack.runtime.evaluate_storage` keeps the same scope. Widening
-    `CitedReading` here is the narrower, accurate claim: a finding
-    cites a `StorageReading` directly; a separate claim — that
-    storage capacity is `Evidence` in the Kernel Runtime's sense —
-    is not made by this change.
+    `provider` names what collected it (e.g. `docker stats`, `sensors`).
+    `reading` is one of the reading or declaration types listed in the
+    annotation below.
     """
 
     provider: str
@@ -162,66 +99,18 @@ class CitedReading:
 @dataclass(frozen=True)
 class RuntimeFinding:
     """
-    One qualified statement about a running subject.
+    One qualified statement about a running subject, with a
+    recommended remediation.
 
-    This is not an `IntegrityFinding`, and the difference is not
-    symmetry. An `IntegrityFinding` speaks about the governed
-    heritage, counts artifacts, and its contract states that "it
-    proposes no remediation". A runtime finding speaks about the
-    system the heritage describes, and STD-0300 § VS-4 criterion
-    4.7 *requires* it to recommend one. Reusing the first would
-    have broken its own declared contract.
+    `evidence` must not be empty; the constructor enforces it, and each
+    item must be a `MatchedLine` or a `CitedReading`. `signature` is the
+    identifier of the rule that produced the finding (e.g.
+    `OPS-0001/S-003`).
 
-    **`evidence` may not be empty, and that is enforced here
-    rather than asked for.** Criterion 4.9 — no finding without
-    at least one evidence reference — is a property of the type,
-    so a finding that cannot cite what it saw cannot be
-    constructed. This heritage spent two days on rules that were
-    declared and enforced by nothing; this one is enforced by the
-    constructor.
-
-    `signature` carries the identifier of the rule that produced
-    the finding — `OPS-0001/S-003`. That is criterion 4.7's
-    citation, and it is why the rule had to be declared and
-    identified rather than written into a function.
-
-    Each piece of evidence is a `MatchedLine`: the line, and
-    where the pattern was found in it. The position exists so a
-    report can show what fired the rule. On 2026-08-22 the first
-    complete run produced eleven `frigate` lines carrying three
-    timestamps each, and the report's extract stopped before
-    `connection refused` — everything about the evidence except
-    what it proved.
-
-    `interpretation` and `remediation` are copied from the
-    signature at the moment of qualification, not looked up
-    later. A finding read six months from now states what the
-    rule said when it fired, not what the rule says today.
-
-    **`qualifications` classifies the finding, revised from the
-    account above.** Until J5 (`claude/PLAN-TRAJECTOIRE-2026-09-04
-    .md`) nothing here classified the finding four ways, and that
-    paragraph said inventing the vocabulary would be authoring
-    governed knowledge GOV-P-001 forbids. The vocabulary has since
-    been authored — by the owner, in `OPS-0004`, closed at four
-    terms — so citing it here is no longer inventing it; `evaluate`
-    (`aistack.runtime.evaluate`) is its first producer.
-    `QUALIFICATIONS` (module level, this file) is the closed list
-    `__post_init__` validates against, each entry a citation —
-    `OPS-0004/energy-inefficiency`, not the bare term — the same
-    shape `grounding` already writes. Defaults to `()`: a
-    log-signature finding from `qualify()` carries none, and that
-    is a true, ungoverned-by-this-field state, not an omission.
-    STD-0300 § VS-4 criterion 4.5: more than one qualification found
-    together is what makes a finding derived knowledge rather than
-    an opinion about severity — this field is where that is stated.
-
-    `evidence` widened the same day, from `tuple[MatchedLine, ...]`
-    alone to `tuple[MatchedLine | CitedReading, ...]` — a
-    `CitedReading` (this module) is a reading, not a log line, cited
-    the same way STD-0300 § VS-4 criterion 4.4 asks for. Existing
-    `MatchedLine` evidence is untouched; this adds a second kind
-    rather than replacing the first.
+    `interpretation` and `remediation` are copied from the rule when it
+    fires, so the finding states what the rule said then.
+    `qualifications` cites entries of `QUALIFICATIONS`; a log-signature
+    finding carries none.
     """
 
     subject: str
@@ -232,10 +121,9 @@ class RuntimeFinding:
     grounding: str
     evidence: tuple[MatchedLine | CitedReading, ...]
     qualifications: tuple[str, ...] = ()
-    # The same two sentences as catalog keys, for a page that renders
-    # them in its reader's language (`aistack.contracts.finding_message`,
-    # 2026-10-03). `None` where an evaluator has not declared its
-    # sentences yet: the English text is shown as it is.
+    # The same two sentences as catalog keys, for a page rendered in the
+    # reader's language (`aistack.contracts.finding_message`). `None`:
+    # the English text is shown as is.
     message: FindingMessage | None = None
 
     def __post_init__(self) -> None:
@@ -246,23 +134,17 @@ class RuntimeFinding:
 
         if not self.signature.strip():
             raise ValueError(
-                "a finding cites the signature that produced it "
-                "(STD-0300 § VS-4, criterion 4.7)"
+                "a finding cites the signature that produced it"
             )
 
         if not self.evidence:
             raise ValueError(
                 f"{self.signature} produced a finding about "
-                f"{self.subject!r} citing no evidence; STD-0300 § VS-4 "
-                f"criterion 4.9 forbids it"
+                f"{self.subject!r} citing no evidence; a finding always "
+                f"cites one"
             )
 
-        # An annotation is not a check. `tuple[MatchedLine, ...]`
-        # accepted bare `LogEntry` objects without complaint when
-        # this type changed on 2026-08-23, and every caller that
-        # had not been updated kept passing — a declaration that
-        # asserts a protection and delivers none, in the contract
-        # written to stop exactly that.
+        # The annotation alone does not reject a bare `LogEntry`.
         wrong = [
             type(item).__name__
             for item in self.evidence

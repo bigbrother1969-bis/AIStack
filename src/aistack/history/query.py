@@ -8,13 +8,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-# The one true filename format Observation History writes in
-# (`generators/history.py`'s `write_artifact_with_history`):
-# `<%Y-%m-%dT%H-%M-%SZ>[-<suffix>]<ext>`. isoformat is not used
-# because a filesystem path cannot carry the `:` it contains — see
-# that function's docstring. This module is the read side of the
-# same contract, so it parses exactly what that function writes
-# and nothing looser.
+# The filename format `write_artifact_with_history` writes:
+# `<%Y-%m-%dT%H-%M-%SZ>[-<suffix>]<ext>` (no `:`, which isoformat would
+# put in a path). Parsed strictly, nothing looser.
 _FILENAME_STAMP = re.compile(
     r"^(?P<stamp>\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)(?:-(?P<suffix>\d+))?$"
 )
@@ -24,11 +20,7 @@ COMPRESSED_SUFFIX = ".gz"
 
 @dataclass(frozen=True)
 class HistoricalObservation:
-    """
-    One artifact as it stood at a moment in the past — the unit
-    the query layer hands back, one `stem`/`observed_at` pair
-    resolved to the file that actually holds that content.
-    """
+    """One artifact as it stood at a past instant, and the file holding it."""
 
     stem: str
     observed_at: datetime
@@ -39,16 +31,15 @@ class HistoricalObservation:
 
     @property
     def label(self) -> str:
-        """The file's own name without extension — `format_instant`, plus
-        `-<rank>` for a second or later write in the same second: what
-        tells two versions written in one second apart."""
+        """The file name without extension: `format_instant`, plus
+        `-<rank>` for a later write in the same second."""
 
         stamp = format_instant(self.observed_at)
         return f"{stamp}-{self.rank}" if self.rank else stamp
 
     def read(self) -> str:
         # Observations older than the data budget's window are kept
-        # gzip-compressed, never deleted (`ADR-0021`, 2026-10-09).
+        # gzip-compressed, never deleted (ADR-0021).
         if self.path.suffix == COMPRESSED_SUFFIX:
             with gzip.open(self.path, "rt", encoding="utf-8") as stream:
                 return stream.read()
@@ -63,11 +54,8 @@ def format_instant(instant: datetime) -> str:
 
 def parse_instant(text: str) -> datetime:
     """
-    Parse a `format_instant`-shaped string back into a UTC
-    datetime. Raises `ValueError` naming the expected shape on
-    anything else, rather than a bare parser error — this is
-    meant to be typed at a terminal from what `list_instants`
-    or a directory listing just printed.
+    Parse a `format_instant`-shaped string into a UTC datetime. Raises
+    `ValueError` naming the expected shape otherwise.
     """
 
     try:
@@ -82,18 +70,11 @@ def parse_instant(text: str) -> datetime:
 def latest_observations(generated_dir: Path, stem: str) -> list[HistoricalObservation]:
     """
     Every instant `stem` was observed at, oldest first, each with the
-    observation that was current at that instant — exactly
-    `[observation_at(generated_dir, stem, i) for i in
-    available_instants(generated_dir, stem)]`, in one directory scan
-    instead of one per instant.
+    observation current at that instant.
 
-    **Why it exists — measured 2026-10-02.** Every projection walked a
-    stream as `available_instants` + `observation_at` per instant, and
-    `observation_at` scans the whole directory each time: quadratic in
-    the number of files. Harmless at a few hundred; at the 33,790
-    batches the docker-events stream held, `timemachine_rebuild` ran
-    for over an hour on the reference host, one core at 95 %, without
-    writing a single triple.
+    Same result as calling `observation_at` for each of
+    `available_instants`, but in one directory scan: the per-instant
+    form is quadratic and too slow on large histories.
     """
 
     best: dict[datetime, tuple[int, Path]] = {}
@@ -114,15 +95,12 @@ def latest_observations(generated_dir: Path, stem: str) -> list[HistoricalObserv
 
 def every_version(generated_dir: Path, stem: str) -> list[HistoricalObservation]:
     """
-    Every file `stem`'s history holds, oldest first — two written in the
-    same second included, in the order they were written (1.9).
+    Every file `stem`'s history holds, oldest first, including several
+    written in the same second, in write order.
 
-    `latest_observations` answers "what was current at each instant",
-    and keeps only the last write of a second. A history whose files are
-    *versions* rather than snapshots — an Explication's, where each
-    write is a text someone or something recorded — needs all of them:
-    an import that wrote three commits of one subject in one second lost
-    two of them to that reader (defect found 2026-10-03, fixed here).
+    Unlike `latest_observations`, which keeps only the last write of a
+    second, this suits histories whose files are versions rather than
+    snapshots.
     """
 
     found: list[HistoricalObservation] = []
@@ -141,14 +119,12 @@ def _history_dir(generated_dir: Path, stem: str) -> Path:
 
 def _parse_history_filename(path: Path) -> tuple[datetime, int] | None:
     """
-    The instant a history file was written, and its collision
-    rank (0 for the unsuffixed file, the suffix number otherwise).
-    `None` for anything in the directory that isn't one of this
-    module's own files.
+    The instant a history file was written, and its collision rank (0
+    for the unsuffixed file). `None` for any other file.
     """
 
-    # `<stamp>.json.gz`, a compressed observation (`ADR-0021`): the
-    # same instant and rank as the `<stamp>.json` it was.
+    # `<stamp>.json.gz` (ADR-0021) has the same instant and rank as the
+    # `<stamp>.json` it was.
     name = Path(path.stem) if path.suffix == COMPRESSED_SUFFIX else path
     match = _FILENAME_STAMP.match(name.stem)
     if match is None:
@@ -163,9 +139,8 @@ def _parse_history_filename(path: Path) -> tuple[datetime, int] | None:
 
 def available_stems(generated_dir: Path) -> list[str]:
     """
-    Every artifact kind that has Observation History under
-    `generated_dir` — the `history/<stem>/` subdirectories
-    `write_artifact_with_history` creates, one per artifact kind.
+    Every artifact kind with history under `generated_dir`: the
+    `history/<stem>/` subdirectories.
     """
 
     history_root = generated_dir / "history"
@@ -177,13 +152,8 @@ def available_stems(generated_dir: Path) -> list[str]:
 
 def available_instants(generated_dir: Path, stem: str) -> list[datetime]:
     """
-    Every instant at which `stem` was observed, oldest first.
-
-    Two writes landing in the same wall-clock second collapse to
-    one instant here: `write_artifact_with_history`'s collision
-    suffix exists to keep both files on disk, not to make them two
-    distinct historical moments — `observation_at` is what picks
-    between them.
+    Every instant at which `stem` was observed, oldest first. Writes in
+    the same second count as one instant.
     """
 
     instants: set[datetime] = set()
@@ -199,18 +169,11 @@ def observation_at(
     generated_dir: Path, stem: str, at: datetime
 ) -> HistoricalObservation | None:
     """
-    What `stem` looked like at `at`: the most recent observation
-    at or before that instant. `None` when no such observation
-    exists — `at` predates the first one, or `stem` has no history
-    at all.
+    What `stem` looked like at `at`: the most recent observation at or
+    before that instant, or `None`.
 
-    A naive `at` is treated as UTC, matching the convention every
-    instant in this history is already recorded in
-    (`datetime.now(timezone.utc)`, per `generators/history.py`).
-
-    When several writes land in the same wall-clock second, the
-    last one written is what was actually current at that instant:
-    ties are broken by the collision suffix, highest wins.
+    A naive `at` is treated as UTC. Among writes in the same second, the
+    highest collision suffix (the last written) wins.
     """
 
     if at.tzinfo is None:

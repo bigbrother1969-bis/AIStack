@@ -2,15 +2,14 @@
 `python -m aistack.cli.sync_apply` — the generalized sync's host executor (ADR-0022 § 6).
 
     python -m aistack.cli.sync_apply                 apply every pair whose selection changed,
-                                                     and every hour the others
+                                                     and the others every hour
     python -m aistack.cli.sync_apply music--phone    apply this pair now
     python -m aistack.cli.sync_apply --dry-run ...   say what it would do
     python -m aistack.cli.sync_apply --list          every pair and its last application
 
 Run on the host, from the checkout, by the account that owns the
-content disks: `aistack-sync.timer` starts it every two minutes
-(`deploy/systemd/aistack-sync.service`). A pair with no recorded
-selection is never touched. One executor at a time.
+content disks; `aistack-sync.timer` starts it every two minutes. A pair
+with no recorded selection is never touched. One executor at a time.
 """
 
 from __future__ import annotations

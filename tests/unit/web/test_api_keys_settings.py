@@ -92,8 +92,18 @@ def test_an_undeclared_name_is_refused(tmp_path: Path):
     assert api_keys.read_store(tmp_path) == {}
 
 
-def test_nothing_on_the_public_port(tmp_path: Path):
+def test_an_administrator_enters_a_key_from_the_public_address_too(tmp_path: Path):
     web = client(tmp_path, port=8183)
-    assert 'id="api-keys"' not in web.get("/settings").text
-    assert web.post("/settings/api-keys", data={"name": KEY.name, "value": "x"}).status_code == 404
+    assert 'id="api-keys"' in web.get("/settings").text
+
+    web.post("/settings/api-keys", data={"csrf": csrf(web), "name": KEY.name, "value": "good-value-1234"})
+
+    assert api_keys.read_store(tmp_path) == {KEY.name: "good-value-1234"}
+
+
+def test_nobody_signed_out_sees_or_writes_a_key(tmp_path: Path):
+    app = client(tmp_path, port=8183).app
+    anonymous = TestClient(app, base_url="http://testserver:8183", follow_redirects=False)
+    assert 'id="api-keys"' not in anonymous.get("/settings").text
+    assert anonymous.post("/settings/api-keys", data={"name": KEY.name, "value": "x"}).status_code in (303, 401, 403)
     assert api_keys.read_store(tmp_path) == {}

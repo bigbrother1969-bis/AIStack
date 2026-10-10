@@ -2,7 +2,10 @@
 Settings' "API keys" section (the owner, 2026-10-09: "dans les
 paramètres, il faudrait pouvoir également accéder aux clés API";
 every key, the future ones included; write-only, the last four
-characters shown). On the local network only, for an administrator.
+characters shown). For an administrator, on both listeners (the owner,
+2026-10-10: "partout pour les administrateurs"): behind the sign-in,
+HTTPS on the public address and each form's token; a key is written,
+never read back.
 
 The keys are declared in `api_keys.yml` (`aistack.api_keys`); a value
 entered here is kept in the data directory and laid over the
@@ -24,9 +27,9 @@ from aistack import api_keys
 from aistack.i18n import Translator
 from aistack.renderers.text import escape_text
 from aistack.web.authentication import ADMIN_ACTION, current_session
-from aistack.web.exposure import LAN_ONLY, arrival_port
+from aistack.web.exposure import PUBLIC
 
-router = APIRouter(dependencies=[LAN_ONLY])
+router = APIRouter(dependencies=[PUBLIC])
 SAVE_PATH = "/settings/api-keys"
 TEST_PATH = "/settings/api-keys/test"
 ANCHOR = "api-keys"
@@ -55,8 +58,6 @@ def _keys(request: Request) -> list[api_keys.ApiKey]:
 
 
 def api_keys_section(request: Request, t: Translator) -> str:
-    if arrival_port(request) != request.app.state.listeners.lan_port:
-        return ""
     session = current_session(request)
     token = escape_text(session.csrf) if session is not None else ""
     generated: Path = request.app.state.generated_dir

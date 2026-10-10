@@ -280,7 +280,7 @@ connecté) ; un clic ouvre la réponse, la croix la ferme.
 
 ## Clés d'API
 
-*Réseau local, administrateurs.* Dans **Paramètres → Clés d'API** : toutes
+*Administrateurs, depuis les deux adresses.* Dans **Paramètres → Clés d'API** : toutes
 les clés et accès que les composants d'AIStack lisent (Gemini, Gotify,
 Syncthing, Jellyfin, Beszel…), déclarés dans `api_keys.yml`. Pour chacune :
 d'où vient la valeur (saisie ici, `.env.web` ou absente), ses quatre derniers

@@ -344,7 +344,7 @@ a click opens the answer, the cross closes it.
 
 ## API keys
 
-*Local network, administrators.* In **Settings → API keys**: every key and
+*Administrators, from both addresses.* In **Settings → API keys**: every key and
 credential AIStack's components read (Gemini, Gotify, Syncthing, Jellyfin,
 Beszel…), declared in `api_keys.yml`. For each: where the value comes from
 (entered here, `.env.web` or absent), its last four characters — never the

@@ -405,9 +405,10 @@ AIStack never restores anything from this screen.
 
 Every version of a subject's explanation, from the oldest to the current
 one, with its confidence, status, author, validator and, for a discarded
-version, who discarded it and why. Explanations come from four imported
-sources (commit messages, restore-test comments, the AI's answers, session
-notes) and from administrators.
+version, who discarded it and why. Explanations are written by
+administrators, or imported at each rebuild of the graph from the AI's
+answers and from the dated comments of `pra_tests.yml`, as proposals to
+validate.
 
 An administrator has three actions; each adds a version, none deletes:
 

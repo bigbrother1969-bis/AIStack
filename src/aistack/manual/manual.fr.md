@@ -342,9 +342,9 @@ AIStack ne restaure jamais rien depuis cet écran.
 Toutes les versions de l'explication d'un sujet, de la plus ancienne à
 l'actuelle, avec leur confiance, leur statut, leur auteur, leur validateur et,
 pour une version écartée, qui l'a écartée et pourquoi. Les explications
-viennent de quatre sources importées (messages de commit, commentaires des
-tests de restauration, réponses de l'IA, notes de session) et des
-administrateurs.
+sont écrites par les administrateurs, ou importées à chaque reconstruction du
+graphe depuis les réponses de l'IA et les commentaires datés de
+`pra_tests.yml`, comme propositions à valider.
 
 Un administrateur dispose de trois actions ; chacune ajoute une version,
 aucune n'efface :

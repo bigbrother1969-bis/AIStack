@@ -179,3 +179,26 @@ def test_rebuild_reports_a_recorded_docker_diff_snapshot(tmp_path: Path):
 
     assert "- Docker-diff subjects seen: 1" in output
     assert "- Docker-diff snapshots seen: 1" in output
+
+
+def test_rebuild_imports_the_restore_tests_comments_once(tmp_path: Path):
+    """2.0.0-rc2: the importers run with every rebuild, and skip what
+    they already recorded — before, only commands nothing scheduled ran
+    them."""
+
+    generated_dir = tmp_path / "reports" / "generated"
+    config = tmp_path / "test-config"
+    config.mkdir()
+    (config / "pra_tests.yml").write_text(
+        "# **`wordpress` restored in the sandbox (2026-10-08).**\n"
+        "# Every table there, the site answers.\n"
+        "pra_tests: []\n"
+    )
+
+    first = _run(tmp_path, str(generated_dir))
+    second = _run(tmp_path, str(generated_dir))
+
+    assert "- Explications imported from pra_tests.yml: 1" in first
+    assert "- Explications imported from pra_tests.yml: 0" in second
+    assert "- Explication subjects seen: 1" in second
+    assert (generated_dir / "explications" / "wordpress.json").is_file()

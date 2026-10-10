@@ -3,6 +3,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from aistack.config import configured
+from aistack.explications.from_ai_reasoning import import_explain_answers
+from aistack.explications.from_pra_tests import import_pra_tests_comments
 from aistack.hosts.records import load_hosts_declaration, read_all
 from aistack.timemachine.oxigraph_store import OxigraphGraphStore
 from aistack.timemachine.projection import (
@@ -43,11 +46,12 @@ def main() -> None:
     never clearing it again** — Explications is the fifth source
     stream `project_observation_history`'s own docstring already
     named ("soon five"), added to the one rebuild pass rather than a
-    second, independent graph. It projects whatever
-    `aistack.cli.explications_import` (or a sibling importer, still to
-    come for the other three sources) has already recorded — this
-    command never imports raw sources itself, only what Explications'
-    own store already holds.
+    second, independent graph. Two sources are imported just
+    before (2.0.0-rc2): the AI's `explain` answers and the dated
+    comments of `pra_tests.yml` become Proposed Explications, waiting for
+    an administrator. Both importers skip what they already recorded, so
+    every rebuild runs them; until rc2 they ran only from commands
+    nothing scheduled.
 
     **`project_docker_events` runs third, against the same store, for
     the same reason** — 1.5's first collector
@@ -128,6 +132,15 @@ def main() -> None:
     store_path = generated_dir / "timemachine" / "graph"
     store_path.mkdir(parents=True, exist_ok=True)
 
+    explications_dir = generated_dir / "explications"
+    explain_import = import_explain_answers(generated_dir / "ai-reasoning", explications_dir)
+    pra_tests = configured(Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml")
+    pra_recorded = (
+        import_pra_tests_comments(pra_tests, explications_dir).explications_recorded
+        if pra_tests.is_file()
+        else 0
+    )
+
     store = OxigraphGraphStore(store_path)
     summary = project_observation_history(store, generated_dir=generated_dir)
     explications_summary = project_explications(store, generated_dir=generated_dir)
@@ -146,6 +159,8 @@ def main() -> None:
     print(f"- Store: {store_path}")
     print(f"- Streams seen: {summary.streams_seen}")
     print(f"- Observations seen: {summary.observations_seen}")
+    print(f"- Explications imported from AI answers: {explain_import.explications_recorded}")
+    print(f"- Explications imported from pra_tests.yml: {pra_recorded}")
     print(f"- Explication subjects seen: {explications_summary.subjects_seen}")
     print(f"- Explications seen: {explications_summary.explications_seen}")
     print(f"- Docker-events batches seen: {docker_events_summary.batches_seen}")

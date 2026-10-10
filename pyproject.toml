@@ -146,15 +146,6 @@ testpaths = [
 # seen, because every prior run had been typed by hand with whatever
 # scope happened to be on the command line that day.
 #
-# `archive/` is explicitly frozen heritage (`GH-0002B: archive AIStack
-# V0 heritage components`, 2026-07-06) — components the project keeps
-# for record, not code anyone maintains or ships. Linting it the same
-# way as live code would ask someone to fix a historical snapshot,
-# which defeats the point of archiving it; excluding it here is the
-# declared decision, not a scope nobody chose.
-[tool.ruff]
-extend-exclude = ["archive"]
-
 # Adopted 2026-09-10, after evaluating both against this codebase:
 # on the very first run, before any of this configuration existed,
 # mypy found two real defects (an incompatible method override in

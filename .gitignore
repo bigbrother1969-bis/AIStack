@@ -1,106 +1,39 @@
-# A comment above a pattern says why that pattern is ignored.
-#
-# Until 2026-08-21 this file held thirteen comments stacked at
-# the top and fourteen patterns stacked below them, because the
-# whole file had been sorted alphabetically at some point. Every
-# comment still described something; none of them described the
-# line underneath it, which is the only place a reader looks.
-
 # Python
 __pycache__/
 *.pyc
 *.egg-info/
 .venv/
+build/
+dist/
 
-# The five screens' own environments (`.venv-selection-ui/`,
-# `.venv-priority-ui/`, `.venv-network-discovery-ui/`,
-# `.venv-troubleshooting-assistant-ui/`, `.venv-timemachine-ui/`) left
-# with decision #9, 2026-10-03: every screen is part of the single web
-# application and runs from `.venv` (ADR-0012 § 2). Their patterns go
-# with them — a directory of that name reappearing is a fact to see.
-
-# Local environment and secrets. Never committed: these carry
-# per-machine values, and one of them carries credentials.
+# This host's settings and secrets, never committed. The .env.*-ui files
+# were the five former screens' own (until 1.7); a host may still hold
+# one, and they carried credentials.
 .env
 .env.web
 .env.resource-priority
-# The five screens' own environment files: kept ignored while a host may
-# still hold one — they carried credentials (ADR-0012 § 2 retires the
-# venv patterns, not these).
 .env.selection-ui
 .env.priority-ui
 .env.network-discovery-ui
 .env.troubleshooting-assistant-ui
 .env.timemachine-ui
 
-# Deployment-specific transfer target. The path a given host
-# ships bundles to is a property of that host, not of AIStack.
-config/context_bundle_transfer.yml
-
-# Generated artifacts. ENG-P-003: what a pipeline can rebuild is
-# disposable, and committing it makes the repository the SPOT of
-# a projection rather than of the heritage.
-#
-# `build/` and `dist/` were absent until 2026-08-22, so
-# `python -m build` — the standard packaging command, in a project
-# whose ADR-0001 is *Python Packaging v1* — left an untracked build
-# tree that any `git add -A` would have committed.
-build/
-dist/
-context/bundles/
-reports/generated/
-# Moved from Settings (1.8): `reports/generated` becomes a link to the
-# chosen directory, and the old one is kept beside it; the choice
-# itself is this host's, not the repository's.
+# What AIStack generates, and where this host moved it (Settings, 1.8).
 /reports/generated
 /reports/generated.avant-deplacement/
 /data_location.yml
-examples/catalog_engine/music-library-catalog.yml
 
-# Wrong path since whatever commit moved this generator's output
-# directory from examples/selection_engine/ to examples/selections/
-# — the pattern kept naming the old path, matched nothing, and the
-# file it was meant to exclude was committed instead. Found live on
-# GIGABYTE, 2026-09-03: it kept showing as locally modified and
-# blocking OPS-0002's clean-tree gate on every publication. Corrected
-# path, plus `git rm --cached` on the file this same commit.
+# The smartphone selection and its generation report, written on the host.
 examples/selections/music-android-selection-real.yml
-
-# selection_ui's own materialisation report, one per Application
-# Definition — `_last_generation_path` (`selection_ui/app.py`) names
-# it `{app_id}-last-generation.yml`, written beside that
-# definition's own `selection_file`. Generated on every "générer"
-# click (`materialise_by_hardlink`, ENG-P-003 disposable, same as
-# the selection file itself). A pattern, not a literal path: found
-# live on GIGABYTE, 2026-09-03, as
-# `music_android-last-generation.yml` (`app_id: music_android`,
-# underscore — `selection_ui/definitions/music_android.yml` already
-# names a second instance of the family as the reason this file's
-# own shape can change), and the definition anticipates a second
-# `app_id` existing later, which would write a second, differently
-# named report right beside it.
 examples/selections/*-last-generation.yml
 
-# Local backups
+# Local backups and patches in transit.
 *.bak-*
-
-# Patches produced for transfer to another machine.
-#
-# ENG-P-003: a generated artifact is disposable. A patch is a
-# projection of commits that already exist in the history — the
-# history is their SPOT, and a patch file in the tree is a second
-# copy of knowledge the repository already holds.
-#
-# Added 2026-08-22 after two of them were written into the working
-# tree instead of /tmp, one day after the transit residue of the
-# same kind had been cleaned out of `docs/`.
 *.patch
 patches-*.tar.gz
 
-# docker compose (ADR-0017): the configuration and data volumes, and the
-# compose settings copied from .env.example.
+# docker compose (ADR-0017): configuration and data volumes, and this
+# host's additions to docker-compose.yml.
 /config/
 /data/
-/.env
-# This host's additions to docker-compose.yml (ADR-0017 § 5).
 /docker-compose.override.yml

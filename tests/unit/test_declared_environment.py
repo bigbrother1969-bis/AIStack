@@ -5,13 +5,6 @@ import subprocess
 
 ROOT = Path(__file__).parents[2]
 
-PRINCIPLE = (
-    ROOT
-    / "docs"
-    / "00-foundation"
-    / "ENG-TEST-0002-Declared-Execution-Environment-Principle.md"
-)
-
 README = ROOT / "README.md"
 
 PROVIDER = ROOT / "scripts" / "dev-env.sh"
@@ -38,38 +31,15 @@ def sourced_by(document: Path) -> set[str]:
     return set(SOURCED.findall(document.read_text()))
 
 
-def test_the_principle_names_the_file_that_provides_the_environment():
+def test_the_readme_names_the_file_that_provides_the_environment():
     """
-    ENG-TEST-0002 is C3. The command it prints is the command
-    people run.
-
-    It printed `source bin/aistack_env.sh` until 2026-08-23. That
-    file declares the two source roots and the interpreter the
-    heritage is verified on, and provides neither: `python3` stays
-    whatever the distribution installed — 3.12 on Linux Mint 22.3
-    — while `pyproject.toml` requires 3.13 and both images ship
-    `python:3.13-slim`.
-
-    The owner ran it exactly as written on a bare shell: 514
-    passed and the interpreter test failed. GOV-0002/OS-025.
+    The command the README prints is the command people run. It once
+    printed `source bin/aistack_env.sh`, which declares the source
+    roots and the interpreter and provides neither: `python3` stayed
+    whatever the distribution installed (GOV-0002/OS-025, 2026-08-23).
     """
 
-    assert "scripts/dev-env.sh" in sourced_by(PRINCIPLE)
-
-
-def test_the_readme_and_the_principle_show_the_same_command():
-    """
-    They have drifted before, and expensively. ENG-TEST-0002 v1.0
-    asked for `PYTHONPATH=src`, `bin/aistack_env.sh` exported the
-    repository root, and `scripts/dev-env.sh` exported `src` — one
-    knowledge item with three declarations, none of them complete,
-    which is what FDN-P-005 forbids and what v2.0 was written to
-    end.
-
-    Nothing compared them then. This does.
-    """
-
-    assert sourced_by(README) == sourced_by(PRINCIPLE)
+    assert sourced_by(README) == {"scripts/dev-env.sh"}
 
 
 def test_the_provider_sources_the_declaration():

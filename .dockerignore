@@ -1,23 +1,4 @@
-# A pattern here is matched against the file's full path in the
-# build context, not against its name.
-#
-# Until 2026-08-21 this file read:
-#
-#   __pycache__
-#   *.pyc
-#
-# which excluded `./__pycache__` and root-level `.pyc` files, and
-# nothing else. Every `src/aistack/**/__pycache__` went into every
-# image ever built here. `selection-ui:0.4` shipped with two stale
-# bytecode directories for façade modules deleted the same morning —
-# and because their `__init__.py` was gone while the directory
-# survived, `import aistack.selection.engine` returned an empty
-# namespace package instead of failing.
-#
-# `**/` is what makes a pattern mean "anywhere".
-#
-# The same file governed the build of `aistack-core:0.1.0`, published
-# 2026-08-19. That image carries the same residue.
+# Matched against the full path in the build context; `**/` means anywhere.
 
 .git
 .venv
@@ -34,7 +15,6 @@ build
 dist
 exports
 reports/generated
-context/bundles/*.zip
 
 # docker compose (ADR-0017): secrets and the configuration and data
 # volumes never enter the build context.

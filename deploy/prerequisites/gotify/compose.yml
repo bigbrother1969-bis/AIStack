@@ -1,0 +1,21 @@
+# Gotify — the vigil's notifications, shipped by AIStack (ADR-0023 § 4).
+# Its documentation: https://gotify.net/docs.
+#
+# `.env` (written by install.sh, mode 0600):
+#   GOTIFY_DEFAULTUSER_PASS=<the admin's first password; change it at first sign-in>
+#
+# Then, in Gotify: Apps → Create application "AIStack" → its token goes
+# to AIStack (Settings → API keys, AISTACK_GOTIFY_TOKEN).
+
+services:
+  gotify:
+    image: gotify/server:latest
+    container_name: gotify
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: Europe/Paris
+    ports:
+      - "8070:80"
+    volumes:
+      - ./data:/app/data

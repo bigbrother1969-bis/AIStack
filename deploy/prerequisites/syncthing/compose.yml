@@ -1,0 +1,31 @@
+# Syncthing — sync to devices (ADR-0022), shipped by AIStack
+# (ADR-0023 § 4). Its documentation: https://docs.syncthing.net.
+#
+# The host's /media is /data inside, as AIStack's sync.yml says
+# (`path_map: /media: /data`): the folders AIStack shares live beside
+# the contents, on the same disk (`<disk>/.aistack-sync/...`).
+# No VPN is needed (ADR-0022 § 8): discovery and relays are on by
+# default; forward 22000/tcp+udp on the box for direct connections.
+#
+# `.env` (written by install.sh, mode 0600):
+#   PUID=<id -u>
+#   PGID=<id -g>
+#
+# Its API key (Actions → Settings → API Key in its web page) goes to
+# AIStack (Settings → API keys, SYNCTHING_API_KEY).
+
+services:
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: syncthing
+    hostname: syncthing
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8384:8384"
+      - "22000:22000/tcp"
+      - "22000:22000/udp"
+      - "21027:21027/udp"
+    volumes:
+      - ./config:/var/syncthing
+      - /media:/data

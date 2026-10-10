@@ -1,0 +1,26 @@
+# Pocket ID — sign-in for AIStack (OIDC with passkeys), shipped by
+# AIStack (ADR-0023 § 4). Its documentation: https://pocket-id.org/docs.
+#
+# Passkeys need HTTPS: Pocket ID answers in plain HTTP on 1411 and the
+# reverse proxy (Nginx Proxy Manager or another) serves it at APP_URL.
+# `.env` (written by install.sh, mode 0600):
+#   APP_URL=https://id.<your domain>
+#   ENCRYPTION_KEY=<openssl rand -base64 32>
+#   TRUST_PROXY=<the reverse proxy's address or network>, when it is not on this host
+
+services:
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v2
+    container_name: pocket-id
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "1411:1411"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1411/healthz"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 2
+      start_period: 10s

@@ -145,7 +145,7 @@ as written; every place where it was not enough is a defect of 2.0.
 
 | Part | State |
 |---|---|
-| § 4 `install.sh` and the shipped prerequisite projects | to do |
+| § 4 `install.sh` and the shipped prerequisite projects | done — `scripts/install.sh`, `deploy/prerequisites/{pocket-id,gotify,syncthing}` |
 | § 5 the guided first start | to do |
 | § 6 the manual | to do |
 | The test at David's | to do — after § 4–6 |
@@ -158,8 +158,14 @@ as written; every place where it was not enough is a defect of 2.0.
   afterwards, Settings keeps the API keys, and the declarations stay
   files the owner edits.
 - AIStack ships Compose files for software it does not own (Pocket ID,
-  Gotify, Syncthing): their versions are pinned and move with AIStack's
-  releases, through the Dock like any other service once installed.
+  Gotify, Syncthing): Pocket ID follows its `v2` tag (its project
+  publishes one per major version), Gotify and Syncthing the image the
+  installation pulls; once installed, their updates go through the Dock
+  like any other service.
+- The test at David's runs before the 2.0 release: the script fetches
+  its files from a tag (`--ref`), and the image it runs must be
+  published under a version — a release candidate, decided with the
+  release (`OPS-0002`).
 
 ## Open Points
 

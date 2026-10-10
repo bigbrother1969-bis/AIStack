@@ -51,6 +51,7 @@ from aistack.api_keys import apply_to_environ, load_api_keys
 from aistack.web import dock as dock_screen
 from aistack.web import health
 from aistack.web import notifications
+from aistack.web import pending as pending_screen
 from aistack.web.ai_jobs import AIJobs
 from aistack.instance.data_location import location_file
 from aistack.web.authentication import (
@@ -115,6 +116,7 @@ def create_app(
     pending: list[Any] | None = None,
     api_keys: Callable[[], Any] | None = None,
     test_api_key: Callable[[str], str | None] | None = None,
+    pending_counts: Callable[[Path], dict[str, int]] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -128,6 +130,8 @@ def create_app(
     # from a path that does not exist. Each screen declares both forms.
     app.router.redirect_slashes = False
     app.state.generated_dir = generated_dir
+    # What waits behind each console card (2026-10-10).
+    app.state.pending_counts = pending_counts if pending_counts is not None else pending_screen.counts
     # The API keys entered from Settings, laid over the environment
     # (2026-10-09); `api_keys` and `test_api_key` are replaced in tests.
     app.state.api_keys = api_keys if api_keys is not None else load_api_keys
@@ -209,6 +213,7 @@ def create_app(
     include(app, dock_screen.router, dock_screen.PREFIX)
     include(app, health.router)
     include(app, notifications.router)
+    include(app, pending_screen.router)
 
     @app.middleware("http")
     async def _who_is_signed_in(request: Request, call_next: Any) -> Response:

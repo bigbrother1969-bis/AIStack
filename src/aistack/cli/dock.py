@@ -74,7 +74,7 @@ def main(argv: list[str] | None = None, runner: Runner = docker_runner, root: Pa
 
     with exclusive(generated_dir) as mine:
         if not mine:
-            print("Un autre exécuteur du quai est déjà au travail.")
+            print("Un autre exécuteur du dock est déjà au travail.")
             return 0
         dock = Dock(
             generated_dir=generated_dir,

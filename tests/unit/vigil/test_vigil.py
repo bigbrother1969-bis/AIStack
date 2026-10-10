@@ -77,7 +77,7 @@ def test_the_health_going_down_lists_its_new_findings() -> None:
 def test_the_dock_proposed_then_rolled_back() -> None:
     previous = notify.State(known=True, score=81, findings=(), proposals={})
     found, state = notify.events(T, previous, None, [_proposal("p1", store.PROPOSED)])
-    assert [e.line for e in found] == ["Quai : mise à jour de wordpress proposée par fabrice, en attente de validation."]
+    assert [e.line for e in found] == ["Dock : mise à jour de wordpress proposée par fabrice, en attente de validation."]
 
     found, state = notify.events(T, state, None, [_proposal("p1", store.VALIDATED)])
     assert found == []

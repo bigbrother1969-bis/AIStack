@@ -568,7 +568,7 @@ et n'a pas été testé dans les six derniers jours. Le résultat est
 Santé : une réussite rafraîchit la date du service, un échec devient un
 constat jusqu'au prochain test réussi. `pra_tests.yml` reste ton fichier :
 AIStack ne le réécrit jamais, et garde pour chaque service le résultat le
-plus récent des deux. Le test attend que le Quai ait fini, et le Quai
+plus récent des deux. Le test attend que le Dock ait fini, et le Dock
 attend le test.
 
 Installation, une fois, sur l'hôte (en root) :
@@ -587,10 +587,10 @@ Pour lancer un test tout de suite et voir les résultats :
 ./run_pra_schedule.sh --list
 ```
 
-## Quai : mettre à jour un service de façon gouvernée
+## Dock : mettre à jour un service de façon gouvernée
 
 Les services déclarés dans `dock.yml` (WordPress pour commencer) ne
-changent d'image que par le quai, depuis la console → *Quai* (réseau
+changent d'image que par le dock, depuis la console → *Dock* (réseau
 local, connecté). La page montre, pour chaque conteneur, l'image qui
 tourne et si une image plus récente est publiée pour le même tag ; elle
 ne télécharge rien.
@@ -599,7 +599,7 @@ Quand une mise à jour est disponible, un administrateur la propose en
 écrivant pourquoi (obligatoire : ce sera l'explication du changement).
 Un administrateur la valide — en production, un autre que l'auteur. La
 proposition validée est ensuite prise en charge par l'exécuteur du
-quai, sur l'hôte : restauration en bac à sable de la dernière
+dock, sur l'hôte : restauration en bac à sable de la dernière
 sauvegarde, répétition avec la nouvelle image, puis application avec
 retour arrière prêt. Une proposition peut être rejetée tant qu'elle
 n'a pas commencé.
@@ -607,7 +607,7 @@ n'a pas commencé.
 Un service gouverné ne doit plus porter le label de Watchtower : la page
 signale ceux qui l'ont encore. Retire-le de leur fichier compose.
 
-L'exécuteur du quai tourne sur l'hôte, comme service systemd, et prend
+L'exécuteur du dock tourne sur l'hôte, comme service systemd, et prend
 les propositions validées une à une. Installe-le une fois, en root :
 
 ```
@@ -667,7 +667,7 @@ t'envoie sur **Gotify** ce qui a changé depuis son passage précédent :
 - un hôte silencieux (son collecteur n'écrit plus) ;
 - un test de restauration en échec ;
 - la santé qui baisse, avec les nouveaux constats ;
-- le Quai : une mise à jour proposée qui attend ta validation, puis
+- le Dock : une mise à jour proposée qui attend ta validation, puis
   appliquée, revenue en arrière ou en échec.
 
 Chaque événement n'est dit qu'une fois : un constat qui reste n'est pas

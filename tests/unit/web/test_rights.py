@@ -48,6 +48,8 @@ ANYONE = {
     # The AI notice's question (2026-10-09): nothing but an empty list
     # without a session.
     "/notifications",
+    # The console cards' pastilles (2026-10-10): nothing without a session.
+    "/pending",
 }
 # Sign-in itself, whose own checks (CSRF, password) answer for it.
 SIGN_IN_ACTIONS = {"/logout", "/login/local"}

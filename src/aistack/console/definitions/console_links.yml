@@ -240,9 +240,9 @@ links:
     url: /health.html
     ai:
       fr: >-
-        Chaque anomalie mène à l'assistant de pannes, où l'IA propose son diagnostic.
+        Chaque anomalie mène à l'assistant de pannes, où l'IA (Google Gemini, Ollama en secours) donne son avis.
       en: >-
-        Each finding leads to the troubleshooting assistant, where the AI offers its diagnosis.
+        Each finding leads to the troubleshooting assistant, where the AI (Google Gemini, Ollama as the fallback) gives its opinion.
     scope: public
   - name:
       fr: Découverte réseau
@@ -263,19 +263,20 @@ links:
       en: Troubleshooting assistant
     description:
       fr: >-
-        Diagnostiquer une panne réelle, pas à pas : analyser la
-        situation, comprendre la cause probable, puis recevoir une
-        recommandation d'action.
+        Traiter une panne réelle, pas à pas : ce qu'AIStack en sait,
+        ce que tu fais (avec la correction en un clic quand elle
+        existe), puis l'avis de l'IA si tu le demandes.
       en: >-
-        Diagnose a real fault, step by step: look at the situation,
-        understand the likely cause, then get a recommended action.
+        Handle a real fault, step by step: what AIStack knows of it,
+        what you do (with the one-click fix when there is one), then
+        the AI's opinion if you ask for it.
     service: web_lan
     path: /troubleshooting/
     ai:
       fr: >-
-        Un modèle d'IA local (Ollama) raisonne sur la panne, l'explique en clair et recommande une action ; rien ne s'applique sans ton clic.
+        AIStack établit les faits et la marche à suivre ; sur ton clic, Google Gemini donne son avis à partir de ces faits (ils sortent alors de ton réseau), avec un modèle local (Ollama) en secours ; rien ne s'applique sans ton clic.
       en: >-
-        A local AI model (Ollama) reasons about the fault, explains it in plain words and recommends an action; nothing is applied without your click.
+        AIStack states the facts and what to do; on your click, Google Gemini gives its opinion from those facts (they then leave your network), with a local model (Ollama) as the fallback; nothing is applied without your click.
     scope: lan
   - name: Time Machine
     description:
@@ -297,7 +298,7 @@ links:
         Keeps every reasoning of the AI, dated and tied to what it explains, so you can read it again, correct it or validate it.
     scope: lan
   - name:
-      fr: Quai
+      fr: Dock
       en: Dock
     description:
       fr: >-

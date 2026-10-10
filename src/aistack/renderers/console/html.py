@@ -423,7 +423,8 @@ def _render_link(link: ConsoleLink, t: Translator) -> str:
         else ""
     )
 
-    return f"""    <a class="card card-{link.scope}" href="{escape_text(_link_href(link.url, t.lang))}" title="{escape_text(tooltip)}">
+    pending = f' data-pending="{escape_text(_path_of(link.url))}"' if link.scope == LAN else ""
+    return f"""    <a class="card card-{link.scope}"{pending} href="{escape_text(_link_href(link.url, t.lang))}" title="{escape_text(tooltip)}">
       <h2>{escape_text(link.name)}</h2>
       <p>{escape_text(description)}</p>{ai_html}{scope_html}
     </a>"""
@@ -435,6 +436,19 @@ _OLD_SCOPE_ENDINGS = (
     re.compile(r"\s*Accessible\s+uniquement\s+depuis\s+le\s+réseau\s+local\.?\s*$"),
     re.compile(r"\s*[—.,]?\s*AIStack web application,\s+LAN\s+listener\s+only(\s*\(ADR-\d+\))?\.?\s*$"),
 )
+
+
+def _path_of(url: str) -> str:
+    from urllib.parse import urlsplit
+
+    return urlsplit(url).path or "/"
+
+
+# What waits for the owner behind a card (2026-10-10): the card carries
+# its screen's path in `data-pending`; the notice script the local
+# network listener adds for a signed-in person
+# (`aistack.web.notifications`) asks `/pending` and draws the pastille.
+# The page itself stays script-free.
 
 
 def _without_scope_sentence(description: str, scope_line: str) -> str:
@@ -568,6 +582,13 @@ body {
   background: #ffffff; transition: border-color .15s ease;
 }
 .card:hover { border-color: #16335c; }
+.card[data-pending] { position: relative; }
+.pending-mark {
+  position: absolute; top: .55rem; right: .6rem; min-width: 1.4rem; height: 1.4rem;
+  padding: 0 .35rem; box-sizing: border-box; border-radius: .7rem;
+  background: #c2410c; color: #ffffff; font: 700 .78rem/1.4rem system-ui, sans-serif;
+  text-align: center; box-shadow: 0 0 0 2px #ffffff;
+}
 .card h2 {
   margin: 0 0 .4rem; font-size: 1.05rem; color: #16335c;
   font-family: Georgia, "Times New Roman", Times, serif;

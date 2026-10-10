@@ -95,3 +95,8 @@ license:
   image_text: "Chaque version publiée d'AIStack est aussi livrée en image Docker, sur {registry} :"
   image_pull: "Pour la récupérer, en remplaçant <version> par le numéro d'une version publiée (voir les notes de version) :"
   back: "← Retour à la console"
+# What waits behind a card (2026-10-10).
+pending:
+  dock: "{count} mise(s) à jour à valider"
+  troubleshooting: "{count} constat(s) à traiter"
+  timemachine: "{count} explication(s) à valider"

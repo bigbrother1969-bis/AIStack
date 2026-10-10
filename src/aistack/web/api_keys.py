@@ -46,7 +46,7 @@ NOTICES = {
     "test_absent": "auth.api_keys.notice.test_absent",
 }
 
-_INPUT = "min-height:32px;padding:0 .5rem;border:1px solid #c6d0dc;border-radius:6px;font-size:.85rem;width:100%;box-sizing:border-box"
+_INPUT = "min-height:32px;padding:0 .5rem;border:1px solid #c6d0dc;border-radius:6px;font-size:.85rem;min-width:16rem;flex:1;box-sizing:border-box"
 
 
 def _keys(request: Request) -> list[api_keys.ApiKey]:

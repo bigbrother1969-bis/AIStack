@@ -52,7 +52,7 @@ def record_change_explication(generated_dir: Path, proposal: store.Proposal, now
         subject = change_subject(change)
         content = "\n\n".join(part for part in (
             proposal.why,
-            f"Quai, proposition {proposal.id} : {change.image} "
+            f"Dock, proposition {proposal.id} : {change.image} "
             f"{change.from_digest[:19]}… → {change.to_digest[:19]}… — {outcome}."
             + (f" {last}" if last and proposal.status != store.APPLIED else ""),
         ) if part)

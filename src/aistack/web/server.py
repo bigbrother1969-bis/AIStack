@@ -18,6 +18,8 @@ from __future__ import annotations
 from aistack.config import configured
 
 import argparse
+import logging
+import re
 import socket
 from pathlib import Path
 
@@ -60,6 +62,21 @@ def bind(host: str, port: int) -> socket.socket:
     return listening
 
 
+class HideTokens(logging.Filter):
+    """The access log never shows the installation token (ADR-0023 § 5):
+    `/setup/open?token=…` is logged as `token=…`."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.args and isinstance(record.args, tuple):
+            record.args = tuple(
+                _TOKEN.sub(r"\1…", argument) if isinstance(argument, str) else argument for argument in record.args
+            )
+        return True
+
+
+_TOKEN = re.compile(r"(token=)[^&\s\"]+")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m aistack.web.server")
     parser.add_argument("--host", default="0.0.0.0")
@@ -82,6 +99,7 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     server = uvicorn.Server(uvicorn.Config(app, proxy_headers=False))
+    logging.getLogger("uvicorn.access").addFilter(HideTokens())
     server.run(sockets=sockets)
 
 

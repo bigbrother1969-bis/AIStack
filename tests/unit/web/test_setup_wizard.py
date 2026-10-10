@@ -803,3 +803,17 @@ def test_the_fallback_administrator_alone_is_not_nagged_for_a_client():
     # Without its password, nobody could sign in: still required.
     nobody = pending(None, client_id="", client_secret="", local_admin_hash="", oidc_wanted=False)
     assert SIGN_IN_SECRETS in {item.key for item in nobody}
+
+
+def test_the_access_log_never_shows_the_installation_token():
+    import logging
+
+    from aistack.web.server import HideTokens
+
+    record = logging.LogRecord(
+        "uvicorn.access", logging.INFO, "", 0, '%s - "%s %s HTTP/%s" %d',
+        ("127.0.0.1:5000", "GET", "/setup/open?token=0123456789abcdef&lang=fr", "1.1", 303), None,
+    )
+
+    assert HideTokens().filter(record)
+    assert record.getMessage() == '127.0.0.1:5000 - "GET /setup/open?token=…&lang=fr HTTP/1.1" 303'

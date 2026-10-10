@@ -7,11 +7,11 @@ artifact:
   domain: Operations
   criticality: C2
   confidence: Declared
-  version: 1.18
+  version: 1.19
   status: Draft
   owner: Operations
   created: 2026-08-27
-  updated: 2026-10-05
+  updated: 2026-10-10
 
 relations:
   references:
@@ -754,6 +754,35 @@ silently because nothing runs it twice.
 
 **No credential appears here.** The owner authenticates to the registry
 personally, as for every other step of this procedure.
+
+### A release candidate
+
+*Decided by the owner, 2026-10-10, for 2.0.0.* A version tried outside
+the reference host before its release is published as a **release
+candidate**: `pyproject.toml` declares `X.Y.Z-rcN` (a valid PEP 440
+version, which the installed metadata normalizes to `X.Y.ZrcN`), the
+release commit is tagged `vX.Y.Z-rcN`, and the image is pushed under
+`X.Y.Z-rcN` **only — never `latest`**, which keeps naming the last
+release. The build reads the version from `pyproject.toml` as above, so
+the image's tag is the declared one; the two `latest` lines are left
+out:
+
+```bash
+docker build -f Dockerfile \
+  --label org.opencontainers.image.source="https://gitea.persiaut-family.fr/fabrice.persiaut/AIStack" \
+  --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
+  --label org.opencontainers.image.version="$VERSION" \
+  --label org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+  --label org.opencontainers.image.description="AIStack — Infrastructure Knowledge Platform" \
+  -t "bigbrother1969/aistack-core:$VERSION" .
+
+docker push "bigbrother1969/aistack-core:$VERSION"
+```
+
+`install.sh` defaults to the version `pyproject.toml` declares, and
+fetches its files from the tag of that version (`--ref` otherwise). The
+release that follows a candidate is published as usual, under its
+version and `latest`.
 
 ### Between two publications, the reference host runs `dev`
 

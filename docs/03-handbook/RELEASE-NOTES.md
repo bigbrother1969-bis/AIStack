@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.15
+  version: 1.16
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-10-08
+  updated: 2026-10-10
 
 relations:
   references:
@@ -36,6 +36,91 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 2.0.0-rc1 — 2026-10-10
+
+**A release candidate: AIStack installs on a server that is not the
+reference host, from nothing, guided page by page — and carries nothing
+of the reference host's own configuration. Published to be tried on a
+friend's server before 2.0.0; never tagged `latest`.**
+
+- **`install.sh`** (`ADR-0023` § 4). On Debian, Ubuntu, Linux Mint or
+  LMDE, as an ordinary account with `sudo`: it reads, then asks before
+  each change — Docker Engine and the Compose plugin from Docker's own
+  repository, `/srv/aistack` with `docker-compose.yml`, `.env`,
+  `config/`, `data/`, `.env.web` (0600); on request Pocket ID, Gotify and
+  Syncthing, each its own Compose project in `/srv/<name>`, and Ollama
+  with `qwen2.5:3b`. It never prints a secret; run again, it redoes only
+  what is missing; `--dry-run` says everything it would do.
+- **The installation assistant** (`ADR-0023` § 5), `/setup/step/1…6`, on
+  the local network only, opened by the token the script shows (`python
+  -m aistack.cli.setup_token` shows it again): the host and its ports;
+  the public address, with the proxy hosts to create in Nginx Proxy
+  Manager and a check that both names answer; signing in — the Pocket ID
+  procedure with the client's four addresses written out, the client's
+  ID and secret, a fallback administrator's password hashed in the
+  request, all kept in the data directory and never shown again; the
+  host folders AIStack reads (`config/volumes.yml`, through
+  `COMPOSE_FILE`); every API key with how to get it; a check of Pocket
+  ID, Ollama, Gemini, Gotify and Syncthing; then the restart command.
+- **A new installation carries nothing of the reference host**
+  (`ADR-0023` § 7). The declarations AIStack ships were the reference
+  host's own; they are now neutral, with an example in each comment, and
+  the reference host's live with the tests. The local network to scan is
+  discovered (`cidr: auto`); the thresholds that hold on any host apply
+  to any host (`host: "*"`); without a declared publisher, the legal
+  notice says the installation is private. **An existing installation
+  keeps its own files**: at its first start, its copies become its
+  owner's and never follow the neutral ones.
+- **The troubleshooting assistant states the facts first.** For a
+  finding: its evidence, what `backup_strategy.yml`, `pra_tests.yml` and
+  `resource_priority.yml` say, then what to do — the how-to, the YAML to
+  add and where, the command that verifies it, Apply for a CPU class, the
+  result of a PRA test recorded from the page (`pra/scheduled.jsonl`,
+  `pra_tests.yml` never rewritten). The AI's opinion is a click away:
+  **Google Gemini first, given those facts, Ollama as the fallback**; the
+  page says where the question goes before it is asked. A clickable
+  notice on every page says when an answer is ready.
+- **The vigil.** Every 15 minutes it renders the health cockpit and the
+  console again and sends Gotify what changed — the score going down
+  with its new findings, a silent host, a failed restore test, a Dock
+  proposal waiting, applied, rolled back or failed — once, grouped.
+- **Restore tests on a schedule**: every Sunday the sandbox restores
+  every service with a recipe not tested in six days, and records it.
+- **Two new health domains**: *Hôtes* (a host whose collector is silent)
+  and *Données d'AIStack* — a 2 GB budget for AIStack's own data, old
+  observations gzip-compressed in place after 90 days, never deleted.
+- **Contents to devices** (`ADR-0022`): every content of the server to
+  every Syncthing device, ticked directory by directory, with a quota per
+  device, applied on the host with hard links; "Créer et partager le
+  dossier", "Relancer le partage".
+- **Settings → API keys**, for administrators on both addresses: every
+  key `api_keys.yml` declares, entered, replaced, cleared or tested,
+  write-only (the last four characters shown), each with how to get it.
+- **The console**: the running version under the lockup; "Dock" in
+  French; an "AI" mark on the screens that use it; pastilles on the
+  cards with something waiting; "local network only" as each LAN card's
+  last line.
+- **The vigil renders, at its first pass, what a new installation does
+  not have yet**: the Architecture page and the Time Machine's graph.
+- **Not yet in a Docker-only installation** — what this candidate is
+  meant to show: the Dock's executor, the scheduled restore tests, the
+  sync executor and AIStack's nightly backup run on the host from a copy
+  of the repository (`deploy/systemd/`), which `install.sh` does not set
+  up; on such an installation those screens show and record, and nothing
+  is applied on the host.
+- **Fixes** found by the 2.0 acceptance tests on the reference host:
+  the assistant read no network discovery in the image; a CPU finding
+  shown could not be started once the next reading was calm; Gotify
+  behind Cloudflare refused Python's user agent; an untouched copy made
+  by hand never followed its shipped declaration; a Syncthing folder not
+  yet created read "unreachable"; the installation token reached the
+  access log.
+
+`pytest -q` — 3502 passed; `mypy src` — 669 files; 90 knowledge
+artifacts, `clean: True`.
 
 ---
 

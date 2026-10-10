@@ -552,6 +552,14 @@ yourself, is never touched, but **Settings → Shipped declarations** shows
 the difference and the command that takes the shipped version, until you
 click "Seen, I keep my file".
 
+**What a Docker installation does not run yet.** Four executors work
+on the host itself, started by systemd from a copy of the repository
+(`deploy/systemd/`): the Dock (governed updates), the scheduled restore
+tests, the executor of the sync to devices and AIStack's nightly backup.
+`install.sh` does not install them: without them, those screens show and
+record, but nothing is applied on the host. The Architecture page and
+the Time Machine's graph are made by the vigil at its first pass.
+
 The `web` service has a healthcheck: `docker ps` shows it `healthy`
 when the application answers on the local-network port. A dashboard
 reading Docker (Homepage, for example) then shows "healthy" on its

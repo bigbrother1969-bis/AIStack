@@ -499,6 +499,15 @@ fichier que tu as modifié, ou déposé toi-même, n'est jamais touché, mais
 qui prend la version livrée, jusqu'à ce que tu cliques « Vu, je garde mon
 fichier ».
 
+**Ce qu'une installation Docker ne fait pas encore tourner.** Quatre
+exécutants travaillent sur l'hôte lui-même, lancés par systemd depuis une
+copie du dépôt (`deploy/systemd/`) : le Dock (mises à jour gouvernées),
+les tests de restauration planifiés, l'exécutant de synchronisation vers
+les appareils et la sauvegarde nocturne d'AIStack. `install.sh` ne les
+installe pas : sans eux, ces écrans montrent et enregistrent, mais rien
+ne s'applique sur l'hôte. Les pages d'Architecture et le graphe de la
+Time Machine, eux, sont faits par la vigie à son premier passage.
+
 Le service `web` a un contrôle de santé : `docker ps` le montre
 `healthy` quand l'application répond sur le port du réseau local. Un
 tableau de bord qui lit Docker (Homepage, par exemple) affiche alors

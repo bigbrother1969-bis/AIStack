@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 11
+  version: 12
   created: 2026-07-04
-  updated: 2026-10-08
+  updated: 2026-10-10
 ---
 
 # AIStack
@@ -79,9 +79,46 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 1.11.0
+### Concrete capabilities, as of 2.0.0-rc1
 
-- **What changes on the hosts themselves — new as of 1.11.0** — a
+- **A new installation, from nothing — new as of 2.0.0-rc1** — on a
+  Debian-family server, `install.sh` installs Docker and Compose when
+  missing, offers Pocket ID, Gotify, Syncthing and Ollama, starts AIStack
+  and gives an address carrying an installation token; that address opens
+  the **installation assistant**, on the local network only: the host,
+  the public address (the reverse-proxy hosts to create, then checked),
+  signing in (the Pocket ID procedure with the four addresses written
+  out, the client, a fallback administrator whose password is hashed in
+  the request), the folders AIStack reads, every API key with how to get
+  it, and a check of every prerequisite. Nothing is edited by hand, and
+  **a new installation carries nothing of the reference host**: AIStack
+  ships neutral declarations and discovers the rest — its containers,
+  the local network to scan.
+- **Faults handled with the facts first — new as of 2.0.0-rc1** — the
+  troubleshooting assistant states what AIStack knows of a finding (its
+  evidence, the backup strategy and restore tests declared, the CPU
+  classes), then what to do (the how-to, the YAML to add, the command
+  that verifies it, a one-click fix where there is one, the PRA test's
+  result recorded from the page); the AI's opinion is asked on a click —
+  Google Gemini first, given those facts, a local Ollama model as the
+  fallback — and a clickable notice says when it is ready.
+- **The health kept fresh, and told — new as of 2.0.0-rc1** — the vigil
+  renders the health cockpit and the console every 15 minutes and sends
+  Gotify what changed: the score going down, a silent host, a failed
+  restore test, the Dock's steps. Restore tests run every Sunday in the
+  sandbox and are recorded; a host whose collector went silent is a
+  health finding; AIStack's own data has a disk budget, old observations
+  compressed, never deleted.
+- **Contents to devices — new as of 2.0.0-rc1** — every content of the
+  server (music, photos, videos, books, comics, documents…) to every
+  device paired with Syncthing, ticked directory by directory, with a
+  quota per device; applied on the host with hard links.
+- **Settings for the administrators** — every API key entered,
+  replaced, tested from Settings (write-only, the last four characters
+  shown), with how to get it; the console's cards show what waits for
+  someone (the Dock's proposals, the troubleshooting assistant's
+  findings, the explications to validate) and which screens use AI.
+- **What changes on the hosts themselves — as of 1.11.0** — a
   collector on each host (GIGABYTE and the Raspberry on the reference
   installation), one file using the Python standard library only, run
   by systemd every 15 minutes as root but read-only and with no network,
@@ -403,9 +440,9 @@ got past its absence.
   and as `latest`, and the reference host itself runs that exact image
   through `docker-compose.yml` — the first user of every release.
 
-**As of 1.11.0**: `pytest -q` — **3325 passed**; `ruff check src tests` —
-all checks passed; `mypy src` — no issues found in **641 source files**;
-`python3 -m aistack.cli.knowledge_integrity` — **87 knowledge artifacts**,
+**As of 2.0.0-rc1**: `pytest -q` — **3502 passed**; `ruff check src tests` —
+all checks passed; `mypy src` — no issues found in **669 source files**;
+`python3 -m aistack.cli.knowledge_integrity` — **90 knowledge artifacts**,
 `blocking: 0 warnings: 0 clean: True`.
 
 The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test

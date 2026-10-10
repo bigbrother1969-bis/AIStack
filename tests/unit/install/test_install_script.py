@@ -94,3 +94,16 @@ def test_compose_reads_the_folders_the_assistant_chooses(tmp_path: Path):
     assert "[à faire] docker compose up -d" in out
     script = SCRIPT.read_text(encoding="utf-8")
     assert "COMPOSE_FILE=docker-compose.yml:config/volumes.yml" in script
+
+
+def test_the_script_installs_the_version_pyproject_declares():
+    # One declaration of the version (test_the_version_is_declared_once):
+    # install.sh's default follows it at every release.
+    import re
+
+    declared = re.search(r'^version\s*=\s*"([^"]+)"', (ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.M)
+    default = re.search(r'^VERSION="\$\{AISTACK_VERSION:-([^}]+)\}"', SCRIPT.read_text(encoding="utf-8"), re.M)
+
+    assert declared and default and default.group(1) == declared.group(1)
+    env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
+    assert f"AISTACK_VERSION={declared.group(1)}" in env_example

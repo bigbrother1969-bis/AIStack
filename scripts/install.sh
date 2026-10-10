@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # AIStack — installation on a new host (ADR-0023 § 4).
 #
-#   curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/main/scripts/install.sh
+#   curl -fsSLO https://raw.githubusercontent.com/bigbrother1969-bis/AIStack/v2.0.0-rc1/scripts/install.sh
 #   bash install.sh                 # asks before each change
 #   bash install.sh --dry-run       # says what it would do, changes nothing
 #
@@ -24,7 +24,7 @@
 
 set -euo pipefail
 
-VERSION="${AISTACK_VERSION:-1.11.0}"
+VERSION="${AISTACK_VERSION:-2.0.0-rc1}"
 REPOSITORY="${AISTACK_REPOSITORY:-https://raw.githubusercontent.com/bigbrother1969-bis/AIStack}"
 DIR="/srv/aistack"
 PREREQ_ROOT="/srv"

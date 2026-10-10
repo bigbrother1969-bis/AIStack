@@ -58,7 +58,7 @@ STEP_TITLES = {
     CHECK: "setup.step.check.title",
 }
 # The steps the pages hold today; the others are announced.
-READY = (HOST, PUBLIC, SIGN_IN)
+READY = (HOST, PUBLIC, SIGN_IN, STORAGE)
 ERRORS = {
     "host_name": "setup.error.host_name",
     "port_range": "setup.error.port_range",
@@ -77,6 +77,8 @@ ERRORS = {
     "password_short": "setup.error.password_short",
     "password_differs": "setup.error.password_differs",
     "password_required": "setup.error.password_required",
+    "folder_invalid": "setup.error.folder_invalid",
+    "folder_refused": "setup.error.folder_refused",
 }
 
 
@@ -278,8 +280,46 @@ def _sign_in_view(request: Request) -> dict[str, Any]:
     }
 
 
-VALUES = {HOST: _host_values, PUBLIC: _public_values, SIGN_IN: _sign_in_values}
-FILES = {HOST: INSTANCE_FILE, PUBLIC: AUTHENTICATION_FILE}
+def _storage_values(request: Request) -> dict[str, Any]:
+    return {"folders": wizard.read_volumes(config_dir()), "typed": ""}
+
+
+def _size(value: int) -> str:
+    size = float(value)
+    for unit in ("o", "Kio", "Mio", "Gio", "Tio"):
+        if size < 1024 or unit == "Tio":
+            return f"{size:.0f} {unit}" if unit == "o" else f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} Tio"
+
+
+def _storage_view(request: Request, values: dict[str, Any]) -> dict[str, Any]:
+    from aistack.host.mounts import usage
+
+    generated = _generated(request)
+    measured = usage(str(generated))
+    chosen = list(values.get("folders") or [])
+    mounts = [
+        {"point": mount.point, "device": mount.device, "type": mount.fstype, "checked": mount.point in chosen}
+        for mount in wizard.offered_mounts(generated)
+    ]
+    shown = {mount["point"] for mount in mounts}
+    install_dir = wizard.install_answers(generated).get("INSTALL_DIR") or "/srv/aistack"
+    return {
+        "data_dir": os.environ.get("AISTACK_DATA_DIR", "./data"),
+        "data_free": _size(measured.free) if measured is not None else "",
+        "data_total": _size(measured.total) if measured is not None else "",
+        "always": wizard.ALWAYS_READ,
+        "mounts": mounts,
+        "known_mounts": bool(wizard.host_mounts(generated)),
+        "typed": values.get("typed") or "\n".join(path for path in chosen if path not in shown),
+        "install_dir": install_dir,
+        "compose_file": f"COMPOSE_FILE=docker-compose.yml:config/{wizard.VOLUMES_FILE}",
+    }
+
+
+VALUES = {HOST: _host_values, PUBLIC: _public_values, SIGN_IN: _sign_in_values, STORAGE: _storage_values}
+FILES = {HOST: INSTANCE_FILE, PUBLIC: AUTHENTICATION_FILE, STORAGE: wizard.VOLUMES_FILE}
 
 
 def _step_page(
@@ -287,7 +327,7 @@ def _step_page(
     step: int,
     token: str,
     *,
-    values: dict[str, str] | None = None,
+    values: dict[str, Any] | None = None,
     errors: list[str] | None = None,
     checks: list[wizard.Check] | None = None,
     status_code: int = 200,
@@ -315,6 +355,8 @@ def _step_page(
         context["proxy"] = _proxy_hosts(request)
     if step == SIGN_IN:
         context["sign_in"] = _sign_in_view(request)
+    if step == STORAGE:
+        context["storage"] = _storage_view(request, values)
     return _render(request, "first_start/wizard.html", context, status_code)
 
 
@@ -381,6 +423,17 @@ async def save_step(request: Request, step: int) -> Response:
         wizard.remember(generated, domain=public.domain, proxy=public.proxy)
         wizard.mark_saved(generated, PUBLIC, when)
         return RedirectResponse(f"{STEP_PATH}/{PUBLIC}#proxy-hosts", status_code=303)
+
+    if step == STORAGE:
+        typed = values.get("typed", "")
+        folders, errors = wizard.parse_folders([str(item) for item in form.getlist("folder")], typed)
+        if errors:
+            return _step_page(
+                request, step, token, values={"folders": folders, "typed": typed}, errors=errors, status_code=400
+            )
+        wizard.write_volumes(directory, folders, when)
+        wizard.mark_saved(generated, STORAGE, when)
+        return RedirectResponse(f"{STEP_PATH}/{STORAGE}#saved", status_code=303)
 
     # SIGN_IN — the passwords are never sent back to the page, even refused.
     definition = _definition()

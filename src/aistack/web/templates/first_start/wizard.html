@@ -200,6 +200,42 @@ docker compose --project-directory /srv/pocket-id up -d</pre>
     {% endif %}
   </section>
   {% endif %}
+  {% elif step == 4 %}
+  <h2>{{ t('setup.step.storage.title') }}</h2>
+  <p>{{ t('setup.step.storage.intro') }}</p>
+  <h3>{{ t('setup.step.storage.data_heading') }}</h3>
+  <p><code>{{ storage.data_dir }}</code>{% if storage.data_free %} — {{ t('setup.step.storage.data_free', free=storage.data_free, total=storage.data_total) }}{% endif %}</p>
+  <p class="help">{{ t('setup.step.storage.data_later') }}</p>
+  <h3>{{ t('setup.step.storage.read_heading') }}</h3>
+  <p>{{ t('setup.step.storage.always') }} {% for path in storage.always %}<code>{{ path }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+  <form class="step" method="post" action="{{ action }}">
+    <input type="hidden" name="form_token" value="{{ form_token }}">
+    {% if storage.mounts %}
+    <fieldset>
+      <legend>{{ t('setup.step.storage.mounts') }}</legend>
+      {% for mount in storage.mounts %}
+      <label><input type="checkbox" name="folder" value="{{ mount.point }}"{% if mount.checked %} checked{% endif %}> <code>{{ mount.point }}</code> <span class="help">{{ mount.device }} · {{ mount.type }}</span></label>
+      {% endfor %}
+    </fieldset>
+    {% elif not storage.known_mounts %}
+    <p class="help">{{ t('setup.step.storage.no_mounts') }}</p>
+    {% endif %}
+    <label for="typed">{{ t('setup.step.storage.typed') }}</label>
+    <p class="help">{{ t('setup.step.storage.typed_help') }}</p>
+    <textarea id="typed" name="typed" rows="4" style="width:100%;max-width:26rem;font-family:monospace">{{ storage.typed }}</textarea>
+    <p class="note">{{ t('setup.written_to', file=config_file) }}</p>
+    <button type="submit" title="{{ t('setup.tooltip.save') }}">{{ t('setup.save') }}</button>
+  </form>
+  {% if saved %}
+  <section id="saved">
+    <p class="done">{{ t('setup.step.storage.saved') }}</p>
+    <p>{{ t('setup.step.storage.apply') }}</p>
+    <pre>cd {{ storage.install_dir }}
+grep -q '^COMPOSE_FILE=' .env || echo '{{ storage.compose_file }}' &gt;&gt; .env
+docker compose up -d</pre>
+    <p class="help">{{ t('setup.step.storage.apply_later') }}</p>
+  </section>
+  {% endif %}
   {% endif %}
 
   {% if saved and next %}

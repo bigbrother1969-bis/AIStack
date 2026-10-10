@@ -527,3 +527,86 @@ def test_the_step_after_the_last_saved_one_is_offered(tmp_path: Path, config: Pa
     page = web.get("/setup/step/2?lang=fr").text
 
     assert 'href="/setup/step/3"' in page and "Étape suivante" in page
+
+
+# --------------------------------------------------------------------
+# Step 4 — storage
+# --------------------------------------------------------------------
+
+HOST_MOUNTS = """/dev/sda2 / ext4 rw,relatime 0 0
+proc /proc proc rw 0 0
+/dev/sda1 /boot/efi vfat rw 0 0
+/dev/sdb1 /mnt/backup ext4 rw,relatime 0 0
+/dev/sdc1 /media/david/USB ext4 rw 0 0
+//nas/music /mnt/nas\\040music cifs rw 0 0
+/dev/sda2 /var/lib/docker/overlay2/x overlay rw 0 0
+"""
+
+
+def at_step_four(tmp_path: Path):
+    app, generated, web, token = opened(tmp_path, ANSWERS + "INSTALL_DIR=/srv/aistack\n")
+    (generated / "setup" / "host-mounts").write_text(HOST_MOUNTS, encoding="utf-8")
+    return app, generated, web, token
+
+
+def test_step_four_offers_the_host_s_own_disks_never_the_system_s(tmp_path: Path, config: Path):
+    _app, _generated, web, _token = at_step_four(tmp_path)
+
+    page = web.get("/setup/step/4?lang=fr").text
+
+    assert 'value="/mnt/backup"' in page
+    assert 'value="/mnt/nas music"' in page
+    # Under /media: read already. The system's and Docker's: never.
+    for point in ("/media/david/USB", 'value="/"', "/boot/efi", "/var/lib/docker"):
+        assert point not in page, point
+    assert "<code>/media</code>" in page and "<code>/srv</code>" in page
+
+
+def test_step_four_writes_the_folders_for_every_service_read_only(tmp_path: Path, config: Path):
+    _app, generated, web, token = at_step_four(tmp_path)
+
+    reply = web.post(
+        "/setup/step/4",
+        data={"form_token": wizard.form_token(token), "folder": ["/mnt/backup"], "typed": "/home/david/Musique/\n/media/already\n/mnt/backup\n"},
+    )
+
+    assert reply.status_code == 303
+    written = yaml.safe_load((config / "volumes.yml").read_text(encoding="utf-8"))
+    assert set(written["services"]) == set(wizard.SERVICES)
+    assert written["services"]["vigil"]["volumes"] == [
+        "/mnt/backup:/mnt/backup:ro,rslave",
+        "/home/david/Musique:/home/david/Musique:ro,rslave",
+    ]
+    page = web.get("/setup/step/4?lang=fr").text
+    assert 'value="/mnt/backup" checked' in page
+    assert "/home/david/Musique" in page
+    assert "COMPOSE_FILE=docker-compose.yml:config/volumes.yml" in page
+    assert "cd /srv/aistack" in page
+    assert 4 in wizard.progress(generated)
+
+
+@pytest.mark.parametrize(
+    ("typed", "error"),
+    [("relative/path", "chemin absolu"), ("/etc", "du système"), ("/mnt/a:/b", "chemin absolu"), ("/", "du système")],
+)
+def test_step_four_refuses_what_it_must_not_read(tmp_path: Path, config: Path, typed: str, error: str):
+    _app, _generated, web, token = at_step_four(tmp_path)
+
+    reply = web.post("/setup/step/4?lang=fr", data={"form_token": wizard.form_token(token), "typed": typed})
+
+    assert reply.status_code == 400
+    assert error in reply.text
+    assert not (config / "volumes.yml").exists()
+
+
+def test_no_folder_gives_an_empty_override_compose_accepts():
+    assert wizard.volumes_declaration([]) == {"services": {}}
+
+
+def test_the_services_are_those_of_docker_compose_yml():
+    from tests.unit.install.test_install_script import ROOT
+
+    compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
+    built_on_aistack = {name for name, service in compose["services"].items() if "tools" not in (service.get("profiles") or [])}
+
+    assert built_on_aistack == set(wizard.SERVICES)

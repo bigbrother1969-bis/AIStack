@@ -48,6 +48,7 @@ CHOICES_FILE = "choices.json"
 
 # What install.sh may write in `install.env`: nothing else is read.
 ANSWER_KEYS = (
+    "INSTALL_DIR",
     "HOST_NAME",
     "HOST_ADDRESS",
     "DOMAIN",
@@ -482,3 +483,104 @@ def parse_sign_in(
         # a sign-in button that cannot work.
         return SignInAnswer(mode, "", "", password or None), []
     return SignInAnswer(mode, client_id, client_secret or None, password or None), []
+
+
+# --------------------------------------------------------------------
+# Step 4 — storage
+# --------------------------------------------------------------------
+
+# The host's own mounts, as install.sh copied them (`/proc/self/mounts`
+# on the host): the container sees only what it is given.
+HOST_MOUNTS_FILE = "host-mounts"
+VOLUMES_FILE = "volumes.yml"
+# The services of `docker-compose.yml` built on `x-aistack`: each sees
+# the same folders.
+SERVICES = ("web", "events", "diff", "digest", "packages", "priority", "vigil")
+# What `docker-compose.yml` already gives every service, read-only.
+ALWAYS_READ = ("/media", "/srv", "/opt")
+# Never offered, never accepted: the system's own, or the container's.
+REFUSED = ("/", "/proc", "/sys", "/dev", "/run", "/var/run", "/etc", "/boot", "/usr", "/bin", "/sbin", "/lib",
+           "/app", "/config", "/var/lib/docker", "/tmp")
+
+
+def host_mounts(generated: Path) -> list[Any]:
+    from aistack.host.mounts import parse_mounts
+
+    try:
+        text = (folder(generated) / HOST_MOUNTS_FILE).read_text(encoding="utf-8")
+    except OSError:
+        return []
+    return parse_mounts(text)
+
+
+def already_read(path: str) -> bool:
+    return any(path == base or path.startswith(base + "/") for base in ALWAYS_READ)
+
+
+def refused(path: str) -> bool:
+    return any(path == base or (base != "/" and path.startswith(base + "/")) for base in REFUSED) or path == "/"
+
+
+def offered_mounts(generated: Path) -> list[Any]:
+    """The host's mounts worth reading: neither the system's nor under a
+    folder every service reads already."""
+
+    return [
+        mount
+        for mount in host_mounts(generated)
+        if not refused(mount.point) and not already_read(mount.point) and not mount.point.startswith("/boot")
+    ]
+
+
+def parse_folders(chosen: list[str], typed: str) -> tuple[list[str], list[str]]:
+    """The folders to read, cleaned and without duplicates, or the errors."""
+
+    folders: list[str] = []
+    errors: list[str] = []
+    for raw in [*chosen, *typed.splitlines()]:
+        path = raw.strip().rstrip("/") if raw.strip() != "/" else "/"
+        if not path:
+            continue
+        if not path.startswith("/") or "/../" in path + "/" or any(c in path for c in ":,\n\t"):
+            errors.append("folder_invalid")
+        elif refused(path):
+            errors.append("folder_refused")
+        elif not already_read(path) and path not in folders:
+            folders.append(path)
+    return folders, sorted(set(errors))
+
+
+def volumes_declaration(folders: list[str]) -> dict[str, Any]:
+    volumes = [f"{path}:{path}:ro,rslave" for path in folders]
+    return {"services": {service: {"volumes": list(volumes)} for service in SERVICES} if volumes else {}}
+
+
+def write_volumes(directory: Path, folders: list[str], when: datetime) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    header = (
+        "# AIStack — the host folders AIStack reads, besides /media, /srv and /opt,\n"
+        f"# written by the installation assistant (/setup, ADR-0023 § 5) on {when.date().isoformat()}.\n"
+        "# Read with docker-compose.yml through COMPOSE_FILE in .env; each folder\n"
+        "# at the same path, read-only. Applied by: docker compose up -d\n\n"
+    )
+    text = header + yaml.safe_dump(volumes_declaration(folders), sort_keys=False, allow_unicode=True)
+    target = directory / VOLUMES_FILE
+    temporary = directory / f".{VOLUMES_FILE}.{os.getpid()}"
+    temporary.write_text(text, encoding="utf-8")
+    temporary.replace(target)
+    return target
+
+
+def read_volumes(directory: Path | None) -> list[str]:
+    """The folders `volumes.yml` gives the web service today."""
+
+    if directory is None:
+        return []
+    try:
+        data = yaml.safe_load((directory / VOLUMES_FILE).read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return []
+    services = data.get("services") if isinstance(data, dict) else None
+    web = services.get("web") if isinstance(services, dict) else None
+    volumes = web.get("volumes") if isinstance(web, dict) else None
+    return [str(volume).split(":", 1)[0] for volume in volumes or []]

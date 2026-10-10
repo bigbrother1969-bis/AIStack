@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-10-10
@@ -125,8 +125,14 @@ au fur et à mesure").
    request, never stored in clear).
 4. **Storage** — where the data lives; the disks and folders AIStack
    reads, chosen among the host's mounts (`aistack.host.mounts`); the
-   page writes them to `config/volumes.yml`, which `docker-compose.yml`
-   includes, and says the one command that applies them.
+   page writes them to `config/volumes.yml` — a Compose override that
+   gives each folder to every service, at the same path, read-only —
+   which `docker compose` reads with `docker-compose.yml` through
+   `COMPOSE_FILE` in `.env` (written by `install.sh`; Compose's
+   `include:` cannot add volumes to a service already declared), and
+   says the one command that applies them. The host's disks come from
+   `install.sh` (`setup/host-mounts`): the container sees only what it
+   is given.
 5. **API keys** — every key of `api_keys.yml`, each with its procedure:
    where to get it, what to click, what it unlocks; entered as in
    Settings (`secrets/api_keys.json`).
@@ -146,7 +152,7 @@ as written; every place where it was not enough is a defect of 2.0.
 | Part | State |
 |---|---|
 | § 4 `install.sh` and the shipped prerequisite projects | done — `scripts/install.sh`, `deploy/prerequisites/{pocket-id,gotify,syncthing}` |
-| § 5 the guided first start | in progress — the installation token (`install.sh`, `aistack.cli.setup_token`), step 1 (the host) and step 2 (the public address, the proxy hosts to create, the check), step 3 (signing in: the Pocket ID procedure with the four addresses, the client's id and secret, the fallback administrator's password hashed — kept in `secrets/sign_in.json`, 0600, laid over the web process's environment at start) in `/setup/step/<n>`; steps 4–6 to do |
+| § 5 the guided first start | in progress — the installation token (`install.sh`, `aistack.cli.setup_token`), step 1 (the host) and step 2 (the public address, the proxy hosts to create, the check), step 3 (signing in: the Pocket ID procedure with the four addresses, the client's id and secret, the fallback administrator's password hashed — kept in `secrets/sign_in.json`, 0600, laid over the web process's environment at start) step 4 (storage: the host's disks listed by `install.sh`, other folders typed, `config/volumes.yml`) in `/setup/step/<n>`; steps 5–6 to do |
 | § 6 the manual | to do |
 | The test at David's | to do — after § 4–6 |
 

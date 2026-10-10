@@ -19,8 +19,9 @@
 #     keeps everything it records in `./data`;
 #   - sees each host directory a declaration names AT THE SAME PATH,
 #     read-only: backup disks, media libraries, the folders holding the
-#     Compose projects AIStack reads. Add yours at the end of the
-#     `volumes:` list of `x-aistack` below.
+#     Compose projects AIStack reads. /media, /srv and /opt below; the
+#     others go to ./config/volumes.yml (chosen in /setup, step 4), read
+#     with this file through COMPOSE_FILE in .env.
 #
 # One-off commands run in the same image:
 #

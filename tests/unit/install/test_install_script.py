@@ -82,3 +82,15 @@ def test_it_leaves_the_assistant_its_answers_and_the_address_with_the_token(tmp_
     assert "data/setup/token (mode 600)" in out
     assert ":8186/setup/open?token=JETON" in out
     assert "aistack.cli.setup_token" in out
+
+
+def test_compose_reads_the_folders_the_assistant_chooses(tmp_path: Path):
+    # ADR-0023 § 5.4: config/volumes.yml, through COMPOSE_FILE — so the
+    # script runs compose in the directory, never with -f.
+    out = dry_run(tmp_path, LMDE).stdout
+
+    assert "config/volumes.yml (mode 644)" in out
+    assert "host-mounts" in out
+    assert "[à faire] docker compose up -d" in out
+    script = SCRIPT.read_text(encoding="utf-8")
+    assert "COMPOSE_FILE=docker-compose.yml:config/volumes.yml" in script

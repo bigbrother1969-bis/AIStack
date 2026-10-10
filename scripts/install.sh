@@ -202,9 +202,22 @@ AISTACK_VERSION=$VERSION
 AISTACK_UID=$(id -u)
 AISTACK_GID=$(id -g)
 DOCKER_GID=$docker_gid
+# The host folders chosen in /setup (step 4), read with docker-compose.yml.
+COMPOSE_FILE=docker-compose.yml:config/volumes.yml
 EOF
 else
     note ".env déjà là : gardé."
+    if ! grep -q '^COMPOSE_FILE=' "$DIR/.env"; then
+        run sh -c "echo 'COMPOSE_FILE=docker-compose.yml:config/volumes.yml' >> '$DIR/.env'"
+    fi
+fi
+if [ ! -f "$DIR/config/volumes.yml" ]; then
+    write_file "$DIR/config/volumes.yml" 644 <<'EOF'
+# AIStack — the host folders AIStack reads, besides /media, /srv and /opt.
+# Filled by the installation assistant (/setup, step 4); read with
+# docker-compose.yml through COMPOSE_FILE in .env.
+services: {}
+EOF
 fi
 if [ ! -f "$DIR/.env.web" ]; then
     write_file "$DIR/.env.web" 600 <<'EOF'
@@ -308,6 +321,7 @@ say "5. Démarrer AIStack"
 SETUP_DIR="$DIR/data/setup"
 run mkdir -p "$SETUP_DIR"
 write_file "$SETUP_DIR/install.env" 600 <<EOF
+INSTALL_DIR=$DIR
 HOST_NAME=$(hostname)
 HOST_ADDRESS=$HOST_ADDRESS
 DOMAIN=$domain
@@ -317,6 +331,12 @@ GOTIFY=$WITH_GOTIFY
 SYNCTHING=$WITH_SYNCTHING
 OLLAMA=$WITH_OLLAMA
 EOF
+# The host's disks, for step 4: the container sees only what it is given.
+if [ "$DRY_RUN" -eq 1 ]; then
+    note "[à faire] copier /proc/self/mounts dans $SETUP_DIR/host-mounts"
+else
+    cp /proc/self/mounts "$SETUP_DIR/host-mounts"
+fi
 token=""
 if [ -f "$SETUP_DIR/finished" ]; then
     note "L'assistant d'installation est déjà terminé : il reste fermé."
@@ -329,8 +349,13 @@ else
     token="$(openssl rand -hex 24 2>/dev/null || head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
     printf '%s\n' "$token" | write_file "$SETUP_DIR/token" 600
 fi
-run $DOCKER compose --project-directory "$DIR" -f "$DIR/docker-compose.yml" pull
-run $DOCKER compose --project-directory "$DIR" -f "$DIR/docker-compose.yml" up -d
+# In the directory, without -f: COMPOSE_FILE (.env) adds config/volumes.yml.
+(
+    note "(dans $DIR)"
+    if [ "$DRY_RUN" -eq 0 ]; then cd "$DIR" || exit 1; fi
+    run $DOCKER compose pull
+    run $DOCKER compose up -d
+)
 say "C'est prêt pour la suite dans le navigateur"
 if [ -n "$token" ]; then
     note "Ouvre cette adresse depuis un poste du réseau local (elle porte le jeton d'installation) :"

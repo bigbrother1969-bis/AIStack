@@ -83,6 +83,31 @@ keep_copy() {
 
 port_busy() { ss -ltn 2>/dev/null | awk '{print $4}' | grep -Eq '[:.]80$'; }
 
+# Installs the nginx package without letting it start: the package starts
+# its own nginx when it is configured, and with the reverse proxy on port
+# 80 that start fails — which leaves dpkg with a half-configured package.
+# A policy-rc.d that refuses every start (exit 101) is in place for the
+# duration, and only if there was none.
+install_nginx() {
+    local policy="$PREFIX/usr/sbin/policy-rc.d"
+    if [ "$DRY_RUN" -eq 1 ]; then
+        say "  [simulation] apt-get install nginx (démarrage du service interdit pendant l'installation)"
+        return 0
+    fi
+    local made=0
+    if [ ! -e "$policy" ]; then
+        install -d "$(dirname "$policy")"
+        printf '#!/bin/sh\nexit 101\n' > "$policy"
+        chmod 755 "$policy"
+        made=1
+    fi
+    local rc=0
+    say "  apt-get install nginx (démarrage du service interdit pendant l'installation)"
+    apt-get install -y nginx || rc=$?
+    [ "$made" -eq 0 ] || rm -f "$policy"
+    [ "$rc" -eq 0 ] || fail "apt-get install nginx a échoué (code $rc)."
+}
+
 cmd_install() {
     need_root
     say "== Installation de la page de maintenance"
@@ -91,7 +116,7 @@ cmd_install() {
     if ! command -v nginx >/dev/null 2>&1; then
         say "  nginx n'est pas installé."
         confirm "Installer le paquet nginx (apt) ?" || fail "Abandon."
-        do_it "apt-get install nginx" apt-get install -y nginx
+        install_nginx
         # The package starts and enables its own nginx: not wanted, the
         # reverse proxy has port 80 and this nginx is ours.
         do_it "arrêt et désactivation du service nginx du paquet" systemctl disable --now nginx

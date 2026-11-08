@@ -68,6 +68,23 @@ def installed(tmp_path: Path, *args: str) -> None:
     (tmp_path / "calls").unlink(missing_ok=True)
 
 
+def test_nginx_missing_is_installed_without_letting_the_package_start_it(tmp_path: Path):
+    # The fake nginx is taken away: only the other fakes stay on the PATH.
+    env = environment(tmp_path)
+    (tmp_path / "bin" / "nginx").unlink()
+    policy = tmp_path / "root/usr/sbin/policy-rc.d"
+    # apt-get, as the fake sees it, checks the policy file exists and says what it holds.
+    apt = tmp_path / "bin" / "apt-get"
+    apt.write_text(f'#!/bin/sh\necho "apt-get $*" >> "$CALLS"\ncat "{policy}" >> "$CALLS"\n', encoding="utf-8")
+    env["PATH"] = f"{tmp_path / 'bin'}:/usr/bin:/bin"
+    result = subprocess.run(["bash", str(SCRIPT), "install", "--yes"], env=env, capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stderr
+    seen = calls(tmp_path)
+    assert "apt-get install -y nginx" in seen and "exit 101" in seen
+    assert any("disable --now nginx" in call for call in seen)
+    assert not policy.exists()
+
+
 def test_the_page_is_self_contained_and_says_it_in_both_languages():
     html = HTML.read_text(encoding="utf-8")
     assert "Maintenance en cours" in html and "Maintenance in progress" in html

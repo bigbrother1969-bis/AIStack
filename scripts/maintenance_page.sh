@@ -40,6 +40,7 @@ PAGE_DIR="$PREFIX/usr/share/aistack-maintenance"
 CONF_DIR="$PREFIX/etc/aistack-maintenance"
 UNIT="$PREFIX/etc/systemd/system/aistack-maintenance.service"
 WAIT_PORT_SECONDS="${AISTACK_MAINTENANCE_WAIT:-120}"
+DOCKER_BIN="${AISTACK_DOCKER:-docker}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 DRY_RUN=0
@@ -203,6 +204,38 @@ cmd_status() {
     fi
 }
 
+# The containers running before Docker is stopped. A restart policy does
+# not bring back every one of them (a container killed while the daemon
+# stops, `on-failure`, `no`): after Docker is back, those that were
+# running and are not any more are started again.
+RUNNING_BEFORE=""
+note_running_containers() {
+    command -v "$DOCKER_BIN" >/dev/null 2>&1 || return 0
+    RUNNING_BEFORE="$("$DOCKER_BIN" ps -q --no-trunc 2>/dev/null || true)"
+}
+
+restart_stopped_containers() {
+    [ -n "$RUNNING_BEFORE" ] || return 0
+    local waited=0 id name
+    until "$DOCKER_BIN" info >/dev/null 2>&1; do
+        waited=$((waited + 1))
+        if [ "$waited" -gt "$WAIT_PORT_SECONDS" ]; then
+            say "ATTENTION : Docker ne répond pas, les conteneurs d'avant ne sont pas relancés."
+            return 0
+        fi
+        sleep 1
+    done
+    # Let the restart policies act first.
+    sleep 30
+    for id in $RUNNING_BEFORE; do
+        if [ "$("$DOCKER_BIN" inspect -f '{{.State.Running}}' "$id" 2>/dev/null || echo true)" != true ]; then
+            name="$("$DOCKER_BIN" inspect -f '{{.Name}}' "$id" 2>/dev/null || echo "$id")"
+            say "  Relance de ${name#/} (tournait avant l'arrêt de Docker)"
+            "$DOCKER_BIN" start "$id" >/dev/null 2>&1 || say "ATTENTION : ${name#/} ne démarre pas."
+        fi
+    done
+}
+
 cmd_run() {
     need_root
     [ $# -gt 0 ] || fail "Usage : $0 run -- COMMANDE [ARGUMENTS...]"
@@ -214,12 +247,13 @@ cmd_run() {
         say "  [simulation] arrêt de Docker (docker.service et docker.socket)"
         say "  [simulation] page de maintenance affichée"
         say "  [simulation] $*"
-        say "  [simulation] page retirée, Docker redémarré (même si la commande échoue)"
+        say "  [simulation] page retirée, Docker redémarré, conteneurs d'avant relancés (même si la commande échoue)"
         return 0
     fi
     # Whatever happens from here on, the page comes down and Docker comes
     # back: the trap is set before anything is stopped.
-    trap 'cmd_off || true; systemctl start docker.service || say "ATTENTION : Docker ne redémarre pas, à relancer à la main."' EXIT
+    note_running_containers
+    trap 'cmd_off || true; systemctl start docker.service || say "ATTENTION : Docker ne redémarre pas, à relancer à la main."; restart_stopped_containers || true' EXIT
     systemctl stop docker.service docker.socket
     cmd_on
     local rc=0

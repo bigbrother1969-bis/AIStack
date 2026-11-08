@@ -28,6 +28,13 @@ FAKES = {
     "ss": '[ -f "$BUSY" ] && echo "LISTEN 0 4096 0.0.0.0:80 0.0.0.0:*"\nexit 0\n',
     "curl": 'echo "${FAKE_HTTP:-503}"\n',
     "sleep": "exit 0\n",
+    # Docker: `ps` lists the containers of $WAS_RUNNING; those named in $DEAD are not running any more.
+    "docker": 'case "$1" in\n'
+    '  info) exit 0;;\n'
+    '  ps) cat "$WAS_RUNNING" 2>/dev/null; exit 0;;\n'
+    '  inspect) id="$4"; if [ "$3" = "{{.State.Running}}" ]; then grep -qx "$id" "$DEAD" 2>/dev/null && echo false || echo true; else echo "/name-$id"; fi;;\n'
+    '  start) echo "docker start $2" >> "$DOCKER_CALLS";;\n'
+    'esac\n',
 }
 
 
@@ -49,6 +56,9 @@ def environment(tmp_path: Path, *, busy: bool = False) -> dict[str, str]:
         "CALLS": str(tmp_path / "calls"),
         "ACTIVE": str(tmp_path / "active"),
         "BUSY": str(busy_file),
+        "WAS_RUNNING": str(tmp_path / "was_running"),
+        "DEAD": str(tmp_path / "dead"),
+        "DOCKER_CALLS": str(tmp_path / "docker_calls"),
     }
 
 
@@ -222,3 +232,22 @@ def test_shellcheck_finds_nothing():
     assert shellcheck, 'shellcheck missing: python -m pip install -e ".[dev]"'
     result = subprocess.run([shellcheck, str(SCRIPT)], capture_output=True, text=True, timeout=60, env=os.environ)
     assert result.returncode == 0, result.stdout
+
+
+def test_run_starts_again_the_containers_that_did_not_come_back(tmp_path: Path):
+    installed(tmp_path)
+    (tmp_path / "was_running").write_text("aaa\nbbb\nccc\n", encoding="utf-8")
+    (tmp_path / "dead").write_text("bbb\nccc\n", encoding="utf-8")
+    result = run(tmp_path, "run", "--", "true")
+    assert result.returncode == 0, result.stderr
+    started = (tmp_path / "docker_calls").read_text(encoding="utf-8").splitlines()
+    assert started == ["docker start bbb", "docker start ccc"]
+    assert "Relance de name-bbb" in result.stdout
+
+
+def test_run_starts_nothing_when_every_container_came_back(tmp_path: Path):
+    installed(tmp_path)
+    (tmp_path / "was_running").write_text("aaa\n", encoding="utf-8")
+    result = run(tmp_path, "run", "--", "true")
+    assert result.returncode == 0, result.stderr
+    assert not (tmp_path / "docker_calls").exists()

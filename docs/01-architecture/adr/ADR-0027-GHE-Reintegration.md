@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.1
+  version: 1.2
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -123,7 +123,7 @@ end of each lot.
 | Lot | Subject | Closes |
 |---|---|---|
 | 3 | No technology in the Kernel | `GOV-0002/OS-085` |
-| 4 | Capabilities registered at bootstrap; services exposed | part of `OS-086` |
+| 4 | Application code asks the Kernel for a provider (§ 9) | part of `OS-086` |
 | 5 | The chains run through the Kernel, one at a time: health, architecture, console, Time Machine | `OS-086`, `OS-089` |
 | 6 | Modifications of knowledge go through a transaction | `OS-087` |
 | 7 | The declarations edited by hand on the host become governed knowledge | — |
@@ -173,6 +173,44 @@ What this costs is said here once: a registration that names a class
 that does not exist fails when the Kernel boots, where an import failed
 when the module was read, and `mypy` no longer sees it. A test of the
 governed suite checks every declared path against its contract.
+
+### 9. Application code asks the Kernel for a provider
+
+Decided by the owner, 2026-11-15, at the opening of lot 4. `FDN-0004`
+validated the Kernel Bootstrap Principle on one sentence: *"DockerProvider
+is no longer instantiated directly by application code."* Measured that
+day by `scripts/ghe_audit.py`: twelve providers exist, two are registered,
+and ten files of application code build one — 23 pairs of a file and a
+provider it builds. `DockerProvider`, which is registered, is built by
+five of those files.
+
+**Scope.** The six providers built with no argument come from the
+registry: `docker`, `compose`, `storage`, `backup`, `gpu`, `host`. The six
+built from a configuration at each use — Beszel, the HTTP probe, Jellyfin,
+the media library, the network discovery, Syncthing — stay built by their
+caller, and stay reported by the audit: 7 of the 23 pairs. Registering them needs a way for
+the Kernel to hand each its address, token or path; no case asks for that
+mechanism yet (`ARC-P-006`).
+
+**Order.** One chain at a time, health first. A provider is registered in
+the commit in which its callers start asking the registry for it: a
+provider registered and asked for by nothing would be the defect of the
+Task nothing executes.
+
+**Contract.** The registry was typed on `KnowledgeProvider`, whose one
+method is `collect()`. The providers of storage, backup, GPU and host have
+none: they expose specialised readings. All twelve carry the identity of
+the base contract `Provider`, which *"does not prescribe how information
+is obtained"*. The registry is typed on `Provider`. `KnowledgeProvider`
+stays the contract of those that `collect()`, and a Task built on a
+provider still requires it, checked when the Kernel boots. No provider is
+rewritten.
+
+The plan of that morning named lot 4 *capabilities registered at
+bootstrap; services exposed*. Read against the code: the transaction
+service is already in `KernelServices` (`ADR-0019` § 6), and the Capability
+Model (`ARCH-0012`, Draft, at the tag) has open points no case settles.
+Lot 4 is the providers.
 
 ## The refactoring plan of August 2026
 

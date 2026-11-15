@@ -111,6 +111,34 @@ def test_a_task_executed_from_outside_the_kernel_is_not_a_departure(tmp_path: Pa
     assert audit.measure(asked_for)["registered_tasks_never_executed"] == []
 
 
+def test_application_code_that_builds_a_provider_is_a_departure(tmp_path: Path) -> None:
+    root = _tree(
+        tmp_path,
+        {
+            "providers/docker/provider.py": "class DockerProvider:\n    pass\n\n\nclass Reading:\n    pass\n",
+            "providers/gpu/provider.py": "class NvidiaGpuProvider:\n    pass\n",
+            "providers/docker/factory.py": "from .provider import DockerProvider\n\nDockerProvider()\n",
+            "cli/health.py": (
+                "from aistack.providers.docker.provider import DockerProvider, Reading\n"
+                "from aistack.providers import gpu\n\n"
+                "DockerProvider().collect()\nDockerProvider()\nReading()\n"
+                "gpu.provider.NvidiaGpuProvider()\n"
+            ),
+            "cli/asks.py": (
+                "from aistack.providers.docker.provider import DockerProvider\n\n\n"
+                "def run(kernel):\n"
+                "    return kernel.registries.providers.get_as('docker', DockerProvider)\n"
+            ),
+            "kernel/bootstrap/registrations.py": "def build(factory):\n    return factory()\n",
+        },
+    )
+
+    assert _audit().measure(root)["providers_built_by_application_code"] == [
+        "src/aistack/cli/health.py -> DockerProvider",
+        "src/aistack/cli/health.py -> NvidiaGpuProvider",
+    ]
+
+
 def test_writing_the_disk_outside_a_transaction_is_a_departure(tmp_path: Path) -> None:
     root = _tree(
         tmp_path,

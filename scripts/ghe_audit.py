@@ -243,6 +243,27 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     )
     unexecuted = [] if task_callers else ["no module outside the Kernel executes a registered Task"]
 
+    # ARC-P-002 - application code asks the Kernel for a provider; it does
+    # not build one (`FDN-0004`, Kernel Bootstrap Principle). A provider is
+    # a class of `aistack/providers` whose name ends in `Provider`.
+    providers = {
+        node.name
+        for path, tree in trees.items()
+        if inside(path, "providers")
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ClassDef) and node.name.endswith("Provider")
+    }
+    built = sorted(
+        {
+            f"{_relative(root, path)} -> {name}"
+            for path, tree in trees.items()
+            if not inside(path, "providers") and not inside(path, "kernel")
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and (name := _dotted(node.func).rpartition(".")[2]) in providers
+        }
+    )
+
     # GOV-P-002 - every modification is a governed transaction.
     # ARC-P-012 - providers observe and collect; they never modify.
     # Writing a generated artifact is legitimate (ENG-P-003); telling it
@@ -277,6 +298,7 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
         "kernel_names_what_is_not_generic": kernel_imports,
         "entry_points_bypassing_the_kernel": bypassing,
         "registered_tasks_never_executed": unexecuted,
+        "providers_built_by_application_code": built,
         "disk_writes_outside_a_transaction": writers,
         "principles_missing_from_the_tree": missing,
         "documents_cited_and_absent": sorted(cited_documents - present - _kept_at_the_tag(root)),
@@ -296,6 +318,10 @@ TITLES = {
     "registered_tasks_never_executed": (
         "ARC-P-002",
         "A registered Task is never executed",
+    ),
+    "providers_built_by_application_code": (
+        "ARC-P-002",
+        "Application code builds a provider instead of asking the Kernel for it",
     ),
     "disk_writes_outside_a_transaction": (
         "GOV-P-002, ARC-P-012",

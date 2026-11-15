@@ -27,6 +27,31 @@
   "registered_tasks_never_executed": [
     "no module outside the Kernel executes a registered Task"
   ],
+  "providers_built_by_application_code": [
+    "src/aistack/cli/ai_reason.py -> DockerProvider",
+    "src/aistack/cli/ai_reason.py -> HostProvider",
+    "src/aistack/cli/architecture_render.py -> BeszelProvider",
+    "src/aistack/cli/architecture_render.py -> HttpProbeProvider",
+    "src/aistack/cli/console_render.py -> BackupProvider",
+    "src/aistack/cli/console_render.py -> DockerProvider",
+    "src/aistack/cli/console_render.py -> NvidiaGpuProvider",
+    "src/aistack/cli/console_render.py -> StorageProvider",
+    "src/aistack/cli/health_render.py -> BackupProvider",
+    "src/aistack/cli/health_render.py -> DockerProvider",
+    "src/aistack/cli/health_render.py -> NvidiaGpuProvider",
+    "src/aistack/cli/health_render.py -> StorageProvider",
+    "src/aistack/cli/network_docker_discover.py -> NetworkDockerDiscoveryProvider",
+    "src/aistack/priority/detectors/jellyfin.py -> JellyfinProvider",
+    "src/aistack/priority/screen.py -> DockerProvider",
+    "src/aistack/selection/screen.py -> MediaLibraryProvider",
+    "src/aistack/selection/screen.py -> SyncthingProvider",
+    "src/aistack/sync/screen.py -> MediaLibraryProvider",
+    "src/aistack/troubleshooting/findings.py -> BackupProvider",
+    "src/aistack/troubleshooting/findings.py -> DockerProvider",
+    "src/aistack/troubleshooting/findings.py -> HostProvider",
+    "src/aistack/troubleshooting/findings.py -> NvidiaGpuProvider",
+    "src/aistack/troubleshooting/findings.py -> StorageProvider"
+  ],
   "disk_writes_outside_a_transaction": [
     "src/aistack/api_keys/__init__.py",
     "src/aistack/arrivals/declare.py",

@@ -173,5 +173,6 @@ def test_the_real_categorization_produces_seven_views():
         "AIStack — Paquets",
         "AIStack — Priorité CPU",
         "AIStack — Vigie",
+        "AIStack — Relance au démarrage",
         "Music Sync",
     ]

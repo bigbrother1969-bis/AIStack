@@ -39,7 +39,7 @@ main() {
     echo "Services systemd"
     local unit
     for unit in aistack-web aistack-docker-events-monitor aistack-docker-diff-monitor \
-        aistack-docker-digest-monitor aistack-docker-packages-monitor aistack-resource-priority-monitor; do
+        aistack-docker-digest-monitor aistack-docker-packages-monitor aistack-resource-priority-monitor aistack-restart-watch; do
         info "$unit : $(systemctl is-active "$unit" 2>/dev/null) / $(systemctl is-enabled "$unit" 2>/dev/null)"
     done
 

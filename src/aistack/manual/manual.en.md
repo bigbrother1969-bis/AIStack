@@ -733,6 +733,35 @@ a test message and `docker compose logs -f vigil` to follow it. In a
 git installation: `deploy/systemd/aistack-vigil.service`. Without these
 two variables the vigil still runs, and says notifications are off.
 
+## Restart after boot
+
+When the machine starts, dozens of containers start at once. A few come up
+"running" but unusable: a program stuck at initialisation, or a container
+sharing another one's network (`network_mode: container:…`) whose network
+has been replaced since. Docker's restart policy sees nothing, since
+nothing fell over. The `restart-watch` service finds them and restarts
+them in the order their dependencies need.
+
+A container is judged stuck by one of three signs: its healthcheck says
+"unhealthy"; it shares the network of a container started after it; or,
+with no healthcheck, the probe you declared for it gets no answer. A
+stopped container is never restarted.
+
+Safeguards: the watch acts only for 30 minutes after it starts (which
+follows Docker's start), only on a container seen stuck two passes in a
+row, at most twice an hour per container. It restarts one container after
+the other, each only once the previous one answers; if one does not come
+back, it stops there and tells you through Gotify. Outside the window it
+writes down without acting.
+
+The "Restart after boot" screen of the console shows the window, the
+stuck containers and the decision journal. The settings (window,
+attempts, containers never touched, imposed order, probes) are in
+`./config/restart_watch.yml`. To see what it would do without restarting
+anything: `docker compose exec restart-watch python -m
+aistack.cli.restart_watch --once --dry-run --ignore-window`. On a git
+installation: `deploy/systemd/aistack-restart-watch.service`.
+
 ## Disk budget of AIStack's data
 
 AIStack's data (the data directory: history, the Time Machine's graph,

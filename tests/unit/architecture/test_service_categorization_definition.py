@@ -361,7 +361,7 @@ def test_the_real_service_categorization_loads():
         for category in definition.categories
         for service in category.services
     ]
-    assert len(all_services) == 77  # + AIStack's own six, 2026-10-04, and its vigil, 2026-10-09
+    assert len(all_services) == 78  # + AIStack's own six, 2026-10-04, its vigil, 2026-10-09, and its restart watch, 2026-11-15
 
     by_name = {service.name: service for service in all_services}
 
@@ -382,15 +382,16 @@ def test_the_real_service_categorization_loads():
         c for c in definition.categories if c.name == "AIStack"
     )
     assert [s.name for s in aistack_category.services] == [
-    "AIStack",
-    "AIStack — Événements Docker",
-    "AIStack — Différences de fichiers",
-    "AIStack — Empreintes d'images",
-    "AIStack — Paquets",
-    "AIStack — Priorité CPU",
-    "AIStack — Vigie",
-    "Music Sync",
-]
+        "AIStack",
+        "AIStack — Événements Docker",
+        "AIStack — Différences de fichiers",
+        "AIStack — Empreintes d'images",
+        "AIStack — Paquets",
+        "AIStack — Priorité CPU",
+        "AIStack — Vigie",
+        "AIStack — Relance au démarrage",
+        "Music Sync",
+    ]
 
     # 1.6 closure, 2026-10-02: 22 technical/infra entries added to
     # resolve real `discovered_undeclared` inventory gaps — sidecars
@@ -408,6 +409,7 @@ def test_the_real_service_categorization_loads():
         "AIStack — Paquets",
         "AIStack — Priorité CPU",
         "AIStack — Vigie",
+        "AIStack — Relance au démarrage",
         "Nextcloud — Base de données",
         "Nextcloud — Redis",
         "Nextcloud — Cron",
@@ -430,7 +432,7 @@ def test_the_real_service_categorization_loads():
         "Unpackerr",
         "MinIO",
     }
-    assert len(_NO_ICON_OR_HREF) == 27
+    assert len(_NO_ICON_OR_HREF) == 28
 
     # `icon`/`href`/`description` joined 2026-09-12 (§10) — every
     # user-facing service carries all three, unlike `container` (which

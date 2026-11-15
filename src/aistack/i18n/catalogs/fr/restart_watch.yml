@@ -1,0 +1,41 @@
+# Écran « Relance au démarrage » (ADR-0025).
+
+title: "AIStack — Relance au démarrage"
+heading: "Relance au démarrage"
+meta: "Fenêtre : {window} min après le démarrage — {attempts} tentative(s) par heure et par conteneur — un conteneur doit être vu bloqué {confirm} fois de suite avant d'être relancé."
+now:
+  heading: "Maintenant"
+  never: "La surveillance n'a encore rien écrit : elle n'a pas tourné depuis la mise en place."
+  window_open: "fenêtre ouverte : la surveillance agit"
+  window_closed: "fenêtre fermée : elle note sans agir"
+  dry_run: "essai : rien n'est relancé"
+  updated: "dernier passage : {at}"
+  none: "Aucun conteneur bloqué."
+col:
+  container: "Conteneur"
+  reasons: "Pourquoi"
+  seen: "Vu bloqué (passages de suite)"
+  when: "Quand"
+  event: "Décision"
+  detail: "Détail"
+reason:
+  unhealthy: "contrôle de santé en échec"
+  stale_network: "réseau périmé (le conteneur qui le porte a redémarré après lui)"
+  probe_failed: "sonde déclarée sans réponse"
+  dragged: "entraîné par le réseau d'un conteneur relancé"
+event:
+  restarted: "relancé"
+  failed: "échec"
+  planned: "aurait été relancé (essai)"
+  skipped_limit: "refusé : limite par heure atteinte"
+  outside_window: "vu bloqué hors fenêtre, rien fait"
+  cycle: "ordre déclaré en boucle"
+declared:
+  heading: "Ce qui est déclaré"
+  where: "Dans restart_watch.yml (Paramètres, déclarations livrées) : la fenêtre, les tentatives, et ces trois listes."
+  never: "Jamais touchés"
+  after: "Ordre imposé (celui de gauche après ceux de droite)"
+  probes: "Sondes (conteneurs sans contrôle de santé)"
+journal:
+  heading: "Journal des décisions"
+  empty: "Aucune décision pour l'instant."

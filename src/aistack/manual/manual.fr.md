@@ -768,6 +768,36 @@ installation git : `deploy/systemd/aistack-vigil.service`. Sans ces deux
 variables, la vigie tourne quand même et dit que les notifications sont
 coupées.
 
+## Relance au démarrage
+
+Au démarrage de la machine, des dizaines de conteneurs démarrent en même
+temps. Quelques-uns se lèvent « en marche » mais inutilisables : un
+programme resté bloqué à l'initialisation, ou un conteneur qui partage le
+réseau d'un autre (`network_mode: container:…`) et dont le réseau a été
+remplacé depuis. La politique de redémarrage de Docker ne voit rien, car
+rien n'est tombé. Le service `restart-watch` les repère et les relance
+dans l'ordre que leurs dépendances demandent.
+
+Un conteneur est jugé bloqué à l'un de ces trois signes : son contrôle de
+santé dit « unhealthy » ; il partage le réseau d'un conteneur démarré
+après lui ; ou, s'il n'a aucun contrôle de santé, la sonde que tu as
+déclarée pour lui ne répond pas. Un conteneur arrêté n'est jamais relancé.
+
+Garde-fous : la surveillance n'agit que pendant 30 minutes après son
+propre démarrage (qui suit celui de Docker), seulement sur un conteneur vu
+bloqué deux passages de suite, au plus deux fois par heure et par
+conteneur. Elle redémarre un conteneur après l'autre, chacun seulement
+quand le précédent répond ; si l'un ne revient pas, elle s'arrête là et
+te prévient par Gotify. Hors de la fenêtre, elle note sans agir.
+
+L'écran « Relance au démarrage » de la console montre la fenêtre, les
+conteneurs bloqués et le journal des décisions. Les réglages (fenêtre,
+tentatives, conteneurs jamais touchés, ordre imposé, sondes) sont dans
+`./config/restart_watch.yml`. Pour voir ce qu'elle ferait sans rien
+relancer : `docker compose exec restart-watch python -m
+aistack.cli.restart_watch --once --dry-run --ignore-window`. En
+installation git : `deploy/systemd/aistack-restart-watch.service`.
+
 ## Budget disque des données d'AIStack
 
 Les données d'AIStack (le dossier des données : historique, graphe de la

@@ -495,7 +495,7 @@ HOST_MOUNTS_FILE = "host-mounts"
 VOLUMES_FILE = "volumes.yml"
 # The services of `docker-compose.yml` built on `x-aistack`: each sees
 # the same folders.
-SERVICES = ("web", "events", "diff", "digest", "packages", "priority", "vigil")
+SERVICES = ("web", "events", "diff", "digest", "packages", "priority", "vigil", "restart-watch")
 # What `docker-compose.yml` already gives every service, read-only.
 ALWAYS_READ = ("/media", "/srv", "/opt")
 # Never offered, never accepted: the system's own, or the container's.

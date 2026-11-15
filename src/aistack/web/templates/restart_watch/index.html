@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('restart_watch.title') }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+    .box h2 { margin: 0 0 .6rem; font-size: 1.05rem; }
+    .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .75rem; }
+    .badge.open { background: #dff6dd; color: #116329; }
+    .badge.closed { background: #f0f0f0; color: #666; }
+    .badge.restarted { background: #dff6dd; color: #116329; }
+    .badge.failed, .badge.cycle { background: #fde2e2; color: #8a1c1c; }
+    .badge.planned, .badge.outside_window, .badge.skipped_limit { background: #fff1cc; color: #7d4e00; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    code { background: #eef1f4; padding: .05rem .3rem; border-radius: 4px; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; font-size: .88rem; }
+    .top a { color: #1f6feb; text-decoration: none; }
+    .top a:hover { text-decoration: underline; }
+    .lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
+    .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
+    .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
+    .lang-switch a:hover .flag { opacity: 1; }
+    .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+  </style>
+</head>
+<body>
+  {% set reasons = {
+    'unhealthy': t('restart_watch.reason.unhealthy'),
+    'stale_network': t('restart_watch.reason.stale_network'),
+    'probe_failed': t('restart_watch.reason.probe_failed'),
+    'dragged': t('restart_watch.reason.dragged'),
+  } %}
+  {% set events = {
+    'restarted': t('restart_watch.event.restarted'),
+    'failed': t('restart_watch.event.failed'),
+    'planned': t('restart_watch.event.planned'),
+    'skipped_limit': t('restart_watch.event.skipped_limit'),
+    'outside_window': t('restart_watch.event.outside_window'),
+    'cycle': t('restart_watch.event.cycle'),
+  } %}
+  <div class="top">
+    <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+  <header>
+    <h1>{{ t('restart_watch.heading') }}</h1>
+    <p class="meta">{{ t('restart_watch.meta', window=definition.window_minutes, attempts=definition.max_attempts_per_hour, confirm=definition.confirm_cycles) }}</p>
+  </header>
+
+  <div class="box">
+    <h2>{{ t('restart_watch.now.heading') }}</h2>
+    {% if not state %}
+      <p>{{ t('restart_watch.now.never') }}</p>
+    {% else %}
+      <p>
+        {% if state.window_open %}<span class="badge open">{{ t('restart_watch.now.window_open') }}</span>
+        {% else %}<span class="badge closed">{{ t('restart_watch.now.window_closed') }}</span>{% endif %}
+        {% if state.dry_run %}<span class="badge planned">{{ t('restart_watch.now.dry_run') }}</span>{% endif %}
+        <span class="meta">{{ t('restart_watch.now.updated', at=state.updated_at) }}</span>
+      </p>
+      {% if stuck %}
+        <table>
+          <tr><th>{{ t('restart_watch.col.container') }}</th><th>{{ t('restart_watch.col.reasons') }}</th><th>{{ t('restart_watch.col.seen') }}</th></tr>
+          {% for item in stuck %}
+            <tr>
+              <td><code>{{ item.name }}</code></td>
+              <td>{% for reason in item.reasons %}{{ reasons.get(reason, reason) }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+              <td>{{ item.seen }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% else %}
+        <p>{{ t('restart_watch.now.none') }}</p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>{{ t('restart_watch.declared.heading') }}</h2>
+    <p class="meta">{{ t('restart_watch.declared.where') }}</p>
+    <ul>
+      <li>{{ t('restart_watch.declared.never') }} :
+        {% if definition.never %}{% for name in definition.never %}<code>{{ name }}</code> {% endfor %}{% else %}—{% endif %}</li>
+      <li>{{ t('restart_watch.declared.after') }} :
+        {% if definition.after %}{% for name, first in definition.after.items() %}<code>{{ name }}</code> ← {% for other in first %}<code>{{ other }}</code> {% endfor %}{% endfor %}{% else %}—{% endif %}</li>
+      <li>{{ t('restart_watch.declared.probes') }} :
+        {% if definition.probes %}{% for name, probe in definition.probes.items() %}<code>{{ name }}</code> → {{ probe.url }} {% endfor %}{% else %}—{% endif %}</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h2>{{ t('restart_watch.journal.heading') }}</h2>
+    {% if entries %}
+      <table>
+        <tr><th>{{ t('restart_watch.col.when') }}</th><th>{{ t('restart_watch.col.event') }}</th><th>{{ t('restart_watch.col.container') }}</th><th>{{ t('restart_watch.col.reasons') }}</th><th>{{ t('restart_watch.col.detail') }}</th></tr>
+        {% for entry in entries %}
+          <tr>
+            <td>{{ entry.at.replace('T', ' ') }}</td>
+            <td><span class="badge {{ entry.event }}">{{ events.get(entry.event, entry.event) }}</span></td>
+            <td><code>{{ entry.container }}</code></td>
+            <td>{% for reason in entry.reasons %}{{ reasons.get(reason, reason) }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+            <td>{{ entry.detail }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>{{ t('restart_watch.journal.empty') }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

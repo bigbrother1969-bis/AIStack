@@ -1,0 +1,38 @@
+# AIStack — restart watch (ADR-0025): bring back the containers that came
+# up stuck after a start, in the order their dependencies need.
+#
+# The watch acts only during `window_minutes` after it starts (it starts
+# with Docker), only on a container found stuck `confirm_cycles` polls in
+# a row, and at most `max_attempts_per_hour` times per container. Outside
+# the window it only writes down what it sees.
+
+window_minutes: 30
+poll_seconds: 30
+confirm_cycles: 2
+max_attempts_per_hour: 2
+# How long to wait for one restarted container to answer before giving
+# up on the rest of the plan.
+wait_seconds: 180
+
+# Containers never touched, whatever they look like — a container you
+# keep stopped on purpose is never started (the watch only restarts what
+# runs), but one you do not want restarted belongs here.
+never: []
+
+# The order is read from Docker (the network a container shares, the
+# `depends_on` of its Compose file). Say here what Docker cannot know:
+# the container on the left is restarted after the ones on its right.
+#
+#   after:
+#     firefly: [firefly_db]
+after: {}
+
+# A container with no healthcheck is judged by a probe you declare: any
+# HTTP answer under 500 means alive, a refusal or a silence means stuck.
+# The address is asked from the host's own network.
+#
+#   probes:
+#     scrutiny:
+#       url: http://127.0.0.1:8080/api/health
+#       timeout_seconds: 5
+probes: {}

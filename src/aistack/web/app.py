@@ -35,6 +35,7 @@ from aistack.web import (
     first_start,
     network_discovery,
     priority,
+    restart_watch,
     selection,
     timemachine,
     troubleshooting,
@@ -80,6 +81,8 @@ class WebPaths:
         configured(PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml")
     )
     resource_priority: Path = configured(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml")
+    # The restart watch's declaration, shown by its screen (ADR-0025).
+    restart_watch: Path = configured(PACKAGE_ROOT / "restart_watch" / "definitions" / "restart_watch.yml")
     # Read by the troubleshooting assistant to describe a finding.
     backup_strategy: Path = configured(PACKAGE_ROOT / "backup_strategy" / "definitions" / "backup_strategy.yml")
     pra_tests: Path = configured(PACKAGE_ROOT / "pra" / "definitions" / "pra_tests.yml")
@@ -209,6 +212,7 @@ def create_app(
     include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)
     include(app, priority.router, priority.PREFIX)
+    include(app, restart_watch.router, restart_watch.PREFIX)
     include(app, selection.router, selection.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)
     include(app, timemachine.router, timemachine.PREFIX)

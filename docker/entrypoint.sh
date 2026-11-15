@@ -20,6 +20,7 @@ case "$command" in
     digest)    exec python -m aistack.cli.docker_digest_monitor "$@" ;;
     packages)  exec python -m aistack.cli.docker_packages_monitor "$@" ;;
     priority)  exec python -m aistack.cli.resource_priority_monitor "$@" ;;
+    restart-watch) exec python -m aistack.cli.restart_watch "$@" ;;
     vigil)     exec python -m aistack.cli.vigil --every "${AISTACK_VIGIL_SECONDS:-900}" "$@" ;;
     *)         exec "$command" "$@" ;;
 esac

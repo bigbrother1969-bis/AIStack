@@ -22,7 +22,7 @@ def compose() -> dict:
 
 def entrypoint_commands() -> dict[str, str]:
     text = (ROOT / "docker" / "entrypoint.sh").read_text(encoding="utf-8")
-    return dict(re.findall(r"^\s*(\w+)\)\s*exec python -m ([\w.]+)", text, re.M))
+    return dict(re.findall(r"^\s*([\w-]+)\)\s*exec python -m ([\w.]+)", text, re.M))
 
 
 def test_the_six_processes_are_six_services_of_one_image():
@@ -36,7 +36,7 @@ def test_the_six_processes_are_six_services_of_one_image():
         assert services[name]["network_mode"] == "host"
         assert services[name]["restart"] == "unless-stopped"
     # The knowledge-integrity validator was retired in 2.0.0-rc2.
-    assert set(services) == SERVICES | {"vigil"}
+    assert set(services) == SERVICES | {"vigil", "restart-watch"}
 
 
 def test_every_service_sees_the_socket_its_configuration_and_its_data():

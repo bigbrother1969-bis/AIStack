@@ -440,6 +440,11 @@ categories:
       - name: AIStack — Vigie
         container: aistack-vigil
         description: Vigie d'AIStack (santé rafraîchie, notifications Gotify)
+      # The restart watch (2026-11-15): restarts the containers that came
+      # up stuck after a start.
+      - name: AIStack — Relance au démarrage
+        container: aistack-restart-watch
+        description: Surveillance d'AIStack (relance des conteneurs bloqués après un démarrage)
       - name: Music Sync
         icon: music
         href: https://music-sync.persiaut-family.fr

@@ -242,6 +242,7 @@ def test_the_real_console_links_definition_loads():
     assert set(by_name) == {
         "Selection UI",
         "Priorité CPU",
+        "Relance au démarrage",
         "Architecture",
         "Cockpit Santé",
         "Découverte réseau",
@@ -256,6 +257,7 @@ def test_the_real_console_links_definition_loads():
     # the reversal.
     assert by_name["Selection UI"].url == "http://GIGABYTE:8186/selection/"
     assert by_name["Priorité CPU"].url == "http://GIGABYTE:8186/priority/"
+    assert by_name["Relance au démarrage"].url == "http://GIGABYTE:8186/restart-watch/"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"
     # LAN-only, deliberately: never a `https://...persiaut-family.fr`
@@ -277,6 +279,7 @@ def test_the_real_console_links_definition_loads():
     for name in (
         "Selection UI",
         "Priorité CPU",
+        "Relance au démarrage",
         "Découverte réseau",
         "Assistant de pannes",
         "Time Machine",

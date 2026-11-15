@@ -1,0 +1,41 @@
+# "Restart after boot" screen (ADR-0025).
+
+title: "AIStack — Restart after boot"
+heading: "Restart after boot"
+meta: "Window: {window} min after the start — {attempts} attempt(s) per hour per container — a container must be seen stuck {confirm} times in a row before it is restarted."
+now:
+  heading: "Now"
+  never: "The watch has written nothing yet: it has not run since it was set up."
+  window_open: "window open: the watch acts"
+  window_closed: "window closed: it writes down without acting"
+  dry_run: "trial: nothing is restarted"
+  updated: "last pass: {at}"
+  none: "No stuck container."
+col:
+  container: "Container"
+  reasons: "Why"
+  seen: "Seen stuck (passes in a row)"
+  when: "When"
+  event: "Decision"
+  detail: "Detail"
+reason:
+  unhealthy: "healthcheck failing"
+  stale_network: "stale network (the container carrying it restarted after it)"
+  probe_failed: "declared probe got no answer"
+  dragged: "dragged along by the network of a restarted container"
+event:
+  restarted: "restarted"
+  failed: "failed"
+  planned: "would have been restarted (trial)"
+  skipped_limit: "refused: hourly limit reached"
+  outside_window: "seen stuck outside the window, nothing done"
+  cycle: "declared order loops"
+declared:
+  heading: "What is declared"
+  where: "In restart_watch.yml (Settings, shipped declarations): the window, the attempts, and these three lists."
+  never: "Never touched"
+  after: "Imposed order (the one on the left after those on the right)"
+  probes: "Probes (containers without a healthcheck)"
+journal:
+  heading: "Decision journal"
+  empty: "No decision yet."

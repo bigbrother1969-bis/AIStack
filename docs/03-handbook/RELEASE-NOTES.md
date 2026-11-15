@@ -39,6 +39,22 @@ it says what the build was *for*.
 
 ---
 
+## Unreleased
+
+- **Restart after boot.** After a start of the machine, the new
+  `restart-watch` service finds the containers that came up *running but
+  stuck* — unhealthy, holding the network of a container restarted after
+  them, or failing a probe you declare — and restarts them in the order
+  their dependencies need. It acts for 30 minutes after it starts, only on
+  a container seen stuck twice in a row, at most twice an hour each, and
+  tells Gotify when one does not come back. The console has a card for it
+  (the window, the stuck containers, the decision journal);
+  `restart_watch.yml` holds the settings. `ADR-0025`.
+- **The maintenance page waits for nginx.** `maintenance_page.sh on`
+  asked once whether the page answered, right after systemd said the
+  service had started — before nginx was listening. It now asks again for
+  up to 15 seconds (`AISTACK_MAINTENANCE_PAGE_WAIT`).
+
 ## 2.0.0-rc1 — 2026-10-10
 
 **A release candidate: AIStack installs on a server that is not the

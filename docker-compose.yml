@@ -113,6 +113,14 @@ services:
     container_name: aistack-resource-priority
     command: ["priority"]
 
+  # The restart watch (2.1, ADR-0025): after a start, restarts the
+  # containers that came up stuck, in the order their dependencies need.
+  # It acts for 30 minutes after it starts — it starts with Docker.
+  restart-watch:
+    <<: *aistack
+    container_name: aistack-restart-watch
+    command: ["restart-watch"]
+
   # The vigil (2.0): every 15 minutes, renders the health cockpit and
   # the console again and sends what changed to Gotify
   # (AISTACK_GOTIFY_URL and AISTACK_GOTIFY_TOKEN in .env.web).

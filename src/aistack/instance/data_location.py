@@ -190,6 +190,7 @@ SYSTEMD_UNITS = (
     "aistack-docker-digest-monitor",
     "aistack-docker-packages-monitor",
     "aistack-resource-priority-monitor",
+    "aistack-restart-watch",
 )
 
 

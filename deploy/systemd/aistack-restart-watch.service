@@ -1,0 +1,44 @@
+# AIStack — the restart watch (ADR-0025), for a git installation (the
+# Docker one runs it as the `restart-watch` service of docker-compose.yml;
+# never both).
+#
+# After a start, finds the containers that came up stuck — unhealthy,
+# sharing the network of a provider restarted after them, or failing a
+# probe declared in restart_watch.yml — and restarts them in the order
+# their dependencies need. It acts for 30 minutes after it starts (it
+# starts with Docker), at most twice an hour per container, and writes
+# every decision to reports/generated/restart-watch.jsonl (screen
+# "Relance au démarrage" in the console). Failures go to Gotify
+# (AISTACK_GOTIFY_URL and AISTACK_GOTIFY_TOKEN in .env.web).
+#
+# Install (as root):
+#
+#   cp deploy/systemd/aistack-restart-watch.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now aistack-restart-watch
+#
+# Before enabling it, look at what it would do, touching nothing:
+#
+#   ./run_restart_watch.sh --once --dry-run --ignore-window
+#
+# Watch it with: journalctl -u aistack-restart-watch -f
+
+[Unit]
+Description=AIStack restart watch (restarts the containers that came up stuck)
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=big-brother
+Group=big-brother
+WorkingDirectory=/srv/aistack/AIStack
+ExecStart=/srv/aistack/AIStack/run_restart_watch.sh
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -40,6 +40,21 @@ links:
     service: web_lan
     path: /priority/
     scope: lan
+  - name:
+      fr: Relance au démarrage
+      en: Restart after boot
+    description:
+      fr: >-
+        Après un démarrage de la machine, voir quels conteneurs sont
+        restés bloqués (en marche mais inutilisables), lesquels ont été
+        relancés, dans quel ordre, et pourquoi certains ne l'ont pas été.
+      en: >-
+        After the machine starts, see which containers stayed stuck
+        (running but unusable), which were restarted, in what order,
+        and why some were not.
+    service: web_lan
+    path: /restart-watch/
+    scope: lan
   - name: Architecture
     description:
       fr: >-

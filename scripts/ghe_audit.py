@@ -52,6 +52,14 @@ PRINCIPLE = re.compile(r"\b[A-Z]{2,5}-P-\d{3}\b")
 REGISTRY = "docs/00-foundation/FDN-0012-AIStack-Principles-Registry.md"
 INDEX = "docs/00-foundation/FDN-0001-README.md"
 KEPT_AT_THE_TAG = "## Kept at the tag"
+# The generic mechanisms the Kernel may name (`ADR-0027` § 7): they carry
+# no technology. Everything else outside the Kernel is one, or leads to one.
+GENERIC = (
+    "aistack.transport",
+    "aistack.transaction",
+    "aistack.history",
+    "aistack.generators.history",
+)
 # The audit's own test names identifiers that exist only in its fixtures.
 OWN_TEST = "tests/unit/scripts/test_ghe_audit.py"
 READ = ("src", "tests", "docs", "scripts", "README.md")
@@ -195,17 +203,18 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     def inside(path: Path, *parts: str) -> bool:
         return path.is_relative_to(source.joinpath(*parts))
 
-    # ARC-P-004 - technology-specific concepts never belong in the Kernel.
-    # ARC-P-001 - the Kernel is generic: it depends on nothing outside itself.
-    # The composition root (`kernel/bootstrap`) is where the outside is
-    # allowed to be named, except for a technology.
+    # ARC-P-001, ARC-P-004 - the Kernel is generic: it names no technology.
+    # It may name a generic mechanism, and the list of those is declared
+    # above. Its bootstrap is held to the same rule as the rest of it.
+    def generic(name: str) -> bool:
+        return any(name == module or name.startswith(module + ".") for module in GENERIC)
+
     kernel_imports = sorted(
         f"{_relative(root, path)} -> {name}"
         for path, names in imports.items()
         if inside(path, "kernel")
         for name in names
-        if _area(name) not in ("kernel", "")
-        and (not inside(path, "kernel", "bootstrap") or _area(name) in ("providers", "generators"))
+        if _area(name) not in ("kernel", "") and not generic(name)
     )
 
     # ARC-P-002 - what runs is registered at bootstrap and reached through
@@ -259,7 +268,7 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     registered = _registered(root)
 
     return {
-        "kernel_depends_on_the_outside": kernel_imports,
+        "kernel_names_what_is_not_generic": kernel_imports,
         "entry_points_bypassing_the_kernel": bypassing,
         "registered_tasks_never_executed": unexecuted,
         "disk_writes_outside_a_transaction": writers,
@@ -270,9 +279,9 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
 
 
 TITLES = {
-    "kernel_depends_on_the_outside": (
+    "kernel_names_what_is_not_generic": (
         "ARC-P-001, ARC-P-004",
-        "The Kernel names something outside itself",
+        "The Kernel names something that is not a generic mechanism",
     ),
     "entry_points_bypassing_the_kernel": (
         "ARC-P-002",

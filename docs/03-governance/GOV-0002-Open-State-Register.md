@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.3
+  version: 2.4
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -202,9 +202,12 @@ None open.
 
 **Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
 **Observed** `python scripts/ghe_audit.py`, measure *The Kernel names something
-outside itself*: ten imports on `5b1489c`, among them `aistack.providers.docker`,
-`aistack.providers.compose` and `aistack.generators.docker`. `ARC-P-001`,
-`ARC-P-004`.
+that is not a generic mechanism*: six imports on `76649da` —
+`aistack.providers.docker`, `aistack.providers.compose`,
+`aistack.generators.docker` and three catalog views. `ARC-P-001`,
+`ARC-P-004`. *First measured as ten imports, of which three named a
+technology: seven named a generic mechanism, admitted since by `ADR-0027`
+§ 7, and three were hidden by an exemption the audit gave the bootstrap.*
 **Derivable** yes
 **Qualification** to conform, in lot 3 of the GHE reintegration.
 

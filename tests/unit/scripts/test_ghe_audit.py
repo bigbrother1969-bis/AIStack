@@ -53,21 +53,27 @@ def test_the_kernel_naming_a_technology_is_a_departure(tmp_path: Path) -> None:
             "kernel/core.py": "from aistack.kernel.registry import x\n",
             "kernel/tasks/discover.py": "from aistack.providers.docker import DockerProvider\n",
             "kernel/bootstrap/default.py": (
-                "from aistack.transport import engine\nfrom aistack.providers.docker import DockerProvider\n"
+                "from aistack.transport import engine\nfrom aistack.catalog.views.music import MusicView\n"
             ),
+            "kernel/tracing/file.py": (
+                "from aistack.generators.history import write\nfrom aistack.generators.docker import Generator\n"
+            ),
+            "kernel/time/sequence.py": "from aistack.history.query import instants\n",
+            "kernel/services/core.py": "from aistack.transaction.registry import Registry\n",
         },
     )
 
-    assert _audit().measure(root)["kernel_depends_on_the_outside"] == [
-        "src/aistack/kernel/bootstrap/default.py -> aistack.providers.docker",
+    assert _audit().measure(root)["kernel_names_what_is_not_generic"] == [
+        "src/aistack/kernel/bootstrap/default.py -> aistack.catalog.views.music",
         "src/aistack/kernel/tasks/discover.py -> aistack.providers.docker",
+        "src/aistack/kernel/tracing/file.py -> aistack.generators.docker",
     ]
 
 
 def test_a_relative_import_is_resolved(tmp_path: Path) -> None:
     root = _tree(tmp_path, {"kernel/tasks/discover.py": "from ...generators import docker\n"})
 
-    assert _audit().measure(root)["kernel_depends_on_the_outside"] == [
+    assert _audit().measure(root)["kernel_names_what_is_not_generic"] == [
         "src/aistack/kernel/tasks/discover.py -> aistack.generators"
     ]
 

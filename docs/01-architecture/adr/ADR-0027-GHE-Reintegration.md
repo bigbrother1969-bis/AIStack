@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -56,7 +56,7 @@ Measured on 2026-11-15 by `scripts/ghe_audit.py`, written that day:
 
 | Principles | Departure | Count |
 |---|---|---|
-| `ARC-P-001`, `ARC-P-004` | The Kernel names something outside itself | 10 imports |
+| `ARC-P-001`, `ARC-P-004` | The Kernel names something outside itself | 10 imports — see § 7 |
 | `ARC-P-002` | An entry point never builds the Kernel | 22 of 25 |
 | `ARC-P-002` | The one registered Task is never executed | 1 |
 | `GOV-P-002`, `ARC-P-012` | The disk is written outside a transaction | 35 files |
@@ -139,6 +139,40 @@ that is at the tag, and return when the code they describe does.
 
 `ARC-P-006`. A lot moves what exists behind the Kernel. It builds nothing
 the product does not already do.
+
+### 7. The Kernel may name a generic mechanism, never a technology
+
+Decided by the owner, 2026-11-15, at the opening of lot 3. The audit of
+that morning counted every import of the Kernel that left the Kernel: ten.
+Seven of them named no technology — the transport, the transaction
+(`ADR-0019` § 6 places it in `KernelServices`) and the history. The Generic
+Kernel Principle (`FDN-0004`) forbids technologies in the Kernel; it does
+not forbid the Kernel a mechanism that carries none.
+
+The admitted mechanisms are declared in one place, `GENERIC` in
+`scripts/ghe_audit.py`: `aistack.transport`, `aistack.transaction`,
+`aistack.history` and `aistack.generators.history`. They are not moved
+into the Kernel: that would rename dozens of files for no change of
+behaviour.
+
+The same reading removed an exemption. The audit let the bootstrap of the
+Kernel name anything but a provider or a generator, and so did not see it
+import three catalog views — Docker, music, media. The bootstrap is now
+held to the rule of the rest of the Kernel. **Measured the same day: 6
+imports name a technology**, where the first count read 10 of which 3 did.
+
+### 8. The Kernel bootstraps from declared registrations
+
+Decided the same day. *"The Kernel shall bootstrap itself from governed
+registrations rather than explicit technology-specific wiring"*
+(`FDN-0004`, Kernel Bootstrap Principle). The registrations are declared
+in a file outside the Kernel; the Kernel reads it and registers what it
+names. `create_kernel()` stays the one call an application makes.
+
+What this costs is said here once: a registration that names a class
+that does not exist fails when the Kernel boots, where an import failed
+when the module was read, and `mypy` no longer sees it. A test of the
+governed suite checks every declared path against its contract.
 
 ## The refactoring plan of August 2026
 

@@ -1,0 +1,143 @@
+"""scripts/ghe_audit.py: the departures from the GHE principles are
+measured, and the list can only get shorter."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+from types import ModuleType
+
+ROOT = Path(__file__).resolve().parents[3]
+BASELINE = ROOT / "tests" / "reference" / "ghe_audit_baseline.json"
+
+
+def _audit() -> ModuleType:
+    spec = importlib.util.spec_from_file_location("ghe_audit", ROOT / "scripts" / "ghe_audit.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _tree(tmp_path: Path, files: dict[str, str]) -> Path:
+    for name, content in files.items():
+        path = tmp_path / "src" / "aistack" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    return tmp_path
+
+
+def test_no_departure_is_added_and_none_is_kept_once_gone() -> None:
+    measured = _audit().measure(ROOT)
+    baseline = json.loads(BASELINE.read_text(encoding="utf-8"))
+
+    assert measured.keys() == baseline.keys()
+    for key in baseline:
+        added = sorted(set(measured[key]) - set(baseline[key]))
+        gone = sorted(set(baseline[key]) - set(measured[key]))
+        assert not added, (
+            f"{key}: a new departure from the GHE principles: {added}. "
+            "Bring the change back within the principle; the baseline is not extended."
+        )
+        assert not gone, (
+            f"{key}: no longer a departure: {gone}. "
+            f"Remove it from {BASELINE.relative_to(ROOT)} so that it cannot come back."
+        )
+
+
+def test_the_kernel_naming_a_technology_is_a_departure(tmp_path: Path) -> None:
+    root = _tree(
+        tmp_path,
+        {
+            "kernel/core.py": "from aistack.kernel.registry import x\n",
+            "kernel/tasks/discover.py": "from aistack.providers.docker import DockerProvider\n",
+            "kernel/bootstrap/default.py": (
+                "from aistack.transport import engine\nfrom aistack.providers.docker import DockerProvider\n"
+            ),
+        },
+    )
+
+    assert _audit().measure(root)["kernel_depends_on_the_outside"] == [
+        "src/aistack/kernel/bootstrap/default.py -> aistack.providers.docker",
+        "src/aistack/kernel/tasks/discover.py -> aistack.providers.docker",
+    ]
+
+
+def test_a_relative_import_is_resolved(tmp_path: Path) -> None:
+    root = _tree(tmp_path, {"kernel/tasks/discover.py": "from ...generators import docker\n"})
+
+    assert _audit().measure(root)["kernel_depends_on_the_outside"] == [
+        "src/aistack/kernel/tasks/discover.py -> aistack.generators"
+    ]
+
+
+def test_an_entry_point_that_never_builds_the_kernel_is_a_departure(tmp_path: Path) -> None:
+    root = _tree(
+        tmp_path,
+        {
+            "cli/__init__.py": "",
+            "cli/through.py": "from aistack.kernel.bootstrap import create_kernel\n",
+            "cli/around.py": "from aistack.health import score\n",
+            "web/app.py": "from aistack.kernel.bootstrap import create_kernel\n",
+        },
+    )
+
+    assert _audit().measure(root)["entry_points_bypassing_the_kernel"] == ["src/aistack/cli/around.py"]
+
+
+def test_a_task_executed_from_outside_the_kernel_is_not_a_departure(tmp_path: Path) -> None:
+    audit = _audit()
+
+    registered_only = _tree(tmp_path / "a", {"kernel/tasks/discover.py": "", "cli/run.py": ""})
+    executed = _tree(tmp_path / "b", {"cli/run.py": "from aistack.kernel.execution import Request\n"})
+
+    assert len(audit.measure(registered_only)["registered_tasks_never_executed"]) == 1
+    assert audit.measure(executed)["registered_tasks_never_executed"] == []
+
+
+def test_writing_the_disk_outside_a_transaction_is_a_departure(tmp_path: Path) -> None:
+    root = _tree(
+        tmp_path,
+        {
+            "a/text.py": "def f(p):\n    p.write_text('x')\n",
+            "a/opened.py": "def f(p):\n    with open(p, 'w') as h:\n        h.write('x')\n",
+            "a/path_opened.py": "def f(p):\n    with p.open(mode='a') as h:\n        h.write('x')\n",
+            "a/moved.py": "def f(p, q):\n    p.replace(q)\n",
+            "a/removed.py": "import os\n\ndef f(p):\n    os.remove(p)\n",
+            "a/reads.py": "def f(p):\n    with open(p) as h:\n        return h.read().replace('a', 'b')\n",
+            "transaction/executor.py": "def f(p):\n    p.write_text('x')\n",
+        },
+    )
+
+    assert _audit().measure(root)["disk_writes_outside_a_transaction"] == [
+        "src/aistack/a/moved.py",
+        "src/aistack/a/opened.py",
+        "src/aistack/a/path_opened.py",
+        "src/aistack/a/removed.py",
+        "src/aistack/a/text.py",
+    ]
+
+
+def test_the_registry_in_the_tree_is_not_a_departure(tmp_path: Path) -> None:
+    audit = _audit()
+    root = _tree(tmp_path, {"__init__.py": ""})
+    registry = root / "docs" / "00-foundation" / "FDN-0012-AIStack-Principles-Registry.md"
+
+    assert audit.measure(root)["principles_missing_from_the_tree"] == [
+        "docs/00-foundation/FDN-0012-AIStack-Principles-Registry.md"
+    ]
+    registry.parent.mkdir(parents=True)
+    registry.write_text("# AIStack Principles Registry\n", encoding="utf-8")
+    assert audit.measure(root)["principles_missing_from_the_tree"] == []
+
+
+def test_the_report_counts_every_measure(tmp_path: Path) -> None:
+    audit = _audit()
+    measures = audit.measure(_tree(tmp_path, {"cli/around.py": ""}))
+
+    text = audit.report(measures)
+
+    assert set(audit.TITLES) == set(measures)
+    assert "| ARC-P-002 | An entry point never builds the Kernel | 1 |" in text
+    assert "- `src/aistack/cli/around.py`" in text

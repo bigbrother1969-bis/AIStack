@@ -135,7 +135,22 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
-# **1.11.0 — published 2026-10-08, current; also `latest`.**
+# **2.0.0 — published 2026-11-15, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:2.0.0
+#   @sha256:6d45f19eb846cb0c4083ad344485b3ef209c857e7a143746fa1d96cf0af66b74
+#
+# Built from 205990d (tag v2.0.0) on the reference host, behind the
+# terms OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 2789 tests passing. Before the build,
+# the 15 versions listed here as current (1.1.1 to 1.11.0) were pulled
+# again and each matched its recorded digest. Pushed under its version
+# and as `latest` — both name the same digest; its `revision` label is
+# 205990dff9e50baddd9329a28b1cae6adb6e8695. The first stable 2.0:
+# `docs/03-handbook/RELEASE-NOTES.md`'s own 2.0.0 entry gives the full
+# account.
+#
+# **1.11.0 — published 2026-10-08, current.**
 #
 #   bigbrother1969/aistack-core:1.11.0
 #   @sha256:c62c72b2c213f8715c89228fc189a2ff8013784601d2ab144e4e4b4f44c0d705

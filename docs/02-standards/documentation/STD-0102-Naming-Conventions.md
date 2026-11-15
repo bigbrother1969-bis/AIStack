@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   confidence: Declared
   status: Published
-  version: 2.3
+  version: 2.4
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-08-27
+  updated: 2026-11-15
 
 relations:
   references:
@@ -211,6 +211,12 @@ ARCH-0002
 | `CMP-` | Components |
 | `GOV-` | Governance |
 | `OPS-` | Operations — knowledge about running this deployment |
+| `QUAL-` | Qualification records — an experiment, what it measured and how it was closed |
+
+`QUAL-` was added on 2026-11-15, for `QUAL-0001`. The identifier had
+been cited by two Accepted ADRs since September while naming a session
+note, with no prefix declared here and no document under `docs/`
+(`GOV-0002/OS-092`). Its documents live under `docs/05-reference/`.
 
 `OPS-` was added on 2026-08-22, for `OPS-0001`, the catalogue of
 container log signatures. The heritage had carried Operations

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.2
+  version: 2.3
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -241,20 +241,6 @@ the tag* and is no longer reported; the architecture documents return with
 the lot that brings their code back. What remains reported is those, and
 `OS-092`.
 
-#### GOV-0002/OS-092 — Two identifiers are cited and were never documents
-
-**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
-**Observed** `python scripts/ghe_audit.py`, measure *A document is cited, is
-not in the tree and is not declared kept at the tag*. `OPS-0009` is cited by
-`OPS-0004` and by the release notes as the document that governs
-`pra_tests.yml`; `QUAL-0001` is cited by `ADR-0010` and `ADR-0011`. Neither is
-under `docs/` in `main`, and neither is under `docs/` at
-`archive/heritage-2.0.0-rc1`. `ADR-0011` names
-`claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md`, a session note.
-**Derivable** yes
-**Qualification** unknown — each becomes a document, or its citations name
-what they actually mean.
-
 #### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
 
 **Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
@@ -264,8 +250,10 @@ what they actually mean.
 on `e574fb7`; `git grep explain_selection -- src` returns nothing. The
 selection itself still runs.
 **Derivable** yes
-**Qualification** unknown — the explanation returns, or 3.2 is withdrawn from
-the scenario.
+**Qualification** decided by the owner, 2026-11-15: the explanation returns
+from the tag when the selection screen displays it, in lot 5 (`ADR-0027`).
+Until then 3.2 stays *not verifiable in `main`*. It is not restored before
+something calls it.
 
 ---
 
@@ -300,17 +288,7 @@ None open.
 
 # Decisions
 
-#### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
-
-**Nature** `decision` · **Opened** 2026-11-15 · **State** open
-**Observed** `STD-0300` § *Requalification against 2.0.0*: 1.1 to 1.4, 4.2,
-4.4, 4.5, 4.8 and 4.9 were verified on GIGABYTE between 2026-08-22 and
-2026-09-11, with `aistack.cli.docker_catalog` and
-`aistack.cli.runtime_diagnose`. Neither command is in `main`, and AIStack now
-runs on another host.
-**Derivable** no
-**Qualification** the owner decides how each is re-run on 2.0.0 — through
-which entry point, on which host — or which are withdrawn.
+None open. OS-091 is in *Resolved*.
 
 ---
 
@@ -323,3 +301,33 @@ rule ever bound anything.
 `OS-001` to `OS-084` were resolved between 2026-08-22 and 2026-10-03. Their
 entries are in version 1.123 of this register, at the tag
 `archive/heritage-2.0.0-rc1`.
+
+#### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
+
+**Nature** `decision` · **Opened** 2026-11-15 · **State** resolved 2026-11-15 by the owner's decision
+**Observed** `STD-0300` § *Requalification against 2.0.0*: 1.1 to 1.4, 4.2,
+4.4, 4.5, 4.8 and 4.9 were verified on GIGABYTE between 2026-08-22 and
+2026-09-11, with `aistack.cli.docker_catalog` and
+`aistack.cli.runtime_diagnose`. Neither command is in `main`, and AIStack now
+runs on another host.
+**Derivable** no
+**Qualification** decided: each is re-run on the host AIStack runs on, in
+lot 5, through the entry point its chain gains when it runs through the
+Kernel. No throwaway command is rebuilt for it. Until then `STD-0300` reads
+them *satisfied before 2.0.0, not re-run*, and none is withdrawn.
+
+#### GOV-0002/OS-092 — Two identifiers are cited and were never documents
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** resolved 2026-11-15 — both became documents
+**Observed** `python scripts/ghe_audit.py`, measure *A document is cited, is
+not in the tree and is not declared kept at the tag*. `OPS-0009` is cited by
+`OPS-0004` and by the release notes as the document that governs
+`pra_tests.yml`; `QUAL-0001` is cited by `ADR-0010` and `ADR-0011`. Neither is
+under `docs/` in `main`, and neither is under `docs/` at
+`archive/heritage-2.0.0-rc1`. `ADR-0011` names
+`claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md`, a session note.
+**Derivable** yes
+**Qualification** decided by the owner, 2026-11-15: both are written.
+`OPS-0009 — Restore Test Freshness` describes what `main` does and decides
+nothing new; `QUAL-0001` summarises the session note under
+`docs/05-reference/`, and `STD-0102` gains the `QUAL-` prefix.

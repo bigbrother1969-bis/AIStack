@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   confidence: Declared
   version: 1.0
-  status: Proposed
+  status: Accepted
   owner: Architecture
   created: 2026-11-15
   updated: 2026-11-15
@@ -25,8 +25,8 @@ relations:
 
 ## Status
 
-Proposed, 2026-11-15, for the owner's acceptance. Decided with the owner
-the same day, while a writing service (KoboldCpp) was added to the
+Accepted, 2026-11-15, by the owner, the day of the proposal
+(`ADR-0016` § 3). Decided with the owner the same day, while a writing service (KoboldCpp) was added to the
 reference host and AIStack found it only as a Cockpit finding, to be
 declared by editing a file: *"on fera aussi des ajustements dans AIStack
 pour qu'il puisse identifier tout seul quand un nouvel hôte est mis en

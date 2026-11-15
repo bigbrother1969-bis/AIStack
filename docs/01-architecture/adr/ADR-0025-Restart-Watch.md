@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   confidence: Declared
   version: 1.0
-  status: Proposed
+  status: Accepted
   owner: Architecture
   created: 2026-11-15
   updated: 2026-11-15
@@ -25,8 +25,8 @@ relations:
 
 ## Status
 
-Proposed, 2026-11-15, for the owner's acceptance. Decided with the owner
-the same day, after a cold boot of the reference host left four
+Accepted, 2026-11-15, by the owner, the day of the proposal
+(`ADR-0016` § 3). Decided with the owner the same day, after a cold boot of the reference host left four
 containers stuck.
 
 ## Context

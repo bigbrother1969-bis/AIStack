@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   confidence: Declared
   version: 0.1
-  status: Proposed
+  status: Accepted
   owner: Architecture
   created: 2026-10-10
-  updated: 2026-10-10
+  updated: 2026-11-15
 
 relations:
   references:
@@ -25,10 +25,12 @@ relations:
 
 ## Status
 
-Proposed, 2026-10-10, for 2.1 or 3.0 — not before 2.0.0. Asked by the
-owner the same day, on reading what 2.0.0-rc2 removed: *"Il va falloir
-revoir le fonctionnement global pour utiliser ces composants."* Nothing
-here is decided yet; § *Decision* is a proposal to contest.
+Accepted, 2026-11-15, by the owner, as the direction for 2.1 or 3.0 — not
+before the test of 2.0 on a second server. Proposed 2026-10-10, asked by
+the owner the same day, on reading what 2.0.0-rc2 removed: *"Il va falloir
+revoir le fonctionnement global pour utiliser ces composants."* Accepting
+the direction decides § *Decision*; the *Open points* at the end stay
+open and are settled when the version is planned.
 
 ## Context
 
@@ -64,7 +66,7 @@ key, and nothing ties the two; the Dock is the only change that goes
 through a proposal, though a new threshold or a backup strategy changes the
 server's governance as much.
 
-## Decision (proposed)
+## Decision
 
 ### 1. One registry of Governed Items
 
@@ -102,7 +104,7 @@ The facts given to Gemini or Ollama about a finding become a projection of
 the item, its policies, its recent facts and its Explications — declared
 once, the same for every finding, and recorded with the answer.
 
-## Consequences, if accepted
+## Consequences
 
 - The YAML declarations of 2.0 are migrated once into the registry, the
   files kept readable as an import path; `config_init` and the installation

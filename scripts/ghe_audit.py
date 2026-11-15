@@ -2,8 +2,8 @@
 """Measure how far the source tree is from the GHE principles.
 
 Read-only, standard library only. It parses `src/aistack` and reports,
-for the C3 principles a program can measure, every place that departs
-from them:
+for the principles a program can measure, every place that departs
+from them, and every citation that leads nowhere:
 
     python scripts/ghe_audit.py            the report, as Markdown
     python scripts/ghe_audit.py --json     the measures, as JSON
@@ -14,7 +14,7 @@ the baseline fails the suite, and so does a baseline entry that no
 longer exists. The list can only get shorter.
 
 The principles are cited by their identifier in the registry
-(`FDN-0012`, kept at the tag `archive/heritage-2.0.0-rc1`).
+(`docs/00-foundation/FDN-0012-AIStack-Principles-Registry.md`).
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -44,6 +45,37 @@ WRITING_FUNCTIONS = {
     "shutil.copytree",
     "shutil.rmtree",
 }
+
+# A governed document (`FDN-0012`) and a principle (`FDN-P-005`).
+DOCUMENT = re.compile(r"\b(?:FDN|ARCH|ADR|STD|GOV|OPS|ENG-TEST|CMP|QUAL)-\d{4}\b")
+PRINCIPLE = re.compile(r"\b[A-Z]{2,5}-P-\d{3}\b")
+REGISTRY = "docs/00-foundation/FDN-0012-AIStack-Principles-Registry.md"
+READ = ("src", "tests", "docs", "scripts", "README.md")
+TEXT = {".py", ".md", ".yml", ".yaml", ".sh", ".toml", ".html", ".txt", ".cfg"}
+
+
+def _texts(root: Path) -> dict[Path, str]:
+    """The text of everything a contributor reads or runs."""
+
+    found: dict[Path, str] = {}
+    for name in READ:
+        start = root / name
+        paths = [start] if start.is_file() else sorted(start.rglob("*")) if start.is_dir() else []
+        for path in paths:
+            if path.is_file() and path.suffix in TEXT and "__pycache__" not in path.parts:
+                found[path] = path.read_text(encoding="utf-8", errors="replace")
+    return found
+
+
+def _registered(root: Path) -> set[str]:
+    """The principles the registry declares: the first cell of a table row."""
+
+    registry = root / REGISTRY
+    if not registry.is_file():
+        return set()
+    rows = (line.split("|") for line in registry.read_text(encoding="utf-8").splitlines())
+    return {row[1].strip() for row in rows if len(row) > 2 and PRINCIPLE.fullmatch(row[1].strip())}
+
 
 def _source_root(root: Path) -> Path:
     return root / "src" / PACKAGE
@@ -191,8 +223,21 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
 
     # FDN-P-005, FDN-P-006 - the principles have one governed place, and
     # it is read where the work is done.
-    registry = root / "docs" / "00-foundation" / "FDN-0012-AIStack-Principles-Registry.md"
-    missing = [] if registry.is_file() else [_relative(root, registry)]
+    registry = root / REGISTRY
+    missing = [] if registry.is_file() else [REGISTRY]
+
+    # FDN-P-005 - a cited document, or a cited principle, exists. What is
+    # cited and is not in the tree cannot be read by who follows the citation.
+    texts = _texts(root)
+    documents = root / "docs"
+    present = {
+        match.group()
+        for path in texts
+        if path.is_relative_to(documents) and (match := DOCUMENT.match(path.name))
+    }
+    cited_documents = {name for text in texts.values() for name in DOCUMENT.findall(text)}
+    cited_principles = {name for text in texts.values() for name in PRINCIPLE.findall(text)}
+    registered = _registered(root)
 
     return {
         "kernel_depends_on_the_outside": kernel_imports,
@@ -200,6 +245,8 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
         "registered_tasks_never_executed": unexecuted,
         "disk_writes_outside_a_transaction": writers,
         "principles_missing_from_the_tree": missing,
+        "documents_cited_and_absent": sorted(cited_documents - present),
+        "principles_cited_and_not_registered": sorted(cited_principles - registered) if registered else [],
     }
 
 
@@ -223,6 +270,14 @@ TITLES = {
     "principles_missing_from_the_tree": (
         "FDN-P-005, FDN-P-006",
         "The principles registry is not in the tree",
+    ),
+    "documents_cited_and_absent": (
+        "FDN-P-005",
+        "A document is cited and is not in the tree",
+    ),
+    "principles_cited_and_not_registered": (
+        "FDN-P-005",
+        "A principle is cited and the registry does not declare it",
     ),
 }
 

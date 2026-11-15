@@ -75,7 +75,32 @@
     "src/aistack/vigil/notify.py",
     "src/aistack/vigil/snapshot.py"
   ],
-  "principles_missing_from_the_tree": [
-    "docs/00-foundation/FDN-0012-AIStack-Principles-Registry.md"
+  "principles_missing_from_the_tree": [],
+  "documents_cited_and_absent": [
+    "ADR-0005",
+    "ADR-0006",
+    "ADR-0007",
+    "ARCH-0002",
+    "ARCH-0007",
+    "ARCH-0012",
+    "ARCH-0013",
+    "CMP-0001",
+    "CMP-0012",
+    "FDN-0001",
+    "FDN-0002",
+    "FDN-0005",
+    "FDN-0006",
+    "GOV-0001",
+    "GOV-0002",
+    "OPS-0009",
+    "OPS-0012",
+    "QUAL-0001",
+    "STD-0001",
+    "STD-0002",
+    "STD-0101",
+    "STD-0300"
+  ],
+  "principles_cited_and_not_registered": [
+    "ARC-P-099"
   ]
 }

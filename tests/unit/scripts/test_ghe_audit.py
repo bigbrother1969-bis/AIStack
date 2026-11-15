@@ -132,6 +132,31 @@ def test_the_registry_in_the_tree_is_not_a_departure(tmp_path: Path) -> None:
     assert audit.measure(root)["principles_missing_from_the_tree"] == []
 
 
+def test_a_cited_document_that_is_not_in_the_tree_is_a_departure(tmp_path: Path) -> None:
+    root = _tree(tmp_path, {"health/score.py": '"""Weights: OPS-0008. Register: GOV-0002."""\n'})
+    document = root / "docs" / "04-development" / "OPS-0008-Health-Score-Weights.md"
+    document.parent.mkdir(parents=True)
+    document.write_text("See ADR-0011.\n", encoding="utf-8")
+
+    assert _audit().measure(root)["documents_cited_and_absent"] == ["ADR-0011", "GOV-0002"]
+
+
+def test_a_cited_principle_the_registry_does_not_declare_is_a_departure(tmp_path: Path) -> None:
+    audit = _audit()
+    root = _tree(tmp_path, {"kernel/core.py": "# ARC-P-001, and ARC-P-099 which nobody registered\n"})
+
+    assert audit.measure(root)["principles_cited_and_not_registered"] == []
+
+    registry = root / audit.REGISTRY
+    registry.parent.mkdir(parents=True)
+    registry.write_text(
+        "| ID | Principle | Criticality |\n|----|----|----|\n| ARC-P-001 | Generic Kernel Principle | C3 |\n",
+        encoding="utf-8",
+    )
+
+    assert audit.measure(root)["principles_cited_and_not_registered"] == ["ARC-P-099"]
+
+
 def test_the_report_counts_every_measure(tmp_path: Path) -> None:
     audit = _audit()
     measures = audit.measure(_tree(tmp_path, {"cli/around.py": ""}))

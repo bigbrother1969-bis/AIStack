@@ -25,6 +25,8 @@ providers:
     factory: aistack.providers.filesystem:BackupProvider
   - id: gpu
     factory: aistack.providers.gpu:NvidiaGpuProvider
+  - id: host
+    factory: aistack.providers.host.provider:HostProvider
 
 catalog_views:
   - id: music-selection

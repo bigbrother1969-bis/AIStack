@@ -26,6 +26,8 @@ from aistack.catalog.docker import DockerRuntimeCatalogBuilder
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.hosts.health import hosts_domain
+from aistack.kernel.bootstrap import registered_providers
+from aistack.kernel.registries import ProviderRegistry
 from aistack.data_budget.health import data_budget_domain
 from aistack.pra.scheduled import with_scheduled
 from aistack.pra.yaml import load_pra_tests_yaml
@@ -123,7 +125,9 @@ def resource_priority_definition(
         )
 
 
-def _consumption_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
+def _consumption_findings(
+    providers: ProviderRegistry | None = None,
+) -> tuple[tuple[RuntimeFinding, ...], str]:
     """
     The CPU/temperature findings of `aistack.runtime.evaluate`, freshly
     collected, as in `aistack.cli.ai_reason.qualified_findings`.
@@ -135,7 +139,7 @@ def _consumption_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
         return (), note
 
     try:
-        readings = DockerProvider().collect_cpu_readings()
+        readings = registered_providers(providers).get_as("docker", DockerProvider).collect_cpu_readings()
     except (subprocess.SubprocessError, OSError) as error:
         return (), (
             f"CPU readings could not be collected ({error}); "
@@ -143,7 +147,7 @@ def _consumption_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
         )
 
     consumption = find_unexplained_consumption(readings, definition)
-    temperatures = HostProvider().collect_temperatures()
+    temperatures = registered_providers(providers).get_as("host", HostProvider).collect_temperatures()
 
     return evaluate(consumption, temperatures), ""
 
@@ -152,7 +156,7 @@ def _consumption_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
 # domain is documented.
 
 
-def storage_domain(hostname: str) -> HealthDomain:
+def storage_domain(hostname: str, providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.storage_domain` exactly."""
 
     thresholds, note = storage_thresholds_for_host(
@@ -162,7 +166,7 @@ def storage_domain(hostname: str) -> HealthDomain:
     if not thresholds:
         return HealthDomain(name="Stockage", instrumented=False, note=note)
 
-    usage = StorageProvider().collect_usage(
+    usage = registered_providers(providers).get_as("storage", StorageProvider).collect_usage(
         tuple(threshold.mount for threshold in thresholds)
     )
     shortages = find_storage_shortage(usage, thresholds)
@@ -172,11 +176,13 @@ def storage_domain(hostname: str) -> HealthDomain:
     )
 
 
-def services_domain() -> HealthDomain:
+def services_domain(providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.services_domain` exactly."""
 
     try:
-        readings = DockerProvider().collect_container_states()
+        readings = (
+            registered_providers(providers).get_as("docker", DockerProvider).collect_container_states()
+        )
     except (subprocess.SubprocessError, OSError) as error:
         return HealthDomain(
             name="Services",
@@ -199,7 +205,7 @@ def services_domain() -> HealthDomain:
     )
 
 
-def backup_domain(hostname: str) -> HealthDomain:
+def backup_domain(hostname: str, providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.backup_domain` exactly."""
 
     thresholds, note = backup_thresholds_for_host(SOURCES.backup_thresholds, hostname)
@@ -207,7 +213,7 @@ def backup_domain(hostname: str) -> HealthDomain:
     if not thresholds:
         return HealthDomain(name="Sauvegarde / PRA", instrumented=False, note=note)
 
-    freshness = BackupProvider().collect_freshness(
+    freshness = registered_providers(providers).get_as("backup", BackupProvider).collect_freshness(
         tuple(threshold.path for threshold in thresholds)
     )
     gaps = find_backup_gaps(freshness, thresholds)
@@ -217,7 +223,7 @@ def backup_domain(hostname: str) -> HealthDomain:
     )
 
 
-def gpu_domain(hostname: str) -> HealthDomain:
+def gpu_domain(hostname: str, providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.gpu_domain` exactly."""
 
     thresholds, note = gpu_thresholds_for_host(SOURCES.gpu_thresholds, hostname)
@@ -225,7 +231,7 @@ def gpu_domain(hostname: str) -> HealthDomain:
     if not thresholds:
         return HealthDomain(name="GPU", instrumented=False, note=note)
 
-    readings = NvidiaGpuProvider().collect_readings()
+    readings = registered_providers(providers).get_as("gpu", NvidiaGpuProvider).collect_readings()
     anomalies = find_gpu_anomalies(readings, thresholds)
 
     return HealthDomain(name="GPU", instrumented=True, findings=evaluate_gpu(anomalies))
@@ -319,7 +325,7 @@ def uncovered_state_domain() -> HealthDomain:
     )
 
 
-def inventory_gap_domain() -> HealthDomain:
+def inventory_gap_domain(providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.inventory_gap_domain` exactly."""
 
     if not SOURCES.categorization.exists():
@@ -345,7 +351,9 @@ def inventory_gap_domain() -> HealthDomain:
         )
 
     try:
-        docker_catalog = DockerRuntimeCatalogBuilder().build(DockerProvider().collect())
+        docker_catalog = DockerRuntimeCatalogBuilder().build(
+            registered_providers(providers).collecting("docker").collect()
+        )
         discovered: dict[str, str | None] = {
             item.id: None for item in docker_catalog.items if item.kind == "container"
         }
@@ -376,18 +384,22 @@ def inventory_gap_domain() -> HealthDomain:
     )
 
 
-def build_cockpit(hostname: str) -> HealthCockpit:
+def build_cockpit(hostname: str, providers: ProviderRegistry | None = None) -> HealthCockpit:
     """Mirrors `aistack.cli.health_render.build_cockpit` exactly."""
+
+    # One Kernel for the whole cockpit: every domain reads through the
+    # same registered providers (ADR-0027 § 9).
+    providers = registered_providers(providers)
 
     return HealthCockpit(
         domains=(
-            storage_domain(hostname),
-            services_domain(),
-            backup_domain(hostname),
-            gpu_domain(hostname),
+            storage_domain(hostname, providers),
+            services_domain(providers),
+            backup_domain(hostname, providers),
+            gpu_domain(hostname, providers),
             pra_tests_domain(),
             uncovered_state_domain(),
-            inventory_gap_domain(),
+            inventory_gap_domain(providers),
             hosts_domain(),
             data_budget_domain(),
         )
@@ -429,8 +441,11 @@ def qualified_findings() -> tuple[tuple[QualifiedFinding, ...], str]:
     `note` is set only when the consumption check could not run at all.
     """
 
-    consumption_findings, note = _consumption_findings()
-    cockpit = build_cockpit(socket.gethostname())
+    # One Kernel for the consumption check and the whole cockpit.
+    providers = registered_providers()
+
+    consumption_findings, note = _consumption_findings(providers)
+    cockpit = build_cockpit(socket.gethostname(), providers)
 
     tagged: list[tuple[str, RuntimeFinding]] = [
         (CONSUMPTION_DOMAIN, finding) for finding in consumption_findings

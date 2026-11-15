@@ -13,6 +13,7 @@ from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
 from aistack.priority.definition import ResourcePriorityDefinition
 from aistack.priority.yaml import load_resource_priority_yaml
+from aistack.kernel.bootstrap import registered_providers
 from aistack.providers.docker import DockerProvider
 from aistack.providers.host.provider import HostProvider
 from aistack.runtime.evaluate import evaluate
@@ -66,8 +67,11 @@ def qualified_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
     if definition is None:
         return (), note
 
+    # One Kernel for both readings (ADR-0027 § 9).
+    providers = registered_providers()
+
     try:
-        readings = DockerProvider().collect_cpu_readings()
+        readings = providers.get_as("docker", DockerProvider).collect_cpu_readings()
     except (subprocess.SubprocessError, OSError) as error:
         return (), (
             f"CPU readings could not be collected ({error}); "
@@ -77,7 +81,7 @@ def qualified_findings() -> tuple[tuple[RuntimeFinding, ...], str]:
     consumption = find_unexplained_consumption(readings, definition)
 
     # Never raises.
-    temperatures = HostProvider().collect_temperatures()
+    temperatures = providers.get_as("host", HostProvider).collect_temperatures()
 
     return evaluate(consumption, temperatures), ""
 

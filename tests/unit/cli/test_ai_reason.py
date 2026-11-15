@@ -17,6 +17,12 @@ class FakeDockerProvider:
     def collect_cpu_readings(self):
         return tuple(self._readings)
 
+    def collect(self):
+        # It stands in for the provider registered as `docker`, on which
+        # the Kernel builds the task `docker.discover`: that one collects
+        # (ADR-0027 § 9), and the Kernel refuses to boot on one that does not.
+        return {}
+
 
 class FakeHostProvider:
     def __init__(self, temperatures=()):
@@ -62,15 +68,13 @@ def test_unexplained_consumption_and_a_hot_sensor_produce_a_finding(
     path.write_text(RESOURCE_PRIORITY_YAML, encoding="utf-8")
     monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", path)
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(
             [ContainerCpuReading(container="booklore_db", cpu_percent=12.2)]
         ),
     )
     monkeypatch.setattr(
-        cli,
-        "HostProvider",
+        "aistack.providers.host.provider.HostProvider",
         lambda: FakeHostProvider(
             [
                 TemperatureReading(
@@ -108,13 +112,12 @@ def test_main_reports_no_model_configured(workspace, monkeypatch, capsys):
     monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
 
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(
             [ContainerCpuReading(container="booklore_db", cpu_percent=12.2)]
         ),
     )
-    monkeypatch.setattr(cli, "HostProvider", lambda: FakeHostProvider())
+    monkeypatch.setattr("aistack.providers.host.provider.HostProvider", lambda: FakeHostProvider())
 
     cli.main()
 
@@ -154,13 +157,12 @@ def test_main_reports_the_engine_unreachable_when_a_model_is_configured(
     monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
 
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(
             [ContainerCpuReading(container="booklore_db", cpu_percent=12.2)]
         ),
     )
-    monkeypatch.setattr(cli, "HostProvider", lambda: FakeHostProvider())
+    monkeypatch.setattr("aistack.providers.host.provider.HostProvider", lambda: FakeHostProvider())
 
     cli.main()
 
@@ -193,13 +195,12 @@ def test_main_builds_the_engine_with_the_declared_timeout(
     monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
 
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(
             [ContainerCpuReading(container="booklore_db", cpu_percent=12.2)]
         ),
     )
-    monkeypatch.setattr(cli, "HostProvider", lambda: FakeHostProvider())
+    monkeypatch.setattr("aistack.providers.host.provider.HostProvider", lambda: FakeHostProvider())
 
     captured_kwargs = {}
 

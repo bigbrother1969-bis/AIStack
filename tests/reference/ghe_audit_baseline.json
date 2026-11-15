@@ -1,7 +1,6 @@
 {
   "kernel_names_what_is_not_generic": [],
   "entry_points_bypassing_the_kernel": [
-    "src/aistack/cli/ai_reason.py",
     "src/aistack/cli/config_init.py",
     "src/aistack/cli/data_budget.py",
     "src/aistack/cli/docker_diff_monitor.py",
@@ -26,8 +25,6 @@
     "no module outside the Kernel executes a registered Task"
   ],
   "providers_built_by_application_code": [
-    "src/aistack/cli/ai_reason.py -> DockerProvider",
-    "src/aistack/cli/ai_reason.py -> HostProvider",
     "src/aistack/cli/architecture_render.py -> BeszelProvider",
     "src/aistack/cli/architecture_render.py -> HttpProbeProvider",
     "src/aistack/cli/network_docker_discover.py -> NetworkDockerDiscoveryProvider",
@@ -35,12 +32,7 @@
     "src/aistack/priority/screen.py -> DockerProvider",
     "src/aistack/selection/screen.py -> MediaLibraryProvider",
     "src/aistack/selection/screen.py -> SyncthingProvider",
-    "src/aistack/sync/screen.py -> MediaLibraryProvider",
-    "src/aistack/troubleshooting/findings.py -> BackupProvider",
-    "src/aistack/troubleshooting/findings.py -> DockerProvider",
-    "src/aistack/troubleshooting/findings.py -> HostProvider",
-    "src/aistack/troubleshooting/findings.py -> NvidiaGpuProvider",
-    "src/aistack/troubleshooting/findings.py -> StorageProvider"
+    "src/aistack/sync/screen.py -> MediaLibraryProvider"
   ],
   "disk_writes_outside_a_transaction": [
     "src/aistack/api_keys/__init__.py",

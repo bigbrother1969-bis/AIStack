@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 
-from aistack.kernel.application import ApplicationDefinition, SyncthingDefinition
+from aistack.application.core import ApplicationDefinition, SyncthingDefinition
 
 _REQUIRED_FIELDS = (
     "app_id",

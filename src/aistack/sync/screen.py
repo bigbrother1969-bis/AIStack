@@ -21,7 +21,7 @@ from typing import Any, Callable
 
 from aistack.catalog.filesystem import MediaLibraryCatalogBuilder
 from aistack.generators.filesystem.hardlink import MaterialisationReport, materialise_by_hardlink
-from aistack.kernel.application import ApplicationDefinition, SyncthingDefinition
+from aistack.application import ApplicationDefinition, SyncthingDefinition
 from aistack.kernel.catalog.core import Catalog
 from aistack.kernel.selection.core import Selection
 from aistack.providers.filesystem import MediaLibraryProvider

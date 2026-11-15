@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.4
+  version: 2.5
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -198,19 +198,6 @@ None open.
 
 # Non-conforming instances
 
-#### GOV-0002/OS-085 — The Kernel names what is outside it, a technology included
-
-**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
-**Observed** `python scripts/ghe_audit.py`, measure *The Kernel names something
-that is not a generic mechanism*: six imports on `76649da` —
-`aistack.providers.docker`, `aistack.providers.compose`,
-`aistack.generators.docker` and three catalog views. `ARC-P-001`,
-`ARC-P-004`. *First measured as ten imports, of which three named a
-technology: seven named a generic mechanism, admitted since by `ADR-0027`
-§ 7, and three were hidden by an exemption the audit gave the bootstrap.*
-**Derivable** yes
-**Qualification** to conform, in lot 3 of the GHE reintegration.
-
 #### GOV-0002/OS-086 — Entry points run without the Kernel, and the one registered Task is never executed
 
 **Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
@@ -304,6 +291,29 @@ rule ever bound anything.
 `OS-001` to `OS-084` were resolved between 2026-08-22 and 2026-10-03. Their
 entries are in version 1.123 of this register, at the tag
 `archive/heritage-2.0.0-rc1`.
+
+#### GOV-0002/OS-085 — The Kernel names what is outside it, a technology included
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** resolved 2026-11-15 by lot 3 of the GHE reintegration
+**Observed** `python scripts/ghe_audit.py`, measure *The Kernel names something
+that is not a generic mechanism*: six imports on `76649da` —
+`aistack.providers.docker`, `aistack.providers.compose`,
+`aistack.generators.docker` and three catalog views. `ARC-P-001`,
+`ARC-P-004`. *First measured as ten imports, of which three named a
+technology: seven named a generic mechanism, admitted since by `ADR-0027`
+§ 7, and three were hidden by an exemption the audit gave the bootstrap.*
+**Derivable** yes
+**Qualification** conformed. The Kernel bootstraps from
+`registrations.yml` (`ADR-0027` § 8), the task `docker.discover` is declared
+in `aistack.tasks`, and the measure reads none. One technology was in the
+Kernel by name and not by import, so the measure never saw it:
+`SyncthingDefinition`, in `kernel/application`. It left with
+`ApplicationDefinition` for `aistack.application` in the same lot.
+**What the measure does not cover**: a technology named in the Kernel
+without an import. On the day of the closure, `git grep -il
+"docker\|syncthing" -- src/aistack/kernel` returned nothing, and *compose*
+occurred there three times, as the English verb. Nothing re-runs that
+search.
 
 #### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
 

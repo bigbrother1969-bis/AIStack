@@ -20,7 +20,7 @@ from aistack.generators.filesystem.hardlink import (
 )
 from aistack.generators.filesystem.yaml import load_last_generation_yaml, save_last_generation_yaml
 from aistack.i18n import Translator
-from aistack.kernel.application import ApplicationDefinition
+from aistack.application import ApplicationDefinition
 from aistack.providers.filesystem import DEFAULT_MEDIA_EXTENSIONS, MediaLibraryProvider
 from aistack.providers.syncthing.provider import SyncthingProvider
 from aistack.selection.capacity import assess_capacity

@@ -16,6 +16,15 @@ providers:
     factory: aistack.providers.docker:DockerProvider
   - id: compose
     factory: aistack.providers.compose:ComposeProvider
+  # Providers of specialised readings (ADR-0027 § 9): they carry the
+  # provider identity and no `collect()`. Each is registered with the
+  # first chain that asks the registry for it.
+  - id: storage
+    factory: aistack.providers.filesystem:StorageProvider
+  - id: backup
+    factory: aistack.providers.filesystem:BackupProvider
+  - id: gpu
+    factory: aistack.providers.gpu:NvidiaGpuProvider
 
 catalog_views:
   - id: music-selection

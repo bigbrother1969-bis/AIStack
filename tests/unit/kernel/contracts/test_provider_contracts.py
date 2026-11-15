@@ -64,9 +64,13 @@ def test_the_registry_holds_what_the_providers_are() -> None:
     """
     `ProviderRegistry` was typed on `DiscoveryProvider` — the half
     nothing implemented — so its declared element type was
-    satisfied by nothing it could ever hold. It is typed on
-    `KnowledgeProvider` now, which the two registered providers
-    satisfy.
+    satisfied by nothing it could ever hold. It was then typed on
+    `KnowledgeProvider`, which the two registered providers satisfy.
+
+    Since ADR-0027 § 9 it is typed on `Provider`: the providers of
+    specialised readings carry the identity and no `collect()`, and
+    the registry holds them too. `collecting` is where a caller that
+    relies on `collect()` has the contract checked.
     """
 
     from aistack.kernel.registries.provider_registry import (
@@ -80,3 +84,21 @@ def test_the_registry_holds_what_the_providers_are() -> None:
 
     assert registry.get("docker").provider_id
     assert registry.get("compose").provider_id
+    assert registry.collecting("docker") is registry.get("docker")
+
+
+def test_the_registry_holds_a_provider_of_readings_and_does_not_call_it_collecting() -> None:
+    import pytest
+
+    from aistack.kernel.registries.provider_registry import ProviderRegistry
+    from aistack.providers.filesystem import StorageProvider
+
+    registry = ProviderRegistry()
+    storage = StorageProvider()
+    registry.register("storage", storage)
+
+    assert registry.get("storage").provider_id == "aistack.provider.storage"
+    assert registry.get_as("storage", StorageProvider) is storage
+
+    with pytest.raises(TypeError, match="'storage' is registered and does not collect"):
+        registry.collecting("storage")

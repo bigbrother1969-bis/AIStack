@@ -578,9 +578,10 @@ def test_technical_debt_score_matches_health_renders_own_behavior(monkeypatch):
         "DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
+    # The health chain asks the Kernel for its provider (ADR-0027 § 9):
+    # it is stubbed where `registrations.yml` names it.
     monkeypatch.setattr(
-        health_render,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 

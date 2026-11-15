@@ -44,10 +44,25 @@ def test_every_declared_factory_resolves_to_a_class() -> None:
         assert isinstance(resolve_factory(registration), type), registration
 
 
-def test_every_declared_provider_collects() -> None:
+def test_every_declared_provider_carries_the_provider_identity() -> None:
+    """The base contract `Provider`: what the registry holds (ADR-0027 § 9)."""
+
     for registration in load_registrations():
         if registration.kind == PROVIDERS:
-            assert callable(getattr(resolve_factory(registration), "collect", None)), registration
+            provider = resolve_factory(registration)
+            assert isinstance(provider.provider_id, str) and provider.provider_id, registration
+            assert isinstance(provider.provider_name, str) and provider.provider_name, registration
+
+
+def test_every_provider_a_declared_task_is_built_on_collects() -> None:
+    """A Task is built on a `KnowledgeProvider`: the one contract with `collect()`."""
+
+    declared = {entry.identifier: entry for entry in load_registrations() if entry.kind == PROVIDERS}
+
+    for registration in load_registrations():
+        if registration.kind == TASKS and registration.provider:
+            provider = resolve_factory(declared[registration.provider])
+            assert callable(getattr(provider, "collect", None)), registration
 
 
 def test_every_declared_catalog_view_builds() -> None:
@@ -81,7 +96,11 @@ def test_the_kernel_registers_what_is_declared_and_nothing_else() -> None:
 
 
 def test_what_the_kernel_registered_before_the_file_existed_is_still_registered() -> None:
-    """The registrations of 2.0.0, when the bootstrap named each class itself."""
+    """
+    The registrations of 2.0.0, when the bootstrap named each class
+    itself — and, since, the providers each chain brought to the
+    registry when it started asking for them (ADR-0027 § 9).
+    """
 
     kernel = create_default_kernel()
 
@@ -91,6 +110,10 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
     assert registered(kernel.registries.providers) == {
         "docker": "DockerProvider",
         "compose": "ComposeProvider",
+        # The health chain.
+        "storage": "StorageProvider",
+        "backup": "BackupProvider",
+        "gpu": "NvidiaGpuProvider",
     }
     assert registered(kernel.registries.catalog_views) == {
         "music-selection": "MusicSelectionViewEngine",
@@ -169,6 +192,24 @@ def test_a_task_built_on_a_provider_nobody_registered_is_refused(tmp_path: Path)
 
     assert "'orphan.discover'" in str(refusal.value)
     assert "'nowhere', which is not registered" in str(refusal.value)
+
+
+def test_a_task_built_on_a_provider_that_does_not_collect_is_refused() -> None:
+    kernel = create_kernel()
+    on_readings = (
+        Registration(
+            kind=TASKS,
+            identifier="storage.discover",
+            factory="aistack.tasks:DockerDiscoverTask",
+            provider="storage",
+        ),
+    )
+
+    with pytest.raises(ValueError) as refusal:
+        register_declared(kernel, on_readings)
+
+    assert "tasks 'storage.discover'" in str(refusal.value)
+    assert "'storage' is registered and does not collect()" in str(refusal.value)
 
 
 def test_an_identifier_declared_twice_is_refused() -> None:

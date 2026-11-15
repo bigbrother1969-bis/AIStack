@@ -65,10 +65,10 @@ def main(environ: Mapping[str, str] | None = None) -> None:
 
     ctx = create_kernel()
 
-    docker_observation = ctx.registries.providers.get("docker").collect()
+    docker_observation = ctx.registries.providers.collecting("docker").collect()
     docker_catalog = DockerRuntimeCatalogBuilder().build(docker_observation)
 
-    compose_observation = ctx.registries.providers.get("compose").collect()
+    compose_observation = ctx.registries.providers.collecting("compose").collect()
     compose_catalog = ComposeRuntimeCatalogBuilder().build(compose_observation)
 
     categorization = load_service_categorization_yaml(DEFAULT_CATEGORIZATION)

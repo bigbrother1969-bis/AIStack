@@ -141,9 +141,12 @@ def register_declared(kernel: Kernel, registrations: tuple[Registration, ...]) -
                     f"Kernel registration tasks {registration.identifier!r} is built on "
                     f"provider {registration.provider!r}, which is not registered"
                 )
-            kernel.registries.tasks.register(
-                registration.identifier,
-                factory(kernel.registries.providers.get(registration.provider)),
-            )
+            try:
+                provider = kernel.registries.providers.collecting(registration.provider)
+            except TypeError as error:
+                raise ValueError(
+                    f"Kernel registration tasks {registration.identifier!r}: {error}"
+                ) from error
+            kernel.registries.tasks.register(registration.identifier, factory(provider))
         else:
             kernel.registries.tasks.register(registration.identifier, factory())

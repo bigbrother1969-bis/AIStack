@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.5
+  version: 2.6
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -205,6 +205,11 @@ None open.
 nothing from `aistack.kernel`; no module outside the Kernel imports its
 execution, resolution or tasks packages. `kernel/runtime` was removed on
 2026-10-10 (`19e73a6`). `ARC-P-002`.
+*Lot 4, 2026-11-15: ten files of application code build a provider
+themselves, 23 pairs of a file and a provider (`ADR-0027` § 9). The health
+chain asks the Kernel for its four since that day: 21 of 25 entry points, 19
+pairs. Building the Kernel to ask it for a provider is not yet running
+through it: no Task is executed.*
 **Derivable** yes
 **Qualification** to conform, in lots 4 and 5.
 

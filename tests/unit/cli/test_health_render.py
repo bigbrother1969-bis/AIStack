@@ -248,7 +248,7 @@ def test_all_nine_domains_are_always_present(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+    monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
 
@@ -263,8 +263,7 @@ def test_all_nine_domains_are_always_present(monkeypatch, tmp_path):
 
 def test_a_restarting_container_is_an_alert(monkeypatch):
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
@@ -281,8 +280,7 @@ def test_a_restarting_container_is_an_alert(monkeypatch):
 
 def test_a_clean_docker_host_reads_as_clean(monkeypatch):
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(
             states=[
                 {
@@ -302,8 +300,7 @@ def test_a_clean_docker_host_reads_as_clean(monkeypatch):
 
 def test_docker_not_reachable_is_not_instrumented(monkeypatch):
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=OSError("docker not found")),
     )
 
@@ -417,8 +414,7 @@ def gpu_thresholds_file(tmp_path: Path) -> Path:
 def test_a_hot_gpu_reading_is_an_alert(monkeypatch, gpu_thresholds_file):
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
     monkeypatch.setattr(
-        cli,
-        "NvidiaGpuProvider",
+        "aistack.providers.gpu.NvidiaGpuProvider",
         lambda: FakeGpuProvider([gpu_reading(temperature_celsius=85.0)]),
     )
 
@@ -437,7 +433,7 @@ def test_a_hot_gpu_reading_is_an_alert(monkeypatch, gpu_thresholds_file):
 def test_a_clean_gpu_reading_reads_as_clean(monkeypatch, gpu_thresholds_file):
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
     monkeypatch.setattr(
-        cli, "NvidiaGpuProvider", lambda: FakeGpuProvider([gpu_reading()])
+        "aistack.providers.gpu.NvidiaGpuProvider", lambda: FakeGpuProvider([gpu_reading()])
     )
 
     domain = cli.gpu_domain("test-host")
@@ -764,7 +760,7 @@ def test_a_declared_container_never_discovered_is_an_alert(monkeypatch, tmp_path
     path.write_text(categorization_yaml(), encoding="utf-8")
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
     monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+    monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     domain = cli.inventory_gap_domain()
 
@@ -785,7 +781,7 @@ def test_a_declared_container_found_locally_reads_as_clean(monkeypatch, tmp_path
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
     monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
     monkeypatch.setattr(
-        cli, "DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
+        "aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
     )
 
     domain = cli.inventory_gap_domain()
@@ -800,8 +796,7 @@ def test_a_discovered_container_not_declared_is_an_alert(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
     monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "wordpress"}, {"Names": "mystery"}]),
     )
 
@@ -833,7 +828,7 @@ def test_a_container_found_only_via_network_discovery_reads_as_clean(monkeypatch
         encoding="utf-8",
     )
     monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", observation_path)
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+    monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     domain = cli.inventory_gap_domain()
 
@@ -859,7 +854,7 @@ def test_a_corrupt_network_observation_falls_back_to_local_only(monkeypatch, tmp
     observation_path.write_text("not valid json", encoding="utf-8")
     monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", observation_path)
     monkeypatch.setattr(
-        cli, "DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
+        "aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
     )
 
     domain = cli.inventory_gap_domain()
@@ -874,8 +869,7 @@ def test_docker_not_reachable_falls_back_gracefully(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
     monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=OSError("docker not found")),
     )
 
@@ -1082,8 +1076,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
@@ -1127,7 +1120,7 @@ hosts:
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+    monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
     score, note = cli.technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
@@ -1143,8 +1136,7 @@ def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
@@ -1285,8 +1277,7 @@ def test_a_container_running_between_two_crashes_is_still_a_restart_loop(monkeyp
         lambda since, output_path=None: deaths,
     )
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(
             states=[{"Names": "mularr", "State": "running", "Status": "Up 5 seconds"}]
         ),
@@ -1326,3 +1317,40 @@ services:
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
 
     assert cli.pra_tests_domain().findings == ()
+
+
+def test_the_cockpit_boots_one_kernel_and_every_domain_reads_through_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """
+    ADR-0027 § 9: the health chain asks the Kernel for its providers.
+    `build_cockpit` boots it once; a domain called alone boots its own.
+    """
+
+    for name in (
+        "DEFAULT_STORAGE_THRESHOLDS",
+        "DEFAULT_BACKUP_THRESHOLDS",
+        "DEFAULT_GPU_THRESHOLDS",
+        "DEFAULT_PRA_TESTS",
+        "DEFAULT_BACKUP_STRATEGY",
+        "DEFAULT_CATEGORIZATION",
+    ):
+        monkeypatch.setattr(cli, name, tmp_path / "absent.yml")
+    monkeypatch.setattr(
+        "aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[])
+    )
+
+    boots = []
+    real = cli.create_kernel
+
+    def counted() -> object:
+        boots.append(1)
+        return real()
+
+    monkeypatch.setattr(cli, "create_kernel", counted)
+
+    cli.build_cockpit("test-host")
+    assert len(boots) == 1
+
+    cli.services_domain()
+    assert len(boots) == 2

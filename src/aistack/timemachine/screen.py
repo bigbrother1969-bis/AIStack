@@ -824,7 +824,7 @@ def live_network_tree(
     return build_network_tree(
         cidr=load_network_discovery_yaml(network_discovery).cidr,
         local_host_label=hardware[0].name if hardware else "",
-        docker_catalog=DockerRuntimeCatalogBuilder().build(providers.get("docker").collect()),
-        compose_catalog=ComposeRuntimeCatalogBuilder().build(providers.get("compose").collect()),
+        docker_catalog=DockerRuntimeCatalogBuilder().build(providers.collecting("docker").collect()),
+        compose_catalog=ComposeRuntimeCatalogBuilder().build(providers.collecting("compose").collect()),
         remote_hosts=last_remote_hosts(generated_dir),
     )

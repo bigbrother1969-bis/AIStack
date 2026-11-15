@@ -1,0 +1,26 @@
+# AIStack — arrivals (ADR-0026): notice a container or a machine that
+# appeared, and propose it on the screen *Nouveautés*.
+#
+# The vigil (every 15 minutes) compares the containers it finds with
+# `service_categorization.yml`. A container no service declares is said
+# to Gotify once, after it was seen on `confirm_passes` passes in a row,
+# so a container that lives a few minutes is never announced. The screen
+# proposes its declaration; nothing is written until you click.
+
+confirm_passes: 2
+
+# A machine that answers SSH and runs Docker, found by the network
+# discovery, and that no declaration names, is proposed too. The
+# discovery tries every declared SSH user name against every live host
+# of the LAN: it is an action, so it is off (0). Set a number of hours,
+# for instance 24, to let the vigil run it. It needs `nmap` in the image
+# and the key named in `network_discovery.yml`. The first scan only
+# notes the machines found: they are not news.
+machine_scan_hours: 0
+
+# Containers never proposed.
+ignore: []
+
+# Addresses of machines that are not news, besides those `hosts.yml` names
+# with an `address:`.
+known_hosts: []

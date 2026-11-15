@@ -3,8 +3,8 @@ What the vigil tells the owner, and how.
 
 Events: health going down, the dock (a proposal waiting, a change
 applied, rolled back or failed), a silent host, a failed restore test,
-and AIStack's data nearing or past its disk budget (ADR-0021; urgent
-past it). Each event is said once: a finding that stays is not repeated
+AIStack's data nearing or past its disk budget (ADR-0021; urgent past
+it), and a container or a machine that appeared (ADR-0026). Each event is said once: a finding that stays is not repeated
 until it has gone and come back. The events of one pass go out as one
 message. The first pass of a fresh install only records what is there.
 
@@ -46,6 +46,18 @@ class Event:
     kind: str
     line: str
     urgent: bool = False
+
+
+def arrival_event(t: Translator, arrival: Any) -> Event:
+    """One line for a container or a machine that appeared (ADR-0026); never urgent."""
+
+    if arrival.kind == "host":
+        return Event("arrival", t("notify.event.arrival_host", address=arrival.name, user=arrival.where or "?"))
+
+    if arrival.where:
+        return Event("arrival", t("notify.event.arrival_container_on_host", name=arrival.name, host=arrival.where))
+
+    return Event("arrival", t("notify.event.arrival_container_here", name=arrival.name))
 
 
 @dataclass

@@ -19,8 +19,10 @@ def load_service_categorization_yaml(path: Path) -> ServiceCategorizationDefinit
     """
     Load the service categorization from YAML.
 
-    The file is edited by hand (nothing writes it back); a missing key
-    raises a `ValueError` naming it and its location.
+    The file is edited by hand, or by one click on the screen *Nouveautés*
+    (`aistack.arrivals.declare`, which adds a service as text and keeps a
+    dated copy); a missing key raises a `ValueError` naming it and its
+    location.
     """
 
     with path.open("r", encoding="utf-8") as stream:

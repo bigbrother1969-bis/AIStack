@@ -54,6 +54,18 @@ def test_the_shipped_declaration_traces_both_hosts(tmp_path: Path):
     assert declaration.silent_after == timedelta(minutes=60)
 
 
+def test_a_host_may_name_its_network_address(tmp_path: Path):
+    path = tmp_path / "hosts.yml"
+    path.write_text(
+        "hosts:\n  server:\n    directory: hosts/server\n    address: 192.168.1.10\n  other:\n    directory: hosts/other\n",
+        encoding="utf-8",
+    )
+
+    declaration = load_hosts_declaration(tmp_path, path)
+
+    assert [(host.name, host.address) for host in declaration.hosts] == [("server", "192.168.1.10"), ("other", None)]
+
+
 def test_records_are_read_line_by_line_and_a_bad_line_skipped(tmp_path: Path):
     records = read_host(_host(tmp_path))
 

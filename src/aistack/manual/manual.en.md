@@ -762,6 +762,47 @@ anything: `docker compose exec restart-watch python -m
 aistack.cli.restart_watch --once --dry-run --ignore-window`. On a git
 installation: `deploy/systemd/aistack-restart-watch.service`.
 
+## New arrivals
+
+When you add a container, AIStack already sees it as an inventory gap in
+the Cockpit. The vigil now tells you through Gotify, and the console
+screen *Nouveautés* (“New arrivals”) proposes it.
+
+The vigil, which passes every 15 minutes, announces a container that no
+service declares, once, when it has seen it on **two passes in a row**: a
+container that lives a few minutes is never announced. At its very first
+pass it only notes what is there: the containers undeclared on the day of
+the installation are not news, they stay listed on the screen.
+
+The screen shows each container waiting (where it runs, its image, its
+ports, whether it asks for the GPU) with a prefilled form: the name, the
+category (an existing one, or a new one) and a description. **Declare**
+adds the service to `./config/service_categorization.yml` without touching
+the rest of the file (your comments and layout stay) and keeps a dated
+copy beside it (`service_categorization.yml.avant-arrivals-…`). If the
+file has a shape the screen cannot edit (a category with `services: []`),
+it says so and changes nothing. **Ignore** sets the container aside; it is
+taken back from the “Set aside” list. Only an administrator can write.
+
+A machine that answers SSH, runs Docker and is declared nowhere is
+proposed the same way, with the lines to add to `hosts.yml` once the
+collector runs on it (see “Traceability of the hosts”). It is never added
+with a click: without a collector it would be a silent host. A machine
+already traced is recognized by `address:` in `hosts.yml`; “Already known”
+sets the others aside.
+
+The machine scan is **off**: it tries every declared SSH user against
+every machine of the network, which is an action. For the vigil to run it,
+set for instance `machine_scan_hours: 24` in `./config/arrivals.yml`; the
+image needs `nmap` (shipped since this version, rebuild the image) and the
+key named in `network_discovery.yml` must be readable inside the
+container. You can also run it by hand: `docker compose exec vigil python
+-m aistack.cli.network_docker_discover`. The machines found by the
+**first** observation that holds any are the baseline: they are not news.
+
+Settings in `./config/arrivals.yml`: `confirm_passes`, `machine_scan_hours`,
+`ignore` (containers never proposed) and `known_hosts` (known addresses).
+
 ## Disk budget of AIStack's data
 
 AIStack's data (the data directory: history, the Time Machine's graph,

@@ -20,11 +20,15 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
+from aistack import arrivals
 from aistack.api_keys import apply_to_environ
 from aistack.data_budget.budget import compact_if_due, human_size, load_data_budget
 from aistack.dock import proposals as store
+from aistack.hosts.records import load_hosts_declaration
 from aistack.i18n import default_languages, translator_for
 from aistack.instance.yaml import load_instance_config_yaml
 from aistack.config import configured
@@ -32,6 +36,7 @@ from aistack.vigil import notify, snapshot
 
 GENERATED_DIR = Path("reports/generated")
 INSTANCE_CONFIG = configured(Path(__file__).resolve().parents[1] / "instance" / "definitions" / "instance_config.yml")
+ARRIVALS = configured(Path(__file__).resolve().parents[1] / "arrivals" / "definitions" / "arrivals.yml")
 RENDERS = ("aistack.cli.health_render", "aistack.cli.console_render")
 
 
@@ -82,6 +87,29 @@ def _compact(generated: Path) -> None:
         )
 
 
+def _scan() -> None:
+    """The network discovery, when `arrivals.yml` asks the vigil to run it (ADR-0026)."""
+
+    _run("aistack.cli.network_docker_discover")
+
+
+def _arrivals(generated: Path, now: datetime | None = None) -> tuple[list[arrivals.Arrival], dict[str, Any] | None]:
+    """What appeared since the last pass, and the state to keep once it was said; never stops the vigil."""
+
+    try:
+        return arrivals.run(
+            generated,
+            arrivals.load_arrivals_yaml(ARRIVALS),
+            snapshot.read(generated),
+            {host.address for host in load_hosts_declaration(generated).hosts if host.address},
+            now=now or datetime.now(timezone.utc),
+            scan=_scan,
+        )
+    except (OSError, ValueError) as error:
+        print(f"vigil: arrivals skipped ({error})", flush=True)
+        return [], None
+
+
 def _console_url() -> str:
     try:
         return load_instance_config_yaml(INSTANCE_CONFIG).service_url("web_lan") + "/console.html"
@@ -96,6 +124,8 @@ def one_pass(generated: Path, gotify: notify.Gotify | None, dry_run: bool, rende
     t = translator_for(default_languages().reference)
     previous = notify.read_state(generated)
     found, current = notify.events(t, previous, snapshot.read(generated), store.all_proposals(generated))
+    appeared, following = _arrivals(generated)
+    found += [notify.arrival_event(t, arrival) for arrival in appeared]
     message = notify.compose(t, found)
     if message is None:
         print("vigil: nothing new" + ("" if previous.known else " (first pass: what is there is noted)"), flush=True)
@@ -113,6 +143,8 @@ def one_pass(generated: Path, gotify: notify.Gotify | None, dry_run: bool, rende
             return 1
     if not dry_run:
         notify.write_state(generated, current)
+        if following is not None:
+            arrivals.remember(generated, following)
     return 0
 
 

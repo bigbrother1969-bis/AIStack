@@ -41,6 +41,20 @@ links:
     path: /priority/
     scope: lan
   - name:
+      fr: Nouveautés
+      en: New arrivals
+    description:
+      fr: >-
+        Les conteneurs et les machines apparus que rien ne déclare : les
+        voir, déclarer un conteneur d'un clic, ou l'écarter.
+      en: >-
+        The containers and machines that appeared and that nothing
+        declares: see them, declare a container with a click, or set it
+        aside.
+    service: web_lan
+    path: /arrivals/
+    scope: lan
+  - name:
       fr: Relance au démarrage
       en: Restart after boot
     description:

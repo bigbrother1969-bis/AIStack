@@ -50,6 +50,17 @@ it says what the build was *for*.
   tells Gotify when one does not come back. The console has a card for it
   (the window, the stuck containers, the decision journal);
   `restart_watch.yml` holds the settings. `ADR-0025`.
+- **New arrivals.** The vigil now says, once, a container that no service
+  declares — after it was seen on two passes in a row, so a container that
+  lives a few minutes is never announced — and the new console screen
+  *Nouveautés* proposes it: its image, ports and GPU request, a prefilled
+  name, category and description, and one click that declares it in
+  `service_categorization.yml` (a dated copy is kept). A machine that
+  answers SSH and runs Docker and that nothing declares is proposed too,
+  with the lines to add to `hosts.yml`; `hosts.yml` takes an optional
+  `address:`. The scan of the machines is off until `machine_scan_hours`
+  in `arrivals.yml` says otherwise, and the image now installs `nmap` for
+  it. `ADR-0026`.
 - **The maintenance page waits for nginx.** `maintenance_page.sh on`
   asked once whether the page answered, right after systemd said the
   service had started — before nginx was listening. It now asks again for

@@ -30,6 +30,7 @@ from aistack.troubleshooting.guide import AskAI, ai_destination, ask_ai_runtime
 from aistack.timemachine.screen import ExpiringValue, live_network_tree
 from aistack.timemachine.tree import NetworkTreeNode
 from aistack.web import (
+    arrivals,
     authentication,
     console,
     first_start,
@@ -81,6 +82,10 @@ class WebPaths:
         configured(PACKAGE_ROOT / "network_discovery" / "definitions" / "network_discovery.yml")
     )
     resource_priority: Path = configured(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml")
+    # The arrivals' declaration and the file a click declares a container
+    # in (ADR-0026).
+    arrivals: Path = configured(PACKAGE_ROOT / "arrivals" / "definitions" / "arrivals.yml")
+    categorization: Path = configured(PACKAGE_ROOT / "architecture" / "definitions" / "service_categorization.yml")
     # The restart watch's declaration, shown by its screen (ADR-0025).
     restart_watch: Path = configured(PACKAGE_ROOT / "restart_watch" / "definitions" / "restart_watch.yml")
     # Read by the troubleshooting assistant to describe a finding.
@@ -212,6 +217,7 @@ def create_app(
     include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)
     include(app, priority.router, priority.PREFIX)
+    include(app, arrivals.router, arrivals.PREFIX)
     include(app, restart_watch.router, restart_watch.PREFIX)
     include(app, selection.router, selection.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)

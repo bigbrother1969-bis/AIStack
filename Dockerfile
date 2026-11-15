@@ -6,8 +6,9 @@
 #
 # The `docker` client, copied as a single static binary from Docker's
 # own image, is how AIStack observes and throttles the host's
-# containers through the mounted socket; `lm-sensors` and
-# `openssh-client` are the two other host commands it runs.
+# containers through the mounted socket; `lm-sensors`, `openssh-client`
+# and `nmap` (the network discovery's ping sweep, ADR-0026) are the other
+# host commands it runs.
 FROM docker:27-cli AS docker-cli
 
 FROM python:3.13-slim
@@ -20,7 +21,7 @@ ENV AISTACK_CONFIG_DIR=/config
 ENV HOME=/tmp
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends lm-sensors openssh-client \
+    && apt-get install -y --no-install-recommends lm-sensors openssh-client nmap \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker

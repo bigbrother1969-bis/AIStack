@@ -798,6 +798,52 @@ relancer : `docker compose exec restart-watch python -m
 aistack.cli.restart_watch --once --dry-run --ignore-window`. En
 installation git : `deploy/systemd/aistack-restart-watch.service`.
 
+## Nouveautés
+
+Quand tu ajoutes un conteneur, AIStack le voit déjà comme un écart
+d'inventaire dans le Cockpit. La vigie te le dit maintenant par Gotify, et
+l'écran « Nouveautés » de la console le propose.
+
+La vigie, qui passe toutes les 15 minutes, annonce un conteneur que
+aucun service ne déclare, une seule fois, quand elle l'a vu à **deux
+passages de suite** : un conteneur qui ne vit que quelques minutes n'est
+jamais annoncé. Au tout premier passage, elle note seulement ce qui est
+là : les conteneurs non déclarés le jour de l'installation ne sont pas
+des nouveautés, ils restent listés sur l'écran.
+
+L'écran montre chaque conteneur en attente (où il tourne, son image, ses
+ports, s'il demande le GPU) avec un formulaire prérempli : le nom, la
+catégorie (une catégorie existante, ou une nouvelle) et une description.
+**Déclarer** ajoute le service à `./config/service_categorization.yml`
+sans toucher au reste du fichier (tes commentaires et ta mise en page
+restent) et garde une copie datée à côté
+(`service_categorization.yml.avant-arrivals-…`). Si le fichier a une
+forme que l'écran ne sait pas modifier (une catégorie avec
+`services: []`), il le dit et ne touche à rien. **Ignorer** écarte le
+conteneur ; il se reprend depuis la liste « Écartés ». Seul un
+administrateur peut écrire.
+
+Une machine qui répond en SSH, fait tourner Docker et n'est déclarée
+nulle part est proposée de la même façon, avec les lignes à ajouter à
+`hosts.yml` une fois le collecteur installé dessus (voir « Traçabilité
+des hôtes »). Elle n'est jamais ajoutée d'un clic : sans collecteur, elle
+serait un hôte silencieux. Une machine déjà suivie est reconnue grâce à
+`address:` dans `hosts.yml` ; « Déjà connue » écarte les autres.
+
+Le scan des machines est **désactivé** : il essaie tous les utilisateurs
+SSH déclarés contre toutes les machines du réseau, ce qui est une action.
+Pour que la vigie le lance, mets par exemple `machine_scan_hours: 24`
+dans `./config/arrivals.yml` ; il faut `nmap` dans l'image (livré depuis
+cette version, reconstruis l'image) et la clé nommée dans
+`network_discovery.yml` lisible dans le conteneur. Tu peux aussi le
+lancer à la main : `docker compose exec vigil python -m
+aistack.cli.network_docker_discover`. Les machines trouvées par la
+**première** observation qui en contient sont la référence : elles ne
+sont pas des nouveautés.
+
+Réglages dans `./config/arrivals.yml` : `confirm_passes`, `machine_scan_hours`,
+`ignore` (conteneurs jamais proposés) et `known_hosts` (adresses connues).
+
 ## Budget disque des données d'AIStack
 
 Les données d'AIStack (le dossier des données : historique, graphe de la

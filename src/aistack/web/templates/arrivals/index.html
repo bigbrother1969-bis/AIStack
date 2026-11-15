@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('arrivals.title') }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+    .box h2 { margin: 0 0 .6rem; font-size: 1.05rem; }
+    .status { background: #e8f1ff; border: 1px solid #b6d0f7; border-radius: 6px; padding: .6rem .8rem; margin-bottom: 1rem; }
+    .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .75rem; background: #fff1cc; color: #7d4e00; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    code, pre { background: #eef1f4; padding: .05rem .3rem; border-radius: 4px; }
+    pre { padding: .5rem .7rem; overflow-x: auto; }
+    form.declare { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .5rem; margin-top: .4rem; align-items: end; }
+    form.declare label { display: flex; flex-direction: column; font-size: .8rem; color: #555; gap: .15rem; }
+    form.declare input, form.declare select { padding: .35rem .5rem; font-size: .9rem; border: 1px solid #bbb; border-radius: 6px; }
+    form.inline { display: inline; }
+    button { padding: .4rem .8rem; font-size: .85rem; cursor: pointer; border: 1px solid #bbb; border-radius: 6px; background: white; }
+    button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; font-size: .88rem; }
+    .top a { color: #1f6feb; text-decoration: none; }
+    .top a:hover { text-decoration: underline; }
+    .lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
+    .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
+    .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
+    .lang-switch a:hover .flag { opacity: 1; }
+    .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+    .item { border-top: 1px solid #e5e5e5; padding: .7rem 0; }
+    .item:first-of-type { border-top: 0; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+  <header>
+    <h1>{{ t('arrivals.heading') }}</h1>
+    <p class="meta">{{ t('arrivals.meta', passes=definition.confirm_passes) }}
+      {% if definition.machine_scan_hours %}{{ t('arrivals.scan.enabled', hours=definition.machine_scan_hours) }}{% else %}{{ t('arrivals.scan.disabled') }}{% endif %}
+      {% if state %}{{ t('arrivals.updated', at=state.updated_at) }}{% else %}{{ t('arrivals.never') }}{% endif %}</p>
+  </header>
+
+  {% if status %}<div class="status">{{ status }}</div>{% endif %}
+
+  <div class="box">
+    <h2>{{ t('arrivals.containers.heading') }}</h2>
+    {% if containers %}
+      {% for item in containers %}
+        <div class="item">
+          <strong><code>{{ item.name }}</code></strong>
+          <span class="meta">— {{ item.where or t('arrivals.containers.here') }}{% if item.image %} — {{ item.image }}{% endif %}{% if item.ports %} — {{ item.ports }}{% endif %}{% if item.since %} — {{ t('arrivals.containers.col.since') }} {{ item.since }}{% endif %}</span>
+          {% if item.gpu %}<span class="badge">{{ t('arrivals.containers.gpu') }}</span>{% endif %}
+          <form class="declare" method="post" action="{{ base }}/declare"><!--aistack:csrf-->
+            <input type="hidden" name="container" value="{{ item.name }}">
+            <label>{{ t('arrivals.containers.name') }}
+              <input type="text" name="name" value="{{ item.suggested_name }}" title="{{ t('arrivals.tooltip.name') }}"></label>
+            <label>{{ t('arrivals.containers.category') }}
+              <select name="category" title="{{ t('arrivals.tooltip.category') }}">
+                {% for category in categories %}<option value="{{ category }}">{{ category }}</option>{% endfor %}
+                <option value="{{ new_category }}"{% if not categories %} selected{% endif %}>{{ t('arrivals.containers.new_category') }}</option>
+              </select></label>
+            <label>{{ t('arrivals.containers.new_category_name') }}
+              <input type="text" name="new_category" title="{{ t('arrivals.tooltip.new_category') }}"></label>
+            <label>{{ t('arrivals.containers.description') }}
+              <input type="text" name="description" value="{{ item.suggested_description }}" title="{{ t('arrivals.tooltip.description') }}"></label>
+            <button class="primary" type="submit" title="{{ t('arrivals.tooltip.declare') }}">{{ t('arrivals.containers.declare') }}</button>
+          </form>
+          <form class="inline" method="post" action="{{ base }}/ignore"><!--aistack:csrf-->
+            <input type="hidden" name="container" value="{{ item.name }}">
+            <button type="submit" title="{{ t('arrivals.tooltip.ignore') }}">{{ t('arrivals.containers.ignore') }}</button>
+          </form>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>{{ t('arrivals.containers.none') }}</p>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>{{ t('arrivals.hosts.heading') }}</h2>
+    {% if hosts %}
+      {% for item in hosts %}
+        <div class="item">
+          <strong><code>{{ item.address }}</code></strong>
+          <span class="meta">— {{ t('arrivals.hosts.col.user') }} {{ item.user }} — {{ item.containers }} {{ t('arrivals.hosts.col.containers') | lower }}{% if item.since %} — {{ t('arrivals.hosts.col.since') }} {{ item.since }}{% endif %}</span>
+          <p class="meta">{{ t('arrivals.hosts.add') }}</p>
+          <pre>{{ item.block }}</pre>
+          <form class="inline" method="post" action="{{ base }}/known"><!--aistack:csrf-->
+            <input type="hidden" name="address" value="{{ item.address }}">
+            <button type="submit" title="{{ t('arrivals.tooltip.known') }}">{{ t('arrivals.hosts.known') }}</button>
+          </form>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>{{ t('arrivals.hosts.none') }}</p>
+    {% endif %}
+  </div>
+
+  {% if ignored_containers or ignored_hosts %}
+    <div class="box">
+      <h2>{{ t('arrivals.ignored.heading') }}</h2>
+      {% for name in ignored_containers %}
+        <form class="inline" method="post" action="{{ base }}/restore"><!--aistack:csrf-->
+          <input type="hidden" name="name" value="{{ name }}">
+          <code>{{ name }}</code> <span class="meta">({{ t('arrivals.ignored.container') }})</span>
+          <button type="submit" title="{{ t('arrivals.tooltip.restore') }}">{{ t('arrivals.ignored.restore') }}</button>
+        </form><br>
+      {% endfor %}
+      {% for name in ignored_hosts %}
+        <form class="inline" method="post" action="{{ base }}/restore"><!--aistack:csrf-->
+          <input type="hidden" name="name" value="{{ name }}">
+          <input type="hidden" name="kind" value="host">
+          <code>{{ name }}</code> <span class="meta">({{ t('arrivals.ignored.host') }})</span>
+          <button type="submit" title="{{ t('arrivals.tooltip.restore') }}">{{ t('arrivals.ignored.restore') }}</button>
+        </form><br>
+      {% endfor %}
+    </div>
+  {% endif %}
+</body>
+</html>

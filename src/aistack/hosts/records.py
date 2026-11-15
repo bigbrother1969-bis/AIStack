@@ -25,6 +25,9 @@ SHIPPED = Path(__file__).resolve().parent / "definitions" / "hosts.yml"
 class TracedHost:
     name: str
     directory: Path
+    # The machine's network address, when the declaration gives it: a
+    # machine found on the network at that address is not news (ADR-0026).
+    address: str | None = None
 
 
 @dataclass(frozen=True)
@@ -43,7 +46,10 @@ def load_hosts_declaration(generated_dir: Path, path: Path | None = None) -> Hos
         if not isinstance(raw, dict) or not raw.get("directory"):
             raise ValueError(f"{source}: host `{name}` names no `directory`")
         directory = Path(str(raw["directory"]))
-        hosts.append(TracedHost(str(name), directory if directory.is_absolute() else generated_dir / directory))
+        address = str(raw["address"]).strip() if raw.get("address") else None
+        hosts.append(
+            TracedHost(str(name), directory if directory.is_absolute() else generated_dir / directory, address or None)
+        )
     return HostsDeclaration(tuple(hosts), timedelta(minutes=float(data.get("silent_after_minutes", 60))))
 
 

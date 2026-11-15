@@ -23,7 +23,8 @@ class InventoryGap:
     `DECLARED_UNDISCOVERED`. `host` is set only for a remote discovered
     container; `None` means this machine or not applicable.
 
-    Gaps are never written back to the declared file; the owner edits it.
+    A gap is never written back by itself: the owner edits the declared
+    file, or accepts the proposal of the screen *Nouveautés* (`ADR-0026`).
     """
 
     kind: str

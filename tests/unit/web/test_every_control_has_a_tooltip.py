@@ -233,6 +233,7 @@ def web(tmp_path: Path) -> TestClient:
 SCREENS = [
     "/network-discovery/?status=ok",
     "/priority/?status=ok",
+    "/arrivals/",
     "/restart-watch/",
     "/selection/?status=ok",
     "/troubleshooting/?status=ok",

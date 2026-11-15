@@ -40,6 +40,8 @@ PAGE_DIR="$PREFIX/usr/share/aistack-maintenance"
 CONF_DIR="$PREFIX/etc/aistack-maintenance"
 UNIT="$PREFIX/etc/systemd/system/aistack-maintenance.service"
 WAIT_PORT_SECONDS="${AISTACK_MAINTENANCE_WAIT:-120}"
+# systemd reports the unit started before nginx listens: how long `on` waits for the 503.
+WAIT_PAGE_SECONDS="${AISTACK_MAINTENANCE_PAGE_WAIT:-15}"
 DOCKER_BIN="${AISTACK_DOCKER:-docker}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
@@ -180,8 +182,17 @@ cmd_on() {
     done
     do_it "systemctl start aistack-maintenance" systemctl start aistack-maintenance.service
     [ "$DRY_RUN" -eq 1 ] && return 0
-    local code
-    code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/ || true)"
+    # `Type=simple`: systemd says "started" before nginx has opened the port,
+    # so the first answer can be nothing at all. Ask again until the page
+    # answers, for up to WAIT_PAGE_SECONDS.
+    local code page_waited=0
+    while :; do
+        code="$(curl -s -m 3 -o /dev/null -w '%{http_code}' http://127.0.0.1/ || true)"
+        [ "$code" = 503 ] && break
+        [ "$page_waited" -lt "$WAIT_PAGE_SECONDS" ] || break
+        sleep 1
+        page_waited=$((page_waited + 1))
+    done
     [ "$code" = 503 ] || fail "La page ne répond pas 503 (reçu : ${code:-rien}) : journalctl -u aistack-maintenance -n 40"
     say "  La page de maintenance répond (503)."
 }

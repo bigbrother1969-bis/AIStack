@@ -26,7 +26,9 @@ FAKES = {
     "nginx": 'echo "nginx $*" >> "$CALLS"\n',
     "apt-get": 'echo "apt-get $*" >> "$CALLS"\n',
     "ss": '[ -f "$BUSY" ] && echo "LISTEN 0 4096 0.0.0.0:80 0.0.0.0:*"\nexit 0\n',
-    "curl": 'echo "${FAKE_HTTP:-503}"\n',
+    # The first $FAKE_FAILS calls get nothing (nginx not listening yet), the next ones the page.
+    "curl": 'n=$(cat "$TRIES" 2>/dev/null || echo 0); n=$((n + 1)); echo "$n" > "$TRIES"\n'
+    'if [ "$n" -le "${FAKE_FAILS:-0}" ]; then echo 000; else echo "${FAKE_HTTP:-503}"; fi\n',
     "sleep": "exit 0\n",
     # Docker: `ps` lists the containers of $WAS_RUNNING; those named in $DEAD are not running any more.
     "docker": 'case "$1" in\n'
@@ -59,6 +61,7 @@ def environment(tmp_path: Path, *, busy: bool = False) -> dict[str, str]:
         "WAS_RUNNING": str(tmp_path / "was_running"),
         "DEAD": str(tmp_path / "dead"),
         "DOCKER_CALLS": str(tmp_path / "docker_calls"),
+        "TRIES": str(tmp_path / "tries"),
     }
 
 
@@ -191,6 +194,24 @@ def test_on_checks_that_the_page_really_answers_503(tmp_path: Path):
     assert run(tmp_path, "on").returncode == 0
     wrong = run(tmp_path, "on", extra={"FAKE_HTTP": "200"})
     assert wrong.returncode == 1 and "503" in wrong.stderr
+
+
+def test_on_asks_again_when_nginx_is_not_listening_yet(tmp_path: Path):
+    # 2026-11-15: systemd said "started", the first curl got nothing, the
+    # weekly image was cancelled. The page answers from the third try.
+    installed(tmp_path)
+    (tmp_path / "tries").unlink(missing_ok=True)
+    result = run(tmp_path, "on", extra={"FAKE_FAILS": "2"})
+    assert result.returncode == 0, result.stderr
+    assert (tmp_path / "tries").read_text(encoding="utf-8").strip() == "3"
+    assert "répond (503)" in result.stdout
+
+
+def test_on_gives_up_when_the_page_never_answers(tmp_path: Path):
+    installed(tmp_path)
+    result = run(tmp_path, "on", extra={"FAKE_FAILS": "99", "AISTACK_MAINTENANCE_PAGE_WAIT": "3"})
+    assert result.returncode == 1 and "503" in result.stderr
+    assert (tmp_path / "tries").read_text(encoding="utf-8").strip() == "4"
 
 
 def test_run_stops_docker_shows_the_page_runs_then_restores(tmp_path: Path):

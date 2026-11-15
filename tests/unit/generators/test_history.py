@@ -135,3 +135,68 @@ def test_returns_both_paths_it_wrote(tmp_path: Path):
     assert returned_latest == latest_path
     assert returned_history.exists()
     assert returned_history.parent.name == "docker-runtime-catalog"
+
+
+def test_an_observation_identical_to_the_last_adds_no_copy(tmp_path: Path):
+    """
+    Measured on the reference host on 2026-11-07: `history/console` held
+    about 916 MB of identical copies. When nothing changed between two
+    runs, the second keeps no new file; the newest copy is returned and
+    the fixed path still carries the content.
+    """
+
+    latest_path = tmp_path / "reports" / "generated" / "console.html"
+
+    _, first = write_artifact_with_history("same\n", latest_path)
+    _, second = write_artifact_with_history("same\n", latest_path)
+    _, third = write_artifact_with_history("same\n", latest_path)
+
+    history_dir = latest_path.parent / "history" / "console"
+    assert len(list(history_dir.glob("*.html"))) == 1
+    assert second == first == third
+    assert latest_path.read_text(encoding="utf-8") == "same\n"
+
+
+def test_a_change_after_identical_runs_is_kept_and_so_is_a_return(tmp_path: Path, monkeypatch):
+    """
+    Only a *difference* is a new observation: A, A, B, B, A keeps three
+    copies, so going back to a past state is still recorded.
+    """
+
+    import aistack.generators.history as history_module
+
+    ticks = iter(range(100))
+
+    class Stepping(history_module.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 11, 15, 10, 0, next(ticks), tzinfo=tz)
+
+    monkeypatch.setattr(history_module, "datetime", Stepping)
+
+    latest_path = tmp_path / "reports" / "generated" / "console.html"
+    for content in ("A\n", "A\n", "B\n", "B\n", "A\n"):
+        write_artifact_with_history(content, latest_path)
+
+    history_dir = latest_path.parent / "history" / "console"
+    kept = [f.read_text(encoding="utf-8") for f in sorted(history_dir.glob("*.html"))]
+    assert kept == ["A\n", "B\n", "A\n"]
+
+
+def test_identical_content_without_a_copy_still_gets_one(tmp_path: Path):
+    """
+    A history someone cleared (or one that never existed beside a
+    `latest` file) must not stay empty just because the content did not
+    change: the first write after that records the observation.
+    """
+
+    import shutil
+
+    latest_path = tmp_path / "reports" / "generated" / "console.html"
+    write_artifact_with_history("same\n", latest_path)
+    shutil.rmtree(latest_path.parent / "history")
+
+    _, again = write_artifact_with_history("same\n", latest_path)
+
+    assert again.exists()
+    assert again.read_text(encoding="utf-8") == "same\n"

@@ -17,8 +17,16 @@ def write_artifact_with_history(content: str, latest_path: Path) -> tuple[Path, 
     Write a generated artifact to `latest_path` and to a timestamped
     copy in `history/<stem>/` beside it (Observation History).
 
-    Every copy is kept, with no retention window or count cap. Returns
-    `(latest_path, history_path)`.
+    A copy is kept for every observation that *differs* from the one
+    before it. When `content` is byte for byte what `latest_path`
+    already holds and that observation has a copy, no new copy is
+    written and the existing newest one is returned: a reader asking
+    what was observed at a later instant gets that copy anyway
+    (`aistack.history.query` takes the newest observation at or before
+    the instant), so nothing is lost, and a quiet host stops filling
+    the disk with identical files (916 MB of them under
+    `history/console` on 2026-11-07). No retention window or count cap
+    otherwise. Returns `(latest_path, history_path)`.
 
     The stamp uses `strftime` rather than `isoformat` because a path
     cannot carry `:`. Two writes in the same second get a numeric
@@ -26,9 +34,16 @@ def write_artifact_with_history(content: str, latest_path: Path) -> tuple[Path, 
     """
 
     latest_path.parent.mkdir(parents=True, exist_ok=True)
+    history_dir = latest_path.parent / "history" / latest_path.stem
+
+    unchanged = _holds(latest_path, content)
     latest_path.write_text(content, encoding="utf-8")
 
-    history_dir = latest_path.parent / "history" / latest_path.stem
+    if unchanged:
+        newest = _newest_copy(history_dir)
+        if newest is not None:
+            return latest_path, newest
+
     history_dir.mkdir(parents=True, exist_ok=True)
 
     stamp = wall_clock().strftime("%Y-%m-%dT%H-%M-%SZ")
@@ -40,3 +55,24 @@ def write_artifact_with_history(content: str, latest_path: Path) -> tuple[Path, 
     history_path.write_text(content, encoding="utf-8")
 
     return latest_path, history_path
+
+
+def _holds(path: Path, content: str) -> bool:
+    """Whether `path` already holds exactly `content`."""
+
+    try:
+        return path.read_text(encoding="utf-8") == content
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def _newest_copy(history_dir: Path) -> Path | None:
+    """The most recently written history copy, or None when there is none
+    (a first run, or a history someone cleared)."""
+
+    if not history_dir.is_dir():
+        return None
+    copies = [path for path in history_dir.iterdir() if path.is_file()]
+    if not copies:
+        return None
+    return max(copies, key=lambda path: (path.stat().st_mtime_ns, path.name))

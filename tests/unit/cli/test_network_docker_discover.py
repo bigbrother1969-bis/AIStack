@@ -142,7 +142,7 @@ def test_the_observation_is_written_with_history(stubbed_provider, workspace):
     assert len(list(history_dir.glob("*.json"))) == 1
 
 
-def test_a_second_run_does_not_erase_the_first_observation(
+def test_an_identical_second_run_keeps_the_first_observation_once(
     stubbed_provider, workspace
 ):
     network_docker_discover.main(environ={})
@@ -155,7 +155,9 @@ def test_a_second_run_does_not_erase_the_first_observation(
         / "history"
         / "network-docker-observation"
     )
-    assert len(list(history_dir.glob("*.json"))) == 2
+    # The stub returns the same observation twice: an identical run keeps no
+    # second copy (`write_artifact_with_history`), and the first stays.
+    assert len(list(history_dir.glob("*.json"))) == 1
 
 
 def test_a_run_with_real_discovered_hosts_writes_them_through(

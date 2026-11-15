@@ -32,7 +32,7 @@
 # AISTACK_VERSION=dev in .env first, so a local build never takes a
 # published version's name (OPS-0002 § *Between two publications*).
 #
-# The seven services replace the seven systemd units of a git
+# The eight services replace the systemd units of a git
 # installation; never run both on one host (the ports and the
 # collectors would collide).
 

@@ -4,7 +4,7 @@
 
 **AIStack watches a self-hosted server and explains it**: what runs, what
 changed, what is at risk, and what to do about it. It runs on the server it
-observes, as one Docker image and seven services.
+observes, as one Docker image and eight services.
 
 Its idea: an infrastructure is understood and handed on only if what is known
 about it is kept dated, sourced and explained, never overwritten. AI helps
@@ -22,6 +22,11 @@ reason about a fault; it is never the source of truth.
   opinion: Google Gemini given those facts, a local Ollama model as fallback.
 - **Vigil** — renders the cockpit every 15 minutes and sends what changed to
   Gotify.
+- **Restart watch** — after a start of the machine, restarts the containers
+  that came up *running but stuck*, in the order their dependencies need, and
+  tells Gotify when one does not come back.
+- **New arrivals** — notices a container that no service declares and
+  proposes it on a screen of its own, with one click to declare it.
 - **Time Machine** — the history of containers, images, packages, files and
   hosts as a provenance graph, with the written reason behind each change
   (Explications, written and validated by administrators).

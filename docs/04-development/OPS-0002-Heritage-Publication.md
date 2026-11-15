@@ -1,6 +1,7 @@
 # OPS-0002 — Publication
 
-*Version 2.0, 2026-10-10: condensed for 2.0.0-rc2. The full history of each
+*Version 2.0, 2026-10-10: condensed for 2.0.0 (prepared as 2.0.0-rc2, never
+published: its changes ship in 2.0.0). The full history of each
 rule (version 1.19) is at the tag `archive/heritage-2.0.0-rc1`.*
 
 How a change reaches the reference repository, then the mirrors, and how a

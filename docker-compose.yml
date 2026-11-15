@@ -113,7 +113,7 @@ services:
     container_name: aistack-resource-priority
     command: ["priority"]
 
-  # The restart watch (2.1, ADR-0025): after a start, restarts the
+  # The restart watch (2.0, ADR-0025): after a start, restarts the
   # containers that came up stuck, in the order their dependencies need.
   # It acts for 30 minutes after it starts — it starts with Docker.
   restart-watch:

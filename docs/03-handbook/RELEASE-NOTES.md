@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.16
+  version: 1.17
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-10-10
+  updated: 2026-11-15
 
 relations:
   references:
@@ -39,7 +39,13 @@ it says what the build was *for*.
 
 ---
 
-## Unreleased
+## 2.0.0 — 2026-11-15
+
+**The first stable 2.0, validated by its owner on 2026-11-15: what
+2.0.0-rc1 brought — an installation on a server that is not the
+reference host, guided page by page, carrying nothing of that host's own
+configuration — plus the three changes below, which came from running it
+for a month on the reference host. `latest` now names this version.**
 
 - **Restart after boot.** After a start of the machine, the new
   `restart-watch` service finds the containers that came up *running but
@@ -61,6 +67,13 @@ it says what the build was *for*.
   `address:`. The scan of the machines is off until `machine_scan_hours`
   in `arrivals.yml` says otherwise, and the image now installs `nmap` for
   it. `ADR-0026`.
+- **The governance heritage left the product.** What 2.0.0-rc1 still
+  carried to govern the project's own documents — the knowledge-integrity
+  validator, the Context Bundle and the packages `item`, `policies`,
+  `package_manager`, `knowledge` and `location`, which nothing in the
+  product called — is removed, and `sync_context_bundle.sh` with it. It
+  stays at the tag `archive/heritage-2.0.0-rc1`. A `2.0.0-rc2` was
+  prepared for this and never published: its changes are in 2.0.0.
 - **The maintenance page waits for nginx.** `maintenance_page.sh on`
   asked once whether the page answered, right after systemd said the
   service had started — before nginx was listening. It now asks again for

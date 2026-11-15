@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aistack"
-version = "2.0.0-rc1"
+version = "2.0.0"
 description = "AIStack Knowledge Operating System"
 readme = "README.md"
 # The one interpreter AIStack is verified on, the one the image runs;

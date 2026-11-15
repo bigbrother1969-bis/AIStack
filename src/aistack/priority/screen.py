@@ -12,6 +12,7 @@ import subprocess
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from aistack.kernel.bootstrap import registered_providers
 from aistack.priority.definition import (
     BackgroundPriorityDefinition,
     ContainerPriorityDefinition,
@@ -21,7 +22,6 @@ from aistack.priority.definition import (
     ResourcePriorityDefinition,
 )
 from aistack.priority.discovery import DiscoveredContainer, resolve_discovered_containers
-from aistack.providers.docker import DockerProvider
 
 Discover = Callable[[], tuple[DiscoveredContainer, ...]]
 
@@ -30,12 +30,12 @@ def discover_containers() -> tuple[DiscoveredContainer, ...]:
     """
     What Docker reports right now, or nothing if the daemon is unreachable.
 
-    `DockerProvider` raises when the daemon is down; this call absorbs it so
-    the screen still shows the saved classification.
+    The provider registered as `docker` raises when the daemon is down; this
+    call absorbs it so the screen still shows the saved classification.
     """
 
     try:
-        return resolve_discovered_containers(DockerProvider().collect())
+        return resolve_discovered_containers(registered_providers().collecting("docker").collect())
     except subprocess.CalledProcessError:
         return ()
 

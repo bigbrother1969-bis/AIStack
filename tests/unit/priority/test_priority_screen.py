@@ -130,3 +130,42 @@ def test_a_throttle_that_is_not_a_number_is_refused_not_guessed():
             {"sonarr"},
             {"classification__sonarr": "throttled", "throttled_normal_cpus__sonarr": "1,5"},
         )
+
+
+class _RegisteredDocker:
+    """Stands in for the provider `registrations.yml` registers as `docker`."""
+
+    def __init__(self, observation=None, error=None):
+        self._observation = observation
+        self._error = error
+
+    def collect(self):
+        if self._error is not None:
+            raise self._error
+        return self._observation
+
+
+def test_the_screen_asks_the_kernel_for_what_docker_reports(monkeypatch):
+    """ADR-0027 § 9: the screen builds no provider; it asks the registry for `docker`."""
+
+    from aistack.priority.screen import discover_containers
+
+    observation = {"docker": {"containers": [{"Names": "jellyfin", "State": "running"}]}}
+    monkeypatch.setattr(
+        "aistack.providers.docker.DockerProvider", lambda: _RegisteredDocker(observation)
+    )
+
+    assert [container.name for container in discover_containers()] == ["jellyfin"]
+
+
+def test_the_screen_shows_nothing_discovered_when_the_daemon_is_down(monkeypatch):
+    import subprocess
+
+    from aistack.priority.screen import discover_containers
+
+    down = subprocess.CalledProcessError(1, ["docker", "ps"])
+    monkeypatch.setattr(
+        "aistack.providers.docker.DockerProvider", lambda: _RegisteredDocker(error=down)
+    )
+
+    assert discover_containers() == ()

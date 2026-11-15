@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.6
+  version: 2.7
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -206,12 +206,15 @@ nothing from `aistack.kernel`; no module outside the Kernel imports its
 execution, resolution or tasks packages. `kernel/runtime` was removed on
 2026-10-10 (`19e73a6`). `ARC-P-002`.
 *Lot 4, 2026-11-15: ten files of application code build a provider
-themselves, 23 pairs of a file and a provider (`ADR-0027` § 9). The health
-chain asks the Kernel for its four since that day: 21 of 25 entry points, 19
-pairs. Building the Kernel to ask it for a provider is not yet running
-through it: no Task is executed.*
+themselves, 23 pairs of a file and a provider (`ADR-0027` § 9). The health,
+console and troubleshooting chains and the priority screen ask the Kernel for
+theirs since that day: 19 of 25 entry points, 7 pairs. The 7 are the
+providers configured at each use, which stay with their caller by decision
+and stay reported. Building the Kernel to ask it for a provider is not yet
+running through it: no Task is executed. Lot 4 is complete; what is left of
+this entry is lot 5.*
 **Derivable** yes
-**Qualification** to conform, in lots 4 and 5.
+**Qualification** to conform, in lot 5.
 
 #### GOV-0002/OS-087 — The disk is written outside a transaction
 

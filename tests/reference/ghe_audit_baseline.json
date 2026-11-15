@@ -29,7 +29,6 @@
     "src/aistack/cli/architecture_render.py -> HttpProbeProvider",
     "src/aistack/cli/network_docker_discover.py -> NetworkDockerDiscoveryProvider",
     "src/aistack/priority/detectors/jellyfin.py -> JellyfinProvider",
-    "src/aistack/priority/screen.py -> DockerProvider",
     "src/aistack/selection/screen.py -> MediaLibraryProvider",
     "src/aistack/selection/screen.py -> SyncthingProvider",
     "src/aistack/sync/screen.py -> MediaLibraryProvider"

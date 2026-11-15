@@ -1,0 +1,287 @@
+---
+artifact:
+  id: GOV-0002
+  title: Open State Register
+  type: Governance Register
+  semantic_type: Knowledge Artifact
+  domain: Governance
+  criticality: C2
+  confidence: Declared
+  version: 2.0
+  status: Draft
+  owner: Foundation
+  created: 2026-08-22
+  updated: 2026-11-15
+
+relations:
+  references:
+    - FDN-0011
+    - GOV-0001
+    - STD-0100
+---
+
+# GOV-0002 — Open State Register
+
+## Provenance of version 2.0
+
+This register left `main` on 2026-10-10 with the rest of the heritage
+(`94f7c15`) and returns on 2026-11-15, by decision of the owner, as a short
+register: its rules are unchanged, word for word, and its history is not
+copied. Version 1.123, with the 84 entries `OS-001` to `OS-084`, all resolved,
+is at the tag `archive/heritage-2.0.0-rc1` under this same path. Entries opened
+from 2026-11-15 continue the numbering at `OS-085`.
+
+Between those two dates nothing recorded what AIStack knew about itself and had
+not resolved. The entries below are what was measured on the day the register
+returned; they are not a reconstruction of those five weeks.
+
+## Purpose
+
+This register records what AIStack knows about itself and has not resolved.
+
+Until 2026-08-22 that knowledge lived in AI session records under `claude/`,
+which is to say in notes with no owner, outside the projection, and readable
+only by whoever thought to open them. The heritage has already paid for that
+once: STD-0300 was extracted from an unowned working note on 2026-08-14,
+because acceptance criteria were sitting in a file nobody governed.
+
+An open state is not a failure. It is a fact about the system that has been
+observed, stated, and not yet closed. What this register forbids is the
+third possibility — observed, and quietly forgotten.
+
+## What belongs here
+
+An entry states one condition of the system that is known and unresolved.
+Six natures are declared, and the table below is the declaration:
+
+| Nature | What it is |
+|---|---|
+| `contract-debt` | A defect of the contract architecture, per FDN-0011 |
+| `non-conforming` | An instance that violates a rule the heritage declares |
+| `defect` | Code that does not do what it is meant to do |
+| `published` | An artifact already published that must be rebuilt |
+| `risk` | An exposure that is understood and not closed |
+| `decision` | A question that requires the owner and has not been answered |
+
+## What does not belong here
+
+A wish, a roadmap item, or an improvement nobody has observed the need for.
+`docs/99-meta/roadmap/` holds those, outside the projection, and they are not
+open states — they are intentions.
+
+## The relationship to FDN-0011
+
+FDN-0011 defines technical debt as a property of the contracts, and states
+that it is *derived from violations of the contract architecture rather than
+from subjective code reviews*.
+
+That ambition is respected here rather than contradicted, and the distinction
+matters: **`contract-debt` is the only nature in this register that is
+derivable**. As of 2026-08-22 the others are declared, because nothing
+derives them.
+
+An entry carries a `derivable` field for that reason. When a nature becomes
+derivable, its entries stop being maintained by hand and become the output of
+a check, and the register measures its own automatability.
+
+**One nature crossed that line on 2026-08-22.** `contract-debt` is now
+derived: `aistack.conformance.inventory` walks the package at every
+projection, the archive carries the result, and the `contract-debt` integrity
+check publishes it. OS-001 no longer holds a figure an agent asserted — it
+holds one the validator republishes, identically, on every supported
+interpreter.
+
+What that does **not** change is qualification. The check states how many
+contracts nothing satisfies; STD-P-002 makes a contract ahead of its
+implementation the prescribed order, so which of them are planned and which
+abandoned stays with the owner under GOV-P-001. A derivable nature is one
+whose *facts* are measured, not one whose *judgements* are automated.
+
+This register is not a second view of the code. It is the primary record of
+conditions no artifact states about itself.
+
+## Resolution is recorded, never removed
+
+A resolved entry stays, with the date and what discharged it.
+
+The reason is a defect found on 2026-08-22 in STD-0100. Its version 2.0 had
+carried, since 2026-08-20, the sentence *"the validator shall also observe
+`version`, `created` and `updated`, **which it does not today**"*. The work
+was done on 2026-08-21 by `085fe3b`. The sentence was never updated, and a
+C2 standard spent a day asserting something about the code that had stopped
+being true.
+
+The defect was not the deferral — a deferral honoured within a day is the
+method working. The defect was that **nothing distinguished a live deferral
+from a discharged one**. Deleting resolved entries here would rebuild that
+same blindness.
+
+## What a closure must carry
+
+Two rules, adopted 2026-08-27 by the owner. Both come from entries that closed
+wrongly on the day they were written.
+
+### A condition about the world outside this repository cites its measurement
+
+Inside the repository the suite and the projection *are* the measurement: an
+entry closing because a check exists closes against a check that runs. Outside
+it — a host, a mirror, a forge, a published image — nothing runs, and the
+closure states what was measured and when.
+
+GOV-0002/OS-012 closed on *nothing on any host still declares it*, which is a
+condition about a host, and nobody looked. OS-011 and OS-032 are the same
+shape and were the same risk.
+
+The rule is deliberately narrow. A closure citing a measurement for everything
+would produce citations for the sake of citing, and a formal citation nobody
+can falsify is the defect this register keeps finding rather than a protection
+against it. That is also why this is prose and not a check: `register-coherence`
+could require a resolved entry to carry a date and a command, and could not
+tell whether either was true.
+
+### A closure names what still asserts the condition
+
+An entry states a condition of the system, and the heritage usually says the
+same thing elsewhere in its own words. Closing the entry does not close those
+sentences.
+
+GOV-0002/OS-028 closed the two-spelling divergence on the morning of
+2026-08-27 **and cited its measurement** — the rule above was satisfied.
+OPS-0002 § *The canonical name* went on describing that divergence as current
+until the evening, on three forges, in a C2 artifact revised three times that
+afternoon. The closure was right and the heritage was wrong.
+
+So a closure names the artifacts that carried the condition. Producing the
+list is a `grep` — *who else says `AISTack`?* — and the value is in having to
+ask rather than in the list.
+
+**A check on citations would not have caught it.** The failing paragraph did
+not cite OS-028; that is why it survived. What is derivable is the sentences
+that name an entry, and the sentences that matter are the ones that do not.
+
+## Qualification is dated and attributed
+
+An entry's `Qualification` field carries either `unknown` or a decision, and a
+decision carries the date it was taken and who took it. GOV-P-001 puts that
+act with the owner: the register may measure a condition, and may lay out the
+readings, but it may not choose between them.
+
+**Ten entries were qualified on 2026-08-23**, in one pass — every entry then
+open. What each was decided *against* is kept in place, because a decision
+whose alternatives have been erased reads as the only thing anyone thought of.
+
+A qualified entry is not a resolved one. Six of the ten still carry work, and
+stay in their section until it is done.
+
+## How an entry is written
+
+```
+#### GOV-0002/OS-000 — one-line statement
+
+**Nature** · **Opened** · **State** open | resolved YYYY-MM-DD by <what>
+**Observed** where and how it was measured, so a reader can re-measure it
+**Derivable** yes | no | yes, once <what> exists
+**Qualification** what the owner must decide, or `unknown`
+```
+
+Entry identifiers are fragments of this register's identifier, as signatures
+are of their catalogue (ADR-0009 § 3.2). An entry is not a governed object
+citable from anywhere; it exists inside the register that declares it.
+
+---
+
+# Contract debt
+
+None open.
+
+---
+
+# Non-conforming instances
+
+#### GOV-0002/OS-085 — The Kernel names what is outside it, a technology included
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
+**Observed** `python scripts/ghe_audit.py`, measure *The Kernel names something
+outside itself*: ten imports on `5b1489c`, among them `aistack.providers.docker`,
+`aistack.providers.compose` and `aistack.generators.docker`. `ARC-P-001`,
+`ARC-P-004`.
+**Derivable** yes
+**Qualification** to conform, in lot 3 of the GHE reintegration.
+
+#### GOV-0002/OS-086 — Entry points run without the Kernel, and the one registered Task is never executed
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
+**Observed** `python scripts/ghe_audit.py`: 22 of the 25 entry points import
+nothing from `aistack.kernel`; no module outside the Kernel imports its
+execution, resolution or tasks packages. `kernel/runtime` was removed on
+2026-10-10 (`19e73a6`). `ARC-P-002`.
+**Derivable** yes
+**Qualification** to conform, in lots 4 and 5.
+
+#### GOV-0002/OS-087 — The disk is written outside a transaction
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
+**Observed** `python scripts/ghe_audit.py`: 35 files outside
+`src/aistack/transaction` write, move or delete on disk. `GOV-P-002`,
+`ARC-P-012`.
+**Derivable** yes for the list; no for telling a generated artifact
+(`ENG-P-003`) from a modification of knowledge — that is a reading.
+**Qualification** unknown until that reading is done, in lot 6.
+
+#### GOV-0002/OS-088 — `main` cites documents it does not hold
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
+**Observed** `python scripts/ghe_audit.py`, measure *A document is cited and is
+not in the tree*; the list is `tests/reference/ghe_audit_baseline.json`.
+`FDN-P-005`.
+**Derivable** yes
+**Qualification** for each: it returns, or the citation names the tag. Decided
+so far by the owner, 2026-11-15: `FDN-0002` and `STD-0300` return revised;
+`FDN-0005` and `FDN-0006` stay at the tag.
+
+---
+
+# Defects
+
+#### GOV-0002/OS-089 — Two architecture guards pass on nothing
+
+**Nature** `defect` · **Opened** 2026-11-15 · **State** open
+**Observed** `tests/unit/kernel/test_architecture_boundaries.py`:
+`test_runtime_does_not_depend_on_task_registry` iterates over
+`src/aistack/kernel/runtime`, which does not exist;
+`test_every_kernel_runtime_boot_call_in_cli_declares_a_trace_repository`
+searches for `KernelRuntime.boot(`, which occurs nowhere under `src`. Both have
+passed vacuously since `19e73a6`.
+**Derivable** yes
+**Qualification** kept as they are until lot 5 rebuilds the execution path —
+owner, 2026-11-15.
+
+---
+
+# Published artifacts
+
+None open.
+
+---
+
+# Risks
+
+None open.
+
+---
+
+# Decisions
+
+None open.
+
+---
+
+# Resolved
+
+An entry moves here with the date and what discharged it, and is never
+deleted. A register that erased what it had closed could not show that a
+rule ever bound anything.
+
+`OS-001` to `OS-084` were resolved between 2026-08-22 and 2026-10-03. Their
+entries are in version 1.123 of this register, at the tag
+`archive/heritage-2.0.0-rc1`.

@@ -50,6 +50,10 @@ WRITING_FUNCTIONS = {
 DOCUMENT = re.compile(r"\b(?:FDN|ARCH|ADR|STD|GOV|OPS|ENG-TEST|CMP|QUAL)-\d{4}\b")
 PRINCIPLE = re.compile(r"\b[A-Z]{2,5}-P-\d{3}\b")
 REGISTRY = "docs/00-foundation/FDN-0012-AIStack-Principles-Registry.md"
+INDEX = "docs/00-foundation/FDN-0001-README.md"
+KEPT_AT_THE_TAG = "## Kept at the tag"
+# The audit's own test names identifiers that exist only in its fixtures.
+OWN_TEST = "tests/unit/scripts/test_ghe_audit.py"
 READ = ("src", "tests", "docs", "scripts", "README.md")
 TEXT = {".py", ".md", ".yml", ".yaml", ".sh", ".toml", ".html", ".txt", ".cfg"}
 
@@ -62,6 +66,8 @@ def _texts(root: Path) -> dict[Path, str]:
         start = root / name
         paths = [start] if start.is_file() else sorted(start.rglob("*")) if start.is_dir() else []
         for path in paths:
+            if path == root / OWN_TEST:
+                continue
             if path.is_file() and path.suffix in TEXT and "__pycache__" not in path.parts:
                 found[path] = path.read_text(encoding="utf-8", errors="replace")
     return found
@@ -75,6 +81,18 @@ def _registered(root: Path) -> set[str]:
         return set()
     rows = (line.split("|") for line in registry.read_text(encoding="utf-8").splitlines())
     return {row[1].strip() for row in rows if len(row) > 2 and PRINCIPLE.fullmatch(row[1].strip())}
+
+
+def _kept_at_the_tag(root: Path) -> set[str]:
+    """The documents the Foundation index declares kept at the tag."""
+
+    index = root / INDEX
+    if not index.is_file():
+        return set()
+    _, found, section = index.read_text(encoding="utf-8").partition(KEPT_AT_THE_TAG)
+    section = section.split("\n## ", 1)[0] if found else ""
+    cells = (line.split("|")[1].strip() for line in section.splitlines() if line.startswith("|"))
+    return {cell for cell in cells if DOCUMENT.fullmatch(cell)}
 
 
 def _source_root(root: Path) -> Path:
@@ -227,7 +245,8 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     missing = [] if registry.is_file() else [REGISTRY]
 
     # FDN-P-005 - a cited document, or a cited principle, exists. What is
-    # cited and is not in the tree cannot be read by who follows the citation.
+    # cited and is not in the tree cannot be read by who follows the
+    # citation, unless the Foundation index says it is kept at the tag.
     texts = _texts(root)
     documents = root / "docs"
     present = {
@@ -245,7 +264,7 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
         "registered_tasks_never_executed": unexecuted,
         "disk_writes_outside_a_transaction": writers,
         "principles_missing_from_the_tree": missing,
-        "documents_cited_and_absent": sorted(cited_documents - present),
+        "documents_cited_and_absent": sorted(cited_documents - present - _kept_at_the_tag(root)),
         "principles_cited_and_not_registered": sorted(cited_principles - registered) if registered else [],
     }
 
@@ -273,7 +292,7 @@ TITLES = {
     ),
     "documents_cited_and_absent": (
         "FDN-P-005",
-        "A document is cited and is not in the tree",
+        "A document is cited, is not in the tree and is not declared kept at the tag",
     ),
     "principles_cited_and_not_registered": (
         "FDN-P-005",

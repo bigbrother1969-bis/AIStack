@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.2
+  version: 1.3
   status: Published
   owner: Foundation
   created: 2026-07-06
@@ -139,9 +139,32 @@ In `main`, under `docs/00-foundation/`:
 | ENG-TEST-0001 | Mandatory unit testing |
 | ENG-TEST-0002 | The declared execution environment |
 
-At the tag only, by decision of 2026-11-15: `FDN-0005` (Project Operating Model)
-and `FDN-0006` (Project Workspace Operating Model), which describe an
-organisation of the work the project no longer has.
+## Kept at the tag
+
+By decision of the owner, 2026-11-15, the documents below stay at
+`archive/heritage-2.0.0-rc1` and are not brought back to `main`. A citation of
+one of them, anywhere in `main`, leads there. This table is the one place that
+says so: `scripts/ghe_audit.py` reads it, and a cited document that is neither
+in `main` nor in this table is reported.
+
+| Document | Subject | Path at the tag |
+|---|---|---|
+| FDN-0005 | Project Operating Model | `docs/00-foundation/` |
+| FDN-0006 | Project Workspace Operating Model | `docs/00-foundation/` |
+| GOV-0001 | Semantic Knowledge Governance | `docs/03-governance/` |
+| STD-0001 | Standards README | `docs/02-standards/` |
+| STD-0002 | Test Artifact Isolation | `docs/02-standards/testing/` |
+| STD-0101 | Writing Rules | `docs/02-standards/documentation/` |
+| STD-0200 | Specification Standard | `docs/02-standards/specifications/` |
+| OPS-0012 | Dead Code Quarantine | `docs/04-development/` |
+| CMP-0001 | Context Bundle Generator | `docs/04-development/context-bundle-generator/` |
+| CMP-0012 | Innovation Pipeline | `docs/04-development/innovation-pipeline/` |
+
+`FDN-0005` and `FDN-0006` describe an organisation of the work the project no
+longer has. The others govern, or describe, what left `main` on 2026-10-10.
+
+A document due back with a later lot of the reintegration is not listed here:
+it stays reported until it returns.
 
 *Version 1.1 ended on a list of seven file names — `Constitution.md`,
 `Principles.md`, `Semantic-Core.md`, `Engineering-Method.md` and three others —

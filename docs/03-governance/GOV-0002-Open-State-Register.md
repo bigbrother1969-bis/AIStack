@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.1
+  version: 2.2
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -235,9 +235,25 @@ execution, resolution or tasks packages. `kernel/runtime` was removed on
 not in the tree*; the list is `tests/reference/ghe_audit_baseline.json`.
 `FDN-P-005`.
 **Derivable** yes
-**Qualification** for each: it returns, or the citation names the tag. Decided
-so far by the owner, 2026-11-15: `FDN-0002` and `STD-0300` return revised;
-`FDN-0005` and `FDN-0006` stay at the tag.
+**Qualification** decided by the owner, 2026-11-15: the core returns
+(`ADR-0027` § 1); what stays at the tag is declared in `FDN-0001` § *Kept at
+the tag* and is no longer reported; the architecture documents return with
+the lot that brings their code back. What remains reported is those, and
+`OS-092`.
+
+#### GOV-0002/OS-092 — Two identifiers are cited and were never documents
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
+**Observed** `python scripts/ghe_audit.py`, measure *A document is cited, is
+not in the tree and is not declared kept at the tag*. `OPS-0009` is cited by
+`OPS-0004` and by the release notes as the document that governs
+`pra_tests.yml`; `QUAL-0001` is cited by `ADR-0010` and `ADR-0011`. Neither is
+under `docs/` in `main`, and neither is under `docs/` at
+`archive/heritage-2.0.0-rc1`. `ADR-0011` names
+`claude/QUAL-0001-GOVERNED-LLM-EXPERIMENTS-HANDOVER.md`, a session note.
+**Derivable** yes
+**Qualification** unknown — each becomes a document, or its citations name
+what they actually mean.
 
 #### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
 

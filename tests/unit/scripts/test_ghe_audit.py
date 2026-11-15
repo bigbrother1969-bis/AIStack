@@ -141,6 +141,21 @@ def test_a_cited_document_that_is_not_in_the_tree_is_a_departure(tmp_path: Path)
     assert _audit().measure(root)["documents_cited_and_absent"] == ["ADR-0011", "GOV-0002"]
 
 
+def test_a_document_the_index_declares_kept_at_the_tag_is_not_a_departure(tmp_path: Path) -> None:
+    audit = _audit()
+    root = _tree(tmp_path, {"a/b.py": "# STD-0002 forbids it; GOV-0001 and OPS-0009 say more\n"})
+    index = root / audit.INDEX
+    index.parent.mkdir(parents=True)
+    index.write_text(
+        "# Foundation\n\n## Kept at the tag\n\n"
+        "| Document | Subject |\n|---|---|\n| STD-0002 | Test Artifact Isolation |\n\n"
+        "## Elsewhere\n\n| GOV-0001 | not in the section above |\n",
+        encoding="utf-8",
+    )
+
+    assert audit.measure(root)["documents_cited_and_absent"] == ["GOV-0001", "OPS-0009"]
+
+
 def test_a_cited_principle_the_registry_does_not_declare_is_a_departure(tmp_path: Path) -> None:
     audit = _audit()
     root = _tree(tmp_path, {"kernel/core.py": "# ARC-P-001, and ARC-P-099 which nobody registered\n"})
@@ -155,6 +170,13 @@ def test_a_cited_principle_the_registry_does_not_declare_is_a_departure(tmp_path
     )
 
     assert audit.measure(root)["principles_cited_and_not_registered"] == ["ARC-P-099"]
+
+
+def test_the_fixtures_of_this_file_are_not_citations() -> None:
+    audit = _audit()
+
+    assert Path(__file__).resolve() == (ROOT / audit.OWN_TEST).resolve()
+    assert "ARC-P-099" not in audit.measure(ROOT)["principles_cited_and_not_registered"]
 
 
 def test_the_report_counts_every_measure(tmp_path: Path) -> None:

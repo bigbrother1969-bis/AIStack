@@ -85,20 +85,8 @@
     "ARCH-0010",
     "ARCH-0012",
     "ARCH-0013",
-    "CMP-0001",
-    "CMP-0012",
-    "FDN-0005",
-    "FDN-0006",
-    "GOV-0001",
     "OPS-0009",
-    "OPS-0012",
-    "QUAL-0001",
-    "STD-0001",
-    "STD-0002",
-    "STD-0101",
-    "STD-0200"
+    "QUAL-0001"
   ],
-  "principles_cited_and_not_registered": [
-    "ARC-P-099"
-  ]
+  "principles_cited_and_not_registered": []
 }

@@ -50,6 +50,27 @@ def test_old_deaths_starts_and_unreadable_instants_are_not_counted():
     assert find_restart_loops(events, NOW, window_minutes=60, threshold=5) == ()
 
 
+def _die_in(subject: str, minutes_ago: float, *, one_off: str | None) -> dict:
+    attributes = {} if one_off is None else {"com.docker.compose.oneoff": one_off}
+    event = _die(subject, minutes_ago)
+    event["raw"] = {"Actor": {"Attributes": attributes}}
+    return event
+
+
+def test_the_deaths_of_one_off_containers_are_not_crashes():
+    # Ten `docker compose run --rm` commands in an hour: not a loop.
+    runs = [_die_in("aistack/web", m, one_off="True") for m in range(10)]
+    assert find_restart_loops(runs, NOW, window_minutes=60, threshold=5) == ()
+
+
+def test_a_service_that_really_dies_is_still_a_loop_beside_one_off_runs():
+    deaths = [_die_in("aistack/web", m, one_off="False") for m in range(5)]
+    deaths += [_die_in("aistack/web", m, one_off="True") for m in range(10)]
+    deaths += [_die("aistack/web", 30)]  # an event with no label at all
+    (loop,) = find_restart_loops(deaths, NOW, window_minutes=60, threshold=5)
+    assert loop.restarts == 6
+
+
 def test_a_loop_becomes_an_ops_0004_finding_citing_it():
     loop = RestartLoop(container="arrstack/mularr", restarts=216, window_minutes=60, threshold=5)
     (finding,) = evaluate_restart_loops([loop])

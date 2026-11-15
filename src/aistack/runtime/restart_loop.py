@@ -31,6 +31,20 @@ from aistack.runtime.evaluate_services import (
 RESTART_LOOP_WINDOW_MINUTES = 60
 RESTART_LOOP_THRESHOLD = 5
 
+# `docker compose run` starts a throwaway container and removes it when
+# the command ends: it dies by design, under the same `project/service`
+# subject as the service itself, so it must not count as a crash.
+_ONE_OFF_LABEL = "com.docker.compose.oneoff"
+
+
+def _is_one_off(event: Mapping[str, Any]) -> bool:
+    raw = event.get("raw")
+    actor = raw.get("Actor") if isinstance(raw, Mapping) else None
+    attributes = actor.get("Attributes") if isinstance(actor, Mapping) else None
+    if not isinstance(attributes, Mapping):
+        return False
+    return str(attributes.get(_ONE_OFF_LABEL, "")).lower() == "true"
+
 
 def find_restart_loops(
     events: Iterable[Mapping[str, Any]],
@@ -42,13 +56,14 @@ def find_restart_loops(
     """
     Return every subject with at least `threshold` `die` events in the last
     `window_minutes` before `now`, sorted by subject. Events without a
-    readable `occurred_at` are not counted.
+    readable `occurred_at` are not counted, nor are the deaths of one-off
+    containers (`docker compose run`), which end by design.
     """
 
     since = now - timedelta(minutes=window_minutes)
     deaths: Counter[str] = Counter()
     for event in events:
-        if event.get("action") != "die":
+        if event.get("action") != "die" or _is_one_off(event):
             continue
         try:
             occurred = datetime.fromisoformat(str(event.get("occurred_at")))

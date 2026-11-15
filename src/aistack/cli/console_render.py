@@ -24,6 +24,8 @@ from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import default_languages
 from aistack.i18n.pages import page_file
 from aistack.instance.yaml import load_instance_config_yaml
+from aistack.kernel.bootstrap import registered_providers
+from aistack.kernel.registries import ProviderRegistry
 from aistack.providers.docker import DockerProvider
 from aistack.providers.filesystem import (
     BackupProvider,
@@ -127,7 +129,7 @@ DEFAULT_NETWORK_DOCKER_OBSERVATION = Path(
 )
 
 
-def storage_domain(hostname: str) -> HealthDomain:
+def storage_domain(hostname: str, providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.storage_domain` exactly."""
 
     thresholds, note = storage_thresholds_for_host(
@@ -137,7 +139,7 @@ def storage_domain(hostname: str) -> HealthDomain:
     if not thresholds:
         return HealthDomain(name="Stockage", instrumented=False, note=note)
 
-    usage = StorageProvider().collect_usage(
+    usage = registered_providers(providers).get_as("storage", StorageProvider).collect_usage(
         tuple(threshold.mount for threshold in thresholds)
     )
     shortages = find_storage_shortage(usage, thresholds)
@@ -147,11 +149,13 @@ def storage_domain(hostname: str) -> HealthDomain:
     )
 
 
-def services_domain() -> HealthDomain:
+def services_domain(providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.services_domain` exactly."""
 
     try:
-        readings = DockerProvider().collect_container_states()
+        readings = (
+            registered_providers(providers).get_as("docker", DockerProvider).collect_container_states()
+        )
     except (subprocess.SubprocessError, OSError) as error:
         return HealthDomain(
             name="Services",
@@ -173,7 +177,7 @@ def services_domain() -> HealthDomain:
     )
 
 
-def backup_domain(hostname: str) -> HealthDomain:
+def backup_domain(hostname: str, providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.backup_domain` exactly."""
 
     thresholds, note = backup_thresholds_for_host(
@@ -183,7 +187,7 @@ def backup_domain(hostname: str) -> HealthDomain:
     if not thresholds:
         return HealthDomain(name="Sauvegarde / PRA", instrumented=False, note=note)
 
-    freshness = BackupProvider().collect_freshness(
+    freshness = registered_providers(providers).get_as("backup", BackupProvider).collect_freshness(
         tuple(threshold.path for threshold in thresholds)
     )
     gaps = find_backup_gaps(freshness, thresholds)
@@ -193,7 +197,7 @@ def backup_domain(hostname: str) -> HealthDomain:
     )
 
 
-def gpu_domain(hostname: str) -> HealthDomain:
+def gpu_domain(hostname: str, providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.gpu_domain` exactly."""
 
     thresholds, note = gpu_thresholds_for_host(DEFAULT_GPU_THRESHOLDS, hostname)
@@ -201,7 +205,7 @@ def gpu_domain(hostname: str) -> HealthDomain:
     if not thresholds:
         return HealthDomain(name="GPU", instrumented=False, note=note)
 
-    readings = NvidiaGpuProvider().collect_readings()
+    readings = registered_providers(providers).get_as("gpu", NvidiaGpuProvider).collect_readings()
     anomalies = find_gpu_anomalies(readings, thresholds)
 
     return HealthDomain(name="GPU", instrumented=True, findings=evaluate_gpu(anomalies))
@@ -295,7 +299,7 @@ def uncovered_state_domain() -> HealthDomain:
     )
 
 
-def inventory_gap_domain() -> HealthDomain:
+def inventory_gap_domain(providers: ProviderRegistry | None = None) -> HealthDomain:
     """Mirrors `aistack.cli.health_render.inventory_gap_domain` exactly."""
 
     if not DEFAULT_CATEGORIZATION.exists():
@@ -321,7 +325,9 @@ def inventory_gap_domain() -> HealthDomain:
         )
 
     try:
-        docker_catalog = DockerRuntimeCatalogBuilder().build(DockerProvider().collect())
+        docker_catalog = DockerRuntimeCatalogBuilder().build(
+            registered_providers(providers).collecting("docker").collect()
+        )
         discovered: dict[str, str | None] = {
             item.id: None
             for item in docker_catalog.items
@@ -348,18 +354,22 @@ def inventory_gap_domain() -> HealthDomain:
     )
 
 
-def build_cockpit(hostname: str) -> HealthCockpit:
+def build_cockpit(hostname: str, providers: ProviderRegistry | None = None) -> HealthCockpit:
     """Mirrors `aistack.cli.health_render.build_cockpit` exactly."""
+
+    # One Kernel for the whole cockpit: every domain reads through the
+    # same registered providers (ADR-0027 § 9).
+    providers = registered_providers(providers)
 
     return HealthCockpit(
         domains=(
-            storage_domain(hostname),
-            services_domain(),
-            backup_domain(hostname),
-            gpu_domain(hostname),
+            storage_domain(hostname, providers),
+            services_domain(providers),
+            backup_domain(hostname, providers),
+            gpu_domain(hostname, providers),
             pra_tests_domain(),
             uncovered_state_domain(),
-            inventory_gap_domain(),
+            inventory_gap_domain(providers),
             hosts_domain(),
             data_budget_domain(),
         )

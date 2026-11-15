@@ -265,7 +265,7 @@ def test_build_cockpit_always_names_all_nine_domains(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+    monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
 
@@ -309,8 +309,7 @@ hosts:
 
 def test_services_domain_reports_an_alert(monkeypatch):
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
@@ -356,8 +355,7 @@ def test_technical_debt_score_reports_findings_across_domains(monkeypatch, tmp_p
     monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
@@ -384,8 +382,7 @@ hosts:
     )
     monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", path)
     monkeypatch.setattr(
-        cli,
-        "NvidiaGpuProvider",
+        "aistack.providers.gpu.NvidiaGpuProvider",
         lambda: FakeGpuProvider(
             [
                 GpuReading(
@@ -505,7 +502,7 @@ categories:
     )
     monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
     monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
-    monkeypatch.setattr(cli, "DockerProvider", lambda: FakeDockerProvider(states=[]))
+    monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     domain = cli.inventory_gap_domain()
 
@@ -574,8 +571,7 @@ def test_technical_debt_score_matches_health_renders_own_behavior(monkeypatch):
     """
 
     monkeypatch.setattr(
-        cli,
-        "DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
     # The health chain asks the Kernel for its provider (ADR-0027 § 9):

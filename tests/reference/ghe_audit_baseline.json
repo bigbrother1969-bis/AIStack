@@ -3,7 +3,6 @@
   "entry_points_bypassing_the_kernel": [
     "src/aistack/cli/ai_reason.py",
     "src/aistack/cli/config_init.py",
-    "src/aistack/cli/console_render.py",
     "src/aistack/cli/data_budget.py",
     "src/aistack/cli/docker_diff_monitor.py",
     "src/aistack/cli/docker_digest_monitor.py",
@@ -31,10 +30,6 @@
     "src/aistack/cli/ai_reason.py -> HostProvider",
     "src/aistack/cli/architecture_render.py -> BeszelProvider",
     "src/aistack/cli/architecture_render.py -> HttpProbeProvider",
-    "src/aistack/cli/console_render.py -> BackupProvider",
-    "src/aistack/cli/console_render.py -> DockerProvider",
-    "src/aistack/cli/console_render.py -> NvidiaGpuProvider",
-    "src/aistack/cli/console_render.py -> StorageProvider",
     "src/aistack/cli/network_docker_discover.py -> NetworkDockerDiscoveryProvider",
     "src/aistack/priority/detectors/jellyfin.py -> JellyfinProvider",
     "src/aistack/priority/screen.py -> DockerProvider",

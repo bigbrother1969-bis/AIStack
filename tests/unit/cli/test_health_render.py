@@ -1340,14 +1340,16 @@ def test_the_cockpit_boots_one_kernel_and_every_domain_reads_through_it(
         "aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[])
     )
 
+    from aistack.kernel.bootstrap import default as bootstrap
+
     boots = []
-    real = cli.create_kernel
+    real = bootstrap.create_kernel
 
     def counted() -> object:
         boots.append(1)
         return real()
 
-    monkeypatch.setattr(cli, "create_kernel", counted)
+    monkeypatch.setattr(bootstrap, "create_kernel", counted)
 
     cli.build_cockpit("test-host")
     assert len(boots) == 1

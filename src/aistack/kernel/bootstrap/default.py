@@ -123,3 +123,15 @@ def create_kernel() -> Kernel:
 # takes its identifiers in its constructor, so
 # `aistack.selection.workflow` builds one per selection. The registry
 # itself stays (ADR-0003) and is empty after bootstrap.
+
+
+def registered_providers(providers: ProviderRegistry | None = None) -> ProviderRegistry:
+    """
+    The providers a chain reads through: the ones given, or those of a
+    Kernel booted for the occasion (ADR-0027 § 9).
+
+    A chain that reads several times boots one Kernel and hands its
+    providers on; a function called alone boots its own.
+    """
+
+    return providers if providers is not None else create_kernel().registries.providers

@@ -23,7 +23,7 @@ from aistack.health.technical_debt import compute_technical_debt_score
 from aistack.i18n import Languages, default_languages
 from aistack.i18n.pages import page_file
 from aistack.instance.yaml import load_instance_config_yaml
-from aistack.kernel.bootstrap import create_kernel
+from aistack.kernel.bootstrap import registered_providers
 from aistack.kernel.registries import ProviderRegistry
 from aistack.pra.scheduled import with_scheduled
 from aistack.pra.yaml import load_pra_tests_yaml
@@ -133,18 +133,6 @@ TROUBLESHOOTING_PATH = "/troubleshooting"
 # A domain with nothing to observe on this host (no threshold file, Docker
 # unreachable, no definition) is `instrumented=False` with a note, never
 # a false "healthy".
-
-
-def registered_providers(providers: ProviderRegistry | None = None) -> ProviderRegistry:
-    """
-    The providers the health domains read through: the ones given, or
-    those of a Kernel booted for the occasion (ADR-0027 § 9).
-
-    `build_cockpit` boots one Kernel and hands its providers to every
-    domain; a domain called alone boots its own.
-    """
-
-    return providers if providers is not None else create_kernel().registries.providers
 
 
 def storage_domain(hostname: str, providers: ProviderRegistry | None = None) -> HealthDomain:

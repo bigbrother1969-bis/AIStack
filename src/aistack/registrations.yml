@@ -30,5 +30,5 @@ catalog_views:
 
 tasks:
   - id: docker.discover
-    factory: aistack.kernel.tasks:DockerDiscoverTask
+    factory: aistack.tasks:DockerDiscoverTask
     provider: docker

@@ -7,7 +7,7 @@ ADR-0027 § 8; these tests read the Kernel, not the file.
 from __future__ import annotations
 
 from aistack.kernel.bootstrap import create_kernel
-from aistack.kernel.tasks import DockerDiscoverTask
+from aistack.tasks import DockerDiscoverTask
 
 
 def test_create_kernel_registers_the_docker_discover_task():

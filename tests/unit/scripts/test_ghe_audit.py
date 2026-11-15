@@ -94,12 +94,21 @@ def test_an_entry_point_that_never_builds_the_kernel_is_a_departure(tmp_path: Pa
 
 def test_a_task_executed_from_outside_the_kernel_is_not_a_departure(tmp_path: Path) -> None:
     audit = _audit()
+    declared = "from aistack.kernel.execution import Observation, Request\n"
 
-    registered_only = _tree(tmp_path / "a", {"kernel/tasks/discover.py": "", "cli/run.py": ""})
-    executed = _tree(tmp_path / "b", {"cli/run.py": "from aistack.kernel.execution import Request\n"})
+    registered_only = _tree(tmp_path / "a", {"tasks/discover.py": declared, "cli/run.py": ""})
+    resolved = _tree(
+        tmp_path / "b",
+        {"tasks/discover.py": declared, "cli/run.py": "from aistack.kernel.resolution import TaskResolver\n"},
+    )
+    asked_for = _tree(
+        tmp_path / "c",
+        {"cli/run.py": "def run(kernel):\n    return kernel.registries.tasks.get('x').execute(None)\n"},
+    )
 
     assert len(audit.measure(registered_only)["registered_tasks_never_executed"]) == 1
-    assert audit.measure(executed)["registered_tasks_never_executed"] == []
+    assert audit.measure(resolved)["registered_tasks_never_executed"] == []
+    assert audit.measure(asked_for)["registered_tasks_never_executed"] == []
 
 
 def test_writing_the_disk_outside_a_transaction_is_a_departure(tmp_path: Path) -> None:

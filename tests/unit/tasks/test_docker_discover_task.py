@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from aistack.kernel.execution import Request
-from aistack.kernel.tasks.docker_discover import DockerDiscoverTask
+from aistack.tasks.docker_discover import DockerDiscoverTask
 
 
 OBSERVATION = {

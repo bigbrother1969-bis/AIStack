@@ -227,13 +227,19 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
         if path in trees and not any(name.startswith(f"{PACKAGE}.kernel") for name in imports[path])
     )
 
-    # ARC-P-002 - a Task is registered to be executed. Nothing outside the
-    # Kernel reaching the execution machinery means it is registered only.
-    machinery = (f"{PACKAGE}.kernel.execution", f"{PACKAGE}.kernel.resolution", f"{PACKAGE}.kernel.tasks")
+    # ARC-P-002 - a Task is registered to be executed. A module outside
+    # the Kernel executes one when it resolves it, or asks the registry for
+    # it. Declaring a Task (`aistack/tasks`) is not executing it.
+    resolution = f"{PACKAGE}.kernel.resolution"
     task_callers = sorted(
         _relative(root, path)
         for path, names in imports.items()
-        if not inside(path, "kernel") and any(name.startswith(machinery) for name in names)
+        if not inside(path, "kernel")
+        and not inside(path, "tasks")
+        and (
+            any(name == resolution or name.startswith(resolution + ".") for name in names)
+            or ".registries.tasks" in path.read_text(encoding="utf-8")
+        )
     )
     unexecuted = [] if task_callers else ["no module outside the Kernel executes a registered Task"]
 

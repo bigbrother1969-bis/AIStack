@@ -132,10 +132,10 @@ def workspace(monkeypatch, tmp_path: Path) -> Path:
 
 def stub_providers(monkeypatch, compose_projects: list[dict]) -> None:
     monkeypatch.setattr(
-        "aistack.kernel.bootstrap.providers.DockerProvider", FakeDockerProvider
+        "aistack.providers.docker.DockerProvider", FakeDockerProvider
     )
     monkeypatch.setattr(
-        "aistack.kernel.bootstrap.providers.ComposeProvider",
+        "aistack.providers.compose.ComposeProvider",
         lambda: FakeComposeProvider(compose_projects),
     )
     monkeypatch.setattr(

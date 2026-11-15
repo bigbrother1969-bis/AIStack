@@ -143,16 +143,17 @@ def stubbed_providers(monkeypatch) -> None:
 
     The registry refuses a duplicate identifier, so a fake cannot
     be registered over a real one — the provider class is stubbed
-    where `register_default_providers` reads it, which is also
-    where the real dependency on a daemon enters.
+    where `registrations.yml` names it (`module:Class`, resolved when
+    the Kernel boots), which is also where the real dependency on a
+    daemon enters.
     """
 
     monkeypatch.setattr(
-        "aistack.kernel.bootstrap.providers.DockerProvider",
+        "aistack.providers.docker.DockerProvider",
         FakeDockerProvider,
     )
     monkeypatch.setattr(
-        "aistack.kernel.bootstrap.providers.ComposeProvider",
+        "aistack.providers.compose.ComposeProvider",
         FakeComposeProvider,
     )
     monkeypatch.setattr(
@@ -232,11 +233,11 @@ def test_every_provider_command_reaches_its_provider(
 
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(
-            "aistack.kernel.bootstrap.providers.DockerProvider",
+            "aistack.providers.docker.DockerProvider",
             CountingDocker,
         )
         patch.setattr(
-            "aistack.kernel.bootstrap.providers.ComposeProvider",
+            "aistack.providers.compose.ComposeProvider",
             CountingCompose,
         )
 

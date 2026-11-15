@@ -145,10 +145,10 @@ def reset_fake_beszel():
 @pytest.fixture
 def stubbed_providers(monkeypatch) -> None:
     monkeypatch.setattr(
-        "aistack.kernel.bootstrap.providers.DockerProvider", FakeDockerProvider
+        "aistack.providers.docker.DockerProvider", FakeDockerProvider
     )
     monkeypatch.setattr(
-        "aistack.kernel.bootstrap.providers.ComposeProvider", FakeComposeProvider
+        "aistack.providers.compose.ComposeProvider", FakeComposeProvider
     )
     monkeypatch.setattr(architecture_render, "BeszelProvider", FakeBeszelProvider)
     monkeypatch.setattr(

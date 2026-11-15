@@ -1,0 +1,34 @@
+# AIStack — what the Kernel registers when it boots (ADR-0027 § 8).
+#
+# The Kernel names no technology: it reads this file and registers what
+# it declares. Adding a provider, a catalog view or a task is a line
+# here, never a change to the Kernel.
+#
+#   id       the identifier callers ask the registry for
+#   factory  `module:Class`, built with no argument
+#   provider (tasks only) the registered provider the task is built on
+#
+# Read once, by `create_kernel()`. An entry that cannot be built stops
+# the boot and is named in the error.
+
+providers:
+  - id: docker
+    factory: aistack.providers.docker:DockerProvider
+  - id: compose
+    factory: aistack.providers.compose:ComposeProvider
+
+catalog_views:
+  - id: music-selection
+    factory: aistack.catalog.views.music:MusicSelectionViewEngine
+  - id: docker-containers
+    factory: aistack.catalog.views.docker:DockerContainerViewEngine
+  # No configuration, so one instance serves every caller;
+  # `MediaLibraryProvider` is configured per application and is built
+  # per use instead of registered.
+  - id: media-tree
+    factory: aistack.catalog.views.media:MediaTreeViewEngine
+
+tasks:
+  - id: docker.discover
+    factory: aistack.kernel.tasks:DockerDiscoverTask
+    provider: docker

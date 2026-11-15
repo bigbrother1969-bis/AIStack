@@ -33,6 +33,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 _EXPECTED_DATA_FILES = (
+    # What the Kernel registers when it boots (ADR-0027 § 8): without
+    # it an installed AIStack cannot build its Kernel at all.
+    "aistack/registrations.yml",
     "aistack/priority/definitions/resource_priority.yml",
     "aistack/architecture/definitions/service_categorization.yml",
     "aistack/renderers/architecture/vendor/mermaid.min.js",

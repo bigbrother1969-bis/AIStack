@@ -2,16 +2,9 @@ from __future__ import annotations
 
 from aistack.kernel import Kernel
 
-from aistack.kernel.bootstrap.catalog_views import (
-    register_default_catalog_views,
-)
-
-from aistack.kernel.bootstrap.providers import (
-    register_default_providers,
-)
-
-from aistack.kernel.bootstrap.tasks import (
-    register_default_tasks,
+from aistack.kernel.bootstrap.registrations import (
+    load_registrations,
+    register_declared,
 )
 
 
@@ -119,13 +112,9 @@ def create_kernel() -> Kernel:
         services=services,
     )
 
-    register_default_providers(kernel)
-
-    register_default_catalog_views(kernel)
-
-    # Must run after `register_default_providers`: it looks up the
-    # provider its one task wraps.
-    register_default_tasks(kernel)
+    # The Kernel names no provider, catalog view or task: it registers
+    # what `registrations.yml` declares (ADR-0027 § 8).
+    register_declared(kernel, load_registrations())
 
     return kernel
 

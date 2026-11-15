@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.0
+  version: 2.1
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -239,6 +239,18 @@ not in the tree*; the list is `tests/reference/ghe_audit_baseline.json`.
 so far by the owner, 2026-11-15: `FDN-0002` and `STD-0300` return revised;
 `FDN-0005` and `FDN-0006` stay at the tag.
 
+#### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
+**Observed** `STD-0300` criterion 3.2 was satisfied on 2026-09-04 by
+`src/aistack/selection/explanation.py` and
+`tests/unit/selection/test_selection_explanation.py`. Neither is in `main`
+on `e574fb7`; `git grep explain_selection -- src` returns nothing. The
+selection itself still runs.
+**Derivable** yes
+**Qualification** unknown — the explanation returns, or 3.2 is withdrawn from
+the scenario.
+
 ---
 
 # Defects
@@ -272,7 +284,17 @@ None open.
 
 # Decisions
 
-None open.
+#### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
+
+**Nature** `decision` · **Opened** 2026-11-15 · **State** open
+**Observed** `STD-0300` § *Requalification against 2.0.0*: 1.1 to 1.4, 4.2,
+4.4, 4.5, 4.8 and 4.9 were verified on GIGABYTE between 2026-08-22 and
+2026-09-11, with `aistack.cli.docker_catalog` and
+`aistack.cli.runtime_diagnose`. Neither command is in `main`, and AIStack now
+runs on another host.
+**Derivable** no
+**Qualification** the owner decides how each is re-run on 2.0.0 — through
+which entry point, on which host — or which are withdrawn.
 
 ---
 

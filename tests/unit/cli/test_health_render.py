@@ -38,7 +38,11 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import use_source
+
 from aistack.cli import health_render as cli
+from aistack.health import domains
+from aistack.health.technical_debt import technical_debt_score
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
@@ -177,7 +181,7 @@ def test_a_mount_below_its_threshold_is_an_alert(monkeypatch, tmp_path, storage_
         storage_thresholds_yaml(storage_mount, free_gb=999_999_999),
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", path)
+    use_source(monkeypatch, "storage_thresholds", path)
 
     cockpit = cli.build_cockpit("test-host")
 
@@ -192,7 +196,7 @@ def test_a_mount_below_its_threshold_is_an_alert(monkeypatch, tmp_path, storage_
 def test_a_mount_above_its_threshold_reads_as_clean(monkeypatch, tmp_path, storage_mount):
     path = tmp_path / "storage_thresholds.yml"
     path.write_text(storage_thresholds_yaml(storage_mount, free_gb=0), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", path)
+    use_source(monkeypatch, "storage_thresholds", path)
 
     cockpit = cli.build_cockpit("test-host")
 
@@ -209,7 +213,7 @@ def test_a_host_with_nothing_declared_is_not_instrumented(
         storage_thresholds_yaml(storage_mount, free_gb=999_999_999),
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", path)
+    use_source(monkeypatch, "storage_thresholds", path)
 
     cockpit = cli.build_cockpit("a-third-host")
 
@@ -221,7 +225,7 @@ def test_a_host_with_nothing_declared_is_not_instrumented(
 def test_a_missing_storage_threshold_definition_is_not_instrumented(
     monkeypatch, tmp_path
 ):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
     cockpit = cli.build_cockpit("test-host")
 
@@ -242,12 +246,12 @@ def test_all_nine_domains_are_always_present(monkeypatch, tmp_path):
     state, never silently fewer (`FDN-0003` Article 12).
     """
 
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "gpu_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
+    use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -267,7 +271,7 @@ def test_a_restarting_container_is_an_alert(monkeypatch):
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
-    domain = cli.services_domain()
+    domain = domains.services_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -292,7 +296,7 @@ def test_a_clean_docker_host_reads_as_clean(monkeypatch):
         ),
     )
 
-    domain = cli.services_domain()
+    domain = domains.services_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
@@ -304,7 +308,7 @@ def test_docker_not_reachable_is_not_instrumented(monkeypatch):
         lambda: FakeDockerProvider(states=OSError("docker not found")),
     )
 
-    domain = cli.services_domain()
+    domain = domains.services_domain()
 
     assert domain.instrumented is False
     assert "container states could not be collected" in domain.note
@@ -331,9 +335,9 @@ def test_a_missing_backup_file_is_an_alert(monkeypatch, tmp_path):
 
     path = tmp_path / "backup_thresholds.yml"
     path.write_text(backup_thresholds_yaml(backup_dir, max_age_days=7), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+    use_source(monkeypatch, "backup_thresholds", path)
 
-    domain = cli.backup_domain("test-host")
+    domain = domains.backup_domain("test-host")
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -350,9 +354,9 @@ def test_a_fresh_backup_file_reads_as_clean(monkeypatch, tmp_path):
 
     path = tmp_path / "backup_thresholds.yml"
     path.write_text(backup_thresholds_yaml(backup_dir, max_age_days=7), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+    use_source(monkeypatch, "backup_thresholds", path)
 
-    domain = cli.backup_domain("test-host")
+    domain = domains.backup_domain("test-host")
 
     assert domain.instrumented is True
     assert domain.findings == ()
@@ -366,9 +370,9 @@ def test_a_host_with_nothing_declared_for_backups_is_not_instrumented(
 
     path = tmp_path / "backup_thresholds.yml"
     path.write_text(backup_thresholds_yaml(backup_dir, max_age_days=7), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+    use_source(monkeypatch, "backup_thresholds", path)
 
-    domain = cli.backup_domain("a-third-host")
+    domain = domains.backup_domain("a-third-host")
 
     assert domain.instrumented is False
     assert "a-third-host" in domain.note
@@ -377,9 +381,9 @@ def test_a_host_with_nothing_declared_for_backups_is_not_instrumented(
 def test_a_missing_backup_threshold_definition_is_not_instrumented(
     monkeypatch, tmp_path
 ):
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_thresholds", tmp_path / "absent.yml")
 
-    domain = cli.backup_domain("test-host")
+    domain = domains.backup_domain("test-host")
 
     assert domain.instrumented is False
     assert "no backup-threshold definition at" in domain.note
@@ -412,13 +416,13 @@ def gpu_thresholds_file(tmp_path: Path) -> Path:
 
 
 def test_a_hot_gpu_reading_is_an_alert(monkeypatch, gpu_thresholds_file):
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+    use_source(monkeypatch, "gpu_thresholds", gpu_thresholds_file)
     monkeypatch.setattr(
         "aistack.providers.gpu.NvidiaGpuProvider",
         lambda: FakeGpuProvider([gpu_reading(temperature_celsius=85.0)]),
     )
 
-    domain = cli.gpu_domain("test-host")
+    domain = domains.gpu_domain("test-host")
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -431,12 +435,12 @@ def test_a_hot_gpu_reading_is_an_alert(monkeypatch, gpu_thresholds_file):
 
 
 def test_a_clean_gpu_reading_reads_as_clean(monkeypatch, gpu_thresholds_file):
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+    use_source(monkeypatch, "gpu_thresholds", gpu_thresholds_file)
     monkeypatch.setattr(
         "aistack.providers.gpu.NvidiaGpuProvider", lambda: FakeGpuProvider([gpu_reading()])
     )
 
-    domain = cli.gpu_domain("test-host")
+    domain = domains.gpu_domain("test-host")
 
     assert domain.instrumented is True
     assert domain.findings == ()
@@ -445,9 +449,9 @@ def test_a_clean_gpu_reading_reads_as_clean(monkeypatch, gpu_thresholds_file):
 def test_a_host_with_nothing_declared_for_gpu_is_not_instrumented(
     monkeypatch, gpu_thresholds_file
 ):
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", gpu_thresholds_file)
+    use_source(monkeypatch, "gpu_thresholds", gpu_thresholds_file)
 
-    domain = cli.gpu_domain("a-third-host")
+    domain = domains.gpu_domain("a-third-host")
 
     assert domain.instrumented is False
     assert "a-third-host" in domain.note
@@ -456,9 +460,9 @@ def test_a_host_with_nothing_declared_for_gpu_is_not_instrumented(
 def test_a_missing_gpu_threshold_definition_is_not_instrumented(
     monkeypatch, tmp_path
 ):
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "gpu_thresholds", tmp_path / "absent.yml")
 
-    domain = cli.gpu_domain("test-host")
+    domain = domains.gpu_domain("test-host")
 
     assert domain.instrumented is False
     assert "no GPU-threshold definition at" in domain.note
@@ -495,10 +499,10 @@ services:
 def test_a_never_tested_service_is_an_alert(monkeypatch, tmp_path):
     path = tmp_path / "pra_tests.yml"
     path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -514,10 +518,10 @@ def test_a_failed_test_is_an_alert(monkeypatch, tmp_path):
     path.write_text(
         pra_tests_yaml(status="failed", date="2026-01-01"), encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -531,10 +535,10 @@ def test_a_stale_successful_test_is_an_alert(monkeypatch, tmp_path):
     path.write_text(
         pra_tests_yaml(status="success", date=stale_date), encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -546,19 +550,19 @@ def test_a_fresh_successful_test_reads_as_clean(monkeypatch, tmp_path):
     path.write_text(
         pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
 
 
 def test_a_missing_pra_tests_definition_is_not_instrumented(monkeypatch, tmp_path):
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", tmp_path / "absent.yml")
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is False
     assert "no PRA test definition at" in domain.note
@@ -578,7 +582,7 @@ def test_a_stateful_service_not_declared_is_an_alert(monkeypatch, tmp_path):
     pra_path.write_text(
         pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    use_source(monkeypatch, "pra_tests", pra_path)
 
     backup_path = tmp_path / "backup_strategy.yml"
     backup_path.write_text(
@@ -597,9 +601,9 @@ services:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+    use_source(monkeypatch, "backup_strategy", backup_path)
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -619,13 +623,13 @@ def test_a_stateful_service_already_declared_is_not_flagged_twice(
     pra_path.write_text(
         pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    use_source(monkeypatch, "pra_tests", pra_path)
 
     backup_path = tmp_path / "backup_strategy.yml"
     backup_path.write_text(backup_strategy_yaml(has_state=True, engines=[]), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+    use_source(monkeypatch, "backup_strategy", backup_path)
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
@@ -636,10 +640,10 @@ def test_a_missing_backup_strategy_still_leaves_the_domain_instrumented(
 ):
     pra_path = tmp_path / "pra_tests.yml"
     pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", pra_path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -650,13 +654,13 @@ def test_a_corrupt_backup_strategy_falls_back_to_the_three_existing_reasons(
 ):
     pra_path = tmp_path / "pra_tests.yml"
     pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    use_source(monkeypatch, "pra_tests", pra_path)
 
     backup_path = tmp_path / "backup_strategy.yml"
     backup_path.write_text("services: [not, valid,\n", encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+    use_source(monkeypatch, "backup_strategy", backup_path)
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -687,9 +691,9 @@ services:
 def test_an_uncovered_stateful_service_is_an_alert(monkeypatch, tmp_path):
     path = tmp_path / "backup_strategy.yml"
     path.write_text(backup_strategy_yaml(has_state=True, engines=[]), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+    use_source(monkeypatch, "backup_strategy", path)
 
-    domain = cli.uncovered_state_domain()
+    domain = domains.uncovered_state_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -706,9 +710,9 @@ def test_a_covered_stateful_service_reads_as_clean(monkeypatch, tmp_path):
     path.write_text(
         backup_strategy_yaml(has_state=True, engines=["dump_sql"]), encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+    use_source(monkeypatch, "backup_strategy", path)
 
-    domain = cli.uncovered_state_domain()
+    domain = domains.uncovered_state_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
@@ -717,25 +721,25 @@ def test_a_covered_stateful_service_reads_as_clean(monkeypatch, tmp_path):
 def test_a_stateless_service_reads_as_clean(monkeypatch, tmp_path):
     path = tmp_path / "backup_strategy.yml"
     path.write_text(backup_strategy_yaml(has_state=False, engines=[]), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+    use_source(monkeypatch, "backup_strategy", path)
 
-    domain = cli.uncovered_state_domain()
+    domain = domains.uncovered_state_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
 
 
 def test_a_missing_backup_strategy_definition_is_not_instrumented(monkeypatch, tmp_path):
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
-    domain = cli.uncovered_state_domain()
+    domain = domains.uncovered_state_domain()
 
     assert domain.instrumented is False
     assert "no backup strategy definition at" in domain.note
 
 
 def test_the_default_backup_strategy_definition_exists():
-    assert cli.DEFAULT_BACKUP_STRATEGY.exists()
+    assert domains.SOURCES.backup_strategy.exists()
 
 
 # --------------------------------------------------------------------
@@ -758,11 +762,11 @@ categories:
 def test_a_declared_container_never_discovered_is_an_alert(monkeypatch, tmp_path):
     path = tmp_path / "service_categorization.yml"
     path.write_text(categorization_yaml(), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
-    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    use_source(monkeypatch, "categorization", path)
+    use_source(monkeypatch, "network_docker_observation", tmp_path / "absent.json")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -778,13 +782,13 @@ def test_a_declared_container_never_discovered_is_an_alert(monkeypatch, tmp_path
 def test_a_declared_container_found_locally_reads_as_clean(monkeypatch, tmp_path):
     path = tmp_path / "service_categorization.yml"
     path.write_text(categorization_yaml(), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
-    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    use_source(monkeypatch, "categorization", path)
+    use_source(monkeypatch, "network_docker_observation", tmp_path / "absent.json")
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
     )
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
@@ -793,14 +797,14 @@ def test_a_declared_container_found_locally_reads_as_clean(monkeypatch, tmp_path
 def test_a_discovered_container_not_declared_is_an_alert(monkeypatch, tmp_path):
     path = tmp_path / "service_categorization.yml"
     path.write_text(categorization_yaml(), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
-    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    use_source(monkeypatch, "categorization", path)
+    use_source(monkeypatch, "network_docker_observation", tmp_path / "absent.json")
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "wordpress"}, {"Names": "mystery"}]),
     )
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -812,7 +816,7 @@ def test_a_container_found_only_via_network_discovery_reads_as_clean(monkeypatch
     path.write_text(
         categorization_yaml(container="vikunja", name="Vikunja"), encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+    use_source(monkeypatch, "categorization", path)
 
     observation_path = tmp_path / "network-docker-observation.json"
     observation_path.write_text(
@@ -827,19 +831,19 @@ def test_a_container_found_only_via_network_discovery_reads_as_clean(monkeypatch
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", observation_path)
+    use_source(monkeypatch, "network_docker_observation", observation_path)
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
 
 
 def test_a_missing_service_categorization_is_not_instrumented(monkeypatch, tmp_path):
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+    use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is False
     assert "no service categorization at" in domain.note
@@ -848,16 +852,16 @@ def test_a_missing_service_categorization_is_not_instrumented(monkeypatch, tmp_p
 def test_a_corrupt_network_observation_falls_back_to_local_only(monkeypatch, tmp_path):
     path = tmp_path / "service_categorization.yml"
     path.write_text(categorization_yaml(), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
+    use_source(monkeypatch, "categorization", path)
 
     observation_path = tmp_path / "network-docker-observation.json"
     observation_path.write_text("not valid json", encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", observation_path)
+    use_source(monkeypatch, "network_docker_observation", observation_path)
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[{"Names": "wordpress"}])
     )
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is True
     assert domain.findings == ()
@@ -866,14 +870,14 @@ def test_a_corrupt_network_observation_falls_back_to_local_only(monkeypatch, tmp
 def test_docker_not_reachable_falls_back_gracefully(monkeypatch, tmp_path):
     path = tmp_path / "service_categorization.yml"
     path.write_text(categorization_yaml(), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
-    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    use_source(monkeypatch, "categorization", path)
+    use_source(monkeypatch, "network_docker_observation", tmp_path / "absent.json")
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=OSError("docker not found")),
     )
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -882,7 +886,7 @@ def test_docker_not_reachable_falls_back_gracefully(monkeypatch, tmp_path):
 def test_the_default_categorization_path_matches_architecture_render():
     from aistack.cli import architecture_render
 
-    assert cli.DEFAULT_CATEGORIZATION == architecture_render.DEFAULT_CATEGORIZATION
+    assert domains.SOURCES.categorization == architecture_render.DEFAULT_CATEGORIZATION
 
 
 # --------------------------------------------------------------------
@@ -891,7 +895,7 @@ def test_the_default_categorization_path_matches_architecture_render():
 
 
 def test_main_writes_the_health_html_artifact(monkeypatch, tmp_path, workspace):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -915,7 +919,7 @@ def test_main_writes_the_health_html_artifact(monkeypatch, tmp_path, workspace):
 def test_main_writes_one_cockpit_per_declared_language(monkeypatch, tmp_path, workspace):
     """ADR-0010 § 5 (2026-09-27): `health.html` stays the reference page."""
 
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -934,7 +938,7 @@ def test_main_writes_the_action_plan_in_every_language(monkeypatch, tmp_path, wo
     """2026-10-08: the page the two score badges open, next to health.html,
     and not one more history stream."""
 
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -950,7 +954,7 @@ def test_main_writes_the_action_plan_in_every_language(monkeypatch, tmp_path, wo
 
 
 def test_main_prints_the_score_when_weights_are_available(monkeypatch, tmp_path, workspace, capsys):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -977,11 +981,11 @@ def test_main_links_a_real_finding_to_the_troubleshooting_assistant(
     in directly, never exercising `main()`'s own resolution step).
     """
 
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
     pra_path = tmp_path / "pra_tests.yml"
     pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", pra_path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -995,12 +999,12 @@ def test_main_links_a_real_finding_to_the_troubleshooting_assistant(
 def test_main_renders_no_diagnose_button_when_the_instance_config_is_unreadable(
     monkeypatch, tmp_path, workspace
 ):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_INSTANCE_CONFIG", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "instance_config", tmp_path / "absent.yml")
     pra_path = tmp_path / "pra_tests.yml"
     pra_path.write_text(pra_tests_yaml(status=None), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", pra_path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -1011,17 +1015,11 @@ def test_main_renders_no_diagnose_button_when_the_instance_config_is_unreadable(
     assert "/finding/" not in document
 
 
-def test_the_default_instance_config_path_matches_console_render():
-    from aistack.cli import console_render
-
-    assert cli.DEFAULT_INSTANCE_CONFIG == console_render.DEFAULT_INSTANCE_CONFIG
-
-
 def test_main_falls_back_to_the_note_when_weights_are_unavailable(
     monkeypatch, tmp_path, workspace, capsys
 ):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_HEALTH_SCORE_WEIGHTS", tmp_path / "absent-weights.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "score_weights", tmp_path / "absent-weights.yml")
 
     cli.main()
 
@@ -1069,19 +1067,19 @@ hosts:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", backup_path)
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_thresholds", backup_path)
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "gpu_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
+    use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
     cockpit = cli.build_cockpit("test-host")
-    score, note = cli.technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
+    score, note = technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
 
     assert note == ""
     assert score is not None
@@ -1114,16 +1112,16 @@ hosts:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", storage_path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", storage_path)
+    use_source(monkeypatch, "backup_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "gpu_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
+    use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
-    score, note = cli.technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
+    score, note = technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
 
     assert note == ""
     assert score is not None
@@ -1132,9 +1130,9 @@ hosts:
 
 
 def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
+    use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
@@ -1144,7 +1142,7 @@ def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
     weights = HealthScoreWeights(
         weights=(DomainWeight(domain="Services", points=25),)
     )
-    score, note = cli.technical_debt_score(cockpit, weights)
+    score, note = technical_debt_score(cockpit, weights)
 
     assert note == ""
     assert score.value == 75  # 100 - 1*25
@@ -1153,7 +1151,7 @@ def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
 def test_technical_debt_score_is_none_with_a_note_when_weights_are_unavailable():
     cockpit = cli.build_cockpit("test-host")
 
-    score, note = cli.technical_debt_score(cockpit, None)
+    score, note = technical_debt_score(cockpit, None)
 
     assert score is None
     assert "not computed" in note
@@ -1163,7 +1161,7 @@ def test_technical_debt_score_raises_when_no_services_weight_is_declared():
     cockpit = cli.build_cockpit("test-host")
 
     with pytest.raises(ValueError, match="no weight for domain 'Services'"):
-        cli.technical_debt_score(cockpit, _NO_SERVICES_WEIGHTS)
+        technical_debt_score(cockpit, _NO_SERVICES_WEIGHTS)
 
 
 # --------------------------------------------------------------------
@@ -1172,7 +1170,7 @@ def test_technical_debt_score_raises_when_no_services_weight_is_declared():
 
 
 def test_main_writes_the_technical_debt_card(monkeypatch, tmp_path, workspace):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -1183,7 +1181,7 @@ def test_main_writes_the_technical_debt_card(monkeypatch, tmp_path, workspace):
 
 
 def test_main_prints_the_technical_debt_score(monkeypatch, tmp_path, workspace, capsys):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
     cli.main()
 
@@ -1194,8 +1192,8 @@ def test_main_prints_the_technical_debt_score(monkeypatch, tmp_path, workspace, 
 def test_main_falls_back_to_the_note_for_technical_debt_when_weights_are_unavailable(
     monkeypatch, tmp_path, workspace, capsys
 ):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_HEALTH_SCORE_WEIGHTS", tmp_path / "absent-weights.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "score_weights", tmp_path / "absent-weights.yml")
 
     cli.main()
 
@@ -1220,7 +1218,7 @@ def test_the_default_storage_thresholds_path_matches_runtime_diagnoses():
     stayed in sync: both must resolve to the exact same file on disk.
     """
 
-    assert cli.DEFAULT_STORAGE_THRESHOLDS.exists()
+    assert domains.SOURCES.storage_thresholds.exists()
 
 
 def test_the_default_backup_thresholds_path_matches_runtime_diagnoses():
@@ -1229,7 +1227,7 @@ def test_the_default_backup_thresholds_path_matches_runtime_diagnoses():
     for `OPS-0006`'s own file.
     """
 
-    assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()
+    assert domains.SOURCES.backup_thresholds.exists()
 
 
 def test_the_default_gpu_thresholds_path_matches_runtime_diagnoses():
@@ -1238,7 +1236,7 @@ def test_the_default_gpu_thresholds_path_matches_runtime_diagnoses():
     for `OPS-0007`'s own file.
     """
 
-    assert cli.DEFAULT_GPU_THRESHOLDS.exists()
+    assert domains.SOURCES.gpu_thresholds.exists()
 
 
 def test_the_default_health_score_weights_definition_exists():
@@ -1249,7 +1247,7 @@ def test_the_default_health_score_weights_definition_exists():
     confirms the declared path resolves to a real, readable file.
     """
 
-    assert cli.DEFAULT_HEALTH_SCORE_WEIGHTS.exists()
+    assert domains.SOURCES.score_weights.exists()
 
 
 def test_the_default_pra_tests_definition_exists():
@@ -1260,7 +1258,7 @@ def test_the_default_pra_tests_definition_exists():
     Provider that runtime diagnose could also reach.
     """
 
-    assert cli.DEFAULT_PRA_TESTS.exists()
+    assert domains.SOURCES.pra_tests.exists()
 
 
 def test_a_container_running_between_two_crashes_is_still_a_restart_loop(monkeypatch):
@@ -1283,7 +1281,7 @@ def test_a_container_running_between_two_crashes_is_still_a_restart_loop(monkeyp
         ),
     )
 
-    domain = cli.services_domain()
+    domain = domains.services_domain()
 
     assert [finding.subject for finding in domain.findings] == ["arrstack/mularr"]
     assert "restarted 6 times" in domain.findings[0].interpretation
@@ -1296,7 +1294,7 @@ def test_a_state_no_engine_covers_is_not_also_asked_for_a_restore_test(monkeypat
     fresh_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     pra_path = tmp_path / "pra_tests.yml"
     pra_path.write_text(pra_tests_yaml(status="success", date=fresh_date), encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    use_source(monkeypatch, "pra_tests", pra_path)
     backup_path = tmp_path / "backup_strategy.yml"
     backup_path.write_text(
         """
@@ -1314,9 +1312,9 @@ services:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+    use_source(monkeypatch, "backup_strategy", backup_path)
 
-    assert cli.pra_tests_domain().findings == ()
+    assert domains.pra_tests_domain().findings == ()
 
 
 def test_the_cockpit_boots_one_kernel_and_every_domain_reads_through_it(
@@ -1328,14 +1326,14 @@ def test_the_cockpit_boots_one_kernel_and_every_domain_reads_through_it(
     """
 
     for name in (
-        "DEFAULT_STORAGE_THRESHOLDS",
-        "DEFAULT_BACKUP_THRESHOLDS",
-        "DEFAULT_GPU_THRESHOLDS",
-        "DEFAULT_PRA_TESTS",
-        "DEFAULT_BACKUP_STRATEGY",
-        "DEFAULT_CATEGORIZATION",
+        "storage_thresholds",
+        "backup_thresholds",
+        "gpu_thresholds",
+        "pra_tests",
+        "backup_strategy",
+        "categorization",
     ):
-        monkeypatch.setattr(cli, name, tmp_path / "absent.yml")
+        use_source(monkeypatch, name, tmp_path / "absent.yml")
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[])
     )
@@ -1354,5 +1352,5 @@ def test_the_cockpit_boots_one_kernel_and_every_domain_reads_through_it(
     cli.build_cockpit("test-host")
     assert len(boots) == 1
 
-    cli.services_domain()
+    domains.services_domain()
     assert len(boots) == 2

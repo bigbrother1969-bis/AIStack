@@ -35,7 +35,7 @@ def test_domain_slug_falls_back_to_a_placeholder_for_an_all_punctuation_name():
 
 def test_domain_slug_is_unique_across_every_real_health_cockpit_domain_name():
     """
-    `aistack.cli.health_render.build_cockpit`'s own seven domain
+    `aistack.health.domains.build_cockpit`'s own seven domain
     names, slugged — the exact set `aistack.renderers.health.html`
     anchors and `aistack.renderers.console.html` links to. A
     collision here would mean two different domains' sections land

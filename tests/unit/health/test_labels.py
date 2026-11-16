@@ -19,27 +19,23 @@ from aistack.i18n import default_languages, translator_for
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
-# The two commands that build a `HealthCockpit` name each domain
-# literally (`HealthDomain(name="Stockage", ...)`); reading their text
-# finds every name without running either against a real host.
+# The one module that builds a `HealthCockpit` names each domain
+# literally (`HealthDomain(name="Stockage", ...)`); reading its text
+# finds every name without running it against a real host.
 _DOMAIN_NAME = re.compile(r'HealthDomain\(\s*name="([^"]+)"')
 
 
 def built_domain_names() -> set[str]:
-    names: set[str] = set()
+    text = (REPO_ROOT / "src" / "aistack" / "health" / "domains.py").read_text(encoding="utf-8")
 
-    for command in ("console_render.py", "health_render.py"):
-        text = (REPO_ROOT / "src" / "aistack" / "cli" / command).read_text(encoding="utf-8")
-        names.update(_DOMAIN_NAME.findall(text))
-
-    return names
+    return set(_DOMAIN_NAME.findall(text))
 
 
 def test_every_bucket_has_a_label():
     assert set(BUCKET_KEYS) == set(BUCKETS)
 
 
-def test_every_domain_the_commands_build_has_a_label():
+def test_every_domain_the_cockpit_builds_has_a_label():
     names = built_domain_names()
 
     assert names, "no domain name found — the pattern no longer matches"

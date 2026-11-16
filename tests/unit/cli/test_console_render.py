@@ -18,8 +18,11 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import use_source
+
 from aistack.cli import console_render as cli
-from aistack.cli import health_render
+from aistack.health import domains
+from aistack.health.technical_debt import technical_debt_score
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
 from aistack.contracts.gpu_reading import GpuReading
@@ -246,25 +249,23 @@ def test_the_default_console_links_definition_exists():
 
 
 # --------------------------------------------------------------------
-# The health cartouche (PLAN-J11 § 11.9) — build_cockpit and the five
-# domain functions, duplicated from aistack.cli.health_render.
+# The health cartouche (PLAN-J11 § 11.9) — the console builds the one
+# cockpit, `aistack.health.domains` (GOV-0002/OS-093).
 #
 # These do not repeat test_health_render.py's full domain coverage —
 # every branch (instrumented/not, clean/alert) is already proven
-# there. What is proven here is narrower and specific to the
-# duplication: that this module's own copy of each function is
-# genuinely wired to a HealthDomain an alert can come from, not a
-# copy-paste that silently drifted.
+# there. What is proven here is narrower: that the console's own
+# entry point reaches a HealthDomain an alert can come from.
 # --------------------------------------------------------------------
 
 
 def test_build_cockpit_always_names_all_nine_domains(monkeypatch, tmp_path):
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "gpu_thresholds", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
+    use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
     cockpit = cli.build_cockpit("test-host")
@@ -299,9 +300,9 @@ hosts:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_STORAGE_THRESHOLDS", path)
+    use_source(monkeypatch, "storage_thresholds", path)
 
-    domain = cli.storage_domain("test-host")
+    domain = domains.storage_domain("test-host")
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -313,7 +314,7 @@ def test_services_domain_reports_an_alert(monkeypatch):
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
-    domain = cli.services_domain()
+    domain = domains.services_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -334,9 +335,9 @@ hosts:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_THRESHOLDS", path)
+    use_source(monkeypatch, "backup_thresholds", path)
 
-    domain = cli.backup_domain("test-host")
+    domain = domains.backup_domain("test-host")
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -351,9 +352,9 @@ def test_technical_debt_score_reports_findings_across_domains(monkeypatch, tmp_p
     there.
     """
 
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", tmp_path / "absent.yml")
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
+    use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
@@ -361,7 +362,7 @@ def test_technical_debt_score_reports_findings_across_domains(monkeypatch, tmp_p
 
     cockpit = cli.build_cockpit("test-host")
     weights = HealthScoreWeights(weights=(DomainWeight(domain="Services", points=15),))
-    score, note = cli.technical_debt_score(cockpit, weights)
+    score, note = technical_debt_score(cockpit, weights)
 
     assert note == ""
     assert len(score.findings) == 1
@@ -380,7 +381,7 @@ hosts:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_GPU_THRESHOLDS", path)
+    use_source(monkeypatch, "gpu_thresholds", path)
     monkeypatch.setattr(
         "aistack.providers.gpu.NvidiaGpuProvider",
         lambda: FakeGpuProvider(
@@ -397,7 +398,7 @@ hosts:
         ),
     )
 
-    domain = cli.gpu_domain("test-host")
+    domain = domains.gpu_domain("test-host")
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -414,10 +415,10 @@ services:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", path)
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", tmp_path / "absent.yml")
+    use_source(monkeypatch, "pra_tests", path)
+    use_source(monkeypatch, "backup_strategy", tmp_path / "absent.yml")
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -440,7 +441,7 @@ services:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_PRA_TESTS", pra_path)
+    use_source(monkeypatch, "pra_tests", pra_path)
 
     backup_path = tmp_path / "backup_strategy.yml"
     backup_path.write_text(
@@ -459,9 +460,9 @@ services:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", backup_path)
+    use_source(monkeypatch, "backup_strategy", backup_path)
 
-    domain = cli.pra_tests_domain()
+    domain = domains.pra_tests_domain()
 
     assert domain.instrumented is True
     assert {f.subject for f in domain.findings} == {"nextcloud", "wordpress"}
@@ -480,9 +481,9 @@ services:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_BACKUP_STRATEGY", path)
+    use_source(monkeypatch, "backup_strategy", path)
 
-    domain = cli.uncovered_state_domain()
+    domain = domains.uncovered_state_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
@@ -500,98 +501,11 @@ categories:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_CATEGORIZATION", path)
-    monkeypatch.setattr(cli, "DEFAULT_NETWORK_DOCKER_OBSERVATION", tmp_path / "absent.json")
+    use_source(monkeypatch, "categorization", path)
+    use_source(monkeypatch, "network_docker_observation", tmp_path / "absent.json")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
-    domain = cli.inventory_gap_domain()
+    domain = domains.inventory_gap_domain()
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
-
-
-# --------------------------------------------------------------------
-# Drift guard — this module's duplicated constants must match
-# aistack.cli.health_render's own, the same way health_render.py's own
-# threshold paths are already checked against runtime_diagnose.py's.
-# --------------------------------------------------------------------
-
-
-def test_the_default_storage_thresholds_path_matches_health_renders():
-    assert cli.DEFAULT_STORAGE_THRESHOLDS == health_render.DEFAULT_STORAGE_THRESHOLDS
-    assert cli.DEFAULT_STORAGE_THRESHOLDS.exists()
-
-
-def test_the_default_backup_thresholds_path_matches_health_renders():
-    assert cli.DEFAULT_BACKUP_THRESHOLDS == health_render.DEFAULT_BACKUP_THRESHOLDS
-    assert cli.DEFAULT_BACKUP_THRESHOLDS.exists()
-
-
-def test_the_default_gpu_thresholds_path_matches_health_renders():
-    assert cli.DEFAULT_GPU_THRESHOLDS == health_render.DEFAULT_GPU_THRESHOLDS
-    assert cli.DEFAULT_GPU_THRESHOLDS.exists()
-
-
-def test_the_default_health_score_weights_path_matches_health_renders():
-    assert (
-        cli.DEFAULT_HEALTH_SCORE_WEIGHTS == health_render.DEFAULT_HEALTH_SCORE_WEIGHTS
-    )
-    assert cli.DEFAULT_HEALTH_SCORE_WEIGHTS.exists()
-
-
-def test_the_default_pra_tests_path_matches_health_renders():
-    assert cli.DEFAULT_PRA_TESTS == health_render.DEFAULT_PRA_TESTS
-    assert cli.DEFAULT_PRA_TESTS.exists()
-
-
-def test_the_default_backup_strategy_path_matches_health_renders():
-    assert cli.DEFAULT_BACKUP_STRATEGY == health_render.DEFAULT_BACKUP_STRATEGY
-    assert cli.DEFAULT_BACKUP_STRATEGY.exists()
-
-
-def test_the_default_categorization_path_matches_health_renders():
-    assert cli.DEFAULT_CATEGORIZATION == health_render.DEFAULT_CATEGORIZATION
-    assert cli.DEFAULT_CATEGORIZATION.exists()
-
-
-def test_the_default_network_docker_observation_path_matches_health_renders():
-    assert (
-        cli.DEFAULT_NETWORK_DOCKER_OBSERVATION
-        == health_render.DEFAULT_NETWORK_DOCKER_OBSERVATION
-    )
-
-
-def test_technical_debt_score_matches_health_renders_own_behavior(monkeypatch):
-    """
-    `technical_debt_score` has no path constant to compare (it reuses
-    `DEFAULT_HEALTH_SCORE_WEIGHTS`, already checked above) — this
-    checks the two duplicated functions still agree on the one thing
-    a path comparison cannot: given the same cockpit and weights, the
-    same score.
-    """
-
-    monkeypatch.setattr(
-        "aistack.providers.docker.DockerProvider",
-        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
-    )
-    # The health chain asks the Kernel for its provider (ADR-0027 § 9):
-    # it is stubbed where `registrations.yml` names it.
-    monkeypatch.setattr(
-        "aistack.providers.docker.DockerProvider",
-        lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
-    )
-
-    weights = HealthScoreWeights(weights=(DomainWeight(domain="Services", points=15),))
-
-    console_cockpit = cli.build_cockpit("test-host")
-    health_cockpit = health_render.build_cockpit("test-host")
-
-    console_score, console_note = cli.technical_debt_score(console_cockpit, weights)
-    health_score, health_note = health_render.technical_debt_score(
-        health_cockpit, weights
-    )
-
-    assert console_note == health_note == ""
-    assert console_score.value == health_score.value
-    assert console_score.bucket == health_score.bucket
-    assert len(console_score.findings) == len(health_score.findings)

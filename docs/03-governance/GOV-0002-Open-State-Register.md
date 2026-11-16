@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.8
+  version: 2.9
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -252,9 +252,18 @@ Three places say what the health of the homelab is, and none is the
 reference. `FDN-P-005`.
 **Derivable** yes
 **Qualification** to conform, in lot 5 (commit 5.2): the domains and
-`build_cockpit` live in `aistack.health`, parametrised by their sources, and
-the three copies disappear. Decided by the owner, 2026-11-15, at the closing
-of lot 4.
+`build_cockpit` live in `aistack.health.domains`, parametrised by their
+sources, and the three copies disappear. Decided by the owner, 2026-11-15,
+at the closing of lot 4.
+*Commit 5.2, 2026-11-16: done in the code. The nine functions were compared
+after removing docstrings and renaming the paths: identical in the three
+copies. `HealthSources` declares every path once (the assistant's copy read
+its network observation from the working directory, then the checkout; that
+resolution is now everyone's). `technical_debt_score` moved to
+`aistack.health.technical_debt`. The two commands boot the Kernel and hand
+its providers to the cockpit. Ten tests are gone, all of them guards against
+the copies drifting apart. This entry closes when the MSI comparison of the
+three screens, before and after, has been read.*
 
 #### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
 

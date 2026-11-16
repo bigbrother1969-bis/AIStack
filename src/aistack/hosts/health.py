@@ -2,9 +2,8 @@
 
 Each host collector (`ADR-0020`) runs every 15 minutes. A traced host with
 no run for longer than `hosts.yml`'s `silent_after_minutes` (timer
-disabled, host down, disk not mounted) becomes a finding. Shared by
-`aistack.cli.health_render`, `aistack.cli.console_render` and
-`aistack.troubleshooting.findings`.
+disabled, host down, disk not mounted) becomes a finding. Built into the
+cockpit by `aistack.health.domains`.
 """
 
 from __future__ import annotations

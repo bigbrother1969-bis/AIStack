@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.9
+  version: 2.10
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -239,32 +239,6 @@ the tag* and is no longer reported; the architecture documents return with
 the lot that brings their code back. What remains reported is those, and
 `OS-092`.
 
-#### GOV-0002/OS-093 — The health cockpit exists in three copies
-
-**Nature** `non-conforming` · **Opened** 2026-11-16 · **State** open
-**Observed** by comparing, function by function, the cockpit of
-`aistack/cli/health_render.py`, of `aistack/cli/console_render.py` and of
-`aistack/troubleshooting/findings.py`. The copy in `console_render` differs
-from `health_render` by its docstrings only; the one in `findings` differs
-besides by where it reads its sources (`SOURCES.x` instead of the
-`DEFAULT_X` constants). `technical_debt_score` exists in two copies.
-Three places say what the health of the homelab is, and none is the
-reference. `FDN-P-005`.
-**Derivable** yes
-**Qualification** to conform, in lot 5 (commit 5.2): the domains and
-`build_cockpit` live in `aistack.health.domains`, parametrised by their
-sources, and the three copies disappear. Decided by the owner, 2026-11-15,
-at the closing of lot 4.
-*Commit 5.2, 2026-11-16: done in the code. The nine functions were compared
-after removing docstrings and renaming the paths: identical in the three
-copies. `HealthSources` declares every path once (the assistant's copy read
-its network observation from the working directory, then the checkout; that
-resolution is now everyone's). `technical_debt_score` moved to
-`aistack.health.technical_debt`. The two commands boot the Kernel and hand
-its providers to the cockpit. Ten tests are gone, all of them guards against
-the copies drifting apart. This entry closes when the MSI comparison of the
-three screens, before and after, has been read.*
-
 #### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
 
 **Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
@@ -348,6 +322,38 @@ without an import. On the day of the closure, `git grep -il
 "docker\|syncthing" -- src/aistack/kernel` returned nothing, and *compose*
 occurred there three times, as the English verb. Nothing re-runs that
 search.
+
+#### GOV-0002/OS-093 — The health cockpit exists in three copies
+
+**Nature** `non-conforming` · **Opened** 2026-11-16 · **State** resolved 2026-11-16 by commit 5.2 and the MSI comparison
+**Observed** by comparing, function by function, the cockpit of
+`aistack/cli/health_render.py`, of `aistack/cli/console_render.py` and of
+`aistack/troubleshooting/findings.py`. The copy in `console_render` differs
+from `health_render` by its docstrings only; the one in `findings` differs
+besides by where it reads its sources (`SOURCES.x` instead of the
+`DEFAULT_X` constants). `technical_debt_score` exists in two copies.
+Three places say what the health of the homelab is, and none is the
+reference. `FDN-P-005`.
+**Derivable** yes
+**Qualification** to conform, in lot 5 (commit 5.2): the domains and
+`build_cockpit` live in `aistack.health.domains`, parametrised by their
+sources, and the three copies disappear. Decided by the owner, 2026-11-15,
+at the closing of lot 4.
+*Commit 5.2, 2026-11-16: done in the code. The nine functions were compared
+after removing docstrings and renaming the paths: identical in the three
+copies. `HealthSources` declares every path once (the assistant's copy read
+its network observation from the working directory, then the checkout; that
+resolution is now everyone's). `technical_debt_score` moved to
+`aistack.health.technical_debt`. The two commands boot the Kernel and hand
+its providers to the cockpit. Ten tests are gone, all of them guards against
+the copies drifting apart.*
+*MSI, 2026-11-16: `releve-cockpit.sh` read the three cockpits, both scores
+and the assistant's list on the host AIStack runs on, from the repository
+and outside the container, before (`14180b5`) and after (`7b0f119`): identical.
+Not compared: the CPU consumption findings, an instantaneous measure that
+differed between the two readings (filebrowser, firefly before;
+aistack-docker-digest, aistack-docker-packages after) and is not part of the
+cockpit. The web application, on the 2.0.0 image, is not verified.*
 
 #### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
 

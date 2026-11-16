@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.2
+  version: 1.3
   status: Accepted
   owner: Architecture
   created: 2026-11-15
-  updated: 2026-11-15
+  updated: 2026-11-16
 
 relations:
   references:
@@ -212,6 +212,48 @@ service is already in `KernelServices` (`ADR-0019` § 6), and the Capability
 Model (`ARCH-0012`, Draft, at the tag) has open points no case settles.
 Lot 4 is the providers.
 
+### 10. Chains run through the Kernel as Tasks
+
+Decided by the owner, 2026-11-16, at the opening of lot 5. A chain passes
+through the Kernel when it is a Task declared in `registrations.yml`,
+executed by the Runtime from a Request, and a trace of it is kept; the
+command or the page becomes a caller. There is no *chain* type to rebuild:
+the decision of 2026-08-28, kept at the tag, is that a pipeline is a named
+sequence, not an object.
+
+**Which entry points.** Three families, among the 19 that do not build the
+Kernel:
+
+- *Chains run once that produce an artifact of knowledge* — they become
+  Tasks. Four: `timemachine_rebuild`, `network_docker_discover`, `hosts`,
+  `data_budget`; with the health, console and architecture chains, which
+  already build the Kernel. Health, architecture, console and Time
+  Machine are converted first (commits 5.3 to 5.6); the other three are
+  decided one at a time (5.7).
+- *Permanent monitors* — the four `docker_*_monitor`,
+  `resource_priority_monitor`, `vigil` and `restart_watch`. A Task runs a
+  Request and returns an Observation; a daemon that listens without end is
+  not in that contract. Out of lot 5, declared as a known exception.
+  `vigil` and `restart_watch` were first counted among the chains; both
+  loop without end.
+- *Administration and action commands* — `config_init`, `setup_token`,
+  `web_admin_password`, `explications_admin`, `healthcheck`, `sandbox`,
+  `pra_schedule`, `sync_apply`. Not chains of knowledge: exempt, listed in
+  one place (the audit) and recorded here.
+
+**The Runtime** comes back from the tag, reduced to what the lot executes —
+resolve, execute, trace, keep the trace (`ARC-P-006`; a module returns when
+it is executed). It is not rewritten.
+
+**The Task `docker.discover`** is registered, executed by nothing, and the
+artifact it writes is read by nothing. It leaves `registrations.yml` in the
+commit in which the first Task really executed replaces it as the case of
+validation (5.3). Its code stays in `aistack.tasks` until decided.
+
+**One cockpit first.** The three copies of the health cockpit
+(`GOV-0002/OS-093`) become one before any chain goes through the Runtime
+(5.2): three copies are not sent through it.
+
 ## The refactoring plan of August 2026
 
 `AIStack-Refactoring-Plan` (draft v1, 2026-08-13) was the first plan to
@@ -254,5 +296,7 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 - Whether criterion 3.2 gets its explanation back (`OS-090`).
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
-- The order of the chains in lot 5 is a proposal; the first one decides
-  the shape of the others.
+- Where the trace of a Task is written, how long it is kept and its place in
+  the data budget are decided in commit 5.3 (`ADR-0011` § 11 already treats
+  retention). The first chain through the Runtime decides the shape of the
+  others.

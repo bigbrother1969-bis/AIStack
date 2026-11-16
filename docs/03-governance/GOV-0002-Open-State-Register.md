@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.7
+  version: 2.8
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-11-15
+  updated: 2026-11-16
 
 relations:
   references:
@@ -238,6 +238,23 @@ not in the tree*; the list is `tests/reference/ghe_audit_baseline.json`.
 the tag* and is no longer reported; the architecture documents return with
 the lot that brings their code back. What remains reported is those, and
 `OS-092`.
+
+#### GOV-0002/OS-093 — The health cockpit exists in three copies
+
+**Nature** `non-conforming` · **Opened** 2026-11-16 · **State** open
+**Observed** by comparing, function by function, the cockpit of
+`aistack/cli/health_render.py`, of `aistack/cli/console_render.py` and of
+`aistack/troubleshooting/findings.py`. The copy in `console_render` differs
+from `health_render` by its docstrings only; the one in `findings` differs
+besides by where it reads its sources (`SOURCES.x` instead of the
+`DEFAULT_X` constants). `technical_debt_score` exists in two copies.
+Three places say what the health of the homelab is, and none is the
+reference. `FDN-P-005`.
+**Derivable** yes
+**Qualification** to conform, in lot 5 (commit 5.2): the domains and
+`build_cockpit` live in `aistack.health`, parametrised by their sources, and
+the three copies disappear. Decided by the owner, 2026-11-15, at the closing
+of lot 4.
 
 #### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
 

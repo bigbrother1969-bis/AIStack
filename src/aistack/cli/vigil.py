@@ -7,7 +7,8 @@
     python -m aistack.cli.vigil --test         send a test message to Gotify
 
 A pass renders the health cockpit and the console again (so their score
-is never older than one pass), compares health and the dock's proposals
+is never older than one pass), records the declarations edited by hand
+(`aistack.cli.declarations_observe`), compares health and the dock's proposals
 with the previous pass, and sends what changed to Gotify in one message
 (`aistack.vigil.notify`). In Docker it is the `vigil` service, run every
 15 minutes.
@@ -37,7 +38,7 @@ from aistack.vigil import notify, snapshot
 GENERATED_DIR = Path("reports/generated")
 INSTANCE_CONFIG = configured(Path(__file__).resolve().parents[1] / "instance" / "definitions" / "instance_config.yml")
 ARRIVALS = configured(Path(__file__).resolve().parents[1] / "arrivals" / "definitions" / "arrivals.yml")
-RENDERS = ("aistack.cli.health_render", "aistack.cli.console_render")
+RENDERS = ("aistack.cli.health_render", "aistack.cli.console_render", "aistack.cli.declarations_observe")
 
 
 # Rendered once, when missing: on a new installation nothing else renders

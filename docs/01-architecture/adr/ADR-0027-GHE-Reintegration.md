@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.28
+  version: 1.29
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -554,6 +554,21 @@ Commits: 7.2 `declarations.observe`, 7.3 the validation of each declaration
 by its own loader (first, a test per declaration of what an invalid file does
 today), 7.4 the list on the Settings page, 7.5 the closing. Versioning
 `/config/` in the repository is not part of the lot.
+
+**Commit 7.2, 2026-11-17: `declarations.observe`.** The seventh chain the
+Runtime executes (`aistack.tasks.declarations_observe`): it reads, compares each
+shipped declaration's file in the configuration directory with its snapshot
+under `declarations/seen/` of the data directory, and returns digests, never
+content. `aistack.declaration.observe.apply` moves the snapshots and records the
+hand edits through `declaration.write` (`record=False`: the stream
+`declaration-observed` is its own); the previous content is kept as
+`<name>.avant-observe-<date>`. Three cases: *reference* (first sight, no change
+invented), *follow* (the digest is the last `after` of `declaration-change`: a
+screen wrote it, not recorded twice), *edited*. A file that is not UTF-8 is
+reported and left alone; a file that changed again since it was observed waits
+for the next pass. `aistack.cli.declarations_observe` joins the vigil's pass
+(every 15 minutes, and at its start): one more trace per pass, like the health
+and console renders. The audit does not move.
 
 ## The refactoring plan of August 2026
 

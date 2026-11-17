@@ -60,3 +60,5 @@ tasks:
   - id: ai.reason
     factory: aistack.tasks:AiReasonTask
     all_providers: true
+  - id: declarations.observe
+    factory: aistack.tasks:DeclarationsObserveTask

@@ -42,11 +42,14 @@ def write_declaration(
     author: str,
     reason: str,
     copy_label: str = "",
+    record: bool = True,
 ) -> dict[str, object]:
     """
     Write `content` to `path` (`None`: take the file away, keeping the
     previous one) as one `declaration.write` operation; return what the
-    operation did. A change that changed nothing leaves no record.
+    operation did. A change that changed nothing leaves no record, and
+    `record=False` leaves none for a change that did (a caller that keeps its
+    own, as `aistack.declaration.observe` does).
     """
 
     operation = Operation(
@@ -64,13 +67,13 @@ def write_declaration(
     result = operation.result
     assert isinstance(result, dict)
 
-    if result["changed"]:
-        record = {
+    if result["changed"] and record:
+        entry = {
             "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "author": author,
             "reason": reason,
             **result,
         }
-        write_artifact_with_history(json.dumps(record, ensure_ascii=False, indent=2) + "\n", generated_dir / RECORD)
+        write_artifact_with_history(json.dumps(entry, ensure_ascii=False, indent=2) + "\n", generated_dir / RECORD)
 
     return result

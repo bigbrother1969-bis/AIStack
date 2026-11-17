@@ -103,4 +103,5 @@ def test_only_the_tasks_declared_here_are_registered():
         "timemachine.rebuild",
         "network_docker.discover",
         "ai.reason",
+        "declarations.observe",
     }

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.15
+  version: 2.16
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -239,6 +239,10 @@ the Kernel. Its provider, configured at use, is built in the Task, as at 5.4:
 the baseline entry is renamed, seven pairs still. The SSH key path is read from
 the environment by the Task, never carried by the request. Left: `hosts` and
 `data_budget`.*
+*Decision 5.7, 2026-11-17: `hosts`, a read-only status command like
+`healthcheck`, is declared exempt (`ADR-0027` § 10); it stays in the audit's
+list of entry points that do not build the Kernel, as the other exempt
+commands do. Left: `data_budget`.*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 

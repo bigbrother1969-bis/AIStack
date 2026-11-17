@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.8
+  version: 1.9
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -236,7 +236,11 @@ Kernel:
   `data_budget`; with the health, console and architecture chains, which
   already build the Kernel. Health, architecture, console and Time
   Machine are converted first (commits 5.3 to 5.6); the other three are
-  decided one at a time (5.7).
+  decided one at a time (5.7). `network_docker_discover` is converted
+  (5.7a). `hosts` is not: the owner decided on 2026-11-17 that it is a
+  status command, read only, like `healthcheck`, and joins the exempt
+  commands below; a trace at every consultation would add nothing and grow
+  the history. `data_budget` remains to be decided (5.7b).
 - *Permanent monitors* — the four `docker_*_monitor`,
   `resource_priority_monitor`, `vigil` and `restart_watch`. A Task runs a
   Request and returns an Observation; a daemon that listens without end is
@@ -244,7 +248,7 @@ Kernel:
   `vigil` and `restart_watch` were first counted among the chains; both
   loop without end.
 - *Administration and action commands* — `config_init`, `setup_token`,
-  `web_admin_password`, `explications_admin`, `healthcheck`, `sandbox`,
+  `web_admin_password`, `explications_admin`, `healthcheck`, `hosts`, `sandbox`,
   `pra_schedule`, `sync_apply`. Not chains of knowledge: exempt, listed in
   one place (the audit) and recorded here.
 

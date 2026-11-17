@@ -13,4 +13,6 @@ event:
   arrival_container_on_host: "Nouveau conteneur non déclaré : {name} sur {host} — à déclarer dans « Nouveautés »."
   arrival_host: "Nouvelle machine avec Docker : {address} (utilisateur {user}) — voir « Nouveautés »."
   dock_failed: "Dock : mise à jour de {service} en échec."
+  declaration_invalid: "Déclaration {name} non lue : {error} Dernière copie valide : {copy}"
+  declaration_no_copy: "aucune gardée"
 test: "Message d'essai de la vigie d'AIStack : les notifications arrivent."

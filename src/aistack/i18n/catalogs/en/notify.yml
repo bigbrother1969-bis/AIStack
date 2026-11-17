@@ -13,4 +13,6 @@ event:
   arrival_container_on_host: "New undeclared container: {name} on {host} — declare it in “New arrivals”."
   arrival_host: "New machine running Docker: {address} (user {user}) — see “New arrivals”."
   dock_failed: "Dock: update of {service} failed."
+  declaration_invalid: "Declaration {name} is not read: {error} Last valid copy: {copy}"
+  declaration_no_copy: "none kept"
 test: "Test message from AIStack's vigil: notifications get through."

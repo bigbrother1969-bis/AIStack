@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.30
+  version: 1.31
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -584,6 +584,18 @@ the loader does read (`<name>.avant-observe-*`), and exits 1 so the vigil logs
 it. Nothing is refused, nothing is restored (decision 2). Each hand-edit record
 gains `valid`, `error` and `last_valid_copy`. The surface that shows it to the
 owner is the next commit.
+
+**Commit 7.4a, 2026-11-17: the vigil says it.** The owner chose Settings and
+Gotify; no Cockpit domain (adding one touches the score weights, the labels,
+the translations and the troubleshooting facts, and `compute_health_score`
+raises for a domain with no declared weight). `declarations_observe` keeps what
+is invalid now in `declaration-invalid.json` (with its history), written at
+every pass, an empty list included, and without a time so that an unchanged
+state adds no copy. `notify.events` takes it: a declaration that stops being
+read is one urgent event, said once, with the loader's words and the last valid
+copy; read again then broken again is said again; the first pass of a fresh
+install only notes. `State` keeps the names (`invalid`). The audit does not
+move: the file goes through `write_artifact_with_history`.
 
 ## The refactoring plan of August 2026
 

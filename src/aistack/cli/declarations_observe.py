@@ -6,7 +6,7 @@ from pathlib import Path
 
 from aistack.config import config_dir
 from aistack.declaration import observe
-from aistack.declaration.validate import last_valid_copy
+from aistack.declaration.validate import Invalid, record_invalid
 from aistack.kernel.runtime import KernelRuntime, Request
 from aistack.kernel.tracing import FileTraceRepository
 from aistack.tasks.declarations_observe import DEFAULT_GENERATED_DIR, DeclarationsObserveTask
@@ -57,11 +57,13 @@ def main() -> None:
     for problem in problems:
         print(f"  ? {problem}")
 
-    invalid = data["invalid"]
-    for item in invalid:
-        kept = last_valid_copy(generated_dir, item["name"], observe.seen_path(generated_dir, item["name"]).parent)
-        print(f"  ! {item['name']} is not read by its loader: {item['error']}")
-        print(f"    last valid copy: {kept or 'none kept'}")
+    invalid = [Invalid(item["name"], item["error"]) for item in data["invalid"]]
+    entries = record_invalid(
+        generated_dir, invalid, lambda name: observe.seen_path(generated_dir, name).parent
+    )
+    for entry in entries:
+        print(f"  ! {entry['name']} is not read by its loader: {entry['error']}")
+        print(f"    last valid copy: {entry['last_valid_copy'] or 'none kept'}")
 
     if invalid:
         sys.exit(1)

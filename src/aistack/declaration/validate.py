@@ -12,12 +12,15 @@ one that is not named here, so a new declaration comes with its validation.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+
+from aistack.generators.history import write_artifact_with_history
 
 from aistack.ai_runtime.yaml.store import load_ai_runtime_yaml
 from aistack.api_keys import load_api_keys
@@ -78,6 +81,9 @@ LOADERS: dict[str, Loader] = {
 }
 
 MAX_ERROR = 300
+# What is invalid now, one file in the data directory (with its history): the
+# vigil says it once, Settings shows it. Names, loader's words and copies only.
+STATE = "declaration-invalid.json"
 
 
 @dataclass(frozen=True)
@@ -148,3 +154,32 @@ def last_valid_copy(generated: Path, name: str, seen: Path) -> str:
 def _short(text: str) -> str:
     text = re.sub(r"\s+", " ", text).strip()
     return text if len(text) <= MAX_ERROR else text[: MAX_ERROR - 1] + "…"
+
+
+def record_invalid(generated: Path, invalid: list[Invalid], seen_of: Callable[[str], Path]) -> list[dict[str, str]]:
+    """
+    Keep what is invalid now, written every pass so that "valid again" is also
+    known (an empty list). The file carries no time: an unchanged state adds
+    nothing to its history. Returns the entries.
+    """
+
+    entries = [
+        {"name": item.name, "error": item.error, "last_valid_copy": last_valid_copy(generated, item.name, seen_of(item.name))}
+        for item in sorted(invalid, key=lambda item: item.name)
+    ]
+    write_artifact_with_history(json.dumps({"invalid": entries}, ensure_ascii=False, indent=1) + "\n", generated / STATE)
+    return entries
+
+
+def read_invalid(generated: Path) -> list[dict[str, str]]:
+    """What `record_invalid` kept; empty when there is nothing or the file is unreadable."""
+
+    try:
+        data = json.loads((generated / STATE).read_text(encoding="utf-8"))
+        return [
+            {key: str(item.get(key, "")) for key in ("name", "error", "last_valid_copy")}
+            for item in data["invalid"]
+            if isinstance(item, dict)
+        ]
+    except (OSError, ValueError, KeyError, TypeError):
+        return []

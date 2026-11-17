@@ -1,7 +1,8 @@
 """
 What the vigil tells the owner, and how.
 
-Events: health going down, the dock (a proposal waiting, a change
+Events: health going down, a declaration edited by hand that its loader
+does not read (ADR-0027 § 12), the dock (a proposal waiting, a change
 applied, rolled back or failed), a silent host, a failed restore test,
 AIStack's data nearing or past its disk budget (ADR-0021; urgent past
 it), and a container or a machine that appeared (ADR-0026). Each event is said once: a finding that stays is not repeated
@@ -66,6 +67,7 @@ class State:
     score: int | None = None
     findings: tuple[str, ...] = ()
     proposals: dict[str, str] | None = None
+    invalid: tuple[str, ...] = ()
 
 
 def read_state(generated_dir: Path) -> State:
@@ -76,6 +78,7 @@ def read_state(generated_dir: Path) -> State:
             score=data.get("score"),
             findings=tuple(str(key) for key in data.get("findings") or []),
             proposals={str(k): str(v) for k, v in (data.get("proposals") or {}).items()},
+            invalid=tuple(str(name) for name in data.get("invalid") or []),
         )
     except (OSError, ValueError, TypeError, AttributeError):
         return State()
@@ -87,7 +90,12 @@ def write_state(generated_dir: Path, state: State) -> None:
     temporary = path.with_suffix(".tmp")
     temporary.write_text(
         json.dumps(
-            {"score": state.score, "findings": list(state.findings), "proposals": state.proposals or {}},
+            {
+                "score": state.score,
+                "findings": list(state.findings),
+                "proposals": state.proposals or {},
+                "invalid": list(state.invalid),
+            },
             ensure_ascii=False,
             indent=1,
         )
@@ -108,6 +116,7 @@ def events(
     previous: State,
     snapshot: Snapshot | None,
     proposals: Sequence[store.Proposal],
+    invalid: Sequence[dict[str, str]] = (),
 ) -> tuple[list[Event], State]:
     """The events between `previous` and now, and the state to keep."""
 
@@ -117,6 +126,7 @@ def events(
         score=previous.score,
         findings=previous.findings,
         proposals={p.id: p.status for p in proposals},
+        invalid=tuple(sorted(item["name"] for item in invalid)),
     )
 
     if snapshot is not None:
@@ -162,6 +172,21 @@ def events(
                         "dock",
                         t(f"notify.event.dock_{outcome}", service=proposal.service),
                         urgent=proposal.status != store.APPLIED,
+                    )
+                )
+    if previous.known:
+        for item in invalid:
+            if item["name"] not in previous.invalid:
+                found.append(
+                    Event(
+                        "declaration",
+                        t(
+                            "notify.event.declaration_invalid",
+                            name=item["name"],
+                            error=item["error"],
+                            copy=item["last_valid_copy"] or t("notify.event.declaration_no_copy"),
+                        ),
+                        urgent=True,
                     )
                 )
     return found, current

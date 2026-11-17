@@ -33,6 +33,7 @@ from aistack.hosts.records import load_hosts_declaration
 from aistack.i18n import default_languages, translator_for
 from aistack.instance.yaml import load_instance_config_yaml
 from aistack.config import configured
+from aistack.declaration.validate import read_invalid
 from aistack.vigil import notify, snapshot
 
 GENERATED_DIR = Path("reports/generated")
@@ -124,7 +125,9 @@ def one_pass(generated: Path, gotify: notify.Gotify | None, dry_run: bool, rende
         _render(generated)
     t = translator_for(default_languages().reference)
     previous = notify.read_state(generated)
-    found, current = notify.events(t, previous, snapshot.read(generated), store.all_proposals(generated))
+    found, current = notify.events(
+        t, previous, snapshot.read(generated), store.all_proposals(generated), read_invalid(generated)
+    )
     appeared, following = _arrivals(generated)
     found += [notify.arrival_event(t, arrival) for arrival in appeared]
     message = notify.compose(t, found)

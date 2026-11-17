@@ -164,3 +164,51 @@ def test_a_new_installation_gets_its_architecture_and_its_graph_once(tmp_path: P
     (tmp_path / "timemachine" / "graph").mkdir(parents=True)
     assert first_renders(tmp_path, ran.append) == []
     assert len(ran) == 2
+
+
+def _invalid(name: str = "hosts.yml") -> dict[str, str]:
+    return {"name": name, "error": "ScannerError: not YAML (line 2, column 1)", "last_valid_copy": "/data/hosts.yml.avant-observe-1"}
+
+
+def test_a_declaration_that_stops_being_read_is_said_once_and_urgently() -> None:
+    previous = notify.State(known=True, score=81, findings=(), proposals={})
+
+    found, state = notify.events(T, previous, None, [], [_invalid()])
+
+    assert [event.kind for event in found] == ["declaration"]
+    assert found[0].urgent
+    assert "hosts.yml" in found[0].line and "line 2" in found[0].line and "avant-observe-1" in found[0].line
+    again, _ = notify.events(T, state, None, [], [_invalid()])
+    assert again == []
+
+
+def test_a_declaration_read_again_and_broken_again_is_said_again() -> None:
+    previous = notify.State(known=True, score=81, findings=(), proposals={}, invalid=("hosts.yml",))
+
+    _, state = notify.events(T, previous, None, [], [])
+    found, _ = notify.events(T, state, None, [], [_invalid()])
+
+    assert state.invalid == ()
+    assert [event.kind for event in found] == ["declaration"]
+
+
+def test_the_first_pass_only_notes_what_is_invalid() -> None:
+    found, state = notify.events(T, notify.State(), None, [], [_invalid()])
+
+    assert found == [] and state.invalid == ("hosts.yml",)
+
+
+def test_the_invalid_names_survive_the_state_file(tmp_path) -> None:
+    notify.write_state(tmp_path, notify.State(known=True, invalid=("a.yml", "b.yml")))
+
+    assert notify.read_state(tmp_path).invalid == ("a.yml", "b.yml")
+
+
+def test_the_message_has_a_line_in_french_too() -> None:
+    from aistack.i18n import translator_for
+
+    fr = translator_for("fr")
+
+    line = fr("notify.event.declaration_invalid", name="hosts.yml", error="x", copy="y")
+
+    assert "hosts.yml" in line and "Déclaration" in line

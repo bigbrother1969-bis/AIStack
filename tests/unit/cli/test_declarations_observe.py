@@ -72,4 +72,10 @@ def test_an_invalid_declaration_is_reported_with_the_last_valid_copy_and_the_pas
     assert f"{shipped.name}.avant-observe-" in out
     record = json.loads((generated / "declaration-observed.json").read_text(encoding="utf-8"))
     assert record["valid"] is False and record["error"] and record["last_valid_copy"]
+    state = json.loads((generated / "declaration-invalid.json").read_text(encoding="utf-8"))
+    assert [item["name"] for item in state["invalid"]] == [shipped.name]
+
+    (config / shipped.name).write_text(shipped.read_text(encoding="utf-8"), encoding="utf-8")
+    _run(monkeypatch, config, generated)
+    assert json.loads((generated / "declaration-invalid.json").read_text(encoding="utf-8")) == {"invalid": []}
     assert "unclosed" not in json.dumps(record)

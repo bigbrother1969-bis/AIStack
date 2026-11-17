@@ -36,7 +36,6 @@
     "src/aistack/arrivals/declare.py",
     "src/aistack/arrivals/state.py",
     "src/aistack/cli/config_init.py",
-    "src/aistack/cli/console_render.py",
     "src/aistack/cli/docker_diff_monitor.py",
     "src/aistack/cli/docker_digest_monitor.py",
     "src/aistack/cli/docker_events_monitor.py",

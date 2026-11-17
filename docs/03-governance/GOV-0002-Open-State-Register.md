@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.12
+  version: 2.13
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -224,6 +224,10 @@ Runtime executes, `architecture.render`. The two providers it configures at
 use (Beszel, HTTP probes) are built in the Task and not in the command: two
 entries of the baseline are renamed, seven pairs still (`ADR-0027` § 4).
 The chains left are 5.5 to 5.7.*
+*Commit 5.5, 2026-11-17: the console chain is the third Task the Runtime
+executes, `console.render`. The console command already asked the Kernel for
+its providers, so 19 of 25 entry points still do not build it, and seven
+pairs remain. The chains left are 5.6 and 5.7.*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 
@@ -236,6 +240,9 @@ The chains left are 5.5 to 5.7.*
 *Commit 5.3, 2026-11-17: 34. `aistack.cli.health_render` no longer writes:
 the plan page goes through `write_view`, in the module that already writes
 the other generated artifacts.*
+*Commit 5.5, 2026-11-17: 33. `aistack.cli.console_render` no longer writes: the
+links in the public directory and its index go through `ensure_link` and
+`write_view`, in the same module.*
 **Derivable** yes for the list; no for telling a generated artifact
 (`ENG-P-003`) from a modification of knowledge — that is a reading.
 **Qualification** unknown until that reading is done, in lot 6.

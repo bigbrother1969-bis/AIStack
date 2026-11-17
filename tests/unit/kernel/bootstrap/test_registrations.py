@@ -154,6 +154,7 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
     assert registered(kernel.registries.tasks) == {
         "health.render": "HealthRenderTask",
         "architecture.render": "ArchitectureRenderTask",
+        "console.render": "ConsoleRenderTask",
     }
 
 

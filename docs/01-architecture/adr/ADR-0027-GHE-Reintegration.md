@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.5
+  version: 1.6
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -270,6 +270,12 @@ and prints what the Observation carries.
 registry, executed from `aistack.cli.architecture_render`. Its Beszel
 credentials are read from the environment by the Task, never carried by the
 request: the Runtime keeps the request, payload included, in its trace.
+
+**The third chain** is the console chain, the Task `console.render` (5.5),
+built the same way and executed from `aistack.cli.console_render`. The
+symlinks of the public directory and its index page are written through
+`ensure_link` and `write_view` of `aistack.generators.history`, so the command
+and the Task add no writer to the baseline: the command's entry leaves it.
 
 **The trace of a Task** — decided by the owner, 2026-11-17, as proposed:
 

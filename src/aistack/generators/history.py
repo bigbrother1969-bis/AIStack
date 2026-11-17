@@ -73,6 +73,27 @@ def write_view(content: str, path: Path) -> Path:
     return path
 
 
+def ensure_link(link_path: Path, target: Path) -> None:
+    """
+    Make `link_path` a relative symlink to `target`; idempotent.
+
+    A real file there was put by hand, so it raises rather than overwrite it.
+    """
+
+    if link_path.is_symlink():
+        if link_path.readlink() == target:
+            return
+        link_path.unlink()
+    elif link_path.exists():
+        raise ValueError(
+            f"{link_path} already exists and is not a symlink this "
+            f"command manages; remove it by hand before running "
+            f"console_render again"
+        )
+
+    link_path.symlink_to(target)
+
+
 def _holds(path: Path, content: str) -> bool:
     """Whether `path` already holds exactly `content`."""
 

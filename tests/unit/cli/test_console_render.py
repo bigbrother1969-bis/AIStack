@@ -21,7 +21,9 @@ import pytest
 from tests.conftest import use_source
 
 from aistack.cli import console_render as cli
+from aistack.generators.history import ensure_link
 from aistack.health import domains
+from aistack.health.domains import build_cockpit
 from aistack.health.technical_debt import technical_debt_score
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
@@ -204,7 +206,7 @@ def test_history_lives_beside_the_generated_file_not_inside_public(workspace):
 def test_ensure_public_symlink_creates_a_new_link(tmp_path: Path):
     link_path = tmp_path / "architecture.html"
 
-    cli._ensure_public_symlink(link_path, Path("../architecture.html"))
+    ensure_link(link_path, Path("../architecture.html"))
 
     assert link_path.is_symlink()
     assert str(link_path.readlink()) == "../architecture.html"
@@ -215,7 +217,7 @@ def test_ensure_public_symlink_leaves_a_matching_link_alone(tmp_path: Path):
     link_path.symlink_to(Path("../architecture.html"))
     inode_before = link_path.lstat().st_ino
 
-    cli._ensure_public_symlink(link_path, Path("../architecture.html"))
+    ensure_link(link_path, Path("../architecture.html"))
 
     assert link_path.lstat().st_ino == inode_before
 
@@ -224,7 +226,7 @@ def test_ensure_public_symlink_repairs_a_link_pointing_elsewhere(tmp_path: Path)
     link_path = tmp_path / "architecture.html"
     link_path.symlink_to(Path("../somewhere-else.html"))
 
-    cli._ensure_public_symlink(link_path, Path("../architecture.html"))
+    ensure_link(link_path, Path("../architecture.html"))
 
     assert str(link_path.readlink()) == "../architecture.html"
 
@@ -234,7 +236,7 @@ def test_ensure_public_symlink_refuses_to_clobber_a_real_file(tmp_path: Path):
     link_path.write_text("not managed by this command", encoding="utf-8")
 
     with pytest.raises(ValueError, match="not a symlink this command manages"):
-        cli._ensure_public_symlink(link_path, Path("../architecture.html"))
+        ensure_link(link_path, Path("../architecture.html"))
 
     assert link_path.read_text(encoding="utf-8") == "not managed by this command"
 
@@ -268,7 +270,7 @@ def test_build_cockpit_always_names_all_nine_domains(monkeypatch, tmp_path):
     use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
 
     names = {domain.name for domain in cockpit.domains}
     assert names == {
@@ -360,7 +362,7 @@ def test_technical_debt_score_reports_findings_across_domains(monkeypatch, tmp_p
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
     weights = HealthScoreWeights(weights=(DomainWeight(domain="Services", points=15),))
     score, note = technical_debt_score(cockpit, weights)
 
@@ -509,3 +511,19 @@ categories:
 
     assert domain.instrumented is True
     assert len(domain.findings) == 1
+
+
+# --------------------------------------------------------------------
+# The Runtime executes the chain (ADR-0027 § 10, lot 5.5)
+# --------------------------------------------------------------------
+
+
+def test_main_runs_the_chain_through_the_runtime_and_keeps_its_trace(workspace):
+    cli.main()
+
+    traces = workspace / "reports" / "generated" / "history" / "execution-trace"
+    assert len(list(traces.glob("*.json"))) == 1
+    assert (workspace / "reports" / "generated" / "execution-trace.json").exists()
+    assert "console.render" in (
+        workspace / "reports" / "generated" / "execution-trace.json"
+    ).read_text(encoding="utf-8")

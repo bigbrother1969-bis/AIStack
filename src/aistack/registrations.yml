@@ -50,3 +50,6 @@ tasks:
   - id: architecture.render
     factory: aistack.tasks:ArchitectureRenderTask
     all_providers: true
+  - id: console.render
+    factory: aistack.tasks:ConsoleRenderTask
+    all_providers: true

@@ -10,6 +10,7 @@ from __future__ import annotations
 from tests.conftest import REFERENCE_DEFINITIONS as REFERENCE
 
 import shutil
+import json
 from pathlib import Path
 
 import pytest
@@ -106,6 +107,21 @@ def test_saving_writes_what_the_form_describes(tmp_path: Path, definition: Path)
     assert [app.container for app in saved.priority] == ["jellyfin"]
     assert [c.name for c in saved.background.containers] == ["newcomer"]
     assert saved.grace_seconds == 60.0
+
+
+def test_saving_keeps_the_old_file_and_records_the_change(tmp_path: Path, definition: Path):
+    before = definition.read_bytes()
+
+    client(tmp_path, definition).post(
+        "/priority/save",
+        data={"classification__newcomer": "throttled", "throttled_normal_cpus__newcomer": ""},
+    )
+
+    copies = list(definition.parent.glob(f"{definition.name}.avant-*"))
+    assert [c.read_bytes() for c in copies] == [before]
+    record = json.loads((tmp_path / "declaration-change.json").read_text(encoding="utf-8"))
+    assert record["path"] == str(definition)
+    assert record["author"] == "Tester"
 
 
 def test_a_docker_that_reports_nothing_still_shows_the_definition(tmp_path: Path, definition: Path):

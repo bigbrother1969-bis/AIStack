@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.25
+  version: 2.26
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -225,6 +225,10 @@ keys: no secret in a payload or a trace). Left: 6.2 to 6.6.*
 (`ADR-0027` § 11); the SSH user names of the network discovery screen go
 through it. Left: the priority and selection stores, `sync/screen`,
 `arrivals/declare`, `instance/data_location`, then 6.3 to 6.6.*
+*Commit 6.2 (priorities), 2026-11-17: 31. The CPU priority screen and the
+troubleshooting fix write through `declaration.write`. Left: the selection
+store, `sync/screen`, `arrivals/declare`, `instance/data_location`, then 6.3
+to 6.6.*
 
 #### GOV-0002/OS-088 — `main` cites documents it does not hold
 

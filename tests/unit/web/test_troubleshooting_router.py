@@ -8,6 +8,7 @@ under temporary paths, for real.
 from __future__ import annotations
 
 import shutil
+import json
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -271,6 +272,19 @@ def test_the_fix_writes_the_definition_and_checks_the_finding_is_gone(tmp_path: 
     }
     page = web.get("/troubleshooting/finding/newcomer/applied")
     assert page.status_code == 200
+
+
+def test_the_fix_keeps_the_old_definition_and_records_the_change(tmp_path: Path, host: Host):
+    web = client(tmp_path, host)
+    web.post("/troubleshooting/finding/newcomer/start")
+    before = host.definition.read_bytes()
+
+    web.post("/troubleshooting/finding/newcomer/apply")
+
+    copies = list(host.definition.parent.glob(f"{host.definition.name}.avant-*"))
+    assert [c.read_bytes() for c in copies] == [before]
+    record = json.loads((tmp_path / "declaration-change.json").read_text(encoding="utf-8"))
+    assert record["path"] == str(host.definition)
 
 
 def test_the_fix_is_refused_for_a_finding_of_another_domain(tmp_path: Path, host: Host):

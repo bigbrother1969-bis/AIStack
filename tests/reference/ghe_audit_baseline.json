@@ -57,7 +57,6 @@
     "src/aistack/instance/first_start.py",
     "src/aistack/instance/setup_wizard.py",
     "src/aistack/pra/scheduled.py",
-    "src/aistack/priority/yaml/store.py",
     "src/aistack/providers/docker/digest_history.py",
     "src/aistack/restart_watch/guard.py",
     "src/aistack/restart_watch/journal.py",

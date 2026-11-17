@@ -14,8 +14,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
 from aistack.priority.screen import definition_from_form, priority_rows
-from aistack.priority.yaml import load_resource_priority_yaml, save_resource_priority_yaml
-from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY
+from aistack.priority.yaml import load_resource_priority_yaml, render_resource_priority_yaml
+from aistack.declaration import write_declaration
+from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY, current_session
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
@@ -70,7 +71,15 @@ async def save(request: Request) -> RedirectResponse:
     updated = definition_from_form(
         current, names, {key: str(value) for key, value in form.items()}
     )
-    save_resource_priority_yaml(updated, path)
+    session = current_session(request)
+    write_declaration(
+        request.app.state.kernel.services.transactions,
+        request.app.state.generated_dir,
+        path,
+        render_resource_priority_yaml(updated),
+        author=(session.name or session.subject) if session is not None else "",
+        reason="priority screen: the CPU priorities saved",
+    )
 
     status = _language(request).t(
         "priority.status.saved",

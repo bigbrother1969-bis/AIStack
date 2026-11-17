@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.17
+  version: 1.18
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -441,6 +441,11 @@ the content. The first declaration to go through it is the SSH user names of
 the network discovery screen; `network_discovery/yaml/store` no longer writes
 (it renders the text), which takes the baseline from 33 to 32. The other
 declarations follow, one at a time.
+
+**The CPU priorities** (`priority/yaml/store`) follow in the same commit
+series: the screen's save and the troubleshooting fix both write through
+`write_declaration`; the store renders the text with its comments and no
+longer writes (baseline 32 → 31).
 
 ## The refactoring plan of August 2026
 

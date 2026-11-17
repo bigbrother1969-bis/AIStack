@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.unit.declaration_files import save_resource_priority
 from aistack.priority.definition import (
     BackgroundPriorityDefinition,
     ContainerPriorityDefinition,
@@ -10,10 +11,7 @@ from aistack.priority.definition import (
     PriorityAppDefinition,
     ResourcePriorityDefinition,
 )
-from aistack.priority.yaml import (
-    load_resource_priority_yaml,
-    save_resource_priority_yaml,
-)
+from aistack.priority.yaml import load_resource_priority_yaml
 
 
 def write(path: Path, text: str) -> Path:
@@ -472,7 +470,7 @@ def test_the_real_resource_priority_definition_loads():
 
     # A set, not the list literal this assertion carried until
     # 2026-09-18 — found broken the day it was first actually
-    # exercised: `save_resource_priority_yaml` (`priority_ui`'s own
+    # exercised: `render_resource_priority_yaml` (`priority_ui`'s own
     # `/save`, and `troubleshooting_assistant_ui`'s `/apply`) always
     # writes `background.containers` sorted alphabetically
     # (`_dump_section`'s own ordering), so any real save through
@@ -514,7 +512,7 @@ def test_saving_and_reloading_round_trips_a_jellyfin_priority_app(
 ):
     """
     `priority_ui/app.py`'s own `/save` writes through
-    `save_resource_priority_yaml` and the monitor reads back through
+    `render_resource_priority_yaml` and the monitor reads back through
     `load_resource_priority_yaml` — the two must agree on every
     field, including the ones a human never types by hand
     (`api_key_env`'s empty default, `timeout_seconds`).
@@ -545,7 +543,7 @@ def test_saving_and_reloading_round_trips_a_jellyfin_priority_app(
     )
 
     path = tmp_path / "round_trip.yml"
-    save_resource_priority_yaml(original, path)
+    save_resource_priority(original, path)
 
     assert load_resource_priority_yaml(path) == original
 
@@ -569,7 +567,7 @@ def test_saving_and_reloading_round_trips_a_cpu_threshold_priority_app(
     )
 
     path = tmp_path / "round_trip_cpu.yml"
-    save_resource_priority_yaml(original, path)
+    save_resource_priority(original, path)
 
     assert load_resource_priority_yaml(path) == original
 
@@ -594,7 +592,7 @@ def test_saving_omits_normal_cpus_for_an_unlimited_background_container(
     )
 
     path = tmp_path / "unlimited.yml"
-    save_resource_priority_yaml(original, path)
+    save_resource_priority(original, path)
 
     raw = path.read_text(encoding="utf-8")
 
@@ -605,7 +603,7 @@ def test_saving_writes_the_files_own_documentation_comments(tmp_path: Path):
     """
     Found live on GIGABYTE, 2026-09-03
     (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`): a first
-    version of `save_resource_priority_yaml` used one combined
+    version of `render_resource_priority_yaml` used one combined
     `yaml.safe_dump`, which carries no notion of comments at all, so
     a `priority_ui` save silently stripped this file's entire
     documentation (88 lines to 29). This does not assert the exact
@@ -626,7 +624,7 @@ def test_saving_writes_the_files_own_documentation_comments(tmp_path: Path):
     )
 
     path = tmp_path / "documented.yml"
-    save_resource_priority_yaml(original, path)
+    save_resource_priority(original, path)
 
     raw = path.read_text(encoding="utf-8")
     lines = raw.splitlines()

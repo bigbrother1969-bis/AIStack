@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from pathlib import Path
 from typing import Any
 
@@ -218,12 +219,10 @@ _BACKGROUND_COMMENT = """\
 """
 
 
-def save_resource_priority_yaml(
-    definition: ResourcePriorityDefinition, path: Path
-) -> Path:
+def render_resource_priority_yaml(definition: ResourcePriorityDefinition) -> str:
     """
-    Save a resource-priority definition to YAML, the inverse of
-    `load_resource_priority_yaml`.
+    Render a resource-priority definition as YAML text, the inverse of
+    `load_resource_priority_yaml`. Writing it is `aistack.declaration`'s job.
 
     Built explicitly rather than with `dataclasses.asdict`, so the
     detector's `type:` tag is written back. A background container's
@@ -232,8 +231,6 @@ def save_resource_priority_yaml(
     drops comments and the file would otherwise lose its documentation on
     every save.
     """
-
-    path.parent.mkdir(parents=True, exist_ok=True)
 
     priority_data = [
         {
@@ -257,25 +254,25 @@ def save_resource_priority_yaml(
         ],
     }
 
-    with path.open("w", encoding="utf-8") as stream:
-        stream.write(_HEADER_COMMENT)
+    stream = io.StringIO()
+    stream.write(_HEADER_COMMENT)
 
-        stream.write(_PRIORITY_COMMENT)
-        _dump_section(stream, "priority", priority_data)
-        stream.write("\n")
+    stream.write(_PRIORITY_COMMENT)
+    _dump_section(stream, "priority", priority_data)
+    stream.write("\n")
 
-        stream.write(_UNLIMITED_COMMENT)
-        _dump_section(stream, "unlimited_cpus", definition.unlimited_cpus)
-        stream.write("\n")
+    stream.write(_UNLIMITED_COMMENT)
+    _dump_section(stream, "unlimited_cpus", definition.unlimited_cpus)
+    stream.write("\n")
 
-        stream.write(_GRACE_COMMENT)
-        _dump_section(stream, "grace_seconds", definition.grace_seconds)
-        stream.write("\n")
+    stream.write(_GRACE_COMMENT)
+    _dump_section(stream, "grace_seconds", definition.grace_seconds)
+    stream.write("\n")
 
-        stream.write(_BACKGROUND_COMMENT)
-        _dump_section(stream, "background", background_data)
+    stream.write(_BACKGROUND_COMMENT)
+    _dump_section(stream, "background", background_data)
 
-    return path
+    return stream.getvalue()
 
 
 def _dump_section(stream: Any, key: str, value: Any) -> None:

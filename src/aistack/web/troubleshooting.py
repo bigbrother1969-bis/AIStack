@@ -29,7 +29,8 @@ from aistack.i18n.findings import (
     finding_remediation,
 )
 from aistack.i18n.web import PageLanguage, page_language
-from aistack.priority.yaml import save_resource_priority_yaml
+from aistack.declaration import write_declaration
+from aistack.priority.yaml import render_resource_priority_yaml
 from aistack.troubleshooting.apply import BackgroundChange, class_as_background
 from aistack.troubleshooting.findings import CONSUMPTION_DOMAIN, resource_priority_definition
 from aistack.contracts.pra_test_reading import FAILED, SUCCESS
@@ -326,7 +327,15 @@ def apply(request: Request, key: str) -> RedirectResponse:
         return applied
 
     if decision.updated is not None:
-        save_resource_priority_yaml(decision.updated, path)
+        person = current_session(request)
+        write_declaration(
+            request.app.state.kernel.services.transactions,
+            request.app.state.generated_dir,
+            path,
+            render_resource_priority_yaml(decision.updated),
+            author=(person.name or person.subject) if person is not None else "",
+            reason=f"troubleshooting: {subject} classed as a background container",
+        )
         message = t(
             "troubleshooting.message.added",
             subject=subject,

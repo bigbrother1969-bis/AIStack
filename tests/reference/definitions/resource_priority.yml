@@ -5,7 +5,7 @@
 # monitor (`aistack.cli.resource_priority_monitor`).
 #
 # **This header and the section comments below are written by
-# `save_resource_priority_yaml` on every save, not preserved from
+# `render_resource_priority_yaml` on every save, not preserved from
 # whatever was here before** — found live on GIGABYTE, 2026-09-03
 # (`claude/PLAN-DYNAMIC-CONTAINER-PRIORITY-2026-09-03.md`): a first
 # version of this function used a plain `yaml.safe_dump`, which has

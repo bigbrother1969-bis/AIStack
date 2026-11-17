@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import threading
+import unicodedata
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -236,6 +237,11 @@ def _desired(
     """
     Every media file the selection designates, by target path.
 
+    The target path is in NFC, whatever form the library's names are in:
+    Syncthing renames the names it finds in NFD, and a target that kept
+    the library's form would be linked again and its renamed file removed
+    at every pass (`GOV-0002/OS-094`).
+
     Read from the filesystem, since the catalog carries counts, not
     names. Covered nodes do not overlap and each contributes only its
     direct files, so each file appears once.
@@ -264,7 +270,7 @@ def _desired(
             if entry.suffix.lower() not in extensions and "*" not in extensions:
                 continue
 
-            desired[f"{node}/{entry.name}"] = entry
+            desired[unicodedata.normalize("NFC", f"{node}/{entry.name}")] = entry
 
     return desired
 

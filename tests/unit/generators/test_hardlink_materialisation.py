@@ -1,4 +1,5 @@
 import threading
+import unicodedata
 from pathlib import Path
 
 import pytest
@@ -421,3 +422,41 @@ def test_an_absent_tick_does_not_stop_what_exists(library, target):
     report = materialise(library, target, ["Classique/Bach", "Gone"])
 
     assert report.linked == ("Classique/Bach/01.mp3",)
+
+
+def test_names_in_nfd_are_linked_in_nfc_and_a_second_pass_changes_nothing(tmp_path, target):
+    """
+    Syncthing renames a name it finds in NFD. A target that kept the
+    library's form was linked again, and its renamed file removed, at
+    every pass (`GOV-0002/OS-094`).
+    """
+
+    root = tmp_path / "library"
+    nfd = unicodedata.normalize("NFD", "Beautiful Imperfection/05. Bimpé.mp3")
+    nfc = unicodedata.normalize("NFC", nfd)
+    assert nfd != nfc
+    write(root / "Asa" / nfd, b"asa")
+
+    first = materialise(root, target, ["Asa"])
+
+    assert files_under(target) == {f"Asa/{nfc}"}
+    assert len(first.linked) == 1 and not first.removed
+
+    second = materialise(root, target, ["Asa"])
+
+    assert not second.linked and not second.relinked and not second.removed
+    assert second.unchanged == 1
+
+
+def test_a_name_left_in_nfd_in_the_target_is_replaced_by_its_nfc_form(tmp_path, target):
+    root = tmp_path / "library"
+    nfd = unicodedata.normalize("NFD", "05. Bimpé.mp3")
+    nfc = unicodedata.normalize("NFC", nfd)
+    source = write(root / "Asa" / nfd, b"asa")
+    (target / "Asa").mkdir(parents=True)
+    (target / "Asa" / nfd).hardlink_to(source)
+
+    report = materialise(root, target, ["Asa"])
+
+    assert files_under(target) == {f"Asa/{nfc}"}
+    assert len(report.linked) == 1 and len(report.removed) == 1

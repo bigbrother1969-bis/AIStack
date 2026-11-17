@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.33
+  version: 2.34
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -231,10 +231,15 @@ it renames what AIStack linked, the next pass does not find the name it wants,
 links it again and removes the NFC one as not designated.
 **Derivable** yes (`diag_sync_names.py` lists the seven; a test with a name in
 NFD reproduces it)
-**Qualification** unknown until the owner decides. The proposal: the target
-name is the NFC form of the source's name, and names are compared in NFC, so
-that an unchanged selection writes nothing. The seven files of the
-selection are not lost: the phone receives them under the NFC name.
+**Qualification** decided by the owner, 2026-11-17: the target name is the NFC
+form of the source's name, and names are compared in NFC, so that an
+unchanged selection writes nothing. The phone already has the seven files
+under the NFC name: nothing is lost.
+*Commit 6.7, 2026-11-17: `generators/filesystem/hardlink._desired` keys the
+target in NFC; two tests (a library in NFD: linked in NFC then unchanged on the
+second pass; an NFD name left in the target: replaced). Open until measured on
+the MSI: the condition is about a host (the second pass of
+`./run_sync.sh music--phone` must report `+0 ~0 -0`).*
 
 ---
 

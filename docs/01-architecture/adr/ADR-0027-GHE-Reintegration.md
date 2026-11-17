@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.25
+  version: 1.26
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -561,8 +561,9 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 - Of the nine criteria of `STD-0300` named by `GOV-0002/OS-091`, three (4.4,
   4.5, 4.9) were re-run on 2.0.0 on 2026-11-17; 1.1 to 1.4, 4.2 and 4.8 have no
   chain to re-run through (`STD-0300` § *Re-run on 2.0.0*).
-- The sync links names Syncthing renames (NFD to NFC) and does it again at every
-  pass (`OS-094`).
+- The sync linked names Syncthing renames (NFD to NFC) and did it again at every
+  pass (`OS-094`): the target is now keyed in NFC (commit 6.7), to be measured
+  on the MSI before the item closes.
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
 - The volume of the traces, to measure on the host after a few days of the

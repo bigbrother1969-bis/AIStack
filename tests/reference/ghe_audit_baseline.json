@@ -46,7 +46,6 @@
     "src/aistack/dock/executor.py",
     "src/aistack/dock/proposals.py",
     "src/aistack/explications/human.py",
-    "src/aistack/generators/filesystem/copy.py",
     "src/aistack/generators/filesystem/yaml/store.py",
     "src/aistack/generators/history.py",
     "src/aistack/host_collector.py",

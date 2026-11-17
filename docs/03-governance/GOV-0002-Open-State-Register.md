@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.30
+  version: 2.31
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -241,6 +241,8 @@ to 6.6.*
 *Commit 6.3, 2026-11-17: 27. The hard links of a device's folder go through
 `selection.materialise`; `generators/filesystem/hardlink` no longer writes.
 `cli/sync_apply` is exempt like `dock` (owner's decision). Left: 6.4 to 6.6.*
+*Commit 6.4, 2026-11-17: 26. `generators/filesystem/copy` (dead code) is
+deleted. Left: 6.5 and 6.6.*
 
 #### GOV-0002/OS-088 — `main` cites documents it does not hold
 

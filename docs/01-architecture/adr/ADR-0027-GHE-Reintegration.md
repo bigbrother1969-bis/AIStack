@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.22
+  version: 1.23
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -428,6 +428,13 @@ the tests (§ 2).
 
 The audit separates what is declared exempt from what is left to do in 6.5;
 until then the files stay in the baseline, which can only get shorter.
+
+**Commit 6.4, 2026-11-17.** `generators/filesystem/copy` is deleted (it held
+`generate_copy_folder`, destructive and untested, and `generate_symlink_folder`;
+nothing in `src` or in the tests called either, and the definition of the
+phone selection had already dropped the former on purpose). The maintenance
+writes of § 11 (`data_budget/budget`, the purge of explanations) are exempt
+and unchanged. Baseline 27 → 26.
 
 **Commit 6.2, 2026-11-17: `declaration.write`.** The operation is registered
 at the Kernel's bootstrap (`aistack.transaction.engines.declaration_write`).

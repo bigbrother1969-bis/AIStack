@@ -10,7 +10,7 @@
 # `catalog_file` and `generation_command` are gone on purpose: the
 # catalog is scanned live from `source_root` on every request
 # (decision #8), and materialisation calls
-# `materialise_by_hardlink` directly instead of shelling out to
+# the Kernel's `selection.materialise` instead of shelling out to
 # `generate_copy_folder` — the destructive, untested command this
 # definition used to name.
 

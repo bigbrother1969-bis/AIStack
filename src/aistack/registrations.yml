@@ -62,3 +62,5 @@ tasks:
     all_providers: true
   - id: declarations.observe
     factory: aistack.tasks:DeclarationsObserveTask
+  - id: knowledge.integrity
+    factory: aistack.tasks:KnowledgeIntegrityTask

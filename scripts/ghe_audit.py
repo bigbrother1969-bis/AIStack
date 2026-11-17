@@ -103,6 +103,10 @@ EXEMPT_WRITES = {
 }
 # The audit's own test names identifiers that exist only in its fixtures.
 OWN_TEST = "tests/unit/scripts/test_ghe_audit.py"
+# So do the tests of the integrity checks: a check that reads identifiers in
+# a bundle is tested on identifiers invented for the case (a decision numbered zero, an
+# unregistered principle), which is what the check has to recognise.
+FIXTURE_TESTS = "tests/unit/integrity"
 READ = ("src", "tests", "docs", "scripts", "README.md")
 TEXT = {".py", ".md", ".yml", ".yaml", ".sh", ".toml", ".html", ".txt", ".cfg"}
 
@@ -115,7 +119,7 @@ def _texts(root: Path) -> dict[Path, str]:
         start = root / name
         paths = [start] if start.is_file() else sorted(start.rglob("*")) if start.is_dir() else []
         for path in paths:
-            if path == root / OWN_TEST:
+            if path == root / OWN_TEST or path.is_relative_to(root / FIXTURE_TESTS):
                 continue
             if path.is_file() and path.suffix in TEXT and "__pycache__" not in path.parts:
                 found[path] = path.read_text(encoding="utf-8", errors="replace")

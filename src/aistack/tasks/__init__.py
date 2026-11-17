@@ -12,6 +12,7 @@ from aistack.tasks.console_render import ConsoleRenderTask
 from aistack.tasks.declarations_observe import DeclarationsObserveTask
 from aistack.tasks.docker_discover import DockerDiscoverTask
 from aistack.tasks.health_render import HealthRenderTask
+from aistack.tasks.knowledge_integrity import KnowledgeIntegrityTask
 from aistack.tasks.network_docker_discover import NetworkDockerDiscoverTask
 from aistack.tasks.timemachine_rebuild import TimeMachineRebuildTask
 
@@ -22,6 +23,7 @@ __all__ = [
     "DeclarationsObserveTask",
     "DockerDiscoverTask",
     "HealthRenderTask",
+    "KnowledgeIntegrityTask",
     "NetworkDockerDiscoverTask",
     "TimeMachineRebuildTask",
 ]

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.36
+  version: 1.37
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -709,6 +709,46 @@ with their tests (67 more in the suite). Four decisions, written here:
 Two tests wait for 8.3 because they read the bundle with
 `aistack.integrity.bundle_reader`: `test_contract_inventory_travels` and
 `test_identity_survives_the_projection`.
+
+**Commit 8.2c, 2026-11-17: the SSH transfer does not return.** The owner's
+answer: the bundle serves to know the context; once it is available where it
+is read, it is no longer pushed to another machine. `context_bundle/transfer/`,
+`sync_context_bundle.sh`, `config/context_bundle_transfer.yml.example` and
+`ADR-0007` (the transfer) stay at the tag. `service` keeps its optional
+`transfer_service` seam (8.2b), nothing builds one.
+
+**Commit 8.3, 2026-11-17: the integrity checks return, run by a Task.** The
+bundle reader (`aistack.integrity.bundle_reader`), the engine, the three
+contracts (`integrity_check`, `integrity_finding`, `integrity_report`) and the
+eighteen checks of the tag, with their tests, come back unchanged but for two
+comments that cited an identifier invented for the case. The command
+`aistack.cli.knowledge_integrity` is now a thin caller of the eighth Task,
+`knowledge.integrity` (`aistack.tasks.knowledge_integrity`, no provider): the
+Task reads the projection and returns what each check observed, the command
+prints the same report and keeps the same exit codes (1 when something blocks,
+2 when the bundle is not there); a trace is kept under `reports/generated/` of
+the working directory. The eighteen came together, not one by one as planned:
+the engine composes them (`test_default_composition_is_stable` pins the list),
+the Task runs them all, and every one passed untouched; the owner can send one
+back by removing its line from `default_checks()`. The control case returns
+with them: `IntegrityCheck` is satisfied by eighteen classes
+(`test_the_integrity_checks_satisfy_their_contract`), and the two bundle tests
+held at 8.2b (`test_contract_inventory_travels`,
+`test_identity_survives_the_projection`).
+
+*Two adaptations written here.* The audit no longer reads the tests of the
+integrity checks as citations (`FIXTURE_TESTS`, as it already skips its own
+test): a check that reads identifiers is tested on identifiers invented for
+the case. The test of the command runs in the bundle's folder, so that its
+trace is not left in the repository.
+
+*Measured on `main`, 2026-11-17* (bundle exported from the tree, then the
+command): 60 artifacts, **0 blocking, 15 warnings**. The warnings are the
+README, which declares no metadata block, and a few artifacts without status,
+domain, semantic type or criticality (`OPS-0002` since 8.2b, to qualify by the
+owner), plus 4 accepted decisions without a readable implementation state. The
+observations are the facts the checks state (13 of 32 contracts satisfied by
+no class, 13 references designating no artifact, 88 undated assertions).
 
 ## The refactoring plan of August 2026
 

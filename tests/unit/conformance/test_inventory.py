@@ -209,6 +209,45 @@ def test_an_inventory_with_an_unreadable_module_is_partial():
 # --------------------------------------------------------------------
 
 
+def test_the_integrity_checks_satisfy_their_contract():
+    """
+    The control case, and it is not decorative: an earlier pass
+    reported `IntegrityCheck` as an orphan while seven classes
+    implemented it. If this inventory ever answers otherwise, it
+    is measuring nominal inheritance or has lost the ABC branch.
+
+    **16 became 17 on 2026-09-25**, `GOV-0002/OS-070`:
+    `ClaudeNoteReferenceCheck` is a new implementer. **17 became 18
+    the same day**, `GOV-0002/OS-071`: `DeclaredUnknownCheck` is the
+    extraction criterion 2.4's reformulation left to build. Each
+    time the count is raised rather than the assertion loosened to
+    stop tracking it — the exact number is the fact this test
+    exists to pin.
+    """
+
+    inventory = take_inventory()
+
+    check = next(
+        c for c in inventory.contracts if c.name == "IntegrityCheck"
+    )
+
+    assert not check.is_orphan
+    assert len(check.satisfied_by) == 18
+    assert all(
+        "integrity.checks" in name for name in check.satisfied_by
+    )
+
+    # `contract-debt` is the eighth, and it is the one that
+    # publishes this very inventory. The check appearing in the
+    # measurement it produces is not the instrument counting
+    # itself: it is a governed component of the product, exactly
+    # like the seven before it.
+    assert any(
+        name.endswith("ContractDebtCheck")
+        for name in check.satisfied_by
+    )
+
+
 def test_the_inventory_does_not_declare_everything_orphan():
     """
     The other direction. A discovery that failed to recognise any

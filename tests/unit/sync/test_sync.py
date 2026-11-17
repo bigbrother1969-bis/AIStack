@@ -91,7 +91,7 @@ def test_the_executor_links_the_selection_on_the_same_disk(host):
     _select(generated, "books--phone", ["Author"])
     assert waiting(generated, "books--phone") and due(generated, "books--phone", NOW)
 
-    record = apply_pair(declaration, generated, "books--phone", NOW)
+    record = apply_pair(create_kernel().services.transactions, declaration, generated, "books--phone", NOW)
 
     target = target_for(declaration, "books", "phone")
     linked = sorted(p.relative_to(target).as_posix() for p in target.rglob("*") if p.is_file())
@@ -105,7 +105,7 @@ def test_the_executor_links_the_selection_on_the_same_disk(host):
 
     _select(generated, "books--phone", [])
     os.utime(selection_file(generated, "books--phone"), None)
-    assert apply_pair(declaration, generated, "books--phone", NOW)["removed"] == 1
+    assert apply_pair(create_kernel().services.transactions, declaration, generated, "books--phone", NOW)["removed"] == 1
     assert not [p for p in target.rglob("*") if p.is_file()]
 
 
@@ -113,9 +113,9 @@ def test_the_quota_is_shared_by_the_destinations_contents(host):
     config, generated = host
     declaration = load_sync_declaration(config)  # 10 000 bytes for the phone
     _select(generated, "books--phone", ["Author"])
-    apply_pair(declaration, generated, "books--phone", NOW)  # 3 000 taken
+    apply_pair(create_kernel().services.transactions, declaration, generated, "books--phone", NOW)  # 3 000 taken
     _select(generated, "docs--phone", ["Other"])  # 9 000 more: too much
-    record = apply_pair(declaration, generated, "docs--phone", NOW)
+    record = apply_pair(create_kernel().services.transactions, declaration, generated, "docs--phone", NOW)
     assert "larger than the declared capacity" in record["refused"]
     assert (read_applied(generated, "docs--phone") or {})["selected_bytes"] == 0
 

@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from aistack.cli.sandbox import data_dir
+from aistack.kernel.bootstrap.default import create_kernel
 from aistack.sync.declaration import SYNCTHING, load_sync_declaration, split_pair
 from aistack.sync.screen import apply_pair, due, read_applied, selection_file, waiting
 
@@ -62,6 +63,7 @@ def main(argv: list[str] | None = None, root: Path | None = None) -> int:
     if not chosen:
         return 0
 
+    transactions = create_kernel().services.transactions
     lock = generated / "sync" / "executor.lock"
     lock.parent.mkdir(parents=True, exist_ok=True)
     with lock.open("w") as handle:
@@ -75,7 +77,7 @@ def main(argv: list[str] | None = None, root: Path | None = None) -> int:
             if not selection_file(generated, pair).exists():
                 print(f"{pair}: no selection recorded, left as it is")
                 continue
-            record = apply_pair(declaration, generated, pair, now, dry_run=args.dry_run)
+            record = apply_pair(transactions, declaration, generated, pair, now, dry_run=args.dry_run)
             line = (
                 f"{pair}: +{record['linked']} ~{record['relinked']} -{record['removed']} "
                 f"={record['unchanged']} ({record['seconds']} s)"

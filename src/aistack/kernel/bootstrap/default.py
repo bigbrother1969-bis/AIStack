@@ -39,7 +39,9 @@ from aistack.kernel.services.transactions import (
 )
 
 from aistack.transaction.contracts.declaration_write import KIND as DECLARATION_WRITE
+from aistack.transaction.contracts.selection_materialise import KIND as SELECTION_MATERIALISE
 from aistack.transaction.engines.declaration_write import DeclarationWriteEngine
+from aistack.transaction.engines.selection_materialise import SelectionMaterialiseEngine
 from aistack.transaction.adapters.transport_operation_engine import (
     TransportOperationEngine,
 )
@@ -103,6 +105,7 @@ def create_kernel() -> Kernel:
     # A declaration a person changes is written through the same service
     # (ADR-0027 § 11).
     transactions.registry.register(DECLARATION_WRITE, DeclarationWriteEngine())
+    transactions.registry.register(SELECTION_MATERIALISE, SelectionMaterialiseEngine())
 
     services = KernelServices(
         transport_registry=transport_registry,

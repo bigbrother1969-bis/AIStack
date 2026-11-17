@@ -15,12 +15,12 @@
     "src/aistack/cli/restart_watch.py",
     "src/aistack/cli/sandbox.py",
     "src/aistack/cli/setup_token.py",
-    "src/aistack/cli/sync_apply.py",
     "src/aistack/cli/vigil.py",
     "src/aistack/cli/web_admin_password.py"
   ],
   "entry_points_outside_the_runtime": [
     "src/aistack/cli/dock.py",
+    "src/aistack/cli/sync_apply.py",
     "src/aistack/web/app.py"
   ],
   "registered_tasks_never_executed": [],
@@ -47,7 +47,6 @@
     "src/aistack/dock/proposals.py",
     "src/aistack/explications/human.py",
     "src/aistack/generators/filesystem/copy.py",
-    "src/aistack/generators/filesystem/hardlink.py",
     "src/aistack/generators/filesystem/yaml/store.py",
     "src/aistack/generators/history.py",
     "src/aistack/host_collector.py",

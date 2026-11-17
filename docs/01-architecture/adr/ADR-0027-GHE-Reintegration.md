@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.21
+  version: 1.22
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -473,6 +473,26 @@ directory the declarations sit in the checkout, and a copy there must not make
 the tree dirty. The six declarations that § 11 lists now go through a
 transaction; `sync/screen` stays in the baseline only for the report of the
 last application (6.3).
+
+**Commit 6.3, 2026-11-17: `selection.materialise`.** The hard links of a
+device's folder are made by the operation of that name
+(`aistack.transaction.engines.selection_materialise`), the one place that
+links, unlinks and prunes. What it would do is decided by
+`generators/filesystem/hardlink.plan_materialisation`, which writes nothing
+(`preview_materialisation` is its report, for the screens' *pending* line);
+the same per-target lock covers both. A refusal (capacity, another
+filesystem, a missing library) comes back as the report's `refused`, a file
+that cannot be linked in its `failed`, as before; only an unexpected error
+fails the transaction (`MaterialisationFailed`). `hardlink.py` leaves the
+baseline of writes (28 → 27). The report of the last application stays
+written by `sync/screen` (the service's own state, exempt).
+
+`cli/sync_apply`, the host executor, now builds the Kernel to run the
+operation. The owner decided (2026-11-17) that it is exempt like `dock`: an
+action command that changes the host through the Kernel's transaction,
+started every two minutes by its timer; it joins `dock` and the web
+application in the baseline of *an entry point builds the Kernel and never
+executes through the Runtime* and leaves *never builds the Kernel* (17 → 16).
 
 ## The refactoring plan of August 2026
 

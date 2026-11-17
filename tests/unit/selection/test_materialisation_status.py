@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from aistack.catalog.filesystem import MediaLibraryCatalogBuilder
-from aistack.generators.filesystem.hardlink import materialise_by_hardlink
+from tests.unit.materialisation import materialise_by_hardlink
 from aistack.providers.filesystem import (
     DEFAULT_MEDIA_EXTENSIONS,
     MediaLibraryProvider,

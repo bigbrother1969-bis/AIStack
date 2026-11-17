@@ -2,7 +2,7 @@
 
 The route in `aistack.web.selection` only parses the request and calls
 these. The catalog is scanned live from `definition.source_root` on each
-request and materialised in process with `materialise_by_hardlink`.
+request; the materialisation itself is the Kernel's `selection.materialise`.
 Syncthing status and the repository root are passed in as arguments.
 """
 
@@ -16,7 +16,7 @@ from typing import Any
 from aistack.catalog.filesystem import MediaLibraryCatalogBuilder
 from aistack.generators.filesystem.hardlink import (
     MaterialisationReport,
-    materialise_by_hardlink,
+    preview_materialisation,
 )
 from aistack.generators.filesystem.yaml import load_last_generation_yaml
 from aistack.i18n import Translator
@@ -82,7 +82,7 @@ def page_context(
 ) -> dict[str, Any]:
     """Everything one page load needs.
 
-    A dry run of `materialise_by_hardlink` (writes nothing) feeds both the
+    A preview of the materialisation (`preview_materialisation`, writes nothing) feeds both the
     per-node status and the "N to create, M to remove" summary, so they
     cannot disagree.
     """
@@ -96,13 +96,12 @@ def page_context(
     resolution = resolve_subtrees(catalog, selected)
     capacity = assess_capacity(resolution, definition.capacity_declared_bytes)
 
-    pending = materialise_by_hardlink(
+    pending = preview_materialisation(
         catalog=catalog,
         resolution=resolution,
         capacity=capacity,
         target_root=Path(definition.target_root),
         media_extensions=DEFAULT_MEDIA_EXTENSIONS,
-        dry_run=True,
     )
 
     materialized = (

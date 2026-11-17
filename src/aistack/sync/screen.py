@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from aistack.catalog.filesystem import MediaLibraryCatalogBuilder
-from aistack.generators.filesystem.hardlink import MaterialisationReport, materialise_by_hardlink
+from aistack.generators.filesystem.hardlink import MaterialisationReport, preview_materialisation
 from aistack.application import ApplicationDefinition, SyncthingDefinition
 from aistack.kernel.catalog.core import Catalog
 from aistack.kernel.selection.core import Selection
@@ -31,6 +31,7 @@ from aistack.selection.explanation import explain_selection
 from aistack.selection.subtree import SubtreeResolution, resolve_subtrees
 from aistack.declaration import write_declaration
 from aistack.kernel.services.transactions import TransactionServices
+from aistack.selection.materialise import materialise_selection
 from aistack.selection.yaml import load_selection_yaml, render_selection_yaml
 from aistack.sync.declaration import (
     SYNCTHING,
@@ -150,13 +151,12 @@ def definition(declaration: SyncDeclaration, pair: str, lang: str, device_id: st
 
 def _dry_run(declaration: SyncDeclaration, pair: str, catalog: Catalog, resolution: SubtreeResolution, verdict: CapacityVerdict) -> MaterialisationReport:
     content, destination = split_pair(pair)
-    return materialise_by_hardlink(
+    return preview_materialisation(
         catalog=catalog,
         resolution=resolution,
         capacity=verdict,
         target_root=target_for(declaration, content, destination),
         media_extensions=extensions(declaration.contents[content]),
-        dry_run=True,
     )
 
 
@@ -266,9 +266,19 @@ def due(generated: Path, pair: str, now: datetime) -> bool:
 
 
 def apply_pair(
-    declaration: SyncDeclaration, generated: Path, pair: str, now: datetime | None = None, dry_run: bool = False
+    transactions: TransactionServices,
+    declaration: SyncDeclaration,
+    generated: Path,
+    pair: str,
+    now: datetime | None = None,
+    dry_run: bool = False,
 ) -> dict[str, Any]:
-    """Bring the pair's folder to its recorded selection, and say what was done."""
+    """
+    Bring the pair's folder to its recorded selection, and say what was done.
+
+    The folder is changed by the Kernel's `selection.materialise` operation;
+    a dry run only reads (`preview_materialisation`).
+    """
 
     moment = now or datetime.now(timezone.utc)
     content, destination = split_pair(pair)
@@ -279,14 +289,12 @@ def apply_pair(
     resolution = resolve_subtrees(catalog, selected)
     verdict = capacity(declaration, generated, pair, resolution)
     started = datetime.now(timezone.utc)
-    report = materialise_by_hardlink(
-        catalog=catalog,
-        resolution=resolution,
-        capacity=verdict,
-        target_root=target_for(declaration, content, destination),
-        media_extensions=extensions(declaration.contents[content]),
-        dry_run=dry_run,
-    )
+    target_root = target_for(declaration, content, destination)
+    media_extensions = extensions(declaration.contents[content])
+    if dry_run:
+        report = preview_materialisation(catalog, resolution, verdict, target_root, media_extensions)
+    else:
+        report = materialise_selection(transactions, catalog, resolution, verdict, target_root, media_extensions)
     record: dict[str, Any] = {
         "at": moment.isoformat(timespec="seconds"),
         "seconds": round((datetime.now(timezone.utc) - started).total_seconds(), 1),

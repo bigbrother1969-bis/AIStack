@@ -1,8 +1,18 @@
+"""
+What a materialisation would do, read from the disk, writing nothing.
+
+Doing it is the Kernel's operation `selection.materialise`
+(`aistack.transaction.engines.selection_materialise`): this module decides,
+that one acts (`GOV-P-002`, `ADR-0027` § 11).
+"""
+
 from __future__ import annotations
 
 import os
 import threading
-from dataclasses import dataclass
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from aistack.kernel.catalog import Catalog
@@ -17,6 +27,14 @@ SYNC_ARTEFACTS = frozenset({".stfolder", ".stignore", ".stversions"})
 
 _TARGET_LOCKS_GUARD = threading.Lock()
 _TARGET_LOCKS: dict[str, threading.Lock] = {}
+
+
+@contextmanager
+def target_lock(target_root: Path) -> Iterator[None]:
+    """Hold the target's lock: see `_lock_for`."""
+
+    with _lock_for(target_root):
+        yield
 
 
 def _lock_for(target_root: Path) -> threading.Lock:
@@ -60,60 +78,122 @@ class MaterialisationReport:
     dry_run: bool = False
 
 
-def materialise_by_hardlink(
+@dataclass(frozen=True)
+class MaterialisationPlan:
+    """
+    What bringing the target to the selection takes: the files to link
+    (`linked`: absent; `relinked`: present but no longer the source's
+    inode), those to remove, and how many are right already. `desired`
+    gives each target path its source. When `refused` is non-empty, it
+    says why and nothing else is filled.
+    """
+
+    refused: str = ""
+    desired: dict[str, Path] = field(default_factory=dict)
+    linked: tuple[str, ...] = ()
+    relinked: tuple[str, ...] = ()
+    removed: tuple[str, ...] = ()
+    unchanged: int = 0
+
+
+def plan_materialisation(
     catalog: Catalog,
     resolution: SubtreeResolution,
     capacity: CapacityVerdict,
     target_root: Path,
     media_extensions: frozenset[str],
     preserve_names: frozenset[str] = SYNC_ARTEFACTS,
-    dry_run: bool = False,
-) -> MaterialisationReport:
+) -> MaterialisationPlan:
     """
-    Bring the target folder to exactly what the selection designates,
-    using hard links.
+    Read what bringing the target folder to exactly what the selection
+    designates, with hard links, takes. Writes nothing.
 
     Incremental: create what is missing, remove what is no longer
     designated, leave the rest untouched, so an unchanged selection
     causes no write for Syncthing to propagate. A file present in the
-    target is relinked when it no longer shares its source's inode (a
-    tag editor may replace a file instead of editing it in place).
+    target is to be relinked when it no longer shares its source's inode
+    (a tag editor may replace a file instead of editing it in place).
 
-    Refuses, writing nothing, when the selection exceeds `capacity`,
-    or when source and target are on different filesystems (hard links
-    cannot cross them, and the raw error would not say so). Runs under
-    a per-target lock (`_lock_for`).
+    Refuses when the selection exceeds `capacity`, or when source and
+    target are on different filesystems (hard links cannot cross them,
+    and the raw error would not say so).
     """
+
+    root = Path(catalog.metadata.get("root", ""))
+
+    refusal = _refuse(root, target_root, capacity)
+
+    if refusal:
+        return MaterialisationPlan(refused=refusal)
+
+    desired = _desired(catalog, resolution, media_extensions)
+
+    present = _present(target_root, preserve_names)
+
+    linked: list[str] = []
+    relinked: list[str] = []
+    unchanged = 0
+
+    for relative in sorted(desired):
+
+        if relative not in present:
+            linked.append(relative)
+
+        elif _same_file(desired[relative], target_root / relative):
+            unchanged += 1
+
+        else:
+            relinked.append(relative)
+
+    return MaterialisationPlan(
+        desired=desired,
+        linked=tuple(linked),
+        relinked=tuple(relinked),
+        removed=tuple(sorted(present - set(desired))),
+        unchanged=unchanged,
+    )
+
+
+def preview_materialisation(
+    catalog: Catalog,
+    resolution: SubtreeResolution,
+    capacity: CapacityVerdict,
+    target_root: Path,
+    media_extensions: frozenset[str],
+    preserve_names: frozenset[str] = SYNC_ARTEFACTS,
+) -> MaterialisationReport:
+    """The plan as a report (`dry_run`): what the screens show before anything is done."""
 
     with _lock_for(target_root):
 
-        root = Path(catalog.metadata.get("root", ""))
+        plan = plan_materialisation(
+            catalog, resolution, capacity, target_root, media_extensions, preserve_names
+        )
 
-        refusal = _refuse(root, target_root, capacity, dry_run)
+    if plan.refused:
+        return MaterialisationReport(refused=plan.refused, dry_run=True)
 
-        if refusal:
-            return MaterialisationReport(refused=refusal, dry_run=dry_run)
-
-        desired = _desired(catalog, resolution, media_extensions)
-
-        present = _present(target_root, preserve_names)
-
-        return _reconcile(desired, present, target_root, dry_run)
+    return MaterialisationReport(
+        linked=plan.linked,
+        relinked=plan.relinked,
+        removed=plan.removed,
+        unchanged=plan.unchanged,
+        dry_run=True,
+    )
 
 
 def _refuse(
     root: Path,
     target_root: Path,
     capacity: CapacityVerdict,
-    dry_run: bool,
 ) -> str:
     """
     Return why materialisation must not run, or `""`.
 
     Capacity is checked first, as the refusal a human can act on. The
     filesystem is compared against the target's nearest existing
-    ancestor, so a dry run checks it too and no directory is created
-    on a disk that could not hold the links.
+    ancestor, so the answer comes before any directory is created on a
+    disk that could not hold the links.
     """
 
     if not capacity.fits:
@@ -144,14 +224,6 @@ def _refuse(
             "and a hard link cannot cross one: "
             f"{root} and {target_root}"
         )
-
-    if not target_root.exists() and not dry_run:
-
-        try:
-            target_root.mkdir(parents=True)
-
-        except OSError as error:
-            return f"the target folder cannot be created: {error}"
 
     return ""
 
@@ -225,137 +297,9 @@ def _present(target_root: Path, preserve_names: frozenset[str]) -> set[str]:
     return present
 
 
-def _reconcile(
-    desired: dict[str, Path],
-    present: set[str],
-    target_root: Path,
-    dry_run: bool,
-) -> MaterialisationReport:
-    linked: list[str] = []
-    relinked: list[str] = []
-    removed: list[str] = []
-    failed: list[tuple[str, str]] = []
-    unchanged = 0
-
-    for relative in sorted(desired):
-
-        source = desired[relative]
-        target = target_root / relative
-
-        if relative in present:
-
-            if _same_file(source, target):
-                unchanged += 1
-                continue
-
-            relinked.append(relative)
-
-        else:
-            linked.append(relative)
-
-        if dry_run:
-            continue
-
-        error = _link(source, target)
-
-        if error:
-            failed.append((relative, error))
-
-    for relative in sorted(present - set(desired)):
-
-        removed.append(relative)
-
-        if dry_run:
-            continue
-
-        error = _unlink(target_root / relative)
-
-        if error:
-            failed.append((relative, error))
-
-    pruned = _prune(target_root, dry_run)
-
-    return MaterialisationReport(
-        linked=tuple(linked),
-        relinked=tuple(relinked),
-        removed=tuple(removed),
-        pruned=tuple(pruned),
-        unchanged=unchanged,
-        failed=tuple(failed),
-        dry_run=dry_run,
-    )
-
-
 def _same_file(source: Path, target: Path) -> bool:
     try:
         return source.stat().st_ino == target.stat().st_ino
 
     except OSError:
         return False
-
-
-def _link(source: Path, target: Path) -> str:
-    try:
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        if target.exists() or target.is_symlink():
-            target.unlink()
-
-        os.link(source, target)
-
-    except OSError as error:
-        return str(error)
-
-    return ""
-
-
-def _unlink(target: Path) -> str:
-    try:
-        target.unlink()
-
-    except OSError as error:
-        return str(error)
-
-    return ""
-
-
-def _prune(target_root: Path, dry_run: bool) -> list[str]:
-    """
-    Remove directories left empty, bottom-up, never the target root.
-
-    Skipped in a dry run (empty list). Emptiness is read from disk at
-    each visit, not from `os.walk`'s tuple: with `topdown=False` that
-    tuple still lists subdirectories already removed earlier in the
-    pass.
-    """
-
-    if dry_run:
-        return []
-
-    pruned: list[str] = []
-
-    for current, _subdirectories, _filenames in os.walk(
-        target_root, topdown=False
-    ):
-
-        if Path(current) == target_root:
-            continue
-
-        try:
-            if os.listdir(current):
-                continue
-
-        except OSError:
-            continue
-
-        relative = os.path.relpath(current, target_root)
-
-        pruned.append(relative)
-
-        try:
-            os.rmdir(current)
-
-        except OSError:
-            pruned.pop()
-
-    return pruned

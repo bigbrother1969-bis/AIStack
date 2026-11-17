@@ -35,7 +35,7 @@ def assess_capacity(
     """Weigh a resolution against the declared capacity.
 
     Pure, so the screen can show it before anything is written;
-    `materialise_by_hardlink` also takes the verdict to enforce it at write
+    the `selection.materialise` operation also takes the verdict to enforce it at write
     time. A declared capacity of zero or less means "not declared".
     """
 

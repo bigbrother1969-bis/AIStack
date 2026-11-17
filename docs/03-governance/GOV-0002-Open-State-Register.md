@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.27
+  version: 2.28
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -231,6 +231,9 @@ store, `sync/screen`, `arrivals/declare`, `instance/data_location`, then 6.3
 to 6.6.*
 *Commit 6.2 (selection), 2026-11-17: 30. The sync screen records the selection
 through `declaration.write`. Left: `arrivals/declare`, `instance/data_location`,
+then 6.3 to 6.6.*
+*Commit 6.2 (arrivals), 2026-11-17: 29. The container declared from the
+arrivals goes through `declaration.write`. Left: `instance/data_location`,
 then 6.3 to 6.6.*
 
 #### GOV-0002/OS-088 — `main` cites documents it does not hold

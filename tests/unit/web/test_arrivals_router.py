@@ -6,6 +6,7 @@ on the public port, and only an administrator writes.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -121,6 +122,20 @@ def test_declaring_writes_the_file_and_says_so(tmp_path: Path, paths: WebPaths):
     assert "koboldcpp" in text and "Ollama" in text
     assert list(paths.categorization.parent.glob("service_categorization.yml.avant-arrivals-*"))
     assert 'value="koboldcpp"' not in client(tmp_path, paths).get("/arrivals/?lang=en").text
+
+
+def test_declaring_records_who_declared_what(tmp_path: Path, paths: WebPaths):
+    noted(tmp_path)
+
+    client(tmp_path, paths).post(
+        "/arrivals/declare",
+        data={"container": "koboldcpp", "name": "KoboldCpp", "category": "IA", "description": ""},
+    )
+
+    record = json.loads((tmp_path / "generated" / "declaration-change.json").read_text(encoding="utf-8"))
+    assert record["path"] == str(paths.categorization)
+    assert record["author"] == "Tester"
+    assert "koboldcpp" in record["reason"]
 
 
 def test_declaring_in_a_new_category(tmp_path: Path, paths: WebPaths):

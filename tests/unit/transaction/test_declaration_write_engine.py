@@ -46,6 +46,17 @@ def test_a_changed_file_is_kept_beside_it_first(tmp_path: Path) -> None:
     assert result["before"] != result["after"]
 
 
+def test_a_label_is_part_of_the_copys_name(tmp_path: Path) -> None:
+    path = tmp_path / "a.yml"
+    path.write_text("old\n", encoding="utf-8")
+
+    _engine().execute(
+        DeclarationWrite(path=path, content="new\n", author="", reason="", copy_label="arrivals")
+    )
+
+    assert (tmp_path / "a.yml.avant-arrivals-20261117-190005").read_text(encoding="utf-8") == "old\n"
+
+
 def test_two_changes_in_the_same_second_keep_both_copies(tmp_path: Path) -> None:
     path = tmp_path / "a.yml"
     path.write_text("1\n", encoding="utf-8")

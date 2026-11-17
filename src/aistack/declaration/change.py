@@ -41,6 +41,7 @@ def write_declaration(
     content: str,
     author: str,
     reason: str,
+    copy_label: str = "",
 ) -> dict[str, object]:
     """
     Write `content` to `path` as one `declaration.write` operation; return
@@ -50,7 +51,9 @@ def write_declaration(
     operation = Operation(
         name=f"write {path.name}",
         kind=KIND,
-        payload=DeclarationWrite(path=path, content=content, author=author, reason=reason),
+        payload=DeclarationWrite(
+            path=path, content=content, author=author, reason=reason, copy_label=copy_label
+        ),
     )
     transaction = transactions.executor.execute(Transaction(operations=[operation]))
 

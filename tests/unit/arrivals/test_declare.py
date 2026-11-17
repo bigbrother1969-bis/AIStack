@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 
 import yaml
 
 from aistack.architecture.yaml import load_service_categorization_yaml
 from aistack.arrivals.declare import Outcome, declare_container
-
-NOW = datetime(2026, 11, 15, 12, 0, 0)
+from aistack.kernel.bootstrap.default import create_kernel
 
 FILE = """\
 # Mes services, à la main.
@@ -45,11 +43,10 @@ def declare(path: Path, **overrides: object) -> Outcome:
         "description": "Écriture « assistée »",
         "category": "IA",
         "new_category": False,
-        "now": NOW,
     }
     values.update(overrides)
 
-    return declare_container(path, **values)  # type: ignore[arg-type]
+    return declare_container(create_kernel().services.transactions, path.parent / "data", path, **values)  # type: ignore[arg-type]
 
 
 def containers(path: Path) -> dict[str, list[str]]:
@@ -76,7 +73,7 @@ def test_a_dated_copy_of_the_previous_file_is_kept(tmp_path: Path):
 
     declare(path)
 
-    copy = tmp_path / "service_categorization.yml.avant-arrivals-20261115-120000"
+    (copy,) = tmp_path.glob("service_categorization.yml.avant-arrivals-*")
     assert copy.read_text(encoding="utf-8") == FILE
 
 

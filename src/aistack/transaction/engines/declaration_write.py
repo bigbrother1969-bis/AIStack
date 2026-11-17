@@ -47,7 +47,7 @@ class DeclarationWriteEngine(OperationEngine):
             return {"path": str(path), "changed": False, "copy": "", "before": _digest(after), "after": _digest(after)}
 
         path.parent.mkdir(parents=True, exist_ok=True)
-        kept = self._keep(path) if before is not None else None
+        kept = self._keep(path, payload.copy_label) if before is not None else None
 
         temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
         try:
@@ -67,12 +67,13 @@ class DeclarationWriteEngine(OperationEngine):
             "after": _digest(after),
         }
 
-    def _keep(self, path: Path) -> Path:
+    def _keep(self, path: Path, label: str) -> Path:
         stamp = self._clock().strftime("%Y%m%d-%H%M%S")
-        copy = path.with_name(f"{path.name}.avant-{stamp}")
+        head = f"{path.name}.avant-{label}-{stamp}" if label else f"{path.name}.avant-{stamp}"
+        copy = path.with_name(head)
         suffix = 1
         while copy.exists():
-            copy = path.with_name(f"{path.name}.avant-{stamp}-{suffix}")
+            copy = path.with_name(f"{head}-{suffix}")
             suffix += 1
         shutil.copy2(path, copy)
         return copy

@@ -35,7 +35,6 @@
   ],
   "disk_writes_outside_a_transaction": [
     "src/aistack/api_keys/__init__.py",
-    "src/aistack/arrivals/declare.py",
     "src/aistack/arrivals/state.py",
     "src/aistack/cli/config_init.py",
     "src/aistack/cli/docker_diff_monitor.py",

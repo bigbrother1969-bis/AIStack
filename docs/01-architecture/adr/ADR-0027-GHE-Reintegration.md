@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.19
+  version: 1.20
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -454,6 +454,14 @@ person as author; the store renders the text (baseline 31 → 30).
 which is the service's own state and is declared exempt (§ 11) until it moves
 with `selection.materialise` (6.3). `selection/screen.save_and_materialise`,
 called by nothing, is deleted with its imports.
+
+**The container declared from the arrivals** (`arrivals/declare`): the text
+is still edited by hand-made insertion (the owner's comments and layout stay)
+and read by the real loader (`parse_service_categorization_yaml`) *before*
+anything is written; then it goes through `write_declaration`, which keeps
+the copy under the name the screen has always announced
+(`service_categorization.yml.avant-arrivals-<date>`, hence the payload's
+`copy_label`) and records who declared what (baseline 30 → 29).
 
 ## The refactoring plan of August 2026
 

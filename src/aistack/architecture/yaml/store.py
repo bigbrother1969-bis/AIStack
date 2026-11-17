@@ -25,8 +25,13 @@ def load_service_categorization_yaml(path: Path) -> ServiceCategorizationDefinit
     location.
     """
 
-    with path.open("r", encoding="utf-8") as stream:
-        data = yaml.safe_load(stream)
+    return parse_service_categorization_yaml(path.read_text(encoding="utf-8"), path)
+
+
+def parse_service_categorization_yaml(text: str, path: Path) -> ServiceCategorizationDefinition:
+    """The same, from the text; `path` names the file in the messages."""
+
+    data = yaml.safe_load(text)
 
     if not isinstance(data, dict):
         raise ValueError(f"Service categorization must contain a mapping: {path}")

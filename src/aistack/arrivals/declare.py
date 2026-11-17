@@ -3,25 +3,25 @@ Declare a container in `service_categorization.yml` on the owner's click.
 
 The file is the owner's, with comments and a layout of their own, so it
 is edited as text, never re-dumped: one service is inserted after the last
-service of its category (or a category is added at the end), a dated copy
-is kept beside the file, and the result is read back by the real loader
-before it replaces the original. If anything is off the original stays.
+service of its category (or a category is added at the end), the result is
+read by the real loader, and only then is it written through the Kernel's
+`declaration.write` (a dated copy is kept beside the file, the change is
+recorded). If anything is off the original stays.
 """
 
 from __future__ import annotations
 
 import enum
 import json
-import os
 import re
-import shutil
-from datetime import datetime
 from pathlib import Path
 
 import yaml
 
-from aistack.architecture.yaml import load_service_categorization_yaml
+from aistack.architecture.yaml import parse_service_categorization_yaml
 from aistack.arrivals.propose import service_lines
+from aistack.declaration import DeclarationNotWritten, write_declaration
+from aistack.kernel.services.transactions import TransactionServices
 
 CATEGORIES_LINE = re.compile(r"^categories:\s*(\[\s*\])?\s*(#.*)?$")
 ITEM = re.compile(r"^(\s*)-\s+name:")
@@ -36,6 +36,8 @@ class Outcome(enum.Enum):
 
 
 def declare_container(
+    transactions: TransactionServices,
+    generated_dir: Path,
     path: Path,
     *,
     name: str,
@@ -43,7 +45,7 @@ def declare_container(
     description: str,
     category: str,
     new_category: bool,
-    now: datetime,
+    author: str = "",
 ) -> Outcome:
     name, container, category = name.strip(), container.strip(), category.strip()
 
@@ -82,7 +84,15 @@ def declare_container(
     if edited is None:
         return Outcome.UNSUPPORTED
 
-    return _replace(path, text, "\n".join(edited), container, now)
+    return _write(
+        transactions,
+        generated_dir,
+        path,
+        "\n".join(edited),
+        container,
+        author,
+        f"arrivals: {container} declared in {category}",
+    )
 
 
 def _top(lines: list[str]) -> tuple[int, bool] | None:
@@ -183,24 +193,26 @@ def _last_content_line(lines: list[str], start: int, end: int) -> int:
     return max(index for index in range(start, end) if lines[index].strip() and not lines[index].lstrip().startswith("#"))
 
 
-def _replace(path: Path, before: str, after: str, container: str, now: datetime) -> Outcome:
+def _write(
+    transactions: TransactionServices,
+    generated_dir: Path,
+    path: Path,
+    after: str,
+    container: str,
+    author: str,
+    reason: str,
+) -> Outcome:
     if not after.endswith("\n"):
         after += "\n"
 
-    temporary = path.with_name(path.name + ".arrivals.tmp")
-
     try:
-        temporary.write_text(after, encoding="utf-8")
-        declared = load_service_categorization_yaml(temporary)
+        declared = parse_service_categorization_yaml(after, path)
 
         if not any(s.container == container for c in declared.categories for s in c.services):
             raise ValueError("the container is not in the edited file")
 
-        shutil.copy2(path, path.with_name(f"{path.name}.avant-arrivals-{now:%Y%m%d-%H%M%S}"))
-        os.replace(temporary, path)
-    except (OSError, ValueError, yaml.YAMLError):
-        temporary.unlink(missing_ok=True)
-
+        write_declaration(transactions, generated_dir, path, after, author, reason, copy_label="arrivals")
+    except (OSError, ValueError, yaml.YAMLError, DeclarationNotWritten):
         return Outcome.INVALID
 
     return Outcome.DECLARED

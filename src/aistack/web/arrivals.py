@@ -10,7 +10,6 @@ screen only shows the lines to add (ADR-0026).
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 
@@ -25,7 +24,7 @@ from aistack.arrivals.propose import host_block, suggested_description, suggeste
 from aistack.hosts.records import load_hosts_declaration
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
-from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY
+from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY, current_session
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
@@ -147,14 +146,17 @@ async def declare(request: Request) -> RedirectResponse:
     container = str(form.get("container", ""))
     category = str(form.get("new_category", "")) if new else chosen
 
+    session = current_session(request)
     outcome = declare_container(
+        request.app.state.kernel.services.transactions,
+        request.app.state.generated_dir,
         request.app.state.paths.categorization,
         name=str(form.get("name", "")),
         container=container,
         description=str(form.get("description", "")),
         category=category,
         new_category=new,
-        now=datetime.now(),
+        author=(session.name or session.subject) if session is not None else "",
     )
 
     return _back(t(STATUS_KEYS[outcome], name=str(form.get("name", "")).strip() or container, category=category.strip()))

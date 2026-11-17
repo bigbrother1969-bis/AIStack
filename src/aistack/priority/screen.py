@@ -13,6 +13,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from aistack.kernel.bootstrap import registered_providers
+from aistack.kernel.registries import ProviderRegistry
 from aistack.priority.definition import (
     BackgroundPriorityDefinition,
     ContainerPriorityDefinition,
@@ -26,16 +27,22 @@ from aistack.priority.discovery import DiscoveredContainer, resolve_discovered_c
 Discover = Callable[[], tuple[DiscoveredContainer, ...]]
 
 
-def discover_containers() -> tuple[DiscoveredContainer, ...]:
+def discover_containers(
+    providers: ProviderRegistry | None = None,
+) -> tuple[DiscoveredContainer, ...]:
     """
     What Docker reports right now, or nothing if the daemon is unreachable.
+
+    Reads through `providers` when given: the web application hands it
+    the registry of its own Kernel instead of booting one per call
+    (ADR-0027 § 9).
 
     The provider registered as `docker` raises when the daemon is down; this
     call absorbs it so the screen still shows the saved classification.
     """
 
     try:
-        return resolve_discovered_containers(registered_providers().collecting("docker").collect())
+        return resolve_discovered_containers(registered_providers(providers).collecting("docker").collect())
     except subprocess.CalledProcessError:
         return ()
 

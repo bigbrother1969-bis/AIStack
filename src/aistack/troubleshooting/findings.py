@@ -106,7 +106,9 @@ class QualifiedFinding(NamedTuple):
         return self.domain in APPLYABLE_DOMAINS
 
 
-def qualified_findings() -> tuple[tuple[QualifiedFinding, ...], str]:
+def qualified_findings(
+    providers: ProviderRegistry | None = None,
+) -> tuple[tuple[QualifiedFinding, ...], str]:
     """
     Every finding the assistant can guide someone through: the CPU
     consumption check plus every domain of `build_cockpit`, each tagged
@@ -115,8 +117,9 @@ def qualified_findings() -> tuple[tuple[QualifiedFinding, ...], str]:
     `note` is set only when the consumption check could not run at all.
     """
 
-    # One Kernel for the consumption check and the whole cockpit.
-    providers = registered_providers()
+    # One Kernel for the consumption check and the whole cockpit: the one
+    # given (the web application's own), else one booted for the occasion.
+    providers = registered_providers(providers)
 
     consumption_findings, note = _consumption_findings(providers)
     cockpit = build_cockpit(socket.gethostname(), providers)

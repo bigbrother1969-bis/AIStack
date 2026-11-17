@@ -15,6 +15,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
+from functools import partial
 from typing import Any
 
 from fastapi import FastAPI, Request, Response
@@ -109,10 +110,10 @@ def create_app(
     listeners: Listeners,
     languages: Languages | None = None,
     paths: WebPaths | None = None,
-    discover: Discover = discover_containers,
+    discover: Discover | None = None,
     syncthing: SyncthingStatus = read_syncthing,
     kernel: Any = None,
-    collect_findings: CollectFindings = qualified_findings,
+    collect_findings: CollectFindings | None = None,
     ask_ai: AskAI = ask_ai_runtime,
     destination: Callable[[], tuple[str, str]] = ai_destination,
     run_in_background: Callable[[Callable[[], None]], Any] | None = None,
@@ -152,12 +153,19 @@ def create_app(
     app.state.languages = languages if languages is not None else default_languages()
     app.state.paths = paths if paths is not None else WebPaths()
     # Host-touching collaborators (ADR-0012 § 4): what Docker reports.
-    app.state.discover_containers = discover
+    # By default through the providers of this application's own Kernel,
+    # not a Kernel booted per call (ADR-0027 § 9).
+    app.state.kernel = kernel if kernel is not None else create_kernel()
+    providers = app.state.kernel.registries.providers
+    app.state.discover_containers = (
+        discover if discover is not None else partial(discover_containers, providers)
+    )
     # ... and what Syncthing reports for the Selection folder.
     app.state.syncthing = syncthing
-    app.state.kernel = kernel if kernel is not None else create_kernel()
     # ... the host's findings and the AI runtime, for the assistant.
-    app.state.collect_findings = collect_findings
+    app.state.collect_findings = (
+        collect_findings if collect_findings is not None else partial(qualified_findings, providers)
+    )
     app.state.ask_ai = ask_ai
     # Where the AI's question goes, shown before the click.
     app.state.ai_destination = destination

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.10
+  version: 1.11
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -219,6 +219,14 @@ service is already in `KernelServices` (`ADR-0019` § 6), and the Capability
 Model (`ARCH-0012`, Draft, at the tag) has open points no case settles.
 Lot 4 is the providers.
 
+**The web application** (5.8, 2026-11-17) boots one Kernel when it starts
+(`app.state.kernel`) and reads through its providers: the screens that read
+Docker (the priority screen's discovery) and the assistant's findings take
+that registry, where each call used to boot a Kernel of its own. A
+collaborator injected into `create_app` still replaces the default, as the
+tests do. The web application executes no Task: no trace is written by a
+page view, and the volume of traces stays an open point until one does.
+
 ### 10. Chains run through the Kernel as Tasks
 
 Decided by the owner, 2026-11-16, at the opening of lot 5. A chain passes
@@ -370,4 +378,5 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
 - The volume of the traces, to measure on the host after a few days of the
-  health chain, before the web application runs chains (5.8).
+  chains, before the web application executes a Task: lot 5.8 passes it its
+  Kernel's providers and executes none.

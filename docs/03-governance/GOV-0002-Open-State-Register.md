@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.17
+  version: 2.18
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -248,6 +248,10 @@ that produce no artifact, is declared exempt too (`ADR-0027` § 10). Lot 5.7 is
 closed: 17 of 25 entry points do not build the Kernel, of which the permanent
 monitors and the exempt commands are declared; what is left of this entry is
 5.8 to 5.10.*
+*Commit 5.8, 2026-11-17: the web application reads Docker (priority screen)
+and the assistant's findings through the providers of its own Kernel, not one
+booted per call (`ADR-0027` § 9). It runs no Task, so no trace per view. The
+2.0.0 image does not carry it until the next one is published.*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 

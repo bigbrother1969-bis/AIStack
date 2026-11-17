@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.22
+  version: 2.23
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -198,73 +198,6 @@ None open.
 
 # Non-conforming instances
 
-#### GOV-0002/OS-086 — Entry points run without the Kernel, and the one registered Task is never executed
-
-**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
-**Observed** `python scripts/ghe_audit.py`: 22 of the 25 entry points import
-nothing from `aistack.kernel`; no module outside the Kernel imports its
-execution, resolution or tasks packages. `kernel/runtime` was removed on
-2026-10-10 (`19e73a6`). `ARC-P-002`.
-*Lot 4, 2026-11-15: ten files of application code build a provider
-themselves, 23 pairs of a file and a provider (`ADR-0027` § 9). The health,
-console and troubleshooting chains and the priority screen ask the Kernel for
-theirs since that day: 19 of 25 entry points, 7 pairs. The 7 are the
-providers configured at each use, which stay with their caller by decision
-and stay reported. Building the Kernel to ask it for a provider is not yet
-running through it: no Task is executed. Lot 4 is complete; what is left of
-this entry is lot 5.*
-*Commit 5.3, 2026-11-17: `kernel/runtime` returns from the tag (four files,
-reduced to resolve, execute, trace, keep the trace) and the health chain is
-the first Task it executes, `health.render`. `docker.discover` leaves
-`registrations.yml`. The measure *A registered Task is never executed* reads
-none; 19 of 25 entry points still do not build the Kernel (the health
-command already did). The chains left are 5.4 to 5.7.*
-*Commit 5.4, 2026-11-17: the architecture chain is the second Task the
-Runtime executes, `architecture.render`. The two providers it configures at
-use (Beszel, HTTP probes) are built in the Task and not in the command: two
-entries of the baseline are renamed, seven pairs still (`ADR-0027` § 4).
-The chains left are 5.5 to 5.7.*
-*Commit 5.5, 2026-11-17: the console chain is the third Task the Runtime
-executes, `console.render`. The console command already asked the Kernel for
-its providers, so 19 of 25 entry points still do not build it, and seven
-pairs remain. The chains left are 5.6 and 5.7.*
-*Commit 5.6, 2026-11-17: the Time Machine chain is the fourth Task the Runtime
-executes, `timemachine.rebuild`. Its command did not build the Kernel: 18 of 25
-entry points now do not. Its trace is written in the data directory the
-command is given, beside the streams the graph is rebuilt from. The chains left
-are `network_docker_discover`, `hosts` and `data_budget`, one by one (5.7).*
-*Commit 5.7a, 2026-11-17: `network_docker_discover` is the fifth Task the
-Runtime executes, `network_docker.discover`. 17 of 25 entry points do not build
-the Kernel. Its provider, configured at use, is built in the Task, as at 5.4:
-the baseline entry is renamed, seven pairs still. The SSH key path is read from
-the environment by the Task, never carried by the request. Left: `hosts` and
-`data_budget`.*
-*Decision 5.7, 2026-11-17: `hosts`, a read-only status command like
-`healthcheck`, is declared exempt (`ADR-0027` § 10); it stays in the audit's
-list of entry points that do not build the Kernel, as the other exempt
-commands do. Left: `data_budget`.*
-*Decision 5.7b, 2026-11-17: `data_budget`, a measure and a compression action
-that produce no artifact, is declared exempt too (`ADR-0027` § 10). Lot 5.7 is
-closed: 17 of 25 entry points do not build the Kernel, of which the permanent
-monitors and the exempt commands are declared; what is left of this entry is
-5.8 to 5.10.*
-*Commit 5.10, 2026-11-17: the audit reads *A registered Task is never executed*
-Task by Task and measures a new departure, *An entry point builds the Kernel
-and never executes through the Runtime*: `ai_reason`, `dock` and the web
-application (3). Each is to be decided by the owner: converted, or declared
-exempt like the commands above.*
-*Commit 5.10b, 2026-11-17, decisions of the owner: `ai_reason` becomes the sixth
-Task the Runtime executes, `ai.reason`; `dock` is declared exempt (an action
-command through the Kernel's transaction); the web application is a declared
-exception until a screen executes a Task (`ADR-0027` § 10). The new measure
-reads 2: `dock` and the web application.*
-*Commit 5.8, 2026-11-17: the web application reads Docker (priority screen)
-and the assistant's findings through the providers of its own Kernel, not one
-booted per call (`ADR-0027` § 9). It runs no Task, so no trace per view. The
-2.0.0 image does not carry it until the next one is published.*
-**Derivable** yes
-**Qualification** to conform, in lot 5.
-
 #### GOV-0002/OS-087 — The disk is written outside a transaction
 
 **Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
@@ -293,6 +226,9 @@ not in the tree*; the list is `tests/reference/ghe_audit_baseline.json`.
 the tag* and is no longer reported; the architecture documents return with
 the lot that brings their code back. What remains reported is those, and
 `OS-092`.
+*Commit 5.12, 2026-11-17: `ARCH-0002`, `ARCH-0007`, `ARCH-0010` and `ARCH-0012`
+return, revised; 8 cited and absent, then 4. `ADR-0005` to `ADR-0007` and
+`ARCH-0013` stay reported until lot 8 (`ADR-0027` § 5).*
 
 ---
 
@@ -416,6 +352,78 @@ from the tag when the selection screen displays it, in lot 5 (`ADR-0027`).
 Until then 3.2 stays *not verifiable in `main`*. It is not restored before
 something calls it.
 *Commit 5.9, 2026-11-17: `aistack.selection.explanation` and its seven tests come back from the tag, and the selection screen (`aistack.sync.screen.page_context`, template `selection/index.html`) names on each line, in the language of the page, the rule that decided the item: ticked, redundant, inherited, excluded. `STD-0300` still reads 3.2 as not verifiable in `main`; it is brought up to date with the re-run of lot 5.11, as the standard's own requalification.*
+
+#### GOV-0002/OS-086 — Entry points run without the Kernel, and the one registered Task is never executed
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** resolved 2026-11-17 by commit 5.12
+**Observed** `python scripts/ghe_audit.py`: 22 of the 25 entry points import
+nothing from `aistack.kernel`; no module outside the Kernel imports its
+execution, resolution or tasks packages. `kernel/runtime` was removed on
+2026-10-10 (`19e73a6`). `ARC-P-002`.
+*Lot 4, 2026-11-15: ten files of application code build a provider
+themselves, 23 pairs of a file and a provider (`ADR-0027` § 9). The health,
+console and troubleshooting chains and the priority screen ask the Kernel for
+theirs since that day: 19 of 25 entry points, 7 pairs. The 7 are the
+providers configured at each use, which stay with their caller by decision
+and stay reported. Building the Kernel to ask it for a provider is not yet
+running through it: no Task is executed. Lot 4 is complete; what is left of
+this entry is lot 5.*
+*Commit 5.3, 2026-11-17: `kernel/runtime` returns from the tag (four files,
+reduced to resolve, execute, trace, keep the trace) and the health chain is
+the first Task it executes, `health.render`. `docker.discover` leaves
+`registrations.yml`. The measure *A registered Task is never executed* reads
+none; 19 of 25 entry points still do not build the Kernel (the health
+command already did). The chains left are 5.4 to 5.7.*
+*Commit 5.4, 2026-11-17: the architecture chain is the second Task the
+Runtime executes, `architecture.render`. The two providers it configures at
+use (Beszel, HTTP probes) are built in the Task and not in the command: two
+entries of the baseline are renamed, seven pairs still (`ADR-0027` § 4).
+The chains left are 5.5 to 5.7.*
+*Commit 5.5, 2026-11-17: the console chain is the third Task the Runtime
+executes, `console.render`. The console command already asked the Kernel for
+its providers, so 19 of 25 entry points still do not build it, and seven
+pairs remain. The chains left are 5.6 and 5.7.*
+*Commit 5.6, 2026-11-17: the Time Machine chain is the fourth Task the Runtime
+executes, `timemachine.rebuild`. Its command did not build the Kernel: 18 of 25
+entry points now do not. Its trace is written in the data directory the
+command is given, beside the streams the graph is rebuilt from. The chains left
+are `network_docker_discover`, `hosts` and `data_budget`, one by one (5.7).*
+*Commit 5.7a, 2026-11-17: `network_docker_discover` is the fifth Task the
+Runtime executes, `network_docker.discover`. 17 of 25 entry points do not build
+the Kernel. Its provider, configured at use, is built in the Task, as at 5.4:
+the baseline entry is renamed, seven pairs still. The SSH key path is read from
+the environment by the Task, never carried by the request. Left: `hosts` and
+`data_budget`.*
+*Decision 5.7, 2026-11-17: `hosts`, a read-only status command like
+`healthcheck`, is declared exempt (`ADR-0027` § 10); it stays in the audit's
+list of entry points that do not build the Kernel, as the other exempt
+commands do. Left: `data_budget`.*
+*Decision 5.7b, 2026-11-17: `data_budget`, a measure and a compression action
+that produce no artifact, is declared exempt too (`ADR-0027` § 10). Lot 5.7 is
+closed: 17 of 25 entry points do not build the Kernel, of which the permanent
+monitors and the exempt commands are declared; what is left of this entry is
+5.8 to 5.10.*
+*Commit 5.10, 2026-11-17: the audit reads *A registered Task is never executed*
+Task by Task and measures a new departure, *An entry point builds the Kernel
+and never executes through the Runtime*: `ai_reason`, `dock` and the web
+application (3). Each is to be decided by the owner: converted, or declared
+exempt like the commands above.*
+*Commit 5.10b, 2026-11-17, decisions of the owner: `ai_reason` becomes the sixth
+Task the Runtime executes, `ai.reason`; `dock` is declared exempt (an action
+command through the Kernel's transaction); the web application is a declared
+exception until a screen executes a Task (`ADR-0027` § 10). The new measure
+reads 2: `dock` and the web application.*
+*Commit 5.8, 2026-11-17: the web application reads Docker (priority screen)
+and the assistant's findings through the providers of its own Kernel, not one
+booted per call (`ADR-0027` § 9). It runs no Task, so no trace per view. The
+2.0.0 image does not carry it until the next one is published.*
+**Derivable** yes
+**Qualification** to conform, in lot 5. Discharged: the chains that produce an
+artifact run through the Runtime as Tasks with a durable trace (six); what does
+not is declared in `ADR-0027` § 10 and measured by `scripts/ghe_audit.py`, which
+can only get shorter. *Commit 5.12, 2026-11-17: the architecture documents of
+the Kernel and its concepts (`ARCH-0002`, `ARCH-0007`, `ARCH-0010`,
+`ARCH-0012`) return from the tag, revised against `main`; the entry closes.*
 
 #### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
 

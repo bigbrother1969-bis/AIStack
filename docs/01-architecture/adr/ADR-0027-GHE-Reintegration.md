@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.14
+  version: 1.15
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -141,6 +141,14 @@ The architecture documents of the Kernel and of its concepts
 the tag) return revised with lots 3 to 5, and `ADR-0005` to `ADR-0007`
 and `ARCH-0013` with lot 8: they describe code
 that is at the tag, and return when the code they describe does.
+
+**Returned on 2026-11-17 (5.12):** `ARCH-0002`, `ARCH-0007`, `ARCH-0010` and
+`ARCH-0012`, revised against `main`: each says what the code holds, with its
+provenance. `ARCH-0002` and `ARCH-0007` are rewritten (components, extension
+points and registries as they are today); `ARCH-0010` and `ARCH-0012` keep
+their principles and gain a dated status. No returning document cites one that
+is still at the tag: the baseline of cited and absent documents falls from 8
+to 4 and gains nothing.
 
 ### 6. No abstraction without a present case
 
@@ -403,8 +411,9 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 
 ## Open points
 
-- How the nine criteria of `STD-0300` are re-run on 2.0.0
-  (`GOV-0002/OS-091`).
+- Of the nine criteria of `STD-0300` named by `GOV-0002/OS-091`, three (4.4,
+  4.5, 4.9) were re-run on 2.0.0 on 2026-11-17; 1.1 to 1.4, 4.2 and 4.8 have no
+  chain to re-run through (`STD-0300` § *Re-run on 2.0.0*).
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
 - The volume of the traces, to measure on the host after a few days of the

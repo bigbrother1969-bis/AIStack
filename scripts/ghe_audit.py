@@ -60,6 +60,43 @@ GENERIC = (
     "aistack.history",
     "aistack.generators.history",
 )
+# What is written outside a transaction on purpose. `ADR-0027` § 11 reads
+# each of these files and the owner declared them exempt on 2026-11-17: what
+# they write is not a person's knowledge, and no person's choice triggers it.
+# A file is added here only by a decision recorded in that ADR; the audit
+# lists them apart so that what is left to do reads on its own.
+STATE = "the state a service keeps for itself"
+LOCK = "a process lock"
+INSTALLATION = "the installation"
+MAINTENANCE = "the maintenance"
+EXEMPT_WRITES = {
+    "src/aistack/api_keys/__init__.py": "the API keys: no secret in a payload or a trace",
+    "src/aistack/arrivals/state.py": STATE,
+    "src/aistack/cli/config_init.py": INSTALLATION,
+    "src/aistack/cli/docker_diff_monitor.py": STATE,
+    "src/aistack/cli/docker_digest_monitor.py": STATE,
+    "src/aistack/cli/docker_events_monitor.py": STATE,
+    "src/aistack/cli/docker_packages_monitor.py": STATE,
+    "src/aistack/cli/sync_apply.py": LOCK,
+    "src/aistack/data_budget/budget.py": MAINTENANCE,
+    "src/aistack/dock/executor.py": LOCK,
+    "src/aistack/dock/proposals.py": STATE,
+    "src/aistack/explications/human.py": MAINTENANCE,
+    "src/aistack/generators/filesystem/yaml/store.py": STATE,
+    "src/aistack/generators/history.py": "the recognised writer of generated artifacts",
+    "src/aistack/host_collector.py": STATE,
+    "src/aistack/instance/declarations.py": INSTALLATION,
+    "src/aistack/instance/first_start.py": INSTALLATION,
+    "src/aistack/instance/setup_wizard.py": INSTALLATION,
+    "src/aistack/pra/scheduled.py": STATE,
+    "src/aistack/providers/docker/digest_history.py": STATE,
+    "src/aistack/restart_watch/guard.py": STATE,
+    "src/aistack/restart_watch/journal.py": STATE,
+    "src/aistack/sandbox/run.py": STATE,
+    "src/aistack/sync/screen.py": STATE,
+    "src/aistack/vigil/notify.py": STATE,
+    "src/aistack/vigil/snapshot.py": STATE,
+}
 # The audit's own test names identifiers that exist only in its fixtures.
 OWN_TEST = "tests/unit/scripts/test_ghe_audit.py"
 READ = ("src", "tests", "docs", "scripts", "README.md")
@@ -319,11 +356,15 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     # Writing a generated artifact is legitimate (ENG-P-003); telling it
     # from a modification of knowledge is a reading, done in lot 6. What
     # is measured is where the disk is written outside `transaction`.
-    writers = sorted(
+    # Declared exempt (`ADR-0027` § 11) is listed apart: what is left to do
+    # is what remains.
+    writing = sorted(
         _relative(root, path)
         for path, tree in trees.items()
         if not inside(path, "transaction") and _writes(tree)
     )
+    writers = [name for name in writing if name not in EXEMPT_WRITES]
+    exempt = [f"{name} ({EXEMPT_WRITES[name]})" for name in writing if name in EXEMPT_WRITES]
 
     # FDN-P-005, FDN-P-006 - the principles have one governed place, and
     # it is read where the work is done.
@@ -351,6 +392,7 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
         "registered_tasks_never_executed": unexecuted,
         "providers_built_by_application_code": built,
         "disk_writes_outside_a_transaction": writers,
+        "disk_writes_declared_exempt": exempt,
         "principles_missing_from_the_tree": missing,
         "documents_cited_and_absent": sorted(cited_documents - present - _kept_at_the_tag(root)),
         "principles_cited_and_not_registered": sorted(cited_principles - registered) if registered else [],
@@ -381,6 +423,10 @@ TITLES = {
     "disk_writes_outside_a_transaction": (
         "GOV-P-002, ARC-P-012",
         "The disk is written outside a transaction",
+    ),
+    "disk_writes_declared_exempt": (
+        "GOV-P-002",
+        "The disk is written outside a transaction and the owner declared it exempt (ADR-0027 § 11)",
     ),
     "principles_missing_from_the_tree": (
         "FDN-P-005, FDN-P-006",

@@ -208,6 +208,32 @@ def test_writing_the_disk_outside_a_transaction_is_a_departure(tmp_path: Path) -
     ]
 
 
+def test_a_write_declared_exempt_is_listed_apart(tmp_path: Path) -> None:
+    root = _tree(
+        tmp_path,
+        {
+            "vigil/snapshot.py": "def f(p):\n    p.write_text('x')\n",
+            "vigil/reads.py": "def f(p):\n    return p.read_text()\n",
+            "a/text.py": "def f(p):\n    p.write_text('x')\n",
+        },
+    )
+
+    measured = _audit().measure(root)
+
+    assert measured["disk_writes_outside_a_transaction"] == ["src/aistack/a/text.py"]
+    assert measured["disk_writes_declared_exempt"] == [
+        "src/aistack/vigil/snapshot.py (the state a service keeps for itself)"
+    ]
+
+
+def test_every_exemption_is_still_a_write_and_nothing_is_left_to_do() -> None:
+    audit = _audit()
+    measured = audit.measure(ROOT)
+
+    assert len(measured["disk_writes_declared_exempt"]) == len(audit.EXEMPT_WRITES)
+    assert measured["disk_writes_outside_a_transaction"] == []
+
+
 def test_the_registry_in_the_tree_is_not_a_departure(tmp_path: Path) -> None:
     audit = _audit()
     root = _tree(tmp_path, {"__init__.py": ""})

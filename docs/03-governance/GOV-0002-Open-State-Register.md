@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.31
+  version: 2.32
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -243,6 +243,9 @@ to 6.6.*
 `cli/sync_apply` is exempt like `dock` (owner's decision). Left: 6.4 to 6.6.*
 *Commit 6.4, 2026-11-17: 26. `generators/filesystem/copy` (dead code) is
 deleted. Left: 6.5 and 6.6.*
+*Commit 6.5, 2026-11-17: nothing is left to do. The audit lists apart the 26
+files declared exempt (`ADR-0027` § 11) and the measure of this item is empty.
+Left: 6.6, the closing and the check in a container.*
 
 #### GOV-0002/OS-088 — `main` cites documents it does not hold
 

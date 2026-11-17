@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.23
+  version: 1.24
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -435,6 +435,16 @@ nothing in `src` or in the tests called either, and the definition of the
 phone selection had already dropped the former on purpose). The maintenance
 writes of § 11 (`data_budget/budget`, the purge of explanations) are exempt
 and unchanged. Baseline 27 → 26.
+
+**Commit 6.5, 2026-11-17.** The audit separates what is declared exempt from
+what is left to do. `scripts/ghe_audit.py` holds the list of exempt files with
+the reason of each (`EXEMPT_WRITES`, the categories above); the measure
+`disk_writes_outside_a_transaction` is what remains and is empty, and the new
+measure `disk_writes_declared_exempt` lists the 26 files that still write on
+purpose. Both are held by the baseline: a write in a file that is not declared
+fails the suite; so does an exemption whose file no longer writes. Declaring a
+new exemption is a change of that list, with its reason, and a line in this
+section.
 
 **Commit 6.2, 2026-11-17: `declaration.write`.** The operation is registered
 at the Kernel's bootstrap (`aistack.transaction.engines.declaration_write`).

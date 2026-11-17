@@ -69,6 +69,7 @@ STATE = "the state a service keeps for itself"
 LOCK = "a process lock"
 INSTALLATION = "the installation"
 MAINTENANCE = "the maintenance"
+PROJECTION = "the projection, generated whole and never edited"
 EXEMPT_WRITES = {
     "src/aistack/api_keys/__init__.py": "the API keys: no secret in a payload or a trace",
     "src/aistack/arrivals/state.py": STATE,
@@ -79,6 +80,9 @@ EXEMPT_WRITES = {
     "src/aistack/cli/docker_packages_monitor.py": STATE,
     "src/aistack/cli/sync_apply.py": LOCK,
     "src/aistack/data_budget/budget.py": MAINTENANCE,
+    "src/aistack/context_bundle/export/bundle_exporter.py": PROJECTION,
+    "src/aistack/context_bundle/export/markdown_bundle_exporter.py": PROJECTION,
+    "src/aistack/context_bundle/export/zip_bundle_exporter.py": PROJECTION,
     "src/aistack/dock/executor.py": LOCK,
     "src/aistack/dock/proposals.py": STATE,
     "src/aistack/explications/human.py": MAINTENANCE,

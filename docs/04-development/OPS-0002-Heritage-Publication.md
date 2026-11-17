@@ -1,3 +1,10 @@
+---
+artifact:
+  id: OPS-0002
+  title: Publication
+  version: '2.0'
+---
+
 # OPS-0002 — Publication
 
 *Version 2.0, 2026-10-10: condensed for 2.0.0 (prepared as 2.0.0-rc2, never

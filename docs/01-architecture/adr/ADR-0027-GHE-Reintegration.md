@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.35
+  version: 1.36
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -675,6 +675,40 @@ quarantine's `inspecting()` (the quarantine of `OPS-0012` is not in `main`), and
 two tests changed: `test_the_integrity_checks_satisfy_their_contract` comes
 back with the checks (8.3), and the file the repository test looks for is
 `kernel/bootstrap/registrations.py` (the tag had `providers.py`).
+
+**Commit 8.2b, 2026-11-17: the Context Bundle engine and the export script
+return.** `aistack.context_bundle` (discovery, eligibility, builders, registry,
+generation, manifest, export, `engine`, `service`) with seven contracts
+(`context_bundle`, `context_bundle_builder`, `context_bundle_engine`,
+`context_bundle_service`, `bundle_manifest`, `bundle_exporter`,
+`bundle_export_manager`), `manifest_serializer`, and `scripts/export_project_sources.py`
+with their tests (67 more in the suite). Four decisions, written here:
+
+- *The transfer is not there.* The script no longer imports the SSH transfer;
+  `service` keeps its optional `transfer_service`, and the one-method contract
+  `context_bundle_transfer_service` comes with it because the service and its
+  isolation tests name it. Whether `transfer/` returns is 8.2c, and depends on
+  whether the owner still pushes the bundle to another machine.
+- *The export writes the projection, and that is declared exempt* (the
+  category `PROJECTION`, three files: the JSON, Markdown and zip exporters).
+  § 11 says the principle governs a modification of knowledge and what a
+  person's choice triggers on the host; the bundle is a derived projection,
+  written whole at each run and never edited, as `generators/history` is
+  for generated artifacts. Baseline `disk_writes_declared_exempt` 26 → 29,
+  `disk_writes_outside_a_transaction` stays empty. This is a declaration of
+  the owner's list, made here for him to confirm by applying the patch.
+- *`OPS-0002` had lost its frontmatter* when it was condensed for 2.0.0, so the
+  bundle carried it as `unknown` beside the README and refused two artifacts
+  without an identifier (`Knowledge artifact already registered: unknown`).
+  It declares now `id`, `title` and `version`; its domain, criticality and
+  owner are the owner's to qualify (FDN-0003 Article 4), they read `unknown`.
+- *The export test writes elsewhere than in the repository.* The script's
+  `AISTACK_BUNDLE_OUTPUT_DIR` is used by the test, which also checks that no
+  `context/` appears in the tree.
+
+Two tests wait for 8.3 because they read the bundle with
+`aistack.integrity.bundle_reader`: `test_contract_inventory_travels` and
+`test_identity_survives_the_projection`.
 
 ## The refactoring plan of August 2026
 

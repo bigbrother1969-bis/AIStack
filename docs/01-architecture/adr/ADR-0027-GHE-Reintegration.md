@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.37
+  version: 1.38
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -749,6 +749,33 @@ domain, semantic type or criticality (`OPS-0002` since 8.2b, to qualify by the
 owner), plus 4 accepted decisions without a readable implementation state. The
 observations are the facts the checks state (13 of 32 contracts satisfied by
 no class, 13 references designating no artifact, 88 undated assertions).
+
+**Commit 8.4, 2026-11-17: the Knowledge Acquisition Protocol is written; there
+is no Boot Report code to return.** The tag, listed by the owner for `boot`,
+`acquisition`, `protocol`, `kap` and `onboard`, holds no program that produces a
+Boot Report: only `FDN-0009`, already in `main`, the Kernel's bootstrap, and a
+session note. The Boot Report was always a document an agent writes after
+reading the bundle (`STD-0300` § VS-2, criteria 2.1 to 2.3), and the Context
+Engine of the August plan was never built. So 8.4 is writing, not returning:
+`FDN-0013 — Knowledge Acquisition Protocol`, a Foundation concept, `Draft`
+v0.1, indexed in `FDN-0001`. It holds the five principles, the two points of
+truth (Governance SPOT, Acquisition SPOT), the seven acquisition states, what
+the protocol produces (an Operational Context, no recommendation) and the Boot
+Report in eight sections with the rules `FDN-0009` already records. It says what
+implements it today (the bundle and the integrity Task; the agent does the
+rest) and that the Context Engine is not built.
+
+It is a proposal of the assistant, to be validated by the owner (`GOV-P-001`):
+four open points are written in it, none decided: the rule that makes a verdict
+NOT READY, where an agent finds the protocol (the bundle's README presents the
+product and does not point to it, and `FDN-0009` still says acquisition belongs
+to an "AI Boot section of the README" that `main` does not have), the
+qualification of the document, and criterion 2.4. `FDN-0009`, `Published`, is
+left unchanged: correcting its sentence is the owner's decision with the
+document's engraving. Measured: the bundle now carries 61 artifacts and the
+integrity check still reports 0 blocking and 15 warnings (the new document is
+complete); `clean: True` (criterion 2.6) needs those 15 warnings answered, which
+is for 8.6.
 
 ## The refactoring plan of August 2026
 

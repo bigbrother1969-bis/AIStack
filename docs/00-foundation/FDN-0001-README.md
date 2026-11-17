@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.3
+  version: 1.4
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-11-15
+  updated: 2026-11-17
 
 relations:
   references:
@@ -19,6 +19,7 @@ relations:
     - FDN-0003
     - FDN-0004
     - FDN-0012
+    - FDN-0013
 ---
 
 # AIStack Foundation
@@ -136,6 +137,7 @@ In `main`, under `docs/00-foundation/`:
 | FDN-0010 | The Project Working Invariants |
 | FDN-0011 | Contract-Based Engineering |
 | FDN-0012 | The Principles Registry |
+| FDN-0013 | The Knowledge Acquisition Protocol (Draft, 2026-11-17) |
 | ENG-TEST-0001 | Mandatory unit testing |
 | ENG-TEST-0002 | The declared execution environment |
 

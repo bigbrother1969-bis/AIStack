@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.23
+  version: 2.24
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -213,6 +213,14 @@ links in the public directory and its index go through `ensure_link` and
 **Derivable** yes for the list; no for telling a generated artifact
 (`ENG-P-003`) from a modification of knowledge — that is a reading.
 **Qualification** unknown until that reading is done, in lot 6.
+*Commit 6.1, 2026-11-17: the reading is done, file by file
+(`claude/INVENTAIRE-2026-11-17-ecritures-lot-6.md`). Decided by the owner
+(`ADR-0027` § 11): seven writes go through a transaction (the declarations a
+person changes from a screen, and the materialisation of a selection), one is
+deleted (`generators/filesystem/copy`, dead code), and 25 are declared exempt
+(the state a service keeps for itself, the process locks, the installation,
+the maintenance, the recognised writer of generated artifacts, and the API
+keys: no secret in a payload or a trace). Left: 6.2 to 6.6.*
 
 #### GOV-0002/OS-088 — `main` cites documents it does not hold
 

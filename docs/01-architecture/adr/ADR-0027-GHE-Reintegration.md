@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.15
+  version: 1.16
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -372,6 +372,62 @@ kept in the trace, carries none.
 **One cockpit first.** The three copies of the health cockpit
 (`GOV-0002/OS-093`) become one before any chain goes through the Runtime
 (5.2): three copies are not sent through it.
+
+### 11. The disk is written through a transaction when a person's knowledge or the host changes
+
+`GOV-P-002`, `GOV-0002/OS-087`. Read on 2026-11-17 (lot 6, commit 6.1): the
+33 files of `src/aistack` that write, move or delete on disk outside
+`aistack.transaction`, one by one
+(`claude/INVENTAIRE-2026-11-17-ecritures-lot-6.md`). The principle governs a
+modification of knowledge, and an action on the host that a person's choice
+triggers. It does not govern what a service keeps for itself.
+
+**To go through a transaction** (the operations are built in 6.2 and 6.3;
+each is registered by kind in `KernelServices.transactions`, as the dock's
+nine are):
+
+- the declarations a person changes from a screen: the CPU priorities
+  (`priority/yaml/store`), the selection of a pair (`selection/yaml/store`,
+  `sync/screen`), the SSH user names (`network_discovery/yaml/store`), the
+  container declared from the arrivals (`arrivals/declare`) and the place
+  chosen for the data (`instance/data_location`) — one kind of operation,
+  `declaration.write`: whole-file atomic write, the copy kept before, the
+  author and the reason in the trace;
+- the materialisation of a selection into a device's folder
+  (`generators/filesystem/hardlink`) — `selection.materialise`, which keeps
+  its report.
+
+**Declared exempt**, decided by the owner on 2026-11-17, because what they
+write is not knowledge and no person's choice triggers it:
+
+- *The state a service keeps for itself*: the checkpoints of the four
+  monitors and the digest registry, the restart watch's attempts, journal and
+  state, the notification state and the snapshot of the vigil, the host
+  collector's state, the arrivals' last pass, the PRA scheduled-test journal,
+  the dock's proposals (a change is already a transaction, `ADR-0019` § 6),
+  the sandbox's run directory and the last materialisation report. Rewritten
+  at every pass: one trace per write would grow the history and say nothing.
+- *The process locks*: `dock/executor` and `cli/sync_apply` write a lock file.
+- *The installation*: `config_init`, `instance/declarations`,
+  `instance/first_start` and `instance/setup_wizard` copy the shipped
+  declarations on the first start and keep their fingerprints and the
+  assistant's token; several services start together, so each write is whole.
+- *The maintenance*: the compression of `ADR-0021` (the compressed copy is
+  verified before the original goes; its command is already exempt, § 10) and
+  the purge of explanations, which is the development phase's one exception
+  (`ADR-0016`) and goes with that phase.
+- *The recognised writer of generated artifacts*, `generators/history`
+  (`ENG-P-003`): the writer, not an exception.
+- *The API keys* (`api_keys`): **no secret travels in a payload or in a
+  trace.** A transaction carries its values in the request and the trace
+  serializes the request, so the value of a key would be kept in the history.
+  The write stays whole, in mode 0600.
+
+**To delete**: `generators/filesystem/copy`, called by nothing in `src` or in
+the tests (§ 2).
+
+The audit separates what is declared exempt from what is left to do in 6.5;
+until then the 33 stay in the baseline, which can only get shorter.
 
 ## The refactoring plan of August 2026
 

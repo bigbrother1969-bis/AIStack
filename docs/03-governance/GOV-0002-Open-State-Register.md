@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.21
+  version: 2.22
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -430,6 +430,10 @@ runs on another host.
 lot 5, through the entry point its chain gains when it runs through the
 Kernel. No throwaway command is rebuilt for it. Until then `STD-0300` reads
 them *satisfied before 2.0.0, not re-run*, and none is withdrawn.
+**Executed** 2026-11-17 on the MSI (`STD-0300` 1.29, § *Re-run on 2.0.0*): 4.4,
+4.5 and 4.9 re-run live through `ai.reason`; 1.1 to 1.4, 4.2 and 4.8 have no
+chain to re-run through and keep *satisfied before 2.0.0, not re-run*, the
+reason written. No criterion is withdrawn.
 
 #### GOV-0002/OS-092 — Two identifiers are cited and were never documents
 

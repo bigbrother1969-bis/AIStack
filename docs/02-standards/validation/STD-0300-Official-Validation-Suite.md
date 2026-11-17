@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.28
+  version: 1.29
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-11-15
+  updated: 2026-11-17
 
 relations:
   references:
@@ -227,6 +227,10 @@ with it, not because the check does not exist.**
 2.2, 2.3, 2.5, 2.6 and 3.2 were satisfied by code that is no longer in
 `main`; 2.4 gains the same remark. No other state is touched.
 
+**Last change: 2026-11-17, nine criteria re-run on 2.0.0** — see § *Re-run on
+2.0.0* below. 3.2, 4.4, 4.5 and 4.9 change state in place; 1.1 to 1.4, 4.2 and
+4.8 keep theirs, with the reason written.
+
 ### Requalification against 2.0.0 — 2026-11-15
 
 This specification left `main` on 2026-10-10 (`94f7c15`) and returns on
@@ -241,7 +245,7 @@ verification still holds. Measured on `e574fb7`:
 | 1.1 to 1.4 | `aistack.cli.docker_catalog`, live on GIGABYTE, 2026-09-04 | the catalog builder, the explanation generator and their tests; not the command | satisfied before 2.0.0, **not re-run** |
 | 4.2, 4.4, 4.5, 4.8, 4.9 | `aistack.cli.runtime_diagnose` and live readings on GIGABYTE | `aistack.runtime.evaluate` and `tests/unit/runtime/test_evaluate.py`; not the command, nor `test_runtime_diagnose.py`, nor `test_grounding.py` | satisfied before 2.0.0, **not re-run** |
 | 2.1, 2.2, 2.3, 2.5, 2.6 | the Context Bundle and `aistack.cli.knowledge_integrity` | neither (`19e73a6`, `181567d`) | **not verifiable in `main`** |
-| 3.2 | `aistack.selection.explanation` and its seven tests | neither; both were still there on 2026-10-05 | **not verifiable in `main`** |
+| 3.2 | `aistack.selection.explanation` and its seven tests | neither; both were still there on 2026-10-05 | **not verifiable in `main`** (2026-11-15; returned 2026-11-17, see below) |
 | 2.4, 4.1, 4.3, 4.6, 4.7 | nothing: not verified | unchanged; 2.4's protocol needs the Context Bundle | not verified |
 
 **The count for 2.0.0 is 2 verified, 9 satisfied earlier and not re-run, 6 not
@@ -253,6 +257,47 @@ been executed on the release and the host that exist today.
 3.2 is the one criterion that lost its code without its scenario having been
 set aside: the selection of VS-3 is still in `main` and still called, and the
 explanation of each inclusion and exclusion is not. `GOV-0002/OS-090`. The re-run of the nine is `GOV-0002/OS-091`.
+
+### Re-run on 2.0.0 — 2026-11-17
+
+`GOV-0002/OS-091` decided that each of the nine is re-run on the host AIStack
+runs on, through the entry point its chain gains in the Kernel, and that no
+throwaway command is rebuilt. Executed on the MSI (`b10a596`), read-only.
+
+- **3.2 — verified by the suite.** `aistack.selection.explanation` and its
+  seven tests return from the tag (`GOV-0002/OS-090`, resolved); the screen
+  `aistack.sync.screen` gives each row the rule that decided it, in both
+  languages, under two web tests. The screen runs in a container: it shows on
+  the next image, not on 2.0.0.
+- **4.9, 4.5, 4.4 — re-run live through `ai.reason`.** The Task was executed by
+  the Runtime (one trace written) and its qualified findings re-read. A first
+  reading found three consumption findings (`aistack-web`, `paperless`,
+  `frigate`), a second one only `frigate`: consumption moves between readings,
+  which is why this records what each reading saw and nothing more. 4.9: no
+  finding without evidence (0 of 3). 4.5: each finding cites
+  `OPS-0004/energy-inefficiency` and `OPS-0004/sustainability-anomaly`
+  together, and no other term. 4.4: the evidence is the same granularity the
+  criterion was satisfied at on 2026-09-11 — for `frigate`, one
+  `ContainerCpuReading` from `aistack.provider.docker` and two
+  `TemperatureReading` from `aistack.provider.host`; no system call is read,
+  as that section already says.
+- **1.1 to 1.4 — not re-run, and no chain exists to re-run them through.**
+  `architecture.render` builds the Docker catalog but writes no catalog entry
+  list; the explanation generator (`DockerExplanationArtifactGenerator`) is
+  called by no Task. Rebuilding a command for it is what OS-091 forbids.
+  They stay *satisfied before 2.0.0, not re-run*.
+- **4.2 — not re-run.** `correlate_findings` and `CorrelatedFinding`, which
+  carried the correlation of process, container and definition, are no longer
+  in `main`; `evaluate` correlates a consumption with a host temperature only.
+  It stays *satisfied before 2.0.0, not re-run*.
+- **4.8 — not re-run.** `CpuReductionMeasurement` exists; no chain takes a
+  before and an after reading, and one needs a real remediation on the host.
+  It stays *satisfied before 2.0.0, not re-run*.
+
+**The count for 2.0.0 is now 6 verified (3.1, 3.2, 3.3, 4.4, 4.5, 4.9), 6
+satisfied earlier and not re-run (1.1 to 1.4, 4.2, 4.8), 5 not verifiable in
+`main` (2.1, 2.2, 2.3, 2.5, 2.6), 5 not verified (2.4, 4.1, 4.3, 4.6, 4.7).**
+The five not verified are unchanged.
 
 The sections below are the record of each verification as it was executed.
 They are unchanged, and name commands, tests and a host as they were on their
@@ -439,7 +484,7 @@ interaction · Regeneration.
 | # | Criterion | State |
 |---|---|---|
 | 3.1 | The same catalog and the same policy produce the same selection | **satisfied** — 2026-09-04 |
-| 3.2 | Every included and excluded item carries the rule that decided it | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-09-04, at the tag |
+| 3.2 | Every included and excluded item carries the rule that decided it | **verified 2026-11-17** by the suite on 2.0.0 (returned from the tag, § *Re-run on 2.0.0*) — satisfied 2026-09-04 at the tag |
 | 3.3 | After a user modification, regeneration differs only by the modified items | **satisfied** — 2026-09-04 |
 
 #### What 2026-09-04 checked, prompted by the owner citing 2026-09-03's Syncthing work
@@ -536,12 +581,12 @@ below: the point is that AIStack reproduces the reasoning.
 | 4.1 | AIStack detects abnormal idle resource consumption without being pointed at the service | not verified |
 | 4.2 | The finding correlates process, container and deployment definition, each with an observation reference | **satisfied** — 2026-09-11 |
 | 4.3 | It identifies the development option enabled in a permanent service | not verified |
-| 4.4 | Technical evidence is collected and attached to the finding, down to system-call level or equivalent | **satisfied** — 2026-09-11 |
-| 4.5 | Each qualification the evidence supports, among technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly, is cited to a distinct policy; more than one found together is what makes the finding derived knowledge rather than an opinion about severity | **satisfied** — 2026-09-11 |
+| 4.4 | Technical evidence is collected and attached to the finding, down to system-call level or equivalent | **satisfied** — 2026-09-11; **re-run live 2026-11-17** |
+| 4.5 | Each qualification the evidence supports, among technical debt, deployment misconfiguration, energy inefficiency and sustainability anomaly, is cited to a distinct policy; more than one found together is what makes the finding derived knowledge rather than an opinion about severity | **satisfied** — 2026-09-11; **re-run live 2026-11-17** |
 | 4.6 | The root cause is explained, derived from the collected evidence | not verified |
 | 4.7 | A safe remediation is recommended, citing the policies it derives from by identifier | not verified |
 | 4.8 | Before/after verification measures a CPU reduction ≥ 95 % (observed: 58 % → 0.00 %, live) | **satisfied** — 2026-09-04 |
-| 4.9 | No finding is emitted without at least one evidence reference | **satisfied** — 2026-08-22 |
+| 4.9 | No finding is emitted without at least one evidence reference | **satisfied** — 2026-08-22; **re-run live 2026-11-17** |
 
 Criterion 4.5 is not a formality. A single label would make the finding an opinion
 about severity; more than one qualification, each traceable to a distinct policy,

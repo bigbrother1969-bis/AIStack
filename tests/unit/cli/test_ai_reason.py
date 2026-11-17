@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import ai_reason as cli
+from aistack.tasks import ai_reason as task_module
 from aistack.contracts.resource_reading import ContainerCpuReading
 from aistack.contracts.temperature_reading import TemperatureReading
 
@@ -53,9 +54,9 @@ def workspace(monkeypatch, tmp_path: Path) -> Path:
 
 
 def test_no_resource_priority_definition_reports_a_note(monkeypatch, tmp_path):
-    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", tmp_path / "absent.yml")
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", tmp_path / "absent.yml")
 
-    findings, note = cli.qualified_findings()
+    findings, note = task_module.qualified_findings()
 
     assert findings == ()
     assert "no resource-priority definition" in note
@@ -66,7 +67,7 @@ def test_unexplained_consumption_and_a_hot_sensor_produce_a_finding(
 ):
     path = tmp_path / "resource_priority.yml"
     path.write_text(RESOURCE_PRIORITY_YAML, encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", path)
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", path)
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
         lambda: FakeDockerProvider(
@@ -87,7 +88,7 @@ def test_unexplained_consumption_and_a_hot_sensor_produce_a_finding(
         ),
     )
 
-    findings, note = cli.qualified_findings()
+    findings, note = task_module.qualified_findings()
 
     assert note == ""
     assert len(findings) == 1
@@ -105,11 +106,11 @@ def test_main_reports_no_model_configured(workspace, monkeypatch, capsys):
     ai_runtime_path.write_text(
         "host: GIGABYTE\nport: 11434\nmodel: null\n", encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    monkeypatch.setattr(task_module, "DEFAULT_AI_RUNTIME", ai_runtime_path)
 
     resource_priority_path = workspace / "resource_priority.yml"
     resource_priority_path.write_text(RESOURCE_PRIORITY_YAML, encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
 
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
@@ -130,8 +131,8 @@ def test_main_reports_nothing_to_reason_about(workspace, monkeypatch, capsys):
     ai_runtime_path.write_text(
         "host: GIGABYTE\nport: 11434\nmodel: llama3.1:8b\n", encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_AI_RUNTIME", ai_runtime_path)
-    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", workspace / "absent.yml")
+    monkeypatch.setattr(task_module, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", workspace / "absent.yml")
 
     cli.main()
 
@@ -150,11 +151,11 @@ def test_main_reports_the_engine_unreachable_when_a_model_is_configured(
         "host: 127.0.0.1\nport: 1\nmodel: llama3.1:8b\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    monkeypatch.setattr(task_module, "DEFAULT_AI_RUNTIME", ai_runtime_path)
 
     resource_priority_path = workspace / "resource_priority.yml"
     resource_priority_path.write_text(RESOURCE_PRIORITY_YAML, encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
 
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
@@ -188,11 +189,11 @@ def test_main_builds_the_engine_with_the_declared_timeout(
         "host: 127.0.0.1\nport: 1\nmodel: deepseek-r1:1.5b\ntimeout: 900\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    monkeypatch.setattr(task_module, "DEFAULT_AI_RUNTIME", ai_runtime_path)
 
     resource_priority_path = workspace / "resource_priority.yml"
     resource_priority_path.write_text(RESOURCE_PRIORITY_YAML, encoding="utf-8")
-    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
 
     monkeypatch.setattr(
         "aistack.providers.docker.DockerProvider",
@@ -211,7 +212,7 @@ def test_main_builds_the_engine_with_the_declared_timeout(
         def complete(self, prompt):
             return "", "not actually called in this test"
 
-    monkeypatch.setattr(cli, "OllamaEngine", RecordingOllamaEngine)
+    monkeypatch.setattr(task_module, "OllamaEngine", RecordingOllamaEngine)
 
     cli.main()
 
@@ -226,8 +227,8 @@ def test_main_does_not_record_reasoning_history_when_nothing_was_asked(
     ai_runtime_path.write_text(
         "host: GIGABYTE\nport: 11434\nmodel: null\n", encoding="utf-8"
     )
-    monkeypatch.setattr(cli, "DEFAULT_AI_RUNTIME", ai_runtime_path)
-    monkeypatch.setattr(cli, "DEFAULT_RESOURCE_PRIORITY", workspace / "absent.yml")
+    monkeypatch.setattr(task_module, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", workspace / "absent.yml")
 
     cli.main()
 
@@ -244,4 +245,24 @@ def test_main_does_not_record_reasoning_history_when_nothing_was_asked(
 
 
 def test_the_default_resource_priority_path_matches_runtime_diagnoses():
-    assert cli.DEFAULT_RESOURCE_PRIORITY.exists()
+    assert task_module.DEFAULT_RESOURCE_PRIORITY.exists()
+
+
+# --------------------------------------------------------------------
+# The Runtime executes the chain (ADR-0027 § 10, lot 5.10)
+# --------------------------------------------------------------------
+
+
+def test_main_is_executed_by_the_runtime_and_traced(workspace, monkeypatch, capsys):
+    ai_runtime_path = workspace / "ai_runtime.yml"
+    ai_runtime_path.write_text("host: GIGABYTE\nport: 11434\nmodel: null\n", encoding="utf-8")
+    monkeypatch.setattr(task_module, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", workspace / "absent.yml")
+
+    cli.main()
+
+    traces = list((workspace / "reports" / "generated" / "history" / "execution-trace").glob("*.json"))
+    assert len(traces) == 1
+    assert "ai.reason" in (workspace / "reports" / "generated" / "execution-trace.json").read_text(
+        encoding="utf-8"
+    )

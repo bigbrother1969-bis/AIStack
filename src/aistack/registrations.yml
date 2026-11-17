@@ -57,3 +57,6 @@ tasks:
     factory: aistack.tasks:TimeMachineRebuildTask
   - id: network_docker.discover
     factory: aistack.tasks:NetworkDockerDiscoverTask
+  - id: ai.reason
+    factory: aistack.tasks:AiReasonTask
+    all_providers: true

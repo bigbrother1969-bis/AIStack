@@ -32,7 +32,7 @@ from aistack.runtime.idle_consumption import find_unexplained_consumption
 def resource_priority_definition(
     path: Path,
 ) -> tuple[ResourcePriorityDefinition | None, str]:
-    """Mirrors `aistack.cli.ai_reason.resource_priority_definition` exactly."""
+    """Mirrors `aistack.tasks.ai_reason.resource_priority_definition` exactly."""
 
     if not path.exists():
         return None, (
@@ -54,7 +54,7 @@ def _consumption_findings(
 ) -> tuple[tuple[RuntimeFinding, ...], str]:
     """
     The CPU/temperature findings of `aistack.runtime.evaluate`, freshly
-    collected, as in `aistack.cli.ai_reason.qualified_findings`.
+    collected, as in `aistack.tasks.ai_reason.qualified_findings`.
     """
 
     definition, note = resource_priority_definition(domains.SOURCES.resource_priority)

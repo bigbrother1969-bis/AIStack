@@ -20,7 +20,6 @@
     "src/aistack/cli/web_admin_password.py"
   ],
   "entry_points_outside_the_runtime": [
-    "src/aistack/cli/ai_reason.py",
     "src/aistack/cli/dock.py",
     "src/aistack/web/app.py"
   ],

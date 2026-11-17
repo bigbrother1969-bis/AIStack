@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.13
+  version: 1.14
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -243,7 +243,20 @@ never executes through the Runtime* names the commands that take their
 providers from the Kernel and run a chain it does not trace: `ai_reason`,
 `dock` and the web application at the time of the measure. They are put to
 the owner one at a time; until decided they are the baseline of the new
-measure, which like the others can only get shorter.
+measure, which like the others can only get shorter. Decided on 2026-11-17:
+
+- `ai_reason` becomes a Task, `ai.reason` (5.10b): a chain that produces
+  knowledge, the AI reasoning read by the Time Machine, run on demand. Its
+  engine is configured at use and is built by the Task. The command prints
+  what the Observation carries.
+- `dock` is exempt: an action command, which changes the host through the
+  Kernel's transaction (§ 6 of `ADR-0019`), started every two minutes by its
+  timer; a trace of each pass would say nothing more than the transaction
+  does. It joins the exempt commands and stays in the baseline of the new
+  measure.
+- The web application is a declared exception: it reads and serves, and
+  executes no chain. It stays in the baseline of the new measure until a
+  screen executes a Task, which is when the volume of traces is decided.
 
 ### 10. Chains run through the Kernel as Tasks
 
@@ -278,7 +291,7 @@ Lot 5.7 is closed.
   `vigil` and `restart_watch` were first counted among the chains; both
   loop without end.
 - *Administration and action commands* — `config_init`, `setup_token`,
-  `web_admin_password`, `explications_admin`, `healthcheck`, `hosts`, `data_budget`, `sandbox`,
+  `web_admin_password`, `explications_admin`, `healthcheck`, `hosts`, `data_budget`, `dock`, `sandbox`,
   `pra_schedule`, `sync_apply`. Not chains of knowledge: exempt, listed in
   one place (the audit) and recorded here.
 

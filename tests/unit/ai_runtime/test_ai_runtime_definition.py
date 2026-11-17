@@ -7,7 +7,7 @@ import pytest
 from aistack.ai_runtime.definition import AIRuntimeDefinition
 from aistack.ai_runtime.ollama_engine import DEFAULT_TIMEOUT_SECONDS
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
-from aistack.cli.ai_reason import DEFAULT_AI_RUNTIME
+from aistack.tasks.ai_reason import DEFAULT_AI_RUNTIME
 
 
 def write(tmp_path: Path, content: str) -> Path:

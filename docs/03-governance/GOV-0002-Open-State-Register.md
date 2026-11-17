@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.20
+  version: 2.21
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -253,6 +253,11 @@ Task by Task and measures a new departure, *An entry point builds the Kernel
 and never executes through the Runtime*: `ai_reason`, `dock` and the web
 application (3). Each is to be decided by the owner: converted, or declared
 exempt like the commands above.*
+*Commit 5.10b, 2026-11-17, decisions of the owner: `ai_reason` becomes the sixth
+Task the Runtime executes, `ai.reason`; `dock` is declared exempt (an action
+command through the Kernel's transaction); the web application is a declared
+exception until a screen executes a Task (`ADR-0027` § 10). The new measure
+reads 2: `dock` and the web application.*
 *Commit 5.8, 2026-11-17: the web application reads Docker (priority screen)
 and the assistant's findings through the providers of its own Kernel, not one
 booted per call (`ADR-0027` § 9). It runs no Task, so no trace per view. The

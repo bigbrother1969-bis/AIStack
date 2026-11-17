@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.33
+  version: 1.34
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -134,7 +134,7 @@ end of each lot.
 | 5 | The chains run through the Kernel, one at a time: health, architecture, console, Time Machine | `OS-086`, `OS-089` |
 | 6 | Modifications of knowledge go through a transaction | `OS-087` |
 | 7 | The declarations edited by hand on the host become governed knowledge (§ 12), closed 2026-11-17 | — |
-| 8 | Self-onboarding: host executors, Context Bundle, boot report | VS-2 of `STD-0300` |
+| 8 | Self-onboarding: host executors, Context Bundle, boot report (§ 13) | VS-2 of `STD-0300` |
 
 The architecture documents of the Kernel and of its concepts
 (`docs/01-architecture/kernel/` and `docs/01-architecture/concepts/` at
@@ -622,6 +622,37 @@ show waits for the next `dev` image, which only the owner builds: the Settings
 section in a container, and the observation by the `vigil` service itself (the
 containers still run the code of before lot 6). The audit did not move during
 the lot: no write outside a transaction, 26 declared exempt.
+
+### 13. The Context Bundle and the boot report return
+
+`GOV-P-002`. Lot 8, commit 8.1, read on 2026-11-17 (`main` at `bd7125c`). The
+"host executors" of the lot's title are done: `dock` and `cli/sync_apply` build
+the Kernel since lots 5 and 6 and are exempt by decision. What is left is what
+the tag held and `main` lost on 2026-10-10: the Context Bundle, its official
+export script (`scripts/export_project_sources.py`, `ADR-0006`), the knowledge
+integrity checks (nineteen at the tag, `aistack.cli.knowledge_integrity`) and
+the Boot Report. `STD-0300` VS-2 2.1, 2.2, 2.3, 2.5 and 2.6 read "not
+verifiable in `main`"; 2.4 was never verified.
+
+**Decisions of the owner, 2026-11-17:**
+
+- **Scope: everything comes back, by stages.** 8.2 the four documents
+  (`ADR-0005`, `ADR-0006`, `ADR-0007`, `ARCH-0013`) revised against the code
+  that returns, 8.3 the integrity checks, one at a time, as a Task of the
+  Runtime, 8.4 the bundle's export, 8.5 the Boot Report, 8.6 VS-2 re-run,
+  8.7 the closing (`OS-088`, `STD-0300`). Nothing returns without a use
+  (rule 5): a check returns when something runs it.
+- **The Knowledge Acquisition Protocol becomes a Foundation concept**, written
+  in this lot (phase 4 of the August plan; it appears in no governed document
+  today). It describes the acquisition states and the Boot Report; the code
+  that returns implements it, the text stays independent of any technology.
+- **The README stays a presentation of the product.** Phase 3 of the plan (the
+  README as bootstrap specification) is not done: the AI's bootstrap is carried
+  by the Context Bundle and the Boot Report.
+
+The tag's files come from the owner (`git show <tag>:<path>`): Claude does not
+reach the tag. Versioning stays as in lots 5 to 7: one commit, one patch, the
+host measures at the end.
 
 ## The refactoring plan of August 2026
 

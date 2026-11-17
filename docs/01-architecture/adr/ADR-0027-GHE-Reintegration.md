@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -240,7 +240,11 @@ Kernel:
   (5.7a). `hosts` is not: the owner decided on 2026-11-17 that it is a
   status command, read only, like `healthcheck`, and joins the exempt
   commands below; a trace at every consultation would add nothing and grow
-  the history. `data_budget` remains to be decided (5.7b).
+  the history. `data_budget` is not converted either (5.7b, decided on
+2026-11-17): it prints a measure of the disk budget and, with `--compress`,
+compresses old observations, an action. It produces no artifact, and the
+vigil compresses daily by its own way. It joins the exempt commands below.
+Lot 5.7 is closed.
 - *Permanent monitors* — the four `docker_*_monitor`,
   `resource_priority_monitor`, `vigil` and `restart_watch`. A Task runs a
   Request and returns an Observation; a daemon that listens without end is
@@ -248,7 +252,7 @@ Kernel:
   `vigil` and `restart_watch` were first counted among the chains; both
   loop without end.
 - *Administration and action commands* — `config_init`, `setup_token`,
-  `web_admin_password`, `explications_admin`, `healthcheck`, `hosts`, `sandbox`,
+  `web_admin_password`, `explications_admin`, `healthcheck`, `hosts`, `data_budget`, `sandbox`,
   `pra_schedule`, `sync_apply`. Not chains of knowledge: exempt, listed in
   one place (the audit) and recorded here.
 

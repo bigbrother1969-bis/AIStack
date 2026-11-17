@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.16
+  version: 2.17
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -243,6 +243,11 @@ the environment by the Task, never carried by the request. Left: `hosts` and
 `healthcheck`, is declared exempt (`ADR-0027` § 10); it stays in the audit's
 list of entry points that do not build the Kernel, as the other exempt
 commands do. Left: `data_budget`.*
+*Decision 5.7b, 2026-11-17: `data_budget`, a measure and a compression action
+that produce no artifact, is declared exempt too (`ADR-0027` § 10). Lot 5.7 is
+closed: 17 of 25 entry points do not build the Kernel, of which the permanent
+monitors and the exempt commands are declared; what is left of this entry is
+5.8 to 5.10.*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 

@@ -151,7 +151,10 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
         "docker-containers": "DockerContainerViewEngine",
         "media-tree": "MediaTreeViewEngine",
     }
-    assert registered(kernel.registries.tasks) == {"health.render": "HealthRenderTask"}
+    assert registered(kernel.registries.tasks) == {
+        "health.render": "HealthRenderTask",
+        "architecture.render": "ArchitectureRenderTask",
+    }
 
 
 def test_registrations_are_read_in_the_order_a_task_needs(tmp_path: Path) -> None:

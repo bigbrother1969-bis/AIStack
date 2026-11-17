@@ -885,7 +885,7 @@ def test_docker_not_reachable_falls_back_gracefully(monkeypatch, tmp_path):
 
 
 def test_the_default_categorization_path_matches_architecture_render():
-    from aistack.cli import architecture_render
+    from aistack.tasks import architecture_render
 
     assert domains.SOURCES.categorization == architecture_render.DEFAULT_CATEGORIZATION
 

@@ -43,6 +43,7 @@ from typing import Any
 import pytest
 
 from aistack.cli import architecture_render
+from aistack.tasks import architecture_render as task_module
 
 
 OBSERVED_AT = "2026-09-12T12:00:00+00:00"
@@ -142,6 +143,14 @@ def reset_fake_beszel():
     FakeHttpProbeProvider.next_observation = dict(_DEFAULT_HTTP_PROBE_OBSERVATION)
 
 
+@pytest.fixture(autouse=True)
+def no_beszel_credentials(monkeypatch) -> None:
+    """The Task reads the process environment: a test starts without any."""
+
+    monkeypatch.delenv("BESZEL_EMAIL", raising=False)
+    monkeypatch.delenv("BESZEL_PASSWORD", raising=False)
+
+
 @pytest.fixture
 def stubbed_providers(monkeypatch) -> None:
     monkeypatch.setattr(
@@ -150,9 +159,8 @@ def stubbed_providers(monkeypatch) -> None:
     monkeypatch.setattr(
         "aistack.providers.compose.ComposeProvider", FakeComposeProvider
     )
-    monkeypatch.setattr(architecture_render, "BeszelProvider", FakeBeszelProvider)
-    monkeypatch.setattr(
-        architecture_render, "HttpProbeProvider", FakeHttpProbeProvider
+    monkeypatch.setattr(task_module, "BeszelProvider", FakeBeszelProvider)
+    monkeypatch.setattr(task_module, "HttpProbeProvider", FakeHttpProbeProvider
     )
 
 
@@ -181,11 +189,12 @@ def _observation_with_systems(systems: list[dict]) -> dict:
 
 
 def test_the_real_topologys_env_var_names_are_resolved_through_environ(
-    stubbed_providers, workspace
+    stubbed_providers, workspace, monkeypatch
 ):
-    architecture_render.main(
-        environ={"BESZEL_EMAIL": "aistack-readonly@persiaut-family.fr", "BESZEL_PASSWORD": "s3cr3t"}
-    )
+    monkeypatch.setenv("BESZEL_EMAIL", "aistack-readonly@persiaut-family.fr")
+    monkeypatch.setenv("BESZEL_PASSWORD", "s3cr3t")
+
+    architecture_render.main()
 
     assert len(FakeBeszelProvider.instances) == 1
     built = FakeBeszelProvider.instances[0]
@@ -197,7 +206,7 @@ def test_the_real_topologys_env_var_names_are_resolved_through_environ(
 def test_missing_env_vars_resolve_to_empty_strings_not_a_raise(
     stubbed_providers, workspace
 ):
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     assert len(FakeBeszelProvider.instances) == 1
     built = FakeBeszelProvider.instances[0]
@@ -211,7 +220,7 @@ def test_missing_env_vars_resolve_to_empty_strings_not_a_raise(
 
 
 def test_the_beszel_observation_is_written_with_history(stubbed_providers, workspace):
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     output_path = workspace / "reports" / "generated" / "beszel-observation.json"
     assert json.loads(output_path.read_text(encoding="utf-8")) == (
@@ -225,8 +234,8 @@ def test_the_beszel_observation_is_written_with_history(stubbed_providers, works
 def test_an_identical_second_run_keeps_the_first_beszel_observation_once(
     stubbed_providers, workspace
 ):
-    architecture_render.main(environ={})
-    architecture_render.main(environ={})
+    architecture_render.main()
+    architecture_render.main()
 
     history_dir = (
         workspace / "reports" / "generated" / "history" / "beszel-observation"
@@ -255,7 +264,7 @@ def test_a_reachable_hub_with_systems_threads_readings_into_the_page(
         ]
     )
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     document = (
         workspace / "reports" / "generated" / "architecture.html"
@@ -278,7 +287,7 @@ def test_an_unreachable_hub_renders_a_page_with_no_beszel_section(
     empty tuple of readings.
     """
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     output_path = workspace / "reports" / "generated" / "architecture.html"
     document = output_path.read_text(encoding="utf-8")
@@ -297,9 +306,11 @@ def test_a_topology_with_no_beszel_block_never_constructs_the_provider(
 ):
     topology_path = workspace / "infrastructure_topology.yml"
     topology_path.write_text("external_nodes: []\n", encoding="utf-8")
-    monkeypatch.setattr(architecture_render, "DEFAULT_TOPOLOGY", topology_path)
+    monkeypatch.setattr(task_module, "DEFAULT_TOPOLOGY", topology_path)
 
-    architecture_render.main(environ={"BESZEL_EMAIL": "x", "BESZEL_PASSWORD": "y"})
+    monkeypatch.setenv("BESZEL_EMAIL", "x")
+    monkeypatch.setenv("BESZEL_PASSWORD", "y")
+    architecture_render.main()
 
     assert FakeBeszelProvider.instances == []
     assert not (
@@ -322,7 +333,7 @@ def test_main_writes_one_architecture_page_per_declared_language(
         [{"name": "Gigabyte", "host": "192.168.1.10", "status": "up", "info": {"cpu": 17.42}}]
     )
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     generated_dir = workspace / "reports" / "generated"
     english = (generated_dir / "architecture.en.html").read_text(encoding="utf-8")
@@ -333,3 +344,45 @@ def test_main_writes_one_architecture_page_per_declared_language(
     assert '<html lang="fr">' in (generated_dir / "architecture.html").read_text(
         encoding="utf-8"
     )
+
+
+# --------------------------------------------------------------------
+# The Runtime executes the chain and keeps a trace — without a secret
+# --------------------------------------------------------------------
+
+
+def test_main_runs_the_chain_through_the_runtime_and_keeps_its_trace(
+    stubbed_providers, workspace
+):
+    architecture_render.main()
+
+    generated = workspace / "reports" / "generated"
+    latest = json.loads((generated / "execution-trace.json").read_text(encoding="utf-8"))
+
+    assert latest["request"]["task_id"] == "architecture.render"
+    assert latest["resolution"]["task_id"] == "architecture.render"
+    assert latest["observation"]["data"]["output_path"].endswith("architecture.html")
+    assert len(list((generated / "history" / "execution-trace").glob("*.json"))) == 1
+
+
+def test_a_credential_read_from_the_environment_reaches_no_trace(
+    stubbed_providers, workspace, monkeypatch
+):
+    """
+    The Runtime keeps the request, payload included, and the Task's
+    observation: neither may ever hold what the Task read from the
+    environment. The password is looked for in everything written.
+    """
+
+    monkeypatch.setenv("BESZEL_EMAIL", "reader@example.org")
+    monkeypatch.setenv("BESZEL_PASSWORD", "not-to-be-traced-1234")
+
+    architecture_render.main()
+
+    assert FakeBeszelProvider.instances[0].password == "not-to-be-traced-1234"
+    written = [path for path in (workspace / "reports").rglob("*") if path.is_file()]
+    assert written
+    for path in written:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        assert "not-to-be-traced-1234" not in text, path
+        assert "reader@example.org" not in text, path

@@ -31,6 +31,7 @@ from typing import Any
 import pytest
 
 from aistack.cli import architecture_render
+from aistack.tasks import architecture_render as task_module
 
 
 OBSERVED_AT = "2026-09-23T12:00:00+00:00"
@@ -99,7 +100,7 @@ def stubbed_providers(monkeypatch) -> None:
     monkeypatch.setattr(
         "aistack.providers.compose.ComposeProvider", FakeComposeProvider
     )
-    monkeypatch.setattr(architecture_render, "HttpProbeProvider", FakeHttpProbeProvider)
+    monkeypatch.setattr(task_module, "HttpProbeProvider", FakeHttpProbeProvider)
 
 
 @pytest.fixture
@@ -115,7 +116,7 @@ def one_target(workspace, monkeypatch) -> Path:
         "targets:\n  - name: Gitea\n    url: https://gitea.persiaut-family.fr\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(architecture_render, "DEFAULT_CMDB_TARGETS", targets_path)
+    monkeypatch.setattr(task_module, "DEFAULT_CMDB_TARGETS", targets_path)
     return targets_path
 
 
@@ -135,7 +136,7 @@ def _observation_with_targets(targets: list[dict]) -> dict:
 def test_the_real_targets_are_resolved_into_name_url_pairs(
     stubbed_providers, workspace, one_target
 ):
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     assert len(FakeHttpProbeProvider.instances) == 1
     built = FakeHttpProbeProvider.instances[0]
@@ -150,7 +151,7 @@ def test_the_real_targets_are_resolved_into_name_url_pairs(
 def test_the_http_probe_observation_is_written_with_history(
     stubbed_providers, workspace, one_target
 ):
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     output_path = workspace / "reports" / "generated" / "http-probe-observation.json"
     assert json.loads(output_path.read_text(encoding="utf-8")) == (
@@ -164,8 +165,8 @@ def test_the_http_probe_observation_is_written_with_history(
 def test_an_identical_second_run_keeps_the_first_http_probe_observation_once(
     stubbed_providers, workspace, one_target
 ):
-    architecture_render.main(environ={})
-    architecture_render.main(environ={})
+    architecture_render.main()
+    architecture_render.main()
 
     history_dir = (
         workspace / "reports" / "generated" / "history" / "http-probe-observation"
@@ -195,7 +196,7 @@ def test_reachable_targets_thread_readings_into_the_page(
         ]
     )
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     document = (
         workspace / "reports" / "generated" / "architecture.html"
@@ -221,7 +222,7 @@ def test_an_unreachable_target_renders_the_injoignable_state(
         ]
     )
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     document = (
         workspace / "reports" / "generated" / "architecture.html"
@@ -243,9 +244,9 @@ def test_an_empty_target_list_never_constructs_the_provider(
 ):
     targets_path = workspace / "cmdb_probe_targets.yml"
     targets_path.write_text("targets: []\n", encoding="utf-8")
-    monkeypatch.setattr(architecture_render, "DEFAULT_CMDB_TARGETS", targets_path)
+    monkeypatch.setattr(task_module, "DEFAULT_CMDB_TARGETS", targets_path)
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     assert FakeHttpProbeProvider.instances == []
     assert not (

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.4
+  version: 1.5
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -111,7 +111,14 @@ content of a document.
 time: a returning document (`FDN-0002`, then `STD-0300`) cited a
 document that had not returned (`ARCH-0010`, then `STD-0200`). Both are
 recorded in their commits. A returning document brings its citations
-with it; that is the only case in which an entry is added.
+with it; that is the first case in which an entry is added.
+
+**Second case, 2026-11-17 (commit 5.4).** A command that builds a provider
+configured at each use becomes a Task: the entry follows its caller. It is
+renamed, not added, and the count does not change. Decided by the owner
+when `aistack.cli.architecture_render` became the Task
+`architecture.render` (`BeszelProvider` and `HttpProbeProvider` now built
+in `aistack/tasks/architecture_render.py`).
 
 ### 5. The code is brought back within the principles in lots
 
@@ -257,6 +264,12 @@ Kernel: `registrations.yml` gains the key `all_providers: true`, for a Task
 that reads several providers, beside `provider:`, which names one. The
 command `aistack.cli.health_render` boots the Runtime, hands it one Request
 and prints what the Observation carries.
+
+**The second chain** is the architecture chain, the Task
+`architecture.render` (5.4), built the same way: on the whole provider
+registry, executed from `aistack.cli.architecture_render`. Its Beszel
+credentials are read from the environment by the Task, never carried by the
+request: the Runtime keeps the request, payload included, in its trace.
 
 **The trace of a Task** — decided by the owner, 2026-11-17, as proposed:
 

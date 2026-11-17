@@ -47,3 +47,6 @@ tasks:
   - id: health.render
     factory: aistack.tasks:HealthRenderTask
     all_providers: true
+  - id: architecture.render
+    factory: aistack.tasks:ArchitectureRenderTask
+    all_providers: true

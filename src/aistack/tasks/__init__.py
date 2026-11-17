@@ -6,7 +6,8 @@ Kernel (ADR-0027 § 7). The Kernel knows the `Task` contract and the
 registry; `registrations.yml` names the Tasks it registers.
 """
 
+from aistack.tasks.architecture_render import ArchitectureRenderTask
 from aistack.tasks.docker_discover import DockerDiscoverTask
 from aistack.tasks.health_render import HealthRenderTask
 
-__all__ = ["DockerDiscoverTask", "HealthRenderTask"]
+__all__ = ["ArchitectureRenderTask", "DockerDiscoverTask", "HealthRenderTask"]

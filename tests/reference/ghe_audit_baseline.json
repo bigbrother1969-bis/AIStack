@@ -23,13 +23,13 @@
   ],
   "registered_tasks_never_executed": [],
   "providers_built_by_application_code": [
-    "src/aistack/cli/architecture_render.py -> BeszelProvider",
-    "src/aistack/cli/architecture_render.py -> HttpProbeProvider",
     "src/aistack/cli/network_docker_discover.py -> NetworkDockerDiscoveryProvider",
     "src/aistack/priority/detectors/jellyfin.py -> JellyfinProvider",
     "src/aistack/selection/screen.py -> MediaLibraryProvider",
     "src/aistack/selection/screen.py -> SyncthingProvider",
-    "src/aistack/sync/screen.py -> MediaLibraryProvider"
+    "src/aistack/sync/screen.py -> MediaLibraryProvider",
+    "src/aistack/tasks/architecture_render.py -> BeszelProvider",
+    "src/aistack/tasks/architecture_render.py -> HttpProbeProvider"
   ],
   "disk_writes_outside_a_transaction": [
     "src/aistack/api_keys/__init__.py",

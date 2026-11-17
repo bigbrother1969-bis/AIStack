@@ -7,7 +7,7 @@ ADR-0027 § 8; these tests read the Kernel, not the file.
 from __future__ import annotations
 
 from aistack.kernel.bootstrap import create_kernel
-from aistack.tasks import HealthRenderTask
+from aistack.tasks import ArchitectureRenderTask, HealthRenderTask
 
 
 def test_create_kernel_registers_the_health_render_task():
@@ -16,6 +16,15 @@ def test_create_kernel_registers_the_health_render_task():
     task = kernel.registries.tasks.get("health.render")
 
     assert isinstance(task, HealthRenderTask)
+
+
+def test_create_kernel_registers_the_architecture_render_task():
+    kernel = create_kernel()
+
+    task = kernel.registries.tasks.get("architecture.render")
+
+    assert isinstance(task, ArchitectureRenderTask)
+    assert task._providers is kernel.registries.providers
 
 
 def test_the_health_task_reads_through_the_providers_of_its_own_kernel():
@@ -46,4 +55,4 @@ def test_only_the_tasks_declared_here_are_registered():
 
     kernel = create_kernel()
 
-    assert set(kernel.registries.tasks.all()) == {"health.render"}
+    assert set(kernel.registries.tasks.all()) == {"health.render", "architecture.render"}

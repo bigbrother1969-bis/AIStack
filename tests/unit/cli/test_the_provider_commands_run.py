@@ -45,6 +45,7 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import architecture_render
+from aistack.tasks import architecture_render as task_module
 
 
 OBSERVED_AT = "2026-08-29T09:00:00+00:00"
@@ -156,8 +157,7 @@ def stubbed_providers(monkeypatch) -> None:
         "aistack.providers.compose.ComposeProvider",
         FakeComposeProvider,
     )
-    monkeypatch.setattr(
-        architecture_render, "HttpProbeProvider", FakeHttpProbeProvider
+    monkeypatch.setattr(task_module, "HttpProbeProvider", FakeHttpProbeProvider
     )
 
 

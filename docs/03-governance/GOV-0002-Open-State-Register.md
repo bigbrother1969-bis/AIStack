@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.11
+  version: 2.12
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -219,6 +219,11 @@ the first Task it executes, `health.render`. `docker.discover` leaves
 `registrations.yml`. The measure *A registered Task is never executed* reads
 none; 19 of 25 entry points still do not build the Kernel (the health
 command already did). The chains left are 5.4 to 5.7.*
+*Commit 5.4, 2026-11-17: the architecture chain is the second Task the
+Runtime executes, `architecture.render`. The two providers it configures at
+use (Beszel, HTTP probes) are built in the Task and not in the command: two
+entries of the baseline are renamed, seven pairs still (`ADR-0027` § 4).
+The chains left are 5.5 to 5.7.*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 

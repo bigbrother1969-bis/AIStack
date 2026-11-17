@@ -35,6 +35,7 @@ from pathlib import Path
 import pytest
 
 from aistack.cli import architecture_render
+from aistack.tasks import architecture_render as task_module
 
 
 OBSERVED_AT = "2026-09-12T12:00:00+00:00"
@@ -138,8 +139,7 @@ def stub_providers(monkeypatch, compose_projects: list[dict]) -> None:
         "aistack.providers.compose.ComposeProvider",
         lambda: FakeComposeProvider(compose_projects),
     )
-    monkeypatch.setattr(
-        architecture_render, "HttpProbeProvider", FakeHttpProbeProvider
+    monkeypatch.setattr(task_module, "HttpProbeProvider", FakeHttpProbeProvider
     )
 
 
@@ -151,7 +151,7 @@ def stub_providers(monkeypatch, compose_projects: list[dict]) -> None:
 def test_a_real_dependency_edge_reaches_the_rendered_page(monkeypatch, workspace):
     stub_providers(monkeypatch, [bookstack_project()])
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     document = (
         workspace / "reports" / "generated" / "architecture.html"
@@ -172,7 +172,7 @@ def test_a_project_with_no_depends_on_adds_no_dependencies_option(
 ):
     stub_providers(monkeypatch, [jellyfin_project_with_no_depends_on()])
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     document = (
         workspace / "reports" / "generated" / "architecture.html"
@@ -186,7 +186,7 @@ def test_no_compose_projects_at_all_adds_no_dependencies_option(
 ):
     stub_providers(monkeypatch, [])
 
-    architecture_render.main(environ={})
+    architecture_render.main()
 
     document = (
         workspace / "reports" / "generated" / "architecture.html"

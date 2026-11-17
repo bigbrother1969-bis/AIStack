@@ -3,10 +3,8 @@ from pathlib import Path
 import pytest
 
 from aistack.network_discovery.definition import NetworkDiscoveryDefinition
-from aistack.network_discovery.yaml import (
-    load_network_discovery_yaml,
-    save_network_discovery_yaml,
-)
+from tests.unit.declaration_files import save_network_discovery
+from aistack.network_discovery.yaml import load_network_discovery_yaml
 
 
 def write(path: Path, text: str) -> Path:
@@ -143,7 +141,7 @@ def test_a_saved_definition_loads_back_identically(tmp_path: Path):
     )
     path = tmp_path / "network_discovery.yml"
 
-    save_network_discovery_yaml(definition, path)
+    save_network_discovery(definition, path)
 
     assert load_network_discovery_yaml(path) == definition
 
@@ -154,7 +152,7 @@ def test_saving_creates_missing_parent_directories(tmp_path: Path):
     )
     path = tmp_path / "nested" / "dir" / "network_discovery.yml"
 
-    save_network_discovery_yaml(definition, path)
+    save_network_discovery(definition, path)
 
     assert path.exists()
 
@@ -167,7 +165,7 @@ def test_a_username_containing_a_yaml_special_character_round_trips(tmp_path: Pa
     )
     path = tmp_path / "network_discovery.yml"
 
-    save_network_discovery_yaml(definition, path)
+    save_network_discovery(definition, path)
 
     assert load_network_discovery_yaml(path).ssh_usernames == ("a: b", "- weird")
 
@@ -178,7 +176,7 @@ def test_an_empty_username_list_saves_and_reloads_as_empty(tmp_path: Path):
     )
     path = tmp_path / "network_discovery.yml"
 
-    save_network_discovery_yaml(definition, path)
+    save_network_discovery(definition, path)
 
     assert load_network_discovery_yaml(path).ssh_usernames == ()
 

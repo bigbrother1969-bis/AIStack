@@ -73,19 +73,16 @@ def load_network_discovery_yaml(path: Path) -> NetworkDiscoveryDefinition:
     )
 
 
-def save_network_discovery_yaml(
-    definition: NetworkDiscoveryDefinition, path: Path
-) -> Path:
+def render_network_discovery_yaml(definition: NetworkDiscoveryDefinition) -> str:
     """
-    Save a network-discovery definition to YAML, the inverse of
+    The text of a network-discovery definition, the inverse of
     `load_network_discovery_yaml`.
 
     Every field is written, even though the screen changes only
-    `ssh_usernames`. A static header comment is written first, because
-    PyYAML drops comments.
+    `ssh_usernames`. A static header comment comes first, because PyYAML
+    drops comments. The caller writes it, as a transaction
+    (`aistack.declaration`, `ADR-0027` § 11).
     """
-
-    path.parent.mkdir(parents=True, exist_ok=True)
 
     body = {
         "cidr": AUTO if definition.cidr_auto else definition.cidr,
@@ -94,14 +91,9 @@ def save_network_discovery_yaml(
         "ssh_usernames": list(definition.ssh_usernames),
     }
 
-    with path.open("w", encoding="utf-8") as stream:
-        stream.write(_HEADER_COMMENT)
-        stream.write("\n")
-        # `yaml.safe_dump` rather than hand-written lines, so values with
-        # YAML-special characters are quoted and load back correctly.
-        yaml.safe_dump(body, stream, sort_keys=False, allow_unicode=True)
-
-    return path
+    # `yaml.safe_dump` rather than hand-written lines, so values with
+    # YAML-special characters are quoted and load back correctly.
+    return _HEADER_COMMENT + "\n" + yaml.safe_dump(body, sort_keys=False, allow_unicode=True)
 
 
 def _require(data: dict[str, Any], fields: tuple[str, ...], label: str) -> None:

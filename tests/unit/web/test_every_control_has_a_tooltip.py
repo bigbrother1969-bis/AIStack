@@ -34,7 +34,7 @@ from aistack.contracts.health_score import TO_WATCH, HealthScore
 from aistack.health.cockpit import HealthCockpit, HealthDomain
 from aistack.i18n import Language, Languages
 from aistack.network_discovery.definition import NetworkDiscoveryDefinition
-from aistack.network_discovery.yaml import save_network_discovery_yaml
+from tests.unit.declaration_files import save_network_discovery
 from aistack.priority.discovery import DiscoveredContainer
 from aistack.renderers.architecture.html import render_html as render_architecture
 from aistack.renderers.console.html import render_html as render_console
@@ -187,7 +187,7 @@ def web(tmp_path: Path) -> TestClient:
     priority = tmp_path / "resource_priority.yml"
     shutil.copy(PACKAGE_ROOT / "priority" / "definitions" / "resource_priority.yml", priority)
     discovery = tmp_path / "network_discovery.yml"
-    save_network_discovery_yaml(
+    save_network_discovery(
         NetworkDiscoveryDefinition(cidr="192.168.1.0/24", ssh_key_path_env="K", ssh_usernames=("pi",)),
         discovery,
     )

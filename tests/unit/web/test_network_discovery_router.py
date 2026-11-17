@@ -8,19 +8,18 @@ something changed, the localized outcome carried back.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.declaration_files import save_network_discovery
 from tests.unit.web_signed_in import signed_in
 
 from aistack.i18n import Language, Languages
 from aistack.network_discovery.definition import NetworkDiscoveryDefinition
-from aistack.network_discovery.yaml import (
-    load_network_discovery_yaml,
-    save_network_discovery_yaml,
-)
+from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.web.app import WebPaths, create_app
 from aistack.web.exposure import Listeners
 
@@ -36,7 +35,7 @@ LANGUAGES = Languages(
 @pytest.fixture
 def definition(tmp_path: Path) -> Path:
     path = tmp_path / "network_discovery.yml"
-    save_network_discovery_yaml(
+    save_network_discovery(
         NetworkDiscoveryDefinition(
             cidr="192.168.1.0/24",
             ssh_key_path_env="AISTACK_SSH_KEY",
@@ -98,6 +97,26 @@ def test_adding_a_name_writes_it_and_says_so(tmp_path: Path, definition: Path):
     assert reply.headers["location"].startswith("/network-discovery/?status=")
     assert "admin" in reply.headers["location"]
     assert load_network_discovery_yaml(definition).ssh_usernames == ("pi", "pi-hole", "admin")
+
+
+def test_a_change_is_written_by_a_transaction_that_keeps_the_old_file(tmp_path: Path, definition: Path):
+    before = definition.read_bytes()
+
+    client(tmp_path, definition).post("/network-discovery/add", data={"username": "admin"})
+
+    copies = list(definition.parent.glob("network_discovery.yml.avant-*"))
+    assert [c.read_bytes() for c in copies] == [before]
+    record = json.loads((tmp_path / "declaration-change.json").read_text(encoding="utf-8"))
+    assert record["author"] == "Tester"
+    assert record["path"] == str(definition)
+    assert record["copy"] == str(copies[0])
+
+
+def test_a_name_already_there_leaves_no_copy_and_no_record(tmp_path: Path, definition: Path):
+    client(tmp_path, definition).post("/network-discovery/add", data={"username": "pi"})
+
+    assert not list(definition.parent.glob("network_discovery.yml.avant-*"))
+    assert not (tmp_path / "declaration-change.json").exists()
 
 
 def test_a_name_already_there_leaves_the_file_untouched(tmp_path: Path, definition: Path):

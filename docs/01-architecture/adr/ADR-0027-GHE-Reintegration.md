@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.16
+  version: 1.17
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -427,7 +427,20 @@ write is not knowledge and no person's choice triggers it:
 the tests (§ 2).
 
 The audit separates what is declared exempt from what is left to do in 6.5;
-until then the 33 stay in the baseline, which can only get shorter.
+until then the files stay in the baseline, which can only get shorter.
+
+**Commit 6.2, 2026-11-17: `declaration.write`.** The operation is registered
+at the Kernel's bootstrap (`aistack.transaction.engines.declaration_write`).
+It writes the whole file beside its name and moves it into place; when the
+file held something else, it is kept as `<name>.avant-<UTC date>-<time>`
+first; when the content is the one already there, it writes nothing. The
+caller is `aistack.declaration.write_declaration`: it runs the transaction
+and records the change in `declaration-change.json` (and its history): when,
+who, why, which file, the digest before and after and the copy kept — never
+the content. The first declaration to go through it is the SSH user names of
+the network discovery screen; `network_discovery/yaml/store` no longer writes
+(it renders the text), which takes the baseline from 33 to 32. The other
+declarations follow, one at a time.
 
 ## The refactoring plan of August 2026
 

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.24
+  version: 2.25
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -221,6 +221,10 @@ deleted (`generators/filesystem/copy`, dead code), and 25 are declared exempt
 (the state a service keeps for itself, the process locks, the installation,
 the maintenance, the recognised writer of generated artifacts, and the API
 keys: no secret in a payload or a trace). Left: 6.2 to 6.6.*
+*Commit 6.2, 2026-11-17: 32. The operation `declaration.write` exists
+(`ADR-0027` § 11); the SSH user names of the network discovery screen go
+through it. Left: the priority and selection stores, `sync/screen`,
+`arrivals/declare`, `instance/data_location`, then 6.3 to 6.6.*
 
 #### GOV-0002/OS-088 — `main` cites documents it does not hold
 

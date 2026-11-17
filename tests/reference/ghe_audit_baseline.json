@@ -56,7 +56,6 @@
     "src/aistack/instance/declarations.py",
     "src/aistack/instance/first_start.py",
     "src/aistack/instance/setup_wizard.py",
-    "src/aistack/network_discovery/yaml/store.py",
     "src/aistack/pra/scheduled.py",
     "src/aistack/priority/yaml/store.py",
     "src/aistack/providers/docker/digest_history.py",

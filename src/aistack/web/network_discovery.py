@@ -5,8 +5,8 @@ every live host `aistack.cli.network_docker_discover` finds, so this
 router must never answer on the public address.
 
 A thin adapter over `aistack.network_discovery.usernames`: it reads the
-form, writes the definition only when something changed and redirects
-with the localized outcome.
+form, writes the definition only when something changed — as a transaction
+(`aistack.declaration`) — and redirects with the localized outcome.
 """
 
 from __future__ import annotations
@@ -26,11 +26,12 @@ from aistack.network_discovery.usernames import (
     add_username,
     remove_username,
 )
+from aistack.declaration import write_declaration
 from aistack.network_discovery.yaml import (
     load_network_discovery_yaml,
-    save_network_discovery_yaml,
+    render_network_discovery_yaml,
 )
-from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY
+from aistack.web.authentication import ADMIN_ACTION, SIGNED_IN_ONLY, current_session
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
 
@@ -92,7 +93,15 @@ async def _apply(request: Request, change: Change) -> RedirectResponse:
     outcome = change(load_network_discovery_yaml(path), str(form.get("username", "")))
 
     if outcome.changed:
-        save_network_discovery_yaml(outcome.definition, path)
+        session = current_session(request)
+        write_declaration(
+            request.app.state.kernel.services.transactions,
+            request.app.state.generated_dir,
+            path,
+            render_network_discovery_yaml(outcome.definition),
+            author=(session.name or session.subject) if session is not None else "",
+            reason=f"network discovery: {outcome.change.value} the SSH username {outcome.username!r}",
+        )
 
     status = t(STATUS_KEYS[outcome.change], username=outcome.username)
 

@@ -32,6 +32,8 @@ examples/selections/*-last-generation.yml
 
 # Local backups and patches in transit.
 *.bak-*
+# The dated copy a declaration write keeps beside the file it replaces.
+*.avant-*
 *.patch
 patches-*.tar.gz
 

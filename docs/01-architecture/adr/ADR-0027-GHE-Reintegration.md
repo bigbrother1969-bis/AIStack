@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.20
+  version: 1.21
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -462,6 +462,17 @@ anything is written; then it goes through `write_declaration`, which keeps
 the copy under the name the screen has always announced
 (`service_categorization.yml.avant-arrivals-<date>`, hence the payload's
 `copy_label`) and records who declared what (baseline 30 → 29).
+
+**The place chosen for the data** (`instance/data_location`) closes 6.2:
+choosing a disk and forgetting the choice both go through
+`write_declaration`. Forgetting takes the file away, which is the same
+operation with no content (`content=None`): the previous file is kept and the
+change recorded (baseline 29 → 28). The dated copies (`<name>.avant-…`) are
+ignored by git (`*.avant-*`): in an installation without a configuration
+directory the declarations sit in the checkout, and a copy there must not make
+the tree dirty. The six declarations that § 11 lists now go through a
+transaction; `sync/screen` stays in the baseline only for the report of the
+last application (6.3).
 
 ## The refactoring plan of August 2026
 

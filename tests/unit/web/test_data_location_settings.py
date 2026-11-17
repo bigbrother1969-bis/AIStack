@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from pathlib import Path
 
 from aistack.host.mounts import Mount, MountRow, Usage
@@ -74,12 +75,32 @@ def test_a_disk_without_room_is_refused(tmp_path: Path):
 
 def test_cancelling_forgets_the_choice(tmp_path: Path):
     app = app_with(tmp_path)
-    dl.save(tmp_path / dl.FILE_NAME, dl.DataLocation("/media/BD/AIStack/data"))
+    path = tmp_path / dl.FILE_NAME
+    path.write_text(dl.render(dl.DataLocation("/media/BD/AIStack/data")), encoding="utf-8")
     web = signed_in(client(app))
 
     web.post("/settings/storage/location", data={"action": "clear"})
 
-    assert dl.load(tmp_path / dl.FILE_NAME) is None
+    assert dl.load(path) is None
+    assert not path.exists()
+    (copy,) = tmp_path.glob(f"{dl.FILE_NAME}.avant-*")
+    assert dl.load(copy) == dl.DataLocation("/media/BD/AIStack/data")
+
+
+def test_choosing_a_disk_records_who_chose_and_keeps_the_previous_choice(tmp_path: Path):
+    app = app_with(tmp_path)
+    path = tmp_path / dl.FILE_NAME
+    path.write_text(dl.render(dl.DataLocation("/old/AIStack/data")), encoding="utf-8")
+    web = signed_in(client(app))
+
+    web.post("/settings/storage/location", data={"mount": "/media/BD"})
+
+    assert dl.load(path).target == "/media/BD/AIStack/data"  # type: ignore[union-attr]
+    (copy,) = tmp_path.glob(f"{dl.FILE_NAME}.avant-*")
+    assert dl.load(copy) == dl.DataLocation("/old/AIStack/data")
+    record = json.loads((tmp_path / "data" / "declaration-change.json").read_text(encoding="utf-8"))
+    assert record["path"] == str(path)
+    assert record["author"] == "Tester"
 
 
 def test_a_user_can_neither_see_nor_choose(tmp_path: Path):

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.28
+  version: 2.29
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -235,6 +235,9 @@ then 6.3 to 6.6.*
 *Commit 6.2 (arrivals), 2026-11-17: 29. The container declared from the
 arrivals goes through `declaration.write`. Left: `instance/data_location`,
 then 6.3 to 6.6.*
+*Commit 6.2 (data location, 6.2 closed), 2026-11-17: 28. Choosing the place of
+the data, and forgetting the choice, go through `declaration.write`. Left: 6.3
+to 6.6.*
 
 #### GOV-0002/OS-088 — `main` cites documents it does not hold
 

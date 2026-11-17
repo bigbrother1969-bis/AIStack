@@ -51,7 +51,6 @@
     "src/aistack/generators/filesystem/yaml/store.py",
     "src/aistack/generators/history.py",
     "src/aistack/host_collector.py",
-    "src/aistack/instance/data_location.py",
     "src/aistack/instance/declarations.py",
     "src/aistack/instance/first_start.py",
     "src/aistack/instance/setup_wizard.py",

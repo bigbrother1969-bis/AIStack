@@ -17,6 +17,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
 
 from aistack.config import config_dir
+from aistack.declaration import write_declaration
 from aistack.host.mounts import MountRow, disks_and_mounts
 from aistack.i18n import Translator
 from aistack.instance import data_location
@@ -233,8 +234,18 @@ def choose_location(request: Request, mount: str = Form(""), action: str = Form(
     """Record where the data is to go, or forget the choice."""
 
     path: Path = request.app.state.paths.data_location
+    session = current_session(request)
+    author = (session.name or session.subject) if session is not None else ""
+    transactions = request.app.state.kernel.services.transactions
     if action == "clear":
-        data_location.clear(path)
+        write_declaration(
+            transactions,
+            request.app.state.generated_dir,
+            path,
+            None,
+            author,
+            "settings: the choice of where the data goes is forgotten",
+        )
         return _back("cleared")
 
     generated_dir: Path = request.app.state.generated_dir
@@ -247,14 +258,15 @@ def choose_location(request: Request, mount: str = Form(""), action: str = Form(
     except data_location.LocationRefused as refused:
         return _back(refused.reason.rsplit(".", 1)[-1])
 
-    session = current_session(request)
-    data_location.save(
+    write_declaration(
+        transactions,
+        generated_dir,
         path,
-        data_location.DataLocation(
-            target=cleaned,
-            chosen_by=(session.name or session.subject) if session is not None else "",
-            chosen_at=data_location.now(),
+        data_location.render(
+            data_location.DataLocation(target=cleaned, chosen_by=author, chosen_at=data_location.now())
         ),
+        author,
+        f"settings: the data goes to {cleaned}",
     )
     return _back("saved")
 

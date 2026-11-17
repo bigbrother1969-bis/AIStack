@@ -40,8 +40,12 @@ class DeclarationWriteEngine(OperationEngine):
             raise TypeError("DeclarationWriteEngine expects a DeclarationWrite payload.")
 
         path = payload.path
-        after = payload.content.encode("utf-8")
         before = path.read_bytes() if path.exists() else None
+
+        if payload.content is None:
+            return self._remove(path, before, payload.copy_label)
+
+        after = payload.content.encode("utf-8")
 
         if before == after:
             return {"path": str(path), "changed": False, "copy": "", "before": _digest(after), "after": _digest(after)}
@@ -66,6 +70,15 @@ class DeclarationWriteEngine(OperationEngine):
             "before": _digest(before) if before is not None else "",
             "after": _digest(after),
         }
+
+    def _remove(self, path: Path, before: bytes | None, label: str) -> dict[str, object]:
+        if before is None:
+            return {"path": str(path), "changed": False, "copy": "", "before": "", "after": ""}
+
+        kept = self._keep(path, label)
+        path.unlink()
+
+        return {"path": str(path), "changed": True, "copy": str(kept), "before": _digest(before), "after": ""}
 
     def _keep(self, path: Path, label: str) -> Path:
         stamp = self._clock().strftime("%Y%m%d-%H%M%S")

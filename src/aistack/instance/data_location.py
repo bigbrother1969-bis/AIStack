@@ -82,17 +82,16 @@ def load(path: Path) -> DataLocation | None:
     )
 
 
-def save(path: Path, location: DataLocation) -> None:
+def render(location: DataLocation) -> str:
+    """The text of `data_location.yml`. Writing it (or taking it away) is
+    `aistack.declaration`'s job."""
+
     body = yaml.safe_dump(
         {"target": location.target, "chosen_by": location.chosen_by, "chosen_at": location.chosen_at},
         allow_unicode=True,
         sort_keys=False,
     )
-    path.write_text(_HEADER + body, encoding="utf-8")
-
-
-def clear(path: Path) -> None:
-    path.unlink(missing_ok=True)
+    return _HEADER + body
 
 
 def measured_size(directory: Path, budget: float = SIZE_BUDGET_SECONDS) -> int | None:

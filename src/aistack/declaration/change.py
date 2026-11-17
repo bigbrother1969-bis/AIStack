@@ -38,18 +38,19 @@ def write_declaration(
     transactions: TransactionServices,
     generated_dir: Path,
     path: Path,
-    content: str,
+    content: str | None,
     author: str,
     reason: str,
     copy_label: str = "",
 ) -> dict[str, object]:
     """
-    Write `content` to `path` as one `declaration.write` operation; return
-    what the operation did. A change that changed nothing leaves no record.
+    Write `content` to `path` (`None`: take the file away, keeping the
+    previous one) as one `declaration.write` operation; return what the
+    operation did. A change that changed nothing leaves no record.
     """
 
     operation = Operation(
-        name=f"write {path.name}",
+        name=f"{'write' if content is not None else 'remove'} {path.name}",
         kind=KIND,
         payload=DeclarationWrite(
             path=path, content=content, author=author, reason=reason, copy_label=copy_label

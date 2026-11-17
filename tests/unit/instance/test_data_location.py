@@ -11,11 +11,11 @@ from aistack.instance import data_location as dl
 
 def test_a_choice_is_recorded_and_read_back(tmp_path: Path):
     path = tmp_path / dl.FILE_NAME
-    dl.save(path, dl.DataLocation("/media/BD/aistack", "Fabrice", "2026-10-04T14:00:00+02:00"))
+    path.write_text(dl.render(dl.DataLocation("/media/BD/aistack", "Fabrice", "2026-10-04T14:00:00+02:00")), encoding="utf-8")
 
     assert dl.load(path) == dl.DataLocation("/media/BD/aistack", "Fabrice", "2026-10-04T14:00:00+02:00")
     assert path.read_text(encoding="utf-8").startswith("# AIStack")
-    dl.clear(path)
+    path.write_text("", encoding="utf-8")
     assert dl.load(path) is None
 
 

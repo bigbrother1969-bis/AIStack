@@ -104,6 +104,28 @@ def test_no_temporary_file_is_left_when_the_move_fails(tmp_path: Path) -> None:
     assert [p.name for p in tmp_path.iterdir()] == ["a.yml"]
 
 
+def test_a_file_can_be_taken_away_and_is_kept(tmp_path: Path) -> None:
+    path = tmp_path / "a.yml"
+    path.write_text("old\n", encoding="utf-8")
+
+    result = _engine().execute(DeclarationWrite(path=path, content=None, author="", reason=""))
+
+    assert isinstance(result, dict)
+    assert not path.exists()
+    assert result["changed"] is True and result["after"] == ""
+    assert (tmp_path / "a.yml.avant-20261117-190005").read_text(encoding="utf-8") == "old\n"
+
+
+def test_taking_away_a_file_that_is_not_there_changes_nothing(tmp_path: Path) -> None:
+    result = _engine().execute(
+        DeclarationWrite(path=tmp_path / "a.yml", content=None, author="", reason="")
+    )
+
+    assert isinstance(result, dict)
+    assert result["changed"] is False
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_another_payload_is_refused() -> None:
     with pytest.raises(TypeError):
         _engine().execute("not a declaration")

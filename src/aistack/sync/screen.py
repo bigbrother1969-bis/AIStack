@@ -27,6 +27,7 @@ from aistack.kernel.selection.core import Selection
 from aistack.providers.filesystem import MediaLibraryProvider
 from aistack.selection.capacity import CapacityVerdict
 from aistack.selection.materialisation_status import materialized_nodes
+from aistack.selection.explanation import explain_selection
 from aistack.selection.subtree import SubtreeResolution, resolve_subtrees
 from aistack.selection.yaml import load_selection_yaml, save_selection_yaml
 from aistack.sync.declaration import (
@@ -185,6 +186,9 @@ def page_context(
         "covered": set(resolution.covered),
         "redundant": set(resolution.redundant),
         "absent": resolution.absent,
+        # Why each item is in or out, by the rule that decided it
+        # (`STD-0300` criterion 3.2).
+        "decisions": {decision.id: decision for decision in explain_selection(catalog, resolution)},
         "capacity": verdict,
         "pending": pending,
         "materialized": materialized_nodes(pending, resolution) if not pending.refused else frozenset(),

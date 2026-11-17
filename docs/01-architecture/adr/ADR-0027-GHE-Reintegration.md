@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.11
+  version: 1.12
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -227,6 +227,14 @@ collaborator injected into `create_app` still replaces the default, as the
 tests do. The web application executes no Task: no trace is written by a
 page view, and the volume of traces stays an open point until one does.
 
+**Criterion 3.2 gets its explanation back** (5.9, 2026-11-17), as the owner
+decided on 2026-11-15: `aistack.selection.explanation` returns from the tag
+with its test, because the selection screen now displays it. Every item of
+the catalog, included or excluded, shows on its line the rule that decided
+it, in the language of the page. The tag's module is kept as it was; it gains
+two fields, `kind` and `by`, so that the screen translates the rule from data
+and parses no sentence.
+
 ### 10. Chains run through the Kernel as Tasks
 
 Decided by the owner, 2026-11-16, at the opening of lot 5. A chain passes
@@ -374,7 +382,6 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 
 - How the nine criteria of `STD-0300` are re-run on 2.0.0
   (`GOV-0002/OS-091`).
-- Whether criterion 3.2 gets its explanation back (`OS-090`).
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
 - The volume of the traces, to measure on the host after a few days of the

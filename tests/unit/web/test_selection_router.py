@@ -195,3 +195,26 @@ def test_an_existing_folder_can_be_shared_again(workspace: Path, monkeypatch):
     monkeypatch.setattr(selection, "_folder_state", lambda *a: {"share": None, "reshare": True})
     page = client(workspace).get(f"/selection/{PAIR}/?lang=en").text
     assert f'action="/selection/{PAIR}/reshare"' in page and "Share again" in page
+
+
+def test_each_item_says_which_rule_included_or_excluded_it(workspace: Path):
+    """`STD-0300` criterion 3.2 (`GOV-0002/OS-090`): the screen names, for
+    every item it lists, the rule that decided it."""
+
+    web = client(workspace)
+    web.post(f"/selection/{PAIR}/save?lang=en", data={"selected_ids": ["Artist"]})
+
+    reply = web.get(f"/selection/{PAIR}/?lang=en")
+
+    assert 'title="included: ticked directly">Artist<' in reply.text
+    assert 'title="included: inherited from Artist"' in reply.text
+
+    french = web.get(f"/selection/{PAIR}/?lang=fr")
+
+    assert "inclus : coché directement" in french.text
+
+
+def test_an_item_nobody_ticked_says_it_is_excluded(workspace: Path):
+    reply = client(workspace).get(f"/selection/{PAIR}/?lang=en")
+
+    assert "excluded: neither ticked nor covered by a ticked ancestor" in reply.text

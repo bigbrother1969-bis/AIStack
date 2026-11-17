@@ -37,6 +37,11 @@ toolbar:
   expand_all: "Tout déplier"
 sync_button: "Enregistrer la sélection"
 syncing: "Synchronisation en cours…"
+rule:
+  ticked: "inclus : coché directement"
+  redundant: "inclus : coché, mais déjà couvert par {by}"
+  inherited: "inclus : hérité de {by}"
+  excluded: "exclu : ni coché, ni couvert par un parent coché"
 badge:
   redundant: "déjà inclus par un parent coché"
   covered: "inclus (parent coché)"

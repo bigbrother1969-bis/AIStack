@@ -200,7 +200,8 @@
           {% endif %}
           <input type="checkbox" name="selected_ids" value="{{ item.id }}" title="{{ t('selection.tooltip.select', label=item.label or item.id) }}" {% if is_selected %}checked{% endif %}>
           <div>
-            <span>{{ item.label or item.id }}</span>
+            {% set decision = decisions[item.id] if item.id in decisions else none %}
+            <span{% if decision %} title="{% if decision.kind == 'ticked' %}{{ t('selection.rule.ticked') }}{% elif decision.kind == 'redundant' %}{{ t('selection.rule.redundant', by=decision.by) }}{% elif decision.kind == 'inherited' %}{{ t('selection.rule.inherited', by=decision.by) }}{% else %}{{ t('selection.rule.excluded') }}{% endif %}"{% endif %}>{{ item.label or item.id }}</span>
             {% if is_selected and is_redundant %}
               <span class="badge redundant">{{ t('selection.badge.redundant') }}</span>
             {% endif %}

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.18
+  version: 2.19
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -284,20 +284,6 @@ the tag* and is no longer reported; the architecture documents return with
 the lot that brings their code back. What remains reported is those, and
 `OS-092`.
 
-#### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
-
-**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
-**Observed** `STD-0300` criterion 3.2 was satisfied on 2026-09-04 by
-`src/aistack/selection/explanation.py` and
-`tests/unit/selection/test_selection_explanation.py`. Neither is in `main`
-on `e574fb7`; `git grep explain_selection -- src` returns nothing. The
-selection itself still runs.
-**Derivable** yes
-**Qualification** decided by the owner, 2026-11-15: the explanation returns
-from the tag when the selection screen displays it, in lot 5 (`ADR-0027`).
-Until then 3.2 stays *not verifiable in `main`*. It is not restored before
-something calls it.
-
 ---
 
 # Defects
@@ -405,6 +391,21 @@ owner, 2026-11-15.
 `kernel/runtime`) and `aistack.cli.health_render` boots it with a
 `FileTraceRepository`. Both guards read something. A third test fails if
 either goes back to reading nothing.*
+
+#### GOV-0002/OS-090 — VS-3 no longer explains why an item is included or excluded
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** resolved 2026-11-17 by commit 5.9
+**Observed** `STD-0300` criterion 3.2 was satisfied on 2026-09-04 by
+`src/aistack/selection/explanation.py` and
+`tests/unit/selection/test_selection_explanation.py`. Neither is in `main`
+on `e574fb7`; `git grep explain_selection -- src` returns nothing. The
+selection itself still runs.
+**Derivable** yes
+**Qualification** decided by the owner, 2026-11-15: the explanation returns
+from the tag when the selection screen displays it, in lot 5 (`ADR-0027`).
+Until then 3.2 stays *not verifiable in `main`*. It is not restored before
+something calls it.
+*Commit 5.9, 2026-11-17: `aistack.selection.explanation` and its seven tests come back from the tag, and the selection screen (`aistack.sync.screen.page_context`, template `selection/index.html`) names on each line, in the language of the page, the rule that decided the item: ticked, redundant, inherited, excluded. `STD-0300` still reads 3.2 as not verifiable in `main`; it is brought up to date with the re-run of lot 5.11, as the standard's own requalification.*
 
 #### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
 

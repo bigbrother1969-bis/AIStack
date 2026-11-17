@@ -37,6 +37,11 @@ toolbar:
   expand_all: "Expand all"
 sync_button: "Record the selection"
 syncing: "Synchronising…"
+rule:
+  ticked: "included: ticked directly"
+  redundant: "included: ticked, but already covered by {by}"
+  inherited: "included: inherited from {by}"
+  excluded: "excluded: neither ticked nor covered by a ticked ancestor"
 badge:
   redundant: "already included by a ticked parent"
   covered: "included (parent ticked)"

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.34
+  version: 1.35
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -636,12 +636,17 @@ verifiable in `main`"; 2.4 was never verified.
 
 **Decisions of the owner, 2026-11-17:**
 
-- **Scope: everything comes back, by stages.** 8.2 the four documents
-  (`ADR-0005`, `ADR-0006`, `ADR-0007`, `ARCH-0013`) revised against the code
-  that returns, 8.3 the integrity checks, one at a time, as a Task of the
-  Runtime, 8.4 the bundle's export, 8.5 the Boot Report, 8.6 VS-2 re-run,
-  8.7 the closing (`OS-088`, `STD-0300`). Nothing returns without a use
-  (rule 5): a check returns when something runs it.
+- **Scope: everything comes back, by stages.** Read again on 2026-11-17 against
+  the tag's file list, the order is: 8.2 the Context Bundle (8.2a the contracts
+  and `aistack.conformance`, 8.2b the engine and the official export script,
+  8.2c the SSH transfer if the owner still uses it), 8.3 the integrity checks,
+  one at a time, as a Task of the Runtime (they read a bundle, so the bundle
+  comes first), 8.4 the Boot Report and the protocol, 8.5 the four documents
+  (`ADR-0005`, `ADR-0006`, `ADR-0007`, `ARCH-0013`), which return when the code
+  they describe does, 8.6 `STD-0300` VS-2 re-run, 8.7 the closing (`OS-088`,
+  `STD-0300`). Nothing returns without a use (rule 5): a check returns when
+  something runs it. `aistack.package_manager` (thirteen files at the tag) has
+  no use in any decision above: it is decided with `ARCH-0013`.
 - **The Knowledge Acquisition Protocol becomes a Foundation concept**, written
   in this lot (phase 4 of the August plan; it appears in no governed document
   today). It describes the acquisition states and the Boot Report; the code
@@ -653,6 +658,23 @@ verifiable in `main`"; 2.4 was never verified.
 The tag's files come from the owner (`git show <tag>:<path>`): Claude does not
 reach the tag. Versioning stays as in lots 5 to 7: one commit, one patch, the
 host measures at the end.
+
+**Commit 8.2a, 2026-11-17: the contracts and `aistack.conformance` return.**
+Nine contracts the bundle names and `main` lacks (`knowledge_registry`,
+`discovery`, `criticality`, `classification`, `artifact_builder`,
+`registry_builder`, `readme_exporter`, `eligibility`; `manifest_serializer`
+waits for 8.2b, it imports the bundle manifest) and the package that measures
+whether a class satisfies a contract (`structural`, `inventory`, `registries`,
+`serialization`, `registry_serialization`), with its 56 tests. The four
+contracts `main` already holds (`artifact`, `undeclared`, `registry_inventory`,
+`contract_inventory`) were compared to the tag's: the same code, only the
+comments were shortened; `main`'s stay. `contract_inventory` and
+`registry_inventory` had no user in `main`: the inventory is theirs. Two
+adaptations, both written here: the inventory no longer wraps its walk in the
+quarantine's `inspecting()` (the quarantine of `OPS-0012` is not in `main`), and
+two tests changed: `test_the_integrity_checks_satisfy_their_contract` comes
+back with the checks (8.3), and the file the repository test looks for is
+`kernel/bootstrap/registrations.py` (the tag had `providers.py`).
 
 ## The refactoring plan of August 2026
 

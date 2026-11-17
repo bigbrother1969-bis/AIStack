@@ -187,3 +187,21 @@ def test_a_copy_that_is_gone_leaves_an_empty_difference_not_an_error(host) -> No
 
 def test_no_record_means_no_hand_edit(tmp_path: Path) -> None:
     assert observe.hand_edits(tmp_path) == []
+
+
+def test_edits_of_the_same_second_keep_the_order_of_their_history_names(tmp_path: Path) -> None:
+    stream = tmp_path / observe.OBSERVED_STREAM
+    stream.mkdir(parents=True)
+    for file, copy in (("2026-11-17T21-29-40Z.json", "c1"), ("2026-11-17T21-29-40Z-1.json", "c2"), ("2026-11-17T21-29-40Z-2.json", "c3")):
+        (stream / file).write_text(
+            json.dumps({"at": "2026-11-17T21:29:40+00:00", "name": "hosts.yml", "copy": str(tmp_path / copy)}), encoding="utf-8"
+        )
+    for copy, text in (("c1", "a: 1\n"), ("c2", "a: 2\n"), ("c3", "a: 3\n")):
+        (tmp_path / copy).write_text(text, encoding="utf-8")
+    observe.seen_path(tmp_path, "hosts.yml").parent.mkdir(parents=True)
+    observe.seen_path(tmp_path, "hosts.yml").write_text("a: 4\n", encoding="utf-8")
+
+    edits = observe.hand_edits(tmp_path)
+
+    assert [("-a: 3" in e.diff, "+a: 4" in e.diff) for e in edits][0] == (True, True)
+    assert "-a: 1" in edits[2].diff and "+a: 2" in edits[2].diff

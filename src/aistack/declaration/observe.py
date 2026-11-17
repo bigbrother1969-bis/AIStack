@@ -214,7 +214,7 @@ def hand_edits(generated_dir: Path, limit: int = 20) -> list[HandEdit]:
     that is gone leaves an empty difference, not an error.
     """
 
-    records: list[dict[str, object]] = []
+    ordered: list[tuple[str, int, dict[str, object]]] = []
 
     for path in (generated_dir / OBSERVED_STREAM).glob("*.json"):
         try:
@@ -222,9 +222,12 @@ def hand_edits(generated_dir: Path, limit: int = 20) -> list[HandEdit]:
         except (OSError, ValueError):
             continue
         if isinstance(data, dict) and data.get("name"):
-            records.append(data)
+            # Two edits in the same second: the history names the second one `<stamp>-<n>`.
+            suffix = path.stem.rsplit("Z-", 1)[1] if "Z-" in path.stem else "0"
+            ordered.append((str(data.get("at", "")), int(suffix) if suffix.isdigit() else 0, data))
 
-    records.sort(key=lambda record: str(record.get("at", "")))
+    ordered.sort(key=lambda entry: entry[:2])
+    records = [entry[2] for entry in ordered]
     found: list[HandEdit] = []
 
     for index, record in enumerate(records):

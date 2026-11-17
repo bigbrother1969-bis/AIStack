@@ -14,6 +14,7 @@ from fastapi.responses import RedirectResponse, Response
 
 from aistack.config import config_dir, shipped_definitions, shown_config_dir
 from aistack.i18n import Translator
+from aistack.declaration import observe, validate
 from aistack.instance import declarations
 from aistack.renderers.text import escape_text
 from aistack.web.authentication import ADMIN_ACTION, current_session
@@ -80,3 +81,50 @@ def mark_seen(request: Request, name: str = Form("")) -> Response:
     if directory is None or not declarations.mark_seen(directory, shipped_definitions(), name):
         return RedirectResponse(f"/settings#{ANCHOR}", status_code=303)
     return RedirectResponse(f"/settings?declaration={quote(name)}#{ANCHOR}", status_code=303)
+
+
+def hand_edits_section(request: Request, t: Translator) -> str:
+    """
+    Settings' "Declarations edited by hand": what the files of the configuration
+    directory hold that their loader does not read (now), and the edits made by
+    hand with their difference (ADR-0027 § 12). Read only.
+    """
+
+    directory = config_dir()
+    if directory is None:
+        return ""
+    generated = request.app.state.generated_dir
+    parts = [
+        '<section class="auth-settings" id="hand-edits">',
+        f'<h2>{escape_text(t("auth.hand_edits.heading"))}</h2>',
+        f'<p>{escape_text(t("auth.hand_edits.intro"))}</p>',
+    ]
+    invalid = validate.validate(directory, generated, shipped_definitions())
+    if invalid:
+        parts.append(f'<h3>{escape_text(t("auth.hand_edits.invalid"))}</h3>')
+    for item in invalid:
+        kept = validate.last_valid_copy(generated, item.name, observe.seen_path(generated, item.name).parent)
+        parts.append(
+            f'<p style="padding:.6rem .9rem;border-radius:6px;background:#fdecea;border:1px solid #f5c6cb">'
+            f'<code>{escape_text(item.name)}</code> — {escape_text(item.error)}<br>'
+            f'{escape_text(t("auth.hand_edits.last_valid"))} '
+            f'<code>{escape_text(kept) if kept else escape_text(t("auth.hand_edits.no_copy"))}</code></p>'
+        )
+    edits = observe.hand_edits(generated)
+    if not edits:
+        parts.append(f'<p>{escape_text(t("auth.hand_edits.none"))}</p>')
+    for edit in edits:
+        state = t("auth.hand_edits.valid") if edit.valid else t("auth.hand_edits.not_read", error=edit.error)
+        parts.append(
+            f'<h3><code>{escape_text(edit.name)}</code> <small>{escape_text(edit.at)}</small></h3>'
+            f'<p>{escape_text(state)}</p>'
+        )
+        parts.append(
+            f'<pre style="{_PRE}">{escape_text(chr(10).join(edit.diff)) or escape_text(t("auth.hand_edits.no_diff"))}</pre>'
+        )
+        if edit.cut:
+            parts.append(
+                f'<p class="note">{escape_text(t("auth.declarations.cut", count=observe.MAX_DIFF_LINES))}</p>'
+            )
+    parts.append("</section>")
+    return "".join(parts)

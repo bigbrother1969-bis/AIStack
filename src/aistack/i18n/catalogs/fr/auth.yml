@@ -147,6 +147,16 @@ declarations:
   marked: "C'est noté : {name} n'est plus signalé tant que la version livrée ne change pas."
   tooltip:
     seen: "Ne plus signaler ce fichier tant que la version livrée ne change pas à nouveau ; ton fichier reste tel quel"
+hand_edits:
+  heading: "Déclarations modifiées à la main"
+  intro: "Les modifications faites aux fichiers du dossier de configuration avec un éditeur sont vues à chaque passage de la vigie (toutes les 15 minutes) et gardées ici, avec la différence. Un fichier que son chargeur ne lit pas est montré en premier ; rien n'est refusé et rien n'est restauré."
+  invalid: "Non lues en ce moment"
+  last_valid: "Dernière copie qui était lue :"
+  no_copy: "aucune gardée"
+  none: "Aucune modification à la main enregistrée."
+  valid: "Lue par son chargeur."
+  not_read: "Non lue par son chargeur : {error}"
+  no_diff: "(la copie n'est plus là : pas de différence à montrer)"
 # Settings: API keys section.
 api_keys:
   heading: "Clés d'API"

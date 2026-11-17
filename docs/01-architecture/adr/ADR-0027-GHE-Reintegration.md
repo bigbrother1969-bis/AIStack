@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.31
+  version: 1.32
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -596,6 +596,17 @@ read is one urgent event, said once, with the loader's words and the last valid
 copy; read again then broken again is said again; the first pass of a fresh
 install only notes. `State` keeps the names (`invalid`). The audit does not
 move: the file goes through `write_artifact_with_history`.
+
+**Commit 7.4b, 2026-11-17: Settings shows it.** A section "Declarations edited
+by hand" follows "Shipped declarations" (administrators, container with a
+configuration directory, read only). It lists first what the loaders do not
+read *now* (computed live against the configuration directory, with the last
+copy that was read), then the recorded edits, newest first (20), each with its
+difference: the copy kept before (−) against what the file held after (the next
+edit's copy of the same file, or the snapshot for the last). `observe.hand_edits`
+reads the stream `history/declaration-observed`; a copy that is gone gives a
+difference against nothing, not an error. The difference shows the owner his own
+edit: the records never hold content, the files in his data directory do.
 
 ## The refactoring plan of August 2026
 

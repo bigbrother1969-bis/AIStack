@@ -147,6 +147,16 @@ declarations:
   marked: "Noted: {name} is no longer reported until the shipped version changes again."
   tooltip:
     seen: "Stop reporting this file until the shipped version changes again; your file stays as it is"
+hand_edits:
+  heading: "Declarations edited by hand"
+  intro: "Edits made to the files of the configuration directory with an editor are seen at each pass of the vigil (every 15 minutes) and kept here, with the difference. A file that its loader does not read is shown first; nothing is refused and nothing is restored."
+  invalid: "Not read now"
+  last_valid: "Last copy that was read:"
+  no_copy: "none kept"
+  none: "No edit by hand recorded."
+  valid: "Read by its loader."
+  not_read: "Not read by its loader: {error}"
+  no_diff: "(the copy is no longer there: no difference to show)"
 # Settings: API keys section.
 api_keys:
   heading: "API keys"

@@ -156,3 +156,34 @@ def test_crlf_line_ends_are_kept_byte_for_byte(host) -> None:
 
     assert observe.seen_path(generated, "hosts.yml").read_bytes() == b"a: 1\r\nb: 2\r\n"
     assert _pass(host)[0] == []
+
+
+def test_the_hand_edits_come_newest_first_each_with_its_own_difference(host) -> None:
+    config, generated, _ = host
+    for text in ("a: 1\n", "a: 2\n", "a: 3\n"):
+        (config / "hosts.yml").write_text(text, encoding="utf-8")
+        _pass(host)
+
+    edits = observe.hand_edits(generated)
+
+    assert [edit.name for edit in edits] == ["hosts.yml", "hosts.yml"]
+    assert "-a: 2" in edits[0].diff and "+a: 3" in edits[0].diff
+    assert "-a: 1" in edits[1].diff and "+a: 2" in edits[1].diff
+    assert observe.hand_edits(generated, limit=1) == edits[:1]
+
+
+def test_a_copy_that_is_gone_leaves_an_empty_difference_not_an_error(host) -> None:
+    config, generated, _ = host
+    for text in ("a: 1\n", "a: 2\n"):
+        (config / "hosts.yml").write_text(text, encoding="utf-8")
+        _pass(host)
+    for copy in observe.seen_path(generated, "hosts.yml").parent.glob("hosts.yml.avant-observe-*"):
+        copy.unlink()
+
+    [edit] = observe.hand_edits(generated)
+
+    assert "+a: 2" in edit.diff and not any(line.startswith("-a") for line in edit.diff)
+
+
+def test_no_record_means_no_hand_edit(tmp_path: Path) -> None:
+    assert observe.hand_edits(tmp_path) == []

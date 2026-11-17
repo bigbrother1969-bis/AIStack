@@ -24,6 +24,7 @@ transaction service.
 
 from __future__ import annotations
 
+import difflib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -39,6 +40,9 @@ SEEN = Path("declarations") / "seen"
 RECORD = "declaration-observed.json"
 CHANGE_STREAM = Path("history") / "declaration-change"
 AUTHOR = "by hand on the host"
+OBSERVED_STREAM = Path("history") / "declaration-observed"
+# A difference longer than this is cut: the page says so.
+MAX_DIFF_LINES = 200
 
 REFERENCE = "reference"
 FOLLOW = "follow"
@@ -180,3 +184,72 @@ def _governed(generated_dir: Path) -> dict[str, str]:
             last[name] = (at, str(record["after"]))
 
     return {name: digest for name, (_, digest) in last.items()}
+
+
+@dataclass(frozen=True)
+class HandEdit:
+    """One edit by hand, as Settings shows it: when, which file, the difference."""
+
+    at: str
+    name: str
+    valid: bool
+    error: str
+    last_valid_copy: str
+    diff: tuple[str, ...]
+    cut: bool
+
+
+def _text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def hand_edits(generated_dir: Path, limit: int = 20) -> list[HandEdit]:
+    """
+    The edits recorded by `apply`, the newest first, each with its difference:
+    the copy kept before (−) against what the file held after, which is the
+    next edit's copy of the same file, or the snapshot for the last one. A copy
+    that is gone leaves an empty difference, not an error.
+    """
+
+    records: list[dict[str, object]] = []
+
+    for path in (generated_dir / OBSERVED_STREAM).glob("*.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get("name"):
+            records.append(data)
+
+    records.sort(key=lambda record: str(record.get("at", "")))
+    found: list[HandEdit] = []
+
+    for index, record in enumerate(records):
+        name = str(record["name"])
+        later = next((other for other in records[index + 1 :] if other.get("name") == name), None)
+        after = Path(str(later["copy"])) if later is not None and later.get("copy") else seen_path(generated_dir, name)
+        lines = list(
+            difflib.unified_diff(
+                _text(Path(str(record.get("copy", "")))).splitlines(),
+                _text(after).splitlines(),
+                fromfile=f"{name} (before)",
+                tofile=f"{name} (after)",
+                lineterm="",
+            )
+        )
+        found.append(
+            HandEdit(
+                at=str(record.get("at", "")),
+                name=name,
+                valid=bool(record.get("valid", True)),
+                error=str(record.get("error", "")),
+                last_valid_copy=str(record.get("last_valid_copy", "")),
+                diff=tuple(lines[:MAX_DIFF_LINES]),
+                cut=len(lines) > MAX_DIFF_LINES,
+            )
+        )
+
+    return found[::-1][:limit]

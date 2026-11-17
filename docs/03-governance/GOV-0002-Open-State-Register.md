@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.32
+  version: 2.33
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -198,55 +198,6 @@ None open.
 
 # Non-conforming instances
 
-#### GOV-0002/OS-087 — The disk is written outside a transaction
-
-**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
-**Observed** `python scripts/ghe_audit.py`: 35 files outside
-`src/aistack/transaction` write, move or delete on disk. `GOV-P-002`,
-`ARC-P-012`.
-*Commit 5.3, 2026-11-17: 34. `aistack.cli.health_render` no longer writes:
-the plan page goes through `write_view`, in the module that already writes
-the other generated artifacts.*
-*Commit 5.5, 2026-11-17: 33. `aistack.cli.console_render` no longer writes: the
-links in the public directory and its index go through `ensure_link` and
-`write_view`, in the same module.*
-**Derivable** yes for the list; no for telling a generated artifact
-(`ENG-P-003`) from a modification of knowledge — that is a reading.
-**Qualification** unknown until that reading is done, in lot 6.
-*Commit 6.1, 2026-11-17: the reading is done, file by file
-(`claude/INVENTAIRE-2026-11-17-ecritures-lot-6.md`). Decided by the owner
-(`ADR-0027` § 11): seven writes go through a transaction (the declarations a
-person changes from a screen, and the materialisation of a selection), one is
-deleted (`generators/filesystem/copy`, dead code), and 25 are declared exempt
-(the state a service keeps for itself, the process locks, the installation,
-the maintenance, the recognised writer of generated artifacts, and the API
-keys: no secret in a payload or a trace). Left: 6.2 to 6.6.*
-*Commit 6.2, 2026-11-17: 32. The operation `declaration.write` exists
-(`ADR-0027` § 11); the SSH user names of the network discovery screen go
-through it. Left: the priority and selection stores, `sync/screen`,
-`arrivals/declare`, `instance/data_location`, then 6.3 to 6.6.*
-*Commit 6.2 (priorities), 2026-11-17: 31. The CPU priority screen and the
-troubleshooting fix write through `declaration.write`. Left: the selection
-store, `sync/screen`, `arrivals/declare`, `instance/data_location`, then 6.3
-to 6.6.*
-*Commit 6.2 (selection), 2026-11-17: 30. The sync screen records the selection
-through `declaration.write`. Left: `arrivals/declare`, `instance/data_location`,
-then 6.3 to 6.6.*
-*Commit 6.2 (arrivals), 2026-11-17: 29. The container declared from the
-arrivals goes through `declaration.write`. Left: `instance/data_location`,
-then 6.3 to 6.6.*
-*Commit 6.2 (data location, 6.2 closed), 2026-11-17: 28. Choosing the place of
-the data, and forgetting the choice, go through `declaration.write`. Left: 6.3
-to 6.6.*
-*Commit 6.3, 2026-11-17: 27. The hard links of a device's folder go through
-`selection.materialise`; `generators/filesystem/hardlink` no longer writes.
-`cli/sync_apply` is exempt like `dock` (owner's decision). Left: 6.4 to 6.6.*
-*Commit 6.4, 2026-11-17: 26. `generators/filesystem/copy` (dead code) is
-deleted. Left: 6.5 and 6.6.*
-*Commit 6.5, 2026-11-17: nothing is left to do. The audit lists apart the 26
-files declared exempt (`ADR-0027` § 11) and the measure of this item is empty.
-Left: 6.6, the closing and the check in a container.*
-
 #### GOV-0002/OS-088 — `main` cites documents it does not hold
 
 **Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
@@ -267,7 +218,23 @@ return, revised; 8 cited and absent, then 4. `ADR-0005` to `ADR-0007` and
 
 # Defects
 
-None open. OS-089 is in *Resolved*.
+#### GOV-0002/OS-094 — The sync links a file under a name Syncthing renames, and does it again at every pass
+
+**Nature** `defect` · **Opened** 2026-11-17 · **State** open
+**Observed** on the MSI, 2026-11-17: `./run_sync.sh music--phone` reports `+7 -7`
+at every pass, as it did on 2026-10-12 (`reports/generated/sync/applied/`).
+`/media/TechData/Storage/Music/Asa/Beautiful Imperfection/05. Bimpé.mp3` is
+named in NFD (“e” and a combining accent); in `Music-Android` the same file is
+named in NFC. Seven files of the library are named in NFD. The destination
+folder is Syncthing's, which corrects the normalisation of names by default:
+it renames what AIStack linked, the next pass does not find the name it wants,
+links it again and removes the NFC one as not designated.
+**Derivable** yes (`diag_sync_names.py` lists the seven; a test with a name in
+NFD reproduces it)
+**Qualification** unknown until the owner decides. The proposal: the target
+name is the NFC form of the source's name, and names are compared in NFC, so
+that an unchanged selection writes nothing. The seven files of the
+selection are not lost: the phone receives them under the NFC name.
 
 ---
 
@@ -491,3 +458,66 @@ under `docs/` in `main`, and neither is under `docs/` at
 `OPS-0009 — Restore Test Freshness` describes what `main` does and decides
 nothing new; `QUAL-0001` summarises the session note under
 `docs/05-reference/`, and `STD-0102` gains the `QUAL-` prefix.
+
+#### GOV-0002/OS-087 — The disk is written outside a transaction
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** resolved 2026-11-17 by lot 6 (commits 6.1 to 6.6)
+**Observed** `python scripts/ghe_audit.py`: 35 files outside
+`src/aistack/transaction` write, move or delete on disk. `GOV-P-002`,
+`ARC-P-012`.
+*Commit 5.3, 2026-11-17: 34. `aistack.cli.health_render` no longer writes:
+the plan page goes through `write_view`, in the module that already writes
+the other generated artifacts.*
+*Commit 5.5, 2026-11-17: 33. `aistack.cli.console_render` no longer writes: the
+links in the public directory and its index go through `ensure_link` and
+`write_view`, in the same module.*
+**Derivable** yes for the list; no for telling a generated artifact
+(`ENG-P-003`) from a modification of knowledge — that is a reading.
+**Qualification** unknown until that reading is done, in lot 6.
+*Commit 6.1, 2026-11-17: the reading is done, file by file
+(`claude/INVENTAIRE-2026-11-17-ecritures-lot-6.md`). Decided by the owner
+(`ADR-0027` § 11): seven writes go through a transaction (the declarations a
+person changes from a screen, and the materialisation of a selection), one is
+deleted (`generators/filesystem/copy`, dead code), and 25 are declared exempt
+(the state a service keeps for itself, the process locks, the installation,
+the maintenance, the recognised writer of generated artifacts, and the API
+keys: no secret in a payload or a trace). Left: 6.2 to 6.6.*
+*Commit 6.2, 2026-11-17: 32. The operation `declaration.write` exists
+(`ADR-0027` § 11); the SSH user names of the network discovery screen go
+through it. Left: the priority and selection stores, `sync/screen`,
+`arrivals/declare`, `instance/data_location`, then 6.3 to 6.6.*
+*Commit 6.2 (priorities), 2026-11-17: 31. The CPU priority screen and the
+troubleshooting fix write through `declaration.write`. Left: the selection
+store, `sync/screen`, `arrivals/declare`, `instance/data_location`, then 6.3
+to 6.6.*
+*Commit 6.2 (selection), 2026-11-17: 30. The sync screen records the selection
+through `declaration.write`. Left: `arrivals/declare`, `instance/data_location`,
+then 6.3 to 6.6.*
+*Commit 6.2 (arrivals), 2026-11-17: 29. The container declared from the
+arrivals goes through `declaration.write`. Left: `instance/data_location`,
+then 6.3 to 6.6.*
+*Commit 6.2 (data location, 6.2 closed), 2026-11-17: 28. Choosing the place of
+the data, and forgetting the choice, go through `declaration.write`. Left: 6.3
+to 6.6.*
+*Commit 6.3, 2026-11-17: 27. The hard links of a device's folder go through
+`selection.materialise`; `generators/filesystem/hardlink` no longer writes.
+`cli/sync_apply` is exempt like `dock` (owner's decision). Left: 6.4 to 6.6.*
+*Commit 6.4, 2026-11-17: 26. `generators/filesystem/copy` (dead code) is
+deleted. Left: 6.5 and 6.6.*
+*Commit 6.5, 2026-11-17: nothing is left to do. The audit lists apart the 26
+files declared exempt (`ADR-0027` § 11) and the measure of this item is empty.
+Left: 6.6, the closing and the check in a container.*
+*Commit 6.5, 2026-11-17: nothing is left to do. The audit lists apart the 26
+files declared exempt (`ADR-0027` § 11) and the measure of this item is empty.*
+*Commit 6.6, 2026-11-17: closed. Measured inside the repository:
+`python scripts/ghe_audit.py` reports 0 writes outside a transaction and 26
+declared exempt, and the suite fails on a write in a file that is not declared
+(`tests/unit/scripts/test_ghe_audit.py`). Measured on the host (the MSI, at
+`4073820`, 2026-11-17): `./run_sync.sh --dry-run` then
+`./run_sync.sh music--phone` through `selection.materialise` give the same
+report, `+7 ~0 -7 =6577`, no failure, nothing left in the checkout; the
+last-application record is rewritten. The same `+7 -7` is in the record of
+2026-10-12, before lot 6: it is `OS-094`, not a regression. What still said
+the condition and was read: the table of `ADR-0027` § 5, § 11 (“until then the
+files stay in the baseline”, brought up to date) and this register; nothing
+else names the item.*

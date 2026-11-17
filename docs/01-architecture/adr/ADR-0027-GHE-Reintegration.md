@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.24
+  version: 1.25
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -426,8 +426,8 @@ write is not knowledge and no person's choice triggers it:
 **To delete**: `generators/filesystem/copy`, called by nothing in `src` or in
 the tests (§ 2).
 
-The audit separates what is declared exempt from what is left to do in 6.5;
-until then the files stay in the baseline, which can only get shorter.
+The audit separates what is declared exempt from what is left to do (6.5): the
+baseline holds both lists and can only get shorter.
 
 **Commit 6.4, 2026-11-17.** `generators/filesystem/copy` is deleted (it held
 `generate_copy_folder`, destructive and untested, and `generate_symlink_folder`;
@@ -435,6 +435,15 @@ nothing in `src` or in the tests called either, and the definition of the
 phone selection had already dropped the former on purpose). The maintenance
 writes of § 11 (`data_budget/budget`, the purge of explanations) are exempt
 and unchanged. Baseline 27 → 26.
+
+**Commit 6.6, 2026-11-17: lot 6 closed.** `OS-087` is resolved, with its
+measurement inside the repository (the audit, the suite) and on the host (the
+MSI at `4073820`: a dry run and a real application of `music--phone` through
+`selection.materialise`, same report, no failure, a clean checkout). The run
+showed a defect that predates the lot (`+7 -7` at every pass since 2026-10-12:
+Syncthing renames the NFD names the sync links): `OS-094`, left open.
+`cli/sync_apply` had no timer on the MSI (`aistack-sync.timer` is installed
+with the content disks); the check was run by hand.
 
 **Commit 6.5, 2026-11-17.** The audit separates what is declared exempt from
 what is left to do. `scripts/ghe_audit.py` holds the list of exempt files with
@@ -552,6 +561,8 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 - Of the nine criteria of `STD-0300` named by `GOV-0002/OS-091`, three (4.4,
   4.5, 4.9) were re-run on 2.0.0 on 2026-11-17; 1.1 to 1.4, 4.2 and 4.8 have no
   chain to re-run through (`STD-0300` § *Re-run on 2.0.0*).
+- The sync links names Syncthing renames (NFD to NFC) and does it again at every
+  pass (`OS-094`).
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
 - The volume of the traces, to measure on the host after a few days of the

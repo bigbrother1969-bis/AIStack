@@ -57,6 +57,22 @@ def write_artifact_with_history(content: str, latest_path: Path) -> tuple[Path, 
     return latest_path, history_path
 
 
+def write_view(content: str, path: Path) -> Path:
+    """
+    Write a generated view whole, with no history: a page that shows
+    this run and nothing older (`plan.html`).
+
+    Written beside its final name and moved into place, so a reader
+    never opens half a page. Returns `path`.
+    """
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_text(content, encoding="utf-8")
+    temporary.replace(path)
+    return path
+
+
 def _holds(path: Path, content: str) -> bool:
     """Whether `path` already holds exactly `content`."""
 

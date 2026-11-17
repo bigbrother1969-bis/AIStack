@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.10
+  version: 2.11
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-11-16
+  updated: 2026-11-17
 
 relations:
   references:
@@ -213,6 +213,12 @@ providers configured at each use, which stay with their caller by decision
 and stay reported. Building the Kernel to ask it for a provider is not yet
 running through it: no Task is executed. Lot 4 is complete; what is left of
 this entry is lot 5.*
+*Commit 5.3, 2026-11-17: `kernel/runtime` returns from the tag (four files,
+reduced to resolve, execute, trace, keep the trace) and the health chain is
+the first Task it executes, `health.render`. `docker.discover` leaves
+`registrations.yml`. The measure *A registered Task is never executed* reads
+none; 19 of 25 entry points still do not build the Kernel (the health
+command already did). The chains left are 5.4 to 5.7.*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 
@@ -222,6 +228,9 @@ this entry is lot 5.*
 **Observed** `python scripts/ghe_audit.py`: 35 files outside
 `src/aistack/transaction` write, move or delete on disk. `GOV-P-002`,
 `ARC-P-012`.
+*Commit 5.3, 2026-11-17: 34. `aistack.cli.health_render` no longer writes:
+the plan page goes through `write_view`, in the module that already writes
+the other generated artifacts.*
 **Derivable** yes for the list; no for telling a generated artifact
 (`ENG-P-003`) from a modification of knowledge — that is a reading.
 **Qualification** unknown until that reading is done, in lot 6.
@@ -257,18 +266,7 @@ something calls it.
 
 # Defects
 
-#### GOV-0002/OS-089 — Two architecture guards pass on nothing
-
-**Nature** `defect` · **Opened** 2026-11-15 · **State** open
-**Observed** `tests/unit/kernel/test_architecture_boundaries.py`:
-`test_runtime_does_not_depend_on_task_registry` iterates over
-`src/aistack/kernel/runtime`, which does not exist;
-`test_every_kernel_runtime_boot_call_in_cli_declares_a_trace_repository`
-searches for `KernelRuntime.boot(`, which occurs nowhere under `src`. Both have
-passed vacuously since `19e73a6`.
-**Derivable** yes
-**Qualification** kept as they are until lot 5 rebuilds the execution path —
-owner, 2026-11-15.
+None open. OS-089 is in *Resolved*.
 
 ---
 
@@ -354,6 +352,23 @@ Not compared: the CPU consumption findings, an instantaneous measure that
 differed between the two readings (filebrowser, firefly before;
 aistack-docker-digest, aistack-docker-packages after) and is not part of the
 cockpit. The web application, on the 2.0.0 image, is not verified.*
+
+#### GOV-0002/OS-089 — Two architecture guards pass on nothing
+
+**Nature** `defect` · **Opened** 2026-11-15 · **State** resolved 2026-11-17 by commit 5.3
+**Observed** `tests/unit/kernel/test_architecture_boundaries.py`:
+`test_runtime_does_not_depend_on_task_registry` iterated over
+`src/aistack/kernel/runtime`, which did not exist;
+`test_every_kernel_runtime_boot_call_in_cli_declares_a_trace_repository`
+searched for `KernelRuntime.boot(`, which occurred nowhere under `src`. Both
+passed vacuously from `19e73a6`.
+**Derivable** yes
+**Qualification** kept as they were until lot 5 rebuilt the execution path —
+owner, 2026-11-15.
+*Commit 5.3, 2026-11-17: the Runtime is back (four files under
+`kernel/runtime`) and `aistack.cli.health_render` boots it with a
+`FileTraceRepository`. Both guards read something. A third test fails if
+either goes back to reading nothing.*
 
 #### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
 

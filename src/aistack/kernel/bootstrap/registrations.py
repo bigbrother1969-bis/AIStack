@@ -25,13 +25,16 @@ class Registration:
     """
     One declared registration: what to build, and the identifier it is
     registered under. `provider` names the registered provider a task
-    is built on; it is empty for everything else.
+    is built on; it is empty for everything else. `all_providers`
+    marks a task built on the whole provider registry, for a chain
+    that reads several providers (a task declares one or the other).
     """
 
     kind: str
     identifier: str
     factory: str
     provider: str = ""
+    all_providers: bool = False
 
 
 def load_registrations(path: Path = DEFAULT_REGISTRATIONS) -> tuple[Registration, ...]:
@@ -68,7 +71,7 @@ def load_registrations(path: Path = DEFAULT_REGISTRATIONS) -> tuple[Registration
             if not isinstance(entry, dict):
                 raise ValueError(f"Kernel registration {where} must be a mapping")
 
-            allowed = {"id", "factory", "provider"} if kind == TASKS else {"id", "factory"}
+            allowed = {"id", "factory", "provider", "all_providers"} if kind == TASKS else {"id", "factory"}
             extra = sorted(set(entry) - allowed)
             if extra:
                 raise ValueError(f"Kernel registration {where} declares unknown keys: {extra}")
@@ -81,12 +84,21 @@ def load_registrations(path: Path = DEFAULT_REGISTRATIONS) -> tuple[Registration
             if not isinstance(provider, str):
                 raise ValueError(f"Kernel registration {where}: provider must be an identifier")
 
+            all_providers = entry.get("all_providers", False)
+            if not isinstance(all_providers, bool):
+                raise ValueError(f"Kernel registration {where}: all_providers must be true or false")
+            if all_providers and provider.strip():
+                raise ValueError(
+                    f"Kernel registration {where}: a task is built on one provider or on all of them, not both"
+                )
+
             registrations.append(
                 Registration(
                     kind=kind,
                     identifier=entry["id"].strip(),
                     factory=entry["factory"].strip(),
                     provider=provider.strip(),
+                    all_providers=all_providers,
                 )
             )
 
@@ -135,6 +147,8 @@ def register_declared(kernel: Kernel, registrations: tuple[Registration, ...]) -
             kernel.registries.providers.register(registration.identifier, factory())
         elif registration.kind == CATALOG_VIEWS:
             kernel.registries.catalog_views.register(registration.identifier, factory())
+        elif registration.all_providers:
+            kernel.registries.tasks.register(registration.identifier, factory(kernel.registries.providers))
         elif registration.provider:
             if registration.provider not in kernel.registries.providers:
                 raise ValueError(

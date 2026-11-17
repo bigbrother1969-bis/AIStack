@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.15
+  version: 1.16
   status: Accepted
   owner: Architecture
   created: 2026-09-27
-  updated: 2026-10-05
+  updated: 2026-11-17
 
 relations:
   references:
@@ -413,6 +413,11 @@ extra alongside it.
 *2026-10-09:* the budget and the compaction this section reserves are
 decided and implemented by `ADR-0021` (2 GB, observations older than
 90 days gzip-compressed in place, never deleted).
+
+*2026-11-17:* the trace of a Task executed by the Runtime is this stream
+(`history/execution-trace/`), kept without deletion and compressed after 90
+days like the others, with no budget of its own (`ADR-0027` § 10, commit
+5.3).
 
 ### 12. SQLite FTS5 for full-text search over Explications
 

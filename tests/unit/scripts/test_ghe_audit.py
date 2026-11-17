@@ -105,10 +105,15 @@ def test_a_task_executed_from_outside_the_kernel_is_not_a_departure(tmp_path: Pa
         tmp_path / "c",
         {"cli/run.py": "def run(kernel):\n    return kernel.registries.tasks.get('x').execute(None)\n"},
     )
+    through_the_runtime = _tree(
+        tmp_path / "d",
+        {"tasks/discover.py": declared, "cli/run.py": "from aistack.kernel.runtime import KernelRuntime\n"},
+    )
 
     assert len(audit.measure(registered_only)["registered_tasks_never_executed"]) == 1
     assert audit.measure(resolved)["registered_tasks_never_executed"] == []
     assert audit.measure(asked_for)["registered_tasks_never_executed"] == []
+    assert audit.measure(through_the_runtime)["registered_tasks_never_executed"] == []
 
 
 def test_application_code_that_builds_a_provider_is_a_departure(tmp_path: Path) -> None:

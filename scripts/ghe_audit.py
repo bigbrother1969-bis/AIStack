@@ -228,16 +228,17 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     )
 
     # ARC-P-002 - a Task is registered to be executed. A module outside
-    # the Kernel executes one when it resolves it, or asks the registry for
-    # it. Declaring a Task (`aistack/tasks`) is not executing it.
-    resolution = f"{PACKAGE}.kernel.resolution"
+    # the Kernel executes one when it hands a Request to the Runtime,
+    # resolves the Task itself, or asks the registry for it. Declaring a
+    # Task (`aistack/tasks`) is not executing it.
+    executing = (f"{PACKAGE}.kernel.runtime", f"{PACKAGE}.kernel.resolution")
     task_callers = sorted(
         _relative(root, path)
         for path, names in imports.items()
         if not inside(path, "kernel")
         and not inside(path, "tasks")
         and (
-            any(name == resolution or name.startswith(resolution + ".") for name in names)
+            any(name == module or name.startswith(module + ".") for name in names for module in executing)
             or ".registries.tasks" in path.read_text(encoding="utf-8")
         )
     )

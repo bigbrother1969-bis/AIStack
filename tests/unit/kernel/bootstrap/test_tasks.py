@@ -7,50 +7,43 @@ ADR-0027 § 8; these tests read the Kernel, not the file.
 from __future__ import annotations
 
 from aistack.kernel.bootstrap import create_kernel
-from aistack.tasks import DockerDiscoverTask
+from aistack.tasks import HealthRenderTask
 
 
-def test_create_kernel_registers_the_docker_discover_task():
+def test_create_kernel_registers_the_health_render_task():
     kernel = create_kernel()
 
-    task = kernel.registries.tasks.get("docker.discover")
+    task = kernel.registries.tasks.get("health.render")
 
-    assert isinstance(task, DockerDiscoverTask)
+    assert isinstance(task, HealthRenderTask)
 
 
-def test_the_registered_task_wraps_the_registered_docker_provider():
+def test_the_health_task_reads_through_the_providers_of_its_own_kernel():
     """
-    Not a second, independent `DockerProvider()` — the same
-    instance already registered under `docker`, so a
-    provider stubbed for a test (as
-    `tests/unit/cli/test_the_provider_commands_run.py` does) is the
-    one this task actually calls.
+    Not a second `ProviderRegistry`, nor a Kernel booted for the
+    occasion: the registry this Kernel registered, so a provider
+    stubbed for a test is the one the chain actually reads.
     """
 
     kernel = create_kernel()
 
-    provider = kernel.registries.providers.get("docker")
-    task = kernel.registries.tasks.get("docker.discover")
+    task = kernel.registries.tasks.get("health.render")
 
-    assert task._provider is provider
+    assert task._providers is kernel.registries.providers
 
 
 def test_only_the_tasks_declared_here_are_registered():
     """
-    Kernel Runtime tracing invariant, audited 2026-09-23
-    (`claude/AUDIT-KERNEL-RUNTIME-CALLERS-2026-09-23.md`) —
-    `KernelRuntime.boot()` defaults `trace_repository` to
-    `InMemoryTraceRepository()` for every caller that does not ask
-    for `FileTraceRepository` explicitly
-    (`tests/unit/kernel/runtime/test_runtime.py::
-    test_boot_defaults_to_an_in_memory_trace_repository`). That
-    default has zero real exposure today only because
-    `docker.discover` is the sole registered Task — this test names
-    that fact so a second Task registered here, without this
-    assertion also being touched, fails immediately, at the moment a
-    new caller could first go untraced, not at the next audit.
+    Kernel Runtime tracing invariant (audited 2026-09-23): a Task
+    registered here is executed by a command that boots the Runtime
+    with a durable trace repository
+    (`tests/unit/kernel/test_architecture_boundaries.py`). A second
+    Task registered without this assertion also being touched fails
+    here, at the moment a new chain could first go untraced, not at
+    the next audit. `docker.discover` was removed on 2026-11-17
+    (ADR-0027 § 10): nothing executed it.
     """
 
     kernel = create_kernel()
 
-    assert set(kernel.registries.tasks.all()) == {"docker.discover"}
+    assert set(kernel.registries.tasks.all()) == {"health.render"}

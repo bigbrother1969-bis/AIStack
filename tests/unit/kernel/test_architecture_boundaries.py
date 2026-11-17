@@ -66,3 +66,21 @@ def test_every_kernel_runtime_boot_call_in_cli_declares_a_trace_repository() -> 
     ]
 
     assert violations == []
+
+
+def test_the_two_guards_above_look_at_something() -> None:
+    """
+    GOV-0002/OS-089: both guards passed for weeks on nothing, because
+    `kernel/runtime` did not exist and no command booted the Runtime.
+    A guard that reads nothing proves nothing: this one fails the day
+    either of them goes back to it.
+    """
+
+    assert list(Path("src/aistack/kernel/runtime").glob("*.py"))
+
+    boot_calls = [
+        call
+        for source_file in Path("src/aistack/cli").glob("*.py")
+        for call in _kernel_runtime_boot_calls(source_file.read_text())
+    ]
+    assert boot_calls

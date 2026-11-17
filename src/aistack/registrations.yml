@@ -7,6 +7,8 @@
 #   id       the identifier callers ask the registry for
 #   factory  `module:Class`, built with no argument
 #   provider (tasks only) the registered provider the task is built on
+#   all_providers (tasks only) `true`: the task is built on the whole
+#            provider registry, for a chain that reads several
 #
 # Read once, by `create_kernel()`. An entry that cannot be built stops
 # the boot and is named in the error.
@@ -39,7 +41,9 @@ catalog_views:
   - id: media-tree
     factory: aistack.catalog.views.media:MediaTreeViewEngine
 
+# `docker.discover` (aistack.tasks.DockerDiscoverTask) is no longer
+# declared: nothing executed it (ADR-0027 § 10). The class stays.
 tasks:
-  - id: docker.discover
-    factory: aistack.tasks:DockerDiscoverTask
-    provider: docker
+  - id: health.render
+    factory: aistack.tasks:HealthRenderTask
+    all_providers: true

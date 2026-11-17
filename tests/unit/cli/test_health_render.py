@@ -42,6 +42,7 @@ from tests.conftest import use_source
 
 from aistack.cli import health_render as cli
 from aistack.health import domains
+from aistack.health.domains import build_cockpit
 from aistack.health.technical_debt import technical_debt_score
 from aistack.contracts.container_health import health_of
 from aistack.contracts.container_state_reading import ContainerStateReading
@@ -183,7 +184,7 @@ def test_a_mount_below_its_threshold_is_an_alert(monkeypatch, tmp_path, storage_
     )
     use_source(monkeypatch, "storage_thresholds", path)
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
 
     storage = next(d for d in cockpit.domains if d.name == "Stockage")
     assert storage.instrumented is True
@@ -198,7 +199,7 @@ def test_a_mount_above_its_threshold_reads_as_clean(monkeypatch, tmp_path, stora
     path.write_text(storage_thresholds_yaml(storage_mount, free_gb=0), encoding="utf-8")
     use_source(monkeypatch, "storage_thresholds", path)
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
 
     storage = next(d for d in cockpit.domains if d.name == "Stockage")
     assert storage.instrumented is True
@@ -215,7 +216,7 @@ def test_a_host_with_nothing_declared_is_not_instrumented(
     )
     use_source(monkeypatch, "storage_thresholds", path)
 
-    cockpit = cli.build_cockpit("a-third-host")
+    cockpit = build_cockpit("a-third-host")
 
     storage = next(d for d in cockpit.domains if d.name == "Stockage")
     assert storage.instrumented is False
@@ -227,7 +228,7 @@ def test_a_missing_storage_threshold_definition_is_not_instrumented(
 ):
     use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
 
     storage = next(d for d in cockpit.domains if d.name == "Stockage")
     assert storage.instrumented is False
@@ -254,7 +255,7 @@ def test_all_nine_domains_are_always_present(monkeypatch, tmp_path):
     use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
 
     names = {domain.name for domain in cockpit.domains}
     assert names == _DOMAIN_NAMES
@@ -948,6 +949,54 @@ def test_main_writes_the_action_plan_in_every_language(monkeypatch, tmp_path, wo
     assert not (generated_dir / "history" / "plan").exists()
 
 
+def test_main_runs_the_health_chain_through_the_runtime_and_keeps_its_trace(
+    monkeypatch, tmp_path, workspace
+):
+    """
+    ADR-0027 § 10, commit 5.3: the first chain the Runtime executes.
+    Its trace is kept where the other historised streams are
+    (`history/execution-trace/`), one copy per run.
+    """
+
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+
+    cli.main()
+    cli.main()
+
+    generated_dir = workspace / "reports" / "generated"
+    latest = json.loads((generated_dir / "execution-trace.json").read_text(encoding="utf-8"))
+
+    assert latest["request"]["task_id"] == "health.render"
+    assert latest["resolution"]["task_id"] == "health.render"
+    assert latest["observation"]["data"]["output_path"].endswith("health.html")
+    assert [event["event_type"] for event in latest["events"]][-1] == "observation_produced"
+    # Each run has its own request id, so each leaves its own copy.
+    assert len(list((generated_dir / "history" / "execution-trace").glob("*.json"))) == 2
+
+
+def test_the_trace_carries_plain_values_only(monkeypatch, tmp_path, workspace):
+    use_source(monkeypatch, "storage_thresholds", tmp_path / "absent.yml")
+
+    cli.main()
+
+    data = json.loads(
+        (workspace / "reports" / "generated" / "execution-trace.json").read_text(encoding="utf-8")
+    )["observation"]["data"]
+    assert set(data) == {
+        "output_path",
+        "plan_path",
+        "score",
+        "score_bucket",
+        "measured_domains",
+        "total_domains",
+        "score_note",
+        "debt_score",
+        "debt_bucket",
+        "debt_findings",
+        "debt_note",
+    }
+
+
 # --------------------------------------------------------------------
 # main() — the score (OPS-0008)
 # --------------------------------------------------------------------
@@ -1078,7 +1127,7 @@ hosts:
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
     score, note = technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
 
     assert note == ""
@@ -1120,7 +1169,7 @@ hosts:
     use_source(monkeypatch, "categorization", tmp_path / "absent.yml")
     monkeypatch.setattr("aistack.providers.docker.DockerProvider", lambda: FakeDockerProvider(states=[]))
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
     score, note = technical_debt_score(cockpit, _ONE_DOMAIN_WEIGHTS)
 
     assert note == ""
@@ -1138,7 +1187,7 @@ def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
         lambda: FakeDockerProvider(states=[{"Names": "gluetun", "State": "restarting"}]),
     )
 
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
     weights = HealthScoreWeights(
         weights=(DomainWeight(domain="Services", points=25),)
     )
@@ -1149,7 +1198,7 @@ def test_technical_debt_score_reuses_the_services_weight(monkeypatch, tmp_path):
 
 
 def test_technical_debt_score_is_none_with_a_note_when_weights_are_unavailable():
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
 
     score, note = technical_debt_score(cockpit, None)
 
@@ -1158,7 +1207,7 @@ def test_technical_debt_score_is_none_with_a_note_when_weights_are_unavailable()
 
 
 def test_technical_debt_score_raises_when_no_services_weight_is_declared():
-    cockpit = cli.build_cockpit("test-host")
+    cockpit = build_cockpit("test-host")
 
     with pytest.raises(ValueError, match="no weight for domain 'Services'"):
         technical_debt_score(cockpit, _NO_SERVICES_WEIGHTS)
@@ -1349,7 +1398,7 @@ def test_the_cockpit_boots_one_kernel_and_every_domain_reads_through_it(
 
     monkeypatch.setattr(bootstrap, "create_kernel", counted)
 
-    cli.build_cockpit("test-host")
+    build_cockpit("test-host")
     assert len(boots) == 1
 
     domains.services_domain()

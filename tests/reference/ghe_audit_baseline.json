@@ -21,9 +21,7 @@
     "src/aistack/cli/vigil.py",
     "src/aistack/cli/web_admin_password.py"
   ],
-  "registered_tasks_never_executed": [
-    "no module outside the Kernel executes a registered Task"
-  ],
+  "registered_tasks_never_executed": [],
   "providers_built_by_application_code": [
     "src/aistack/cli/architecture_render.py -> BeszelProvider",
     "src/aistack/cli/architecture_render.py -> HttpProbeProvider",
@@ -43,7 +41,6 @@
     "src/aistack/cli/docker_digest_monitor.py",
     "src/aistack/cli/docker_events_monitor.py",
     "src/aistack/cli/docker_packages_monitor.py",
-    "src/aistack/cli/health_render.py",
     "src/aistack/cli/sync_apply.py",
     "src/aistack/data_budget/budget.py",
     "src/aistack/dock/executor.py",

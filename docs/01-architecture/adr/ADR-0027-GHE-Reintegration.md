@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.3
+  version: 1.4
   status: Accepted
   owner: Architecture
   created: 2026-11-15
-  updated: 2026-11-16
+  updated: 2026-11-17
 
 relations:
   references:
@@ -245,10 +245,40 @@ Kernel:
 resolve, execute, trace, keep the trace (`ARC-P-006`; a module returns when
 it is executed). It is not rewritten.
 
-**The Task `docker.discover`** is registered, executed by nothing, and the
-artifact it writes is read by nothing. It leaves `registrations.yml` in the
-commit in which the first Task really executed replaces it as the case of
-validation (5.3). Its code stays in `aistack.tasks` until decided.
+**The Task `docker.discover`** was registered, executed by nothing, and the
+artifact it wrote was read by nothing. It left `registrations.yml` in the
+commit in which the first Task really executed replaced it as the case of
+validation (5.3, 2026-11-17). Its code stays in `aistack.tasks` until
+decided.
+
+**The first chain through the Runtime** is the health chain, the Task
+`health.render` (5.3). It is built on the whole provider registry of its
+Kernel: `registrations.yml` gains the key `all_providers: true`, for a Task
+that reads several providers, beside `provider:`, which names one. The
+command `aistack.cli.health_render` boots the Runtime, hands it one Request
+and prints what the Observation carries.
+
+**The trace of a Task** — decided by the owner, 2026-11-17, as proposed:
+
+- *Where.* `reports/generated/history/execution-trace/`, the latest in
+  `reports/generated/execution-trace.json`: the stream `ADR-0011` already
+  names, written by `FileTraceRepository` through the mechanism of every
+  historised stream, read by the Time Machine and by
+  `aistack.cli.history_query`. A command that boots the Runtime passes it
+  explicitly; the Runtime's default stays in memory, so that no test writes
+  into the repository.
+- *How long.* Always, as every historised stream (`ADR-0011` § 11,
+  decision of 2026-09-03): nothing is deleted. After 90 days the compaction
+  of `ADR-0021` compresses it in place with the others.
+- *Its place in the budget.* None of its own: the trace lives under
+  `history/`, so the 2 GB of `ADR-0021` measure it and the compaction
+  covers it. `tests/unit/data_budget/test_traces_are_compacted.py` fails if
+  a trace is kept somewhere the compaction does not reach.
+- *To watch.* The volume follows how often a chain runs. A command run by
+  the vigil or by hand leaves one trace per run; a web page that ran a
+  chain at each display would leave one per view. That is decided when the
+  web application passes its own Kernel (5.8), after the volume has been
+  measured on the host.
 
 **One cockpit first.** The three copies of the health cockpit
 (`GOV-0002/OS-093`) become one before any chain goes through the Runtime
@@ -283,8 +313,9 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 - `STD-0300` no longer reads 17 of 22. For 2.0.0: 2 verified, 9 satisfied
   before 2.0.0 and not re-run, 6 not verifiable in `main`, 5 not
   verified.
-- Two architecture guards pass on nothing until lot 5 (`OS-089`), kept
-  by decision.
+- Two architecture guards passed on nothing until lot 5 (`OS-089`); since
+  5.3 the Runtime exists and a command boots it, and a test fails if either
+  guard looks at nothing again.
 - The audit measures imports and citations. It does not tell a generated
   artifact from a modification of knowledge, and it does not verify that
   a chain which builds the Kernel runs through it.
@@ -296,7 +327,5 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 - Whether criterion 3.2 gets its explanation back (`OS-090`).
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
-- Where the trace of a Task is written, how long it is kept and its place in
-  the data budget are decided in commit 5.3 (`ADR-0011` § 11 already treats
-  retention). The first chain through the Runtime decides the shape of the
-  others.
+- The volume of the traces, to measure on the host after a few days of the
+  health chain, before the web application runs chains (5.8).

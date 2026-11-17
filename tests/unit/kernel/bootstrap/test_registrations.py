@@ -65,6 +65,35 @@ def test_every_provider_a_declared_task_is_built_on_collects() -> None:
             assert callable(getattr(provider, "collect", None)), registration
 
 
+def test_a_task_built_on_all_the_providers_is_given_the_registry() -> None:
+    kernel = create_kernel()
+
+    task = kernel.registries.tasks.get("health.render")
+
+    assert task._providers is kernel.registries.providers  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize(
+    ("entry", "said"),
+    [
+        ("all_providers: yes please", "all_providers must be true or false"),
+        ("all_providers: true\n    provider: docker", "one provider or on all of them"),
+    ],
+)
+def test_a_task_that_misdeclares_all_providers_is_refused_and_named(
+    tmp_path: Path, entry: str, said: str
+) -> None:
+    path = _declared(
+        tmp_path,
+        "tasks:\n  - id: x.y\n    factory: aistack.tasks:HealthRenderTask\n    " + entry + "\n",
+    )
+
+    with pytest.raises(ValueError) as refusal:
+        load_registrations(path)
+
+    assert said in str(refusal.value)
+
+
 def test_every_declared_catalog_view_builds() -> None:
     for registration in load_registrations():
         if registration.kind == CATALOG_VIEWS:
@@ -122,7 +151,7 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
         "docker-containers": "DockerContainerViewEngine",
         "media-tree": "MediaTreeViewEngine",
     }
-    assert registered(kernel.registries.tasks) == {"docker.discover": "DockerDiscoverTask"}
+    assert registered(kernel.registries.tasks) == {"health.render": "HealthRenderTask"}
 
 
 def test_registrations_are_read_in_the_order_a_task_needs(tmp_path: Path) -> None:

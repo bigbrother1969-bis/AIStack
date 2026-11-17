@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.32
+  version: 1.33
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -133,7 +133,7 @@ end of each lot.
 | 4 | Application code asks the Kernel for a provider (§ 9) | part of `OS-086` |
 | 5 | The chains run through the Kernel, one at a time: health, architecture, console, Time Machine | `OS-086`, `OS-089` |
 | 6 | Modifications of knowledge go through a transaction | `OS-087` |
-| 7 | The declarations edited by hand on the host become governed knowledge | — |
+| 7 | The declarations edited by hand on the host become governed knowledge (§ 12), closed 2026-11-17 | — |
 | 8 | Self-onboarding: host executors, Context Bundle, boot report | VS-2 of `STD-0300` |
 
 The architecture documents of the Kernel and of its concepts
@@ -552,7 +552,7 @@ Decided by the owner, 2026-11-17:
 
 Commits: 7.2 `declarations.observe`, 7.3 the validation of each declaration
 by its own loader (first, a test per declaration of what an invalid file does
-today), 7.4 the list on the Settings page, 7.5 the closing. Versioning
+today), 7.4 the list on the Settings page (7.4a: the vigil's Gotify message, 7.4b: the section, 7.4c: a tie-break found on the host), 7.5 the closing. Versioning
 `/config/` in the repository is not part of the lot.
 
 **Commit 7.2, 2026-11-17: `declarations.observe`.** The seventh chain the
@@ -607,6 +607,21 @@ edit's copy of the same file, or the snapshot for the last). `observe.hand_edits
 reads the stream `history/declaration-observed`; a copy that is gone gives a
 difference against nothing, not an error. The difference shows the owner his own
 edit: the records never hold content, the files in his data directory do.
+
+**Commit 7.5, 2026-11-17: lot 7 closed.** Measured on the host (the MSI, code
+from `8de9669`, a script that plays the whole scenario in a temporary directory:
+no real file touched, no Gotify message sent): first sight gives two references
+and invents no change; a valid edit is recorded with its copy (exit 0); a broken
+file is reported with the loader's words and the last copy it reads (exit 1);
+the vigil says it once, urgently, and not again at the next pass; the repaired
+file empties the state (exit 0); no record holds the edited text. On the
+laptop the suite gave the same, and one defect that only the host showed: three
+edits in the same second came out in the order of the files on the disk (7.4c).
+The lot closes no entry of `GOV-0002`. What the host measurement could not
+show waits for the next `dev` image, which only the owner builds: the Settings
+section in a container, and the observation by the `vigil` service itself (the
+containers still run the code of before lot 6). The audit did not move during
+the lot: no write outside a transaction, 26 declared exempt.
 
 ## The refactoring plan of August 2026
 

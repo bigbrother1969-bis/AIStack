@@ -184,6 +184,7 @@ async def save(request: Request, pair: str) -> RedirectResponse:
     form = await request.form()
     session = current_session(request)
     selection = record_selection(
+        request.app.state.kernel.services.transactions,
         declaration,
         request.app.state.generated_dir,
         pair,

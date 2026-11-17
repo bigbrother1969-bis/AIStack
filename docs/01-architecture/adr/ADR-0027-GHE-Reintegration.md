@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.18
+  version: 1.19
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -446,6 +446,14 @@ declarations follow, one at a time.
 series: the screen's save and the troubleshooting fix both write through
 `write_declaration`; the store renders the text with its comments and no
 longer writes (baseline 32 → 31).
+
+**The selection of a pair** (`selection/yaml/store`): the sync screen's save
+(`sync/screen.record_selection`) writes through `write_declaration`, with the
+person as author; the store renders the text (baseline 31 → 30).
+`sync/screen` stays in the baseline for the report of the last application,
+which is the service's own state and is declared exempt (§ 11) until it moves
+with `selection.materialise` (6.3). `selection/screen.save_and_materialise`,
+called by nothing, is deleted with its imports.
 
 ## The refactoring plan of August 2026
 

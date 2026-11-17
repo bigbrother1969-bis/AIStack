@@ -29,7 +29,9 @@ from aistack.selection.capacity import CapacityVerdict
 from aistack.selection.materialisation_status import materialized_nodes
 from aistack.selection.explanation import explain_selection
 from aistack.selection.subtree import SubtreeResolution, resolve_subtrees
-from aistack.selection.yaml import load_selection_yaml, save_selection_yaml
+from aistack.declaration import write_declaration
+from aistack.kernel.services.transactions import TransactionServices
+from aistack.selection.yaml import load_selection_yaml, render_selection_yaml
 from aistack.sync.declaration import (
     SYNCTHING,
     SyncDeclaration,
@@ -204,9 +206,14 @@ def page_context(
 
 
 def record_selection(
-    declaration: SyncDeclaration, generated: Path, pair: str, selected_ids: list[str], person: str
+    transactions: TransactionServices,
+    declaration: SyncDeclaration,
+    generated: Path,
+    pair: str,
+    selected_ids: list[str],
+    person: str,
 ) -> Selection:
-    """What the screen writes: the selection, who made it, when."""
+    """What the screen writes, through a transaction: the selection, who made it, when."""
 
     content, _ = split_pair(pair)
     known = {item.id for item in scan_catalog(declaration, content).items}
@@ -220,7 +227,14 @@ def record_selection(
             "saved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         },
     )
-    save_selection_yaml(selection, selection_file(generated, pair))
+    write_declaration(
+        transactions,
+        generated,
+        selection_file(generated, pair),
+        render_selection_yaml(selection),
+        author=person,
+        reason=f"sync screen: the selection of {pair} recorded",
+    )
     return selection
 
 

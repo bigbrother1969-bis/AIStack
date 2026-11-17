@@ -61,7 +61,6 @@
     "src/aistack/restart_watch/guard.py",
     "src/aistack/restart_watch/journal.py",
     "src/aistack/sandbox/run.py",
-    "src/aistack/selection/yaml/store.py",
     "src/aistack/sync/screen.py",
     "src/aistack/vigil/notify.py",
     "src/aistack/vigil/snapshot.py"

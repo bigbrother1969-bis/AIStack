@@ -18,7 +18,7 @@ from aistack.generators.filesystem.hardlink import (
     MaterialisationReport,
     materialise_by_hardlink,
 )
-from aistack.generators.filesystem.yaml import load_last_generation_yaml, save_last_generation_yaml
+from aistack.generators.filesystem.yaml import load_last_generation_yaml
 from aistack.i18n import Translator
 from aistack.application import ApplicationDefinition
 from aistack.providers.filesystem import DEFAULT_MEDIA_EXTENSIONS, MediaLibraryProvider
@@ -26,8 +26,8 @@ from aistack.providers.syncthing.provider import SyncthingProvider
 from aistack.selection.capacity import assess_capacity
 from aistack.selection.materialisation_status import materialized_nodes
 from aistack.selection.subtree import resolve_subtrees
-from aistack.selection.workflow import build_view, select_from_view
-from aistack.selection.yaml import load_selection_yaml, save_selection_yaml
+from aistack.selection.workflow import build_view
+from aistack.selection.yaml import load_selection_yaml
 
 SyncthingStatus = Callable[[ApplicationDefinition], "dict[str, Any] | None"]
 
@@ -124,46 +124,6 @@ def page_context(
             last_generation_path(definition, repository_root)
         ),
     }
-
-
-def save_and_materialise(
-    definition: ApplicationDefinition,
-    kernel: Any,
-    repository_root: Path,
-    selected_ids: list[str],
-) -> tuple[MaterialisationReport, int]:
-    """Save the submitted selection and materialise it; return the report
-    and the number of selected items."""
-
-    catalog = scan_catalog(definition)
-    view = build_view(kernel, catalog, definition.view_id)
-
-    selection = select_from_view(
-        view=view,
-        selection_id=definition.app_id,
-        selected_ids=selected_ids,
-        metadata={
-            "source_catalog": definition.catalog_id,
-            "managed_by": "selection_ui",
-        },
-    )
-
-    save_selection_yaml(selection, selection_path(definition, repository_root))
-
-    resolution = resolve_subtrees(catalog, selection.selected_ids)
-    capacity = assess_capacity(resolution, definition.capacity_declared_bytes)
-
-    report = materialise_by_hardlink(
-        catalog=catalog,
-        resolution=resolution,
-        capacity=capacity,
-        target_root=Path(definition.target_root),
-        media_extensions=DEFAULT_MEDIA_EXTENSIONS,
-    )
-
-    save_last_generation_yaml(report, last_generation_path(definition, repository_root))
-
-    return report, len(selection.selected_ids)
 
 
 def status_message(report: MaterialisationReport, selected_count: int, t: Translator) -> str:

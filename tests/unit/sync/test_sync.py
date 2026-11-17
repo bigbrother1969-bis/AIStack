@@ -11,7 +11,8 @@ import pytest
 
 from aistack.cli import sync_apply
 from aistack.kernel.selection.core import Selection
-from aistack.selection.yaml import save_selection_yaml
+from aistack.kernel.bootstrap.default import create_kernel
+from tests.unit.declaration_files import save_selection
 from aistack.sync.declaration import (
     SyncthingAccess,
     folder_for,
@@ -76,7 +77,7 @@ def host(tmp_path: Path) -> tuple[Path, Path]:
 
 
 def _select(generated: Path, pair: str, ids: list[str]) -> None:
-    save_selection_yaml(Selection(pair, "x", ids, {}), selection_file(generated, pair))
+    save_selection(Selection(pair, "x", ids, {}), selection_file(generated, pair))
 
 
 def test_nothing_recorded_is_never_applied(host):
@@ -122,7 +123,7 @@ def test_the_quota_is_shared_by_the_destinations_contents(host):
 def test_the_screen_keeps_only_what_it_offers(host):
     config, generated = host
     declaration = load_sync_declaration(config)
-    selection = record_selection(declaration, generated, "books--phone", ["Author", "restricted", "/etc"], "fabrice")
+    selection = record_selection(create_kernel().services.transactions, declaration, generated, "books--phone", ["Author", "restricted", "/etc"], "fabrice")
     assert selection.selected_ids == ["Author"]
     assert selection.metadata["saved_by"] == "fabrice"
 

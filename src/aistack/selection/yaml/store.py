@@ -8,12 +8,9 @@ import yaml
 from aistack.kernel.selection import Selection
 
 
-def save_selection_yaml(selection: Selection, path: Path) -> Path:
-    """Save a governed selection to YAML."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as stream:
-        yaml.safe_dump(asdict(selection), stream, sort_keys=False, allow_unicode=True)
-    return path
+def render_selection_yaml(selection: Selection) -> str:
+    """A governed selection as YAML text. Writing it is `aistack.declaration`'s job."""
+    return yaml.safe_dump(asdict(selection), sort_keys=False, allow_unicode=True)
 
 
 def load_selection_yaml(path: Path) -> Selection | None:

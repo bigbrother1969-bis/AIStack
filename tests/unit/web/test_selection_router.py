@@ -11,6 +11,7 @@ collaborator replaced; its configuration is never reached (no
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -149,6 +150,21 @@ def test_saving_records_the_selection_and_writes_nothing_else(workspace: Path):
     # The host executor applies; the web application links nothing.
     assert list((workspace / "phone").iterdir()) == []
     assert "two minutes" in web.get(f"/selection/{PAIR}/?lang=en").text
+
+
+def test_a_second_save_keeps_the_first_and_both_are_recorded(workspace: Path):
+    web = client(workspace)
+    path = workspace / "data" / "sync" / "selections" / f"{PAIR}.yml"
+
+    web.post(f"/selection/{PAIR}/save", data={"selected_ids": ["Artist/Album"]})
+    first = path.read_bytes()
+    web.post(f"/selection/{PAIR}/save", data={"selected_ids": []})
+
+    copies = list(path.parent.glob(f"{path.name}.avant-*"))
+    assert [c.read_bytes() for c in copies] == [first]
+    record = json.loads((workspace / "data" / "declaration-change.json").read_text(encoding="utf-8"))
+    assert record["path"] == str(path)
+    assert record["author"] == "sub-Tester"
 
 
 def test_the_old_music_selection_is_read_until_the_first_save(workspace: Path):

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.12
+  version: 1.13
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -234,6 +234,16 @@ the catalog, included or excluded, shows on its line the rule that decided
 it, in the language of the page. The tag's module is kept as it was; it gains
 two fields, `kind` and `by`, so that the screen translates the rule from data
 and parses no sentence.
+
+**What the audit measures of the chains** (5.10, 2026-11-17). Two measures
+are added to the one that existed. *A registered Task is never executed* is
+now read Task by Task, from `registrations.yml`: one Task nobody executes no
+longer hides behind another that is. *An entry point builds the Kernel and
+never executes through the Runtime* names the commands that take their
+providers from the Kernel and run a chain it does not trace: `ai_reason`,
+`dock` and the web application at the time of the measure. They are put to
+the owner one at a time; until decided they are the baseline of the new
+measure, which like the others can only get shorter.
 
 ### 10. Chains run through the Kernel as Tasks
 

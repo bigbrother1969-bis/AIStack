@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.19
+  version: 2.20
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -248,6 +248,11 @@ that produce no artifact, is declared exempt too (`ADR-0027` § 10). Lot 5.7 is
 closed: 17 of 25 entry points do not build the Kernel, of which the permanent
 monitors and the exempt commands are declared; what is left of this entry is
 5.8 to 5.10.*
+*Commit 5.10, 2026-11-17: the audit reads *A registered Task is never executed*
+Task by Task and measures a new departure, *An entry point builds the Kernel
+and never executes through the Runtime*: `ai_reason`, `dock` and the web
+application (3). Each is to be decided by the owner: converted, or declared
+exempt like the commands above.*
 *Commit 5.8, 2026-11-17: the web application reads Docker (priority screen)
 and the assistant's findings through the providers of its own Kernel, not one
 booted per call (`ADR-0027` § 9). It runs no Task, so no trace per view. The

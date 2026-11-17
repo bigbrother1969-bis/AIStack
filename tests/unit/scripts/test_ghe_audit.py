@@ -92,28 +92,69 @@ def test_an_entry_point_that_never_builds_the_kernel_is_a_departure(tmp_path: Pa
     assert _audit().measure(root)["entry_points_bypassing_the_kernel"] == ["src/aistack/cli/around.py"]
 
 
+_DECLARED = "tasks:\n  - id: a.render\n    factory: aistack.tasks:ARender\n"
+_TASK = "from aistack.kernel.execution import Observation, Request\n"
+
+
 def test_a_task_executed_from_outside_the_kernel_is_not_a_departure(tmp_path: Path) -> None:
     audit = _audit()
-    declared = "from aistack.kernel.execution import Observation, Request\n"
+    base = {"registrations.yml": _DECLARED, "tasks/a.py": _TASK}
 
-    registered_only = _tree(tmp_path / "a", {"tasks/discover.py": declared, "cli/run.py": ""})
+    registered_only = _tree(tmp_path / "a", {**base, "cli/run.py": ""})
     resolved = _tree(
         tmp_path / "b",
-        {"tasks/discover.py": declared, "cli/run.py": "from aistack.kernel.resolution import TaskResolver\n"},
+        {**base, "cli/run.py": "from aistack.kernel.resolution import TaskResolver\nARender\n"},
     )
     asked_for = _tree(
         tmp_path / "c",
-        {"cli/run.py": "def run(kernel):\n    return kernel.registries.tasks.get('x').execute(None)\n"},
+        {**base, "cli/run.py": "def run(kernel):\n    return kernel.registries.tasks.get('a.render').execute(None)\n"},
     )
     through_the_runtime = _tree(
         tmp_path / "d",
-        {"tasks/discover.py": declared, "cli/run.py": "from aistack.kernel.runtime import KernelRuntime\n"},
+        {**base, "cli/run.py": "from aistack.kernel.runtime import KernelRuntime\nfrom aistack.tasks.a import ARender\n"},
     )
 
-    assert len(audit.measure(registered_only)["registered_tasks_never_executed"]) == 1
+    assert audit.measure(registered_only)["registered_tasks_never_executed"] == ["a.render (ARender)"]
     assert audit.measure(resolved)["registered_tasks_never_executed"] == []
     assert audit.measure(asked_for)["registered_tasks_never_executed"] == []
     assert audit.measure(through_the_runtime)["registered_tasks_never_executed"] == []
+
+
+def test_one_task_nobody_executes_is_not_hidden_by_another_that_is_executed(tmp_path: Path) -> None:
+    root = _tree(
+        tmp_path,
+        {
+            "registrations.yml": (
+                "tasks:\n  - id: a.render\n    factory: aistack.tasks:ARender\n"
+                "  - id: b.render\n    factory: aistack.tasks:BRender\n"
+            ),
+            "cli/a.py": "from aistack.kernel.runtime import KernelRuntime\nfrom aistack.tasks.a import ARender\n",
+        },
+    )
+
+    assert _audit().measure(root)["registered_tasks_never_executed"] == ["b.render (BRender)"]
+
+
+def test_an_entry_point_that_builds_the_kernel_without_the_runtime_is_a_departure(tmp_path: Path) -> None:
+    root = _tree(
+        tmp_path,
+        {
+            "cli/__init__.py": "",
+            "cli/traced.py": "from aistack.kernel.runtime import KernelRuntime\n",
+            "cli/providers_only.py": "from aistack.kernel.bootstrap import registered_providers\n",
+            "cli/around.py": "from aistack.health import score\n",
+            "web/app.py": "from aistack.kernel.bootstrap import create_kernel\n",
+        },
+    )
+
+    measured = _audit().measure(root)
+
+    assert measured["entry_points_outside_the_runtime"] == [
+        "src/aistack/cli/providers_only.py",
+        "src/aistack/web/app.py",
+    ]
+    # One that never builds the Kernel is the other measure's.
+    assert measured["entry_points_bypassing_the_kernel"] == ["src/aistack/cli/around.py"]
 
 
 def test_application_code_that_builds_a_provider_is_a_departure(tmp_path: Path) -> None:

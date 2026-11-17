@@ -19,6 +19,11 @@
     "src/aistack/cli/vigil.py",
     "src/aistack/cli/web_admin_password.py"
   ],
+  "entry_points_outside_the_runtime": [
+    "src/aistack/cli/ai_reason.py",
+    "src/aistack/cli/dock.py",
+    "src/aistack/web/app.py"
+  ],
   "registered_tasks_never_executed": [],
   "providers_built_by_application_code": [
     "src/aistack/priority/detectors/jellyfin.py -> JellyfinProvider",

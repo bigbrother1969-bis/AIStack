@@ -81,6 +81,33 @@ def _texts(root: Path) -> dict[Path, str]:
     return found
 
 
+def _registered_tasks(root: Path) -> list[tuple[str, str]]:
+    """The Tasks `registrations.yml` declares, as (identifier, class name).
+
+    Read without a YAML library: the file is a list of `- id:` entries,
+    each followed by its `factory: module:Class`.
+    """
+
+    declaration = root / "src" / PACKAGE / "registrations.yml"
+    if not declaration.is_file():
+        return []
+    _, found, section = ("\n" + declaration.read_text(encoding="utf-8")).partition("\ntasks:\n")
+    if not found:
+        return []
+    tasks: list[tuple[str, str]] = []
+    identifier = ""
+    for line in section.splitlines():
+        if line and not line.startswith((" ", "#")):
+            break
+        entry = line.strip()
+        if entry.startswith("- id:"):
+            identifier = entry.removeprefix("- id:").strip()
+        elif entry.startswith("factory:") and identifier:
+            tasks.append((identifier, entry.removeprefix("factory:").strip().rpartition(":")[2]))
+            identifier = ""
+    return tasks
+
+
 def _registered(root: Path) -> set[str]:
     """The principles the registry declares: the first cell of a table row."""
 
@@ -221,19 +248,34 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     # the Kernel. An entry point that never builds the Kernel bypasses it.
     entry_points = [path for path in trees if inside(path, "cli") and path.name != "__init__.py"]
     entry_points.append(source / "web" / "app.py")
-    bypassing = sorted(
-        _relative(root, path)
+    builds_the_kernel = [
+        path
         for path in entry_points
-        if path in trees and not any(name.startswith(f"{PACKAGE}.kernel") for name in imports[path])
+        if path in trees and any(name.startswith(f"{PACKAGE}.kernel") for name in imports[path])
+    ]
+    bypassing = sorted(
+        _relative(root, path) for path in entry_points if path in trees and path not in builds_the_kernel
+    )
+
+    # ARC-P-002 - an entry point that builds the Kernel for its providers
+    # and never executes through the Runtime runs a chain the Runtime does
+    # not trace.
+    runtime = f"{PACKAGE}.kernel.runtime"
+    outside_the_runtime = sorted(
+        _relative(root, path)
+        for path in builds_the_kernel
+        if not any(name == runtime or name.startswith(runtime + ".") for name in imports[path])
     )
 
     # ARC-P-002 - a Task is registered to be executed. A module outside
-    # the Kernel executes one when it hands a Request to the Runtime,
-    # resolves the Task itself, or asks the registry for it. Declaring a
-    # Task (`aistack/tasks`) is not executing it.
+    # the Kernel and `aistack/tasks` executes one when it names it and
+    # hands a Request to the Runtime, resolves the Task itself, or asks
+    # the registry for it. Declaring a Task is not executing it. Each
+    # registered Task is held to this, not the registry as a whole: one
+    # Task nobody executes would otherwise hide behind another.
     executing = (f"{PACKAGE}.kernel.runtime", f"{PACKAGE}.kernel.resolution")
-    task_callers = sorted(
-        _relative(root, path)
+    callers = {
+        path: path.read_text(encoding="utf-8")
         for path, names in imports.items()
         if not inside(path, "kernel")
         and not inside(path, "tasks")
@@ -241,8 +283,15 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
             any(name == module or name.startswith(module + ".") for name in names for module in executing)
             or ".registries.tasks" in path.read_text(encoding="utf-8")
         )
+    }
+    unexecuted = sorted(
+        f"{identifier} ({class_name})"
+        for identifier, class_name in _registered_tasks(root)
+        if not any(
+            class_name in text or f"\"{identifier}\"" in text or f"'{identifier}'" in text
+            for text in callers.values()
+        )
     )
-    unexecuted = [] if task_callers else ["no module outside the Kernel executes a registered Task"]
 
     # ARC-P-002 - application code asks the Kernel for a provider; it does
     # not build one (`FDN-0004`, Kernel Bootstrap Principle). A provider is
@@ -298,6 +347,7 @@ def measure(root: Path = ROOT) -> dict[str, list[str]]:
     return {
         "kernel_names_what_is_not_generic": kernel_imports,
         "entry_points_bypassing_the_kernel": bypassing,
+        "entry_points_outside_the_runtime": outside_the_runtime,
         "registered_tasks_never_executed": unexecuted,
         "providers_built_by_application_code": built,
         "disk_writes_outside_a_transaction": writers,
@@ -315,6 +365,10 @@ TITLES = {
     "entry_points_bypassing_the_kernel": (
         "ARC-P-002",
         "An entry point never builds the Kernel",
+    ),
+    "entry_points_outside_the_runtime": (
+        "ARC-P-002",
+        "An entry point builds the Kernel and never executes through the Runtime",
     ),
     "registered_tasks_never_executed": (
         "ARC-P-002",

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.13
+  version: 2.14
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -228,6 +228,11 @@ The chains left are 5.5 to 5.7.*
 executes, `console.render`. The console command already asked the Kernel for
 its providers, so 19 of 25 entry points still do not build it, and seven
 pairs remain. The chains left are 5.6 and 5.7.*
+*Commit 5.6, 2026-11-17: the Time Machine chain is the fourth Task the Runtime
+executes, `timemachine.rebuild`. Its command did not build the Kernel: 18 of 25
+entry points now do not. Its trace is written in the data directory the
+command is given, beside the streams the graph is rebuilt from. The chains left
+are `network_docker_discover`, `hosts` and `data_budget`, one by one (5.7).*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 

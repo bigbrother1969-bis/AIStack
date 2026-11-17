@@ -155,6 +155,7 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
         "health.render": "HealthRenderTask",
         "architecture.render": "ArchitectureRenderTask",
         "console.render": "ConsoleRenderTask",
+        "timemachine.rebuild": "TimeMachineRebuildTask",
     }
 
 

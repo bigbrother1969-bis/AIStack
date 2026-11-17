@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.6
+  version: 1.7
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -276,6 +276,14 @@ built the same way and executed from `aistack.cli.console_render`. The
 symlinks of the public directory and its index page are written through
 `ensure_link` and `write_view` of `aistack.generators.history`, so the command
 and the Task add no writer to the baseline: the command's entry leaves it.
+
+**The fourth chain** is the Time Machine chain, the Task `timemachine.rebuild`
+(5.6). It reads no provider: what it rebuilds from is on disk, so it is
+declared without `provider:` or `all_providers:`. The command takes the data
+directory as an argument, so the trace is written there
+(`<dir>/history/execution-trace/`), not in the working directory. A later
+rebuild of the same directory reads that stream like any other: the graph
+shows what the Runtime executed.
 
 **The trace of a Task** — decided by the owner, 2026-11-17, as proposed:
 

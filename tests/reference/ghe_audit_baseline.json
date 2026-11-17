@@ -17,7 +17,6 @@
     "src/aistack/cli/sandbox.py",
     "src/aistack/cli/setup_token.py",
     "src/aistack/cli/sync_apply.py",
-    "src/aistack/cli/timemachine_rebuild.py",
     "src/aistack/cli/vigil.py",
     "src/aistack/cli/web_admin_password.py"
   ],

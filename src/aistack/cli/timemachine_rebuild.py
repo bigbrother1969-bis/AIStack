@@ -1,109 +1,70 @@
 from __future__ import annotations
 
 import sys
+import uuid
 from pathlib import Path
 
-from aistack.config import configured
-from aistack.explications.from_ai_reasoning import import_explain_answers
-from aistack.explications.from_pra_tests import import_pra_tests_comments
-from aistack.hosts.records import load_hosts_declaration, read_all
-from aistack.timemachine.oxigraph_store import OxigraphGraphStore
-from aistack.timemachine.projection import (
-    DEFAULT_GENERATED_DIR,
-    project_collection_gaps,
-    project_dock_changes,
-    project_docker_diff,
-    project_docker_digest,
-    project_docker_events,
-    project_docker_packages,
-    project_explications,
-    project_host_changes,
-    project_observation_history,
-    project_upgrade_correlation,
-)
+from aistack.kernel.runtime import KernelRuntime, Request
+from aistack.kernel.tracing import FileTraceRepository
+from aistack.tasks.timemachine_rebuild import TimeMachineRebuildTask
+from aistack.timemachine.projection import DEFAULT_GENERATED_DIR
 
 
 def main() -> None:
     """
     Rebuild the Time Machine's graph from the data directory (ADR-0011 § 1 and 10).
 
-    A full rebuild every time, never incremental. The optional argument is
-    the data directory; the store lives at `<dir>/timemachine/graph`.
-    AI `explain` answers and dated `pra_tests.yml` comments are first
-    imported as Proposed Explications (each importer skips what it already
-    recorded). Projections then run in order on the same store: links
-    such as upgrade correlations come after the streams they connect,
-    collection gaps after every stream's activity node exists, and dock
-    changes after the Explications they link to.
-
-    `pyoxigraph.Store` creates only the leaf directory, not its parents,
-    hence the `mkdir(parents=True)`.
+    The Runtime executes the `timemachine.rebuild` Task (ADR-0027 § 10).
+    The optional argument is the data directory; the store lives at
+    `<dir>/timemachine/graph` and the trace of the run beside the other
+    streams, under `<dir>/history/execution-trace/`: the data directory
+    is the one the graph is rebuilt from, not necessarily the working
+    directory's.
     """
 
-    generated_dir = (
-        Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_GENERATED_DIR
-    )
-    store_path = generated_dir / "timemachine" / "graph"
-    store_path.mkdir(parents=True, exist_ok=True)
+    generated_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_GENERATED_DIR
 
-    explications_dir = generated_dir / "explications"
-    explain_import = import_explain_answers(generated_dir / "ai-reasoning", explications_dir)
-    pra_tests = configured(Path(__file__).resolve().parents[1] / "pra" / "definitions" / "pra_tests.yml")
-    pra_recorded = (
-        import_pra_tests_comments(pra_tests, explications_dir).explications_recorded
-        if pra_tests.is_file()
-        else 0
+    runtime = KernelRuntime.boot(
+        trace_repository=FileTraceRepository(output_path=generated_dir / "execution-trace.json")
     )
 
-    store = OxigraphGraphStore(store_path)
-    summary = project_observation_history(store, generated_dir=generated_dir)
-    explications_summary = project_explications(store, generated_dir=generated_dir)
-    docker_events_summary = project_docker_events(store, generated_dir=generated_dir)
-    docker_diff_summary = project_docker_diff(store, generated_dir=generated_dir)
-    docker_digest_summary = project_docker_digest(store, generated_dir=generated_dir)
-    docker_packages_summary = project_docker_packages(store, generated_dir=generated_dir)
-    upgrade_correlation_summary = project_upgrade_correlation(store, generated_dir=generated_dir)
-    collection_gaps_summary = project_collection_gaps(store, generated_dir=generated_dir)
-    dock_changes_summary = project_dock_changes(store, generated_dir=generated_dir)
-    host_records = read_all(load_hosts_declaration(generated_dir))
-    host_changes_summary = project_host_changes(store, host_records)
+    request = Request(
+        request_id=str(uuid.uuid4()),
+        task_id=TimeMachineRebuildTask.task_id,
+        payload={"generated_dir": str(generated_dir)},
+    )
+
+    data = runtime.execute(request).observation.data
 
     print("Time Machine Projection")
-    print(f"- Source: {generated_dir}")
-    print(f"- Store: {store_path}")
-    print(f"- Streams seen: {summary.streams_seen}")
-    print(f"- Observations seen: {summary.observations_seen}")
-    print(f"- Explications imported from AI answers: {explain_import.explications_recorded}")
-    print(f"- Explications imported from pra_tests.yml: {pra_recorded}")
-    print(f"- Explication subjects seen: {explications_summary.subjects_seen}")
-    print(f"- Explications seen: {explications_summary.explications_seen}")
-    print(f"- Docker-events batches seen: {docker_events_summary.batches_seen}")
-    print(f"- Docker events seen: {docker_events_summary.events_seen}")
-    print(f"- Docker-diff subjects seen: {docker_diff_summary.subjects_seen}")
-    print(f"- Docker-diff snapshots seen: {docker_diff_summary.snapshots_seen}")
-    print(f"- Docker-digest subjects seen: {docker_digest_summary.subjects_seen}")
-    print(f"- Docker-digest observations seen: {docker_digest_summary.snapshots_seen}")
-    print(f"- Docker-packages subjects seen: {docker_packages_summary.subjects_seen}")
-    print(f"- Docker-packages observations seen: {docker_packages_summary.snapshots_seen}")
-    print(f"- Upgrade-correlation subjects seen: {upgrade_correlation_summary.subjects_seen}")
-    print(f"- Digest changes seen: {upgrade_correlation_summary.digest_changes_seen}")
-    print(f"- Upgrade correlations written: {upgrade_correlation_summary.correlations_written}")
-    print(f"- Collection-gap streams seen: {collection_gaps_summary.streams_seen}")
-    print(f"- Collection gaps seen: {collection_gaps_summary.gaps_seen}")
-    print(f"- Governed changes seen: {dock_changes_summary.changes_seen}")
-    print(f"- Hosts seen: {host_changes_summary.hosts_seen} ({host_changes_summary.hosts_unreadable} unreadable)")
-    print(f"- Host events seen: {host_changes_summary.events_seen}")
-    for records in host_records:
-        if records.problem:
-            print(f"  ! {records.host}: {records.problem}")
-    print(
-        "- Facts written: "
-        f"{summary.facts_written + explications_summary.facts_written + docker_events_summary.facts_written + docker_diff_summary.facts_written + docker_digest_summary.facts_written + docker_packages_summary.facts_written + upgrade_correlation_summary.facts_written + collection_gaps_summary.facts_written + dock_changes_summary.facts_written + host_changes_summary.facts_written}"
-    )
-    print(
-        "- Facts dropped: "
-        f"{summary.facts_dropped + explications_summary.facts_dropped + docker_events_summary.facts_dropped + docker_diff_summary.facts_dropped + docker_digest_summary.facts_dropped + docker_packages_summary.facts_dropped + upgrade_correlation_summary.facts_dropped + collection_gaps_summary.facts_dropped + dock_changes_summary.facts_dropped + host_changes_summary.facts_dropped}"
-    )
+    print(f"- Source: {data['source']}")
+    print(f"- Store: {data['store']}")
+    print(f"- Streams seen: {data['streams_seen']}")
+    print(f"- Observations seen: {data['observations_seen']}")
+    print(f"- Explications imported from AI answers: {data['explications_from_ai_answers']}")
+    print(f"- Explications imported from pra_tests.yml: {data['explications_from_pra_tests']}")
+    print(f"- Explication subjects seen: {data['explication_subjects_seen']}")
+    print(f"- Explications seen: {data['explications_seen']}")
+    print(f"- Docker-events batches seen: {data['docker_events_batches_seen']}")
+    print(f"- Docker events seen: {data['docker_events_seen']}")
+    print(f"- Docker-diff subjects seen: {data['docker_diff_subjects_seen']}")
+    print(f"- Docker-diff snapshots seen: {data['docker_diff_snapshots_seen']}")
+    print(f"- Docker-digest subjects seen: {data['docker_digest_subjects_seen']}")
+    print(f"- Docker-digest observations seen: {data['docker_digest_observations_seen']}")
+    print(f"- Docker-packages subjects seen: {data['docker_packages_subjects_seen']}")
+    print(f"- Docker-packages observations seen: {data['docker_packages_observations_seen']}")
+    print(f"- Upgrade-correlation subjects seen: {data['upgrade_correlation_subjects_seen']}")
+    print(f"- Digest changes seen: {data['digest_changes_seen']}")
+    print(f"- Upgrade correlations written: {data['upgrade_correlations_written']}")
+    print(f"- Collection-gap streams seen: {data['collection_gap_streams_seen']}")
+    print(f"- Collection gaps seen: {data['collection_gaps_seen']}")
+    print(f"- Governed changes seen: {data['governed_changes_seen']}")
+    print(f"- Hosts seen: {data['hosts_seen']} ({data['hosts_unreadable']} unreadable)")
+    print(f"- Host events seen: {data['host_events_seen']}")
+    for problem in data["host_problems"]:
+        print(f"  ! {problem}")
+    print(f"- Facts written: {data['facts_written']}")
+    print(f"- Facts dropped: {data['facts_dropped']}")
 
 
 if __name__ == "__main__":

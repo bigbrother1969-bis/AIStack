@@ -53,3 +53,5 @@ tasks:
   - id: console.render
     factory: aistack.tasks:ConsoleRenderTask
     all_providers: true
+  - id: timemachine.rebuild
+    factory: aistack.tasks:TimeMachineRebuildTask

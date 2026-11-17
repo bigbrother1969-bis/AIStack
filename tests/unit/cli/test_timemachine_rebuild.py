@@ -202,3 +202,22 @@ def test_rebuild_imports_the_restore_tests_comments_once(tmp_path: Path):
     assert "- Explications imported from pra_tests.yml: 0" in second
     assert "- Explication subjects seen: 1" in second
     assert (generated_dir / "explications" / "wordpress.json").is_file()
+
+
+def test_rebuild_is_executed_by_the_runtime_and_keeps_its_trace_in_the_data_directory(
+    tmp_path: Path,
+):
+    """ADR-0027 § 10: the trace goes beside the streams the graph is
+    rebuilt from, under the data directory given, not the working one."""
+
+    generated_dir = tmp_path / "data" / "generated"
+    generated_dir.mkdir(parents=True)
+
+    _run(tmp_path, str(generated_dir))
+
+    traces = list((generated_dir / "history" / "execution-trace").glob("*.json"))
+    assert len(traces) == 1
+    assert "timemachine.rebuild" in (generated_dir / "execution-trace.json").read_text(
+        encoding="utf-8"
+    )
+    assert not (tmp_path / "reports").exists()

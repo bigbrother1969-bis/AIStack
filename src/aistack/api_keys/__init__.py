@@ -59,6 +59,8 @@ class ApiKey:
 def load_api_keys(path: Path | None = None) -> list[ApiKey]:
     source = path if path is not None else configured(SHIPPED)
     data = yaml.safe_load(source.read_text(encoding="utf-8")) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"{source}: not a mapping")
     keys = []
     for raw in data.get("keys") or []:
         if not isinstance(raw, dict) or not raw.get("name"):

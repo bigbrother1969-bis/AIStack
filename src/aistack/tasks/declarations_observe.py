@@ -4,6 +4,7 @@ from pathlib import Path
 
 from aistack.config import config_dir, shipped_definitions
 from aistack.declaration.observe import observe
+from aistack.declaration.validate import validate
 from aistack.kernel.execution import Observation, ObservationContext, Request
 
 DEFAULT_GENERATED_DIR = "reports/generated"
@@ -18,7 +19,9 @@ class DeclarationsObserveTask:
     declaration's file in the configuration directory with the snapshot of
     it that the data directory holds, and says which differ and how:
     `reference` (first sight), `follow` (a screen wrote it) or `edited`
-    (by hand). It writes nothing and returns digests, never content: moving
+    (by hand), and which files their own loader does not read (`ADR-0027` § 12,
+    `aistack.declaration.validate`), with the loader's words and no content. It
+    writes nothing and returns digests, never content: moving
     the snapshots and recording the edits is `aistack.declaration.observe.apply`,
     through the transaction service.
 
@@ -35,7 +38,9 @@ class DeclarationsObserveTask:
         generated_dir = Path(request.payload.get("generated_dir", DEFAULT_GENERATED_DIR))
         given = str(request.payload.get("config_dir", "")).strip()
         directory = Path(given) if given else config_dir()
-        changes = observe(directory, generated_dir, shipped_definitions()) if directory is not None else []
+        shipped = shipped_definitions()
+        changes = observe(directory, generated_dir, shipped) if directory is not None else []
+        invalid = validate(directory, generated_dir, shipped) if directory is not None else []
 
         return Observation(
             context=ObservationContext(
@@ -51,5 +56,6 @@ class DeclarationsObserveTask:
                     {"name": item.name, "kind": item.kind, "before": item.before, "after": item.after}
                     for item in changes
                 ],
+                "invalid": [{"name": item.name, "error": item.error} for item in invalid],
             },
         )

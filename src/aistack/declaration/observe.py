@@ -30,6 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from aistack.declaration.change import write_declaration
+from aistack.declaration.validate import last_valid_copy, problem
 from aistack.generators.history import write_artifact_with_history
 from aistack.instance.first_start import fingerprint
 from aistack.kernel.services.transactions import TransactionServices
@@ -138,6 +139,7 @@ def apply(
         if item.kind != EDITED:
             continue
 
+        error = problem(item.name, current, generated_dir)
         record: dict[str, object] = {
             "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "author": AUTHOR,
@@ -146,6 +148,9 @@ def apply(
             "before": item.before,
             "after": item.after,
             "copy": result["copy"],
+            "valid": not error,
+            "error": error,
+            "last_valid_copy": last_valid_copy(generated_dir, item.name, seen_path(generated_dir, item.name).parent) if error else "",
         }
         write_artifact_with_history(json.dumps(record, ensure_ascii=False, indent=2) + "\n", generated_dir / RECORD)
         records.append(record)

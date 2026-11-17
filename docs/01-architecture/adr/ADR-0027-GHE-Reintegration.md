@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.29
+  version: 1.30
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -569,6 +569,21 @@ reported and left alone; a file that changed again since it was observed waits
 for the next pass. `aistack.cli.declarations_observe` joins the vigil's pass
 (every 15 minutes, and at its start): one more trace per pass, like the health
 and console renders. The audit does not move.
+
+**Commit 7.3, 2026-11-17: an invalid declaration is reported.** Measured on
+the 25 loaders before writing: a syntax error always raises; a list where a
+mapping is expected raises everywhere except `load_api_keys` (fixed: it now
+says "not a mapping"); an empty file is accepted by eight loaders (api_keys,
+arrivals, cmdb_probe_targets, dock, hosts, infrastructure_topology,
+restart_watch, sync), which is their own business. `aistack.declaration.validate`
+maps each shipped declaration to its loader (a test fails if a declaration has
+none) and returns the loader's own words, shortened, with the line for a YAML
+error, never the content. `declarations.observe` returns the `invalid` list;
+the CLI prints `! <file> is not read by its loader: <why>` with the last copy
+the loader does read (`<name>.avant-observe-*`), and exits 1 so the vigil logs
+it. Nothing is refused, nothing is restored (decision 2). Each hand-edit record
+gains `valid`, `error` and `last_valid_copy`. The surface that shows it to the
+owner is the next commit.
 
 ## The refactoring plan of August 2026
 

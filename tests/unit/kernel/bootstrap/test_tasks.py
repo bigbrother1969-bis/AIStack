@@ -11,6 +11,7 @@ from aistack.tasks import (
     ArchitectureRenderTask,
     ConsoleRenderTask,
     HealthRenderTask,
+    NetworkDockerDiscoverTask,
     TimeMachineRebuildTask,
 )
 
@@ -49,6 +50,14 @@ def test_create_kernel_registers_the_time_machine_rebuild_task():
     assert isinstance(task, TimeMachineRebuildTask)
 
 
+def test_create_kernel_registers_the_network_docker_discover_task():
+    kernel = create_kernel()
+
+    task = kernel.registries.tasks.get("network_docker.discover")
+
+    assert isinstance(task, NetworkDockerDiscoverTask)
+
+
 def test_the_health_task_reads_through_the_providers_of_its_own_kernel():
     """
     Not a second `ProviderRegistry`, nor a Kernel booted for the
@@ -82,4 +91,5 @@ def test_only_the_tasks_declared_here_are_registered():
         "architecture.render",
         "console.render",
         "timemachine.rebuild",
+        "network_docker.discover",
     }

@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.14
+  version: 2.15
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -233,6 +233,12 @@ executes, `timemachine.rebuild`. Its command did not build the Kernel: 18 of 25
 entry points now do not. Its trace is written in the data directory the
 command is given, beside the streams the graph is rebuilt from. The chains left
 are `network_docker_discover`, `hosts` and `data_budget`, one by one (5.7).*
+*Commit 5.7a, 2026-11-17: `network_docker_discover` is the fifth Task the
+Runtime executes, `network_docker.discover`. 17 of 25 entry points do not build
+the Kernel. Its provider, configured at use, is built in the Task, as at 5.4:
+the baseline entry is renamed, seven pairs still. The SSH key path is read from
+the environment by the Task, never carried by the request. Left: `hosts` and
+`data_budget`.*
 **Derivable** yes
 **Qualification** to conform, in lot 5.
 

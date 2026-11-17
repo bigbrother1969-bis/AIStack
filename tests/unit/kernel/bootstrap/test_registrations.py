@@ -156,6 +156,7 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
         "architecture.render": "ArchitectureRenderTask",
         "console.render": "ConsoleRenderTask",
         "timemachine.rebuild": "TimeMachineRebuildTask",
+        "network_docker.discover": "NetworkDockerDiscoverTask",
     }
 
 

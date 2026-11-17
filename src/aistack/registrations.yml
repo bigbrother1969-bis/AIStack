@@ -55,3 +55,5 @@ tasks:
     all_providers: true
   - id: timemachine.rebuild
     factory: aistack.tasks:TimeMachineRebuildTask
+  - id: network_docker.discover
+    factory: aistack.tasks:NetworkDockerDiscoverTask

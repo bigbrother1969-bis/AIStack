@@ -8,8 +8,8 @@ stubbed `NetworkDockerDiscoveryProvider` in place of the real one, so
 no test in this file ever spawns a real `nmap`/`ssh` process or
 touches a real network. What is under test is the wiring this
 command itself adds: the governed definition is loaded, the SSH key
-path env var name it declares is resolved through the given
-`environ` (never the path itself hardcoded here), the provider is
+path env var name it declares is resolved through the process
+environment (never the path itself hardcoded here), the provider is
 built with the definition's real fields, and the resulting
 observation is written as a governed artifact with Observation
 History.
@@ -24,6 +24,7 @@ from typing import Any
 import pytest
 
 from aistack.cli import network_docker_discover
+from aistack.tasks import network_docker_discover as task_module
 
 
 OBSERVED_AT = "2026-09-12T12:00:00+00:00"
@@ -68,10 +69,15 @@ def reset_fake_provider():
     FakeNetworkDockerDiscoveryProvider.next_observation = dict(_DEFAULT_OBSERVATION)
 
 
+@pytest.fixture(autouse=True)
+def no_ssh_key(monkeypatch) -> None:
+    monkeypatch.delenv("AISTACK_NETWORK_SSH_KEY_PATH", raising=False)
+
+
 @pytest.fixture
 def stubbed_provider(monkeypatch) -> None:
     monkeypatch.setattr(
-        network_docker_discover,
+        task_module,
         "NetworkDockerDiscoveryProvider",
         FakeNetworkDockerDiscoveryProvider,
     )
@@ -91,7 +97,7 @@ def workspace(monkeypatch, tmp_path: Path) -> Path:
 def test_the_real_definitions_cidr_and_usernames_reach_the_provider(
     stubbed_provider, workspace
 ):
-    network_docker_discover.main(environ={})
+    network_docker_discover.main()
 
     assert len(FakeNetworkDockerDiscoveryProvider.instances) == 1
     built = FakeNetworkDockerDiscoveryProvider.instances[0]
@@ -106,11 +112,11 @@ def test_the_real_definitions_cidr_and_usernames_reach_the_provider(
 
 
 def test_the_ssh_key_path_env_var_name_is_resolved_through_environ(
-    stubbed_provider, workspace
+    stubbed_provider, workspace, monkeypatch
 ):
-    network_docker_discover.main(
-        environ={"AISTACK_NETWORK_SSH_KEY_PATH": "/home/big-brother/.ssh/id_ed25519"}
-    )
+    monkeypatch.setenv("AISTACK_NETWORK_SSH_KEY_PATH", "/home/big-brother/.ssh/id_ed25519")
+
+    network_docker_discover.main()
 
     built = FakeNetworkDockerDiscoveryProvider.instances[0]
     assert built.ssh_key_path == "/home/big-brother/.ssh/id_ed25519"
@@ -119,7 +125,7 @@ def test_the_ssh_key_path_env_var_name_is_resolved_through_environ(
 def test_a_missing_env_var_resolves_to_an_empty_string_not_a_raise(
     stubbed_provider, workspace
 ):
-    network_docker_discover.main(environ={})
+    network_docker_discover.main()
 
     built = FakeNetworkDockerDiscoveryProvider.instances[0]
     assert built.ssh_key_path == ""
@@ -131,7 +137,7 @@ def test_a_missing_env_var_resolves_to_an_empty_string_not_a_raise(
 
 
 def test_the_observation_is_written_with_history(stubbed_provider, workspace):
-    network_docker_discover.main(environ={})
+    network_docker_discover.main()
 
     output_path = workspace / "reports" / "generated" / "network-docker-observation.json"
     assert json.loads(output_path.read_text(encoding="utf-8")) == (
@@ -145,8 +151,8 @@ def test_the_observation_is_written_with_history(stubbed_provider, workspace):
 def test_an_identical_second_run_keeps_the_first_observation_once(
     stubbed_provider, workspace
 ):
-    network_docker_discover.main(environ={})
-    network_docker_discover.main(environ={})
+    network_docker_discover.main()
+    network_docker_discover.main()
 
     history_dir = (
         workspace
@@ -181,8 +187,30 @@ def test_a_run_with_real_discovered_hosts_writes_them_through(
         },
     }
 
-    network_docker_discover.main(environ={})
+    network_docker_discover.main()
 
     output_path = workspace / "reports" / "generated" / "network-docker-observation.json"
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["network_docker"]["hosts"][0]["host"] == "192.168.1.40"
+
+
+# --------------------------------------------------------------------
+# The Runtime executes the chain (ADR-0027 § 10, lot 5.7)
+# --------------------------------------------------------------------
+
+
+def test_the_run_is_traced_and_the_trace_does_not_keep_the_key_path(
+    stubbed_provider, workspace, monkeypatch
+):
+    monkeypatch.setenv("AISTACK_NETWORK_SSH_KEY_PATH", "/home/big-brother/.ssh/id_ed25519")
+
+    network_docker_discover.main()
+
+    generated = workspace / "reports" / "generated"
+    traces = list((generated / "history" / "execution-trace").glob("*.json"))
+    assert len(traces) == 1
+    everything = "".join(
+        path.read_text(encoding="utf-8") for path in generated.rglob("execution-trace*.json")
+    ) + "".join(path.read_text(encoding="utf-8") for path in traces)
+    assert "network_docker.discover" in everything
+    assert "id_ed25519" not in everything

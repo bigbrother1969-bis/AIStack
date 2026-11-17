@@ -1,51 +1,32 @@
 from __future__ import annotations
 
-from aistack.config import configured
+import uuid
 
-import os
-from collections.abc import Mapping
-from pathlib import Path
-
-from aistack.generators.network_docker import NetworkDockerObservationArtifactGenerator
-from aistack.network_discovery.yaml import load_network_discovery_yaml
-from aistack.providers.network_docker import NetworkDockerDiscoveryProvider
-
-DEFAULT_DEFINITION = (
-    configured(Path(__file__).resolve().parents[1]
-    / "network_discovery"
-    / "definitions"
-    / "network_discovery.yml")
-)
+from aistack.kernel.runtime import KernelRuntime, Request
+from aistack.kernel.tracing import FileTraceRepository
+from aistack.tasks.network_docker_discover import NetworkDockerDiscoverTask
 
 
-def main(environ: Mapping[str, str] | None = None) -> None:
+def main() -> None:
     """
     Scan the network for Docker hosts and write a separate JSON report.
 
     Run on demand only, never from `architecture_render`: a network scan
-    with SSH attempts is an action, not a passive read. Its findings do
-    not feed `architecture.html`. The SSH key path is read from `environ`
-    under the variable `ssh_key_path_env` names, and never written to a file.
+    with SSH attempts is an action, not a passive read. The Runtime
+    executes the `network_docker.discover` Task (ADR-0027 § 10) and keeps
+    its trace under `reports/generated/history/execution-trace/`.
     """
 
-    environ = os.environ if environ is None else environ
+    runtime = KernelRuntime.boot(trace_repository=FileTraceRepository())
 
-    definition = load_network_discovery_yaml(DEFAULT_DEFINITION)
-    ssh_key_path = environ.get(definition.ssh_key_path_env, "")
-
-    observation = NetworkDockerDiscoveryProvider(
-        cidr=definition.cidr,
-        ssh_key_path=ssh_key_path,
-        ssh_usernames=definition.ssh_usernames,
-        timeout_seconds=definition.ssh_timeout_seconds,
-    ).collect()
-
-    output_path = NetworkDockerObservationArtifactGenerator().generate(
-        observation=observation,
-        output_path=Path("reports/generated/network-docker-observation.json"),
+    request = Request(
+        request_id=str(uuid.uuid4()),
+        task_id=NetworkDockerDiscoverTask.task_id,
     )
 
-    print(f"Network Docker observation written to {output_path}")
+    data = runtime.execute(request).observation.data
+
+    print(f"Network Docker observation written to {data['output_path']}")
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.7
+  version: 1.8
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -284,6 +284,13 @@ directory as an argument, so the trace is written there
 (`<dir>/history/execution-trace/`), not in the working directory. A later
 rebuild of the same directory reads that stream like any other: the graph
 shows what the Runtime executed.
+
+**The fifth chain** is the network discovery, the Task
+`network_docker.discover` (5.7a). It is run on demand and by the vigil, never
+by `architecture.render`: a scan with SSH attempts is an action. Its provider
+is configured at use and follows its caller (§ 4), and the SSH key path is read
+from the environment by the Task, as the Beszel credentials are: the request,
+kept in the trace, carries none.
 
 **The trace of a Task** — decided by the owner, 2026-11-17, as proposed:
 

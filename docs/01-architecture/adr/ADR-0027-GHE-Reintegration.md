@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.27
+  version: 1.28
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -521,6 +521,39 @@ action command that changes the host through the Kernel's transaction,
 started every two minutes by its timer; it joins `dock` and the web
 application in the baseline of *an entry point builds the Kernel and never
 executes through the Runtime* and leaves *never builds the Kernel* (17 → 16).
+
+### 12. A declaration edited by hand on the host is observed and recorded
+
+`GOV-P-002`. Lot 7, commit 7.1, read on 2026-11-17. The package ships 25
+declarations (`src/aistack/*/definitions/*.yml`); the host keeps a copy of each
+in its configuration directory (`./config`, `/config` in the container), which
+replaces the shipped file, and which `.gitignore` leaves out of the repository.
+Of the 25, three change from a screen through `declaration.write`
+(`resource_priority.yml`, `network_discovery.yml`, `service_categorization.yml`),
+two from the installation assistant (`instance_config.yml`,
+`authentication.yml`, exempt, § 11) and twenty only by hand. A hand edit leaves
+no author, no reason, no copy of the previous file and no trace; most paths
+are fixed at the import of a module, so an edit takes effect at the next start
+of the service.
+
+Decided by the owner, 2026-11-17:
+
+- **The edit stays by hand.** AIStack observes and records it; it does not
+  oblige the owner to go through a screen or a command.
+- **What is recorded**: when, which file, the digests before and after, the
+  author as "by hand on the host", never the content. The previous content is
+  kept as `<name>.avant-observe-<date>`. A file written by `declaration.write`
+  (its digest is the `after` of the last record) is not recorded a second time.
+- **An invalid file is reported**, never refused and never restored: a finding
+  of the Cockpit names the file, the line and the last valid copy.
+- **The 25 declarations**, none excluded: they hold no secret (the API keys are
+  in the data directory, `secrets/api_keys.json`).
+- **Observed at the start and by the vigil**, as a Task through the Runtime.
+
+Commits: 7.2 `declarations.observe`, 7.3 the validation of each declaration
+by its own loader (first, a test per declaration of what an invalid file does
+today), 7.4 the list on the Settings page, 7.5 the closing. Versioning
+`/config/` in the repository is not part of the lot.
 
 ## The refactoring plan of August 2026
 

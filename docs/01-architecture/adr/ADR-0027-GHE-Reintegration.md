@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.26
+  version: 1.27
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -441,7 +441,9 @@ measurement inside the repository (the audit, the suite) and on the host (the
 MSI at `4073820`: a dry run and a real application of `music--phone` through
 `selection.materialise`, same report, no failure, a clean checkout). The run
 showed a defect that predates the lot (`+7 -7` at every pass since 2026-10-12:
-Syncthing renames the NFD names the sync links): `OS-094`, left open.
+Syncthing renames the NFD names the sync links): `OS-094`, fixed by commit 6.7
+(the target is named in NFC) and closed the same day, measured on the MSI
+(`+0 ~0 -0 =6584` at two passes).
 `cli/sync_apply` had no timer on the MSI (`aistack-sync.timer` is installed
 with the content disks); the check was run by hand.
 
@@ -561,9 +563,6 @@ here: whether the protocol becomes a Foundation concept is the owner's.
 - Of the nine criteria of `STD-0300` named by `GOV-0002/OS-091`, three (4.4,
   4.5, 4.9) were re-run on 2.0.0 on 2026-11-17; 1.1 to 1.4, 4.2 and 4.8 have no
   chain to re-run through (`STD-0300` § *Re-run on 2.0.0*).
-- The sync linked names Syncthing renames (NFD to NFC) and did it again at every
-  pass (`OS-094`): the target is now keyed in NFC (commit 6.7), to be measured
-  on the MSI before the item closes.
 - `OPS-0009` and `QUAL-0001` are cited and were never documents under
   `docs/` (`OS-092`).
 - The volume of the traces, to measure on the host after a few days of the

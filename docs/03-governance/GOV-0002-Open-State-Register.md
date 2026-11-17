@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.34
+  version: 2.35
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -218,28 +218,7 @@ return, revised; 8 cited and absent, then 4. `ADR-0005` to `ADR-0007` and
 
 # Defects
 
-#### GOV-0002/OS-094 — The sync links a file under a name Syncthing renames, and does it again at every pass
-
-**Nature** `defect` · **Opened** 2026-11-17 · **State** open
-**Observed** on the MSI, 2026-11-17: `./run_sync.sh music--phone` reports `+7 -7`
-at every pass, as it did on 2026-10-12 (`reports/generated/sync/applied/`).
-`/media/TechData/Storage/Music/Asa/Beautiful Imperfection/05. Bimpé.mp3` is
-named in NFD (“e” and a combining accent); in `Music-Android` the same file is
-named in NFC. Seven files of the library are named in NFD. The destination
-folder is Syncthing's, which corrects the normalisation of names by default:
-it renames what AIStack linked, the next pass does not find the name it wants,
-links it again and removes the NFC one as not designated.
-**Derivable** yes (`diag_sync_names.py` lists the seven; a test with a name in
-NFD reproduces it)
-**Qualification** decided by the owner, 2026-11-17: the target name is the NFC
-form of the source's name, and names are compared in NFC, so that an
-unchanged selection writes nothing. The phone already has the seven files
-under the NFC name: nothing is lost.
-*Commit 6.7, 2026-11-17: `generators/filesystem/hardlink._desired` keys the
-target in NFC; two tests (a library in NFD: linked in NFC then unchanged on the
-second pass; an NFD name left in the target: replaced). Open until measured on
-the MSI: the condition is about a host (the second pass of
-`./run_sync.sh music--phone` must report `+0 ~0 -0`).*
+None open. OS-089 and OS-094 are in *Resolved*.
 
 ---
 
@@ -526,3 +505,31 @@ last-application record is rewritten. The same `+7 -7` is in the record of
 the condition and was read: the table of `ADR-0027` § 5, § 11 (“until then the
 files stay in the baseline”, brought up to date) and this register; nothing
 else names the item.*
+
+#### GOV-0002/OS-094 — The sync links a file under a name Syncthing renames, and does it again at every pass
+
+**Nature** `defect` · **Opened** 2026-11-17 · **State** resolved 2026-11-17 by commit 6.7
+**Observed** on the MSI, 2026-11-17: `./run_sync.sh music--phone` reports `+7 -7`
+at every pass, as it did on 2026-10-12 (`reports/generated/sync/applied/`).
+`/media/TechData/Storage/Music/Asa/Beautiful Imperfection/05. Bimpé.mp3` is
+named in NFD (“e” and a combining accent); in `Music-Android` the same file is
+named in NFC. Seven files of the library are named in NFD. The destination
+folder is Syncthing's, which corrects the normalisation of names by default:
+it renames what AIStack linked, the next pass does not find the name it wants,
+links it again and removes the NFC one as not designated.
+**Derivable** yes (`diag_sync_names.py` lists the seven; a test with a name in
+NFD reproduces it)
+**Qualification** decided by the owner, 2026-11-17: the target name is the NFC
+form of the source's name, and names are compared in NFC, so that an
+unchanged selection writes nothing. The phone already has the seven files
+under the NFC name: nothing is lost.
+*Commit 6.7, 2026-11-17: `generators/filesystem/hardlink._desired` keys the
+target in NFC; two tests (a library in NFD: linked in NFC then unchanged on the
+second pass; an NFD name left in the target: replaced). Open until measured on
+the MSI: the condition is about a host (the second pass of
+`./run_sync.sh music--phone` must report `+0 ~0 -0`).*
+*Closed 2026-11-17. Measured on the MSI at `f1f8041`, 21:26:
+`./run_sync.sh --dry-run`, then `./run_sync.sh music--phone` twice, all report
+`+0 ~0 -0 =6584` (before: `+7 ~0 -7 =6577`); the checkout is clean. What still
+said the condition: `ADR-0027` § 11 (commit 6.6) and the open point of that
+ADR, brought up to date; nothing else names the item.*

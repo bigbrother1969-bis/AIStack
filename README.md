@@ -474,6 +474,19 @@ container, its free space, and what AIStack keeps where.
 
 ![Disks and mounts](docs/assets/screenshots/settings-disks.png)
 
+**Settings — declarations edited by hand (new in 2.1)** — an edit made
+with an editor to a file of the configuration directory is seen at each
+pass of the vigil and kept here, with the difference; a file its loader
+does not read is shown first. Nothing is refused, nothing is restored.
+
+![Declarations edited by hand](docs/assets/screenshots/settings-hand-edits.png)
+
+**Selection — why each line is what it is (back in 2.1)** — a folder
+ticked directly, one included because its parent is ticked, one left out
+and why, and what is already materialised on the target.
+
+![The selection screen, with the reason of each line](docs/assets/screenshots/selection-explanation.png)
+
 ---
 
 ## Quality Approach

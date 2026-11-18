@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 0.2
+  version: 0.3
   status: Draft
   owner: Foundation
   created: 2026-11-17
@@ -42,7 +42,9 @@ without this text changing.
 **Status of this version.** `Draft`, written 2026-11-17 by an AI assistant at the
 owner's request (decision of 2026-11-17, `ADR-0027` § 13). Per `GOV-P-001`, an AI
 assistant creates no authoritative knowledge: the text below is *Proposed* in the
-sense of `FDN-0009` until the owner validates it and it is engraved (*Gravé*). It
+sense of `FDN-0009` until the owner validates it and it is engraved (*Gravé*). Its
+qualification (type, semantic type, domain, criticality, confidence) was validated
+by the owner on 2026-11-18; its text is not engraved, and it stays a `Draft`. It
 is assembled from what the heritage already states — the August 2026 refactoring
 plan (phases 4 and 5), the two Boot Reports of 2026-08-13 and 2026-09-23, the
 practices recorded in `FDN-0009` (`GOV-0002/OS-072`) and the criteria of
@@ -199,13 +201,14 @@ Decided by the owner on 2026-11-18, after the first agent run on the bundle of
    it (the README stays a presentation of the product: decision of 2026-11-17),
    and `FDN-0009`, which sent the reader to an *AI Boot* section of the README
    that `main` does not hold, now sends to this document.
+3. **The qualification of this artifact.** The owner validated it as proposed on
+   2026-11-18: type `Foundation Protocol`, semantic type `Policy`, domain
+   `Foundation`, criticality C3 (as the other Foundation protocols), confidence
+   `Declared`. Qualification is a human contribution (`FDN-0003` Article 4); the
+   status stays `Draft` until the text is engraved.
 
-Still left to the owner. None is decided here.
+Decided earlier, and left as it stands:
 
-3. **The qualification of this artifact.** Its type, criticality (C3, as the other
-   Foundation protocols) and confidence are proposed by the assistant that wrote
-   it. Qualification is a human contribution (`FDN-0003` Article 4). It goes
-   into the 2.1 release as a Draft.
 4. **Cross-model verification.** Criterion 2.4 stays `not verified`; the owner
    decided on 2026-09-25 (`GOV-0002/OS-076`) that no further run is spent against
    the same two model families.

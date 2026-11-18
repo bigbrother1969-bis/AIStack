@@ -261,7 +261,8 @@ how sure that knowledge is — without reading the whole repository.
   `knowledge.integrity`. On 2026-11-18, on the first reading, it found fifteen
   warnings in the documents; they were answered, and the report now reads
   `blocking: 0   warnings: 0   clean: True`.
-- **The protocol** (`FDN-0013`, a Draft: its qualification is the owner's) says how
+- **The protocol** (`FDN-0013`, a Draft: its qualification is validated, its text is
+  not yet engraved) says how
   an agent acquires that knowledge: two points of truth — the Git repository is
   where the heritage is decided, the bundle is what an agent reads — seven
   acquisition states, and a Boot Report of eight sections ending in READY or NOT

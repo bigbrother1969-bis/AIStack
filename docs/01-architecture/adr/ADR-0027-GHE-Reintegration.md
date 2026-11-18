@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.45
+  version: 1.46
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -900,6 +900,14 @@ the absolute path in the `source` of the bundle is `OS-096`; both are decided
 for after the release. `STD-0300` 2.4 stays not verified. Before the release, the
 lots 6 to 8 are verified in containers (image `dev` rebuilt by the owner), as
 lot 5 was.
+
+**After the release of 2.1.0, 2026-11-18: the qualification of `FDN-0013` is
+validated.** The owner kept the fields as proposed (type `Foundation Protocol`,
+semantic type `Policy`, domain `Foundation`, criticality C3, confidence
+`Declared`); the protocol, 0.3, stays a `Draft` until its text is engraved.
+`STD-0300` 2.4 needs no decision: it stays not verified, as `GOV-0002/OS-076`
+decided on 2026-09-25. `/context/bundles/`, where the export writes by default,
+is ignored by git.
 
 ## Implementation state
 

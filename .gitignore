@@ -30,6 +30,11 @@ examples/selections/*-last-generation.yml
 # The publisher's unattended sync_mirrors.sh writes its output here (OPS-0002).
 /logs/
 
+# The Context Bundle the export writes by default (export_project_sources.py).
+# Each artifact's source names the directory it was generated in (OS-096):
+# never committed.
+/context/bundles/
+
 # Local backups and patches in transit.
 *.bak-*
 # The dated copy a declaration write keeps beside the file it replaces.

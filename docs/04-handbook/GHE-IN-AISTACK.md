@@ -301,10 +301,7 @@ technology in the Kernel or a chain that never runs.
   product, and it writes the repository tree directly — a write outside a
   transaction more;
 - the SSH transfer of the Context Bundle to another machine, and the decision
-  record that described it (`ADR-0007`): the bundle is read where it is generated;
-- seven of the eight test files of the official validation suite's integration
-  folder (`GOV-0002/OS-095`): their numbers were measured in August on a larger
-  heritage, and each needs a re-measure, not a quiet change of the number.
+  record that described it (`ADR-0007`): the bundle is read where it is generated.
 
 ## What to expect when you upgrade
 

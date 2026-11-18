@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.46
+  version: 1.47
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -908,6 +908,15 @@ semantic type `Policy`, domain `Foundation`, criticality C3, confidence
 `STD-0300` 2.4 needs no decision: it stays not verified, as `GOV-0002/OS-076`
 decided on 2026-09-25. `/context/bundles/`, where the export writes by default,
 is ignored by git.
+
+**After the release of 2.1.0, 2026-11-18: the seven files of the validation suite
+return (`GOV-0002/OS-095`, resolved).** Each was re-measured on `main`, and each
+number that moved says so in the docstring of its test: types 19 → 16, contract
+declarations 39 → 37, register entries 29 → 12 and natures 6 → 3, documents
+declaring a date 65 → 64. The references that lead to documents kept at the tag
+are now asserted against `FDN-0001` § *Kept at the tag*, and the rule of the
+declared dates no longer reads the restoration of 2026-11-15 as a revision.
+`OS-096` is the one entry still open.
 
 ## Implementation state
 

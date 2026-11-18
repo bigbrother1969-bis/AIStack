@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.37
+  version: 2.38
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -198,22 +198,7 @@ None open.
 
 # Non-conforming instances
 
-#### GOV-0002/OS-095 — Seven files of the validation suite stay at the tag
-
-**Nature** `non-conforming` · **Opened** 2026-11-18 · **State** open
-**Observed** the tag `archive/heritage-2.0.0-rc1` holds eight files under
-`tests/integration/validation/`; `main` holds one
-(`test_std_0300_scenario_2.py`, lot 8.6b). Run on `main` as they are, six tests of
-the other seven fail, and none is a defect found: floors measured in August (65
-artifacts, 19 types, 39 declarations, 29 register entries) that `main` does not
-reach; twelve references to documents declared kept at the tag; dates of forty
-documents read against a git history that starts on 2026-11-15.
-**Derivable** yes
-**Qualification** decided by the owner, 2026-11-18: they stay at the tag for the
-2.1 release. After it, each file is re-measured (floors, references, dates) and
-returns or is declared kept; no number is changed quietly.
-
-OS-088 is in *Resolved*.
+None open. OS-088 and OS-095 are in *Resolved*.
 
 ---
 
@@ -576,3 +561,43 @@ the MSI: the condition is about a host (the second pass of
 `+0 ~0 -0 =6584` (before: `+7 ~0 -7 =6577`); the checkout is clean. What still
 said the condition: `ADR-0027` § 11 (commit 6.6) and the open point of that
 ADR, brought up to date; nothing else names the item.*
+
+#### GOV-0002/OS-095 — Seven files of the validation suite stay at the tag
+
+**Nature** `non-conforming` · **Opened** 2026-11-18 · **State** resolved 2026-11-18, the seven files return
+**Observed** the tag `archive/heritage-2.0.0-rc1` holds eight files under
+`tests/integration/validation/`; `main` holds one
+(`test_std_0300_scenario_2.py`, lot 8.6b). Run on `main` as they are, six tests of
+the other seven fail, and none is a defect found: floors measured in August (65
+artifacts, 19 types, 39 declarations, 29 register entries) that `main` does not
+reach; twelve references to documents declared kept at the tag; dates of forty
+documents read against a git history that starts on 2026-11-15.
+**Derivable** yes
+**Qualification** decided by the owner, 2026-11-18: they stay at the tag for the
+2.1 release. After it, each file is re-measured (floors, references, dates) and
+returns or is declared kept; no number is changed quietly.
+*Closed 2026-11-18. The seven files return to `tests/integration/validation/`,
+each re-measured on `main` at 2.1.0: 65 artifacts, 16 types, 12 register entries
+of three natures, 37 contract declarations over 394 implementations, 51
+principles, 143 citations. No number changes without its measurement written
+in the docstring of the test that holds it.*
+- *`conftest.py`: the variable of the bundle transfer is dropped; `main` has no
+  transfer.*
+- *`test_the_projection_declares_one_domain_per_type.py`: types 19 → 16 (seven
+  types stayed at the tag, two are new).*
+- *`test_the_projection_declares_what_it_satisfies.py`: declarations 39 → 37 (ten
+  are not in `main`: the transfer five, the package manager three, the
+  filesystem location two; two are new, the transaction engines).*
+- *`test_the_register_agrees_with_itself.py`: entries 29 → 12, natures 6 → 3.*
+- *`test_the_projection_resolves_its_references.py`: asserts that each of the
+  twelve unresolved references, to seven documents, designates a document that
+  `FDN-0001` § *Kept at the tag* declares, read from the projection.*
+- *`test_declared_dates.py`: a restoration is not a revision. The thirteen
+  documents restored on 2026-11-15 (`5b1489c`) were reported as predating a
+  revision they never had; none was a defect. The date is now that of the last
+  modification of the version, or of the creation; a repository built in the test
+  states it. Floor 65 → 64.*
+- *`test_the_projection_governs_its_principles.py`: unchanged, its floors (49, 6,
+  49) hold against 51, 6 and 143.*
+*What still said the condition: `ADR-0027` § 13 and `GHE-IN-AISTACK`, brought up
+to date; `OS-096` stays open.*

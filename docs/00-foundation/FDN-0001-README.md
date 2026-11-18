@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 1.4
+  version: 1.5
   status: Published
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-11-17
+  updated: 2026-11-18
 
 relations:
   references:
@@ -159,6 +159,7 @@ in `main` nor in this table is reported.
 | STD-0101 | Writing Rules | `docs/02-standards/documentation/` |
 | STD-0200 | Specification Standard | `docs/02-standards/specifications/` |
 | OPS-0012 | Dead Code Quarantine | `docs/04-development/` |
+| ADR-0007 | Context Bundle Transfer | `docs/01-architecture/adr/` |
 | CMP-0001 | Context Bundle Generator | `docs/04-development/context-bundle-generator/` |
 | CMP-0012 | Innovation Pipeline | `docs/04-development/innovation-pipeline/` |
 

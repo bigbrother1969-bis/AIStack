@@ -66,11 +66,6 @@
     "src/aistack/vigil/snapshot.py (the state a service keeps for itself)"
   ],
   "principles_missing_from_the_tree": [],
-  "documents_cited_and_absent": [
-    "ADR-0005",
-    "ADR-0006",
-    "ADR-0007",
-    "ARCH-0013"
-  ],
+  "documents_cited_and_absent": [],
   "principles_cited_and_not_registered": []
 }

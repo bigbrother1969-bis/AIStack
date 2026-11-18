@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.38
+  version: 1.39
   status: Accepted
   owner: Architecture
   created: 2026-11-15
-  updated: 2026-11-17
+  updated: 2026-11-18
 
 relations:
   references:
@@ -776,6 +776,29 @@ document's engraving. Measured: the bundle now carries 61 artifacts and the
 integrity check still reports 0 blocking and 15 warnings (the new document is
 complete); `clean: True` (criterion 2.6) needs those 15 warnings answered, which
 is for 8.6.
+
+**Commit 8.5, 2026-11-18: three documents return, `package_manager` stays at the
+tag.** `ADR-0005`, `ADR-0006` and `ARCH-0013` come back from the tag, read
+against `main` (lot 8.2b put the code they describe back). Each carries a dated
+section and is not rewritten. `ADR-0005`: the engine and the script are in
+`main`; the script takes no transfer (decision of 2026-11-17). `ADR-0006`: three
+statements are no longer true and are corrected under their date, namely the
+"configured transport layer", the claim that a suite run regenerates the
+projection (the test now writes to a temporary folder) and the publication order
+(`ruff`, `mypy`, `pytest`). `ARCH-0013` stays `Draft`; its section of
+2026-09-23 describes a code that is not in `main`, and the new section says so.
+`ADR-0007` (the transfer) does not return and joins `FDN-0001` § *Kept at the
+tag* (`docs/01-architecture/adr/`).
+
+**Decided by the owner, 2026-11-18 (option A): `aistack.package_manager` stays at
+the tag.** Thirteen files and five tests; nothing in `main` calls it, no
+decision above needs it (rule 5), and its integration engine writes the working
+tree directly, which would add a write outside a transaction (§ 11). It returns
+if a real case for a receiving dock appears, with its use. The four open points
+of `ARCH-0013` stay open.
+
+Measured: `documents_cited_and_absent` is empty (4 then 0); `OS-088`, whose
+list this was, can close at 8.7.
 
 ## The refactoring plan of August 2026
 

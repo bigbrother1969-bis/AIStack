@@ -213,6 +213,9 @@ the lot that brings their code back. What remains reported is those, and
 *Commit 5.12, 2026-11-17: `ARCH-0002`, `ARCH-0007`, `ARCH-0010` and `ARCH-0012`
 return, revised; 8 cited and absent, then 4. `ADR-0005` to `ADR-0007` and
 `ARCH-0013` stay reported until lot 8 (`ADR-0027` § 5).*
+*Commit 8.5, 2026-11-18: `ADR-0005`, `ADR-0006` and `ARCH-0013` return, revised;
+`ADR-0007` (the transfer) stays at the tag and is declared in `FDN-0001` § *Kept
+at the tag*. 4 cited and absent, then 0. The entry closes with lot 8.7.*
 
 ---
 

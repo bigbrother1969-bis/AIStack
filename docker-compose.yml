@@ -135,7 +135,23 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
-# **2.0.0 — published 2026-11-15, current; also `latest`.**
+# **2.1.0 — published 2026-11-18, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:2.1.0
+#   @sha256:9f92cb1342fde7ac902ac651c952bd72eb385a3b13cabb2fc2c1324dc8c8b45e
+#
+# Built from ca340db (tag v2.1.0) on the reference host, behind the
+# terms OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main and carrying the tag, and 3314 tests passing.
+# Before the build, the 16 versions listed here as current (1.1.1 to
+# 2.0.0) were pulled again and each matched its recorded digest. Pushed
+# under its version and as `latest` — both name the same digest; its
+# `revision` label is ca340dbadf4fbcf25971e2ff3955ecaee83fed77. The
+# digest is that of the manifest list the registry holds. 2.1 makes 2.0
+# accountable: `docs/04-handbook/RELEASE-NOTES.md`'s own 2.1.0 entry gives
+# the full account, and `docs/04-handbook/GHE-IN-AISTACK.md` the reasons.
+#
+# **2.0.0 — published 2026-11-15, current.**
 #
 #   bigbrother1969/aistack-core:2.0.0
 #   @sha256:6d45f19eb846cb0c4083ad344485b3ef209c857e7a143746fa1d96cf0af66b74

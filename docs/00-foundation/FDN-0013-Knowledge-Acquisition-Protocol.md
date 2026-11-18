@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   confidence: Declared
   criticality: C3
-  version: 0.1
+  version: 0.2
   status: Draft
   owner: Foundation
   created: 2026-11-17
-  updated: 2026-11-17
+  updated: 2026-11-18
 
 relations:
   references:
@@ -159,6 +159,9 @@ and says which of its own findings the check did not produce.
 it cannot: *READY* with its scope, or *NOT READY* with what blocks it. A verdict
 that names no scope says nothing.
 
+**The READY rule.** NOT READY means a blocking finding of the integrity check or
+an acquisition state not reached (owner, 2026-11-18; § *Open points*).
+
 **A Boot Report is evidence, not governed knowledge.** It is produced by a
 reasoning assistant, and per `GOV-P-001` it creates no authoritative knowledge.
 It is generated, disposable (`ENG-P-003`), and read by the human who decides.
@@ -183,24 +186,26 @@ services it would belong to are not built either.
 
 ## Open points
 
-Decisions this text leaves to the owner. None is decided here.
+Decided by the owner on 2026-11-18, after the first agent run on the bundle of
+`main` (`STD-0300` 2.1 to 2.3):
 
-1. **The READY rule.** The protocol says the verdict is scoped; it does not say
-   what makes it NOT READY. Candidates: any *blocking* finding of the integrity
-   check; a state not reached. `STD-0300` criteria 2.5 and 2.6 make the check's
-   exit code and its `clean` field the gravity measure of the heritage, and could
-   be read as the rule; the owner decides.
-2. **Where an agent finds this text.** The bundle's companion `README.md` is the
-   project README, which presents the product and does not mention this protocol
-   (decision of 2026-11-17: it stays a presentation of the product). `FDN-0009`
-   used to say that knowledge acquisition *belongs to the AI Boot section of the
-   README*; that section is not in the README of `main`. An agent starting from
-   the bundle reaches this document only by finding it in the Foundation index
-   (`FDN-0001`). Whether the README carries one line pointing to it is the owner's
-   decision.
+1. **The READY rule.** An agent's verdict is *NOT READY* when the integrity check
+   reports at least one *blocking* finding (`aistack.cli.knowledge_integrity` exits
+   non-zero), or when an acquisition state was not reached. Warnings and
+   observations do not make a verdict NOT READY: they are reported, each one, and
+   the verdict names the scope they limit. This is the reading of `STD-0300`
+   criteria 2.5 and 2.6 that the owner kept.
+2. **Where an agent finds this text.** The README carries one line that points to
+   it (the README stays a presentation of the product: decision of 2026-11-17),
+   and `FDN-0009`, which sent the reader to an *AI Boot* section of the README
+   that `main` does not hold, now sends to this document.
+
+Still left to the owner. None is decided here.
+
 3. **The qualification of this artifact.** Its type, criticality (C3, as the other
    Foundation protocols) and confidence are proposed by the assistant that wrote
-   it. Qualification is a human contribution (`FDN-0003` Article 4).
+   it. Qualification is a human contribution (`FDN-0003` Article 4). It goes
+   into the 2.1 release as a Draft.
 4. **Cross-model verification.** Criterion 2.4 stays `not verified`; the owner
    decided on 2026-09-25 (`GOV-0002/OS-076`) that no further run is spent against
    the same two model families.

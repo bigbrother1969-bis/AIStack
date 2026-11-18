@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.44
+  version: 1.45
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -887,6 +887,19 @@ criteria 2.5 and 2.6. What stays open, each with its owner:
 - `aistack.package_manager`, the SSH transfer and `ADR-0007` stay at the tag.
 - Some `source` fields of the bundle carry the absolute path of a working
   directory (reported by the agent of 8.6c), not corrected.
+
+**After the closing, 2026-11-18: the open points are decided, and what stays
+is registered.** The owner kept the recommendations. `FDN-0013` 0.2: an agent's
+verdict is NOT READY on a blocking finding of the integrity check or an
+acquisition state not reached; the README carries one line that points to the
+protocol and `FDN-0009` now sends to `FDN-0013` instead of an *AI Boot* section
+that `main` does not hold. `FDN-0013` goes into 2.1 as a Draft, its
+qualification still the owner's. The seven files of
+`tests/integration/validation/` that stay at the tag are `GOV-0002/OS-095`, and
+the absolute path in the `source` of the bundle is `OS-096`; both are decided
+for after the release. `STD-0300` 2.4 stays not verified. Before the release, the
+lots 6 to 8 are verified in containers (image `dev` rebuilt by the owner), as
+lot 5 was.
 
 ## Implementation state
 

@@ -9,7 +9,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 13
+  version: 14
   created: 2026-07-04
   updated: 2026-11-18
 ---
@@ -141,6 +141,10 @@ services and the image run, `providers/` what observes the host, `health/`,
 The Gitea repository is the reference; GitHub and Codeberg are mirrors.
 Publishing a version, and the image `bigbrother1969/aistack-core` with it,
 follows [`OPS-0002`](docs/04-development/OPS-0002-Heritage-Publication.md).
+
+**An AI agent** acquires what is known about the project from its Context Bundle
+before reasoning; the protocol is `FDN-0013`
+([`docs/00-foundation/`](docs/00-foundation/FDN-0013-Knowledge-Acquisition-Protocol.md)).
 
 ## Licence
 

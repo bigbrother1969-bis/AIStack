@@ -6,12 +6,12 @@ artifact:
   semantic_type: Policy
   domain: Foundation
   criticality: C3
-  version: 1.2
+  version: 1.3
   status: Published
   confidence: Reviewed
   owner: Foundation
   created: 2026-07-06
-  updated: 2026-09-25
+  updated: 2026-11-18
 
 relations:
   references:
@@ -29,8 +29,7 @@ relations:
 This document defines how an AI model shall collaborate with a human on AIStack.
 
 It governs collaboration mechanics — how a validated decision becomes a governed
-artifact. It does not govern knowledge acquisition, which belongs to the AI Boot
-section of the README.
+artifact. It does not govern knowledge acquisition, which `FDN-0013` governs.
 
 The protocol is not a prompt. It is a governed component of the Knowledge
 Operating System, and it evolves through explicit validation like any other

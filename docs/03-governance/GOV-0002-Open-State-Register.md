@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.36
+  version: 2.37
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -198,13 +198,42 @@ None open.
 
 # Non-conforming instances
 
-None open. OS-088 is in *Resolved*.
+#### GOV-0002/OS-095 — Seven files of the validation suite stay at the tag
+
+**Nature** `non-conforming` · **Opened** 2026-11-18 · **State** open
+**Observed** the tag `archive/heritage-2.0.0-rc1` holds eight files under
+`tests/integration/validation/`; `main` holds one
+(`test_std_0300_scenario_2.py`, lot 8.6b). Run on `main` as they are, six tests of
+the other seven fail, and none is a defect found: floors measured in August (65
+artifacts, 19 types, 39 declarations, 29 register entries) that `main` does not
+reach; twelve references to documents declared kept at the tag; dates of forty
+documents read against a git history that starts on 2026-11-15.
+**Derivable** yes
+**Qualification** decided by the owner, 2026-11-18: they stay at the tag for the
+2.1 release. After it, each file is re-measured (floors, references, dates) and
+returns or is declared kept; no number is changed quietly.
+
+OS-088 is in *Resolved*.
 
 ---
 
 # Defects
 
-None open. OS-089 and OS-094 are in *Resolved*.
+#### GOV-0002/OS-096 — The Context Bundle names the host it was generated on
+
+**Nature** `defect` · **Opened** 2026-11-18 · **State** open
+**Observed** the `source` of each of the 64 artifacts of the bundle generated on
+2026-11-18 is the absolute path of the directory it was generated in
+(`ArtifactBuilder` sets `source=str(discovery.path)`). A bundle read elsewhere
+names a machine and a user. No secret is involved, and `source` is not part of
+the `content_hash`; about ten integrity checks read it, among them
+`transport_residue`, which tests `location in artifact.source`.
+**Derivable** yes
+**Qualification** decided by the owner, 2026-11-18: not before the 2.1 release.
+After it, `source` becomes relative to the repository root, with the checks that
+read it re-read and tested.
+
+OS-089 and OS-094 are in *Resolved*.
 
 ---
 

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.43
+  version: 1.44
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -868,9 +868,29 @@ above); the lot 8 row of this table, out of date (corrected in 8.6c); absolute
 paths of a working directory in some `source` fields of the bundle, not
 corrected.
 
+**Commit 8.7, 2026-11-18: lot 8 is closed.** `OS-088` moves to *Resolved*
+(`documents_cited_and_absent` is empty, held by the baseline); `STD-0300` was
+brought up to date by 8.6b and 8.6d. What the lot returned: the Context Bundle
+engine and its export (without the SSH transfer), the eighteen integrity checks
+as the eighth Task of the Runtime, the protocol `FDN-0013` (Draft), the
+documents `ADR-0005`, `ADR-0006` and `ARCH-0013`, and the test of `STD-0300`
+criteria 2.5 and 2.6. What stays open, each with its owner:
+
+- `FDN-0013` is a proposal of the assistant: the NOT READY rule, where an agent
+  finds the protocol (the bundle README does not cite it; `FDN-0009` points to a
+  README section that is not in `main`) and the qualification of the document
+  are the owner's to decide.
+- `STD-0300` 2.4 stays not verified: one model was run, two are needed
+  (`GOV-0002/OS-076`).
+- The other seven files of `tests/integration/validation/` stay at the tag until
+  their floors and dates are re-measured.
+- `aistack.package_manager`, the SSH transfer and `ADR-0007` stay at the tag.
+- Some `source` fields of the bundle carry the absolute path of a working
+  directory (reported by the agent of 8.6c), not corrected.
+
 ## Implementation state
 
-Measured 2026-11-18, at `f952e58`.
+Measured 2026-11-18, at `ea20646`.
 
 | Step | State |
 |---|---|
@@ -880,7 +900,7 @@ Measured 2026-11-18, at `f952e58`.
 | Lot 5 The chains run through the Kernel as Tasks (§ 10) | done — 2026-11-17 |
 | Lot 6 Modifications of knowledge go through a transaction (§ 11) | done — 2026-11-17 |
 | Lot 7 The declarations edited by hand on the host are observed (§ 12) | done — 2026-11-17 |
-| Lot 8 The Context Bundle and the boot report return (§ 13) | not done — 8.1 to 8.5 and 8.6a to 8.6d done 2026-11-18; 8.7 (closing: `OS-088`) remains |
+| Lot 8 The Context Bundle and the boot report return (§ 13) | done — 2026-11-18 (8.1 to 8.7) |
 
 ## The refactoring plan of August 2026
 

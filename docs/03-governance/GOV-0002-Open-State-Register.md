@@ -7,11 +7,11 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.35
+  version: 2.36
   status: Draft
   owner: Foundation
   created: 2026-08-22
-  updated: 2026-11-17
+  updated: 2026-11-18
 
 relations:
   references:
@@ -198,24 +198,7 @@ None open.
 
 # Non-conforming instances
 
-#### GOV-0002/OS-088 — `main` cites documents it does not hold
-
-**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** open
-**Observed** `python scripts/ghe_audit.py`, measure *A document is cited and is
-not in the tree*; the list is `tests/reference/ghe_audit_baseline.json`.
-`FDN-P-005`.
-**Derivable** yes
-**Qualification** decided by the owner, 2026-11-15: the core returns
-(`ADR-0027` § 1); what stays at the tag is declared in `FDN-0001` § *Kept at
-the tag* and is no longer reported; the architecture documents return with
-the lot that brings their code back. What remains reported is those, and
-`OS-092`.
-*Commit 5.12, 2026-11-17: `ARCH-0002`, `ARCH-0007`, `ARCH-0010` and `ARCH-0012`
-return, revised; 8 cited and absent, then 4. `ADR-0005` to `ADR-0007` and
-`ARCH-0013` stay reported until lot 8 (`ADR-0027` § 5).*
-*Commit 8.5, 2026-11-18: `ADR-0005`, `ADR-0006` and `ARCH-0013` return, revised;
-`ADR-0007` (the transfer) stays at the tag and is declared in `FDN-0001` § *Kept
-at the tag*. 4 cited and absent, then 0. The entry closes with lot 8.7.*
+None open. OS-088 is in *Resolved*.
 
 ---
 
@@ -411,6 +394,34 @@ not is declared in `ADR-0027` § 10 and measured by `scripts/ghe_audit.py`, whic
 can only get shorter. *Commit 5.12, 2026-11-17: the architecture documents of
 the Kernel and its concepts (`ARCH-0002`, `ARCH-0007`, `ARCH-0010`,
 `ARCH-0012`) return from the tag, revised against `main`; the entry closes.*
+
+#### GOV-0002/OS-088 — `main` cites documents it does not hold
+
+**Nature** `non-conforming` · **Opened** 2026-11-15 · **State** resolved 2026-11-18 by commit 8.7
+**Observed** `python scripts/ghe_audit.py`, measure *A document is cited and is
+not in the tree*; the list is `tests/reference/ghe_audit_baseline.json`.
+`FDN-P-005`.
+**Derivable** yes
+**Qualification** decided by the owner, 2026-11-15: the core returns
+(`ADR-0027` § 1); what stays at the tag is declared in `FDN-0001` § *Kept at
+the tag* and is no longer reported; the architecture documents return with
+the lot that brings their code back. What remains reported is those, and
+`OS-092`.
+*Commit 5.12, 2026-11-17: `ARCH-0002`, `ARCH-0007`, `ARCH-0010` and `ARCH-0012`
+return, revised; 8 cited and absent, then 4. `ADR-0005` to `ADR-0007` and
+`ARCH-0013` stay reported until lot 8 (`ADR-0027` § 5).*
+*Commit 8.5, 2026-11-18: `ADR-0005`, `ADR-0006` and `ARCH-0013` return, revised;
+`ADR-0007` (the transfer) stays at the tag and is declared in `FDN-0001` § *Kept
+at the tag*. 4 cited and absent, then 0. The entry closes with lot 8.7.*
+*Commit 8.7, 2026-11-18, closure: `python scripts/ghe_audit.py` reads 0 for *A
+document is cited, is not in the tree and is not declared kept at the tag*, and
+`tests/reference/ghe_audit_baseline.json` holds `"documents_cited_and_absent": []`:
+the suite fails the day a document is cited and neither in the tree nor declared
+at the tag. The measurement is inside the repository, the suite is it. What
+carried the condition and is left as history: `ADR-0027` § 5 and § 13 (the
+documents that returned with their code, and the one that did not). The
+documents declared at the tag are listed in `FDN-0001` § *Kept at the tag*;
+`OS-092` is a separate entry.*
 
 #### GOV-0002/OS-091 — Nine criteria of STD-0300 have not been executed on 2.0.0
 

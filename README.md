@@ -1,3 +1,19 @@
+---
+artifact:
+  id: README-AISTACK
+  owner: Foundation
+  status: Draft
+  title: AIStack Main README
+  type: Entry Point Documentation
+  semantic_type: Knowledge Artifact
+  domain: Foundation
+  criticality: C2
+  confidence: Declared
+  version: 13
+  created: 2026-07-04
+  updated: 2026-11-18
+---
+
 # AIStack
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE.txt)

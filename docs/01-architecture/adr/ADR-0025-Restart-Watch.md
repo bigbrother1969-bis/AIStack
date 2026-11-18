@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-11-15
-  updated: 2026-11-15
+  updated: 2026-11-18
 
 relations:
   references:
@@ -136,6 +136,31 @@ and the screen reads the newest lines.
   loop (`restart_loop`), a container that is healthy and wrong.
 - `docker restart` is the only action; the watch never recreates,
   removes or updates anything.
+
+## Implementation state
+
+Measured 2026-11-18, in `main`: `aistack.restart_watch` (`detect`, `order`, `act`,
+`guard`, `journal`, `load`), the command `aistack.cli.restart_watch`, the
+service `restart-watch` of `docker-compose.yml`, the systemd unit
+`deploy/systemd/aistack-restart-watch.service`, the declaration
+`restart_watch.yml` (neutral: no exception, no probe), and
+`tests/unit/restart_watch/`.
+
+| Step | State |
+|---|---|
+| § 1 It acts, with guardrails | done — 2026-11-18 |
+| § 2 Three signs of "stuck" (`unhealthy`, stale network namespace, declared probe) | done — 2026-11-18 |
+| § 3 The order is read from Docker, the owner states exceptions (`after:`, `never:`) | done — 2026-11-18 |
+| § 4 When: the window after a start (30 minutes, `--ignore-window`) | done — 2026-11-18 |
+| § 5 Limits (two polls in a row, two attempts per hour, never itself) | done — 2026-11-18 |
+| § 6 What is recorded and who is told (journal trimmed to 500 lines, the console card *Relance au démarrage*, Gotify urgent on failure) | done — 2026-11-18 |
+
+**What a real run has shown.** On 2026-11-16, on throwaway containers on the
+reference host: detection, order, restart and wait for the return, for
+`unhealthy` and for a stale network. **Not tried for real**: a declared probe
+(Scrutiny), the window after a real cold boot, and the Gotify message when a
+restart fails. *Done* above says the code does what the decision asks, not that
+every path has met the host.
 
 ## Open points
 

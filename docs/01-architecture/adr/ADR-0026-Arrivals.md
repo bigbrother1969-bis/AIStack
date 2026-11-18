@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.0
+  version: 1.1
   status: Accepted
   owner: Architecture
   created: 2026-11-15
-  updated: 2026-11-15
+  updated: 2026-11-18
 
 relations:
   references:
@@ -164,6 +164,26 @@ named in `network_discovery.yml` must be readable inside the container.
 - Out of scope: stopping or removing a container, deciding a category for
   the owner, installing the collector on a machine, scanning the LAN
   without the owner's switch.
+
+## Implementation state
+
+Measured 2026-11-18, in `main`: `aistack.arrivals` (`detect`, `facts`, `propose`,
+`declare`, `load`, `run`, `state`), its call in `aistack.cli.vigil`, the screen
+*Nouveautés* (`web/arrivals.py`), the declaration `arrivals.yml` (neutral), the
+optional `address:` of `hosts.yml`, `nmap` in the image, and
+`tests/unit/arrivals/`.
+
+| Step | State |
+|---|---|
+| § 1 Detect in the vigil, no new service | done — 2026-11-18 |
+| § 2 Say it once, after two passes (`confirm_passes`, Gotify, not urgent) | done — 2026-11-18 |
+| § 3 Propose on a screen, write only on a click (declare, ignore, restore) | done — 2026-11-18; the write goes through `declaration.write` since `ADR-0027` § 11 (lot 6.2) |
+| § 4 Machines: propose the lines, never add (`address:`, `known_hosts:`) | done — 2026-11-18 |
+| § 5 The scan is the owner's to switch on (`machine_scan_hours`, shipped 0) | done — 2026-11-18 |
+| § 6 Declared as the others are (`arrivals.yml`, a console card) | done — 2026-11-18 |
+
+*Not measured here*: the first scan with `machine_scan_hours` set, which the
+open points say will note every machine as known.
 
 ## Open points
 

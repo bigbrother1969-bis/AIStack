@@ -1,8 +1,22 @@
 ---
 artifact:
   id: OPS-0002
-  title: Publication
+  title: Heritage Publication
+  type: Operations Procedure
+  semantic_type: Policy
+  domain: Operations
+  criticality: C2
+  confidence: Declared
   version: '2.0'
+  status: Draft
+  owner: Operations
+  created: 2026-08-27
+  updated: 2026-11-18
+
+relations:
+  references:
+    - ENG-TEST-0002
+    - GOV-0002
 ---
 
 # OPS-0002 — Publication

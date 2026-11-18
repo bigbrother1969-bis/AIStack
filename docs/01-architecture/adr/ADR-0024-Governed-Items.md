@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 0.1
+  version: 0.2
   status: Accepted
   owner: Architecture
   created: 2026-10-10
-  updated: 2026-11-15
+  updated: 2026-11-18
 
 relations:
   references:
@@ -116,6 +116,22 @@ once, the same for every finding, and recorded with the answer.
   held its state in memory and had no persistence.
 - A larger change than any since 1.7: every domain is touched. It is
   planned as its own version, after the test of 2.0 on a second server.
+
+## Implementation state
+
+Measured 2026-11-18. The direction is accepted for 2.1 or 3.0, after the test of 2.0 on
+a second server (§ *Status*); nothing of § *Decision* is built, and no package
+named `item` and no class named `Item` exists in `src`. A row is terminal only
+when it is done, abandoned or superseded: all five are *not started*, by
+decision, and are measured again when the version is planned.
+
+| Step | State |
+|---|---|
+| § 1 One registry of Governed Items | not started — no registry; a service is still a name repeated in several declarations |
+| § 2 Each item carries its governance | not started — owner, criticality and lifecycle are not attributes of an item |
+| § 3 Every change to governance is a proposal | not started — the Dock (`ADR-0019`) is still the only change that goes through a proposal |
+| § 4 Policies are evaluated against items | not started — the Cockpit's domains each read their own file |
+| § 5 What is handed to an AI is a declared projection of items | not started — the facts given to the troubleshooting assistant are unchanged |
 
 ## Open points
 

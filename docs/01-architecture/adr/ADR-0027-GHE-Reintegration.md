@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.39
+  version: 1.40
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -799,6 +799,41 @@ of `ARCH-0013` stay open.
 
 Measured: `documents_cited_and_absent` is empty (4 then 0); `OS-088`, whose
 list this was, can close at 8.7.
+
+**Commit 8.6a, 2026-11-18: the fifteen integrity warnings are answered.** The
+check on the bundle (64 artifacts) reported 0 blocking and 15 warnings, which
+come from three subjects: `OPS-0002` (nine missing fields of its metadata block,
+four of them shared with the README), the README (no metadata block) and four
+accepted decisions without an implementation state (`ADR-0024` to `ADR-0027`).
+`OPS-0002` and the README get back the block they carried at the tag, with the
+owner's values (`OPS-0002`: *Operations Procedure*, `Policy`, `Operations`, C2,
+`Draft`, owner `Operations`; README: `README-AISTACK`, *Entry Point
+Documentation*, `Knowledge Artifact`, `Foundation`, C2, `Draft`, owner
+`Foundation`). The four decisions get a measured `## Implementation state`
+section: `ADR-0024` is *not started* in all five rows by decision;
+`ADR-0025` and `ADR-0026` are *done* in code, with what a real run has not
+shown written beside it; this decision's own table is the one above.
+
+Measured after: the same bundle, 64 artifacts, **0 blocking, 0 warnings,
+`clean: True`** (the exit code is 0). The observations grow where the new tables
+say a decision is unfinished (`unfinished-decisions`: 8 rows, then 14); they are
+the register's to qualify, not faults. `OPS-0002` lists only the references that
+exist in `main` (`ENG-TEST-0002`, `GOV-0002`); `FDN-0005`, which it cited at the
+tag, stays at the tag.
+
+## Implementation state
+
+Measured 2026-11-18, at `7f7c4aa`.
+
+| Step | State |
+|---|---|
+| § 1 The core of the principles returns to `main`, the rest stays at the tag (lots 0 to 2) | done — 2026-11-15 |
+| Lot 3 No technology in the Kernel (§ 7) | done — 2026-11-15 |
+| Lot 4 Application code asks the Kernel for a provider (§ 9) | done — 2026-11-15 |
+| Lot 5 The chains run through the Kernel as Tasks (§ 10) | done — 2026-11-17 |
+| Lot 6 Modifications of knowledge go through a transaction (§ 11) | done — 2026-11-17 |
+| Lot 7 The declarations edited by hand on the host are observed (§ 12) | done — 2026-11-17 |
+| Lot 8 The Context Bundle and the boot report return (§ 13) | not done — 8.1 to 8.5 done 2026-11-18; 8.6 (`STD-0300` VS-2 re-run) and 8.7 (closing) remain |
 
 ## The refactoring plan of August 2026
 

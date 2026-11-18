@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.41
+  version: 1.42
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -838,9 +838,22 @@ dates of forty returned documents, which the test reads against a git history
 that starts on 2026-11-15. Each needs a re-measure or a decision of the owner,
 not a quiet change of the number.
 
+**Commit 8.6c, 2026-11-18: the contract inventory sees the Context Bundle
+packages.** The agent that ran the VS-2 scenario from the bundle alone reported
+that 13 of the 32 contracts read "satisfied by no class". It was not the code:
+`satisfies(DefaultContextBundleEngine, ContextBundleEngine)` is true. The
+packages `aistack.context_bundle` and six of its seven subpackages had no
+`__init__.py` (the tag had the same gap), and `take_inventory` walks packages
+with `pkgutil.walk_packages`, which skips directories without one. The seven
+files are added, empty. The inventory goes from 565 to 593 modules and from 377
+to 394 implementations; three contracts still read "satisfied by no class"
+(`ContextBundleTransferService`, `Receiver`, `Writer`), which is true: the
+transfer does not return, and no class in `main` implements the two transport
+interfaces. The audit measures are unchanged.
+
 ## Implementation state
 
-Measured 2026-11-18, at `6d3818d`.
+Measured 2026-11-18, at `abcdb90`.
 
 | Step | State |
 |---|---|
@@ -850,7 +863,7 @@ Measured 2026-11-18, at `6d3818d`.
 | Lot 5 The chains run through the Kernel as Tasks (§ 10) | done — 2026-11-17 |
 | Lot 6 Modifications of knowledge go through a transaction (§ 11) | done — 2026-11-17 |
 | Lot 7 The declarations edited by hand on the host are observed (§ 12) | done — 2026-11-17 |
-| Lot 8 The Context Bundle and the boot report return (§ 13) | not done — 8.1 to 8.5 done 2026-11-18; 8.6 (`STD-0300` VS-2 re-run) and 8.7 (closing) remain |
+| Lot 8 The Context Bundle and the boot report return (§ 13) | not done — 8.1 to 8.5, 8.6a, 8.6b and 8.6c done 2026-11-18; the grading of `STD-0300` 2.1 to 2.3 and 8.7 (closing) remain |
 
 ## The refactoring plan of August 2026
 

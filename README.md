@@ -30,6 +30,9 @@ AIStack does not aim to build the most powerful infrastructure.
 
 **Its ambition is to build the best understood and most sustainable one.**
 
+**New in 2.1 — why AIStack brings its own principles back, and how:
+[Governed Heritage Engineering in AIStack 2.1](docs/03-handbook/GHE-IN-AISTACK.md).**
+
 ---
 
 ## What is new in 2.1
@@ -121,7 +124,8 @@ AIStack transforms observations into sustainable knowledge assets.
   asks it for a provider; the chains run through its Runtime as Tasks; the
   modifications of knowledge go through transactions. Each of these is counted
   by `scripts/ghe_audit.py` and held by a test, not only written in a document.
-  `docs/03-handbook/GHE-IN-AISTACK.md` says why and how, one concept at a time.
+  [Governed Heritage Engineering in AIStack 2.1](docs/03-handbook/GHE-IN-AISTACK.md)
+  says why and how, one concept at a time.
 - **Every chain leaves a trace — new as of 2.1.0** — eight Tasks (`health.render`,
   `architecture.render`, `console.render`, `timemachine.rebuild`,
   `network_docker.discover`, `ai.reason`, `declarations.observe`,
@@ -874,7 +878,7 @@ The governed heritage lives in `docs/`; the repository README is the entry point
 | `docs/01-architecture/` | Architecture Decision Records (`adr/`) and the architecture concepts (`concepts/`) |
 | `docs/02-standards/` | The documentation standard (`STD-0100`) and the official validation suite (`STD-0300`) |
 | `docs/03-governance/` | The Open State Register (`GOV-0002`): every known gap, decided or waiting |
-| `docs/03-handbook/` | The release notes and the account of the principles brought back in 2.1 |
+| [`docs/03-handbook/`](docs/03-handbook/) | The [release notes](docs/03-handbook/RELEASE-NOTES.md) and [the account of the principles brought back in 2.1](docs/03-handbook/GHE-IN-AISTACK.md) |
 | `docs/04-development/` | The operations procedures and declarations' rules, among them the publication of a version (`OPS-0002`) |
 
 What stays at the tag `archive/heritage-2.0.0-rc1` — and does not return until

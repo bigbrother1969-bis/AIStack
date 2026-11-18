@@ -8,10 +8,10 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.29
+  version: 1.30
   owner: Foundation
   created: 2026-07-31
-  updated: 2026-11-17
+  updated: 2026-11-18
 
 relations:
   references:
@@ -231,6 +231,10 @@ with it, not because the check does not exist.**
 2.0.0* below. 3.2, 4.4, 4.5 and 4.9 change state in place; 1.1 to 1.4, 4.2 and
 4.8 keep theirs, with the reason written.
 
+**Last change: 2026-11-18, criteria 2.5 and 2.6 verified on 2.0.0** — see
+§ *Re-run on 2.0.0, Context Bundle* below. 2.1, 2.2 and 2.3 keep their state;
+2.4 is unchanged.
+
 ### Requalification against 2.0.0 — 2026-11-15
 
 This specification left `main` on 2026-10-10 (`94f7c15`) and returns on
@@ -303,6 +307,31 @@ The sections below are the record of each verification as it was executed.
 They are unchanged, and name commands, tests and a host as they were on their
 date.
 
+### Re-run on 2.0.0, Context Bundle — 2026-11-18
+
+The Context Bundle and `aistack.cli.knowledge_integrity` returned in lot 8
+(`ADR-0027` § 13), and with them the test that executes 2.5 and 2.6:
+`tests/integration/validation/test_std_0300_scenario_2.py` regenerates the
+projection into a temporary directory and runs the integrity command on it, at
+every run of the suite.
+
+- **2.5 — verified by the suite.** The command exits 0 on the bundle
+  (`blocking: 0`).
+- **2.6 — verified by the suite**, after the fifteen warnings the first reading
+  found were answered (lot 8.6a: `OPS-0002` and the README get back their
+  metadata block, four accepted decisions get an implementation state). The
+  report declares `warnings: 0`, `clean: True`. Before that answer 2.6 would
+  have failed: 15 warnings, `clean: False`. That is the criterion doing what
+  `2.6` was written for.
+- **2.1, 2.2, 2.3 — not re-run.** They ask an agent, given only the bundle, to
+  produce a Boot Report; no program does it (`FDN-0013`). They stay *not
+  verifiable in `main`* until an agent is run on the bundle of `main`.
+- **2.4** is unchanged (`GOV-0002/OS-076`).
+
+**The count for 2.0.0 is now 8 verified (2.5, 2.6, 3.1, 3.2, 3.3, 4.4, 4.5, 4.9),
+6 satisfied earlier and not re-run (1.1 to 1.4, 4.2, 4.8), 3 not verifiable in
+`main` (2.1, 2.2, 2.3), 5 not verified (2.4, 4.1, 4.3, 4.6, 4.7).**
+
 ### VS-1 — Docker Runtime Discovery
 
 *Demonstrate that AIStack can automatically discover, model and document a Docker
@@ -371,8 +400,8 @@ NEXT-SESSION-TODO · Knowledge transfer · Self-Onboarding.
 | 2.2 | The agent states the bundle's `source_commit` and `content_hash` without external input | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-08-14, at the tag |
 | 2.3 | The agent identifies Gitea as the Acquisition SPOT and the mirrors as non-authoritative | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-08-14, at the tag |
 | 2.4 | Two agents of different models each cover the canonical set of declared unknowns (`FDN-0003` Article 12), add nothing `GOV-0002` already qualifies, and reach the same READY verdict | not verified — and not verifiable in `main` since 2026-10-10 |
-| 2.5 | `aistack.cli.knowledge_integrity` exits 0 on the bundle used | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-08-22, at the tag |
-| 2.6 | The same report declares `clean: True` | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-08-22, at the tag |
+| 2.5 | `aistack.cli.knowledge_integrity` exits 0 on the bundle used | **verified by the suite** — 2026-11-18, on 2.0.0 (was satisfied 2026-08-22, at the tag) |
+| 2.6 | The same report declares `clean: True` | **verified by the suite** — 2026-11-18, on 2.0.0 (was satisfied 2026-08-22, at the tag) |
 
 Criteria 2.5 and 2.6 make this scenario self-checking: the suite fails while the
 heritage it transmits is itself unsound.

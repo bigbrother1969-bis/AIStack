@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.40
+  version: 1.41
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -821,9 +821,26 @@ the register's to qualify, not faults. `OPS-0002` lists only the references that
 exist in `main` (`ENG-TEST-0002`, `GOV-0002`); `FDN-0005`, which it cited at the
 tag, stays at the tag.
 
+**Commit 8.6b, 2026-11-18: criteria 2.5 and 2.6 of `STD-0300` are verified by the
+suite.** The test that executes them
+(`tests/integration/validation/test_std_0300_scenario_2.py`) returns from the
+tag, without the variable that disabled the transfer (the transfer does not
+return). It passed on `main` untouched. `STD-0300` 1.30: 8 verified, 6 satisfied
+earlier and not re-run, 3 not verifiable in `main` (2.1 to 2.3, which ask an
+agent for a Boot Report), 5 not verified.
+
+*The other seven files of `tests/integration/validation/` stay at the tag for
+now.* Run on `main` as they are, six of their tests fail, and none of the
+failures is a defect found: floors measured in August (65 artifacts, 19 types,
+39 declarations, 29 register entries) that the smaller heritage of `main` does
+not reach; twelve references to documents declared kept at the tag; and the
+dates of forty returned documents, which the test reads against a git history
+that starts on 2026-11-15. Each needs a re-measure or a decision of the owner,
+not a quiet change of the number.
+
 ## Implementation state
 
-Measured 2026-11-18, at `7f7c4aa`.
+Measured 2026-11-18, at `6d3818d`.
 
 | Step | State |
 |---|---|

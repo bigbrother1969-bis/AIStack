@@ -7,17 +7,18 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.17
+  version: 1.18
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-11-15
+  updated: 2026-11-18
 
 relations:
   references:
     - OPS-0002
     - GOV-0002
     - STD-0100
+    - GHE-IN-AISTACK
 ---
 
 # Release Notes
@@ -36,6 +37,108 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 2.1.0 — 2026-11-18
+
+**What 2.0.0 does, made accountable. AIStack 2.1 changes little of what you
+click and a lot of what happens when you click: every chain leaves a trace, every
+change made from a screen keeps its history, a declaration edited by hand is seen,
+and the project can check its own documentation again. The principles the project
+says it follows are back inside the product — and the code now answers to them,
+measurably. `latest` names this version.**
+
+*Why this release and how each part works, one concept at a time:*
+`docs/03-handbook/GHE-IN-AISTACK.md`.
+
+### What you may notice
+
+- **A change made from a screen keeps its history.** The CPU priorities, a pair's
+  selection, the SSH user names, a container declared from *Nouveautés* and the
+  place chosen for the data are now written through one operation: the file is
+  replaced whole or not at all; the previous one stays beside it as
+  `<name>.avant-<date>-<time>`; nothing is written when the content is identical;
+  and `declaration-change.json` records who, when, why and the fingerprints before
+  and after — never the content. A new `*.avant-*` rule in `.gitignore` keeps these
+  copies out of a git installation's tree.
+- **A declaration edited by hand is seen.** Every pass of the vigil (every 15
+  minutes) compares the 25 declarations with the copy it saw last. A hand edit is
+  kept (`<name>.avant-observe-<date>`) and recorded as made *by hand on the host*. A
+  file its loader no longer reads is reported **once** to Gotify, urgently, with
+  the loader's own words and the last copy that read — nothing is refused and
+  nothing is restored. Settings has a new section, *Déclarations modifiées à la
+  main*: what cannot be read now, and the last twenty edits with their difference.
+- **Every chain leaves a trace.** Health, architecture, console, the Time
+  Machine's graph, the scan of the machines, the AI's reasoning, the observation
+  of declarations and the integrity check run through one Runtime, and each run
+  keeps a trace under `reports/generated/history/execution-trace/`: what asked,
+  when, what came back — never a secret. Expect more files there than before: the
+  vigil's passes now leave some. `python -m aistack.cli.ai_reason` prints the same
+  report as before, and now leaves a trace too.
+- **The selection screen says why.** Each item shows which rule decided it —
+  ticked directly, ticked but already covered by a parent, inherited, or excluded —
+  with a tooltip in French and in English. 2.0.0 had lost this explanation.
+- **A fault of the sync is fixed.** A file whose name carries an accent (the
+  library wrote it one way, the target folder rewrote it another: Unicode NFD
+  against NFC) was linked and removed again at every pass — seven files in the
+  reference library, each time. The target is now named in NFC and a second pass
+  changes nothing.
+- **An API keys file that is a list instead of a mapping now says so**, as every
+  other declaration's loader already did.
+
+### What came back from the heritage
+
+2.0.0 removed from the product what governed the project's own documents. 2.1
+brings back the part that has a use, and leaves the rest where it was.
+
+- **The principles are in sight again.** The Constitution, the Glossary, the
+  Manifesto, the principles registry and the protocols are in `docs/`, so that the
+  code's own citations (`ARC-P-006`, `GOV-P-001`…) can be opened. What stays at
+  the tag `archive/heritage-2.0.0-rc1` is declared in `FDN-0001`.
+- **The Context Bundle and the integrity check are back**, run from a checkout of
+  the repository: `python scripts/export_project_sources.py` writes the bundle,
+  `python -m aistack.cli.knowledge_integrity <bundle>` runs eighteen checks on it
+  and exits 1 when something blocks. They also run in the test suite. The Docker
+  image carries the product, not its documentation, so the check there needs a
+  bundle you bring to it.
+- **A protocol for an AI agent** (`FDN-0013`, a Draft): how an agent acquires the
+  project's knowledge from the bundle, and the Boot Report it produces — eight
+  sections, ending READY or NOT READY. On 2026-11-18 an agent given only the bundle
+  produced one, and named the commit it was taken from.
+- **Still at the tag**: the package manager, the SSH transfer of the bundle, and
+  seven of the eight integration test files of the official validation suite. They
+  return when something uses them.
+
+### Under the hood
+
+- The Kernel names no technology and builds itself from `registrations.yml`; the
+  providers come from it; eight Tasks run through its Runtime. The three copies of
+  the health cockpit became one.
+- Every departure from the principles that can be counted is counted
+  (`scripts/ghe_audit.py`) and held by a test: on 2026-11-15 the Kernel named six
+  technologies, 22 of 25 entry points never went through it and 35 files wrote on
+  the disk outside a transaction; in 2.1.0 the first is zero, the second is 16
+  declared exceptions (permanent monitors, status commands), and the third is zero,
+  with 29 writes declared exempt and a reason each.
+- The inventory of contracts could not see the Context Bundle's packages (seven
+  directories lacked an `__init__.py`): fixed, found by the agent above.
+
+### Not changed
+
+The installation script and assistant, the sign-in, the Dock, restore tests, the
+sync, the restart watch and the new arrivals work as in 2.0.0. The eight services
+are the same. Your `./config` and your data are kept; there is nothing to set.
+
+### Known limits
+
+`FDN-0013` is a Draft, its qualification still to be decided; the verification of
+the protocol with two models (`STD-0300`, 2.4) has not been done; and each artifact
+of the Context Bundle names the directory it was generated in
+(`GOV-0002/OS-096`). All three are decided for after this release.
+
+`pytest -q` — 3314 passed; `mypy` — 593 files; 65 knowledge artifacts,
+`blocking: 0   warnings: 0   clean: True`.
 
 ---
 

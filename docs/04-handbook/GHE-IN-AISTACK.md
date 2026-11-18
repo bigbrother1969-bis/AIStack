@@ -314,10 +314,11 @@ Nothing to configure. You may notice:
 - a Gotify message, urgent and once, if a declaration you edited no longer reads;
 - a new section in Settings.
 
-And what is still open, said plainly: `FDN-0013` is a Draft; the cross-model
-verification of the protocol (`STD-0300`, 2.4) has not been done; and the Context
-Bundle names the directory it was generated in in each artifact's `source`
-(`GOV-0002/OS-096`, decided for after 2.1).
+And what is still open, said plainly: `FDN-0013` is a Draft, its qualification
+validated and its text not yet engraved; and the cross-model verification of the
+protocol (`STD-0300`, 2.4) has not been done. The Context Bundle of 2.1.0 names the
+directory it was generated in in each artifact's `source`; on `main` the source is
+relative to the repository root (`GOV-0002/OS-096`, resolved after the release).
 
 ## Where to read more
 

@@ -96,7 +96,7 @@ class MarkdownArtifactBuilder(ArtifactBuilder):
                 declared,
                 "owner",
             ),
-            source=str(discovery.path),
+            source=discovery.path.as_posix(),
             content=discovery.content,
             status=declared_value(
                 declared,

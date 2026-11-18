@@ -7,7 +7,7 @@ artifact:
   domain: Governance
   criticality: C2
   confidence: Declared
-  version: 2.38
+  version: 2.39
   status: Draft
   owner: Foundation
   created: 2026-08-22
@@ -204,21 +204,7 @@ None open. OS-088 and OS-095 are in *Resolved*.
 
 # Defects
 
-#### GOV-0002/OS-096 — The Context Bundle names the host it was generated on
-
-**Nature** `defect` · **Opened** 2026-11-18 · **State** open
-**Observed** the `source` of each of the 64 artifacts of the bundle generated on
-2026-11-18 is the absolute path of the directory it was generated in
-(`ArtifactBuilder` sets `source=str(discovery.path)`). A bundle read elsewhere
-names a machine and a user. No secret is involved, and `source` is not part of
-the `content_hash`; about ten integrity checks read it, among them
-`transport_residue`, which tests `location in artifact.source`.
-**Derivable** yes
-**Qualification** decided by the owner, 2026-11-18: not before the 2.1 release.
-After it, `source` becomes relative to the repository root, with the checks that
-read it re-read and tested.
-
-OS-089 and OS-094 are in *Resolved*.
+None open. OS-089, OS-094 and OS-096 are in *Resolved*.
 
 ---
 
@@ -601,3 +587,32 @@ in the docstring of the test that holds it.*
   49) hold against 51, 6 and 143.*
 *What still said the condition: `ADR-0027` § 13 and `GHE-IN-AISTACK`, brought up
 to date; `OS-096` stays open.*
+
+#### GOV-0002/OS-096 — The Context Bundle names the host it was generated on
+
+**Nature** `defect` · **Opened** 2026-11-18 · **State** resolved 2026-11-18
+**Observed** the `source` of each of the 64 artifacts of the bundle generated on
+2026-11-18 is the absolute path of the directory it was generated in
+(`ArtifactBuilder` sets `source=str(discovery.path)`). A bundle read elsewhere
+names a machine and a user. No secret is involved, and `source` is not part of
+the `content_hash`; about ten integrity checks read it, among them
+`transport_residue`, which tests `location in artifact.source`.
+**Derivable** yes
+**Qualification** decided by the owner, 2026-11-18: not before the 2.1 release.
+After it, `source` becomes relative to the repository root, with the checks that
+read it re-read and tested.
+*Closed 2026-11-18. Measured on `main` at `dcb6d0f`: the 65 artifacts of a
+generated bundle (the 64 of `docs/` and the README) carried an absolute `source`;
+of the fourteen reads of `artifact.source` in the integrity checks, thirteen use
+it as the label that names an artifact without an identifier, and one,
+`transport_residue`, tests it as a substring that starts with a separator, so a
+relative source would have made it report nothing, silently. `MarkdownDiscovery`
+now reports the path relative to the root it was given and the builder writes it
+with forward slashes; `transport_residue` reads the source with a separator in
+front, so that a bundle generated before this change is still read and
+`mydocs/incoming/` is not `docs/incoming/`. Tests: the discovery and the builder;
+`transport_residue` on relative, absolute and look-alike sources; the real
+projection names no host (none of 65 absolute, none containing the generation
+directory) and the same documents copied elsewhere carry the same sources. What
+still said the condition: `ADR-0027` (§ 13) and `GHE-IN-AISTACK`, brought up to
+date; the 2.1.0 notes keep what was true on the day. No open entry is left.*

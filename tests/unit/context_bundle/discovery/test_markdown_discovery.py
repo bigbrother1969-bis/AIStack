@@ -114,3 +114,26 @@ def test_discovery_ignores_non_source_areas(tmp_path):
     )
 
     assert results == []
+
+
+def test_the_path_is_relative_to_the_root_it_was_given(tmp_path):
+    """
+    `GOV-0002/OS-096`: the discovery reports where a file is in
+    the heritage, never where the heritage was when it was read.
+    """
+
+    (tmp_path / "docs" / "00-foundation").mkdir(parents=True)
+
+    (tmp_path / "docs" / "00-foundation" / "a.md").write_text(
+        "# A",
+        encoding="utf-8",
+    )
+
+    results = MarkdownDiscovery().discover(tmp_path)
+
+    assert [str(result.path) for result in results] == [
+        "docs/00-foundation/a.md"
+    ]
+
+    assert not results[0].path.is_absolute()
+    assert str(tmp_path) not in str(results[0].path)

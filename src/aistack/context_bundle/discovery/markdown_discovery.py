@@ -15,6 +15,14 @@ class MarkdownDiscovery:
 
     This component only observes files.
     It does not classify or interpret knowledge.
+
+    The path it reports is relative to the root it was given (the
+    artifact builder writes it with forward slashes). An absolute
+    path names the machine and the directory the bundle happened to
+    be generated in — a fact about the generation, not about the
+    knowledge — and every artifact carried it as its `source` until
+    `GOV-0002/OS-096`. The same heritage generated in two
+    directories now carries the same sources.
     """
 
     def __init__(self) -> None:
@@ -48,7 +56,7 @@ class MarkdownDiscovery:
 
             results.append(
                 DiscoveryResult(
-                    path=path,
+                    path=path.relative_to(root),
                     content=content,
                     content_hash=digest,
                 )

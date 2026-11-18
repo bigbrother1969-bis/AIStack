@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.47
+  version: 1.48
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -917,6 +917,13 @@ declaring a date 65 → 64. The references that lead to documents kept at the ta
 are now asserted against `FDN-0001` § *Kept at the tag*, and the rule of the
 declared dates no longer reads the restoration of 2026-11-15 as a revision.
 `OS-096` is the one entry still open.
+
+**After the release of 2.1.0, 2026-11-18: `OS-096` is resolved, and the register
+has no open entry.** The `source` of an artifact of the Context Bundle is relative
+to the root of the heritage (`docs/…`, `README.md`) and written with forward
+slashes; the same heritage generated in two directories carries the same sources.
+The 2.1.0 image still generates absolute ones. `transport_residue`, the one check
+that tested the source as a substring, reads it with a separator in front.
 
 ## Implementation state
 

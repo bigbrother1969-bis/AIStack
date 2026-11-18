@@ -143,3 +143,21 @@ def test_builder_reports_undeclared_state_as_unknown():
     assert artifact.semantic_type == "unknown"
     assert artifact.criticality == "unknown"
     assert artifact.declared_type == "unknown"
+
+
+def test_the_source_is_the_relative_path_with_forward_slashes():
+    """
+    `GOV-0002/OS-096`: what the artifact carries as its `source` is
+    the path the discovery reported, written the same way on every
+    system.
+    """
+
+    discovery = DiscoveryResult(
+        path=Path("docs") / "00-foundation" / "a.md",
+        content="# A",
+        content_hash="abc123",
+    )
+
+    artifact = MarkdownArtifactBuilder().build(discovery)
+
+    assert artifact.source == "docs/00-foundation/a.md"

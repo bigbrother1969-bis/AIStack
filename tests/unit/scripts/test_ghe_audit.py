@@ -249,7 +249,7 @@ def test_the_registry_in_the_tree_is_not_a_departure(tmp_path: Path) -> None:
 
 def test_a_cited_document_that_is_not_in_the_tree_is_a_departure(tmp_path: Path) -> None:
     root = _tree(tmp_path, {"health/score.py": '"""Weights: OPS-0008. Register: GOV-0002."""\n'})
-    document = root / "docs" / "04-development" / "OPS-0008-Health-Score-Weights.md"
+    document = root / "docs" / "05-development" / "OPS-0008-Health-Score-Weights.md"
     document.parent.mkdir(parents=True)
     document.write_text("See ADR-0011.\n", encoding="utf-8")
 

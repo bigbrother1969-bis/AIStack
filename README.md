@@ -31,7 +31,7 @@ AIStack does not aim to build the most powerful infrastructure.
 **Its ambition is to build the best understood and most sustainable one.**
 
 **New in 2.1 — why AIStack brings its own principles back, and how:
-[Governed Heritage Engineering in AIStack 2.1](docs/03-handbook/GHE-IN-AISTACK.md).**
+[Governed Heritage Engineering in AIStack 2.1](docs/04-handbook/GHE-IN-AISTACK.md).**
 
 ---
 
@@ -64,9 +64,9 @@ governed by — and makes the code answer to them, measurably.
   linked and unlinked again at every pass.
 
 *Why these, and how each works:*
-[`docs/03-handbook/GHE-IN-AISTACK.md`](docs/03-handbook/GHE-IN-AISTACK.md).
+[`docs/04-handbook/GHE-IN-AISTACK.md`](docs/04-handbook/GHE-IN-AISTACK.md).
 *Everything that changed, in plain language:*
-[`docs/03-handbook/RELEASE-NOTES.md`](docs/03-handbook/RELEASE-NOTES.md).
+[`docs/04-handbook/RELEASE-NOTES.md`](docs/04-handbook/RELEASE-NOTES.md).
 
 ---
 
@@ -124,7 +124,7 @@ AIStack transforms observations into sustainable knowledge assets.
   asks it for a provider; the chains run through its Runtime as Tasks; the
   modifications of knowledge go through transactions. Each of these is counted
   by `scripts/ghe_audit.py` and held by a test, not only written in a document.
-  [Governed Heritage Engineering in AIStack 2.1](docs/03-handbook/GHE-IN-AISTACK.md)
+  [Governed Heritage Engineering in AIStack 2.1](docs/04-handbook/GHE-IN-AISTACK.md)
   says why and how, one concept at a time.
 - **Every chain leaves a trace — new as of 2.1.0** — eight Tasks (`health.render`,
   `architecture.render`, `console.render`, `timemachine.rebuild`,
@@ -420,7 +420,7 @@ AIStack transforms observations into sustainable knowledge assets.
 - **Knowledge integrity validation** — eighteen checks read the Context Bundle on
   every test suite and before every publication (`python -m aistack.cli.knowledge_integrity`).
 
-**Full history of what changed release by release: `docs/03-handbook/RELEASE-NOTES.md`.**
+**Full history of what changed release by release: `docs/04-handbook/RELEASE-NOTES.md`.**
 
 ---
 
@@ -497,7 +497,7 @@ got past its absence.
   container type) and ruff found a genuine `zip()` truncation risk and
   four regex-escaping ambiguities in test assertions — not hypothetical
   findings, real ones, still in the commit history.
-- **Publication — governed, and never automated.** `docs/04-development/
+- **Publication — governed, and never automated.** `docs/05-development/
   OPS-0002-Heritage-Publication.md` states the procedure command by
   command. Before an image is built: a clean tree, on `main`, `HEAD` equal
   to `origin/main`, and `ruff`, `mypy`, `pytest` and the knowledge-integrity
@@ -543,7 +543,7 @@ checks passed; `mypy` — no issues found in **593 source files**;
 `python -m aistack.cli.knowledge_integrity` — **65 knowledge artifacts**,
 `blocking: 0   warnings: 0   clean: True`.
 
-The metrics quoted above and in `docs/03-handbook/RELEASE-NOTES.md` — test
+The metrics quoted above and in `docs/04-handbook/RELEASE-NOTES.md` — test
 counts, artifact counts, `clean: True` — are recorded by hand at each
 publication, read off that publication's own `pytest`/knowledge-integrity
 run. There is no CI pipeline in this repository yet to record them
@@ -878,8 +878,8 @@ The governed heritage lives in `docs/`; the repository README is the entry point
 | `docs/01-architecture/` | Architecture Decision Records (`adr/`) and the architecture concepts (`concepts/`) |
 | `docs/02-standards/` | The documentation standard (`STD-0100`) and the official validation suite (`STD-0300`) |
 | `docs/03-governance/` | The Open State Register (`GOV-0002`): every known gap, decided or waiting |
-| [`docs/03-handbook/`](docs/03-handbook/) | The [release notes](docs/03-handbook/RELEASE-NOTES.md) and [the account of the principles brought back in 2.1](docs/03-handbook/GHE-IN-AISTACK.md) |
-| `docs/04-development/` | The operations procedures and declarations' rules, among them the publication of a version (`OPS-0002`) |
+| [`docs/04-handbook/`](docs/04-handbook/) | The [release notes](docs/04-handbook/RELEASE-NOTES.md) and [the account of the principles brought back in 2.1](docs/04-handbook/GHE-IN-AISTACK.md) |
+| `docs/05-development/` | The operations procedures and declarations' rules, among them the publication of a version (`OPS-0002`) |
 
 What stays at the tag `archive/heritage-2.0.0-rc1` — and does not return until
 something uses it — is declared in `FDN-0001`, § *Kept at the tag*.

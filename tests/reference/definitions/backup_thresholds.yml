@@ -9,7 +9,7 @@
 # string, not a label and not an IP address.
 #
 # Declared 2026-09-11 by the owner
-# (`docs/04-development/OPS-0006-Backup-Freshness-Thresholds.md` §
+# (`docs/05-development/OPS-0006-Backup-Freshness-Thresholds.md` §
 # Declared thresholds) — v1 scope: the WordPress backup written by
 # `/srv/scripts/backup-wordpress.sh`, on GIGABYTE, existence and
 # freshness only. No value here was chosen by AIStack.

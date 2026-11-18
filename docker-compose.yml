@@ -147,7 +147,7 @@ services:
 # again and each matched its recorded digest. Pushed under its version
 # and as `latest` — both name the same digest; its `revision` label is
 # 205990dff9e50baddd9329a28b1cae6adb6e8695. The first stable 2.0:
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 2.0.0 entry gives the full
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 2.0.0 entry gives the full
 # account.
 #
 # **1.11.0 — published 2026-10-08, current.**
@@ -163,7 +163,7 @@ services:
 # — pull matched. Pushed under its version and as `latest`; the
 # reference host runs it through this file since the same evening, the
 # web service `healthy`. What changes on the hosts themselves
-# (`ADR-0020`): `docs/03-handbook/RELEASE-NOTES.md`'s own 1.11.0 entry
+# (`ADR-0020`): `docs/04-handbook/RELEASE-NOTES.md`'s own 1.11.0 entry
 # gives the full account.
 #
 # **1.10.0 — published 2026-10-08, current.**
@@ -181,7 +181,7 @@ services:
 # `latest`; the reference host runs it through this file since the same
 # evening, the web service `healthy`. Governed image updates through the
 # Quai (`ADR-0019`), the change's why in the Time Machine, a healthcheck:
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.10.0 entry gives the full
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.10.0 entry gives the full
 # account.
 #
 # **1.9.0 — published 2026-10-08, current.**
@@ -197,7 +197,7 @@ services:
 # — pull matched. Pushed under its version and as `latest`; the
 # reference host runs it through this file since the same evening.
 # Restore tests in a sandbox (`ADR-0018`), AIStack in its own PRA, the
-# action plan: `docs/03-handbook/RELEASE-NOTES.md`'s own 1.9.0 entry
+# action plan: `docs/04-handbook/RELEASE-NOTES.md`'s own 1.9.0 entry
 # gives the full account.
 #
 # **1.8.0 — published 2026-10-04, current.**
@@ -214,7 +214,7 @@ services:
 # the validator alone (`ADR-0017`), and the first also pushed as
 # `latest` (OPS-0002 1.17), so a plain `docker pull` gives it. The
 # reference host runs it through this file since the same evening.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.8.0 entry gives the full
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.8.0 entry gives the full
 # account.
 #
 # **1.7.0 — published 2026-10-03, current.**
@@ -228,7 +228,7 @@ services:
 # (run once, right after the pull, per OPS-0002 v1.15). 81
 # artifacts, 18 checks. Before the build, 1.6.1 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.7.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.7.0 entry gives the
 # full account; in short, the console and the five screens are one
 # web application on two listeners (ADR-0012), people sign in with
 # Pocket ID or, on the local network only, a fallback administrator
@@ -247,7 +247,7 @@ services:
 # (run once, right after the pull, per OPS-0002 v1.15). 77
 # artifacts, 18 checks. Before the build, 1.6.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.1 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.6.1 entry gives the
 # full account; in short, the Docker event stream keeps only human
 # `exec`s (probes and declared healthchecks dropped, history
 # refiltered and archived out of the stream), the package inventory
@@ -266,7 +266,7 @@ services:
 # HEAD equal to origin/main, and 2726 tests with `clean: True`.
 # 77 artifacts, 18 checks. Before the build, 1.5.2 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.6.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.6.0 entry gives the
 # full account; in short, the homelab's operational inventory
 # declared and checked against what really runs (roadmap R9/R10:
 # instance configuration, two new Health Cockpit domains for
@@ -286,7 +286,7 @@ services:
 # HEAD equal to origin/main, and 2581 tests with `clean: True`.
 # 75 artifacts, 18 checks. Before the build, 1.5.1 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.2 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.5.2 entry gives the
 # full account; in short, the Time Machine ribbon rebuilt around
 # what a real production graph showed it needed (`ADR-0011` § 26)
 # — a real per-category time axis, label-aware clustering with a
@@ -307,7 +307,7 @@ services:
 # HEAD equal to origin/main, and 2538 tests with `clean: True`.
 # 75 artifacts, 18 checks. Before the build, 1.5.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.1 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.5.1 entry gives the
 # full account; in short, 1.5's fourth and last named collector
 # (`ADR-0011` § 23: package inventory, `dpkg`/`apk` fallback, never
 # a silent empty list), plus the roadmap's first two GUI/
@@ -326,7 +326,7 @@ services:
 # HEAD equal to origin/main, and 2473 tests with `clean: True`.
 # 75 artifacts, 18 checks. Before the build, 1.4.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.5.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.5.0 entry gives the
 # full account; in short, the roadmap's third Time Machine step
 # (`ADR-0011` § 20-22): three passive collectors — Docker events,
 # periodic `docker diff`, and image-digest drift — feeding the same
@@ -344,7 +344,7 @@ services:
 # HEAD equal to origin/main, and 2294 tests with `clean: True`.
 # 75 artifacts, 18 checks. Before the build, 1.3.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.4.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.4.0 entry gives the
 # full account; in short, the roadmap's second Time Machine step
 # (`ADR-0011` § 18-19): a foldable network tree read from the live
 # Docker/Compose catalogs, and a Mermaid provenance-graph diagram on
@@ -360,7 +360,7 @@ services:
 # HEAD equal to origin/main, and 2270 tests with `clean: True`.
 # 75 artifacts, 17 checks. Before the build, 1.2.1 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.3.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.3.0 entry gives the
 # full account; in short, the Time Machine's first delivered step
 # (`ADR-0011`): AIStack's own five histories projected as a real
 # PROV-O graph (Oxigraph), browsable through a new LAN-only screen,
@@ -378,7 +378,7 @@ services:
 # HEAD equal to origin/main, and 2195 tests with `clean: True`.
 # 74 artifacts, 17 checks. Before the build, 1.2.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.2.1 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.2.1 entry gives the
 # full account; in short, a same-day fix: the AI Runtime's answers
 # now follow the display language (a second, fast model translates
 # whenever the target is not English), correcting what 1.2.0's own
@@ -394,7 +394,7 @@ services:
 # HEAD equal to origin/main, and 2183 tests with `clean: True`.
 # 74 artifacts, 17 checks. Before the build, 1.1.1 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.2.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.2.0 entry gives the
 # full account; in short, the first version of the roadmap toward
 # 2.0 (`claude/ROADMAP-1.2-TO-2.0-2026-09-27.md`) — the console is
 # served by AIStack itself, with a Settings page and a language
@@ -411,7 +411,7 @@ services:
 # HEAD equal to origin/main, and 2081 tests with `clean: True`.
 # 73 artifacts, 17 checks. Before the build, 1.1.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.1 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.1.1 entry gives the
 # full account; in short, no new capability — `OPS-0009`'s own PRA
 # restore-test records catching up with real tests the owner ran the
 # same day: a real backup gap found and closed, a second host's
@@ -430,7 +430,7 @@ services:
 # HEAD equal to origin/main, and 2078 tests with `clean: True`.
 # 73 artifacts, 17 checks. Before the build, 1.0.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.1.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.1.0 entry gives the
 # full account; in short, eight days of work that never bumped the
 # version, caught up in one pass — the AI Runtime's model/timeout
 # change, STD-0300 § VS-4 criteria 4.1 and 4.3 advanced, a corrected
@@ -448,7 +448,7 @@ services:
 # HEAD equal to origin/main, and 1815 tests with `clean: True`.
 # 73 artifacts, 16 checks. Before the build, 0.7.0 was re-verified
 # against its recorded digest (`GOV-0002/OS-047`) — pull matched.
-# `docs/03-handbook/RELEASE-NOTES.md`'s own 1.0.0 entry gives the
+# `docs/04-handbook/RELEASE-NOTES.md`'s own 1.0.0 entry gives the
 # full account; in short, this is the point where the two halves
 # `PLAN-TRAJECTOIRE` (J1 through J8) was building toward are both
 # real and connected — the governed infrastructure knowledge base

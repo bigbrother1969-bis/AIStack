@@ -328,4 +328,4 @@ Bundle names the directory it was generated in in each artifact's `source`
 - `FDN-0004`, `FDN-0008` — Governed Heritage Engineering and its self-application.
 - `FDN-0013` — the protocol an AI agent follows.
 - `GOV-0002` — the register of what is known, decided or waiting.
-- `docs/03-handbook/RELEASE-NOTES.md` — what changed, version by version.
+- `docs/04-handbook/RELEASE-NOTES.md` — what changed, version by version.

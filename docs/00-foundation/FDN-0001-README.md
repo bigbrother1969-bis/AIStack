@@ -158,10 +158,10 @@ in `main` nor in this table is reported.
 | STD-0002 | Test Artifact Isolation | `docs/02-standards/testing/` |
 | STD-0101 | Writing Rules | `docs/02-standards/documentation/` |
 | STD-0200 | Specification Standard | `docs/02-standards/specifications/` |
-| OPS-0012 | Dead Code Quarantine | `docs/04-development/` |
+| OPS-0012 | Dead Code Quarantine | `docs/05-development/` |
 | ADR-0007 | Context Bundle Transfer | `docs/01-architecture/adr/` |
-| CMP-0001 | Context Bundle Generator | `docs/04-development/context-bundle-generator/` |
-| CMP-0012 | Innovation Pipeline | `docs/04-development/innovation-pipeline/` |
+| CMP-0001 | Context Bundle Generator | `docs/05-development/context-bundle-generator/` |
+| CMP-0012 | Innovation Pipeline | `docs/05-development/innovation-pipeline/` |
 
 `FDN-0005` and `FDN-0006` describe an organisation of the work the project no
 longer has. The others govern, or describe, what left `main` on 2026-10-10.

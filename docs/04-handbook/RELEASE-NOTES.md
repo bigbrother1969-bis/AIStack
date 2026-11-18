@@ -50,7 +50,12 @@ says it follows are back inside the product — and the code now answers to them
 measurably. `latest` names this version.**
 
 *Why this release and how each part works, one concept at a time:*
-`docs/03-handbook/GHE-IN-AISTACK.md`.
+`docs/04-handbook/GHE-IN-AISTACK.md`.
+
+*One path change to know:* the `docs/` folders were numbered with two `03`; they are now
+`00-foundation` to `03-governance`, then `04-handbook`, `05-development` and
+`06-reference`. Links to the old `03-handbook`, `04-development` and `05-reference`
+folders need the new number.
 
 ### What you may notice
 

@@ -91,7 +91,7 @@ manual run publishes whatever a mirror missed.
 ## Publishing a version
 
 **The release notes first.** Every version gets an entry in
-`docs/03-handbook/RELEASE-NOTES.md`, in plain language, written before or with
+`docs/04-handbook/RELEASE-NOTES.md`, in plain language, written before or with
 the version bump in `pyproject.toml` — the only place the version is
 declared; everything else reads it.
 

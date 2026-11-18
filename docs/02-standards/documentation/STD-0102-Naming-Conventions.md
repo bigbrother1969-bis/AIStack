@@ -171,7 +171,11 @@ Examples:
 
 03-governance/
 
-04-development/
+04-handbook/
+
+05-development/
+
+06-reference/
 
 templates/
 
@@ -216,7 +220,7 @@ ARCH-0002
 `QUAL-` was added on 2026-11-15, for `QUAL-0001`. The identifier had
 been cited by two Accepted ADRs since September while naming a session
 note, with no prefix declared here and no document under `docs/`
-(`GOV-0002/OS-092`). Its documents live under `docs/05-reference/`.
+(`GOV-0002/OS-092`). Its documents live under `docs/06-reference/`.
 
 `OPS-` was added on 2026-08-22, for `OPS-0001`, the catalogue of
 container log signatures. The heritage had carried Operations

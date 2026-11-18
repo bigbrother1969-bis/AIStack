@@ -484,7 +484,7 @@ under `docs/` in `main`, and neither is under `docs/` at
 **Qualification** decided by the owner, 2026-11-15: both are written.
 `OPS-0009 — Restore Test Freshness` describes what `main` does and decides
 nothing new; `QUAL-0001` summarises the session note under
-`docs/05-reference/`, and `STD-0102` gains the `QUAL-` prefix.
+`docs/06-reference/`, and `STD-0102` gains the `QUAL-` prefix.
 
 #### GOV-0002/OS-087 — The disk is written outside a transaction
 

@@ -5,7 +5,7 @@ import tomllib
 ROOT = Path(__file__).parents[2]
 
 PROCEDURE = (
-    ROOT / "docs" / "04-development" / "OPS-0002-Heritage-Publication.md"
+    ROOT / "docs" / "05-development" / "OPS-0002-Heritage-Publication.md"
 )
 
 CANONICAL = "AIStack"

@@ -10,7 +10,7 @@
 #
 # Declared 2026-09-11 by the owner against live `df -h` output on both
 # hosts
-# (`docs/04-development/OPS-0005-Storage-Capacity-Thresholds.md` §
+# (`docs/05-development/OPS-0005-Storage-Capacity-Thresholds.md` §
 # Declared thresholds) — no value here was chosen by AIStack.
 #
 # This file is edited by hand — no UI writes it back the way

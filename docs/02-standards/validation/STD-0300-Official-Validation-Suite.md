@@ -8,7 +8,7 @@ artifact:
   criticality: C2
   status: Published
   confidence: Reviewed
-  version: 1.30
+  version: 1.31
   owner: Foundation
   created: 2026-07-31
   updated: 2026-11-18
@@ -231,9 +231,9 @@ with it, not because the check does not exist.**
 2.0.0* below. 3.2, 4.4, 4.5 and 4.9 change state in place; 1.1 to 1.4, 4.2 and
 4.8 keep theirs, with the reason written.
 
-**Last change: 2026-11-18, criteria 2.5 and 2.6 verified on 2.0.0** — see
-§ *Re-run on 2.0.0, Context Bundle* below. 2.1, 2.2 and 2.3 keep their state;
-2.4 is unchanged.
+**Last change: 2026-11-18, criteria 2.1 to 2.3 verified on 2.0.0** — see
+§ *Re-run on 2.0.0, Context Bundle* below. 2.5 and 2.6 were verified earlier the
+same day; 2.3 is reworded; 2.4 is unchanged.
 
 ### Requalification against 2.0.0 — 2026-11-15
 
@@ -248,7 +248,7 @@ verification still holds. Measured on `e574fb7`:
 | 3.1, 3.3 | two named tests of the governed suite | both tests, passing | **verified 2026-11-15** by the suite |
 | 1.1 to 1.4 | `aistack.cli.docker_catalog`, live on GIGABYTE, 2026-09-04 | the catalog builder, the explanation generator and their tests; not the command | satisfied before 2.0.0, **not re-run** |
 | 4.2, 4.4, 4.5, 4.8, 4.9 | `aistack.cli.runtime_diagnose` and live readings on GIGABYTE | `aistack.runtime.evaluate` and `tests/unit/runtime/test_evaluate.py`; not the command, nor `test_runtime_diagnose.py`, nor `test_grounding.py` | satisfied before 2.0.0, **not re-run** |
-| 2.1, 2.2, 2.3, 2.5, 2.6 | the Context Bundle and `aistack.cli.knowledge_integrity` | neither (`19e73a6`, `181567d`) | **not verifiable in `main`** |
+| 2.1, 2.2, 2.3, 2.5, 2.6 | the Context Bundle and `aistack.cli.knowledge_integrity` | neither (`19e73a6`, `181567d`) | **not verifiable in `main`** at that date (2.1 to 2.3 verified 2026-11-18, 2.5 and 2.6 the same day, see below) |
 | 3.2 | `aistack.selection.explanation` and its seven tests | neither; both were still there on 2026-10-05 | **not verifiable in `main`** (2026-11-15; returned 2026-11-17, see below) |
 | 2.4, 4.1, 4.3, 4.6, 4.7 | nothing: not verified | unchanged; 2.4's protocol needs the Context Bundle | not verified |
 
@@ -323,14 +323,29 @@ every run of the suite.
   report declares `warnings: 0`, `clean: True`. Before that answer 2.6 would
   have failed: 15 warnings, `clean: False`. That is the criterion doing what
   `2.6` was written for.
-- **2.1, 2.2, 2.3 — not re-run.** They ask an agent, given only the bundle, to
-  produce a Boot Report; no program does it (`FDN-0013`). They stay *not
-  verifiable in `main`* until an agent is run on the bundle of `main`.
-- **2.4** is unchanged (`GOV-0002/OS-076`).
+- **2.1, 2.2, 2.3 — verified by an agent run, 2026-11-18.** They ask an agent,
+  given only the bundle, to produce a Boot Report; no program does it
+  (`FDN-0013`). One agent (Sonnet) was started in an empty directory holding a
+  single copy of the bundle (`aistack-context-2026-11-18`, `source_commit`
+  `abcdb90`, 64 artifacts) and an instruction with no hint. Its report is kept
+  as evidence, not as a governed document:
+  `claude/BOOT-REPORT-2026-11-18-sonnet.md` in the project.
+  - **2.1:** the report carries the eight sections (Identity, Vocabulary,
+    Governance, Architecture, Operational Context, Known Uncertainties,
+    Integrity Warnings, READY / NOT READY) and an acquisition trace.
+  - **2.2:** it states `source_commit` `abcdb90` and the `content_hash`
+    (`79688b4f…ee43`), both equal to the manifest. It could not recompute the
+    bundle-level hash: the bundle does not state the algorithm.
+  - **2.3:** it names Gitea as the Governance SPOT, GitHub and Codeberg as
+    mirrors that are not authoritative, and the Context Bundle as the Acquisition
+    SPOT. The criterion said "Gitea as the Acquisition SPOT"; `FDN-0013` says
+    otherwise, and the bundle carries `FDN-0013`. The owner decided on
+    2026-11-18 to reword the criterion, not the agent's answer (row 2.3 below).
+- **2.4** is unchanged (`GOV-0002/OS-076`): one model was run, not two.
 
-**The count for 2.0.0 is now 8 verified (2.5, 2.6, 3.1, 3.2, 3.3, 4.4, 4.5, 4.9),
-6 satisfied earlier and not re-run (1.1 to 1.4, 4.2, 4.8), 3 not verifiable in
-`main` (2.1, 2.2, 2.3), 5 not verified (2.4, 4.1, 4.3, 4.6, 4.7).**
+**The count for 2.0.0 is now 11 verified (2.1, 2.2, 2.3, 2.5, 2.6, 3.1, 3.2, 3.3,
+4.4, 4.5, 4.9), 6 satisfied earlier and not re-run (1.1 to 1.4, 4.2, 4.8), 5 not
+verified (2.4, 4.1, 4.3, 4.6, 4.7).** Nothing is left *not verifiable in `main`*.
 
 ### VS-1 — Docker Runtime Discovery
 
@@ -396,10 +411,10 @@ NEXT-SESSION-TODO · Knowledge transfer · Self-Onboarding.
 
 | # | Criterion | State |
 |---|---|---|
-| 2.1 | An agent given only the bundle produces a Boot Report carrying all eight declared sections | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-08-14, at the tag |
-| 2.2 | The agent states the bundle's `source_commit` and `content_hash` without external input | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-08-14, at the tag |
-| 2.3 | The agent identifies Gitea as the Acquisition SPOT and the mirrors as non-authoritative | **not verifiable in `main`** since 2026-10-10 — was satisfied 2026-08-14, at the tag |
-| 2.4 | Two agents of different models each cover the canonical set of declared unknowns (`FDN-0003` Article 12), add nothing `GOV-0002` already qualifies, and reach the same READY verdict | not verified — and not verifiable in `main` since 2026-10-10 |
+| 2.1 | An agent given only the bundle produces a Boot Report carrying all eight declared sections | **verified by an agent run** — 2026-11-18, on 2.0.0 (was satisfied 2026-08-14, at the tag) |
+| 2.2 | The agent states the bundle's `source_commit` and `content_hash` without external input | **verified by an agent run** — 2026-11-18, on 2.0.0 (was satisfied 2026-08-14, at the tag) |
+| 2.3 | The agent identifies Gitea as the Governance SPOT, the Context Bundle as the Acquisition SPOT, and the mirrors as non-authoritative | **verified by an agent run** — 2026-11-18, on 2.0.0; reworded the same day (`FDN-0013`), was satisfied 2026-08-14 at the tag under its earlier wording |
+| 2.4 | Two agents of different models each cover the canonical set of declared unknowns (`FDN-0003` Article 12), add nothing `GOV-0002` already qualifies, and reach the same READY verdict | not verified — the bundle is back in `main` (2026-11-18) and one model was run, two are needed (`GOV-0002/OS-076`) |
 | 2.5 | `aistack.cli.knowledge_integrity` exits 0 on the bundle used | **verified by the suite** — 2026-11-18, on 2.0.0 (was satisfied 2026-08-22, at the tag) |
 | 2.6 | The same report declares `clean: True` | **verified by the suite** — 2026-11-18, on 2.0.0 (was satisfied 2026-08-22, at the tag) |
 

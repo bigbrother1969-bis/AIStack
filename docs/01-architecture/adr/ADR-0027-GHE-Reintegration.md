@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.42
+  version: 1.43
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -851,9 +851,26 @@ to 394 implementations; three contracts still read "satisfied by no class"
 transfer does not return, and no class in `main` implements the two transport
 interfaces. The audit measures are unchanged.
 
+**Commit 8.6d, 2026-11-18: criteria 2.1 to 2.3 of `STD-0300` are verified by an
+agent run.** One agent was given only the bundle of `main` (64 artifacts,
+`abcdb90`) in an empty directory. Its Boot Report carries the eight sections and
+states `source_commit` and `content_hash` as the manifest does; it names Gitea as
+the Governance SPOT, the mirrors as non-authoritative and the Context Bundle as
+the Acquisition SPOT. The report is evidence, not a governed document. The
+criterion 2.3 read "Gitea as the Acquisition SPOT", which `FDN-0013` does not say:
+the owner decided to reword the criterion. `STD-0300` 1.31: 11 verified, 6
+satisfied earlier and not re-run, 5 not verified, none *not verifiable in
+`main`*. 2.4 stays not verified (one model, two needed).
+
+*What the agent also reported:* eleven identifiers cited and absent (documents
+declared kept at the tag); two readings of "Acquisition SPOT" (the criterion
+above); the lot 8 row of this table, out of date (corrected in 8.6c); absolute
+paths of a working directory in some `source` fields of the bundle, not
+corrected.
+
 ## Implementation state
 
-Measured 2026-11-18, at `abcdb90`.
+Measured 2026-11-18, at `f952e58`.
 
 | Step | State |
 |---|---|
@@ -863,7 +880,7 @@ Measured 2026-11-18, at `abcdb90`.
 | Lot 5 The chains run through the Kernel as Tasks (§ 10) | done — 2026-11-17 |
 | Lot 6 Modifications of knowledge go through a transaction (§ 11) | done — 2026-11-17 |
 | Lot 7 The declarations edited by hand on the host are observed (§ 12) | done — 2026-11-17 |
-| Lot 8 The Context Bundle and the boot report return (§ 13) | not done — 8.1 to 8.5, 8.6a, 8.6b and 8.6c done 2026-11-18; the grading of `STD-0300` 2.1 to 2.3 and 8.7 (closing) remain |
+| Lot 8 The Context Bundle and the boot report return (§ 13) | not done — 8.1 to 8.5 and 8.6a to 8.6d done 2026-11-18; 8.7 (closing: `OS-088`) remains |
 
 ## The refactoring plan of August 2026
 

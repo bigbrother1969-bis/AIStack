@@ -16,6 +16,12 @@
 # `critical_ports`: whoever reaches one of these controls the host (the
 # Docker API). The same, as a finding to fix.
 #
+# `accepted`: per kind of risk, the containers you accept carrying it by
+# name (a monitor that holds the Docker socket, a VPN that adds a
+# capability). The kinds are privileged, docker_socket, host_namespaces,
+# capabilities and host_mounts. An accepted risk is counted, not reported.
+# `python -m aistack.cli.security_assess --propose` prints both blocks.
+#
 # `max_listed`: how many names one finding carries before "and N more".
 
 declared_ports: {}
@@ -38,5 +44,7 @@ sensitive_ports:
 critical_ports:
   2375: Docker API (no TLS)
   2376: Docker API (TLS)
+
+accepted: {}
 
 max_listed: 20

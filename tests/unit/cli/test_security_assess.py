@@ -14,6 +14,7 @@ from aistack.security.exposure import ALL, Listener, Published
 def _run(monkeypatch: pytest.MonkeyPatch, generated: Path, listeners, published) -> None:
     monkeypatch.setattr("aistack.tasks.security_assess.read_listeners", lambda: (listeners, []))
     monkeypatch.setattr("aistack.tasks.security_assess.read_published", lambda: published)
+    monkeypatch.setattr("aistack.tasks.security_assess.read_containers", lambda: [])
     monkeypatch.setattr("sys.argv", ["security_assess", str(generated)])
     cli.main()
 
@@ -50,8 +51,9 @@ def test_each_run_is_kept_in_the_history(tmp_path: Path, monkeypatch) -> None:
 def test_propose_prints_only_the_block_and_applies_nothing(tmp_path: Path, monkeypatch, capsys) -> None:
     monkeypatch.setattr("aistack.tasks.security_assess.read_listeners", lambda: ([Listener("tcp", 9999, ALL)], []))
     monkeypatch.setattr("aistack.tasks.security_assess.read_published", lambda: [Published("web", "tcp", 9999, ALL)])
+    monkeypatch.setattr("aistack.tasks.security_assess.read_containers", lambda: [])
     monkeypatch.setattr("sys.argv", ["security_assess", "--propose", str(tmp_path)])
 
     cli.main()
 
-    assert capsys.readouterr().out == "declared_ports:\n  9999: web\n"
+    assert capsys.readouterr().out == "declared_ports:\n  9999: web\naccepted: {}\n"

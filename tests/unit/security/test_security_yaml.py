@@ -46,6 +46,10 @@ def test_declared_ports_are_read_with_their_purpose(tmp_path: Path) -> None:
         "declared_ports:\n  70000: too high\n",
         "declared_ports:\n  0: zero\n",
         "sensitive_ports:\n  true: bool\n",
+        "accepted: [portainer]\n",
+        "accepted:\n  unknown_kind: [a]\n",
+        "accepted:\n  docker_socket: portainer\n",
+        "accepted:\n  docker_socket: [1]\n",
         "max_listed: 0\n",
         "max_listed: many\n",
     ],
@@ -53,3 +57,10 @@ def test_declared_ports_are_read_with_their_purpose(tmp_path: Path) -> None:
 def test_an_invalid_declaration_is_refused(tmp_path: Path, text: str) -> None:
     with pytest.raises(ValueError):
         load_security_yaml(_write(tmp_path, text))
+
+
+def test_accepted_risks_are_read_by_kind(tmp_path: Path) -> None:
+    definition = load_security_yaml(_write(tmp_path, "accepted:\n  docker_socket: [portainer, beszel]\n"))
+
+    assert definition.accepted == {"docker_socket": ("portainer", "beszel")}
+    assert load_security_yaml(SHIPPED).accepted == {}

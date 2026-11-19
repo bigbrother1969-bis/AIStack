@@ -6,6 +6,7 @@ from typing import Any
 import yaml
 
 from aistack.security.definition import SecurityDefinition
+from aistack.security.hygiene import KINDS
 
 
 def load_security_yaml(path: Path) -> SecurityDefinition:
@@ -33,6 +34,7 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
         declared_ports=_ports(data, "declared_ports", path),
         sensitive_ports=_ports(data, "sensitive_ports", path),
         critical_ports=_ports(data, "critical_ports", path),
+        accepted=_accepted(data, path),
         max_listed=max_listed,
     )
 
@@ -51,3 +53,21 @@ def _ports(data: dict[str, Any], key: str, path: Path) -> dict[int, str]:
         ports[port] = str(purpose or "")
 
     return ports
+
+
+def _accepted(data: dict[str, Any], path: Path) -> dict[str, tuple[str, ...]]:
+    declared = data.get("accepted") or {}
+
+    if not isinstance(declared, dict):
+        raise ValueError(f"Security declaration {path}: accepted must be a mapping of a kind of risk to container names")
+
+    accepted: dict[str, tuple[str, ...]] = {}
+
+    for kind, names in declared.items():
+        if kind not in KINDS:
+            raise ValueError(f"Security declaration {path}: accepted: {kind!r} is not one of {', '.join(KINDS)}")
+        if not isinstance(names, list) or not all(isinstance(name, str) and name for name in names):
+            raise ValueError(f"Security declaration {path}: accepted: {kind} must be a list of container names")
+        accepted[kind] = tuple(names)
+
+    return accepted

@@ -8,6 +8,7 @@ from aistack.generators.security import SecurityAssessmentArtifactGenerator
 from aistack.kernel.execution import Observation, ObservationContext, Request
 from aistack.security.exposure import assess, propose_declaration, read_listeners, read_published
 from aistack.security.firewall import read_firewall
+from aistack.security.hygiene import assess_hygiene, propose_accepted, read_containers
 from aistack.security.findings import SEVERITIES, worst
 from aistack.security.yaml import load_security_yaml
 
@@ -43,7 +44,10 @@ class SecurityAssessTask:
         listeners, unread = read_listeners()
         published = read_published()
         firewall, firewall_note = read_firewall(generated_dir / HOST_DIR)
-        findings = assess(listeners, unread, published, definition, firewall, firewall_note)
+        containers = read_containers()
+        findings = assess(listeners, unread, published, definition, firewall, firewall_note) + assess_hygiene(
+            containers, definition
+        )
 
         assessment = {
             "security": {
@@ -83,6 +87,7 @@ class SecurityAssessTask:
                 "findings": [finding.as_dict() for finding in findings],
                 "proposal": (
                     propose_declaration(listeners, published, definition)
+                    + (propose_accepted(containers, definition) if containers is not None else "")
                     if request.payload.get("propose")
                     else ""
                 ),

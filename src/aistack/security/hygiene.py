@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import subprocess
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from aistack.security.definition import SecurityDefinition
 from aistack.security.findings import INFORMATION, WATCH, Finding
@@ -49,6 +49,8 @@ _UNKNOWN = {
 DANGEROUS_CAPABILITIES = {"ALL", "SYS_ADMIN", "SYS_MODULE", "SYS_PTRACE", "SYS_RAWIO", "DAC_READ_SEARCH"}
 # "/" is matched exactly; the others with everything under them.
 SENSITIVE_MOUNTS = ("/etc", "/root", "/boot", "/var/lib/docker")
+# Read-only, and nothing but the host's clock settings: nearly every container mounts them.
+HARMLESS_MOUNTS = ("/etc/localtime", "/etc/timezone")
 
 
 @dataclass(frozen=True)
@@ -57,6 +59,8 @@ class Container:
     image: str
     risks: frozenset[str]
     host_network: bool
+    # What makes the risk, per kind: the capabilities, the host paths. Never a value from the environment.
+    details: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
 
 def _sensitive(source: str) -> bool:
@@ -83,20 +87,27 @@ def parse_inspect(text: str) -> list[Container] | None:
         host = entry.get("HostConfig") or {}
         config = entry.get("Config") or {}
         risks: set[str] = set()
+        details: dict[str, list[str]] = {}
 
         if host.get("Privileged"):
             risks.add(PRIVILEGED)
         if host.get("PidMode") == "host" or host.get("IpcMode") == "host":
             risks.add(HOST_NAMESPACES)
-        if DANGEROUS_CAPABILITIES & {str(item).removeprefix("CAP_").upper() for item in (host.get("CapAdd") or [])}:
+
+        added = sorted(DANGEROUS_CAPABILITIES & {str(item).removeprefix("CAP_").upper() for item in (host.get("CapAdd") or [])})
+        if added:
             risks.add(CAPABILITIES)
+            details[CAPABILITIES] = added
 
         for mount in entry.get("Mounts") or []:
             source = str((mount or {}).get("Source") or "")
             if "docker.sock" in source:
                 risks.add(DOCKER_SOCKET)
             elif mount.get("Type") == "bind" and _sensitive(source):
+                if source in HARMLESS_MOUNTS and mount.get("RW") is False:
+                    continue
                 risks.add(HOST_MOUNTS)
+                details.setdefault(HOST_MOUNTS, []).append(source + ("" if mount.get("RW", True) else " (read-only)"))
 
         containers.append(
             Container(
@@ -104,6 +115,7 @@ def parse_inspect(text: str) -> list[Container] | None:
                 image=str(config.get("Image") or ""),
                 risks=frozenset(risks),
                 host_network=host.get("NetworkMode") == "host",
+                details={kind: tuple(values) for kind, values in details.items()},
             )
         )
 
@@ -127,8 +139,10 @@ def read_containers(run_command: CommandRunner = subprocess.run) -> list[Contain
     return parse_inspect(inspected.stdout) if inspected.returncode == 0 else None
 
 
-def _label(container: Container) -> str:
-    return f"{container.name} ({container.image})" if container.image else container.name
+def _label(container: Container, kind: str = "") -> str:
+    label = f"{container.name} ({container.image})" if container.image else container.name
+    shown = container.details.get(kind)
+    return f"{label}: {', '.join(shown)}" if shown else label
 
 
 def _listed(names: list[str], limit: int) -> tuple[str, ...]:
@@ -168,7 +182,7 @@ def assess_hygiene(containers: list[Container] | None, definition: SecurityDefin
                     f"hygiene.{kind}",
                     WATCH,
                     f"{len(found)} {_TITLES[kind]}",
-                    _listed([_label(item) for item in found], definition.max_listed),
+                    _listed([_label(item, kind) for item in found], definition.max_listed),
                     unknown=_UNKNOWN[kind],
                 )
             )

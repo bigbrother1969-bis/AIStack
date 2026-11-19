@@ -137,3 +137,30 @@ def test_docker_is_asked_with_read_only_commands_and_failure_is_none() -> None:
     assert read_containers(lambda command, **_: subprocess.CompletedProcess(command, 1, stdout="")) is None
     assert read_containers(lambda command, **_: (_ for _ in ()).throw(OSError())) is None
     assert parse_inspect("not json") is None
+
+
+def test_a_finding_shows_what_makes_the_risk() -> None:
+    containers = parse_inspect(
+        _inspect(
+            _entry("scrutiny", "scrutiny", host={"CapAdd": ["SYS_RAWIO", "SYS_ADMIN", "NET_ADMIN"]}),
+            _entry("frigate", "frigate", mounts=[{"Type": "bind", "Source": "/etc/frigate", "RW": False}]),
+        )
+    )
+    assert containers is not None
+
+    findings = {finding.key: finding for finding in assess_hygiene(containers, SecurityDefinition())}
+
+    assert findings["hygiene.capabilities"].evidence == ("scrutiny (scrutiny): SYS_ADMIN, SYS_RAWIO",)
+    assert findings["hygiene.host_mounts"].evidence == ("frigate (frigate): /etc/frigate (read-only)",)
+
+
+def test_the_hosts_clock_mounted_read_only_is_not_a_risk_but_written_it_is() -> None:
+    containers = parse_inspect(
+        _inspect(
+            _entry("a", mounts=[{"Type": "bind", "Source": "/etc/localtime", "RW": False}, {"Type": "bind", "Source": "/etc/timezone", "RW": False}]),
+            _entry("b", mounts=[{"Type": "bind", "Source": "/etc/localtime", "RW": True}]),
+        )
+    )
+
+    assert containers is not None
+    assert [item.name for item in containers if HOST_MOUNTS in item.risks] == ["b"]

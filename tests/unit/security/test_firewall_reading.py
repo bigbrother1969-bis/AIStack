@@ -204,3 +204,37 @@ def test_without_a_snapshot_the_note_says_why() -> None:
 
     not_read = next(finding for finding in findings if finding.key == "firewall.not_read")
     assert not_read.evidence == ("no firewall snapshot yet",)
+
+
+def test_only_the_filter_table_decides_not_the_others_that_share_chain_names() -> None:
+    # What iptables-save really writes: mangle and nat come first and have an INPUT
+    # chain that ACCEPTs, and nat has a DOCKER chain; filter's INPUT is DROP.
+    text = (
+        "*raw\n:PREROUTING ACCEPT [0:0]\n:OUTPUT ACCEPT [0:0]\nCOMMIT\n"
+        "*mangle\n:PREROUTING ACCEPT [0:0]\n:INPUT ACCEPT [0:0]\n-A INPUT -j ACCEPT\nCOMMIT\n"
+        "*nat\n:PREROUTING ACCEPT [0:0]\n:INPUT ACCEPT [0:0]\n:DOCKER - [0:0]\n"
+        "-A DOCKER-USER -j ACCEPT\n-A DOCKER ! -i docker0 -p tcp -m tcp --dport 80 -j DNAT\nCOMMIT\n"
+    ) + UFW
+
+    table = parse_table(text)
+
+    assert table.policies["INPUT"] == "DROP"
+    assert host_reach(table, "tcp", 22).origins == LAN
+    assert published_reach(table).origins == LAN
+
+
+def test_ephemeral_udp_ports_are_information_and_not_declared_by_the_proposal() -> None:
+    from aistack.security.exposure import propose_declaration
+
+    listeners = [Listener("udp", 50840, ALL), Listener("tcp", 50841, ALL), Listener("udp", 5353, ALL)]
+
+    findings = assess(listeners, [], [], SecurityDefinition())
+
+    by_key = {finding.key: finding for finding in findings}
+    assert by_key["exposure.ephemeral_udp"].severity == INFORMATION
+    assert by_key["exposure.ephemeral_udp"].evidence == ("50840/udp",)
+    # A TCP server on a high port is not a datagram client: it stays to watch, with the others.
+    assert by_key["exposure.undeclared_on_all_interfaces"].evidence == ("50841/tcp", "5353/udp")
+    assert propose_declaration(listeners, [], SecurityDefinition()) == (
+        "declared_ports:\n  5353: host\n  50841: host\n"
+    )

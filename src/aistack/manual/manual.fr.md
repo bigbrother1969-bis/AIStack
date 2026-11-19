@@ -952,6 +952,7 @@ règle. À installer une fois (en root) :
 ```bash
 sudo install -m 0755 src/aistack/firewall_snapshot.py /usr/local/sbin/aistack-firewall-snapshot
 sudo cp deploy/firewall-snapshot/aistack-firewall-snapshot.service deploy/firewall-snapshot/aistack-firewall-snapshot.timer /etc/systemd/system/
+sudo install -d -o <propriétaire> -g <groupe> <données>/security-host   # le compte avec lequel AIStack lit ses données
 sudo mkdir -p /etc/systemd/system/aistack-firewall-snapshot.service.d
 # host.conf : [Service], Environment=OUTPUT=<données>/security-host et ReadWritePaths=<le même>
 sudo systemctl daemon-reload && sudo systemctl enable --now aistack-firewall-snapshot.timer

@@ -144,10 +144,22 @@ def parse_rule(line: str) -> Rule | None:
 
 
 def parse_table(text: str) -> Table:
+    """
+    The `filter` table of an `iptables-save` reading. The save lists several
+    tables (raw, mangle, nat, filter) and some chains share a name across
+    them (`INPUT`, `DOCKER`): only `filter` decides what reaches a port, so
+    the others are skipped. A reading with no `*table` line is taken whole.
+    """
+
     table = Table()
+    current = "filter"
     for line in text.splitlines():
         line = line.strip()
-        if line.startswith(":"):
+        if line.startswith("*"):
+            current = line[1:].strip()
+        elif current != "filter":
+            continue
+        elif line.startswith(":"):
             name, _, rest = line[1:].partition(" ")
             table.policies[name] = rest.split(" ", 1)[0]
         elif line.startswith("-A "):

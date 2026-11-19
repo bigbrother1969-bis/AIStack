@@ -33,6 +33,10 @@ _TABLES = (("tcp", "tcp"), ("tcp6", "tcp"), ("udp", "udp"), ("udp6", "udp"))
 # with no peer, the nearest to "listening" a datagram socket has.
 _LISTENING = {"tcp": "0A", "udp": "07"}
 
+# Linux picks a datagram socket's port from here when a program does not
+# choose one (mDNS, discovery, a client): these ports change at every start.
+EPHEMERAL_PORTS = (32768, 60999)
+
 ALL = "all"
 SPECIFIC = "specific"
 LOOPBACK = "loopback"
@@ -208,6 +212,10 @@ def _name(listener: Listener, owners: dict[tuple[str, int], str]) -> str:
     return f"{listener.port}/{listener.protocol}" + (f" ({owner})" if owner else "")
 
 
+def _ephemeral_udp(item: Listener) -> bool:
+    return item.protocol == "udp" and EPHEMERAL_PORTS[0] <= item.port <= EPHEMERAL_PORTS[1]
+
+
 def _listed(names: list[str], limit: int) -> tuple[str, ...]:
     if len(names) <= limit:
         return tuple(names)
@@ -330,8 +338,13 @@ def assess(
             label = (definition.critical_ports if critical else definition.sensitive_ports)[item.port]
             findings.append(_judged(f"exposure.{kind}.{item.protocol}.{item.port}", label, critical, _name(item, owners), reached(item)))
 
-    others = [_name(item, owners) for item in wide if (item.protocol, item.port) not in handled
-              and item.port not in definition.declared_ports]
+    undeclared = [
+        item
+        for item in wide
+        if (item.protocol, item.port) not in handled and item.port not in definition.declared_ports
+    ]
+    others = [_name(item, owners) for item in undeclared if not _ephemeral_udp(item)]
+    ephemeral = [_name(item, owners) for item in undeclared if _ephemeral_udp(item)]
 
     open_ones = [
         _name(item, owners)
@@ -365,6 +378,17 @@ def assess(
         )
 
     listening = {item.port for item in listeners}
+    if ephemeral:
+        findings.append(
+            Finding(
+                "exposure.ephemeral_udp",
+                INFORMATION,
+                f"{len(ephemeral)} UDP port(s) in the ephemeral range listen on every interface",
+                _listed(ephemeral, definition.max_listed),
+                unknown="Which program holds each; these ports change at every start, so they are not declared.",
+            )
+        )
+
     missing = [f"{port} ({purpose})" if purpose else str(port)
                for port, purpose in sorted(definition.declared_ports.items()) if port not in listening]
 
@@ -408,6 +432,7 @@ def propose_declaration(
             for item in listeners
             if item.bind == ALL
             and item.port not in definition.declared_ports
+            and not _ephemeral_udp(item)
             and item.port not in definition.sensitive_ports
             and item.port not in definition.critical_ports
         }

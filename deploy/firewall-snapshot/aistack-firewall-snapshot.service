@@ -9,6 +9,8 @@
 #
 #   install -m 0755 src/aistack/firewall_snapshot.py /usr/local/sbin/aistack-firewall-snapshot
 #   cp aistack-firewall-snapshot.service aistack-firewall-snapshot.timer /etc/systemd/system/
+#   # the output directory first, as the owner of the data (systemd needs it before the unit starts):
+#   install -d -o <owner> -g <group> <data>/security-host
 #   mkdir -p /etc/systemd/system/aistack-firewall-snapshot.service.d
 #   # host.conf there: OUTPUT, and the same OUTPUT as ReadWritePaths (below)
 #   systemctl daemon-reload && systemctl enable --now aistack-firewall-snapshot.timer

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.1
+  version: 0.2
   status: Proposed
   owner: Architecture
   created: 2026-11-19
@@ -186,7 +186,7 @@ delivery):
 
 | Slice | Content | State |
 |---|---|---|
-| T1 | Exposure and inventory: published ports, tunnel and proxy, firewall rules, host services | not started |
+| T1 | Exposure and inventory of the host AIStack runs on: listening sockets and the ports Docker publishes, judged against `security.yml`; the Task `security.assess` and `python -m aistack.cli.security_assess` | done, in part — 2026-11-19: sockets and published ports. **Not read yet**: the firewall rules, the tunnel and the proxy (see Open points); only the host AIStack runs on |
 | T2 | Hygiene and what is behind: sensitive file permissions, privileged containers, Docker-socket mounts, images and packages behind | not started |
 | T3 | Detection from existing logs and `ADR-0020` records | not started |
 | T4 | Alerts (severity, deduplication) and the console card | not started |
@@ -194,6 +194,15 @@ delivery):
 
 ## Open points
 
+- **Reading the firewall.** The image holds neither `iptables` nor `ufw`,
+  and the host collector runs with no network (`ADR-0020` § 2), so a
+  reading made there would describe an empty private namespace and say
+  "no rule" about a host that has some. T1 says "not read" in every
+  report. A read-only reading made on the host itself, with its own
+  network, is a later slice.
+- **What a real run has shown**: not yet. T1 is verified by the suite
+  against canned socket tables and `docker ps` lines, not against the
+  reference host.
 - A vulnerability feed (CVE) for images and packages: which source,
   and whether any data leaves the LAN.
 - How level 1 closes the entrance: stop the tunnel, or refuse at the

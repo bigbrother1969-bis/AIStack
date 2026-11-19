@@ -46,6 +46,7 @@ from aistack.providers.filesystem.yaml.store import load_storage_thresholds_yaml
 from aistack.providers.gpu.yaml.store import load_gpu_thresholds_yaml
 from aistack.restart_watch.load import load_restart_watch_yaml
 from aistack.sandbox.declaration import load_sandbox_declaration
+from aistack.security.yaml import load_security_yaml
 from aistack.sync.declaration import load_sync_declaration
 
 # A loader reads the file at `path`; `generated` is for the one that also
@@ -75,6 +76,7 @@ LOADERS: dict[str, Loader] = {
     "resource_priority.yml": lambda path, _: load_resource_priority_yaml(path),
     "restart_watch.yml": lambda path, _: load_restart_watch_yaml(path),
     "sandbox.yml": lambda path, _: load_sandbox_declaration(path),
+    "security.yml": lambda path, _: load_security_yaml(path),
     "service_categorization.yml": lambda path, _: load_service_categorization_yaml(path),
     "storage_thresholds.yml": lambda path, _: load_storage_thresholds_yaml(path),
     "sync.yml": lambda path, _: load_sync_declaration(path),

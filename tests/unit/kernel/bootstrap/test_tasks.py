@@ -105,4 +105,5 @@ def test_only_the_tasks_declared_here_are_registered():
         "ai.reason",
         "declarations.observe",
         "knowledge.integrity",
+        "security.assess",
     }

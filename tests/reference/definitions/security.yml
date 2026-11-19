@@ -1,0 +1,42 @@
+# AIStack — the host's exposure (ADR-0028)
+#
+# What the Cybersecurity Manager checks the listening sockets against.
+# Read-only: it reports, it never closes anything.
+#
+# `declared_ports`: the ports you expect to find listening on every
+# interface of the host, each with its purpose. A declared port is no
+# longer reported. Ships empty: the first assessment lists what it finds,
+# and you declare what is yours. Protect these ports by a firewall; the
+# assessment does not read it yet and says so.
+#
+# `sensitive_ports`: a service behind one of these ports should not be
+# reachable from every network. Listening on every interface without being
+# declared is a finding to watch.
+#
+# `critical_ports`: whoever reaches one of these controls the host (the
+# Docker API). The same, as a finding to fix.
+#
+# `max_listed`: how many names one finding carries before "and N more".
+
+declared_ports: {}
+
+sensitive_ports:
+  22: SSH
+  139: SMB
+  445: SMB
+  2049: NFS
+  3306: MySQL / MariaDB
+  3389: RDP
+  3493: NUT (UPS)
+  5432: PostgreSQL
+  5900: VNC
+  6379: Redis
+  9200: Elasticsearch
+  11211: Memcached
+  27017: MongoDB
+
+critical_ports:
+  2375: Docker API (no TLS)
+  2376: Docker API (TLS)
+
+max_listed: 20

@@ -64,3 +64,5 @@ tasks:
     factory: aistack.tasks:DeclarationsObserveTask
   - id: knowledge.integrity
     factory: aistack.tasks:KnowledgeIntegrityTask
+  - id: security.assess
+    factory: aistack.tasks:SecurityAssessTask

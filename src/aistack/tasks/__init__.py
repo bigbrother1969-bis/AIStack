@@ -14,6 +14,7 @@ from aistack.tasks.docker_discover import DockerDiscoverTask
 from aistack.tasks.health_render import HealthRenderTask
 from aistack.tasks.knowledge_integrity import KnowledgeIntegrityTask
 from aistack.tasks.network_docker_discover import NetworkDockerDiscoverTask
+from aistack.tasks.security_assess import SecurityAssessTask
 from aistack.tasks.timemachine_rebuild import TimeMachineRebuildTask
 
 __all__ = [
@@ -25,5 +26,6 @@ __all__ = [
     "HealthRenderTask",
     "KnowledgeIntegrityTask",
     "NetworkDockerDiscoverTask",
+    "SecurityAssessTask",
     "TimeMachineRebuildTask",
 ]

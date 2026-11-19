@@ -50,6 +50,8 @@ def test_declared_ports_are_read_with_their_purpose(tmp_path: Path) -> None:
         "accepted:\n  unknown_kind: [a]\n",
         "accepted:\n  docker_socket: portainer\n",
         "accepted:\n  docker_socket: [1]\n",
+        "max_image_age_days: 0\n",
+        "max_image_age_days: old\n",
         "max_listed: 0\n",
         "max_listed: many\n",
     ],
@@ -64,3 +66,11 @@ def test_accepted_risks_are_read_by_kind(tmp_path: Path) -> None:
 
     assert definition.accepted == {"docker_socket": ("portainer", "beszel")}
     assert load_security_yaml(SHIPPED).accepted == {}
+
+
+def test_the_image_age_limit_defaults_to_a_year_and_old_images_can_be_accepted(tmp_path: Path) -> None:
+    assert load_security_yaml(_write(tmp_path, "")).max_image_age_days == 365
+
+    definition = load_security_yaml(_write(tmp_path, "max_image_age_days: 180\naccepted:\n  old_image: [finished]\n"))
+
+    assert definition.max_image_age_days == 180 and definition.accepted == {"old_image": ("finished",)}

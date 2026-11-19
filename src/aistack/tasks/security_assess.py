@@ -6,10 +6,12 @@ from pathlib import Path
 from aistack.config import PACKAGE_ROOT, configured
 from aistack.generators.security import SecurityAssessmentArtifactGenerator
 from aistack.kernel.execution import Observation, ObservationContext, Request
+from aistack.security.definition import SecurityDefinition
 from aistack.security.exposure import assess, propose_declaration, read_listeners, read_published
-from aistack.security.firewall import read_firewall
-from aistack.security.hygiene import assess_hygiene, propose_accepted, read_containers
 from aistack.security.findings import SEVERITIES, worst
+from aistack.security.firewall import read_firewall
+from aistack.security.hygiene import OLD_IMAGE, Container, assess_hygiene, propose_accepted, read_containers
+from aistack.security.images import assess_images, old_images, read_created
 from aistack.security.yaml import load_security_yaml
 
 DEFAULT_GENERATED_DIR = "reports/generated"
@@ -45,8 +47,12 @@ class SecurityAssessTask:
         published = read_published()
         firewall, firewall_note = read_firewall(generated_dir / HOST_DIR)
         containers = read_containers()
-        findings = assess(listeners, unread, published, definition, firewall, firewall_note) + assess_hygiene(
-            containers, definition
+        created = read_created(sorted({item.image_id for item in containers if item.image_id})) if containers else {}
+        now = datetime.now(timezone.utc)
+        findings = (
+            assess(listeners, unread, published, definition, firewall, firewall_note)
+            + assess_hygiene(containers, definition)
+            + assess_images(containers, created, now, definition)
         )
 
         assessment = {
@@ -87,9 +93,20 @@ class SecurityAssessTask:
                 "findings": [finding.as_dict() for finding in findings],
                 "proposal": (
                     propose_declaration(listeners, published, definition)
-                    + (propose_accepted(containers, definition) if containers is not None else "")
+                    + (propose_accepted(containers, definition, _old_names(containers, created, now, definition)) if containers is not None else "")
                     if request.payload.get("propose")
                     else ""
                 ),
             },
         )
+
+
+def _old_names(
+    containers: list[Container] | None,
+    created: dict[str, datetime] | None,
+    now: datetime,
+    definition: SecurityDefinition,
+) -> dict[str, list[str]]:
+    if not containers or created is None:
+        return {}
+    return {OLD_IMAGE: [item.name for item, _ in old_images(containers, created, now, definition)]}

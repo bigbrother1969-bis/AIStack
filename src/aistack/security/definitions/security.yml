@@ -19,8 +19,13 @@
 # `accepted`: per kind of risk, the containers you accept carrying it by
 # name (a monitor that holds the Docker socket, a VPN that adds a
 # capability). The kinds are privileged, docker_socket, host_namespaces,
-# capabilities and host_mounts. An accepted risk is counted, not reported.
+# capabilities, host_mounts and old_image. An accepted risk is counted, not reported.
 # `python -m aistack.cli.security_assess --propose` prints both blocks.
+#
+# `max_image_age_days`: how old (days since the image was built) a running
+# container's image may be. Older is a finding to watch; accept a container
+# whose project is finished under `accepted: old_image`. The age is read
+# locally: no registry is asked, so it says what is old, not what is newer.
 #
 # `max_listed`: how many names one finding carries before "and N more".
 
@@ -46,5 +51,7 @@ critical_ports:
   2376: Docker API (TLS)
 
 accepted: {}
+
+max_image_age_days: 365
 
 max_listed: 20

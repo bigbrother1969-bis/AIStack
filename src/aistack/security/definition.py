@@ -17,11 +17,13 @@ class SecurityDefinition:
     whoever reaches it (the Docker API): the same, as a finding to fix.
     `accepted` names, per kind of risk, the containers the owner accepts
     carrying it (a monitor with the Docker socket, say): they are counted,
-    not reported. `max_listed` bounds how many names one finding carries.
+    not reported. `max_image_age_days` is how old a running container's
+    image may be before it is a finding to watch. `max_listed` bounds how many names one finding carries.
     """
 
     declared_ports: dict[int, str] = field(default_factory=dict)
     sensitive_ports: dict[int, str] = field(default_factory=dict)
     critical_ports: dict[int, str] = field(default_factory=dict)
     accepted: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    max_image_age_days: int = 365
     max_listed: int = 20

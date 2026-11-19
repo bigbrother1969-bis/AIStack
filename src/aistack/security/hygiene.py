@@ -30,6 +30,9 @@ HOST_NAMESPACES = "host_namespaces"
 CAPABILITIES = "capabilities"
 HOST_MOUNTS = "host_mounts"
 KINDS = (PRIVILEGED, DOCKER_SOCKET, HOST_NAMESPACES, CAPABILITIES, HOST_MOUNTS)
+# What `accepted` may name: the risks above, and an image the owner keeps although it is old (images.py).
+OLD_IMAGE = "old_image"
+ACCEPTABLE = (*KINDS, OLD_IMAGE)
 
 _TITLES = {
     PRIVILEGED: "container(s) run privileged",
@@ -59,6 +62,7 @@ class Container:
     image: str
     risks: frozenset[str]
     host_network: bool
+    image_id: str = ""
     # What makes the risk, per kind: the capabilities, the host paths. Never a value from the environment.
     details: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
@@ -115,6 +119,7 @@ def parse_inspect(text: str) -> list[Container] | None:
                 image=str(config.get("Image") or ""),
                 risks=frozenset(risks),
                 host_network=host.get("NetworkMode") == "host",
+                image_id=str(entry.get("Image") or ""),
                 details={kind: tuple(values) for kind, values in details.items()},
             )
         )
@@ -219,13 +224,24 @@ def assess_hygiene(containers: list[Container] | None, definition: SecurityDefin
     return findings
 
 
-def propose_accepted(containers: list[Container], definition: SecurityDefinition) -> str:
-    """The `accepted` block that would silence what the containers carry today; never applied."""
+def propose_accepted(
+    containers: list[Container],
+    definition: SecurityDefinition,
+    extra: dict[str, list[str]] | None = None,
+) -> str:
+    """
+    The `accepted` block that would silence what the containers carry today;
+    never applied. `extra` adds kinds found elsewhere (the old images).
+    """
+
+    found = {kind: sorted({item.name for item in items}) for kind, items in risky(containers, definition).items()}
+    for kind, names in (extra or {}).items():
+        found[kind] = sorted(set(names))
 
     lines: list[str] = []
-    for kind, found in risky(containers, definition).items():
-        if found:
+    for kind in ACCEPTABLE:
+        if found.get(kind):
             lines.append(f"  {kind}:")
-            lines.extend(f"    - {name}" for name in sorted({item.name for item in found}))
+            lines.extend(f"    - {name}" for name in found[kind])
 
     return "accepted:\n" + "\n".join(lines) + "\n" if lines else "accepted: {}\n"

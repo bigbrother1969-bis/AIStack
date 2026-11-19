@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.4
+  version: 0.5
   status: Proposed
   owner: Architecture
   created: 2026-11-19
@@ -187,7 +187,7 @@ delivery):
 | Slice | Content | State |
 |---|---|---|
 | T1 | Exposure and inventory of the host AIStack runs on: listening sockets and the ports Docker publishes, judged against `security.yml`; the Task `security.assess` and `python -m aistack.cli.security_assess` | done, in part — 2026-11-19: sockets, published ports and the firewall rules (a host snapshot). **Not read yet**: the tunnel and the proxy (see Open points); only the host AIStack runs on |
-| T2 | Hygiene and what is behind: sensitive file permissions, privileged containers, Docker-socket mounts, images and packages behind | T2a done, 2026-11-19: what the running containers may do to the host (privileged, Docker socket, host process or IPC namespace, kernel capabilities, sensitive host mounts), from `docker inspect`; the owner accepts a risk by container name in `security.yml` (`accepted`), and `--propose` prints the block. **Not started**: images behind, host packages, sensitive file permissions |
+| T2 | Hygiene and what is behind: sensitive file permissions, privileged containers, Docker-socket mounts, images and packages behind | T2a done, 2026-11-19: what the running containers may do to the host (privileged, Docker socket, host process or IPC namespace, kernel capabilities, sensitive host mounts), from `docker inspect`; the owner accepts a risk by container name in `security.yml` (`accepted`), and `--propose` prints the block. T2b done, 2026-11-19: how old each running container's image is (its build date, read locally with `docker image inspect`; no registry is asked, so it says what is old, never that a newer image exists), against `max_image_age_days` (365); an old image the owner keeps is accepted by container name (`accepted: old_image`). **Not started**: host packages, sensitive file permissions |
 | T3 | Detection from existing logs and `ADR-0020` records | not started |
 | T4 | Alerts (severity, deduplication) and the console card | not started |
 | later | Raspberry witness; actuator; level 1; snapshot, clean point, level 3 | not started, each to be decided |

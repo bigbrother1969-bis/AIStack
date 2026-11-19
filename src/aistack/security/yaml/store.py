@@ -6,7 +6,7 @@ from typing import Any
 import yaml
 
 from aistack.security.definition import SecurityDefinition
-from aistack.security.hygiene import KINDS
+from aistack.security.hygiene import ACCEPTABLE
 
 
 def load_security_yaml(path: Path) -> SecurityDefinition:
@@ -30,11 +30,17 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
     if isinstance(max_listed, bool) or not isinstance(max_listed, int) or max_listed < 1:
         raise ValueError(f"Security declaration {path}: max_listed must be a positive integer")
 
+    max_age = data.get("max_image_age_days", 365)
+
+    if isinstance(max_age, bool) or not isinstance(max_age, int) or max_age < 1:
+        raise ValueError(f"Security declaration {path}: max_image_age_days must be a positive integer")
+
     return SecurityDefinition(
         declared_ports=_ports(data, "declared_ports", path),
         sensitive_ports=_ports(data, "sensitive_ports", path),
         critical_ports=_ports(data, "critical_ports", path),
         accepted=_accepted(data, path),
+        max_image_age_days=max_age,
         max_listed=max_listed,
     )
 
@@ -64,8 +70,8 @@ def _accepted(data: dict[str, Any], path: Path) -> dict[str, tuple[str, ...]]:
     accepted: dict[str, tuple[str, ...]] = {}
 
     for kind, names in declared.items():
-        if kind not in KINDS:
-            raise ValueError(f"Security declaration {path}: accepted: {kind!r} is not one of {', '.join(KINDS)}")
+        if kind not in ACCEPTABLE:
+            raise ValueError(f"Security declaration {path}: accepted: {kind!r} is not one of {', '.join(ACCEPTABLE)}")
         if not isinstance(names, list) or not all(isinstance(name, str) and name for name in names):
             raise ValueError(f"Security declaration {path}: accepted: {kind} must be a list of container names")
         accepted[kind] = tuple(names)

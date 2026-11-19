@@ -17,6 +17,7 @@ from aistack.security.exposure import (
     merge,
     parse_published,
     parse_sockets,
+    propose_declaration,
     read_listeners,
     read_published,
 )
@@ -208,3 +209,28 @@ def test_what_could_not_be_read_is_a_finding_never_an_absence() -> None:
 
     assert "exposure.sockets_unreadable" in _keys(findings)
     assert "exposure.docker_unreadable" in _keys(findings)
+
+
+def test_the_proposal_names_each_port_after_its_container_and_leaves_the_risky_ones_out() -> None:
+    listeners = [
+        Listener("tcp", 80, ALL),
+        Listener("udp", 80, ALL),
+        Listener("tcp", 111, ALL),
+        Listener("tcp", 22, ALL),
+        Listener("tcp", 2375, ALL),
+        Listener("tcp", 631, LOOPBACK),
+    ]
+    published = [Published("npm", "tcp", 80, ALL)]
+    definition = SecurityDefinition(
+        declared_ports={}, sensitive_ports={22: "SSH"}, critical_ports={2375: "Docker API"}
+    )
+
+    assert propose_declaration(listeners, published, definition) == (
+        "declared_ports:\n  80: npm\n  111: host\n"
+    )
+
+
+def test_nothing_to_propose_is_an_empty_block() -> None:
+    definition = SecurityDefinition(declared_ports={80: "npm"}, sensitive_ports={}, critical_ports={})
+
+    assert propose_declaration([Listener("tcp", 80, ALL)], [], definition) == "declared_ports: {}\n"

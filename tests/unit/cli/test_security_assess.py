@@ -45,3 +45,13 @@ def test_each_run_is_kept_in_the_history(tmp_path: Path, monkeypatch) -> None:
 
     history = list((tmp_path / "history" / "security-assessment").glob("*.json"))
     assert len(history) == 2
+
+
+def test_propose_prints_only_the_block_and_applies_nothing(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr("aistack.tasks.security_assess.read_listeners", lambda: ([Listener("tcp", 9999, ALL)], []))
+    monkeypatch.setattr("aistack.tasks.security_assess.read_published", lambda: [Published("web", "tcp", 9999, ALL)])
+    monkeypatch.setattr("sys.argv", ["security_assess", "--propose", str(tmp_path)])
+
+    cli.main()
+
+    assert capsys.readouterr().out == "declared_ports:\n  9999: web\n"

@@ -320,3 +320,42 @@ def assess(
         )
 
     return findings
+
+
+def propose_declaration(
+    listeners: list[Listener],
+    published: list[Published] | None,
+    definition: SecurityDefinition,
+) -> str:
+    """
+    The `declared_ports` block that would silence what is listening today.
+
+    A starting point for the owner to read, never applied: it states what
+    is there now, not what is right. Sensitive and critical ports are left
+    out on purpose, so they stay in the report until the owner declares
+    them by hand. A port is named after the container that publishes it,
+    `host` when no container does.
+    """
+
+    owners = {
+        item.port: item.container
+        for item in (published or [])
+        if item.bind == ALL
+    }
+    ports = sorted(
+        {
+            item.port
+            for item in listeners
+            if item.bind == ALL
+            and item.port not in definition.declared_ports
+            and item.port not in definition.sensitive_ports
+            and item.port not in definition.critical_ports
+        }
+    )
+
+    if not ports:
+        return "declared_ports: {}\n"
+
+    lines = ["declared_ports:"]
+    lines.extend(f"  {port}: {owners.get(port, 'host')}" for port in ports)
+    return "\n".join(lines) + "\n"

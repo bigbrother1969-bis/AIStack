@@ -16,11 +16,14 @@ def main() -> None:
 
     The Runtime executes the `security.assess` Task, which reads and
     writes only its own report. The optional argument is the data
-    directory. Nothing on the host is changed. Exit code 1 when a finding
+    directory. With `--propose` it prints, and applies nothing, the
+    `declared_ports` block that would silence what listens today. Nothing on the host is changed. Exit code 1 when a finding
     to fix or an urgent one stands, so a caller can tell.
     """
 
-    generated_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(DEFAULT_GENERATED_DIR)
+    arguments = [argument for argument in sys.argv[1:] if not argument.startswith("--")]
+    propose = "--propose" in sys.argv[1:]
+    generated_dir = Path(arguments[0]) if arguments else Path(DEFAULT_GENERATED_DIR)
 
     runtime = KernelRuntime.boot(
         trace_repository=FileTraceRepository(output_path=generated_dir / "execution-trace.json")
@@ -29,11 +32,16 @@ def main() -> None:
     request = Request(
         request_id=str(uuid.uuid4()),
         task_id=SecurityAssessTask.task_id,
-        payload={"generated_dir": str(generated_dir)},
+        payload={"generated_dir": str(generated_dir), "propose": propose},
     )
 
     data = runtime.execute(request).observation.data
     counts = data["counts"]
+
+    if propose:
+        # Only the block, so it can be read, then pasted into security.yml.
+        print(data["proposal"], end="")
+        return
 
     print(
         "Security assessment: "

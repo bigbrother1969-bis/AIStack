@@ -6,7 +6,7 @@ from pathlib import Path
 from aistack.config import PACKAGE_ROOT, configured
 from aistack.generators.security import SecurityAssessmentArtifactGenerator
 from aistack.kernel.execution import Observation, ObservationContext, Request
-from aistack.security.exposure import assess, read_listeners, read_published
+from aistack.security.exposure import assess, propose_declaration, read_listeners, read_published
 from aistack.security.findings import SEVERITIES, worst
 from aistack.security.yaml import load_security_yaml
 
@@ -77,5 +77,10 @@ class SecurityAssessTask:
                 },
                 "worst": worst(findings) or "",
                 "findings": [finding.as_dict() for finding in findings],
+                "proposal": (
+                    propose_declaration(listeners, published, definition)
+                    if request.payload.get("propose")
+                    else ""
+                ),
             },
         )

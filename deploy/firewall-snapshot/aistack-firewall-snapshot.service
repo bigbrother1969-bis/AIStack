@@ -1,0 +1,40 @@
+# AIStack — what the host's firewall says (ADR-0028, T1)
+#
+# Asks iptables-save and ip6tables-save (they only read) and writes their
+# answer where AIStack reads it. Root, because only root may read the
+# rules; in the host's network namespace, because the rules live there;
+# changes no rule and writes nowhere but its output.
+#
+# Install (as root), once per host — see the manual, "Security assessment":
+#
+#   install -m 0755 src/aistack/firewall_snapshot.py /usr/local/sbin/aistack-firewall-snapshot
+#   cp aistack-firewall-snapshot.service aistack-firewall-snapshot.timer /etc/systemd/system/
+#   mkdir -p /etc/systemd/system/aistack-firewall-snapshot.service.d
+#   # host.conf there: OUTPUT, and the same OUTPUT as ReadWritePaths (below)
+#   systemctl daemon-reload && systemctl enable --now aistack-firewall-snapshot.timer
+#
+# What it did: journalctl -u aistack-firewall-snapshot -n 5
+
+[Unit]
+Description=AIStack firewall snapshot (reads the rules, never changes them)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Set per host in aistack-firewall-snapshot.service.d/host.conf — the
+# output twice, since ReadWritePaths= does not expand variables:
+#   [Service]
+#   Environment=OUTPUT=/srv/aistack/AIStack/reports/generated/security-host
+#   ReadWritePaths=/srv/aistack/AIStack/reports/generated/security-host
+Environment=OUTPUT=
+ExecStart=/usr/local/sbin/aistack-firewall-snapshot --output ${OUTPUT}
+Nice=10
+IOSchedulingClass=idle
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+# Reading the rules needs CAP_NET_ADMIN; writing the file as its
+# directory's owner needs CAP_CHOWN and CAP_FOWNER. Nothing else.
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_CHOWN CAP_FOWNER CAP_DAC_OVERRIDE
+TimeoutStartSec=2min

@@ -887,6 +887,36 @@ domain: it counts in the score, appears in the action plan and opens in
 the troubleshooting assistant. The delay is set in `./config/hosts.yml`
 (`silent_after_minutes`).
 
+## Security assessment
+
+`python -m aistack.cli.security_assess` (or `docker compose exec web python
+-m aistack.cli.security_assess`) says what the host exposes: the ports
+that listen on every interface, who owns them, and — once the firewall
+snapshot is installed — from where each can be reached. It only reads. It
+exits with 1 when a finding is to be fixed or urgent. `--propose` prints
+the `declared_ports` block for `security.yml` and applies nothing.
+
+Declare what is yours in `security.yml` (`declared_ports`: port and
+purpose); a declared port is no longer reported. Sensitive ports (SSH,
+shares, databases) are best left undeclared until you have read what the
+firewall lets in.
+
+The container cannot read the firewall, so a small unit on the host
+writes it, every ten minutes, where AIStack reads it. It changes no rule.
+Install it once (as root):
+
+```bash
+sudo install -m 0755 src/aistack/firewall_snapshot.py /usr/local/sbin/aistack-firewall-snapshot
+sudo cp deploy/firewall-snapshot/aistack-firewall-snapshot.service deploy/firewall-snapshot/aistack-firewall-snapshot.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-firewall-snapshot.service.d
+# host.conf there: [Service], Environment=OUTPUT=<data>/security-host and ReadWritePaths=<same>
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-firewall-snapshot.timer
+```
+
+`<data>` is the directory behind `reports/generated` (`./data` unless
+Settings moved it). A snapshot older than two hours is not used; the
+report says so.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

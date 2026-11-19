@@ -930,6 +930,37 @@ domaine **Hôtes** : il compte dans le score, apparaît dans le plan
 d'action et s'ouvre dans l'assistant de pannes. Le délai se règle dans
 `./config/hosts.yml` (`silent_after_minutes`).
 
+## Évaluation de sécurité
+
+`python -m aistack.cli.security_assess` (ou `docker compose exec web python
+-m aistack.cli.security_assess`) dit ce que l'hôte expose : les ports qui
+écoutent sur toutes les interfaces, à qui ils appartiennent et, une fois le
+relevé du pare-feu installé, d'où chacun peut être joint. Il ne fait que
+lire. Il sort avec le code 1 quand un point est à corriger ou urgent.
+`--propose` affiche le bloc `declared_ports` pour `security.yml` et
+n'applique rien.
+
+Déclare ce qui est à toi dans `security.yml` (`declared_ports` : port et
+rôle) ; un port déclaré n'est plus signalé. Les ports sensibles (SSH,
+partages, bases de données) sont à laisser non déclarés tant que tu n'as pas
+lu ce que le pare-feu laisse entrer.
+
+Le conteneur ne peut pas lire le pare-feu : un petit service sur l'hôte
+l'écrit toutes les dix minutes là où AIStack le lit. Il ne change aucune
+règle. À installer une fois (en root) :
+
+```bash
+sudo install -m 0755 src/aistack/firewall_snapshot.py /usr/local/sbin/aistack-firewall-snapshot
+sudo cp deploy/firewall-snapshot/aistack-firewall-snapshot.service deploy/firewall-snapshot/aistack-firewall-snapshot.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-firewall-snapshot.service.d
+# host.conf : [Service], Environment=OUTPUT=<données>/security-host et ReadWritePaths=<le même>
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-firewall-snapshot.timer
+```
+
+`<données>` est le dossier derrière `reports/generated` (`./data` sauf si
+les Réglages l'ont déplacé). Un relevé de plus de deux heures n'est pas
+utilisé ; le rapport le dit.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

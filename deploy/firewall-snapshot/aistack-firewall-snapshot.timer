@@ -1,0 +1,11 @@
+# AIStack — firewall snapshot, every ten minutes (ADR-0028, T1)
+[Unit]
+Description=AIStack firewall snapshot, every ten minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

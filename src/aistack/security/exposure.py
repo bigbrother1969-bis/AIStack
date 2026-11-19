@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from aistack.security.definition import SecurityDefinition
+from aistack.security.firewall import Firewall, Reach, docker_filter, reach
 from aistack.security.findings import FIX, INFORMATION, WATCH, Finding
 
 PROC_NET = Path("/proc/net")
@@ -213,15 +214,67 @@ def _listed(names: list[str], limit: int) -> tuple[str, ...]:
     return (*names[:limit], f"and {len(names) - limit} more")
 
 
+def _judged(key: str, label: str, critical: bool, name: str, found: Reach | None) -> Finding:
+    """A critical or sensitive port: said as unknown without the firewall, judged with it."""
+
+    if found is None:
+        return Finding(
+            key,
+            FIX if critical else WATCH,
+            f"{label} listens on every interface",
+            (name,),
+            unknown="Whether a firewall stops it from being reached from outside.",
+        )
+
+    if found.anywhere:
+        return Finding(key, FIX, f"{label} listens on every interface and the firewall lets any source in", (name, f"reachable from: {found.text()}"))
+
+    title = f"{label} listens on every interface; the firewall lets in {found.text()} only"
+    return Finding(key, WATCH if critical else INFORMATION, title, (name,))
+
+
+def _firewall_read(firewall: Firewall) -> Finding:
+    policy = firewall.v4.policies.get("INPUT", "unknown")
+    docker = docker_filter(firewall.v4)
+    evidence = [
+        f"snapshot of {firewall.collected_at.isoformat(timespec='minutes')}",
+        f"IPv4 incoming traffic: default {policy}",
+        (
+            "published ports: other sources dropped"
+            + (f" on {docker.iface}" if docker.iface else "")
+            + (f", {', '.join(docker.allowed)} let in" if docker.allowed else "")
+            if docker.drops
+            else "published ports: not filtered by DOCKER-USER"
+        ),
+        "IPv6: " + ("read" if firewall.v6 is not None else "not read"),
+    ]
+    return Finding(
+        "firewall.read",
+        INFORMATION,
+        "The firewall was read",
+        tuple(evidence),
+        unknown="Whether a router in front of the host forwards ports to it.",
+    )
+
+
 def assess(
     listeners: list[Listener],
     unread_tables: list[str],
     published: list[Published] | None,
     definition: SecurityDefinition,
+    firewall: Firewall | None = None,
+    firewall_note: str = "",
 ) -> list[Finding]:
     """What the readings say, judged against the owner's declaration (ADR-0028 § 3)."""
 
     findings: list[Finding] = []
+    docker_ports = {(item.protocol, item.port) for item in (published or []) if item.bind == ALL}
+
+    def reached(item: Listener) -> Reach | None:
+        if firewall is None:
+            return None
+        return reach(firewall, item.protocol, item.port, (item.protocol, item.port) in docker_ports)[0]
+
     owners = {
         (item.protocol, item.port): item.container
         for item in (published or [])
@@ -249,15 +302,18 @@ def assess(
             )
         )
 
-    findings.append(
-        Finding(
-            "firewall.not_read",
-            INFORMATION,
-            "The firewall is not read from here",
-            ("neither iptables nor ufw is available to this assessment",),
-            unknown="Whether a port listening on every interface is actually reachable from outside the LAN.",
+    if firewall is None:
+        findings.append(
+            Finding(
+                "firewall.not_read",
+                INFORMATION,
+                "The firewall is not read from here",
+                (firewall_note or "neither iptables nor ufw is available to this assessment",),
+                unknown="Whether a port listening on every interface is actually reachable from outside the LAN.",
+            )
         )
-    )
+    else:
+        findings.append(_firewall_read(firewall))
 
     wide = [item for item in listeners if item.bind == ALL]
     handled: set[tuple[str, int]] = set()
@@ -267,31 +323,35 @@ def assess(
             handled.add((item.protocol, item.port))
             continue
 
-        if item.port in definition.critical_ports:
+        if item.port in definition.critical_ports or item.port in definition.sensitive_ports:
             handled.add((item.protocol, item.port))
-            findings.append(
-                Finding(
-                    f"exposure.critical.{item.protocol}.{item.port}",
-                    FIX,
-                    f"{definition.critical_ports[item.port]} listens on every interface",
-                    (_name(item, owners),),
-                    unknown="Whether a firewall stops it from being reached from outside.",
-                )
-            )
-        elif item.port in definition.sensitive_ports:
-            handled.add((item.protocol, item.port))
-            findings.append(
-                Finding(
-                    f"exposure.sensitive.{item.protocol}.{item.port}",
-                    WATCH,
-                    f"{definition.sensitive_ports[item.port]} listens on every interface",
-                    (_name(item, owners),),
-                    unknown="Whether a firewall stops it from being reached from outside.",
-                )
-            )
+            critical = item.port in definition.critical_ports
+            kind = "critical" if critical else "sensitive"
+            label = (definition.critical_ports if critical else definition.sensitive_ports)[item.port]
+            findings.append(_judged(f"exposure.{kind}.{item.protocol}.{item.port}", label, critical, _name(item, owners), reached(item)))
 
     others = [_name(item, owners) for item in wide if (item.protocol, item.port) not in handled
               and item.port not in definition.declared_ports]
+
+    open_ones = [
+        _name(item, owners)
+        for item in wide
+        if (item.protocol, item.port) not in handled
+        and item.port not in definition.declared_ports
+        and (found := reached(item)) is not None
+        and found.anywhere
+    ]
+
+    if open_ones:
+        findings.append(
+            Finding(
+                "exposure.reachable_from_anywhere",
+                WATCH,
+                f"{len(open_ones)} undeclared port(s) are open to any source",
+                _listed(open_ones, definition.max_listed),
+                unknown="Whether a router in front of the host forwards them.",
+            )
+        )
 
     if others:
         findings.append(

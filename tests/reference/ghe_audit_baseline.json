@@ -50,6 +50,7 @@
     "src/aistack/dock/executor.py (a process lock)",
     "src/aistack/dock/proposals.py (the state a service keeps for itself)",
     "src/aistack/explications/human.py (the maintenance)",
+    "src/aistack/firewall_snapshot.py (the state a service keeps for itself)",
     "src/aistack/generators/filesystem/yaml/store.py (the state a service keeps for itself)",
     "src/aistack/generators/history.py (the recognised writer of generated artifacts)",
     "src/aistack/host_collector.py (the state a service keeps for itself)",

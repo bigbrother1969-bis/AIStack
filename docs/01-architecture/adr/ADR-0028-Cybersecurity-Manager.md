@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.2
+  version: 0.3
   status: Proposed
   owner: Architecture
   created: 2026-11-19
@@ -186,7 +186,7 @@ delivery):
 
 | Slice | Content | State |
 |---|---|---|
-| T1 | Exposure and inventory of the host AIStack runs on: listening sockets and the ports Docker publishes, judged against `security.yml`; the Task `security.assess` and `python -m aistack.cli.security_assess` | done, in part — 2026-11-19: sockets and published ports. **Not read yet**: the firewall rules, the tunnel and the proxy (see Open points); only the host AIStack runs on |
+| T1 | Exposure and inventory of the host AIStack runs on: listening sockets and the ports Docker publishes, judged against `security.yml`; the Task `security.assess` and `python -m aistack.cli.security_assess` | done, in part — 2026-11-19: sockets, published ports and the firewall rules (a host snapshot). **Not read yet**: the tunnel and the proxy (see Open points); only the host AIStack runs on |
 | T2 | Hygiene and what is behind: sensitive file permissions, privileged containers, Docker-socket mounts, images and packages behind | not started |
 | T3 | Detection from existing logs and `ADR-0020` records | not started |
 | T4 | Alerts (severity, deduplication) and the console card | not started |
@@ -194,15 +194,22 @@ delivery):
 
 ## Open points
 
-- **Reading the firewall.** The image holds neither `iptables` nor `ufw`,
-  and the host collector runs with no network (`ADR-0020` § 2), so a
-  reading made there would describe an empty private namespace and say
-  "no rule" about a host that has some. T1 says "not read" in every
-  report. A read-only reading made on the host itself, with its own
-  network, is a later slice.
-- **What a real run has shown**: not yet. T1 is verified by the suite
-  against canned socket tables and `docker ps` lines, not against the
-  reference host.
+- **Reading the firewall: done, 2026-11-19 (T1b).** The container cannot
+  read it (no `iptables`; `ADR-0020`'s collector has no network), so a
+  small root unit, `aistack-firewall-snapshot`, runs `iptables-save` and
+  `ip6tables-save` in the host's namespace every ten minutes and writes
+  their answer, dated, under the data directory. The assessment reads
+  those files and says, per port, from where it can be reached: the
+  `INPUT` chain and the chains ufw jumps to for host ports, `DOCKER-USER`
+  for published ones. It is an approximation: a rule it cannot classify
+  (connection state, destination address, source port) is set aside,
+  never counted as an opening; a snapshot older than two hours is not
+  used. What stays unknown, and is said: whether a router in front of
+  the host forwards ports to it. Still to read: the tunnel and the proxy.
+- **What a real run has shown**: the first run on the reference host
+  (2026-11-19) listed 82 ports on every interface, none to fix. T1b is
+  verified by the suite against a ufw-shaped snapshot; its first run on
+  the host is still to come.
 - A vulnerability feed (CVE) for images and packages: which source,
   and whether any data leaves the LAN.
 - How level 1 closes the entrance: stop the tunnel, or refuse at the

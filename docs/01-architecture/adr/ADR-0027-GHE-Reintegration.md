@@ -407,6 +407,12 @@ write is not knowledge and no person's choice triggers it:
   the dock's proposals (a change is already a transaction, `ADR-0019` § 6),
   the sandbox's run directory and the last materialisation report. Rewritten
   at every pass: one trace per write would grow the history and say nothing.
+- *The firewall snapshot* (`firewall_snapshot`), added on 2026-11-19 on the
+  owner's decision, as the host collector's sibling: a host service that
+  writes, every ten minutes, a dated copy of what `iptables-save` says. It is
+  rewritten whole at every pass, holds no knowledge of a person, runs on a
+  host that has no copy of AIStack (so no transaction to go through), and
+  `ADR-0028` reads it. Same nature as the state a service keeps for itself.
 - *The process locks*: `dock/executor` and `cli/sync_apply` write a lock file.
 - *The installation*: `config_init`, `instance/declarations`,
   `instance/first_start` and `instance/setup_wizard` copy the shipped

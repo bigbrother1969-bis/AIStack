@@ -7,10 +7,13 @@ from aistack.config import PACKAGE_ROOT, configured
 from aistack.generators.security import SecurityAssessmentArtifactGenerator
 from aistack.kernel.execution import Observation, ObservationContext, Request
 from aistack.security.exposure import assess, propose_declaration, read_listeners, read_published
+from aistack.security.firewall import read_firewall
 from aistack.security.findings import SEVERITIES, worst
 from aistack.security.yaml import load_security_yaml
 
 DEFAULT_GENERATED_DIR = "reports/generated"
+# Where the host unit aistack-firewall-snapshot writes, under the data directory.
+HOST_DIR = "security-host"
 
 DEFAULT_DEFINITION = configured(PACKAGE_ROOT / "security" / "definitions" / "security.yml")
 
@@ -39,7 +42,8 @@ class SecurityAssessTask:
         definition = load_security_yaml(DEFAULT_DEFINITION)
         listeners, unread = read_listeners()
         published = read_published()
-        findings = assess(listeners, unread, published, definition)
+        firewall, firewall_note = read_firewall(generated_dir / HOST_DIR)
+        findings = assess(listeners, unread, published, definition, firewall, firewall_note)
 
         assessment = {
             "security": {

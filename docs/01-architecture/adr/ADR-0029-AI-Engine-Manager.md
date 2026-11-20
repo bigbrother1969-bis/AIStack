@@ -1,0 +1,201 @@
+---
+artifact:
+  id: ADR-0029
+  title: AI-Engine Manager
+  type: ADR
+  semantic_type: ADR
+  domain: Architecture
+  criticality: C1
+  confidence: Declared
+  version: 0.1
+  status: Proposed
+  owner: Architecture
+  created: 2026-11-20
+  updated: 2026-11-20
+
+relations:
+  references:
+    - ADR-0014
+    - ADR-0019
+    - ADR-0027
+    - ADR-0028
+---
+
+# ADR-0029 — AI-Engine Manager
+
+## Status
+
+Proposed, 2026-11-20. Scope and three choices decided with the owner on
+2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
+the rest is proposed and waits for the owner. No code exists yet.
+
+## Context
+
+*Read in the code, 2026-11-20.*
+
+AIStack asks a model in four places, and each one has its own route,
+written in `troubleshooting/guide.py`:
+
+- **The troubleshooting assistant** (`ask_ai_runtime`) asks Google
+  Gemini first when its key is set: the question and its facts then
+  leave the local network (the page says so before the click). The
+  declared local engines answer when Gemini is not set or is silent.
+- **The Security page** (`ADR-0028` T4b), **the watch** (`ai.reason`)
+  and **the comparison** (`ai.compare`) ask the declared local engines
+  only (`ask_local`): Ollama (`qwen2.5:7b`), then Olala, started on
+  demand by an actuator (`ADR-0028` T4d).
+
+What is missing:
+
+- **No policy.** Which engine answers is a line of code, not a decision
+  the owner can read, change or audit. Nothing says what may leave the
+  network except the order in which two functions call their engines.
+- **No trace.** Nothing records who asked, which engine answered, how
+  long it took, or what was set aside. The only record is the answer
+  itself, in `ai-reasoning/`, and only for the pages that keep one.
+- **A hole beside it.** Home Assistant talks to Ollama directly, without
+  passing through AIStack. This ADR does not close it (§ 9).
+
+Three facts frame the risk:
+
+- **The data that leaves is the data of the machines.** What Gemini
+  receives from the assistant is names of files, services and hosts:
+  it describes the owner's network. That is not personal data in the
+  usual sense, and it is not nothing.
+- **A small local model is sometimes not enough.** Olala and
+  `qwen2.5:7b` break their own rules from time to time (`ADR-0028`
+  T4c): a better engine is tempting, and it is outside.
+- **A fallback is a decision.** "The local engine is silent, so ask the
+  external one" is the most natural line to write and the one that
+  sends data out on the day the machine is already in trouble.
+
+## Decision
+
+### 1. One place decides, and it does not replace the engines
+
+The Manager is the one entry point for a question to a model: the
+caller says who it is and what it asks; the Manager decides which
+engines may be asked, in which order, and records the decision. The
+engines (`AIEngine`: Ollama, `openai_chat`, Gemini) and their guards
+(`ADR-0028` T4c, T4d) stay as they are. The Manager adds a decision
+before them and a record after them.
+
+### 2. Data has a class, declared by the caller
+
+Decided by the owner, 2026-11-20. Two classes:
+
+- `internal_only`: what is asked never leaves the machines the owner
+  runs.
+- `external_allowed`: what is asked may go to an external engine.
+
+The class belongs to the *use*, not to the text: the Security page, the
+assistant, the watch each declare theirs, in a governed file
+(`ai_policy.yml`), and the owner is the only one who changes it. The
+Manager does not read the text to guess a class; detectors of shapes
+(addresses, paths, secrets) are not part of this decision and would be a
+later, separate one. **In doubt, `internal_only`**: a caller the file
+does not name is internal.
+
+### 3. Engines are internal or external
+
+An engine is *internal* when it runs on the owner's machines (Ollama,
+Olala, any `openai_chat` server on the loopback or the LAN) and
+*external* when it does not (Gemini). The file says which, per engine;
+the default for an engine it does not name is external, the cautious
+side for this property.
+
+### 4. The routing rule
+
+Decided by the owner, 2026-11-20. For a call of class C:
+
+- an `internal_only` call reaches internal engines only, in the order
+  declared;
+- an `external_allowed` call may reach any engine, in the order
+  declared;
+- **a call never crosses its class to find an answer.** When every
+  engine its class allows is silent or set aside, the answer says so
+  and the hand-written text stays: the Manager does not ask an external
+  engine because the internal ones failed.
+
+The shipped class of the troubleshooting assistant is `internal_only`:
+it keeps Gemini only if the owner declares its facts `external_allowed`.
+
+### 5. Personal data and a local engine that is not enough
+
+Decided by the owner, 2026-11-19. If personal data is in play and no
+internal engine is capable enough, the internal engine is used anyway
+and the limit is written in the record (§ 6): the data never leaves,
+the answer may be weaker, and the record says so.
+
+### 6. Every decision is recorded, never the content
+
+One line per call, in a bounded history: the date, the caller, the
+operation, the language, the class, the engines the call was allowed to
+reach, the engine that answered (and its kind, internal or external),
+the duration, whether anything answered, and the reasons an answer was
+set aside (`answer set aside twice, it broke the rules: …`). **Never**
+the question, the answer, the evidence lines, or a name or an address
+taken from them. The record is written by a Task (`ADR-0027`'s rule: no
+write outside the Runtime), kept for a bounded time, and read by the
+page of § 8.
+
+### 7. The user chooses nothing
+
+The page keeps one button. Which engine answers is the declaration's
+business, not the reader's. Two things stay honest, as they already
+are: the page says where the question goes before the click, and every
+answer names the model that gave it. Both now read the policy.
+
+### 8. A page shows what happened
+
+A read-only page lists the engines and their state (Ollama on the GPU or
+the CPU, Olala stopped or starting), counts by caller and by engine, the
+share of calls that stayed internal, and the last set-asides. It
+changes nothing.
+
+### 9. What this ADR leaves out
+
+- **Other applications** (Home Assistant and any other client): they
+  reach Ollama without the Manager. A portal for them, behind the OIDC
+  provider the owner uses (Pocket ID), is a later decision. Who may read
+  the page of § 8 follows `ADR-0014` (profiles and rights).
+- **Choosing an engine by what the text says**, and any choice made by a
+  model: the Manager decides from files, deterministically.
+- **Cost and quotas** of an external engine.
+- **A new external engine** (Olala on a hosted service, for instance):
+  it would be declared external and follow § 3 and § 4 unchanged.
+
+## Consequences
+
+- The owner can read, in one file, what may leave the network and which
+  use may send it.
+- The troubleshooting assistant stops calling Gemini until the owner
+  declares otherwise: a change of behaviour, made on purpose and
+  recorded.
+- A day when every internal engine is silent gives an honest "no
+  answer", not an answer from somewhere else.
+- The record shows, before any rule is tightened, what the console
+  really asks and of whom.
+
+## Implementation state
+
+Nothing is built. Planned slices (each its own patch, tested before
+delivery):
+
+| Slice | Content | State |
+|---|---|---|
+| M0 | This ADR | proposed, 2026-11-20 |
+| M1 | The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; written by a Task; routing unchanged | not started |
+| M2 | Classes and policy: `ai_policy.yml` (caller to class, engine to internal or external, internal by default); the page's destination reads it; the record also says what the policy would have decided | not started |
+| M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | not started |
+| M4 | The read-only page of § 8 and its console card | not started |
+| later | A portal for other applications behind the OIDC provider | not started, to be decided |
+
+## Open points
+
+- How long the record is kept (proposed: 90 days, like the security
+  series) and how it is bounded.
+- The list of callers, to be read with the owner when M1 names them.
+- How a caller declares the capability it needs of an engine, for the
+  case of § 5.
+- Whether Home Assistant should one day go through the Manager.

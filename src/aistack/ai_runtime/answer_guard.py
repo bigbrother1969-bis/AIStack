@@ -4,7 +4,7 @@ What an answer must not say before the page shows it (ADR-0028, slice T4b).
 The rules given to a small model in its prompt are followed most of the time, not always: on
 20 Nov. 2026 Olala still wrote "tentative de compromission" and gave five commands where three
 were asked. The rules are therefore also checked in code. An answer that breaks one is not shown;
-it is handed to the next declared engine, as an answer cut at the token limit is.
+it is asked once more with the rules recalled, then handed to the next declared engine, as an answer cut at the token limit is.
 
 Pure: text in, the names of the rules broken out.
 """
@@ -80,8 +80,46 @@ def problems(text: str, language: str) -> tuple[str, ...]:
     return tuple(broken)
 
 
+REMINDER = {
+    "fr": "\n\nTa réponse précédente a été écartée : elle enfreint ces règles ({rules}). Réponds de nouveau, plus court, en les respectant.",
+    "en": "\n\nYour previous answer was set aside: it breaks these rules ({rules}). Answer again, shorter, and follow them.",
+}
+RULE_WORDS = {
+    "fr": {
+        "alarming wording": "formule alarmante interdite",
+        "alarmist wording": "ton alarmiste",
+        "vouvoiement": "vouvoiement : tutoie",
+        "the word owner": "le mot owner : dis « toi »",
+        "a command that changes something": "commande qui modifie quelque chose : lecture seule seulement",
+        f"more than {MAX_COMMANDS} commands": f"plus de {MAX_COMMANDS} commandes : {MAX_COMMANDS} au plus",
+    },
+    "en": {
+        "alarming wording": "forbidden alarming wording",
+        "alarmist wording": "alarmist tone",
+        "vouvoiement": "formal address",
+        "the word owner": "the word owner: say 'you'",
+        "a command that changes something": "a command that changes something: read-only only",
+        f"more than {MAX_COMMANDS} commands": f"more than {MAX_COMMANDS} commands: {MAX_COMMANDS} at most",
+    },
+}
+
+
+def reminder(broken: tuple[str, ...], language: str) -> str:
+    """The sentence added to the question for the second try: the rules the first answer broke, in the reader's language."""
+
+    code = "fr" if language == "fr" else "en"
+    words = RULE_WORDS[code]
+    return REMINDER[code].format(rules="; ".join(words.get(rule, rule) for rule in broken))
+
+
 class GuardedEngine:
-    """An engine whose answer is set aside, with the rules it broke as the reason, when it breaks one."""
+    """
+    An engine whose answer is set aside, with the rules it broke as the reason, when it breaks one.
+
+    The engine is asked a second time first, with the rules it broke recalled after the question: a
+    second try of an engine already running costs seconds, handing the question on may start another
+    engine. Only the second answer's breaking of a rule sets it aside.
+    """
 
     def __init__(self, inner: AIEngine, language: str, label: str) -> None:
         self.inner = inner
@@ -90,8 +128,15 @@ class GuardedEngine:
 
     def complete(self, prompt: str) -> tuple[str, str]:
         text, reason = self.inner.complete(prompt)
-        if text.strip():
-            broken = problems(text, self.language)
-            if broken:
-                return "", f"{self.label} answer set aside, it broke the rules: {', '.join(broken)}"
+        if not text.strip():
+            return text, reason
+        broken = problems(text, self.language)
+        if not broken:
+            return text, reason
+        text, reason = self.inner.complete(prompt + reminder(broken, self.language))
+        if not text.strip():
+            return text, reason
+        broken = problems(text, self.language)
+        if broken:
+            return "", f"{self.label} answer set aside twice, it broke the rules: {', '.join(broken)}"
         return text, reason

@@ -240,3 +240,29 @@ def test_the_actuator_refuses_to_run_with_a_short_or_missing_secret(tmp_path, mo
     assert unit.main() == 2
     monkeypatch.setattr("sys.argv", [*base, "--token-file", str(tmp_path / "absent")])
     assert unit.main() == 2
+
+
+def test_the_gpu_figure_after_is_read_once_it_has_stopped_falling_not_at_once():
+    # Ollama gave the memory back a moment after the unload: 5167 at once, then 535.
+    host = FakeHost(running=True, gpu=(5167, 5167, 535, 535))
+    switch, clock, _ = switch_of(host)
+
+    report = switch.stop()
+
+    assert report["gpu_before_mib"] == 5167 and report["gpu_after_mib"] == 535
+    assert clock.now - 1000.0 <= unit.SETTLE_SECONDS
+
+
+def test_nothing_is_waited_when_nothing_was_unloaded_and_the_wait_is_bounded():
+    class Silent(FakeHost):
+        def unload_ollama(self):
+            return []
+
+    quiet, quiet_clock, _ = switch_of(Silent(running=True, gpu=(900, 900)))
+    quiet.stop()
+    slow = FakeHost(running=True, gpu=tuple(range(9000, 0, -100)))
+    slow_switch, slow_clock, _ = switch_of(slow)
+    slow_switch.stop()
+
+    assert quiet_clock.now == 1000.0
+    assert slow_clock.now - 1000.0 <= unit.SETTLE_SECONDS

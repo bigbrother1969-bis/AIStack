@@ -40,6 +40,7 @@ from pathlib import Path
 TOKEN_HEADER = "X-Engine-Switch-Token"
 ACTIONS = ("start", "stop", "status", "touch")
 CHECK_EVERY_SECONDS = 30.0
+SETTLE_SECONDS = 10  # Ollama frees the GPU a moment after it is told to unload: read the figure once it stops falling
 
 
 class Host:
@@ -122,6 +123,20 @@ class Switch:
         self.last_use: float | None = None
         self._lock = threading.Lock()
 
+    def _gpu_after(self, unloaded: int) -> int | None:
+        """The GPU memory in use once what Ollama released has been given back (it falls a moment late)."""
+
+        after = self.host.gpu_used_mib()
+        if not unloaded or after is None:
+            return after
+        for _ in range(SETTLE_SECONDS):
+            self.sleep(1.0)
+            now = self.host.gpu_used_mib()
+            if now is None or now >= after:
+                return after
+            after = now
+        return after
+
     def status(self) -> dict[str, object]:
         running = self.host.running()
         state = "stopped" if not running else ("ready" if self.host.ready() else "starting")
@@ -148,7 +163,7 @@ class Switch:
                     failure = f"not ready after {int(self.start_timeout)} s"
                     break
                 self.sleep(1.0)
-            after = self.host.gpu_used_mib()
+            after = self._gpu_after(len(unloaded))
             state = "failed" if failure else "ready"
             if not failure:
                 self.last_use = self.clock()
@@ -163,7 +178,7 @@ class Switch:
             before = self.host.gpu_used_mib()
             failure = self.host.docker("stop") if self.host.running() else ""
             unloaded = self.host.unload_ollama()
-            after = self.host.gpu_used_mib()
+            after = self._gpu_after(len(unloaded))
             self.last_use = None
             state = "failed" if failure else "stopped"
             self.log(f"stop: {state} gpu_mib {before}->{after} unloaded {len(unloaded)}" + (f" ({failure})" if failure else ""))

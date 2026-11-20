@@ -90,6 +90,7 @@ EXEMPT_WRITES = {
     "src/aistack/generators/history.py": "the recognised writer of generated artifacts",
     "src/aistack/host_collector.py": STATE,
     "src/aistack/firewall_snapshot.py": STATE,
+    "src/aistack/host_hygiene.py": STATE,
     "src/aistack/instance/declarations.py": INSTALLATION,
     "src/aistack/instance/first_start.py": INSTALLATION,
     "src/aistack/instance/setup_wizard.py": INSTALLATION,

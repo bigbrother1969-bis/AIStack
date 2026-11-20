@@ -27,6 +27,16 @@
 # whose project is finished under `accepted: old_image`. The age is read
 # locally: no registry is asked, so it says what is old, not what is newer.
 #
+# `max_reboot_pending_days`: how long a required reboot of the host may wait
+# before it is a finding to watch. `max_apt_age_days`: how old the host's
+# package lists may be. Both are read from the host snapshot
+# `aistack-host-hygiene`, which also lists the upgrades that wait (the
+# security ones are to watch) and the rights of the files that hold secrets:
+# other access to one is a finding to fix, group access one to watch.
+#
+# `accepted_files`: sensitive files, by absolute path, whose wide rights you
+# accept. They are counted, not reported.
+#
 # `max_listed`: how many names one finding carries before "and N more".
 
 declared_ports: {}
@@ -53,5 +63,11 @@ critical_ports:
 accepted: {}
 
 max_image_age_days: 365
+
+max_reboot_pending_days: 14
+
+max_apt_age_days: 7
+
+accepted_files: []
 
 max_listed: 20

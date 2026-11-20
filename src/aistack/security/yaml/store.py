@@ -35,12 +35,18 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
     if isinstance(max_age, bool) or not isinstance(max_age, int) or max_age < 1:
         raise ValueError(f"Security declaration {path}: max_image_age_days must be a positive integer")
 
+    reboot_days = _positive(data, "max_reboot_pending_days", 14, path)
+    apt_days = _positive(data, "max_apt_age_days", 7, path)
+
     return SecurityDefinition(
         declared_ports=_ports(data, "declared_ports", path),
         sensitive_ports=_ports(data, "sensitive_ports", path),
         critical_ports=_ports(data, "critical_ports", path),
         accepted=_accepted(data, path),
         max_image_age_days=max_age,
+        max_reboot_pending_days=reboot_days,
+        max_apt_age_days=apt_days,
+        accepted_files=_paths(data, path),
         max_listed=max_listed,
     )
 
@@ -77,3 +83,21 @@ def _accepted(data: dict[str, Any], path: Path) -> dict[str, tuple[str, ...]]:
         accepted[kind] = tuple(names)
 
     return accepted
+
+
+def _positive(data: dict[str, Any], key: str, default: int, path: Path) -> int:
+    value = data.get(key, default)
+
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(f"Security declaration {path}: {key} must be a positive integer")
+
+    return value
+
+
+def _paths(data: dict[str, Any], path: Path) -> tuple[str, ...]:
+    declared = data.get("accepted_files") or []
+
+    if not isinstance(declared, list) or not all(isinstance(item, str) and item.startswith("/") for item in declared):
+        raise ValueError(f"Security declaration {path}: accepted_files must be a list of absolute paths")
+
+    return tuple(declared)

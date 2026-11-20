@@ -1,0 +1,44 @@
+# AIStack — what the host says about its packages and sensitive files (ADR-0028, T2c)
+#
+# Simulates the package upgrades (apt-get -s: it reads the lists already on
+# the disk, asks no network, changes nothing) and reads the mode, owner and
+# group of the files that hold secrets — never their content. Root, because
+# only root may walk /root and the other users' homes; writes nowhere but
+# its output.
+#
+# Install (as root), once per host — see the manual, "Security assessment":
+#
+#   install -m 0755 src/aistack/host_hygiene.py /usr/local/sbin/aistack-host-hygiene
+#   cp aistack-host-hygiene.service aistack-host-hygiene.timer /etc/systemd/system/
+#   # the output directory is the one of the firewall snapshot (already there)
+#   mkdir -p /etc/systemd/system/aistack-host-hygiene.service.d
+#   # host.conf there: OUTPUT, and the same OUTPUT as ReadWritePaths (below)
+#   systemctl daemon-reload && systemctl enable --now aistack-host-hygiene.timer
+#
+# What it did: journalctl -u aistack-host-hygiene -n 5
+
+[Unit]
+Description=AIStack host hygiene (reads packages and file rights, never changes them)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Set per host in aistack-host-hygiene.service.d/host.conf — the output
+# twice, since ReadWritePaths= does not expand variables:
+#   [Service]
+#   Environment=OUTPUT=/srv/aistack/AIStack/reports/generated/security-host
+#   ReadWritePaths=/srv/aistack/AIStack/reports/generated/security-host
+# Another pattern to read the rights of: add it to ExecStart in the same file
+# (ExecStart= empty first, then the line with --glob '/some/where/*.key').
+Environment=OUTPUT=
+ExecStart=/usr/local/sbin/aistack-host-hygiene --output ${OUTPUT}
+Nice=10
+IOSchedulingClass=idle
+ProtectSystem=strict
+# ProtectHome stays off: the rights of /root/.ssh and /home/*/.ssh are what it reads.
+PrivateTmp=yes
+NoNewPrivileges=yes
+# Walking every home needs CAP_DAC_READ_SEARCH; writing the file as its
+# directory's owner needs CAP_CHOWN and CAP_FOWNER. Nothing else.
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_CHOWN CAP_FOWNER
+TimeoutStartSec=5min

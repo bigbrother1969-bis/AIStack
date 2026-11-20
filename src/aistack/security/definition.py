@@ -26,4 +26,7 @@ class SecurityDefinition:
     critical_ports: dict[int, str] = field(default_factory=dict)
     accepted: dict[str, tuple[str, ...]] = field(default_factory=dict)
     max_image_age_days: int = 365
+    max_reboot_pending_days: int = 14
+    max_apt_age_days: int = 7
+    accepted_files: tuple[str, ...] = ()
     max_listed: int = 20

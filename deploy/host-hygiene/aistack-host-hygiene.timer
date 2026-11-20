@@ -1,0 +1,11 @@
+# AIStack — host hygiene, every hour (ADR-0028, T2c)
+[Unit]
+Description=AIStack host hygiene, every hour
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

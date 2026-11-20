@@ -23,7 +23,7 @@ def test_the_assessment_is_written_traced_and_told(tmp_path: Path, monkeypatch, 
     _run(monkeypatch, tmp_path, [Listener("tcp", 9999, ALL)], [Published("web", "tcp", 9999, ALL)])
 
     out = capsys.readouterr().out
-    assert "Security assessment: 0 urgent, 0 fix, 1 watch, 1 information" in out
+    assert "Security assessment: 0 urgent, 0 fix, 1 watch, 2 information" in out
     assert "9999/tcp (web)" in out and "not known:" in out
 
     report = json.loads((tmp_path / "security-assessment.json").read_text(encoding="utf-8"))["security"]

@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.48
+  version: 1.49
   status: Accepted
   owner: Architecture
   created: 2026-11-15
-  updated: 2026-11-18
+  updated: 2026-11-20
 
 relations:
   references:
@@ -413,6 +413,13 @@ write is not knowledge and no person's choice triggers it:
   rewritten whole at every pass, holds no knowledge of a person, runs on a
   host that has no copy of AIStack (so no transaction to go through), and
   `ADR-0028` reads it. Same nature as the state a service keeps for itself.
+- *The host hygiene* (`host_hygiene`), added on 2026-11-20 on the owner's
+  decision, as a second service beside the firewall snapshot and not an
+  extension of it: a host service that writes, every hour, a dated copy of
+  what `apt-get -s` plans and the rights (mode, owner, group) of the files
+  that hold secrets — never their content. Rewritten whole at every pass,
+  no knowledge of a person, no copy of AIStack on the host to go through,
+  and `ADR-0028` reads it. Same nature as the firewall snapshot.
 - *The process locks*: `dock/executor` and `cli/sync_apply` write a lock file.
 - *The installation*: `config_init`, `instance/declarations`,
   `instance/first_start` and `instance/setup_wizard` copy the shipped

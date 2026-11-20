@@ -927,6 +927,24 @@ report lists them under `accepted`, and `aistack-docker-proxy` with
 them. A reader of the proxy still sees each container's environment
 variables.
 
+A second unit does the same for the host's packages and the rights of
+the files that hold secrets, every hour. It reads (`apt-get -s` plans and
+changes nothing; only the mode, owner and group of each file are read,
+never its content) and changes nothing:
+
+```bash
+sudo install -m 0755 src/aistack/host_hygiene.py /usr/local/sbin/aistack-host-hygiene
+sudo cp deploy/host-hygiene/aistack-host-hygiene.service deploy/host-hygiene/aistack-host-hygiene.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-host-hygiene.service.d
+# host.conf there: [Service], Environment=OUTPUT=<data>/security-host and ReadWritePaths=<same>
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-host-hygiene.timer
+```
+
+A security update that waits, a reboot required for more than
+`max_reboot_pending_days`, package lists older than `max_apt_age_days`, and
+a secret file a group can reach are findings to watch; a secret file any user
+can reach is to fix. `accepted_files` in `security.yml` accepts a file by path.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

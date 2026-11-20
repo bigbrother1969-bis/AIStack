@@ -54,6 +54,7 @@
     "src/aistack/generators/filesystem/yaml/store.py (the state a service keeps for itself)",
     "src/aistack/generators/history.py (the recognised writer of generated artifacts)",
     "src/aistack/host_collector.py (the state a service keeps for itself)",
+    "src/aistack/host_hygiene.py (the state a service keeps for itself)",
     "src/aistack/instance/declarations.py (the installation)",
     "src/aistack/instance/first_start.py (the installation)",
     "src/aistack/instance/setup_wizard.py (the installation)",

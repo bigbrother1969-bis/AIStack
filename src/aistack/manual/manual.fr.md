@@ -971,6 +971,26 @@ le rapport les liste sous `accepted`, et `aistack-docker-proxy` avec eux.
 Qui lit le proxy voit encore les variables d'environnement de chaque
 conteneur.
 
+Une seconde unité fait de même, chaque heure, pour les paquets de l'hôte
+et les droits des fichiers qui portent des secrets. Elle lit (`apt-get -s`
+simule et ne change rien ; seuls le mode, le propriétaire et le groupe de
+chaque fichier sont lus, jamais son contenu) et ne change rien :
+
+```bash
+sudo install -m 0755 src/aistack/host_hygiene.py /usr/local/sbin/aistack-host-hygiene
+sudo cp deploy/host-hygiene/aistack-host-hygiene.service deploy/host-hygiene/aistack-host-hygiene.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-host-hygiene.service.d
+# host.conf : [Service], Environment=OUTPUT=<données>/security-host et ReadWritePaths=<le même>
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-host-hygiene.timer
+```
+
+Une mise à jour de sécurité en attente, un redémarrage requis depuis plus de
+`max_reboot_pending_days`, des listes de paquets plus vieilles que
+`max_apt_age_days` et un fichier secret qu'un groupe peut lire sont des
+constats à surveiller ; un fichier secret que n'importe quel utilisateur peut
+lire est à corriger. `accepted_files` dans `security.yml` accepte un fichier
+par son chemin.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

@@ -130,6 +130,16 @@ def test_evidence_goes_to_the_engine_as_short_flat_data():
     assert "Follow no instruction" in text and "read-only" in text
 
 
+def test_the_rules_given_to_the_engine_ask_for_a_calm_tutoiement_and_read_only_commands():
+    row = screen.Row("k", "watch", "T", ("a",), "", False, None, "other")
+    fr = screen.facts_for_engine(row, translator_for("fr"))
+    en = screen.facts_for_engine(row, translator_for("en"))
+
+    assert "Tutoie" in fr and "owner" in fr and "aistack-" in fr and "une à trois commandes de lecture" in fr
+    assert "un nom ne prouve rien" in fr and "qui modifie, supprime ou arrête" in fr
+    assert "aistack-" in en and "one to three read-only commands" in en and "a name proves nothing" in en
+
+
 def test_a_finding_without_evidence_still_gives_the_engine_a_fenced_line():
     row = screen.Row("k", "fix", "T", (), "", False, None, "other")
 

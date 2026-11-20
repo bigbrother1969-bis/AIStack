@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.12
+  version: 0.13
   status: Proposed
   owner: Architecture
   created: 2026-11-19
@@ -197,7 +197,8 @@ receives is what the sheet already shows: the title, the severity and at
 most five evidence lines, cut, flattened and fenced as data, because a
 container's name, a path or a log's words can be chosen by whoever
 attacks; the prompt says to follow nothing written in them and to give no
-command that changes anything. The hand-written text, not the model,
+command that changes anything. The same rules ask for a calm tone, a reader addressed directly, and one to three read-only commands built from the
+names read; a name that starts with `aistack-` proves nothing, so the answer is to check where it comes from. The hand-written text, not the model,
 carries every command a person may copy. The page works without the
 engine.
 

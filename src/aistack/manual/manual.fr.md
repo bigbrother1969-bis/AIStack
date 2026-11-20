@@ -962,6 +962,15 @@ sudo systemctl daemon-reload && sudo systemctl enable --now aistack-firewall-sna
 les Réglages l'ont déplacé). Un relevé de plus de deux heures n'est pas
 utilisé ; le rapport le dit.
 
+L'application web, le seul service avec un port public, ne tient aucun
+socket Docker : `docker-compose.yml` lui fait lire Docker par
+`docker-proxy`, un proxy en lecture seule sur la boucle locale de l'hôte
+(`127.0.0.1:2376` ; `AISTACK_DOCKER_PROXY_PORT` le déplace). Il refuse
+toute écriture par une erreur 403. Les autres services gardent le socket ;
+le rapport les liste sous `accepted`, et `aistack-docker-proxy` avec eux.
+Qui lit le proxy voit encore les variables d'environnement de chaque
+conteneur.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

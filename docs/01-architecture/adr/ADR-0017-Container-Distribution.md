@@ -7,17 +7,18 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.9
+  version: 1.10
   status: Accepted
   owner: Architecture
   created: 2026-10-04
-  updated: 2026-10-05
+  updated: 2026-11-20
 
 relations:
   references:
     - ADR-0012
     - ADR-0013
     - ADR-0016
+    - ADR-0028
     - OPS-0002
 ---
 
@@ -80,7 +81,9 @@ systemd does today. The validator stays a command of the same image.
 `network_mode: host` (the two ports and the LAN scan as they are), the
 Docker socket, and every host directory a declaration names mounted at
 the **same path** inside the container — read-only, except the data and
-configuration volumes.
+configuration volumes. Since 2026-11-20 the web application, the one
+service with a public listener, no longer holds the socket: it reads
+Docker through a read-only proxy (`ADR-0028` § 10).
 
 ### 4. First start, guided
 
@@ -203,6 +206,7 @@ Settings if wanted (§ 4 bis).
 | § 1 — `aistack.config`, `config_init`, every declaration path through `configured()` | done — 2026-10-04 |
 | § 2 — the image runs AIStack; `docker-compose.yml` with six services, `.env.example` | done — 2026-10-04; tried on GIGABYTE the same day (`dev` image, ports 9183/9186): console and manual answer 200, ready ≈ 12 s after start |
 | § 3 — host network, socket, same-path mounts | done — 2026-10-04; tried on GIGABYTE the same day: both ports listening on the host, `docker ps` answers inside the container |
+| § 3 bis — the web application without the socket | done — 2026-11-20 (`ADR-0028` § 10): `docker-proxy`, read-only, on `127.0.0.1:2376`; tried on the reference host the same morning |
 | § 4 — guided first start | done — 2026-10-04; since 2026-10-05 `/setup` names the host's `./config/<file>` (`AISTACK_CONFIG_HOST_DIR`), not the container's `/config/<file>` |
 | § 4 bis — where the data lives, chosen from Settings | done — 2026-10-04 |
 | A shipped declaration that changes (open point, decided 2026-10-05) | done — 2026-10-05: an untouched copy follows the shipped version at start; an edited or owner-placed file is never touched, and Settings shows the difference until marked seen (`aistack.instance.declarations`) |

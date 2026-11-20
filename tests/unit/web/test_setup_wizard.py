@@ -607,7 +607,11 @@ def test_the_services_are_those_of_docker_compose_yml():
     from tests.unit.install.test_install_script import ROOT
 
     compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
-    built_on_aistack = {name for name, service in compose["services"].items() if "tools" not in (service.get("profiles") or [])}
+    # `docker-proxy` is another image: it reads no host folder a declaration names.
+    built_on_aistack = {
+        name for name, service in compose["services"].items()
+        if "tools" not in (service.get("profiles") or []) and str(service["image"]).startswith("bigbrother1969/aistack-core:")
+    }
 
     assert built_on_aistack == set(wizard.SERVICES)
 

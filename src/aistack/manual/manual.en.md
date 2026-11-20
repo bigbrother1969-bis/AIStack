@@ -918,6 +918,15 @@ sudo systemctl daemon-reload && sudo systemctl enable --now aistack-firewall-sna
 Settings moved it). A snapshot older than two hours is not used; the
 report says so.
 
+The web application, the one service with a public listener, holds no
+Docker socket: `docker-compose.yml` has it read Docker through
+`docker-proxy`, a read-only proxy on the host's loopback
+(`127.0.0.1:2376`; `AISTACK_DOCKER_PROXY_PORT` moves it). It refuses
+every write with an error 403. The other services keep the socket; the
+report lists them under `accepted`, and `aistack-docker-proxy` with
+them. A reader of the proxy still sees each container's environment
+variables.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

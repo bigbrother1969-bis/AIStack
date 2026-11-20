@@ -361,7 +361,7 @@ def test_the_real_service_categorization_loads():
         for category in definition.categories
         for service in category.services
     ]
-    assert len(all_services) == 78  # + AIStack's own six, 2026-10-04, its vigil, 2026-10-09, and its restart watch, 2026-11-15
+    assert len(all_services) == 79  # + AIStack's own six, 2026-10-04, its vigil, 2026-10-09, its restart watch, 2026-11-15, and the web application's Docker proxy, 2026-11-20
 
     by_name = {service.name: service for service in all_services}
 
@@ -390,6 +390,7 @@ def test_the_real_service_categorization_loads():
         "AIStack — Priorité CPU",
         "AIStack — Vigie",
         "AIStack — Relance au démarrage",
+        "AIStack — Proxy Docker",
         "Music Sync",
     ]
 
@@ -410,6 +411,7 @@ def test_the_real_service_categorization_loads():
         "AIStack — Priorité CPU",
         "AIStack — Vigie",
         "AIStack — Relance au démarrage",
+        "AIStack — Proxy Docker",
         "Nextcloud — Base de données",
         "Nextcloud — Redis",
         "Nextcloud — Cron",
@@ -432,7 +434,7 @@ def test_the_real_service_categorization_loads():
         "Unpackerr",
         "MinIO",
     }
-    assert len(_NO_ICON_OR_HREF) == 28
+    assert len(_NO_ICON_OR_HREF) == 29  # + the web application's Docker proxy, 2026-11-20
 
     # `icon`/`href`/`description` joined 2026-09-12 (§10) — every
     # user-facing service carries all three, unlike `container` (which

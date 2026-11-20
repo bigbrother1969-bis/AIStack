@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.5
+  version: 0.6
   status: Proposed
   owner: Architecture
   created: 2026-11-19
-  updated: 2026-11-19
+  updated: 2026-11-20
 
 relations:
   references:
@@ -19,6 +19,7 @@ relations:
     - ADR-0012
     - ADR-0013
     - ADR-0014
+    - ADR-0017
     - ADR-0018
     - ADR-0019
     - ADR-0020
@@ -169,6 +170,34 @@ Through the vigil's Gotify channel, plus the Raspberry watcher's own
 for the case where the MSI is the problem. The message says what, how
 sure, what was done, and how to undo it. No secret, no content.
 
+### 10. The web application does not hold the Docker socket
+
+The Docker socket can start, stop and replace every container, so
+whoever controls a process that holds it controls the host. The web
+application is the one process with a public listener (`ADR-0017`), and
+the assessment (T2a) listed it among the holders. It only reads Docker:
+the containers, images, networks and volumes its pages show. Every
+write — a restart, a CPU limit, a governed change — is made by another
+service, or by the dock on the host.
+
+So the compose file gives it no socket and no Docker group, and a ninth
+service, `docker-proxy` (`tecnativa/docker-socket-proxy`), between them:
+it answers the reads the application makes, refuses every write with an
+HTTP 403, and listens on the host's loopback only (`127.0.0.1:2376`,
+`AISTACK_DOCKER_PROXY_PORT`). The seven other services keep the socket;
+none has a public listener. A test holds the settings: no write verb, no
+`exec`, no build, no secrets, nothing beyond the six reads.
+
+What it does not close, and the owner knows: a reader of the proxy
+still sees each container's configuration, its environment variables
+included, so a compromised web application can read a secret a
+container receives that way. Any process on the host's network can also
+reach the loopback port: authenticating the proxy (a certificate, or a
+socket file under a directory only the web application mounts) was
+weighed and left, for a gain that is small beside the failure it adds.
+The proxy's image is a tag, not a digest, until the owner pins one
+(`AISTACK_DOCKER_PROXY_IMAGE`).
+
 ## Consequences
 
 - A first slice delivers value with no action at all: an exposure
@@ -190,6 +219,7 @@ delivery):
 | T2 | Hygiene and what is behind: sensitive file permissions, privileged containers, Docker-socket mounts, images and packages behind | T2a done, 2026-11-19: what the running containers may do to the host (privileged, Docker socket, host process or IPC namespace, kernel capabilities, sensitive host mounts), from `docker inspect`; the owner accepts a risk by container name in `security.yml` (`accepted`), and `--propose` prints the block. T2b done, 2026-11-19: how old each running container's image is (its build date, read locally with `docker image inspect`; no registry is asked, so it says what is old, never that a newer image exists), against `max_image_age_days` (365); an old image the owner keeps is accepted by container name (`accepted: old_image`). **Not started**: host packages, sensitive file permissions |
 | T3 | Detection from existing logs and `ADR-0020` records | not started |
 | T4 | Alerts (severity, deduplication) and the console card | not started |
+| T2d | The web application no longer holds the Docker socket (§ 10) | done, 2026-11-20: `docker-proxy` in the compose file, a test of its settings; tried on the reference host the same morning — the web application `healthy`, its Dock and CPU-priority pages answer, a write through the proxy is refused (403), the report goes from two points to watch to one |
 | later | Raspberry witness; actuator; level 1; snapshot, clean point, level 3 | not started, each to be decided |
 
 ## Open points

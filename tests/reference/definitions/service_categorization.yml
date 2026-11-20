@@ -445,6 +445,11 @@ categories:
       - name: AIStack — Relance au démarrage
         container: aistack-restart-watch
         description: Surveillance d'AIStack (relance des conteneurs bloqués après un démarrage)
+      # The web application's read-only view of Docker (2026-11-20, ADR-0028
+      # § 10): it replaced the socket the web application held.
+      - name: AIStack — Proxy Docker
+        container: aistack-docker-proxy
+        description: Proxy en lecture seule vers Docker, pour l'application web d'AIStack
       - name: Music Sync
         icon: music
         href: https://music-sync.persiaut-family.fr

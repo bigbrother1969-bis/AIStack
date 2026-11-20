@@ -174,5 +174,6 @@ def test_the_real_categorization_produces_seven_views():
         "AIStack — Priorité CPU",
         "AIStack — Vigie",
         "AIStack — Relance au démarrage",
+        "AIStack — Proxy Docker",
         "Music Sync",
     ]

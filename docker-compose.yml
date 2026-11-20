@@ -13,7 +13,10 @@
 #     listener (8183) and the local-network listener (8186) answer on
 #     the host's own ports, and the network scan sees the LAN;
 #   - talks to the host's Docker through its socket — the account it
-#     runs as must be in the socket's group (`DOCKER_GID`);
+#     runs as must be in the socket's group (`DOCKER_GID`) — except
+#     `web`, the one service with a public listener: it reads Docker
+#     through `docker-proxy`, read-only, and holds no socket (ADR-0028
+#     § 10);
 #   - reads its declarations from `./config` (filled with the shipped
 #     ones at first start; a file you edited is never overwritten) and
 #     keeps everything it records in `./data`;
@@ -32,7 +35,7 @@
 # AISTACK_VERSION=dev in .env first, so a local build never takes a
 # published version's name (OPS-0002 § *Between two publications*).
 #
-# The eight services replace the systemd units of a git
+# The nine services replace the systemd units of a git
 # installation; never run both on one host (the ports and the
 # collectors would collide).
 
@@ -46,7 +49,7 @@ x-aistack: &aistack
   user: "${AISTACK_UID:-1000}:${AISTACK_GID:-1000}"
   group_add:
     - "${DOCKER_GID:-999}"
-  environment:
+  environment: &aistack-environment
     # The host directory behind /app/reports/generated, for Settings.
     AISTACK_DATA_DIR: ${AISTACK_DATA_DIR:-./data}
     # The host directory behind /config, for what /setup says to edit.
@@ -79,6 +82,23 @@ services:
     <<: *aistack
     container_name: aistack-web
     command: ["web"]
+    # No Docker socket, no Docker group (ADR-0028 § 10): the public
+    # application reads Docker through `docker-proxy`, which refuses
+    # every write. What follows is `x-aistack` less the socket — a key
+    # given here replaces the merged one whole, so each is written out
+    # (a test keeps `volumes` equal to `x-aistack`'s without the socket).
+    depends_on:
+      - docker-proxy
+    group_add: []
+    environment:
+      <<: *aistack-environment
+      DOCKER_HOST: tcp://127.0.0.1:${AISTACK_DOCKER_PROXY_PORT:-2376}
+    volumes:
+      - ./config:/config
+      - ${AISTACK_DATA_DIR:-./data}:/app/reports/generated
+      - /media:/media:ro,rslave
+      - /srv:/srv:ro,rslave
+      - /opt:/opt:ro,rslave
     # `healthy` in `docker ps` and in dashboards reading Docker
     # (Homepage): /healthz on the local-network port answers `ok`.
     healthcheck:
@@ -87,6 +107,30 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # What the web application sees of Docker (ADR-0028 § 10): reads of
+  # containers, images, networks and volumes, and a refusal (HTTP 403) of
+  # every write. It listens on the host's loopback only. It still lets a
+  # reader see each container's configuration, environment variables
+  # included. `AISTACK_DOCKER_PROXY_IMAGE` pins the image; the port moves
+  # with `AISTACK_DOCKER_PROXY_PORT`.
+  docker-proxy:
+    image: ${AISTACK_DOCKER_PROXY_IMAGE:-tecnativa/docker-socket-proxy:latest}
+    container_name: aistack-docker-proxy
+    restart: unless-stopped
+    environment:
+      POST: 0
+      CONTAINERS: 1
+      IMAGES: 1
+      NETWORKS: 1
+      VOLUMES: 1
+      INFO: 1
+      VERSION: 1
+      EVENTS: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "127.0.0.1:${AISTACK_DOCKER_PROXY_PORT:-2376}:2375"
 
   events:
     <<: *aistack

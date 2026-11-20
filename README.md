@@ -780,8 +780,11 @@ With `COMPOSE_FILE` set, Compose no longer loads a
 ### With Docker (from 1.8)
 
 From 1.8 on, the image runs AIStack itself (`ADR-0017`): the web application, the five collectors, the vigil and the restart watch are eight services of
-`docker-compose.yml`, one image, on the host's network, with the Docker
-socket, a configuration directory and a data directory. The
+`docker-compose.yml`, one image, on the host's network, with a
+configuration directory and a data directory, and the Docker socket —
+except the web application, the one with a public listener, which reads
+Docker through a ninth service, a read-only proxy on the host's loopback
+(`ADR-0028` § 10). The
 prerequisites, precautions, declarations and identity-provider steps
 above are the same; the services replace step 4.
 

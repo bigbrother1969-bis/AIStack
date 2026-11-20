@@ -15,4 +15,16 @@ event:
   dock_failed: "Dock : mise à jour de {service} en échec."
   declaration_invalid: "Déclaration {name} non lue : {error} Dernière copie valide : {copy}"
   declaration_no_copy: "aucune gardée"
+  security_fix: "Sécurité, à corriger — {title}"
+  security_urgent: "Sécurité, URGENT — {title}"
+  security_window_expired: "Sécurité : la fenêtre de maintenance est terminée, la dérive des fichiers est de nouveau signalée."
+  security_digest: "Sécurité : {count} point(s) à surveiller."
+  security_digest_item: "{title} (depuis {age})"
+  security_digest_window: "Une fenêtre de maintenance est ouverte jusqu'à {until} : {held} point(s) de dérive sont comptés, pas signalés."
+  security_stale: "Le rapport de sécurité n'a pas été refait depuis {hours} h : la vigie ne surveille plus."
+age:
+  recent: "moins d'une heure"
+  hours: "{n} h"
+  days: "{n} j"
+
 test: "Message d'essai de la vigie d'AIStack : les notifications arrivent."

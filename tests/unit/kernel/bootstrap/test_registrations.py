@@ -161,6 +161,7 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
         "declarations.observe": "DeclarationsObserveTask",
         "knowledge.integrity": "KnowledgeIntegrityTask",
         "security.assess": "SecurityAssessTask",
+        "security.window": "SecurityWindowTask",
     }
 
 

@@ -1005,6 +1005,36 @@ fixé `ssh_failed_outside_watch` et `npm_scans_outside_watch` dans
 venu de l'extérieur, ou d'une origine inconnue, est à surveiller. Une source de
 journal illisible est un constat, pas un hôte tranquille.
 
+Alertes (T4a) : la vigie lance l'évaluation à chaque passage (15 minutes) et
+lit le rapport qu'elle vient d'écrire. Un constat **à corriger** ou **urgent**
+est dit tout de suite sur Gotify (l'urgent sonne), une seule fois tant qu'il
+dure ; un constat qui disparaît puis revient est redit. Les constats **à
+surveiller** partent en un seul message par jour, à `digest_hour` (8) dans
+`digest_timezone` (Europe/Paris), avec depuis combien de temps chacun dure, et
+seulement s'il y en a ; un constat qui apparaît après cette heure attend le
+lendemain. Le message du jour dit aussi si le rapport n'a pas été refait depuis
+plus de trois heures. Le premier passage après la mise à jour note ce qui est
+là sans rien dire.
+
+Tes propres changements : `python -m aistack.cli.security_window --for 2h` ouvre
+une **fenêtre de maintenance** (4 heures au plus, `window_max_hours`),
+`--show` dit si elle est ouverte, `--end` la ferme ; elle se ferme seule et le
+dit une fois. Pendant la fenêtre, la dérive des fichiers et des unités est
+comptée mais pas dite, quelle que soit sa gravité sauf urgente ; le reste
+(port ouvert, secret, connexions échouées, proxy) est dit comme d'habitude. Un
+constat retenu ainsi est dit à la fin de la fenêtre s'il dure encore. Ouvertures
+et fermetures sont notées dans `security-window.jsonl`. Sans effet sur aucun
+hôte : une fausse alerte coûte un message, jamais une panne.
+
+Séries : à chaque passage la vigie ajoute une ligne à `security-series.jsonl`
+(constats par gravité et par domaine, ports, refus du pare-feu, tentatives SSH,
+sondes et chemins d'application du proxy, dérive, mises à jour en attente) :
+des comptes, jamais une adresse, un chemin ou un contenu. `series_days` (90)
+fixe combien de jours sont gardés. Elles nourrissent les graphes de la page
+Sécurité (tranche suivante). Un rapport qui n'a pas été refait n'est pas
+ajouté deux fois : un trou, pas une ligne plate. L'image doit être reconstruite
+(`docker compose build && docker compose up -d`).
+
 L'application web, le seul service avec un port public, ne tient aucun
 socket Docker : `docker-compose.yml` lui fait lire Docker par
 `docker-proxy`, un proxy en lecture seule sur la boucle locale de l'hôte

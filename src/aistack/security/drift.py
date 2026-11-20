@@ -24,6 +24,7 @@ not calibrated on real records):
 from __future__ import annotations
 
 import fnmatch
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -72,32 +73,27 @@ def _listed(lines: list[str], limit: int) -> tuple[str, ...]:
     return tuple(lines) if len(lines) <= limit else (*lines[:limit], f"and {len(lines) - limit} more")
 
 
-def assess_host_drift(records: HostRecords, silent_after: timedelta, now: datetime, definition: SecurityDefinition) -> list[Finding]:
-    name = records.host
+@dataclass(frozen=True)
+class Counted:
+    """What the records of one host say over the window, sorted into classes."""
 
-    if records.problem:
-        return [
-            Finding(
-                f"drift.{name}.unread",
-                INFORMATION,
-                f"{name}: the host's change records cannot be read",
-                (records.problem,),
-                unknown="Whether files or units changed on this host; nothing was judged.",
-            )
-        ]
+    recent: list[dict[str, Any]]
+    reported: list[str]
+    explained: int
+    ignored: int
+    ordinary: int
+    units: int
 
-    if records.silent(now, silent_after):
-        last = records.last_run
-        return [
-            Finding(
-                f"drift.{name}.silent",
-                INFORMATION,
-                f"{name}: the host's collector has not reported for a long time",
-                (f"last run {last.isoformat(timespec='minutes')}" if last else "no run recorded",),
-                unknown="Whether files or units changed on this host since; nothing was judged.",
-            )
-        ]
+    @property
+    def files(self) -> int:
+        return sum(1 for event in self.recent if event.get("kind") == "file")
 
+    @property
+    def runs(self) -> int:
+        return sum(1 for event in self.recent if event.get("kind") == "apt")
+
+
+def classify(records: HostRecords, now: datetime, definition: SecurityDefinition) -> Counted:
     since = now - timedelta(hours=definition.drift_window_hours)
     grace = timedelta(minutes=definition.drift_apt_grace_minutes)
     recent: list[dict[str, Any]] = []
@@ -137,6 +133,58 @@ def assess_host_drift(records: HostRecords, silent_after: timedelta, now: dateti
                 else:
                     reported.append(f"unit enabled {unit}")
 
+    return Counted(recent, reported, explained, ignored, ordinary, units)
+
+
+def host_counts(records: HostRecords, silent_after: timedelta, now: datetime, definition: SecurityDefinition) -> dict[str, int] | None:
+    """The numbers behind one host's drift findings; None when the host cannot be judged (unread, silent)."""
+
+    if records.problem or records.silent(now, silent_after):
+        return None
+
+    counted = classify(records, now, definition)
+    return {
+        "sensitive": len(set(counted.reported)),
+        "explained": counted.explained,
+        "other": counted.ordinary,
+        "noise": counted.ignored,
+        "units": counted.units,
+        "apt_runs": counted.runs,
+    }
+
+
+def assess_host_drift(records: HostRecords, silent_after: timedelta, now: datetime, definition: SecurityDefinition) -> list[Finding]:
+    name = records.host
+
+    if records.problem:
+        return [
+            Finding(
+                f"drift.{name}.unread",
+                INFORMATION,
+                f"{name}: the host's change records cannot be read",
+                (records.problem,),
+                unknown="Whether files or units changed on this host; nothing was judged.",
+            )
+        ]
+
+    if records.silent(now, silent_after):
+        last = records.last_run
+        return [
+            Finding(
+                f"drift.{name}.silent",
+                INFORMATION,
+                f"{name}: the host's collector has not reported for a long time",
+                (f"last run {last.isoformat(timespec='minutes')}" if last else "no run recorded",),
+                unknown="Whether files or units changed on this host since; nothing was judged.",
+            )
+        ]
+
+    counted = classify(records, now, definition)
+    reported, explained, ignored, ordinary, units = (
+        counted.reported, counted.explained, counted.ignored, counted.ordinary, counted.units
+    )
+    recent = counted.recent
+
     findings: list[Finding] = []
 
     if reported:
@@ -150,8 +198,7 @@ def assess_host_drift(records: HostRecords, silent_after: timedelta, now: dateti
             )
         )
 
-    runs = sum(1 for event in recent if event.get("kind") == "apt")
-    files = sum(1 for event in recent if event.get("kind") == "file")
+    runs, files = counted.runs, counted.files
 
     if recent and (files or units or runs):
         findings.append(

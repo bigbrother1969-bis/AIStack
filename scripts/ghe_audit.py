@@ -99,6 +99,8 @@ EXEMPT_WRITES = {
     "src/aistack/providers/docker/digest_history.py": STATE,
     "src/aistack/restart_watch/guard.py": STATE,
     "src/aistack/restart_watch/journal.py": STATE,
+    "src/aistack/security/series.py": STATE,
+    "src/aistack/security/window.py": STATE,
     "src/aistack/sandbox/run.py": STATE,
     "src/aistack/sync/screen.py": STATE,
     "src/aistack/vigil/notify.py": STATE,

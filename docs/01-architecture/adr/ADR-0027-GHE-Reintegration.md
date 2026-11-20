@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.50
+  version: 1.51
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -430,6 +430,15 @@ write is not knowledge and no person's choice triggers it:
   Rewritten whole at every pass, no knowledge of a person, no copy of AIStack
   on the host to go through, and `ADR-0028` reads it. Same nature as the host
   hygiene.
+- *The security window and series* (`security/window`, `security/series`),
+  added on 2026-11-20 on the owner's decision ("go T4a", after the proposal
+  that named them), as the vigil's own state beside the notification state:
+  the maintenance window the owner opens for a bounded time and its journal
+  (who silenced the alerts, and when), and the series of **counts** the vigil
+  appends at each pass (`ADR-0028` T4a), never an address, a path or a
+  content. Small, rewritten or appended at every pass, no knowledge of a
+  person; the opening of a window goes through the Runtime (the Task
+  `security.window`). Same nature as the state a service keeps for itself.
 - *The process locks*: `dock/executor` and `cli/sync_apply` write a lock file.
 - *The installation*: `config_init`, `instance/declarations`,
   `instance/first_start` and `instance/setup_wizard` copy the shipped

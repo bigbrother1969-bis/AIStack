@@ -20,7 +20,7 @@ import json
 import os
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
@@ -68,6 +68,13 @@ class State:
     findings: tuple[str, ...] = ()
     proposals: dict[str, str] | None = None
     invalid: tuple[str, ...] = ()
+    # Security (ADR-0028 T4a): the findings to fix already told, since when each
+    # one to watch stands, the day of the last digest, and whether a first pass
+    # has recorded what was there.
+    security_known: bool = False
+    security_told: tuple[str, ...] = ()
+    watch_since: dict[str, str] = field(default_factory=dict)
+    digest_day: str = ""
 
 
 def read_state(generated_dir: Path) -> State:
@@ -79,6 +86,10 @@ def read_state(generated_dir: Path) -> State:
             findings=tuple(str(key) for key in data.get("findings") or []),
             proposals={str(k): str(v) for k, v in (data.get("proposals") or {}).items()},
             invalid=tuple(str(name) for name in data.get("invalid") or []),
+            security_known=bool(data.get("security_known")),
+            security_told=tuple(str(key) for key in data.get("security_told") or []),
+            watch_since={str(k): str(v) for k, v in (data.get("watch_since") or {}).items()},
+            digest_day=str(data.get("digest_day") or ""),
         )
     except (OSError, ValueError, TypeError, AttributeError):
         return State()
@@ -95,6 +106,10 @@ def write_state(generated_dir: Path, state: State) -> None:
                 "findings": list(state.findings),
                 "proposals": state.proposals or {},
                 "invalid": list(state.invalid),
+                "security_known": state.security_known,
+                "security_told": list(state.security_told),
+                "watch_since": state.watch_since,
+                "digest_day": state.digest_day,
             },
             ensure_ascii=False,
             indent=1,

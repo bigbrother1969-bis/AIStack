@@ -6,17 +6,19 @@
     python -m aistack.cli.vigil --dry-run      one pass, the message printed, not sent
     python -m aistack.cli.vigil --test         send a test message to Gotify
 
-A pass renders the health cockpit and the console again (so their score
+A pass assesses security (`aistack.cli.security_assess`, ADR-0028 T4a),
+renders the health cockpit and the console again (so their score
 is never older than one pass), records the declarations edited by hand
 (`aistack.cli.declarations_observe`), compares health and the dock's proposals
 with the previous pass, and sends what changed to Gotify in one message
-(`aistack.vigil.notify`). In Docker it is the `vigil` service, run every
+(`aistack.vigil.notify`); security has its own rules (`aistack.vigil.security_notify`: at once from "to fix", one message a day for "to watch", a maintenance window for the owner's own work). In Docker it is the `vigil` service, run every
 15 minutes.
 """
 
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import subprocess
 import sys
 import time
@@ -24,6 +26,8 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from aistack import arrivals
 from aistack.api_keys import apply_to_environ
@@ -34,11 +38,15 @@ from aistack.i18n import default_languages, translator_for
 from aistack.instance.yaml import load_instance_config_yaml
 from aistack.config import configured
 from aistack.declaration.validate import read_invalid
-from aistack.vigil import notify, snapshot
+from aistack.security import series, window
+from aistack.security.definition import SecurityDefinition
+from aistack.security.yaml import load_security_yaml
+from aistack.vigil import notify, security_notify, snapshot
 
 GENERATED_DIR = Path("reports/generated")
 INSTANCE_CONFIG = configured(Path(__file__).resolve().parents[1] / "instance" / "definitions" / "instance_config.yml")
 ARRIVALS = configured(Path(__file__).resolve().parents[1] / "arrivals" / "definitions" / "arrivals.yml")
+SECURITY = configured(Path(__file__).resolve().parents[1] / "security" / "definitions" / "security.yml")
 RENDERS = ("aistack.cli.health_render", "aistack.cli.console_render", "aistack.cli.declarations_observe")
 
 
@@ -66,8 +74,35 @@ def first_renders(generated: Path, run: Callable[[str], None] = _run) -> list[st
     return missing
 
 
+def _assess(generated: Path) -> None:
+    """
+    The security assessment (ADR-0028 T4a). It exits with 1 when a finding is to
+    fix: that is its answer, not a failure. Any other exit 1 (the module is not
+    in the image, say) is no answer, and says so.
+    """
+
+    done = subprocess.run(
+        [sys.executable, "-m", "aistack.cli.security_assess", str(generated)], capture_output=True, text=True, timeout=900
+    )
+    answered = done.returncode == 0 or (done.returncode == 1 and done.stdout.startswith("Security assessment:"))
+
+    if not answered:
+        print(f"aistack.cli.security_assess: exit {done.returncode}: {(done.stderr or done.stdout).strip()[-400:]}", flush=True)
+
+
+def _security_definition() -> SecurityDefinition:
+    """`security.yml`; a declaration that cannot be read must not stop the vigil."""
+
+    try:
+        return load_security_yaml(SECURITY)
+    except (OSError, ValueError, yaml.YAMLError) as error:
+        print(f"vigil: security.yml not read ({error}); defaults used", flush=True)
+        return SecurityDefinition()
+
+
 def _render(generated: Path = GENERATED_DIR) -> None:
     first_renders(generated)
+    _assess(generated)
     for module in RENDERS:
         _run(module)
 
@@ -130,6 +165,22 @@ def one_pass(generated: Path, gotify: notify.Gotify | None, dry_run: bool, rende
     )
     appeared, following = _arrivals(generated)
     found += [notify.arrival_event(t, arrival) for arrival in appeared]
+    definition = _security_definition()
+    now = datetime.now(timezone.utc)
+    expired = None if dry_run else window.close_if_expired(generated, now)
+    opened = window.current(generated, now)
+    told = security_notify.events(t, previous, series.read_report(generated), opened, expired, now, definition)
+    found += told.events
+    current = dataclasses.replace(
+        current,
+        security_known=told.known,
+        security_told=told.told,
+        watch_since=told.watch_since,
+        digest_day=told.digest_day,
+    )
+    if not dry_run:
+        # Before the send: a Gotify that does not answer must not leave a gap in the graphs.
+        series.append(generated, now, opened is not None, definition.series_days)
     message = notify.compose(t, found)
     if message is None:
         print("vigil: nothing new" + ("" if previous.known else " (first pass: what is there is noted)"), flush=True)

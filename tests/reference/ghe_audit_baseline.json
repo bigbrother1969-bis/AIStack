@@ -63,6 +63,8 @@
     "src/aistack/providers/docker/digest_history.py (the state a service keeps for itself)",
     "src/aistack/restart_watch/guard.py (the state a service keeps for itself)",
     "src/aistack/restart_watch/journal.py (the state a service keeps for itself)",
+    "src/aistack/security/series.py (the state a service keeps for itself)",
+    "src/aistack/security/window.py (the state a service keeps for itself)",
     "src/aistack/sandbox/run.py (the state a service keeps for itself)",
     "src/aistack/sync/screen.py (the state a service keeps for itself)",
     "src/aistack/vigil/notify.py (the state a service keeps for itself)",

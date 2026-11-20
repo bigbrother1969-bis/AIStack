@@ -959,6 +959,34 @@ above the usual figure of the report; then the figure from outside, or from an
 unknown origin, is a finding to watch. A log source that cannot be read is a
 finding, not a quiet host.
 
+Alerts (T4a): the vigil runs the assessment at each pass (15 minutes) and
+reads the report it has just written. A finding **to fix** or an **urgent** one
+is told at once on Gotify (urgent rings), once while it stands; one that goes
+and comes back is told again. The findings **to watch** go in one message a
+day, at `digest_hour` (8) in `digest_timezone` (Europe/Paris), with how long
+each has stood, and only when there are some; one that appears after that hour
+waits for the next day. The day's message also says when the report has not
+been redone for more than three hours. The first pass after the update only
+notes what is there.
+
+Your own changes: `python -m aistack.cli.security_window --for 2h` opens a
+**maintenance window** (4 hours at most, `window_max_hours`), `--show` says
+whether one is open, `--end` closes it; it closes by itself and says so once.
+While it is open, the drift of files and units is counted and not told,
+whatever its severity but urgent; the rest (an open port, a secret, failed
+logins, the proxy) is told as usual. A finding held back that way is told when
+the window ends if it still stands. Openings and closings are kept in
+`security-window.jsonl`. It changes nothing on any host: a false alert costs a
+message, never an outage.
+
+Series: at each pass the vigil appends a line to `security-series.jsonl`
+(findings by severity and by area, ports, firewall refusals, SSH attempts, the
+proxy's probes and application paths, drift, pending updates): counts, never an
+address, a path or a content. `series_days` (90) sets how many days are kept.
+They feed the graphs of the Security page (next slice). A report that was not
+redone is not appended twice: a gap, not a flat line. The image must be rebuilt
+(`docker compose build && docker compose up -d`).
+
 The web application, the one service with a public listener, holds no
 Docker socket: `docker-compose.yml` has it read Docker through
 `docker-proxy`, a read-only proxy on the host's loopback

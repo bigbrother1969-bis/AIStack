@@ -13,6 +13,7 @@ from aistack.security.findings import SEVERITIES, worst
 from aistack.security.firewall import read_firewall
 from aistack.security.host import assess_files, assess_packages, assess_remote_hosts, read_host, read_remote_hosts
 from aistack.security.logs import assess_logs, read_logs
+from aistack.security.measures import measures
 from aistack.security.refusals import assess_refusals, read_refusals
 from aistack.security.hygiene import OLD_IMAGE, Container, assess_hygiene, propose_accepted, read_containers
 from aistack.security.images import assess_images, old_images, read_created
@@ -56,6 +57,9 @@ class SecurityAssessTask:
         containers = read_containers()
         created = read_created(sorted({item.image_id for item in containers if item.image_id})) if containers else {}
         now = datetime.now(timezone.utc)
+        drift = read_drift(generated_dir)
+        logs = read_logs(generated_dir / HOST_DIR, generated_dir)
+        refusals = read_refusals(generated_dir / HOST_DIR)
         findings = (
             assess(listeners, unread, published, definition, firewall, firewall_note)
             + assess_hygiene(containers, definition)
@@ -63,9 +67,22 @@ class SecurityAssessTask:
             + assess_packages(packages, host_note, now, definition)
             + assess_files(host_files, definition)
             + assess_remote_hosts(remote_hosts, now, definition)
-            + assess_drift(*read_drift(generated_dir), now, definition)
-            + assess_logs(read_logs(generated_dir / HOST_DIR, generated_dir), definition)
-            + assess_refusals(read_refusals(generated_dir / HOST_DIR), now, definition, firewall is not None)
+            + assess_drift(*drift, now, definition)
+            + assess_logs(logs, definition)
+            + assess_refusals(refusals, now, definition, firewall is not None)
+        )
+
+        counted = measures(
+            findings=findings,
+            listening=len(listeners),
+            published=len(published) if published is not None else None,
+            refusals=refusals,
+            logs=logs,
+            drift=drift,
+            packages=[("local", packages)] + [(name, remote) for name, remote, _files, _note in remote_hosts],
+            old_images=len(old_images(containers, created, now, definition)) if containers and created else None,
+            now=now,
+            definition=definition,
         )
 
         assessment = {
@@ -81,6 +98,7 @@ class SecurityAssessTask:
                     for item in (published or [])
                 ],
                 "findings": [finding.as_dict() for finding in findings],
+                "measures": counted,
             }
         }
 
@@ -103,6 +121,7 @@ class SecurityAssessTask:
                     for severity in SEVERITIES
                 },
                 "worst": worst(findings) or "",
+                "measures": counted,
                 "findings": [finding.as_dict() for finding in findings],
                 "proposal": (
                     propose_declaration(listeners, published, definition)

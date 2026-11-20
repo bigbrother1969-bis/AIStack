@@ -61,3 +61,10 @@ class SecurityDefinition:
     ssh_failed_outside_watch: int = 0
     npm_scans_outside_watch: int = 0
     accepted_proxy_hosts: tuple[str, ...] = ()
+    # T4a: what the vigil tells Gotify. A finding to fix or urgent goes at once;
+    # the ones to watch go in one message a day, at `digest_hour` o'clock in
+    # `digest_timezone`. A maintenance window is at most `window_max_hours` long.
+    digest_hour: int = 8
+    digest_timezone: str = "Europe/Paris"
+    window_max_hours: int = 4
+    series_days: int = 90

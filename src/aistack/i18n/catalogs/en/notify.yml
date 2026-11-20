@@ -15,4 +15,16 @@ event:
   dock_failed: "Dock: update of {service} failed."
   declaration_invalid: "Declaration {name} is not read: {error} Last valid copy: {copy}"
   declaration_no_copy: "none kept"
+  security_fix: "Security, to fix — {title}"
+  security_urgent: "Security, URGENT — {title}"
+  security_window_expired: "Security: the maintenance window has ended, file drift is told again."
+  security_digest: "Security: {count} item(s) to watch."
+  security_digest_item: "{title} (for {age})"
+  security_digest_window: "A maintenance window is open until {until}: {held} drift item(s) are counted, not told."
+  security_stale: "The security report has not been redone for {hours} h: the vigil is no longer watching."
+age:
+  recent: "under an hour"
+  hours: "{n} h"
+  days: "{n} d"
+
 test: "Test message from AIStack's vigil: notifications get through."

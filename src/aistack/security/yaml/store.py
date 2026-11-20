@@ -58,6 +58,10 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
         ssh_failed_outside_watch=_non_negative(data, "ssh_failed_outside_watch", 0, path),
         npm_scans_outside_watch=_non_negative(data, "npm_scans_outside_watch", 0, path),
         accepted_proxy_hosts=_patterns(data, "accepted_proxy_hosts", (), path),
+        digest_hour=_hour(data, "digest_hour", 8, path),
+        digest_timezone=_text(data, "digest_timezone", "Europe/Paris", path),
+        window_max_hours=_positive(data, "window_max_hours", 4, path),
+        series_days=_positive(data, "series_days", 90, path),
     )
 
 
@@ -132,3 +136,21 @@ def _non_negative(data: dict[str, Any], key: str, default: int, path: Path) -> i
         raise ValueError(f"Security declaration {path}: {key} must be an integer, 0 or more")
 
     return value
+
+
+def _hour(data: dict[str, Any], key: str, default: int, path: Path) -> int:
+    value = data.get(key, default)
+
+    if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 23:
+        raise ValueError(f"Security declaration {path}: {key} must be an hour, 0 to 23")
+
+    return value
+
+
+def _text(data: dict[str, Any], key: str, default: str, path: Path) -> str:
+    value = data.get(key, default)
+
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"Security declaration {path}: {key} must be a non-empty text")
+
+    return value.strip()

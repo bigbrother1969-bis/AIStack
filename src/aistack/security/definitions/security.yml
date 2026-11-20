@@ -117,3 +117,19 @@ drift_window_hours: 24
 drift_apt_grace_minutes: 60
 
 accepted_drift: []
+
+# What the vigil tells Gotify (ADR-0028 slice T4a). A finding to fix or an
+# urgent one is told at once, and not again while it stands. The ones to
+# watch are told in one message a day, at digest_hour o'clock in
+# digest_timezone, and only when there are some. While a maintenance window
+# is open (`python -m aistack.cli.security_window --for 2h`, at most
+# window_max_hours) the drift of files and units is counted, not told.
+digest_hour: 8
+
+digest_timezone: Europe/Paris
+
+window_max_hours: 4
+
+# How many days of measures security-series.jsonl keeps (counts only: no
+# address, no path, no content).
+series_days: 90

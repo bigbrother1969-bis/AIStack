@@ -38,6 +38,16 @@
 # accept. They are counted, not reported.
 #
 # `max_listed`: how many names one finding carries before "and N more".
+#
+# Drift (T3a): the change records the host collectors of ADR-0020 write
+# (files added, modified or removed, units enabled) are read over the last
+# `drift_window_hours`. A change to a path of `drift_sensitive` (shell
+# patterns, `*` crosses `/`) or a unit newly enabled is to watch, unless an
+# apt run on that host explains it (`drift_apt_grace_minutes`: the collector
+# notes a change when it next runs). `drift_noise` (a printer queue, the
+# hardware clock, `*.dpkg-new`…) and `accepted_drift` (yours: a path you
+# change on purpose) are counted, never reported. Each list, when you write
+# it, replaces the built-in one; leave it out to keep the built-in list.
 
 declared_ports: {}
 
@@ -71,3 +81,9 @@ max_apt_age_days: 7
 accepted_files: []
 
 max_listed: 20
+
+drift_window_hours: 24
+
+drift_apt_grace_minutes: 60
+
+accepted_drift: []

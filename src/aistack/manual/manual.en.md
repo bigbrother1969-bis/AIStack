@@ -945,6 +945,15 @@ A security update that waits, a reboot required for more than
 a secret file a group can reach are findings to watch; a secret file any user
 can reach is to fix. `accepted_files` in `security.yml` accepts a file by path.
 
+Drift (T3a): the report also reads what the host collectors of `ADR-0020`
+saw change in the last `drift_window_hours` (24) on each traced host. A
+change to a sensitive path (accounts, sudo, SSH, firewall, VPN, UPS, tunnel,
+`/usr/local`, scheduled jobs) or a unit newly enabled is to watch, unless an
+apt run on the host explains it; a printer queue, the hardware clock and
+`*.dpkg-new` files are counted, and `accepted_drift` in `security.yml`
+accepts paths you change on purpose. The finding names the path and what
+happened to it, never a content. Nothing is installed for it.
+
 On the other hosts the same unit sends nothing by itself: it writes in
 the folder of that host's collector, under `security`
 (`OUTPUT=/var/lib/aistack-hotes/<host>/security`, and the same path as

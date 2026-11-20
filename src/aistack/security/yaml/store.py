@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 
-from aistack.security.definition import SecurityDefinition
+from aistack.security.definition import DRIFT_NOISE, DRIFT_SENSITIVE, SecurityDefinition
 from aistack.security.hygiene import ACCEPTABLE
 
 
@@ -48,6 +48,11 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
         max_apt_age_days=apt_days,
         accepted_files=_paths(data, path),
         max_listed=max_listed,
+        drift_window_hours=_positive(data, "drift_window_hours", 24, path),
+        drift_apt_grace_minutes=_positive(data, "drift_apt_grace_minutes", 60, path),
+        drift_sensitive=_patterns(data, "drift_sensitive", DRIFT_SENSITIVE, path),
+        drift_noise=_patterns(data, "drift_noise", DRIFT_NOISE, path),
+        accepted_drift=_patterns(data, "accepted_drift", (), path),
     )
 
 
@@ -99,5 +104,17 @@ def _paths(data: dict[str, Any], path: Path) -> tuple[str, ...]:
 
     if not isinstance(declared, list) or not all(isinstance(item, str) and item.startswith("/") for item in declared):
         raise ValueError(f"Security declaration {path}: accepted_files must be a list of absolute paths")
+
+    return tuple(declared)
+
+
+def _patterns(data: dict[str, Any], key: str, default: tuple[str, ...], path: Path) -> tuple[str, ...]:
+    if key not in data or data[key] is None:
+        return default
+
+    declared = data[key]
+
+    if not isinstance(declared, list) or not all(isinstance(item, str) and item for item in declared):
+        raise ValueError(f"Security declaration {path}: {key} must be a list of path patterns")
 
     return tuple(declared)

@@ -7,12 +7,14 @@ from aistack.config import PACKAGE_ROOT, configured
 from aistack.generators.security import SecurityAssessmentArtifactGenerator
 from aistack.kernel.execution import Observation, ObservationContext, Request
 from aistack.security.definition import SecurityDefinition
+from aistack.security.drift import assess_drift
 from aistack.security.exposure import assess, propose_declaration, read_listeners, read_published
 from aistack.security.findings import SEVERITIES, worst
 from aistack.security.firewall import read_firewall
 from aistack.security.host import assess_files, assess_packages, assess_remote_hosts, read_host, read_remote_hosts
 from aistack.security.hygiene import OLD_IMAGE, Container, assess_hygiene, propose_accepted, read_containers
 from aistack.security.images import assess_images, old_images, read_created
+from aistack.hosts.records import HostRecords, HostsDeclaration, load_hosts_declaration, read_all
 from aistack.security.yaml import load_security_yaml
 
 DEFAULT_GENERATED_DIR = "reports/generated"
@@ -59,6 +61,7 @@ class SecurityAssessTask:
             + assess_packages(packages, host_note, now, definition)
             + assess_files(host_files, definition)
             + assess_remote_hosts(remote_hosts, now, definition)
+            + assess_drift(*read_drift(generated_dir), now, definition)
         )
 
         assessment = {
@@ -116,3 +119,13 @@ def _old_names(
     if not containers or created is None:
         return {}
     return {OLD_IMAGE: [item.name for item, _ in old_images(containers, created, now, definition)]}
+
+
+def read_drift(generated_dir: Path) -> tuple[list[HostRecords], HostsDeclaration | None]:
+    """The change records of the traced hosts; an unreadable `hosts.yml` is no reason to fail the assessment."""
+
+    try:
+        declaration = load_hosts_declaration(generated_dir)
+    except (OSError, ValueError, AttributeError):
+        return [], None
+    return read_all(declaration), declaration

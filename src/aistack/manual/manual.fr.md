@@ -991,6 +991,16 @@ constats à surveiller ; un fichier secret que n'importe quel utilisateur peut
 lire est à corriger. `accepted_files` dans `security.yml` accepte un fichier
 par son chemin.
 
+Dérive (T3a) : le rapport lit aussi ce que les collecteurs d'hôtes d'`ADR-0020`
+ont vu changer pendant les dernières `drift_window_hours` (24) sur chaque hôte
+tracé. Un changement dans un chemin sensible (comptes, sudo, SSH, pare-feu,
+VPN, onduleur, tunnel, `/usr/local`, tâches planifiées) ou une unité nouvellement
+activée est à surveiller, sauf si un passage d'apt sur l'hôte l'explique ; la
+file des imprimantes, l'horloge matérielle et les fichiers `*.dpkg-new` sont
+comptés, et `accepted_drift` dans `security.yml` accepte les chemins que tu
+changes volontairement. Le constat nomme le chemin et ce qui lui est arrivé,
+jamais un contenu. Rien n'est installé pour cela.
+
 Sur les autres hôtes, la même unité n'envoie rien toute seule : elle écrit
 dans le dossier du collecteur de l'hôte, sous `security`
 (`OUTPUT=/var/lib/aistack-hotes/<hôte>/security`, et le même chemin en

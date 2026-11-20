@@ -934,8 +934,12 @@ Logs (T3c): a third unit, `aistack-host-logs`, counts what the host's logs
 say about who tried to get in, over the last 24 hours and by kind of network
 (the LAN, the VPN, outside): SSH logins that failed, `DOCKER-USER` packets
 that were refused and logged, and, where Nginx Proxy Manager keeps its logs
-on the host, the requests by status class per virtual host and those that ask
-for a path scanners ask for (`/.env`, `/.git`, `wp-login.php`…). It writes
+on the host, the requests by status class per virtual host, the probes (`/.env`,
+`/.git`: nobody but a scanner asks for them) and the application paths
+(`wp-login.php`, `xmlrpc.php`), with how many of each were answered with a
+success (2xx). A probe that a virtual host answers with a success is a finding
+to watch whatever the threshold (a host that answers 200 to every path, a
+single-page application, is accepted by name under `accepted_proxy_hosts`). It writes
 counts only, never an address, a path, a user name or a log line. Install it
 like the host hygiene:
 

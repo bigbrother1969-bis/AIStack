@@ -14,8 +14,9 @@ nothing else**. For each origin class (the LAN, the VPN, outside), how many
 SSH logins failed and how many named a user the host does not have; how
 many packets `DOCKER-USER` refused and logged; and, when a Nginx Proxy
 Manager keeps its logs on the host, per virtual host how many requests
-ended in 2xx, 3xx, 4xx and 5xx and how many asked for a path that scanners
-ask for (`/.env`, `/.git`, `wp-login.php`…). It never writes an address, a
+ended in 2xx, 3xx, 4xx and 5xx, how many asked for a probe (`/.env`,
+`/.git`: nobody else asks) and for an application path (`wp-login.php`,
+`xmlrpc.php`…), and how many of each were answered with a success (2xx). It never writes an address, a
 path, a user name, a line of a log or a header: a reader of the file
 learns how many and from what kind of network, not who or what.
 
@@ -49,15 +50,18 @@ WINDOW = timedelta(hours=24)
 # A busy proxy writes a lot: only the end of a file is read.
 MAX_BYTES = 64 * 1024 * 1024
 MAX_VHOSTS = 200
+VHOST_KEYS = ("2xx", "3xx", "4xx", "5xx", "probes", "probes_ok", "app_paths", "app_paths_ok")
 CLASSES = ("lan", "vpn", "outside", "unknown")
 DEFAULT_LAN = (
     "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8",
     "fc00::/7", "fe80::/10", "::1/128",
 )
-# What scanners ask for. Matched in lower case against the request path; the path itself is never kept.
-SCAN_SIGNATURES = (
-    "/.env", "/.git", "wp-login.php", "wp-admin", "xmlrpc.php", "phpmyadmin", "/cgi-bin", "/../", "%2e%2e",
-)
+# Matched in lower case against the request path; the path itself is never kept.
+# A probe is asked for by scanners and by nobody else: no service has a reason to answer it.
+PROBE_SIGNATURES = ("/.env", "/.git", "/../", "%2e%2e")
+# An application path is asked for by scanners too, and by the person who uses the application
+# (a WordPress login): it is counted apart, and what matters is that it answers.
+APP_SIGNATURES = ("wp-login.php", "wp-admin", "xmlrpc.php", "phpmyadmin", "/cgi-bin")
 MONTHS = {name: number for number, name in enumerate(
     ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), start=1)}
 
@@ -151,7 +155,7 @@ def _tail_lines(path: Path) -> list[str]:
 
 def npm_counts(directory: Path, since: datetime, vpn: list, lan: list) -> dict[str, object]:
     vhosts: dict[str, Counter[str]] = {}
-    scans_by_origin = _empty()
+    probes_by_origin, probes_ok_by_origin, app_by_origin = _empty(), _empty(), _empty()
     requests = 0
 
     for path in sorted([*directory.glob("*_access.log"), *directory.glob("*_access.log.1")]):
@@ -167,19 +171,31 @@ def npm_counts(directory: Path, since: datetime, vpn: list, lan: list) -> dict[s
             if host not in vhosts and len(vhosts) >= MAX_VHOSTS:
                 host = "other"
             counter = vhosts.setdefault(host, Counter())
-            counter[f"{match.group('status')[0]}xx"] += 1
+            status_class = f"{match.group('status')[0]}xx"
+            counter[status_class] += 1
             uri = match.group("uri").lower()
-            if any(signature in uri for signature in SCAN_SIGNATURES):
-                counter["scans"] += 1
-                scans_by_origin[origin(match.group("ip"), vpn, lan)] += 1
+            where = origin(match.group("ip"), vpn, lan)
+            if any(signature in uri for signature in PROBE_SIGNATURES):
+                counter["probes"] += 1
+                probes_by_origin[where] += 1
+                if status_class == "2xx":
+                    counter["probes_ok"] += 1
+                    probes_ok_by_origin[where] += 1
+            elif any(signature in uri for signature in APP_SIGNATURES):
+                counter["app_paths"] += 1
+                app_by_origin[where] += 1
+                if status_class == "2xx":
+                    counter["app_paths_ok"] += 1
 
     return {
         "requests": requests,
         "vhosts": {
-            host: {key: counter.get(key, 0) for key in ("2xx", "3xx", "4xx", "5xx", "scans")}
+            host: {key: counter.get(key, 0) for key in VHOST_KEYS}
             for host, counter in sorted(vhosts.items())
         },
-        "scans_by_origin": scans_by_origin,
+        "probes_by_origin": probes_by_origin,
+        "probes_ok_by_origin": probes_ok_by_origin,
+        "app_paths_by_origin": app_by_origin,
     }
 
 

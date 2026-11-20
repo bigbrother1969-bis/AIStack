@@ -57,6 +57,7 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
         refusal_watch_per_hour=_non_negative(data, "refusal_watch_per_hour", 0, path),
         ssh_failed_outside_watch=_non_negative(data, "ssh_failed_outside_watch", 0, path),
         npm_scans_outside_watch=_non_negative(data, "npm_scans_outside_watch", 0, path),
+        accepted_proxy_hosts=_patterns(data, "accepted_proxy_hosts", (), path),
     )
 
 

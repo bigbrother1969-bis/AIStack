@@ -88,11 +88,38 @@ def test_the_proxy_is_counted_per_virtual_host_inside_the_window_only(tmp_path: 
     result = unit.npm_counts(_npm_directory(tmp_path), NOW - timedelta(hours=24), VPN, LAN)
 
     assert result["requests"] == 5
+    zero = {"2xx": 0, "3xx": 0, "4xx": 0, "5xx": 0, "probes": 0, "probes_ok": 0, "app_paths": 0, "app_paths_ok": 0}
     assert result["vhosts"] == {
-        "example.org": {"2xx": 1, "3xx": 0, "4xx": 2, "5xx": 1, "scans": 2},
-        "other.org": {"2xx": 0, "3xx": 1, "4xx": 0, "5xx": 0, "scans": 1},
+        "example.org": {**zero, "2xx": 1, "4xx": 2, "5xx": 1, "probes": 1, "app_paths": 1},
+        "other.org": {**zero, "3xx": 1, "probes": 1},
     }
-    assert result["scans_by_origin"] == {"lan": 0, "vpn": 1, "outside": 2, "unknown": 0}
+    assert result["probes_by_origin"] == {"lan": 0, "vpn": 1, "outside": 1, "unknown": 0}
+    assert result["app_paths_by_origin"] == {"lan": 0, "vpn": 0, "outside": 1, "unknown": 0}
+
+
+def test_a_probe_and_an_application_path_answered_with_a_success_are_counted_apart(tmp_path: Path) -> None:
+    directory = tmp_path / "logs"
+    directory.mkdir()
+    recent = NOW - timedelta(hours=1)
+    (directory / "proxy-host-2_access.log").write_text(
+        "\n".join(
+            [
+                _npm_line(recent, 200, "spa.org", "/.env", "203.0.113.5"),
+                _npm_line(recent, 404, "spa.org", "/.git/config", "203.0.113.5"),
+                _npm_line(recent, 200, "wp.org", "/xmlrpc.php", "203.0.113.6"),
+                _npm_line(recent, 200, "wp.org", "/wp-login.php", "192.168.1.5"),
+                _npm_line(recent, 404, "wp.org", "/cgi-bin/x", "203.0.113.6"),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = unit.npm_counts(directory, NOW - timedelta(hours=24), VPN, LAN)
+
+    assert result["vhosts"]["spa.org"]["probes"] == 2 and result["vhosts"]["spa.org"]["probes_ok"] == 1
+    assert result["vhosts"]["wp.org"]["app_paths"] == 3 and result["vhosts"]["wp.org"]["app_paths_ok"] == 2
+    assert result["probes_ok_by_origin"] == {"lan": 0, "vpn": 0, "outside": 1, "unknown": 0}
 
 
 def test_the_file_holds_counts_and_never_an_address_a_path_or_a_user(tmp_path: Path, monkeypatch) -> None:
@@ -103,7 +130,7 @@ def test_the_file_holds_counts_and_never_an_address_a_path_or_a_user(tmp_path: P
     report = unit.collect(NOW, VPN, LAN, _npm_directory(tmp_path))
     text = json.dumps(report)
 
-    for secret in ("203.0.113", "192.168.1.20", "10.223.207.2", "198.51.100", "2001:db8", "/.env", "etc/passwd", "admin", "big-brother", "agent", "wp-login"):
+    for secret in ("203.0.113", "192.168.1.20", "10.223.207.2", "198.51.100", "2001:db8", "/.env", "etc/passwd", "admin", "big-brother", "agent", "wp-login", "xmlrpc"):
         assert secret.lower() not in text.lower(), secret
     assert report["sources"] == {"ssh": "ok", "kernel": "ok", "npm": "ok"}
 
@@ -196,21 +223,74 @@ def test_a_quiet_host_has_no_finding() -> None:
     assert assess_logs([("local", _logs(ssh=quiet, kernel={"docker_user_refuse": _zero()}), "")], SecurityDefinition()) == []
 
 
-def test_the_proxy_names_the_virtual_hosts_that_were_scanned() -> None:
-    npm = {
+def _vhost(**counts: int) -> dict[str, int]:
+    base = {"2xx": 0, "3xx": 0, "4xx": 0, "5xx": 0, "probes": 0, "probes_ok": 0, "app_paths": 0, "app_paths_ok": 0}
+    return {**base, **counts}
+
+
+def _npm(**vhosts: dict[str, int]) -> dict:
+    return {
         "requests": 120,
-        "vhosts": {
-            "a.org": {"2xx": 50, "3xx": 0, "4xx": 5, "5xx": 0, "scans": 4},
-            "b.org": {"2xx": 60, "3xx": 0, "4xx": 0, "5xx": 5, "scans": 0},
-        },
-        "scans_by_origin": {**_zero(), "outside": 3, "vpn": 1},
+        "vhosts": vhosts,
+        "probes_by_origin": {**_zero(), "outside": 3, "vpn": 1},
+        "probes_ok_by_origin": _zero(),
+        "app_paths_by_origin": {**_zero(), "outside": 500},
     }
 
-    [finding] = assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition(npm_scans_outside_watch=3))
 
-    assert finding.key == "logs.npm" and finding.severity == WATCH
-    assert finding.evidence[0] == "scanner-looking requests: 1 VPN, 3 outside"
-    assert finding.evidence[1:] == ("a.org: 4 scanner-looking, 5 in 4xx, 0 in 5xx",)
+def test_the_proxy_counts_probes_and_application_paths_apart_per_virtual_host() -> None:
+    npm = _npm(**{"a.org": _vhost(probes=4, app_paths=500, app_paths_ok=450), "b.org": _vhost(**{"5xx": 5})})
+
+    [finding] = assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition(npm_scans_outside_watch=1000))
+
+    assert finding.key == "logs.npm" and finding.severity == INFORMATION
+    assert finding.evidence[:2] == ("probes (/.env, /.git…): 1 VPN, 3 outside", "application paths (wp-login, xmlrpc…): 500 outside")
+    assert "a.org: 4 probe(s), 0 answered 2xx" in finding.evidence
+    assert "a.org: 500 application path request(s), 450 answered 2xx" in finding.evidence
+    assert not any("b.org" in line for line in finding.evidence)
+
+
+def test_the_threshold_counts_probes_and_application_paths_from_outside() -> None:
+    npm = _npm(**{"a.org": _vhost(probes=4, app_paths=500)})
+
+    assert assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition(npm_scans_outside_watch=500))[0].severity == WATCH
+    assert assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition(npm_scans_outside_watch=503))[0].severity == WATCH
+    assert assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition(npm_scans_outside_watch=504))[0].severity == INFORMATION
+
+
+def test_a_probe_answered_with_a_success_is_to_watch_whatever_the_threshold() -> None:
+    npm = _npm(**{"spa.org": _vhost(probes=2, probes_ok=2), "fine.org": _vhost(probes=9)})
+
+    findings = {finding.key: finding for finding in assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition())}
+
+    answered = findings["logs.npm.probe_answered"]
+    assert answered.severity == WATCH and answered.evidence == ("spa.org: 2 of 2 probe(s) answered 2xx",)
+    assert "single-page" in answered.unknown and "accepted_proxy_hosts" in answered.unknown
+    assert findings["logs.npm"].severity == INFORMATION
+
+
+def test_a_host_accepted_by_name_is_counted_not_reported() -> None:
+    npm = _npm(**{"spa.org": _vhost(probes=2, probes_ok=2)})
+
+    keys = [item.key for item in assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition(accepted_proxy_hosts=("spa.org",)))]
+
+    assert "logs.npm.probe_answered" not in keys and "logs.npm" in keys
+
+
+def test_an_application_path_answered_with_a_success_alone_is_never_a_watch() -> None:
+    npm = {**_npm(**{"wp.org": _vhost(app_paths=500, app_paths_ok=500)}), "probes_by_origin": _zero()}
+
+    [finding] = assess_logs([("local", _logs(npm=npm), "")], SecurityDefinition())
+
+    assert finding.key == "logs.npm" and finding.severity == INFORMATION
+
+
+def test_a_reading_written_before_probes_and_application_paths_were_told_apart_is_still_read() -> None:
+    old = {"requests": 100, "vhosts": {"a.org": {"scans": 7, "4xx": 7}}, "scans_by_origin": {**_zero(), "outside": 7}}
+
+    [finding] = assess_logs([("local", _logs(npm=old), "")], SecurityDefinition())
+
+    assert "a.org: 7 probe(s), 0 answered 2xx" in finding.evidence
 
 
 def test_the_kernel_log_says_it_keeps_at_most_six_a_minute() -> None:
@@ -263,16 +343,17 @@ def test_parse_accepts_only_a_dated_reading() -> None:
     assert parse_logs(json.dumps({"collected_at": "2026-11-20T12:00:00+00:00"})) is not None
 
 
-def test_the_declaration_reads_the_two_thresholds(tmp_path: Path) -> None:
+def test_the_declaration_reads_the_two_thresholds_and_the_accepted_hosts(tmp_path: Path) -> None:
     from aistack.security.yaml import load_security_yaml
 
     path = tmp_path / "s.yml"
-    path.write_text("ssh_failed_outside_watch: 20\nnpm_scans_outside_watch: 100\n", encoding="utf-8")
+    path.write_text("ssh_failed_outside_watch: 20\nnpm_scans_outside_watch: 100\naccepted_proxy_hosts:\n  - spa.org\n", encoding="utf-8")
     bad = tmp_path / "b.yml"
     bad.write_text("ssh_failed_outside_watch: -1\n", encoding="utf-8")
 
     definition = load_security_yaml(path)
 
     assert (definition.ssh_failed_outside_watch, definition.npm_scans_outside_watch) == (20, 100)
+    assert definition.accepted_proxy_hosts == ("spa.org",)
     with pytest.raises(ValueError, match="ssh_failed_outside_watch"):
         load_security_yaml(bad)

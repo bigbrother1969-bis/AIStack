@@ -60,3 +60,4 @@ class SecurityDefinition:
     # T3c: failed logins and scanner requests counted from the host's logs (0 = information only).
     ssh_failed_outside_watch: int = 0
     npm_scans_outside_watch: int = 0
+    accepted_proxy_hosts: tuple[str, ...] = ()

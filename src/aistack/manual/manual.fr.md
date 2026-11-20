@@ -980,8 +980,12 @@ journaux de l'hôte disent de qui a essayé d'entrer, sur les dernières 24 heur
 et par sorte de réseau (le LAN, le VPN, l'extérieur) : les connexions SSH
 échouées, les paquets refusés et journalisés par `DOCKER-USER` et, quand Nginx
 Proxy Manager garde ses journaux sur l'hôte, les requêtes par classe de statut
-et par hôte virtuel et celles qui demandent un chemin que demandent les
-balayeurs (`/.env`, `/.git`, `wp-login.php`…). Elle n'écrit que des comptes,
+et par hôte virtuel, les sondes (`/.env`, `/.git` : personne d'autre qu'un
+balayeur ne les demande) et les chemins d'application (`wp-login.php`,
+`xmlrpc.php`), avec combien de chacun ont reçu une réponse de succès (2xx). Une
+sonde qu'un hôte virtuel traite par un succès est un constat à surveiller quel
+que soit le seuil (un hôte qui répond 200 à tous les chemins, une application
+monopage, s'accepte par son nom dans `accepted_proxy_hosts`). Elle n'écrit que des comptes,
 jamais une adresse, un chemin, un nom de compte ni une ligne de journal. On
 l'installe comme l'hygiène de l'hôte :
 

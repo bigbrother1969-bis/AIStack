@@ -161,29 +161,7 @@ def assess_one(logs: HostLogs | None, note: str, definition: SecurityDefinition)
 
     npm = logs.data.get("npm")
     if logs.sources.get("npm") == "ok" and isinstance(npm, dict):
-        raw_vhosts = npm.get("vhosts")
-        vhosts = raw_vhosts if isinstance(raw_vhosts, dict) else {}
-        scans = _counts(npm.get("scans_by_origin"))
-        requests = npm.get("requests") if isinstance(npm.get("requests"), int) else 0
-        limit = definition.npm_scans_outside_watch
-        scanned = sorted(
-            ((name, row) for name, row in vhosts.items() if isinstance(row, dict) and row.get("scans")),
-            key=lambda item: -int(item[1].get("scans", 0)),
-        )
-        if requests and (sum(scans.values()) or scanned):
-            lines = [f"scanner-looking requests: {_split(scans)}"] + [
-                f"{name}: {row.get('scans', 0)} scanner-looking, {row.get('4xx', 0)} in 4xx, {row.get('5xx', 0)} in 5xx"
-                for name, row in scanned
-            ]
-            findings.append(
-                Finding(
-                    "logs.npm",
-                    WATCH if limit and scans["outside"] + scans["unknown"] >= limit else INFORMATION,
-                    f"Proxy: {sum(scans.values())} scanner-looking request(s) among {requests} in the last {hours} h",
-                    tuple(lines[: definition.max_listed + 1]),
-                    unknown="What was asked and by whom: the unit counts, it keeps neither the path nor the address.",
-                )
-            )
+        findings += _assess_proxy(npm, hours, definition)
 
     kernel = logs.data.get("kernel")
     if logs.sources.get("kernel") == "ok" and isinstance(kernel, dict):
@@ -198,6 +176,80 @@ def assess_one(logs: HostLogs | None, note: str, definition: SecurityDefinition)
                     unknown="How many were refused in all: the log keeps at most six a minute, the firewall's counters count them all.",
                 )
             )
+
+    return findings
+
+
+def _number(row: dict[str, Any], key: str) -> int:
+    value = row.get(key)
+    return value if isinstance(value, int) else 0
+
+
+def _assess_proxy(npm: dict[str, Any], hours: int, definition: SecurityDefinition) -> list[Finding]:
+    """
+    The proxy's counts. A probe (`/.env`, `/.git`: asked by scanners and by
+    nobody else) that was answered with a success is the one thing here
+    worth a finding to watch whatever the threshold; the rest is a count.
+    A reading written before probes and application paths were told apart
+    carries `scans` and is read as probes.
+    """
+
+    raw_vhosts = npm.get("vhosts")
+    vhosts = raw_vhosts if isinstance(raw_vhosts, dict) else {}
+    requests = npm.get("requests") if isinstance(npm.get("requests"), int) else 0
+    probes = _counts(npm.get("probes_by_origin") or npm.get("scans_by_origin"))
+    app_paths = _counts(npm.get("app_paths_by_origin"))
+    accepted = set(definition.accepted_proxy_hosts)
+    limit = definition.npm_scans_outside_watch
+
+    rows = {name: row for name, row in vhosts.items() if isinstance(row, dict)}
+    probed = sorted(
+        ((name, row) for name, row in rows.items() if _number(row, "probes") or _number(row, "scans")),
+        key=lambda item: -(_number(item[1], "probes") or _number(item[1], "scans")),
+    )
+    answered = [(name, row) for name, row in probed if _number(row, "probes_ok") and name not in accepted]
+    used = sorted(
+        ((name, row) for name, row in rows.items() if _number(row, "app_paths")),
+        key=lambda item: -_number(item[1], "app_paths"),
+    )
+    findings: list[Finding] = []
+
+    if answered:
+        findings.append(
+            Finding(
+                "logs.npm.probe_answered",
+                WATCH,
+                f"Proxy: {len(answered)} virtual host(s) answered a scanner's probe with a success in the last {hours} h",
+                tuple(
+                    f"{name}: {_number(row, 'probes_ok')} of {_number(row, 'probes') or _number(row, 'scans')} probe(s) answered 2xx"
+                    for name, row in answered[: definition.max_listed]
+                ),
+                unknown="Whether anything was exposed: a service that answers 200 to every path (a single-page application) does it "
+                "without exposing a file. Accept such a host under accepted_proxy_hosts once you have looked.",
+            )
+        )
+
+    if requests and (sum(probes.values()) or sum(app_paths.values())):
+        lines = [f"probes (/.env, /.git…): {_split(probes)}", f"application paths (wp-login, xmlrpc…): {_split(app_paths)}"]
+        for name, row in probed:
+            lines.append(
+                f"{name}: {_number(row, 'probes') or _number(row, 'scans')} probe(s), {_number(row, 'probes_ok')} answered 2xx"
+            )
+        for name, row in used:
+            lines.append(
+                f"{name}: {_number(row, 'app_paths')} application path request(s), {_number(row, 'app_paths_ok')} answered 2xx"
+            )
+        outside = probes["outside"] + probes["unknown"] + app_paths["outside"] + app_paths["unknown"]
+        findings.append(
+            Finding(
+                "logs.npm",
+                WATCH if limit and outside >= limit else INFORMATION,
+                f"Proxy: {sum(probes.values())} probe(s) and {sum(app_paths.values())} application path request(s) among {requests} in the last {hours} h",
+                tuple(lines[: definition.max_listed + 2]),
+                unknown="What was asked and by whom: the unit counts, it keeps neither the path nor the address. "
+                "An application path answered 2xx is normal for the person who uses the application, and the door of a brute-force attempt for the rest.",
+            )
+        )
 
     return findings
 

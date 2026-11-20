@@ -92,15 +92,21 @@ max_listed: 20
 # Logs (T3c): `aistack-host-logs` counts, over the last 24 hours and by kind
 # of network (LAN, VPN, outside), the failed SSH logins, the packets
 # DOCKER-USER refused and logged, and what Nginx Proxy Manager answered
-# (status classes, scanner-looking requests such as /.env or wp-login.php).
-# It writes counts only: no address, path, user name or log line. These two
-# make the figure from outside (or from an unknown origin) a finding to
-# watch once it reaches the number you set; 0 keeps it to information. Set
-# them above the usual figure of the report.
+# (status classes; probes such as /.env or /.git, which nobody but a scanner
+# asks for; application paths such as wp-login.php or xmlrpc.php). It writes
+# counts only: no address, path, user name or log line. These two make the
+# figure from outside (or from an unknown origin) a finding to watch once it
+# reaches the number you set; 0 keeps it to information. Set them above the
+# usual figure of the report. A probe that a virtual host answers with a
+# success (2xx) is a finding to watch whatever the threshold; a host that
+# answers 200 to every path (a single-page application) and exposes nothing
+# is accepted by name under `accepted_proxy_hosts`.
 
 ssh_failed_outside_watch: 0
 
 npm_scans_outside_watch: 0
+
+accepted_proxy_hosts: []
 
 refusal_window_hours: 24
 

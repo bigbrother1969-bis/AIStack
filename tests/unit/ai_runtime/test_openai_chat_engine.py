@@ -65,6 +65,7 @@ def test_the_answer_is_the_content_and_never_the_reasoning_channel(server):
     assert body["messages"] == [{"role": "user", "content": "Question?"}]
     assert body["model"] == "olala-mini" and body["stream"] is False
     assert body["temperature"] == 0.8 and body["top_p"] == 0.9 and body["top_k"] == 40
+    assert body["repeat_penalty"] == 1.1
     assert "reasoning_effort" not in body
 
 

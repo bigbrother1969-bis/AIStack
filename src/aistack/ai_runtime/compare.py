@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import parse_qs
 
+from aistack.ai_runtime.answer_guard import ALARMIST, CHANGING, CODE, OWNER, VOUS, outside_code
 from aistack.ai_runtime.definition import LocalEngineDefinition
 from aistack.ai_runtime.ollama_engine import DEFAULT_TIMEOUT_SECONDS
 from aistack.ai_runtime.openai_chat_engine import REASONING_EFFORTS
@@ -96,28 +97,12 @@ FLAGS = {
     "intrusion": "parle d'intrusion sans la nier",
 }
 
-# « vous » and the forms of the verbs a model writes to a reader it does not tutoie.
-_VOUS = re.compile(
-    r"\b(vous|votre|vos|exécutez|examinez|vérifiez|consultez|lancez|regardez|considérez|utilisez|tapez|ouvrez"
-    r"|affichez|listez|lisez|contrôlez|pouvez|devez|avez|êtes|rappelez-vous|veuillez|suivez|essayez|notez)\b",
-    re.IGNORECASE,
-)
 _ENGLISH_WORDS = frozenset(
     "the and of is are to that this with these were was for on in be it as by from you should your".split()
 )
 _FRENCH_WORDS = frozenset("le la les des du de et est que qui un une sur dans pour au aux ce cette ces par pas".split())
-_ALARMIST = re.compile(r"\b(inquiétant|inquiétante|alarmant|alarmante|attaquant|malveillant|malveillante|pirate|piraté)\b", re.IGNORECASE)
 _NEGATION = re.compile(r"\b(pas|aucun|aucune|sans|ni|jamais)\b|\bn['’]|\bne\b", re.IGNORECASE)
-_OWNER = re.compile(r"\bowner\b", re.IGNORECASE)
 _INTRUSION = re.compile(r"\b(intrusion|compromis|compromission|piraté)\b", re.IGNORECASE)
-_CHANGING = re.compile(
-    r"(\brm\s+-|\brm\s+/|\bsystemctl\s+(stop|start|restart|reload|enable|disable|mask|kill)\b"
-    r"|\bdocker\s+(rm|stop|kill|restart|run|exec|rmi|compose\s+(down|up|restart|rm))\b|\b(kill|pkill|killall)\s"
-    r"|\bchmod\b|\bchown\b|\biptables\b|\bufw\s+(allow|deny|delete|enable|disable|reject|insert)\b"
-    r"|\bapt(-get)?\s+(remove|purge|install|upgrade|dist-upgrade|autoremove)\b|\breboot\b|\bshutdown\b|\bmkfs\b"
-    r"|\bdd\s+if=|\bsed\s+-i\b|\btee\s|\bmv\s|\bcp\s|\btruncate\b|\bpasswd\b|\buserdel\b|>\s*/)"
-)
-_CODE = re.compile(r"`([^`\n]+)`")
 
 
 def review(text: str, lang: str) -> tuple[str, ...]:
@@ -126,15 +111,15 @@ def review(text: str, lang: str) -> tuple[str, ...]:
     if not text.strip():
         return ("empty",)
     flags: list[str] = []
-    if lang == "fr" and _VOUS.search(text):
+    if lang == "fr" and VOUS.search(text):
         flags.append("vous")
-    if _OWNER.search(text):
+    if OWNER.search(text):
         flags.append("owner")
-    if any(_CHANGING.search(span) for span in _CODE.findall(text)) or _CHANGING.search(_outside_code(text)):
+    if any(CHANGING.search(span) for span in CODE.findall(text)) or CHANGING.search(outside_code(text)):
         flags.append("changing_command")
     if lang == "fr" and _is_english(text):
         flags.append("english")
-    if _ALARMIST.search(text):
+    if ALARMIST.search(text):
         flags.append("alarmist")
     if any(_INTRUSION.search(sentence) and not _NEGATION.search(sentence) for sentence in _sentences(text)):
         flags.append("intrusion")
@@ -148,20 +133,14 @@ def _sentences(text: str) -> list[str]:
 def _is_english(text: str) -> bool:
     """More English function words than French ones, enough of them to be sure; code spans are ignored."""
 
-    words = re.findall(r"[a-zàâçéèêëîïôûùüÿœ']+", _CODE.sub(" ", text).lower())
+    words = re.findall(r"[a-zàâçéèêëîïôûùüÿœ']+", CODE.sub(" ", text).lower())
     english = sum(1 for word in words if word in _ENGLISH_WORDS)
     french = sum(1 for word in words if word in _FRENCH_WORDS)
     return english >= 4 and english > french
 
 
-def _outside_code(text: str) -> str:
-    """Lines that look like a shell prompt, for commands not put in backticks."""
-
-    return "\n".join(line for line in text.splitlines() if line.lstrip().startswith(("$ ", "# ", "sudo ")))
-
-
 def commands_cited(text: str) -> int:
-    return len(_CODE.findall(text))
+    return len(CODE.findall(text))
 
 
 # ---------------------------------------------------------------------------

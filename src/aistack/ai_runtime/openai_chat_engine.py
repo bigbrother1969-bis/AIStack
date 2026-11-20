@@ -23,7 +23,7 @@ REASONING_EFFORTS = ("disabled", "low", "medium", "high")
 # (a call of 2940 tokens was seen, 20 Nov. 2026, at a low temperature). Past this it is stopped, and the
 # caller hands over to the next engine.
 DEFAULT_MAX_TOKENS = 800
-DEFAULT_SAMPLING = {"temperature": 0.8, "top_p": 0.9, "top_k": 40}
+DEFAULT_SAMPLING = {"temperature": 0.8, "top_p": 0.9, "top_k": 40, "repeat_penalty": 1.1}
 
 
 class OpenAIChatEngine:

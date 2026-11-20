@@ -145,3 +145,15 @@ def test_the_engine_is_built_with_the_system_directive_of_the_language_asked():
     assert "tutoies" in guide._engine_of(chat(1), "fr").system
     assert guide._engine_of(chat(1), "en").system == ""
     assert guide._engine_of(chat(1)).system == ""
+
+
+def test_an_answer_that_breaks_the_rules_is_handed_to_the_next_engine_but_not_from_the_last(servers):
+    bad = {"choices": [{"message": {"content": "Une tentative de compromission."}}]}
+    first, _ = servers(bad)
+    second, _ = servers(OLLAMA_REPLY)
+
+    handed = guide.ask_local(finding(), "reason", "fr", "", definition(chat(first, label="olala"), ollama(second)))
+    last = guide.ask_local(finding(), "reason", "fr", "", definition(ollama(dead_port()), chat(first, label="olala")))
+
+    assert handed.response == "from ollama" and "olala answer set aside" in handed.model
+    assert last.reachable and "compromission" in last.response

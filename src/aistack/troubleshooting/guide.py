@@ -20,6 +20,7 @@ from dataclasses import replace
 from typing import Any
 
 from aistack.ai_runtime.definition import AIRuntimeDefinition, LocalEngineDefinition
+from aistack.ai_runtime.answer_guard import GuardedEngine
 from aistack.ai_runtime.engine import AIEngine
 from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
 from aistack.ai_runtime.gemini_engine import GeminiEngine
@@ -135,15 +136,19 @@ def ask_ollama(
     )
 
 
-def _engine_of(declared: LocalEngineDefinition, target_language: str = "en") -> AIEngine:
+def _engine_of(declared: LocalEngineDefinition, target_language: str = "en", guarded: bool = False) -> AIEngine:
+    """The engine as declared; `guarded` sets aside an answer that breaks the rules, to hand it on."""
+
     if declared.kind == "openai_chat":
-        return OpenAIChatEngine(
+        engine = OpenAIChatEngine(
             declared.host, declared.port, declared.model, declared.timeout, declared.reasoning_effort, declared.label,
             declared.temperature,
             declared.max_tokens,
             system_directive(target_language),
         )
-    return OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
+        return GuardedEngine(engine, target_language, engine.label) if guarded else engine
+    plain = OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
+    return GuardedEngine(plain, target_language, declared.label or declared.model) if guarded else plain
 
 
 def ask_one(
@@ -153,12 +158,13 @@ def ask_one(
     target_language: str,
     context: str = "",
     translator: AIEngine | None = None,
+    guarded: bool = False,
 ) -> AIRuntimeAnswer:
     """One answer from one declared engine, with no hand-over to another."""
 
     return _CALLS[operation](
         finding,
-        _engine_of(engine, target_language),
+        _engine_of(engine, target_language, guarded),
         engine.label or engine.model,
         target_language=target_language,
         translator=translator,
@@ -198,7 +204,10 @@ def ask_local(
     )
 
     def ask(engine: LocalEngineDefinition) -> AIRuntimeAnswer:
-        return ask_one(engine, finding, operation, target_language, context, translator)
+        # An answer that breaks the rules is set aside only when another engine can still answer.
+        return ask_one(
+            engine, finding, operation, target_language, context, translator, guarded=engine is not declared[-1]
+        )
 
     if len(declared) == 1:
         return ask(declared[0])

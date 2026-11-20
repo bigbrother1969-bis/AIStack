@@ -5,8 +5,6 @@ from aistack.config import configured
 import subprocess
 from pathlib import Path
 
-from aistack.ai_runtime.ollama_engine import OllamaEngine
-from aistack.ai_runtime.operations import explain, reason, recommend
 from aistack.ai_runtime.reasoning_history import record_ai_reasoning
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.runtime_finding import RuntimeFinding
@@ -19,6 +17,7 @@ from aistack.providers.docker import DockerProvider
 from aistack.providers.host.provider import HostProvider
 from aistack.runtime.evaluate import evaluate
 from aistack.runtime.idle_consumption import find_unexplained_consumption
+from aistack.troubleshooting.guide import ask_local
 
 DEFAULT_RESOURCE_PRIORITY = (
     configured(Path(__file__).resolve().parents[1]
@@ -100,10 +99,10 @@ class AiReasonTask:
     round in the AI Reasoning History (read by the Time Machine), even
     when no answer was reachable: that is an outcome too.
 
-    The engine is configured at use (host, port, model, timeout from the
-    governed definition) and is built here, as the Beszel provider is
-    built by its Task. Nothing secret passes through the request, which
-    carries no payload.
+    The engines are the declared ones (`ask_local`: Ollama alone, or the
+    ordered `engines:` with hand-over and, for an engine that declares one,
+    the switch that starts it on demand), built at use. Nothing secret
+    passes through the request, which carries no payload.
 
     Returns an Observation of plain values: the note that explains why
     there may be no finding, and for each finding what was asked and
@@ -124,34 +123,12 @@ class AiReasonTask:
         reasoned: list[dict[str, object]] = []
 
         if findings:
-            # Built even when `model` is empty: the operations then return
-            # before asking it. The declared timeout is passed on, since
-            # slower models need more than `OllamaEngine`'s default.
-            engine = OllamaEngine(
-                host=ai_runtime_definition.host,
-                port=ai_runtime_definition.port,
-                model=ai_runtime_definition.model or "",
-                timeout=ai_runtime_definition.timeout,
-            )
-
-            # A second, fast model translates answers into French when they
-            # are not already; None when no `translator_model:` is declared.
-            translator = (
-                OllamaEngine(
-                    host=ai_runtime_definition.host,
-                    port=ai_runtime_definition.port,
-                    model=ai_runtime_definition.translator_model,
-                    timeout=ai_runtime_definition.timeout,
-                )
-                if ai_runtime_definition.translator_model
-                else None
-            )
-
             for finding in findings:
-                answers = (
-                    reason(finding, engine, ai_runtime_definition.model, translator=translator),
-                    explain(finding, engine, ai_runtime_definition.model, translator=translator),
-                    recommend(finding, engine, ai_runtime_definition.model, translator=translator),
+                # The same engines, in the same order, with the same hand-over and the same switch as
+                # the console's pages: the watch is one more reader of `engines:`, not a path of its own.
+                answers = tuple(
+                    ask_local(finding, operation, "fr", definition=ai_runtime_definition)
+                    for operation in ("reason", "explain", "recommend")
                 )
 
                 record_ai_reasoning(finding, answers)

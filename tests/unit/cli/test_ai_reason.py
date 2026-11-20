@@ -212,12 +212,47 @@ def test_main_builds_the_engine_with_the_declared_timeout(
         def complete(self, prompt):
             return "", "not actually called in this test"
 
-    monkeypatch.setattr(task_module, "OllamaEngine", RecordingOllamaEngine)
+    monkeypatch.setattr("aistack.troubleshooting.guide.OllamaEngine", RecordingOllamaEngine)
 
     cli.main()
 
     assert captured_kwargs["timeout"] == 900.0
     assert captured_kwargs["model"] == "deepseek-r1:1.5b"
+
+
+def test_the_watch_asks_the_declared_engines_in_order_through_ask_local(workspace, monkeypatch, capsys):
+    from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
+
+    ai_runtime_path = workspace / "ai_runtime.yml"
+    ai_runtime_path.write_text(
+        "host: 127.0.0.1\nport: 1\nmodel: qwen\nengines:\n"
+        "  - {kind: openai_chat, host: 127.0.0.1, port: 18095, model: olala, label: Olala,"
+        " switch: {url: 'http://127.0.0.1:18096', token_file: /etc/aistack/engine-switch.token}}\n"
+        "  - {kind: ollama, host: 127.0.0.1, port: 1, model: qwen}\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(task_module, "DEFAULT_AI_RUNTIME", ai_runtime_path)
+    resource_priority_path = workspace / "resource_priority.yml"
+    resource_priority_path.write_text(RESOURCE_PRIORITY_YAML, encoding="utf-8")
+    monkeypatch.setattr(task_module, "DEFAULT_RESOURCE_PRIORITY", resource_priority_path)
+    monkeypatch.setattr(
+        "aistack.providers.docker.DockerProvider",
+        lambda: FakeDockerProvider([ContainerCpuReading(container="booklore_db", cpu_percent=12.2)]),
+    )
+    monkeypatch.setattr("aistack.providers.host.provider.HostProvider", lambda: FakeHostProvider())
+
+    asked = []
+
+    def fake_ask_local(finding, operation, language, context="", definition=None):
+        asked.append((operation, language, [engine.label or engine.model for engine in definition.local_engines()], definition.engines[0].switch.url))
+        return AIRuntimeAnswer(subject=finding.subject, operation=operation, model="Olala", prompt="p", response="ok", reachable=True)
+
+    monkeypatch.setattr(task_module, "ask_local", fake_ask_local)
+
+    cli.main()
+
+    assert [item[0] for item in asked] == ["reason", "explain", "recommend"]
+    assert {(item[1], tuple(item[2]), item[3]) for item in asked} == {("fr", ("Olala", "qwen"), "http://127.0.0.1:18096")}
 
 
 def test_main_does_not_record_reasoning_history_when_nothing_was_asked(

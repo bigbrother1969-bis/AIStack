@@ -140,6 +140,7 @@ def _engine_of(declared: LocalEngineDefinition) -> AIEngine:
         return OpenAIChatEngine(
             declared.host, declared.port, declared.model, declared.timeout, declared.reasoning_effort, declared.label,
             declared.temperature,
+            declared.max_tokens,
         )
     return OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
 

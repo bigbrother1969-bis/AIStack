@@ -132,3 +132,28 @@ def test_an_answer_spent_on_reasoning_says_so(server):
     text, reason = engine(server, label="olala").complete("q")
 
     assert text == "" and "olala used its answer on reasoning and gave no final text" in reason
+
+
+def test_an_engine_without_reasoning_is_bounded_and_one_that_reasons_is_not(server):
+    engine(server).complete("q")
+    engine(server, reasoning_effort="disabled").complete("q")
+    engine(server, reasoning_effort="low").complete("q")
+    engine(server, reasoning_effort="low", max_tokens=300).complete("q")
+    engine(server, max_tokens=500).complete("q")
+
+    sent = [body.get("max_tokens") for body in server.bodies]
+    assert sent == [800, 800, None, 300, 500]
+
+
+def test_an_answer_cut_at_the_limit_is_not_shown_and_hands_over(server):
+    server.answer = {"choices": [{"message": {"content": "la la la la la"}, "finish_reason": "length"}]}
+
+    text, reason = engine(server, label="olala").complete("q")
+
+    assert text == "" and "olala was stopped at 800 tokens without finishing, most likely repeating itself" in reason
+
+
+def test_a_normal_stop_is_an_answer(server):
+    server.answer = {"choices": [{"message": {"content": "done"}, "finish_reason": "stop"}]}
+
+    assert engine(server).complete("q") == ("done", "")

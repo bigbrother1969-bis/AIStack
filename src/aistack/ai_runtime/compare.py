@@ -24,7 +24,7 @@ from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
 
 _SPEC = re.compile(r"^(?P<kind>[a-z_]+)@(?P<host>[^:/\s]+):(?P<port>\d+)/(?P<model>[^?\s]+)(?:\?(?P<query>\S*))?$")
-_QUERY_KEYS = ("effort", "label", "timeout", "temperature")
+_QUERY_KEYS = ("effort", "label", "timeout", "temperature", "max_tokens")
 
 
 def parse_engine(spec: str) -> LocalEngineDefinition:
@@ -56,6 +56,13 @@ def parse_engine(spec: str) -> LocalEngineDefinition:
         if not 0 <= value <= 2:
             raise ValueError(f"engine {spec!r}: temperature {temperature!r} is not a number from 0 to 2")
 
+    max_tokens = query.get("max_tokens", [None])[0]
+    if max_tokens is not None:
+        if kind != "openai_chat":
+            raise ValueError(f"engine {spec!r}: max_tokens is only for the openai_chat kind")
+        if not max_tokens.isdigit() or int(max_tokens) < 1:
+            raise ValueError(f"engine {spec!r}: max_tokens {max_tokens!r} is not a whole number from 1")
+
     return LocalEngineDefinition(
         kind=kind,
         host=found["host"],
@@ -65,6 +72,7 @@ def parse_engine(spec: str) -> LocalEngineDefinition:
         reasoning_effort=effort,
         label=query.get("label", [""])[0],
         temperature=float(temperature) if temperature is not None else None,
+        max_tokens=int(max_tokens) if max_tokens is not None else None,
     )
 
 
@@ -91,7 +99,7 @@ FLAGS = {
 # « vous » and the forms of the verbs a model writes to a reader it does not tutoie.
 _VOUS = re.compile(
     r"\b(vous|votre|vos|exécutez|examinez|vérifiez|consultez|lancez|regardez|considérez|utilisez|tapez|ouvrez"
-    r"|affichez|listez|lisez|contrôlez|pouvez|devez|avez|êtes|faites|rappelez-vous|veuillez|suivez|essayez|notez)\b",
+    r"|affichez|listez|lisez|contrôlez|pouvez|devez|avez|êtes|rappelez-vous|veuillez|suivez|essayez|notez)\b",
     re.IGNORECASE,
 )
 _ENGLISH_WORDS = frozenset(

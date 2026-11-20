@@ -170,6 +170,9 @@ def test_without_engines_the_one_declared_ollama_is_the_local_engine(tmp_path: P
         ("engines:\n  - {kind: openai_chat, host: h, port: 1, model: m, temperature: 3}\n", "not a number from 0 to 2"),
         ("engines:\n  - {kind: openai_chat, host: h, port: 1, model: m, temperature: hot}\n", "not a number from 0 to 2"),
         ("engines:\n  - {kind: ollama, host: h, port: 1, model: m, temperature: 0.3}\n", "only for the openai_chat kind"),
+        ("engines:\n  - {kind: ollama, host: h, port: 1, model: m, max_tokens: 100}\n", "max_tokens is only for the openai_chat kind"),
+        ("engines:\n  - {kind: openai_chat, host: h, port: 1, model: m, max_tokens: 0}\n", "not a whole number from 1"),
+        ("engines:\n  - {kind: openai_chat, host: h, port: 1, model: m, max_tokens: lots}\n", "not a whole number from 1"),
     ],
 )
 def test_a_wrong_engine_is_refused_by_name(tmp_path: Path, engines: str, message: str):
@@ -189,3 +192,16 @@ def test_a_declared_temperature_loads_and_is_optional(tmp_path: Path):
     )
 
     assert [engine.temperature for engine in definition.local_engines()] == [0.3, 0.0, None]
+
+
+def test_a_declared_max_tokens_loads_and_is_optional(tmp_path: Path):
+    definition = load_ai_runtime_yaml(
+        write(
+            tmp_path,
+            "host: h\nport: 1\nengines:\n"
+            "  - {kind: openai_chat, host: h, port: 2, model: m, max_tokens: 500}\n"
+            "  - {kind: openai_chat, host: h, port: 3, model: m}\n",
+        )
+    )
+
+    assert [engine.max_tokens for engine in definition.local_engines()] == [500, None]

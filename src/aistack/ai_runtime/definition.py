@@ -15,6 +15,8 @@ class LocalEngineDefinition:
     `label` is what an answer says when this engine stands in for another.
     `temperature` (0 to 2, `openai_chat` only) replaces the sampling default of the
     model card, which is lively; a lower one gives steadier, calmer answers.
+    `max_tokens` (`openai_chat` only) bounds an answer: without it, an engine with no
+    reasoning is bounded by `DEFAULT_MAX_TOKENS`, one that reasons by its timeout only.
     """
 
     kind: str
@@ -25,6 +27,7 @@ class LocalEngineDefinition:
     reasoning_effort: str | None = None
     label: str = ""
     temperature: float | None = None
+    max_tokens: int | None = None
 
 
 @dataclass(frozen=True)

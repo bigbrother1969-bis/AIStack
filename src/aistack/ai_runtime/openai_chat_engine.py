@@ -19,6 +19,10 @@ _USER_AGENT = "AIStack-AIRuntime/1.0"
 DEFAULT_TIMEOUT_SECONDS = 120.0
 REASONING_EFFORTS = ("disabled", "low", "medium", "high")
 # What the model's card advises for Olala; harmless defaults for another server.
+# An engine with no reasoning answers in 100 to 400 tokens; one that loops would go on until the timeout
+# (a call of 2940 tokens was seen, 20 Nov. 2026, at a low temperature). Past this it is stopped, and the
+# caller hands over to the next engine.
+DEFAULT_MAX_TOKENS = 800
 DEFAULT_SAMPLING = {"temperature": 0.8, "top_p": 0.9, "top_k": 40}
 
 
@@ -32,6 +36,7 @@ class OpenAIChatEngine:
         reasoning_effort: str | None = None,
         label: str = "",
         temperature: float | None = None,
+        max_tokens: int | None = None,
     ) -> None:
         self.host = host
         self.port = port
@@ -40,6 +45,9 @@ class OpenAIChatEngine:
         self.reasoning_effort = reasoning_effort
         self.label = label or model or "chat engine"
         self.temperature = temperature
+        self.max_tokens = max_tokens if max_tokens is not None else (
+            DEFAULT_MAX_TOKENS if reasoning_effort in (None, "disabled") else None
+        )
 
     def complete(self, prompt: str) -> tuple[str, str]:
         payload: dict[str, object] = {
@@ -50,6 +58,8 @@ class OpenAIChatEngine:
         }
         if self.reasoning_effort:
             payload["reasoning_effort"] = self.reasoning_effort
+        if self.max_tokens is not None:
+            payload["max_tokens"] = self.max_tokens
 
         request = urllib.request.Request(
             f"http://{self.host}:{self.port}/v1/chat/completions",
@@ -86,6 +96,9 @@ class OpenAIChatEngine:
         choices = answer.get("choices")
         message = choices[0].get("message") if isinstance(choices, list) and choices and isinstance(choices[0], dict) else None
         text = message.get("content") if isinstance(message, dict) else None
+        finish = choices[0].get("finish_reason") if isinstance(choices, list) and choices and isinstance(choices[0], dict) else None
+        if finish == "length" and self.max_tokens is not None and isinstance(text, str) and text.strip():
+            return "", f"{self.label} was stopped at {self.max_tokens} tokens without finishing, most likely repeating itself"
         if not isinstance(text, str) or not text.strip():
             if isinstance(message, dict) and str(message.get("reasoning_content") or "").strip():
                 return "", f"{self.label} used its answer on reasoning and gave no final text (try a lower reasoning_effort)"

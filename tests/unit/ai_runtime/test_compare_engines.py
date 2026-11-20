@@ -30,6 +30,20 @@ def test_a_temperature_is_read_shown_and_checked():
         compare.parse_engine("openai_chat@h:1/m?temperature=warm")
 
 
+def test_a_token_limit_is_read_and_checked():
+    assert compare.parse_engine("openai_chat@h:1/m?max_tokens=400").max_tokens == 400
+    with pytest.raises(ValueError, match="only for the openai_chat kind"):
+        compare.parse_engine("ollama@h:1/m?max_tokens=400")
+    with pytest.raises(ValueError, match="not a whole number from 1"):
+        compare.parse_engine("openai_chat@h:1/m?max_tokens=0")
+    with pytest.raises(ValueError, match="not a whole number from 1"):
+        compare.parse_engine("openai_chat@h:1/m?max_tokens=lots")
+
+
+def test_a_past_participle_is_not_a_vouvoiement():
+    assert "vous" not in compare.review("Il n'y a pas d'informations sur qui les a faites.", "fr")
+
+
 def test_a_model_name_keeps_its_colon_and_the_options_are_optional():
     engine = compare.parse_engine("ollama@192.168.1.10:11434/qwen2.5:7b")
 

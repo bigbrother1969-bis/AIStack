@@ -137,3 +137,5 @@ def test_a_declared_temperature_reaches_the_engine_that_is_built():
 
     assert built.temperature == 0.3
     assert guide._engine_of(chat(1)).temperature is None
+    assert guide._engine_of(chat(1, max_tokens=300)).max_tokens == 300
+    assert guide._engine_of(chat(1)).max_tokens == 800

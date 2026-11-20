@@ -39,6 +39,12 @@ def _engines(raw: object, path: Path, default_timeout: float) -> tuple[LocalEngi
                 raise ValueError(f"AI Runtime definition {path}: engine {index}: temperature is only for the openai_chat kind")
             if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or not 0 <= temperature <= 2:
                 raise ValueError(f"AI Runtime definition {path}: engine {index} has a temperature {temperature!r} that is not a number from 0 to 2")
+        max_tokens = item.get("max_tokens")
+        if max_tokens is not None:
+            if kind != "openai_chat":
+                raise ValueError(f"AI Runtime definition {path}: engine {index}: max_tokens is only for the openai_chat kind")
+            if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens < 1:
+                raise ValueError(f"AI Runtime definition {path}: engine {index} has a max_tokens {max_tokens!r} that is not a whole number from 1")
         found.append(
             LocalEngineDefinition(
                 kind=kind,
@@ -49,6 +55,7 @@ def _engines(raw: object, path: Path, default_timeout: float) -> tuple[LocalEngi
                 reasoning_effort=str(effort) if effort is not None else None,
                 label=str(item.get("label") or ""),
                 temperature=float(temperature) if temperature is not None else None,
+                max_tokens=int(max_tokens) if max_tokens is not None else None,
             )
         )
     return tuple(found)

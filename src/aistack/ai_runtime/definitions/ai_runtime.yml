@@ -14,7 +14,8 @@
 # `ollama` or `openai_chat` (POST /v1/chat/completions, e.g. the llama-server
 # of the Olala fork); `reasoning_effort` (disabled, low, medium, high) and
 # `label` are optional, and so is `temperature` (0 to 2, `openai_chat` only: lower
-# answers more steadily than the model card's 0.8). Without `engines:`, the one Ollama above answers.
+# answers more steadily than the model card's 0.8) and `max_tokens`
+# (`openai_chat` only; 800 by default without reasoning: a looping answer is stopped). Without `engines:`, the one Ollama above answers.
 #
 # engines:
 #   - {kind: openai_chat, host: 127.0.0.1, port: 8080, model: olala-mini-7a1b, reasoning_effort: disabled, temperature: 0.3, label: Olala}

@@ -19,7 +19,9 @@ from pathlib import Path
 from dataclasses import replace
 from typing import Any
 
-from aistack.ai_runtime.definition import AIRuntimeDefinition
+from aistack.ai_runtime.definition import AIRuntimeDefinition, LocalEngineDefinition
+from aistack.ai_runtime.engine import AIEngine
+from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
 from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
 from aistack.ai_runtime.operations import explain, reason, recommend
@@ -60,7 +62,8 @@ def ai_destination() -> tuple[str, str]:
     definition = load_ai_runtime_yaml(AI_RUNTIME)
     if _gemini(definition) is not None and definition.gemini is not None:
         return "gemini", definition.gemini.model
-    return "ollama", definition.model or ""
+    engines = definition.local_engines()
+    return "ollama", engines[0].model if engines else (definition.model or "")
 
 
 def ask_ai_runtime(
@@ -83,7 +86,7 @@ def ask_ai_runtime(
         if first.reachable:
             return first
 
-    answer = ask_ollama(finding, operation, target_language, context, definition)
+    answer = ask_local(finding, operation, target_language, context, definition)
     if first is None:
         return answer
     if answer.reachable:
@@ -130,6 +133,72 @@ def ask_ollama(
         translator=translator,
         context=context,
     )
+
+
+def _engine_of(declared: LocalEngineDefinition) -> AIEngine:
+    if declared.kind == "openai_chat":
+        return OpenAIChatEngine(
+            declared.host, declared.port, declared.model, declared.timeout, declared.reasoning_effort, declared.label
+        )
+    return OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
+
+
+def ask_local(
+    finding: RuntimeFinding,
+    operation: str,
+    target_language: str,
+    context: str = "",
+    definition: AIRuntimeDefinition | None = None,
+) -> AIRuntimeAnswer:
+    """
+    One answer from the local engines, in the order declared: the first that
+    answers wins, and an answer given in another's place says so in its
+    `model`. The reader asks one question and never picks an engine; every
+    answer names the model that gave it. Without `engines:` this is exactly
+    `ask_ollama` (the one declared Ollama).
+    """
+
+    definition = definition or load_ai_runtime_yaml(AI_RUNTIME)
+    declared = definition.local_engines()
+    if not declared:
+        return ask_ollama(finding, operation, target_language, context, definition)
+
+    translator = (
+        OllamaEngine(
+            host=definition.host,
+            port=definition.port,
+            model=definition.translator_model,
+            timeout=definition.timeout,
+        )
+        if definition.translator_model
+        else None
+    )
+
+    def ask(engine: LocalEngineDefinition) -> AIRuntimeAnswer:
+        return _CALLS[operation](
+            finding,
+            _engine_of(engine),
+            engine.label or engine.model,
+            target_language=target_language,
+            translator=translator,
+            context=context,
+        )
+
+    if len(declared) == 1:
+        return ask(declared[0])
+
+    failures: list[str] = []
+    answer: AIRuntimeAnswer | None = None
+    for engine in declared:
+        answer = ask(engine)
+        if answer.reachable:
+            if failures:
+                return replace(answer, model=f"{answer.model} ({'; '.join(failures)})")
+            return answer
+        failures.append(f"{engine.label or engine.model}: {answer.unreachable_reason}")
+
+    assert answer is not None
+    return replace(answer, unreachable_reason=" ; ".join(failures))
 
 
 def run_diagnosis(

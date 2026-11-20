@@ -135,3 +135,40 @@ def test_the_real_ai_runtime_definition_asks_qwen_in_french_without_a_translator
 
     assert definition.model == "qwen2.5:3b"
     assert definition.translator_model is None
+
+
+def test_engines_load_in_order_with_their_defaults(tmp_path: Path):
+    path = write(
+        tmp_path,
+        "host: h\nport: 11434\nmodel: qwen\ntimeout: 300\nengines:\n"
+        "  - {kind: openai_chat, host: 127.0.0.1, port: 8080, model: olala-mini, reasoning_effort: low, label: Olala}\n"
+        "  - {host: h, port: 11434, model: qwen, timeout: 60}\n",
+    )
+
+    first, second = load_ai_runtime_yaml(path).engines
+
+    assert (first.kind, first.port, first.model, first.reasoning_effort, first.label, first.timeout) == ("openai_chat", 8080, "olala-mini", "low", "Olala", 300.0)
+    assert (second.kind, second.reasoning_effort, second.timeout) == ("ollama", None, 60.0)
+
+
+def test_without_engines_the_one_declared_ollama_is_the_local_engine(tmp_path: Path):
+    definition = load_ai_runtime_yaml(write(tmp_path, "host: h\nport: 11434\nmodel: qwen\n"))
+
+    assert definition.engines == ()
+    assert [(e.kind, e.host, e.model) for e in definition.local_engines()] == [("ollama", "h", "qwen")]
+    assert load_ai_runtime_yaml(write(tmp_path, "host: h\nport: 1\n")).local_engines() == ()
+
+
+@pytest.mark.parametrize(
+    "engines, message",
+    [
+        ("engines: nope\n", "must be a list"),
+        ("engines:\n  - nope\n", "must be a mapping"),
+        ("engines:\n  - {host: h, port: 1}\n", "missing: model"),
+        ("engines:\n  - {kind: grpc, host: h, port: 1, model: m}\n", "unknown kind"),
+        ("engines:\n  - {host: h, port: 1, model: m, reasoning_effort: extreme}\n", "unknown reasoning_effort"),
+    ],
+)
+def test_a_wrong_engine_is_refused_by_name(tmp_path: Path, engines: str, message: str):
+    with pytest.raises(ValueError, match=message):
+        load_ai_runtime_yaml(write(tmp_path, "host: h\nport: 1\n" + engines))

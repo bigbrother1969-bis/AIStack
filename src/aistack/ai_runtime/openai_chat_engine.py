@@ -1,0 +1,89 @@
+"""
+Any server that speaks `POST /v1/chat/completions` as an `AIEngine`.
+
+The first user is the `llama-server` of OVHcloud's llama.cpp fork, which serves
+Olala (Ollama cannot load that model); llama.cpp, vLLM and many others speak
+the same request. One request, `stream: false`, the prompt as one user
+message. Only the answer (`content`) is returned: a reasoning channel
+(`reasoning_content`) is never shown. Every failure is returned as a sentence,
+never raised, in the shapes `describe_unreachable` knows.
+"""
+
+from __future__ import annotations
+
+import json
+import urllib.error
+import urllib.request
+
+_USER_AGENT = "AIStack-AIRuntime/1.0"
+DEFAULT_TIMEOUT_SECONDS = 120.0
+REASONING_EFFORTS = ("disabled", "low", "medium", "high")
+# What the model's card advises for Olala; harmless defaults for another server.
+DEFAULT_SAMPLING = {"temperature": 0.8, "top_p": 0.9, "top_k": 40}
+
+
+class OpenAIChatEngine:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        model: str,
+        timeout: float = DEFAULT_TIMEOUT_SECONDS,
+        reasoning_effort: str | None = None,
+        label: str = "",
+    ) -> None:
+        self.host = host
+        self.port = port
+        self.model = model
+        self.timeout = timeout
+        self.reasoning_effort = reasoning_effort
+        self.label = label or model or "chat engine"
+
+    def complete(self, prompt: str) -> tuple[str, str]:
+        payload: dict[str, object] = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            **DEFAULT_SAMPLING,
+        }
+        if self.reasoning_effort:
+            payload["reasoning_effort"] = self.reasoning_effort
+
+        request = urllib.request.Request(
+            f"http://{self.host}:{self.port}/v1/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json", "User-Agent": _USER_AGENT},
+            method="POST",
+        )
+        where = f"{self.label} at {self.host}:{self.port}"
+
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:  # noqa: S310 — the declared engine
+                answer = json.load(response)
+        except TimeoutError:
+            return "", f"{where} did not answer within {self.timeout} seconds"
+        except urllib.error.HTTPError as error:
+            detail = ""
+            try:
+                detail = error.read().decode("utf-8", errors="replace").strip()
+            except OSError:
+                pass
+            return "", f"{self.label} refused the request with status {error.code} ({error.reason})" + (f": {detail[:200]}" if detail else "")
+        except urllib.error.URLError as error:
+            if isinstance(error.reason, TimeoutError):
+                return "", f"{where} did not answer within {self.timeout} seconds"
+            return "", f"{where} could not be reached: {error.reason}"
+        except (ValueError, OSError) as error:
+            return "", f"{self.label} answered with something unreadable: {error}"
+
+        if not isinstance(answer, dict):
+            return "", f"{self.label} answered with something unreadable"
+        if "error" in answer:
+            return "", f"{self.label} reported an error: {answer['error']}"
+
+        choices = answer.get("choices")
+        message = choices[0].get("message") if isinstance(choices, list) and choices and isinstance(choices[0], dict) else None
+        text = message.get("content") if isinstance(message, dict) else None
+        if not isinstance(text, str) or not text.strip():
+            return "", f"{self.label} answered with no response text"
+        return text.strip(), ""

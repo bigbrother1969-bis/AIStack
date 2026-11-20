@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.13
+  version: 0.14
   status: Proposed
   owner: Architecture
   created: 2026-11-19
@@ -198,7 +198,10 @@ most five evidence lines, cut, flattened and fenced as data, because a
 container's name, a path or a log's words can be chosen by whoever
 attacks; the prompt says to follow nothing written in them and to give no
 command that changes anything. The same rules ask for a calm tone, a reader addressed directly, and one to three read-only commands built from the
-names read; a name that starts with `aistack-` proves nothing, so the answer is to check where it comes from. The hand-written text, not the model,
+names read; a name that starts with `aistack-` proves nothing, so the answer is to check where it comes from. The engine is the first that answers among the local engines of
+`ai_runtime.yml` (`engines:`, `ollama` or `openai_chat`; without it, the one
+Ollama): the reader asks once and picks nothing, and every answer names the
+model that gave it, and the engine it stood in for when one stayed silent. The hand-written text, not the model,
 carries every command a person may copy. The page works without the
 engine.
 

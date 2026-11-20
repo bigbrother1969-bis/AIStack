@@ -106,7 +106,8 @@ def local_model() -> str:
     from aistack.ai_runtime.yaml import load_ai_runtime_yaml
     from aistack.troubleshooting.guide import AI_RUNTIME
 
-    return load_ai_runtime_yaml(AI_RUNTIME).model or ""
+    engines = load_ai_runtime_yaml(AI_RUNTIME).local_engines()
+    return (engines[0].label or engines[0].model) if engines else ""
 
 
 def _graphs(request: Request, series_lines: list[dict[str, Any]], start: datetime, end: datetime, zone_name: str) -> list[dict[str, Any]]:

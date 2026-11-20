@@ -27,7 +27,7 @@ from aistack.priority.screen import Discover, discover_containers
 from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
 from aistack.troubleshooting.findings import CollectFindings, qualified_findings
-from aistack.troubleshooting.guide import AskAI, ai_destination, ask_ai_runtime, ask_ollama
+from aistack.troubleshooting.guide import AskAI, ai_destination, ask_ai_runtime, ask_local
 from aistack.timemachine.screen import ExpiringValue, live_network_tree
 from aistack.timemachine.tree import NetworkTreeNode
 from aistack.web import (
@@ -127,7 +127,7 @@ def create_app(
     test_api_key: Callable[[str], str | None] | None = None,
     pending_counts: Callable[[Path], dict[str, int]] | None = None,
     security_window: Callable[..., dict[str, Any]] | None = None,
-    ask_local_ai: AskAI = ask_ollama,
+    ask_local_ai: AskAI = ask_local,
     local_model: Callable[[], str] | None = None,
 ) -> FastAPI:
     app = FastAPI(

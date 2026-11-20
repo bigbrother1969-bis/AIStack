@@ -8,6 +8,16 @@
 # loopback only and AIStack runs on the host's network. `timeout`: how
 # long, in seconds, a local answer may take. Remove the `gemini` block
 # to keep every question on this server.
+#
+# Several local engines, asked in this order (the first that answers wins,
+# and an answer says which model gave it): add `engines:` below. `kind` is
+# `ollama` or `openai_chat` (POST /v1/chat/completions, e.g. the llama-server
+# of the Olala fork); `reasoning_effort` (disabled, low, medium, high) and
+# `label` are optional. Without `engines:`, the one Ollama above answers.
+#
+# engines:
+#   - {kind: openai_chat, host: 127.0.0.1, port: 8080, model: olala-mini-7a1b, reasoning_effort: low, label: Olala}
+#   - {kind: ollama, host: 127.0.0.1, port: 11434, model: qwen2.5:7b}
 
 host: 127.0.0.1
 port: 11434

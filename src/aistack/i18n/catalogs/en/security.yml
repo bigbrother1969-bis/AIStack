@@ -97,7 +97,7 @@ finding:
   fixed_note: "Text written by hand for this kind of finding, the same for everyone: it is not generated."
   ai:
     heading: "Local AI's opinion"
-    intro: "On your click only. The local engine (Ollama) receives what you see above: the title, the severity and the evidence lines, never a secret or a content. Nothing leaves your machine and nothing is run."
+    intro: "On your click only. The local engine receives what you see above: the title, the severity and the evidence lines, never a secret or a content. Nothing leaves your machine and nothing is run."
     destination: "The local engine: {model}"
     ask: "Ask the local AI"
     ask_tooltip: "Asks the local engine three questions (reasoning, explanation, suggestion); it can take several minutes"

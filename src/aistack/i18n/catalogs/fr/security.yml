@@ -97,7 +97,7 @@ finding:
   fixed_note: "Texte écrit à la main pour ce type de constat, identique pour tous : il n'est pas généré."
   ai:
     heading: "Avis de l'IA locale"
-    intro: "Sur ton clic seulement. Le moteur local (Ollama) reçoit ce que tu vois ci-dessus : le titre, la gravité et les lignes de preuve, jamais un secret ni un contenu. Rien ne sort de ta machine et rien n'est exécuté."
+    intro: "Sur ton clic seulement. Le moteur local reçoit ce que tu vois ci-dessus : le titre, la gravité et les lignes de preuve, jamais un secret ni un contenu. Rien ne sort de ta machine et rien n'est exécuté."
     destination: "Le moteur local : {model}"
     ask: "Demander à l'IA locale"
     ask_tooltip: "Lance trois questions au moteur local (raisonnement, explication, suggestion) ; il peut falloir plusieurs minutes"

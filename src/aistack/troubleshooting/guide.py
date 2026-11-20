@@ -22,6 +22,7 @@ from typing import Any
 from aistack.ai_runtime.definition import AIRuntimeDefinition, LocalEngineDefinition
 from aistack.ai_runtime.answer_guard import GuardedEngine
 from aistack.ai_runtime.engine import AIEngine
+from aistack.ai_runtime.engine_switch import EngineSwitch, SwitchedEngine
 from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
 from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
@@ -146,9 +147,19 @@ def _engine_of(declared: LocalEngineDefinition, target_language: str = "en", gua
             declared.max_tokens,
             system_directive(target_language),
         )
-        return GuardedEngine(engine, target_language, engine.label) if guarded else engine
+        return _dressed(engine, declared, target_language, guarded, engine.label)
     plain = OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
-    return GuardedEngine(plain, target_language, declared.label or declared.model) if guarded else plain
+    return _dressed(plain, declared, target_language, guarded, declared.label or declared.model)
+
+
+def _dressed(
+    engine: AIEngine, declared: LocalEngineDefinition, target_language: str, guarded: bool, label: str
+) -> AIEngine:
+    """Started on demand when the engine declares a switch, then held to the rules when another can answer."""
+
+    if declared.switch is not None:
+        engine = SwitchedEngine(engine, EngineSwitch(declared.switch, label))
+    return GuardedEngine(engine, target_language, label) if guarded else engine
 
 
 def ask_one(

@@ -4,7 +4,9 @@ from pathlib import Path
 
 import yaml
 
-from aistack.ai_runtime.definition import AIRuntimeDefinition, GeminiDefinition, LocalEngineDefinition
+from urllib.parse import urlparse
+
+from aistack.ai_runtime.definition import AIRuntimeDefinition, GeminiDefinition, LocalEngineDefinition, SwitchDefinition
 from aistack.ai_runtime.openai_chat_engine import REASONING_EFFORTS
 from aistack.ai_runtime.ollama_engine import DEFAULT_TIMEOUT_SECONDS
 
@@ -12,6 +14,30 @@ _REQUIRED_FIELDS = ("host", "port")
 
 
 ENGINE_KINDS = ("ollama", "openai_chat")
+
+
+_LOOPBACK = ("127.0.0.1", "localhost", "::1")
+
+
+def _switch(raw: object, path: Path, index: int) -> SwitchDefinition | None:
+    """The actuator of an engine: on this host only, with its secret in a file, never in the YAML."""
+
+    if raw is None:
+        return None
+    where = f"AI Runtime definition {path}: engine {index}: switch"
+    if not isinstance(raw, dict):
+        raise ValueError(f"{where} must be a mapping")
+    url = str(raw.get("url") or "")
+    parsed = urlparse(url)
+    if parsed.scheme != "http" or parsed.hostname not in _LOOPBACK or not parsed.port:
+        raise ValueError(f"{where}: url must be http://127.0.0.1:<port> (the actuator is reached on this host only)")
+    token_file = str(raw.get("token_file") or "")
+    if not token_file.startswith("/"):
+        raise ValueError(f"{where}: token_file must be an absolute path (the secret is never written in this file)")
+    timeout = raw.get("start_timeout", 90)
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 5 <= timeout <= 600:
+        raise ValueError(f"{where}: start_timeout {timeout!r} is not a number of seconds from 5 to 600")
+    return SwitchDefinition(url=url.rstrip("/"), token_file=token_file, start_timeout=float(timeout))
 
 
 def _engines(raw: object, path: Path, default_timeout: float) -> tuple[LocalEngineDefinition, ...]:
@@ -56,6 +82,7 @@ def _engines(raw: object, path: Path, default_timeout: float) -> tuple[LocalEngi
                 label=str(item.get("label") or ""),
                 temperature=float(temperature) if temperature is not None else None,
                 max_tokens=int(max_tokens) if max_tokens is not None else None,
+                switch=_switch(item.get("switch"), path, index),
             )
         )
     return tuple(found)

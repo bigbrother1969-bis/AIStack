@@ -6,6 +6,21 @@ from aistack.ai_runtime.ollama_engine import DEFAULT_TIMEOUT_SECONDS
 
 
 @dataclass(frozen=True)
+class SwitchDefinition:
+    """
+    The actuator that starts and stops an engine on demand (`switch:` on an engine).
+
+    `url` is the actuator's address on this host (loopback only), `token_file` the file that holds its
+    secret, `start_timeout` how long a call waits for the engine to be ready. The idle delay after which
+    the engine is stopped belongs to the actuator, not to this declaration.
+    """
+
+    url: str
+    token_file: str
+    start_timeout: float = 90.0
+
+
+@dataclass(frozen=True)
 class LocalEngineDefinition:
     """
     One local engine, asked in the order declared (`engines:` in `ai_runtime.yml`).
@@ -17,6 +32,8 @@ class LocalEngineDefinition:
     model card, which is lively; a lower one gives steadier, calmer answers.
     `max_tokens` (`openai_chat` only) bounds an answer: without it, an engine with no
     reasoning is bounded by `DEFAULT_MAX_TOKENS`, one that reasons by its timeout only.
+    `switch` names the actuator that starts this engine when a question comes and stops it after a
+    quiet delay; without it the engine is expected to be running.
     """
 
     kind: str
@@ -28,6 +45,7 @@ class LocalEngineDefinition:
     label: str = ""
     temperature: float | None = None
     max_tokens: int | None = None
+    switch: SwitchDefinition | None = None
 
 
 @dataclass(frozen=True)

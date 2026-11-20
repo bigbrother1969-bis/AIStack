@@ -157,3 +157,15 @@ def test_an_answer_that_breaks_the_rules_is_handed_to_the_next_engine_but_not_fr
 
     assert handed.response == "from ollama" and "olala answer set aside" in handed.model
     assert last.reachable and "compromission" in last.response
+
+
+def test_an_engine_with_a_switch_that_cannot_start_hands_over_and_the_answer_says_why(servers):
+    from aistack.ai_runtime.definition import SwitchDefinition
+
+    second, _ = servers(OLLAMA_REPLY)
+    dead = SwitchDefinition(f"http://127.0.0.1:{dead_port()}", "/nonexistent/token", 5.0)
+
+    answer = guide.ask_local(finding(), "reason", "en", "", definition(chat(dead_port(), label="olala", switch=dead), ollama(second)))
+
+    assert answer.reachable and answer.response == "from ollama"
+    assert "olala: olala could not be started" in answer.model

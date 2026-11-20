@@ -31,6 +31,7 @@ class OpenAIChatEngine:
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
         reasoning_effort: str | None = None,
         label: str = "",
+        temperature: float | None = None,
     ) -> None:
         self.host = host
         self.port = port
@@ -38,13 +39,14 @@ class OpenAIChatEngine:
         self.timeout = timeout
         self.reasoning_effort = reasoning_effort
         self.label = label or model or "chat engine"
+        self.temperature = temperature
 
     def complete(self, prompt: str) -> tuple[str, str]:
         payload: dict[str, object] = {
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
             "stream": False,
-            **DEFAULT_SAMPLING,
+            **{**DEFAULT_SAMPLING, **({"temperature": self.temperature} if self.temperature is not None else {})},
         }
         if self.reasoning_effort:
             payload["reasoning_effort"] = self.reasoning_effort

@@ -33,6 +33,12 @@ def _engines(raw: object, path: Path, default_timeout: float) -> tuple[LocalEngi
         effort = item.get("reasoning_effort")
         if effort is not None and str(effort) not in REASONING_EFFORTS:
             raise ValueError(f"AI Runtime definition {path}: engine {index} has an unknown reasoning_effort {effort!r} (one of {', '.join(REASONING_EFFORTS)})")
+        temperature = item.get("temperature")
+        if temperature is not None:
+            if kind != "openai_chat":
+                raise ValueError(f"AI Runtime definition {path}: engine {index}: temperature is only for the openai_chat kind")
+            if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or not 0 <= temperature <= 2:
+                raise ValueError(f"AI Runtime definition {path}: engine {index} has a temperature {temperature!r} that is not a number from 0 to 2")
         found.append(
             LocalEngineDefinition(
                 kind=kind,
@@ -42,6 +48,7 @@ def _engines(raw: object, path: Path, default_timeout: float) -> tuple[LocalEngi
                 timeout=float(item.get("timeout") or default_timeout),
                 reasoning_effort=str(effort) if effort is not None else None,
                 label=str(item.get("label") or ""),
+                temperature=float(temperature) if temperature is not None else None,
             )
         )
     return tuple(found)

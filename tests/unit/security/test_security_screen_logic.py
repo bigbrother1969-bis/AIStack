@@ -137,6 +137,8 @@ def test_the_rules_given_to_the_engine_ask_for_a_calm_tutoiement_and_read_only_c
 
     assert "Tutoie" in fr and "owner" in fr and "aistack-" in fr and "une à trois commandes de lecture" in fr
     assert "un nom ne prouve rien" in fr and "qui modifie, supprime ou arrête" in fr
+    assert "N'écris jamais « tentative d'attaque »" in fr and "n'est pas normal » : dis « cela peut être normal »" in fr
+    assert "Never write 'attack attempt'" in en and "say 'this may be normal'" in en
     assert "aistack-" in en and "one to three read-only commands" in en and "a name proves nothing" in en
 
 

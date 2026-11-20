@@ -13,6 +13,8 @@ class LocalEngineDefinition:
     `kind` is `ollama` (`POST /api/generate`) or `openai_chat` (`POST
     /v1/chat/completions`, the `llama-server` of the Olala fork among others).
     `label` is what an answer says when this engine stands in for another.
+    `temperature` (0 to 2, `openai_chat` only) replaces the sampling default of the
+    model card, which is lively; a lower one gives steadier, calmer answers.
     """
 
     kind: str
@@ -22,6 +24,7 @@ class LocalEngineDefinition:
     timeout: float = DEFAULT_TIMEOUT_SECONDS
     reasoning_effort: str | None = None
     label: str = ""
+    temperature: float | None = None
 
 
 @dataclass(frozen=True)

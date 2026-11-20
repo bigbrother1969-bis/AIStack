@@ -24,7 +24,7 @@ from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
 
 _SPEC = re.compile(r"^(?P<kind>[a-z_]+)@(?P<host>[^:/\s]+):(?P<port>\d+)/(?P<model>[^?\s]+)(?:\?(?P<query>\S*))?$")
-_QUERY_KEYS = ("effort", "label", "timeout")
+_QUERY_KEYS = ("effort", "label", "timeout", "temperature")
 
 
 def parse_engine(spec: str) -> LocalEngineDefinition:
@@ -45,6 +45,17 @@ def parse_engine(spec: str) -> LocalEngineDefinition:
     if effort is not None and effort not in REASONING_EFFORTS:
         raise ValueError(f"engine {spec!r}: unknown effort {effort!r} (one of {', '.join(REASONING_EFFORTS)})")
 
+    temperature = query.get("temperature", [None])[0]
+    if temperature is not None:
+        if kind != "openai_chat":
+            raise ValueError(f"engine {spec!r}: temperature is only for the openai_chat kind")
+        try:
+            value = float(temperature)
+        except ValueError:
+            value = -1.0
+        if not 0 <= value <= 2:
+            raise ValueError(f"engine {spec!r}: temperature {temperature!r} is not a number from 0 to 2")
+
     return LocalEngineDefinition(
         kind=kind,
         host=found["host"],
@@ -53,12 +64,14 @@ def parse_engine(spec: str) -> LocalEngineDefinition:
         timeout=float(query.get("timeout", [DEFAULT_TIMEOUT_SECONDS])[0]),
         reasoning_effort=effort,
         label=query.get("label", [""])[0],
+        temperature=float(temperature) if temperature is not None else None,
     )
 
 
 def name_of(engine: LocalEngineDefinition) -> str:
     base = engine.label or engine.model
-    return f"{base} ({engine.reasoning_effort})" if engine.reasoning_effort else base
+    options = [option for option in (engine.reasoning_effort, f"t={engine.temperature:g}" if engine.temperature is not None else "") if option]
+    return f"{base} ({', '.join(options)})" if options else base
 
 
 # ---------------------------------------------------------------------------

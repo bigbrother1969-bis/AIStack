@@ -68,6 +68,14 @@ def test_the_answer_is_the_content_and_never_the_reasoning_channel(server):
     assert "reasoning_effort" not in body
 
 
+def test_a_declared_temperature_replaces_the_card_default_and_keeps_the_rest(server):
+    engine(server, temperature=0.3).complete("q")
+    engine(server, temperature=0.0).complete("q")
+
+    assert server.bodies[0]["temperature"] == 0.3 and server.bodies[1]["temperature"] == 0.0
+    assert server.bodies[0]["top_p"] == 0.9 and server.bodies[0]["top_k"] == 40
+
+
 def test_the_reasoning_effort_is_sent_when_declared(server):
     engine(server, reasoning_effort="low").complete("q")
 

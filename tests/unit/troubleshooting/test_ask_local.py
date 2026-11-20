@@ -130,3 +130,10 @@ def test_the_destination_names_the_first_declared_model(tmp_path: Path, monkeypa
     monkeypatch.setattr(guide, "AI_RUNTIME", path)
 
     assert guide.ai_destination() == ("ollama", "olala-mini")
+
+
+def test_a_declared_temperature_reaches_the_engine_that_is_built():
+    built = guide._engine_of(chat(1, temperature=0.3))
+
+    assert built.temperature == 0.3
+    assert guide._engine_of(chat(1)).temperature is None

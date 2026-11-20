@@ -138,7 +138,8 @@ def ask_ollama(
 def _engine_of(declared: LocalEngineDefinition) -> AIEngine:
     if declared.kind == "openai_chat":
         return OpenAIChatEngine(
-            declared.host, declared.port, declared.model, declared.timeout, declared.reasoning_effort, declared.label
+            declared.host, declared.port, declared.model, declared.timeout, declared.reasoning_effort, declared.label,
+            declared.temperature,
         )
     return OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
 

@@ -18,6 +18,18 @@ def test_a_spec_gives_the_engine_with_its_options():
     assert compare.name_of(engine) == "Olala (disabled)"
 
 
+def test_a_temperature_is_read_shown_and_checked():
+    engine = compare.parse_engine("openai_chat@h:1/m?effort=disabled&temperature=0.3&label=Olala")
+
+    assert engine.temperature == 0.3 and compare.name_of(engine) == "Olala (disabled, t=0.3)"
+    with pytest.raises(ValueError, match="only for the openai_chat kind"):
+        compare.parse_engine("ollama@h:1/m?temperature=0.3")
+    with pytest.raises(ValueError, match="not a number from 0 to 2"):
+        compare.parse_engine("openai_chat@h:1/m?temperature=9")
+    with pytest.raises(ValueError, match="not a number from 0 to 2"):
+        compare.parse_engine("openai_chat@h:1/m?temperature=warm")
+
+
 def test_a_model_name_keeps_its_colon_and_the_options_are_optional():
     engine = compare.parse_engine("ollama@192.168.1.10:11434/qwen2.5:7b")
 

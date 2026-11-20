@@ -266,3 +266,82 @@ def test_nothing_is_waited_when_nothing_was_unloaded_and_the_wait_is_bounded():
 
     assert quiet_clock.now == 1000.0
     assert slow_clock.now - 1000.0 <= unit.SETTLE_SECONDS
+
+
+GPU_LINE = 'time=2026-11-20T19:14:03Z level=INFO source=types.go:131 msg="inference compute" id=GPU-1 library=CUDA compute=6.1 name=CUDA0'
+CPU_LINE = 'time=2026-11-20T19:14:03Z level=INFO source=types.go:131 msg="inference compute" id=cpu library=cpu compute="" name=cpu'
+
+
+@pytest.mark.parametrize(
+    "log, verdict",
+    [
+        (f"starting\n{GPU_LINE}\nlistening", "gpu"),
+        (f"{CPU_LINE}", "cpu"),
+        ("level=WARN msg=\"no compatible GPUs were discovered\"", "cpu"),
+        (f"{CPU_LINE}\n{GPU_LINE}", "gpu"),
+        ("level=INFO msg=\"Listening on [::]:11434\"", "unknown"),
+        ("", "unknown"),
+    ],
+)
+def test_the_log_of_an_ollama_start_says_where_it_computes(log, verdict):
+    assert unit.compute_of_log(log) == verdict
+
+
+class OllamaHost(FakeHost):
+    def __init__(self, verdicts, restart_failure=""):
+        super().__init__()
+        self.verdicts = list(verdicts)
+        self.restart_failure = restart_failure
+
+    def ollama_compute(self):
+        return self.verdicts.pop(0) if self.verdicts else self.last
+
+    def restart_ollama(self):
+        self.calls.append("restart ollama")
+        return self.restart_failure
+
+    last = "gpu"
+
+
+def watching(host):
+    clock = Clock()
+    lines: list[str] = []
+    return unit.Switch(host, 600.0, 90.0, clock=clock, sleep=clock.sleep, log=lines.append, watch_ollama=True), clock, lines
+
+
+def test_ollama_that_started_on_the_cpu_is_restarted_once_and_a_good_start_is_left_alone():
+    host = OllamaHost(["gpu", "unknown", "cpu"])
+    switch, _, lines = watching(host)
+
+    assert [switch.check_ollama() for _ in range(3)] == ["gpu", "unknown", "cpu"]
+
+    assert host.calls == ["restart ollama"] and lines == ["ollama: started without the GPU, restart 1/2"]
+
+
+def test_the_restarts_are_spaced_limited_and_the_giving_up_is_said_once():
+    host = OllamaHost([], restart_failure="docker restart failed")
+    host.last = "cpu"
+    switch, clock, lines = watching(host)
+
+    switch.check_ollama()
+    clock.now += 30
+    switch.check_ollama()  # too soon: nothing
+    clock.now += 100
+    switch.check_ollama()  # second restart
+    clock.now += 200
+    switch.check_ollama()
+    switch.check_ollama()
+
+    assert host.calls == ["restart ollama", "restart ollama"]
+    assert lines == [
+        "ollama: started without the GPU, restart 1/2 (docker restart failed)",
+        "ollama: started without the GPU, restart 2/2 (docker restart failed)",
+        "ollama: still on the CPU after 2 restarts, none more",
+    ]
+
+
+def test_without_the_option_nothing_of_ollama_is_read_or_touched():
+    host = OllamaHost(["cpu"])
+    switch, _, lines = switch_of(host)
+
+    assert switch.check_ollama() == "unknown" and host.calls == [] and lines == []

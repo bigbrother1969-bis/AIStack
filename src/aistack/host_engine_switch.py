@@ -16,6 +16,11 @@ wait until it is ready), `stop`, `status`, `touch` (the engine was just used). N
 reachable: no command, no path, no container name comes from the caller. After `--idle-minutes`
 without a `start` or a `touch`, the engine is stopped by the actuator itself.
 
+With `--ollama-container`, the watcher also reads what Ollama's container logged since it started: when its
+GPU discovery failed and it settled on the CPU (seen on 18 and 19 Nov. 2026) on a machine where `nvidia-smi`
+answers, it restarts that one container, twice at most per run of the actuator, two minutes apart, and says so
+in the journal. `--diagnose-ollama <container>` prints the verdict (`gpu`, `cpu` or `unknown`) and changes nothing.
+
 Each transition unloads the models Ollama holds (`keep_alive: 0`) and reads the GPU memory in use
 before and after, so the reader sees that it was freed. It writes one line per transition to its
 standard error (the journal): the action, the state, the two figures; never a prompt or an answer.
@@ -27,6 +32,7 @@ from __future__ import annotations
 import argparse
 import hmac
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -40,16 +46,31 @@ from pathlib import Path
 TOKEN_HEADER = "X-Engine-Switch-Token"
 ACTIONS = ("start", "stop", "status", "touch")
 CHECK_EVERY_SECONDS = 30.0
+OLLAMA_MAX_RESTARTS = 2
+OLLAMA_RESTART_SPACING_SECONDS = 120.0
+_COMPUTE_LINE = re.compile(r'msg="?inference compute"?.*?\blibrary=(\w+)')
 SETTLE_SECONDS = 10  # Ollama frees the GPU a moment after it is told to unload: read the figure once it stops falling
+
+
+def compute_of_log(text: str) -> str:
+    """What the log of an Ollama start says it computes on: `gpu`, `cpu`, or `unknown` when it has not said yet."""
+
+    libraries = [found.lower() for found in _COMPUTE_LINE.findall(text)]
+    if any(library != "cpu" for library in libraries):
+        return "gpu"
+    if libraries or "no compatible GPUs were discovered" in text:
+        return "cpu"
+    return "unknown"
 
 
 class Host:
     """What the actuator does to the machine; replaced whole in the tests."""
 
-    def __init__(self, container: str, ready_url: str, ollama: str | None) -> None:
+    def __init__(self, container: str, ready_url: str, ollama: str | None, ollama_container: str | None = None) -> None:
         self.container = container
         self.ready_url = ready_url
         self.ollama = ollama.rstrip("/") if ollama else None
+        self.ollama_container = ollama_container
 
     def running(self) -> bool:
         done = subprocess.run(
@@ -91,6 +112,32 @@ class Host:
         except (urllib.error.URLError, TimeoutError, OSError, ValueError):
             return []
 
+    def ollama_compute(self) -> str:
+        """`gpu`, `cpu` or `unknown`, from what Ollama's container logged since it started; `unknown` on a machine without a GPU."""
+
+        if not self.ollama_container or self.gpu_used_mib() is None:
+            return "unknown"
+        seen = subprocess.run(
+            ["docker", "inspect", "-f", "{{.State.Running}} {{.State.StartedAt}}", self.ollama_container],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        running, _, started = seen.stdout.strip().partition(" ")
+        if seen.returncode != 0 or running != "true" or not started:
+            return "unknown"
+        logged = subprocess.run(
+            ["docker", "logs", "--since", started, self.ollama_container],
+            capture_output=True, text=True, timeout=60, check=False,
+        )
+        return compute_of_log(logged.stdout + "\n" + logged.stderr)
+
+    def restart_ollama(self) -> str:
+        """Restart the one Ollama container; the reason as a sentence when it fails, empty otherwise."""
+
+        if not self.ollama_container:
+            return "no container declared"
+        done = subprocess.run(["docker", "restart", self.ollama_container], capture_output=True, text=True, timeout=180, check=False)
+        return "" if done.returncode == 0 else "docker restart failed"
+
     def gpu_used_mib(self) -> int | None:
         try:
             done = subprocess.run(
@@ -113,8 +160,13 @@ class Switch:
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
         log: Callable[[str], None] | None = None,
+        watch_ollama: bool = False,
     ) -> None:
         self.host = host
+        self.watch_ollama = watch_ollama
+        self.ollama_restarts = 0
+        self.last_ollama_restart: float | None = None
+        self._gave_up = False
         self.idle_seconds = idle_seconds
         self.start_timeout = start_timeout
         self.clock = clock
@@ -200,6 +252,28 @@ class Switch:
         self.stop()
         return True
 
+    def check_ollama(self) -> str:
+        """Called by the watcher: restart Ollama when it started on the CPU of a machine that has a GPU. Returns the verdict read."""
+
+        if not self.watch_ollama:
+            return "unknown"
+        with self._lock:
+            verdict = self.host.ollama_compute()
+            if verdict != "cpu":
+                return verdict
+            if self.ollama_restarts >= OLLAMA_MAX_RESTARTS:
+                if not self._gave_up:
+                    self._gave_up = True
+                    self.log(f"ollama: still on the CPU after {self.ollama_restarts} restarts, none more")
+                return verdict
+            if self.last_ollama_restart is not None and self.clock() - self.last_ollama_restart < OLLAMA_RESTART_SPACING_SECONDS:
+                return verdict
+            failure = self.host.restart_ollama()
+            self.ollama_restarts += 1
+            self.last_ollama_restart = self.clock()
+            self.log(f"ollama: started without the GPU, restart {self.ollama_restarts}/{OLLAMA_MAX_RESTARTS}" + (f" ({failure})" if failure else ""))
+            return verdict
+
     def do(self, action: str) -> dict[str, object]:
         return {"start": self.start, "stop": self.stop, "status": self.status, "touch": self.touch}[action]()
 
@@ -234,20 +308,29 @@ def watch(switch: Switch, stop: threading.Event, every: float = CHECK_EVERY_SECO
     while not stop.wait(every):
         try:
             switch.stop_if_idle()
+            switch.check_ollama()
         except (OSError, subprocess.SubprocessError) as error:
-            print(f"idle check failed: {type(error).__name__}", file=sys.stderr, flush=True)
+            print(f"watch failed: {type(error).__name__}", file=sys.stderr, flush=True)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Start an engine on demand and stop it when nobody asks.")
-    parser.add_argument("--container", required=True)
-    parser.add_argument("--ready-url", required=True)
-    parser.add_argument("--token-file", required=True, type=Path)
+    parser.add_argument("--container")
+    parser.add_argument("--ready-url")
+    parser.add_argument("--token-file", type=Path)
+    parser.add_argument("--ollama-container", default=None, help="Ollama's container, restarted when it started on the CPU of a machine that has a GPU")
+    parser.add_argument("--diagnose-ollama", metavar="CONTAINER", default=None, help="print gpu, cpu or unknown for that container and change nothing")
     parser.add_argument("--ollama", default=None, help="Ollama's address, to unload its models at each transition")
     parser.add_argument("--port", type=int, default=18096)
     parser.add_argument("--idle-minutes", type=float, default=10.0)
     parser.add_argument("--start-timeout", type=float, default=90.0)
     arguments = parser.parse_args()
+
+    if arguments.diagnose_ollama:
+        print(Host("", "", None, arguments.diagnose_ollama).ollama_compute())
+        return 0
+    if not (arguments.container and arguments.ready_url and arguments.token_file):
+        parser.error("--container, --ready-url and --token-file are required")
 
     try:
         token = arguments.token_file.read_text(encoding="utf-8").strip()
@@ -258,7 +341,8 @@ def main() -> int:
         print("the secret is too short (16 characters at least)", file=sys.stderr)
         return 2
 
-    switch = Switch(Host(arguments.container, arguments.ready_url, arguments.ollama), arguments.idle_minutes * 60, arguments.start_timeout)
+    host = Host(arguments.container, arguments.ready_url, arguments.ollama, arguments.ollama_container)
+    switch = Switch(host, arguments.idle_minutes * 60, arguments.start_timeout, watch_ollama=bool(arguments.ollama_container))
     stop = threading.Event()
     threading.Thread(target=watch, args=(switch, stop), daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", arguments.port), handler_for(switch, token))

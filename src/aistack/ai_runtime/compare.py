@@ -68,12 +68,25 @@ def name_of(engine: LocalEngineDefinition) -> str:
 FLAGS = {
     "empty": "pas de réponse",
     "vous": "vouvoie (la page tutoie)",
+    "english": "écrit en anglais",
+    "alarmist": "ton alarmiste",
     "owner": "écrit « owner »",
     "changing_command": "cite une commande qui modifie",
-    "intrusion": "parle d'intrusion",
+    "intrusion": "parle d'intrusion sans la nier",
 }
 
-_VOUS = re.compile(r"\b(vous|votre|vos)\b", re.IGNORECASE)
+# « vous » and the forms of the verbs a model writes to a reader it does not tutoie.
+_VOUS = re.compile(
+    r"\b(vous|votre|vos|exécutez|examinez|vérifiez|consultez|lancez|regardez|considérez|utilisez|tapez|ouvrez"
+    r"|affichez|listez|lisez|contrôlez|pouvez|devez|avez|êtes|faites|rappelez-vous|veuillez|suivez|essayez|notez)\b",
+    re.IGNORECASE,
+)
+_ENGLISH_WORDS = frozenset(
+    "the and of is are to that this with these were was for on in be it as by from you should your".split()
+)
+_FRENCH_WORDS = frozenset("le la les des du de et est que qui un une sur dans pour au aux ce cette ces par pas".split())
+_ALARMIST = re.compile(r"\b(inquiétant|inquiétante|alarmant|alarmante|attaquant|malveillant|malveillante|pirate|piraté)\b", re.IGNORECASE)
+_NEGATION = re.compile(r"\b(pas|aucun|aucune|sans|ni|jamais)\b|\bn['’]|\bne\b", re.IGNORECASE)
 _OWNER = re.compile(r"\bowner\b", re.IGNORECASE)
 _INTRUSION = re.compile(r"\b(intrusion|compromis|compromission|piraté)\b", re.IGNORECASE)
 _CHANGING = re.compile(
@@ -98,9 +111,26 @@ def review(text: str, lang: str) -> tuple[str, ...]:
         flags.append("owner")
     if any(_CHANGING.search(span) for span in _CODE.findall(text)) or _CHANGING.search(_outside_code(text)):
         flags.append("changing_command")
-    if _INTRUSION.search(text):
+    if lang == "fr" and _is_english(text):
+        flags.append("english")
+    if _ALARMIST.search(text):
+        flags.append("alarmist")
+    if any(_INTRUSION.search(sentence) and not _NEGATION.search(sentence) for sentence in _sentences(text)):
         flags.append("intrusion")
     return tuple(flags)
+
+
+def _sentences(text: str) -> list[str]:
+    return [part for part in re.split(r"[.!?\n]+", text) if part.strip()]
+
+
+def _is_english(text: str) -> bool:
+    """More English function words than French ones, enough of them to be sure; code spans are ignored."""
+
+    words = re.findall(r"[a-zàâçéèêëîïôûùüÿœ']+", _CODE.sub(" ", text).lower())
+    english = sum(1 for word in words if word in _ENGLISH_WORDS)
+    french = sum(1 for word in words if word in _FRENCH_WORDS)
+    return english >= 4 and english > french
 
 
 def _outside_code(text: str) -> str:

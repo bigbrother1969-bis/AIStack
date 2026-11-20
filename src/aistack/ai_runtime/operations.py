@@ -28,7 +28,8 @@ _MODEL_NOT_CONFIGURED = (
 _LANGUAGE_DIRECTIVE: dict[str, str] = {
     "fr": (
         "\nRéponds uniquement en français, même si tout ce qui "
-        "précède est en anglais.\n"
+        "précède est en anglais. Tutoie le lecteur (« tu », « ton », "
+        "« exécute », jamais « vous » ni « exécutez »).\n"
     ),
     # No directive: models already answer in English, and the translation
     # pass is skipped for English too.

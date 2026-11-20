@@ -56,6 +56,11 @@ def test_a_clean_answer_has_nothing_to_flag():
         ("Lance `chmod 600 /etc/shadow`.", "changing_command"),
         ("Voici :\n$ rm -rf /tmp/x", "changing_command"),
         ("C'est le signe d'une intrusion possible.", "intrusion"),
+        ("Pour vérifier, exécutez `ls /etc`.", "vous"),
+        ("Examinez les fichiers, vous pourrez conclure.", "vous"),
+        ("Tu peux dire que c'est inquiétant.", "alarmist"),
+        ("Le modifié provient d'un attaquant probable.", "alarmist"),
+        ("The machine has observed sensitive changes and the logs show new files that were added to the host.", "english"),
         ("   ", "empty"),
     ],
 )
@@ -125,3 +130,22 @@ def test_the_report_puts_the_engines_side_by_side():
     assert "**qwen** — 3.0 s — vouvoie (la page tutoie)" in text
     assert "> Vous devriez voir `ls`." in text and "> Deuxième ligne." in text
     assert "*Pas de réponse : Olala could not be reached: refused*" in text
+
+
+@pytest.mark.parametrize(
+    "text, flag",
+    [
+        ("Cela ne prouve pas une intrusion, vérifie le fichier.", "intrusion"),
+        ("Rien n'indique une intrusion ici.", "intrusion"),
+        ("Tu peux lire `ls /usr/local/sbin` et le journal `journalctl -u the-and-of`.", "english"),
+        ("Le fichier a été ajouté avec le service, et c'est la suite que tu vérifies.", "english"),
+    ],
+)
+def test_what_is_denied_or_only_a_code_span_is_not_flagged(text: str, flag: str):
+    assert flag not in compare.review(text, "fr")
+
+
+def test_english_is_only_flagged_for_a_french_page():
+    english = "The machine has observed sensitive changes and the logs show new files that were added to the host."
+
+    assert "english" not in compare.review(english, "en")

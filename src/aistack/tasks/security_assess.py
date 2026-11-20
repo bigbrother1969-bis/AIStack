@@ -12,6 +12,7 @@ from aistack.security.exposure import assess, propose_declaration, read_listener
 from aistack.security.findings import SEVERITIES, worst
 from aistack.security.firewall import read_firewall
 from aistack.security.host import assess_files, assess_packages, assess_remote_hosts, read_host, read_remote_hosts
+from aistack.security.refusals import assess_refusals, read_refusals
 from aistack.security.hygiene import OLD_IMAGE, Container, assess_hygiene, propose_accepted, read_containers
 from aistack.security.images import assess_images, old_images, read_created
 from aistack.hosts.records import HostRecords, HostsDeclaration, load_hosts_declaration, read_all
@@ -62,6 +63,7 @@ class SecurityAssessTask:
             + assess_files(host_files, definition)
             + assess_remote_hosts(remote_hosts, now, definition)
             + assess_drift(*read_drift(generated_dir), now, definition)
+            + assess_refusals(read_refusals(generated_dir / HOST_DIR), now, definition, firewall is not None)
         )
 
         assessment = {

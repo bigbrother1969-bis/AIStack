@@ -54,3 +54,6 @@ class SecurityDefinition:
     drift_sensitive: tuple[str, ...] = DRIFT_SENSITIVE
     drift_noise: tuple[str, ...] = DRIFT_NOISE
     accepted_drift: tuple[str, ...] = ()
+    # T3b: refused packets counted from the firewall's counters.
+    refusal_window_hours: int = 24
+    refusal_watch_per_hour: int = 0

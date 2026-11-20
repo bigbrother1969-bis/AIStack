@@ -82,6 +82,17 @@ accepted_files: []
 
 max_listed: 20
 
+# Refusals (T3b): `aistack-firewall-snapshot` counts the packets the firewall
+# drops (the counters hold no address, so the report says how many, never
+# who). `refusal_window_hours` is the period counted. `refusal_watch_per_hour`
+# is the sustained rate (over at least an hour of readings) from which the
+# count is a finding to watch; 0 keeps it to information. Read the usual
+# figure in the report first, then set a threshold above it.
+
+refusal_window_hours: 24
+
+refusal_watch_per_hour: 0
+
 drift_window_hours: 24
 
 drift_apt_grace_minutes: 60

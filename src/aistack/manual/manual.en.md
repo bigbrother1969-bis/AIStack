@@ -918,6 +918,18 @@ sudo systemctl daemon-reload && sudo systemctl enable --now aistack-firewall-sna
 Settings moved it). A snapshot older than two hours is not used; the
 report says so.
 
+Refusals (T3b): each run also asks the counters (`iptables-save -c`) and
+appends to `firewall-refusals.jsonl`, kept seven days, how many packets
+were refused by `DOCKER-USER` (from outside the LAN and the VPN, to a
+published port), by the default policy of `INPUT`, by ufw and by other
+chains. The report adds them up over `refusal_window_hours` (24) and says
+how many, never who: a counter holds no address. Counters start again at a
+reboot or a rule reload, which the report takes into account. An unit
+installed before this version only needs its script copied again (the
+`install` line above). `refusal_watch_per_hour` in `security.yml` ships at
+0, so the figure stays information until you have seen the usual one and
+set a threshold above it.
+
 The web application, the one service with a public listener, holds no
 Docker socket: `docker-compose.yml` has it read Docker through
 `docker-proxy`, a read-only proxy on the host's loopback

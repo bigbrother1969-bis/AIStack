@@ -53,6 +53,8 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
         drift_sensitive=_patterns(data, "drift_sensitive", DRIFT_SENSITIVE, path),
         drift_noise=_patterns(data, "drift_noise", DRIFT_NOISE, path),
         accepted_drift=_patterns(data, "accepted_drift", (), path),
+        refusal_window_hours=_positive(data, "refusal_window_hours", 24, path),
+        refusal_watch_per_hour=_non_negative(data, "refusal_watch_per_hour", 0, path),
     )
 
 
@@ -118,3 +120,12 @@ def _patterns(data: dict[str, Any], key: str, default: tuple[str, ...], path: Pa
         raise ValueError(f"Security declaration {path}: {key} must be a list of path patterns")
 
     return tuple(declared)
+
+
+def _non_negative(data: dict[str, Any], key: str, default: int, path: Path) -> int:
+    value = data.get(key, default)
+
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"Security declaration {path}: {key} must be an integer, 0 or more")
+
+    return value

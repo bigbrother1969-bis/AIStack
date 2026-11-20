@@ -962,6 +962,19 @@ sudo systemctl daemon-reload && sudo systemctl enable --now aistack-firewall-sna
 les Réglages l'ont déplacé). Un relevé de plus de deux heures n'est pas
 utilisé ; le rapport le dit.
 
+Refus (T3b) : chaque passage lit aussi les compteurs (`iptables-save -c`) et
+ajoute à `firewall-refusals.jsonl`, gardé sept jours, le nombre de paquets
+refusés par `DOCKER-USER` (venus de hors du LAN et du VPN, vers un port
+publié), par la politique par défaut d'`INPUT`, par ufw et par les autres
+chaînes. Le rapport les additionne sur `refusal_window_hours` (24) et dit
+combien, jamais qui : un compteur ne porte aucune adresse. Les compteurs
+repartent de zéro à un redémarrage ou un rechargement des règles ; le
+rapport en tient compte. Une unité installée avant cette version demande
+seulement que son script soit recopié (la ligne `install` ci-dessus).
+`refusal_watch_per_hour` dans `security.yml` vaut 0 à la livraison : le
+chiffre reste une information tant que tu n'as pas vu le chiffre habituel
+et fixé un seuil au-dessus.
+
 L'application web, le seul service avec un port public, ne tient aucun
 socket Docker : `docker-compose.yml` lui fait lire Docker par
 `docker-proxy`, un proxy en lecture seule sur la boucle locale de l'hôte

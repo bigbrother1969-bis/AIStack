@@ -21,7 +21,9 @@ from aistack.security.host import (
     assess_packages,
     parse_files,
     parse_packages,
+    assess_remote_hosts,
     read_host,
+    read_remote_hosts,
 )
 from aistack.security.yaml import load_security_yaml
 
@@ -192,3 +194,65 @@ def test_the_unit_reads_only_and_keeps_its_hardening() -> None:
 
     for line in ("ProtectSystem=strict", "NoNewPrivileges=yes", "PrivateTmp=yes", "CapabilityBoundingSet=CAP_DAC_READ_SEARCH"):
         assert line in unit
+
+
+def _remote(tmp_path: Path, monkeypatch, hosts: dict[str, str | None]) -> Path:
+    """A data directory with `hosts.yml` and, per host, the snapshots its push brought (None: no `security` folder)."""
+
+    config = tmp_path / "config"
+    config.mkdir()
+    (config / "hosts.yml").write_text(
+        "hosts:\n" + "".join(f"  {name}:\n    directory: hosts/{name}\n" for name in hosts), encoding="utf-8"
+    )
+    monkeypatch.setenv("AISTACK_CONFIG_DIR", str(config))
+    generated = tmp_path / "generated"
+    for name, stamp in hosts.items():
+        folder = generated / "hosts" / name
+        folder.mkdir(parents=True)
+        if stamp is not None:
+            (folder / "security").mkdir()
+            (folder / "security" / PACKAGES).write_text(
+                f"# aistack-collected-at: {stamp}\nupgradable: 1\nsecurity: 1\nreboot-required-since: no\nlists-updated: {stamp}\n"
+                "package: libssl3 3.0.1 3.0.2 security\n",
+                encoding="utf-8",
+            )
+            (folder / "security" / FILES).write_text(
+                f"# aistack-collected-at: {stamp}\n0644 pi pi /home/pi/app/.env\n", encoding="utf-8"
+            )
+    return generated
+
+
+def test_each_host_that_sends_a_snapshot_is_judged_and_named(tmp_path: Path, monkeypatch) -> None:
+    generated = _remote(tmp_path, monkeypatch, {"msi": None, "raspberry": STAMP})
+
+    hosts = read_remote_hosts(generated, NOW)
+    findings = {item.key: item for item in assess_remote_hosts(hosts, NOW, SecurityDefinition())}
+
+    assert [name for name, *_ in hosts] == ["raspberry"]
+    assert findings["host.raspberry.updates.security"].title == "raspberry: 1 security update(s) wait on the host"
+    assert findings["host.raspberry.files.exposed"].severity == FIX
+    assert not any(key.startswith("host.msi") for key in findings)
+
+
+def test_a_host_that_was_off_a_few_hours_is_still_read(tmp_path: Path, monkeypatch) -> None:
+    generated = _remote(tmp_path, monkeypatch, {"gigabyte": (NOW - timedelta(hours=10)).isoformat(timespec="seconds")})
+
+    assert read_remote_hosts(generated, NOW)[0][1] is not None
+
+
+def test_a_host_silent_for_more_than_a_day_is_said_so_not_judged(tmp_path: Path, monkeypatch) -> None:
+    generated = _remote(tmp_path, monkeypatch, {"gigabyte": (NOW - timedelta(hours=30)).isoformat(timespec="seconds")})
+
+    findings = assess_remote_hosts(read_remote_hosts(generated, NOW), NOW, SecurityDefinition())
+
+    assert [(item.key, item.severity) for item in findings] == [("host.gigabyte.packages.unread", INFORMATION)]
+    assert findings[0].title.startswith("gigabyte: ")
+
+
+def test_an_unreadable_hosts_declaration_does_not_fail_the_assessment(tmp_path: Path, monkeypatch) -> None:
+    config = tmp_path / "config"
+    config.mkdir()
+    (config / "hosts.yml").write_text("hosts: [not, a, mapping]\n", encoding="utf-8")
+    monkeypatch.setenv("AISTACK_CONFIG_DIR", str(config))
+
+    assert read_remote_hosts(tmp_path / "generated", NOW) == []

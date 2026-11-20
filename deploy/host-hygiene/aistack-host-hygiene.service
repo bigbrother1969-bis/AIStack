@@ -15,6 +15,10 @@
 #   # host.conf there: OUTPUT, and the same OUTPUT as ReadWritePaths (below)
 #   systemctl daemon-reload && systemctl enable --now aistack-host-hygiene.timer
 #
+# On another host (no copy of AIStack, the push of ADR-0020 brings the files
+# to the MSI), the output is the folder of that host's collector, in its
+# `security` subfolder: OUTPUT=/var/lib/aistack-hotes/<host>/security
+#
 # What it did: journalctl -u aistack-host-hygiene -n 5
 
 [Unit]

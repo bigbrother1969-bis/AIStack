@@ -945,6 +945,14 @@ A security update that waits, a reboot required for more than
 a secret file a group can reach are findings to watch; a secret file any user
 can reach is to fix. `accepted_files` in `security.yml` accepts a file by path.
 
+On the other hosts the same unit sends nothing by itself: it writes in
+the folder of that host's collector, under `security`
+(`OUTPUT=/var/lib/aistack-hotes/<host>/security`, and the same path as
+`ReadWritePaths`), and the push of the hosts' records (every 15 minutes)
+brings it to the MSI. The report then names each finding with its host. A
+snapshot older than 25 hours is set aside and the report says so; the host
+may simply be off. A host with no `security` folder is not reported.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

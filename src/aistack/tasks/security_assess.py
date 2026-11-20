@@ -10,7 +10,7 @@ from aistack.security.definition import SecurityDefinition
 from aistack.security.exposure import assess, propose_declaration, read_listeners, read_published
 from aistack.security.findings import SEVERITIES, worst
 from aistack.security.firewall import read_firewall
-from aistack.security.host import assess_files, assess_packages, read_host
+from aistack.security.host import assess_files, assess_packages, assess_remote_hosts, read_host, read_remote_hosts
 from aistack.security.hygiene import OLD_IMAGE, Container, assess_hygiene, propose_accepted, read_containers
 from aistack.security.images import assess_images, old_images, read_created
 from aistack.security.yaml import load_security_yaml
@@ -48,6 +48,7 @@ class SecurityAssessTask:
         published = read_published()
         firewall, firewall_note = read_firewall(generated_dir / HOST_DIR)
         packages, host_files, host_note = read_host(generated_dir / HOST_DIR)
+        remote_hosts = read_remote_hosts(generated_dir)
         containers = read_containers()
         created = read_created(sorted({item.image_id for item in containers if item.image_id})) if containers else {}
         now = datetime.now(timezone.utc)
@@ -57,6 +58,7 @@ class SecurityAssessTask:
             + assess_images(containers, created, now, definition)
             + assess_packages(packages, host_note, now, definition)
             + assess_files(host_files, definition)
+            + assess_remote_hosts(remote_hosts, now, definition)
         )
 
         assessment = {

@@ -991,6 +991,15 @@ constats à surveiller ; un fichier secret que n'importe quel utilisateur peut
 lire est à corriger. `accepted_files` dans `security.yml` accepte un fichier
 par son chemin.
 
+Sur les autres hôtes, la même unité n'envoie rien toute seule : elle écrit
+dans le dossier du collecteur de l'hôte, sous `security`
+(`OUTPUT=/var/lib/aistack-hotes/<hôte>/security`, et le même chemin en
+`ReadWritePaths`), et la poussée des relevés des hôtes (toutes les 15
+minutes) l'amène à la MSI. Le rapport nomme alors chaque constat avec son
+hôte. Un relevé de plus de 25 heures est écarté et le rapport le dit ; l'hôte
+peut simplement être éteint. Un hôte sans dossier `security` n'est pas
+signalé.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

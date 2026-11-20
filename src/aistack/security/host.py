@@ -11,7 +11,7 @@ finding names paths and numbers, never a secret.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -22,6 +22,11 @@ HEADER = "# aistack-collected-at:"
 PACKAGES = "host-packages.txt"
 FILES = "host-files.txt"
 MAX_AGE = timedelta(hours=3)
+# A host that reaches us by the push (ADR-0020) may be off for a day, and the
+# push runs every 15 minutes: its snapshot is set aside after 25 hours, the
+# threshold of `silent_after_minutes` in `hosts.yml`.
+REMOTE_MAX_AGE = timedelta(hours=25)
+REMOTE_DIRECTORY = "security"
 
 
 @dataclass(frozen=True)
@@ -112,7 +117,7 @@ def parse_files(text: str) -> HostFiles | None:
     return HostFiles(collected, tuple(files))
 
 
-def read_host(directory: Path, now: datetime | None = None) -> tuple[Packages | None, HostFiles | None, str]:
+def read_host(directory: Path, now: datetime | None = None, max_age: timedelta = MAX_AGE) -> tuple[Packages | None, HostFiles | None, str]:
     """
     What the host unit wrote, and a sentence saying why a reading is missing
     or was set aside (empty when both are there and fresh).
@@ -130,7 +135,7 @@ def read_host(directory: Path, now: datetime | None = None) -> tuple[Packages | 
         if reading is None:
             notes.append(f"{name} has no date")
             return None
-        if now - reading.collected_at > MAX_AGE:
+        if now - reading.collected_at > max_age:
             notes.append(f"{name} is old ({reading.collected_at.isoformat(timespec='minutes')})")
             return None
         return reading
@@ -263,4 +268,44 @@ def assess_files(files: HostFiles | None, definition: SecurityDefinition) -> lis
             )
         )
 
+    return findings
+
+
+def read_remote_hosts(generated_dir: Path, now: datetime | None = None) -> list[tuple[str, Packages | None, HostFiles | None, str]]:
+    """
+    The snapshots of the other hosts: each host `hosts.yml` traces writes
+    `<directory>/security/` through the push of `ADR-0020`. A host that has
+    no such folder is not reported (it may not run the unit, and the local
+    host is read from the folder of its own unit). An unreadable `hosts.yml`
+    is no reason to fail the assessment.
+    """
+
+    from aistack.hosts.records import load_hosts_declaration
+
+    try:
+        hosts = load_hosts_declaration(generated_dir).hosts
+    except (OSError, ValueError, AttributeError):
+        return []
+
+    found = []
+    for host in hosts:
+        folder = host.directory / REMOTE_DIRECTORY
+        if folder.is_dir():
+            found.append((host.name, *read_host(folder, now, REMOTE_MAX_AGE)))
+    return found
+
+
+def assess_remote_hosts(
+    hosts: list[tuple[str, Packages | None, HostFiles | None, str]],
+    now: datetime,
+    definition: SecurityDefinition,
+) -> list[Finding]:
+    """The same judgement as the local host, each finding naming its host."""
+
+    findings: list[Finding] = []
+    for name, packages, files, note in hosts:
+        for finding in assess_packages(packages, note, now, definition) + assess_files(files, definition):
+            findings.append(
+                replace(finding, key=finding.key.replace("host.", f"host.{name}.", 1), title=f"{name}: {finding.title}")
+            )
     return findings

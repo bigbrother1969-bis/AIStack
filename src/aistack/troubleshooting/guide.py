@@ -143,6 +143,26 @@ def _engine_of(declared: LocalEngineDefinition) -> AIEngine:
     return OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
 
 
+def ask_one(
+    engine: LocalEngineDefinition,
+    finding: RuntimeFinding,
+    operation: str,
+    target_language: str,
+    context: str = "",
+    translator: AIEngine | None = None,
+) -> AIRuntimeAnswer:
+    """One answer from one declared engine, with no hand-over to another."""
+
+    return _CALLS[operation](
+        finding,
+        _engine_of(engine),
+        engine.label or engine.model,
+        target_language=target_language,
+        translator=translator,
+        context=context,
+    )
+
+
 def ask_local(
     finding: RuntimeFinding,
     operation: str,
@@ -175,14 +195,7 @@ def ask_local(
     )
 
     def ask(engine: LocalEngineDefinition) -> AIRuntimeAnswer:
-        return _CALLS[operation](
-            finding,
-            _engine_of(engine),
-            engine.label or engine.model,
-            target_language=target_language,
-            translator=translator,
-            context=context,
-        )
+        return ask_one(engine, finding, operation, target_language, context, translator)
 
     if len(declared) == 1:
         return ask(declared[0])

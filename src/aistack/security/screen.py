@@ -17,6 +17,8 @@ from fnmatch import fnmatchcase
 from html import escape
 from typing import Any
 
+from aistack.contracts.runtime_finding import MatchedLine, RuntimeFinding
+from aistack.contracts.runtime_observation import LogEntry
 from aistack.security.findings import FIX, SEVERITIES, URGENT, WATCH
 
 # The drift of files and units is the owner's own doing while a window is open.
@@ -111,6 +113,37 @@ def rows(
         if item.get("severity") in COUNTED and (only is None or group_of(str(item["key"])) == only)
     ]
     return sorted(found, key=lambda row: (-SEVERITIES.index(row.severity), row.key))
+
+
+def row_of(item: Mapping[str, Any]) -> Row:
+    """One report item as a row, outside any window and with no watch date."""
+
+    return Row(
+        key=str(item["key"]),
+        severity=str(item.get("severity")),
+        title=str(item.get("title", item["key"])),
+        evidence=tuple(str(line) for line in item.get("evidence") or []),
+        unknown=str(item.get("unknown") or ""),
+        held=False,
+        since=None,
+        kind=kind_of(str(item["key"])),
+    )
+
+
+def runtime_finding(row: Row, t: Callable[..., str]) -> RuntimeFinding:
+    """The finding as the engine's prompts know it: the fixed texts say what it means and what to do;
+    the evidence is cleaned (`clean_line`) before it becomes a line."""
+
+    lines = [clean_line(line) for line in row.evidence[:EVIDENCE_LINES]] or [clean_line(row.title)]
+    return RuntimeFinding(
+        subject=f"security:{row.key}",
+        signature=f"ADR-0028/{row.kind}",
+        interpretation=t(f"security.guide.{row.kind}.meaning"),
+        remediation=t(f"security.guide.{row.kind}.action"),
+        confidence=row.severity,
+        grounding="security assessment",
+        evidence=tuple(MatchedLine(LogEntry(offset=index, text=line)) for index, line in enumerate(lines)),
+    )
 
 
 def source_problems(report: Mapping[str, Any] | None) -> list[dict[str, Any]]:

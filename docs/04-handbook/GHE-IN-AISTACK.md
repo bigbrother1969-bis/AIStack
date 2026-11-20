@@ -165,6 +165,7 @@ The command or the page becomes a thin caller. Eight Tasks run this way:
 | `timemachine.rebuild` | the Time Machine's graph |
 | `network_docker.discover` | the scan of the machines |
 | `ai.reason` | the AI's reasoning on a finding |
+| `ai.compare` | the local engines side by side on the same findings |
 | `declarations.observe` | the observation of the declarations (concept 6) |
 | `knowledge.integrity` | the integrity check (concept 7) |
 

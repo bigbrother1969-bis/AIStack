@@ -85,5 +85,7 @@ class OpenAIChatEngine:
         message = choices[0].get("message") if isinstance(choices, list) and choices and isinstance(choices[0], dict) else None
         text = message.get("content") if isinstance(message, dict) else None
         if not isinstance(text, str) or not text.strip():
+            if isinstance(message, dict) and str(message.get("reasoning_content") or "").strip():
+                return "", f"{self.label} used its answer on reasoning and gave no final text (try a lower reasoning_effort)"
             return "", f"{self.label} answered with no response text"
         return text.strip(), ""

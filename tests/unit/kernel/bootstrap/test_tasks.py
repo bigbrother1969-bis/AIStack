@@ -102,6 +102,7 @@ def test_only_the_tasks_declared_here_are_registered():
         "console.render",
         "timemachine.rebuild",
         "network_docker.discover",
+        "ai.compare",
         "ai.reason",
         "declarations.observe",
         "knowledge.integrity",

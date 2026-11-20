@@ -116,3 +116,11 @@ def test_an_error_object_and_a_non_object_are_reported(server):
 
     server.answer = ["not", "an", "object"]
     assert "something unreadable" in engine(server).complete("q")[1]
+
+
+def test_an_answer_spent_on_reasoning_says_so(server):
+    server.answer = {"choices": [{"message": {"content": "", "reasoning_content": "thinking, thinking..."}}]}
+
+    text, reason = engine(server, label="olala").complete("q")
+
+    assert text == "" and "olala used its answer on reasoning and gave no final text" in reason

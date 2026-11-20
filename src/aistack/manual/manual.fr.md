@@ -930,6 +930,10 @@ domaine **Hôtes** : il compte dans le score, apparaît dans le plan
 d'action et s'ouvre dans l'assistant de pannes. Le délai se règle dans
 `./config/hosts.yml` (`silent_after_minutes`).
 
+## Comparer les moteurs d'IA locaux
+
+`python -m aistack.cli.ai_compare --engine ollama@127.0.0.1:11434/qwen2.5:7b --engine 'openai_chat@127.0.0.1:18095/olala?effort=low&label=Olala'` pose les mêmes questions que la page Sécurité à chaque moteur, un par un, sur les constats les plus graves du dernier rapport (`--finding` pour en nommer, `--max` pour en changer le nombre), et écrit un rapport markdown sous `ai-compare/` du dossier de données : durée, réponse, et quelques signaux automatiques (un « vous » là où la page tutoie, le mot « owner », une commande qui modifie, une réponse vide). `--dry-run` ne pose aucune question. Rien n'est modifié sur aucune machine. À toi de lire et de choisir le moteur.
+
 ## Évaluation de sécurité
 
 `python -m aistack.cli.security_assess` (ou `docker compose exec web python

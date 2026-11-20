@@ -24,8 +24,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from aistack.ai_runtime.reasoning_history import record_ai_reasoning
 from aistack.config import PACKAGE_ROOT, configured
-from aistack.contracts.runtime_finding import MatchedLine, RuntimeFinding
-from aistack.contracts.runtime_observation import LogEntry
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
 from aistack.security import screen, series, window
@@ -197,37 +195,11 @@ def declare_window(request: Request, action: str = Form(""), duration: str = For
 
 
 def _row(request: Request, key: str) -> screen.Row | None:
-    generated = request.app.state.generated_dir
-    report = series.read_report(generated)
+    report = series.read_report(request.app.state.generated_dir)
     for item in screen.findings_of(report):
         if item["key"] == key:
-            return screen.Row(
-                key=key,
-                severity=str(item.get("severity")),
-                title=str(item.get("title", key)),
-                evidence=tuple(str(line) for line in item.get("evidence") or []),
-                unknown=str(item.get("unknown") or ""),
-                held=False,
-                since=None,
-                kind=screen.kind_of(key),
-            )
+            return screen.row_of(item)
     return None
-
-
-def _runtime_finding(row: screen.Row, t: Any) -> RuntimeFinding:
-    """The finding as the engine's prompts know it: the fixed texts say what it means and what to do;
-    the evidence is cleaned (`screen.clean_line`) before it becomes a line."""
-
-    lines = [screen.clean_line(line) for line in row.evidence[: screen.EVIDENCE_LINES]] or [screen.clean_line(row.title)]
-    return RuntimeFinding(
-        subject=f"security:{row.key}",
-        signature=f"ADR-0028/{row.kind}",
-        interpretation=t(f"security.guide.{row.kind}.meaning"),
-        remediation=t(f"security.guide.{row.kind}.action"),
-        confidence=row.severity,
-        grounding="security assessment",
-        evidence=tuple(MatchedLine(LogEntry(offset=index, text=line)) for index, line in enumerate(lines)),
-    )
 
 
 def _href(key: str) -> str:
@@ -298,7 +270,7 @@ def ask(request: Request, key: str) -> RedirectResponse:
 
     session = {"answers": {}, "asked": True}
     sessions[key] = session
-    finding_for_engine = _runtime_finding(row, language.t)
+    finding_for_engine = screen.runtime_finding(row, language.t)
     context = screen.facts_for_engine(row, language.t)
     history = request.app.state.generated_dir / "ai-reasoning"
     ask_local = request.app.state.ask_local_ai

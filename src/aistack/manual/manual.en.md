@@ -887,6 +887,10 @@ domain: it counts in the score, appears in the action plan and opens in
 the troubleshooting assistant. The delay is set in `./config/hosts.yml`
 (`silent_after_minutes`).
 
+## Comparing the local AI engines
+
+`python -m aistack.cli.ai_compare --engine ollama@127.0.0.1:11434/qwen2.5:7b --engine 'openai_chat@127.0.0.1:18095/olala?effort=low&label=Olala'` asks each engine, one at a time, what the Security page asks, on the worst findings of the last report (`--finding` to name some, `--max` to change how many), and writes a markdown report under `ai-compare/` of the data directory: time, answer and a few automatic flags (a "vous" where the page uses "tu", the word "owner", a command that modifies, an empty answer). `--dry-run` asks nothing. Nothing is changed on any machine. Reading and choosing the engine is up to you.
+
 ## Security assessment
 
 `python -m aistack.cli.security_assess` (or `docker compose exec web python

@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from aistack.ai_runtime import compare
+from aistack.ai_runtime.call_journal import AI_COMPARE, journaled
 from aistack.ai_runtime.definition import LocalEngineDefinition
 from aistack.ai_runtime.operations import _LANGUAGE_DIRECTIVE
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
@@ -104,7 +105,9 @@ class AiCompareTask:
             return summary
 
         def ask(engine: LocalEngineDefinition, subject: compare.Subject, operation: str) -> AIRuntimeAnswer:
-            return ask_one(engine, subject.finding, operation, language, subject.context)
+            return journaled(ask_one, AI_COMPARE, generated / "ai-calls")(
+                engine, subject.finding, operation, language, subject.context
+            )
 
         outcomes = compare.run(
             engines, subjects, operations, language, ask, time.monotonic,

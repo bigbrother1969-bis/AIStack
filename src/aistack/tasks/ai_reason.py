@@ -5,6 +5,7 @@ from aistack.config import configured
 import subprocess
 from pathlib import Path
 
+from aistack.ai_runtime.call_journal import VIGIL_REASON, journaled
 from aistack.ai_runtime.reasoning_history import record_ai_reasoning
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.runtime_finding import RuntimeFinding
@@ -126,8 +127,9 @@ class AiReasonTask:
             for finding in findings:
                 # The same engines, in the same order, with the same hand-over and the same switch as
                 # the console's pages: the watch is one more reader of `engines:`, not a path of its own.
+                ask = journaled(ask_local, VIGIL_REASON)
                 answers = tuple(
-                    ask_local(finding, operation, "fr", definition=ai_runtime_definition)
+                    ask(finding, operation, "fr", definition=ai_runtime_definition)
                     for operation in ("reason", "explain", "recommend")
                 )
 

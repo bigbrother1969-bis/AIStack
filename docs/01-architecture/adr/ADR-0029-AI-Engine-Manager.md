@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.1
+  version: 0.2
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -27,7 +27,7 @@ relations:
 
 Proposed, 2026-11-20. Scope and three choices decided with the owner on
 2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
-the rest is proposed and waits for the owner. No code exists yet.
+the rest is proposed and waits for the owner. Only the record (M1) exists in code.
 
 ## Context
 
@@ -179,13 +179,13 @@ changes nothing.
 
 ## Implementation state
 
-Nothing is built. Planned slices (each its own patch, tested before
+M1 is built; the rest is not. Planned slices (each its own patch, tested before
 delivery):
 
 | Slice | Content | State |
 |---|---|---|
 | M0 | This ADR | proposed, 2026-11-20 |
-| M1 | The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; written by a Task; routing unchanged | not started |
+| M1 | The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; routing unchanged | done, 2026-11-20 (0091): callers `troubleshooting`, `security.page`, `vigil.reason`, `ai.compare`; 90 days kept; `AIRuntimeAnswer.external` marks a question that went to an external engine. Written by the process that asks (the web service, the watch, the comparison), as state a service keeps for itself in the GHE audit; § 6 said "by a Task", which does not fit the web service, so the rule is read as "declared in the audit" |
 | M2 | Classes and policy: `ai_policy.yml` (caller to class, engine to internal or external, internal by default); the page's destination reads it; the record also says what the policy would have decided | not started |
 | M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | not started |
 | M4 | The read-only page of § 8 and its console card | not started |

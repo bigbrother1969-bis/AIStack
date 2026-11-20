@@ -96,6 +96,7 @@ EXEMPT_WRITES = {
     "src/aistack/instance/first_start.py": INSTALLATION,
     "src/aistack/instance/setup_wizard.py": INSTALLATION,
     "src/aistack/pra/scheduled.py": STATE,
+    "src/aistack/ai_runtime/call_journal.py": STATE,
     "src/aistack/providers/docker/digest_history.py": STATE,
     "src/aistack/restart_watch/guard.py": STATE,
     "src/aistack/restart_watch/journal.py": STATE,

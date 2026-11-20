@@ -86,14 +86,16 @@ def ask_ai_runtime(
             finding, gemini, f"gemini:{gemini.model}", target_language=target_language, context=context
         )
         if first.reachable:
-            return first
+            return replace(first, external=True)
 
     answer = ask_local(finding, operation, target_language, context, definition)
     if first is None:
         return answer
     if answer.reachable:
-        return replace(answer, model=f"{answer.model} (Gemini: {first.unreachable_reason})")
-    return replace(answer, unreachable_reason=f"{first.unreachable_reason} ; {answer.unreachable_reason}")
+        return replace(answer, model=f"{answer.model} (Gemini: {first.unreachable_reason})", external=True)
+    return replace(
+        answer, unreachable_reason=f"{first.unreachable_reason} ; {answer.unreachable_reason}", external=True
+    )
 
 
 def ask_ollama(

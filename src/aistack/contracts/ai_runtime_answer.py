@@ -17,6 +17,9 @@ class AIRuntimeAnswer:
     unreachable engine is a reportable outcome, not an exception.
     `language` is the language requested; if no translator ran or the
     translation failed, `response` is still in the model's own language.
+    `external` says the question was sent to an engine outside the owner's
+    machines, whether or not it answered (`ADR-0029`): the journal records
+    it, the answer's text never needs it.
     """
 
     operation: str
@@ -27,6 +30,7 @@ class AIRuntimeAnswer:
     reachable: bool
     unreachable_reason: str = ""
     language: str = "fr"
+    external: bool = False
 
     def __post_init__(self) -> None:
         if not self.operation.strip():

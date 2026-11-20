@@ -73,7 +73,7 @@
         </form>
       {% endif %}
     {% endif %}
-    {% if pending %}<p class="pending">{{ t('security.finding.ai.pending') }}</p>{% endif %}
+    {% if pending %}<p class="pending">{% if starting %}{{ t('security.finding.ai.engine_starting', engine=starting) }}{% else %}{{ t('security.finding.ai.pending') }}{% endif %}</p>{% endif %}
     {% for opinion in opinions %}
       {% if opinion.answer %}
         <h3 id="ai-{{ opinion.operation }}">{{ labels[opinion.operation] }}</h3>

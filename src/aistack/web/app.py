@@ -129,6 +129,7 @@ def create_app(
     security_window: Callable[..., dict[str, Any]] | None = None,
     ask_local_ai: AskAI = ask_local,
     local_model: Callable[[], str] | None = None,
+    engine_starting: Callable[[], str] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -178,6 +179,7 @@ def create_app(
     app.state.security_window = security_window if security_window is not None else security_screen.run_window
     app.state.ask_local_ai = ask_local_ai
     app.state.local_model = local_model if local_model is not None else security_screen.local_model
+    app.state.engine_starting = engine_starting if engine_starting is not None else security_screen.engine_starting
     app.state.security_sessions = {}
     # The CPU findings last listed: a reading is an instant, so the one
     # clicked may be gone a second later.

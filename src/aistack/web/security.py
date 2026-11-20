@@ -108,6 +108,21 @@ def local_model() -> str:
     return (engines[0].label or engines[0].model) if engines else ""
 
 
+def engine_starting() -> str:
+    """The label of the engine the actuator is starting just now; empty when none is (or the actuator is silent)."""
+
+    from aistack.ai_runtime.engine_switch import EngineSwitch
+    from aistack.ai_runtime.yaml import load_ai_runtime_yaml
+    from aistack.troubleshooting.guide import AI_RUNTIME
+
+    for engine in load_ai_runtime_yaml(AI_RUNTIME).local_engines():
+        if engine.switch is not None:
+            label = engine.label or engine.model
+            if EngineSwitch(engine.switch, label).state() == "starting":
+                return label
+    return ""
+
+
 def _graphs(request: Request, series_lines: list[dict[str, Any]], start: datetime, end: datetime, zone_name: str) -> list[dict[str, Any]]:
     t = _language(request).t
     zone = window.zone(zone_name)
@@ -232,6 +247,7 @@ def finding(request: Request, key: str) -> Response:
         opinions.append({"operation": operation, "answer": answer, "unreachable": unreachable})
 
     model = request.app.state.local_model()
+    pending = bool(session and session.get("asked")) and len(answers) < len(OPERATIONS)
 
     return _render(
         request,
@@ -246,7 +262,8 @@ def finding(request: Request, key: str) -> Response:
             "model": model,
             "asked": bool(session and session.get("asked")),
             "opinions": opinions,
-            "pending": bool(session and session.get("asked")) and len(answers) < len(OPERATIONS),
+            "pending": pending,
+            "starting": request.app.state.engine_starting() if pending else "",
             "evidence": [screen.clean_line(line) for line in row.evidence],
         },
     )

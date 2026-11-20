@@ -69,7 +69,9 @@ def one(key: str, severity: str, title: str = "T", evidence: tuple[str, ...] = (
     return {"key": key, "severity": severity, "title": title, "evidence": list(evidence), "unknown": unknown}
 
 
-def client(tmp_path: Path, engine: Engine | None = None, model: str = "qwen2.5:3b", port: int = LAN) -> tuple[TestClient, Engine]:
+def client(
+    tmp_path: Path, engine: Engine | None = None, model: str = "qwen2.5:3b", port: int = LAN, starting: str = "", deferred: bool = False
+) -> tuple[TestClient, Engine]:
     engine = engine or Engine()
     app = create_app(
         tmp_path,
@@ -79,8 +81,9 @@ def client(tmp_path: Path, engine: Engine | None = None, model: str = "qwen2.5:3
         ask_ai=forbidden,
         ask_local_ai=engine.ask,
         local_model=lambda: model,
+        engine_starting=lambda: starting,
         security_window=engine.run_window,
-        run_in_background=lambda job: job(),
+        run_in_background=(lambda job: None) if deferred else (lambda job: job()),
     )
     return signed_in(TestClient(app, base_url=f"http://testserver:{port}", follow_redirects=False)), engine
 
@@ -228,6 +231,27 @@ def test_the_ai_is_asked_on_a_click_only_and_only_the_local_engine(tmp_path: Pat
         assert answer in page
     assert "jamais exécutée automatiquement" in page and "Relis toute commande" in page
     assert "Demander à l'IA locale" not in page
+
+
+def test_while_a_started_on_demand_engine_starts_the_page_says_so_and_keeps_refreshing(tmp_path: Path):
+    write_report(tmp_path, [one("logs.msi.ssh", "watch", "msi: SSH failures", ("failed: outside 12",))])
+    web, _ = client(tmp_path, starting="Olala", deferred=True)
+
+    web.post("/security/finding/logs.msi.ssh/ask?lang=fr")
+    page = html.unescape(web.get("/security/finding/logs.msi.ssh?lang=fr").text)
+
+    assert "Olala démarre…" in page and "Le moteur local calcule" not in page
+    assert 'http-equiv="refresh"' in page
+
+
+def test_a_pending_question_without_a_starting_engine_keeps_the_usual_message(tmp_path: Path):
+    write_report(tmp_path, [one("logs.msi.ssh", "watch", "msi: SSH failures", ("failed: outside 12",))])
+    web, _ = client(tmp_path, deferred=True)
+
+    web.post("/security/finding/logs.msi.ssh/ask?lang=fr")
+    page = html.unescape(web.get("/security/finding/logs.msi.ssh?lang=fr").text)
+
+    assert "Le moteur local calcule" in page and "démarre…" not in page
 
 
 def test_the_engine_receives_the_evidence_as_fenced_data_and_the_fixed_texts_as_facts(tmp_path: Path):

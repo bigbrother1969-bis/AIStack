@@ -102,6 +102,7 @@ finding:
     ask: "Ask the local AI"
     ask_tooltip: "Asks the local engine three questions (reasoning, explanation, suggestion); it can take several minutes"
     pending: "The local engine is working. This page refreshes by itself; you can also leave it, a notification will appear when an answer is ready."
+    engine_starting: "{engine} is starting… This engine is only launched on demand: allow 15 to 90 seconds before its first answer. This page refreshes by itself."
     reason: "Reasoning"
     explain: "Plain explanation"
     recommend: "A suggestion for you — never run automatically"

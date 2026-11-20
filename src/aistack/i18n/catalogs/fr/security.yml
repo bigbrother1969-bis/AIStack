@@ -102,6 +102,7 @@ finding:
     ask: "Demander à l'IA locale"
     ask_tooltip: "Lance trois questions au moteur local (raisonnement, explication, suggestion) ; il peut falloir plusieurs minutes"
     pending: "Le moteur local calcule. Cette page se rafraîchit toute seule ; tu peux aussi la quitter, une notification apparaîtra quand une réponse sera prête."
+    engine_starting: "{engine} démarre… Ce moteur n'est lancé qu'à la demande : compte de 15 à 90 secondes avant sa première réponse. Cette page se rafraîchit toute seule."
     reason: "Raisonnement"
     explain: "Explication en clair"
     recommend: "Suggestion pour toi — jamais exécutée automatiquement"

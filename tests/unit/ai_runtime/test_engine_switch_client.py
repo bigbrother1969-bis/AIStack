@@ -55,6 +55,16 @@ def test_an_engine_that_is_ready_gives_no_reason_and_a_use_is_told_to_the_switch
     assert state["calls"] == ["start", "touch"]
 
 
+def test_the_state_is_read_without_starting_anything_and_is_empty_when_the_actuator_is_silent(actuator, tmp_path):
+    state, definition = actuator
+    state["status"] = {"state": "starting"}
+
+    assert EngineSwitch(definition, "Olala").state() == "starting"
+    assert state["calls"] == ["status"]
+    assert EngineSwitch(SwitchDefinition("http://127.0.0.1:1", definition.token_file, 5.0), "Olala").state() == ""
+    assert EngineSwitch(SwitchDefinition(definition.url, str(tmp_path / "absent"), 5.0), "Olala").state() == ""
+
+
 @pytest.mark.parametrize("answer, reason", [({"state": "failed", "reason": "not ready after 90 s"}, "not ready after 90 s"), ({"state": "starting"}, "starting")])
 def test_an_engine_that_does_not_become_ready_says_why(actuator, answer, reason):
     state, definition = actuator

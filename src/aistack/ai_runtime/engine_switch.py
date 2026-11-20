@@ -48,6 +48,14 @@ class EngineSwitch:
             return ""
         return f"{self.label} could not be started: {answer.get('reason') or answer.get('state') or 'no answer'}"
 
+    def state(self) -> str:
+        """What the actuator says of the engine (`stopped`, `starting`, `ready`); empty when it cannot be reached. Read-only."""
+
+        try:
+            return str(self._call("status", 2.0).get("state") or "")
+        except _Unreachable:
+            return ""
+
     def used(self) -> None:
         """The engine was used just now (the actuator's `touch` action); a failure here costs nothing, the actuator stops it on its own."""
 

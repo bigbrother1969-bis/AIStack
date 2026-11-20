@@ -168,4 +168,11 @@ def test_an_engine_with_a_switch_that_cannot_start_hands_over_and_the_answer_say
     answer = guide.ask_local(finding(), "reason", "en", "", definition(chat(dead_port(), label="olala", switch=dead), ollama(second)))
 
     assert answer.reachable and answer.response == "from ollama"
-    assert "olala: olala could not be started" in answer.model
+    assert "(olala could not be started" in answer.model and "olala: olala" not in answer.model
+
+
+def test_a_reason_that_starts_with_the_engine_s_name_is_not_prefixed_with_it_again():
+    assert guide._failure("olala", "olala answer set aside twice, it broke the rules: x") == "olala answer set aside twice, it broke the rules: x"
+    assert guide._failure("Olala", "olala could not be started: y") == "olala could not be started: y"
+    assert guide._failure("qwen", "Ollama did not answer") == "qwen: Ollama did not answer"
+    assert guide._failure("olala", "olala at 127.0.0.1:1 could not be reached") == "olala: olala at 127.0.0.1:1 could not be reached"

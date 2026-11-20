@@ -183,6 +183,13 @@ def ask_one(
     )
 
 
+def _failure(label: str, reason: str) -> str:
+    """`<engine>: <reason>`, without saying the engine twice when the reason is a sentence that already starts with its name."""
+
+    own = (f"{label} answer set aside".lower(), f"{label} could not be started".lower())
+    return reason if reason.lower().startswith(own) else f"{label}: {reason}"
+
+
 def ask_local(
     finding: RuntimeFinding,
     operation: str,
@@ -231,7 +238,7 @@ def ask_local(
             if failures:
                 return replace(answer, model=f"{answer.model} ({'; '.join(failures)})")
             return answer
-        failures.append(f"{engine.label or engine.model}: {answer.unreachable_reason}")
+        failures.append(_failure(engine.label or engine.model, answer.unreachable_reason))
 
     assert answer is not None
     return replace(answer, unreachable_reason=" ; ".join(failures))

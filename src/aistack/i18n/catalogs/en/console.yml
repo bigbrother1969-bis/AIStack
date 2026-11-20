@@ -96,3 +96,9 @@ pending:
   dock: "{count} update(s) to validate"
   troubleshooting: "{count} finding(s) to handle"
   timemachine: "{count} explanation(s) to validate"
+  security: "{count} open security finding(s), the worst: {level}"
+  security_any: "{count} open security finding(s)"
+  security_level:
+    watch: "to watch"
+    fix: "to fix"
+    urgent: "urgent"

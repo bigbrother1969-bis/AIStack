@@ -31,11 +31,10 @@ from typing import Any
 from aistack.i18n import Translator
 from aistack.security.definition import SecurityDefinition
 from aistack.security.findings import FIX, URGENT, WATCH
+from aistack.security.screen import is_held
 from aistack.security.window import Window, zone
 from aistack.vigil.notify import Event, State
 
-# What a window holds back: the drift of files and units (`drift.<host>.…`).
-HELD_PREFIX = "drift."
 STALE_AFTER = timedelta(hours=3)
 EVIDENCE_LINES = 3
 
@@ -61,10 +60,6 @@ def _findings(report: dict[str, Any]) -> list[dict[str, Any]]:
     raw = report.get("findings")
     found = [item for item in raw if isinstance(item, dict) and isinstance(item.get("key"), str)] if isinstance(raw, list) else []
     return found
-
-
-def _held(finding: dict[str, Any], in_window: bool) -> bool:
-    return in_window and str(finding["key"]).startswith(HELD_PREFIX) and finding.get("severity") != URGENT
 
 
 def _age(t: Translator, since: datetime | None, now: datetime) -> str:
@@ -103,7 +98,7 @@ def events(
     told = {key for key in previous.security_told if key in serious}
 
     for key, item in serious.items():
-        if key in told or _held(item, in_window):
+        if key in told or is_held(item, in_window):
             continue
         told.add(key)
         if first or not previous.known:
@@ -123,7 +118,7 @@ def events(
 
     if local.hour >= definition.digest_hour and previous.digest_day != today:
         digest_day = today
-        shown = [item for item in watching.values() if not _held(item, in_window)]
+        shown = [item for item in watching.values() if not is_held(item, in_window)]
         held = len(watching) - len(shown)
         collected = _instant(report.get("collected_at"))
         stale = collected is None or now - collected > STALE_AFTER

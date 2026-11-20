@@ -27,7 +27,7 @@ from aistack.priority.screen import Discover, discover_containers
 from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
 from aistack.troubleshooting.findings import CollectFindings, qualified_findings
-from aistack.troubleshooting.guide import AskAI, ai_destination, ask_ai_runtime
+from aistack.troubleshooting.guide import AskAI, ai_destination, ask_ai_runtime, ask_ollama
 from aistack.timemachine.screen import ExpiringValue, live_network_tree
 from aistack.timemachine.tree import NetworkTreeNode
 from aistack.web import (
@@ -52,6 +52,7 @@ from aistack.web import dock as dock_screen
 from aistack.web import health
 from aistack.web import notifications
 from aistack.web import pending as pending_screen
+from aistack.web import security as security_screen
 from aistack.web import setup_wizard as setup_wizard_screen
 from aistack.instance.setup_wizard import apply_sign_in
 from aistack.instance.setup_wizard import probe as setup_probe
@@ -125,6 +126,9 @@ def create_app(
     api_keys: Callable[[], Any] | None = None,
     test_api_key: Callable[[str], str | None] | None = None,
     pending_counts: Callable[[Path], dict[str, int]] | None = None,
+    security_window: Callable[..., dict[str, Any]] | None = None,
+    ask_local_ai: AskAI = ask_ollama,
+    local_model: Callable[[], str] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -170,6 +174,11 @@ def create_app(
     # Where the AI's question goes, shown before the click.
     app.state.ai_destination = destination
     app.state.troubleshooting_sessions = {}
+    # The security screen (ADR-0028 T4b): its window goes through the Runtime, its AI is the local engine only.
+    app.state.security_window = security_window if security_window is not None else security_screen.run_window
+    app.state.ask_local_ai = ask_local_ai
+    app.state.local_model = local_model if local_model is not None else security_screen.local_model
+    app.state.security_sessions = {}
     # The CPU findings last listed: a reading is an instant, so the one
     # clicked may be gone a second later.
     app.state.troubleshooting_listed = {}
@@ -229,6 +238,7 @@ def create_app(
     include(app, restart_watch.router, restart_watch.PREFIX)
     include(app, selection.router, selection.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)
+    include(app, security_screen.router, security_screen.PREFIX)
     include(app, timemachine.router, timemachine.PREFIX)
     include(app, dock_screen.router, dock_screen.PREFIX)
     include(app, health.router)

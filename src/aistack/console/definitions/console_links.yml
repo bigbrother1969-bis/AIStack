@@ -134,6 +134,27 @@ links:
       en: >-
         AIStack states the facts and what to do; on your click, Google Gemini gives its opinion from those facts (they then leave your network), with a local model (Ollama) as the fallback; nothing is applied without your click.
     scope: lan
+  - name:
+      fr: Sécurité
+      en: Security
+    description:
+      fr: >-
+        Voir ce qui est ouvert, ce qui essaie d'entrer et ce qui a
+        changé sur tes machines, avec des graphes dans le temps ;
+        déclarer une fenêtre de maintenance quand tu travailles
+        dessus.
+      en: >-
+        See what is open, what tries to get in and what has changed
+        on your machines, with graphs over time; declare a
+        maintenance window when you work on them.
+    service: web_lan
+    path: /security/
+    ai:
+      fr: >-
+        Sur ton clic, le moteur local (Ollama) explique un constat et suggère quoi faire ; rien ne sort de ta machine et rien n'est exécuté.
+      en: >-
+        On your click, the local engine (Ollama) explains a finding and suggests what to do; nothing leaves your machine and nothing is run.
+    scope: lan
   - name: Time Machine
     description:
       fr: >-

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('security.title') }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 820px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.2rem; }
+    h2 { margin: 2rem 0 .3rem; font-size: 1.2rem; }
+    h3 { margin: 1.2rem 0 .3rem; font-size: 1rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .status { padding: .8rem 1rem; border-radius: 6px; background: #e8f5e9; border: 1px solid #a5d6a7; margin: 1rem 0; }
+    .warning { padding: .8rem 1rem; border-radius: 6px; background: #fff1cc; border: 1px solid #e0b34d; margin: 1rem 0; font-size: .88rem; }
+    .summary { font-size: 1.05rem; margin: .8rem 0; }
+    ul.findings { list-style: none; margin: .6rem 0 0; padding: 0; }
+    ul.findings li { border: 1px solid #ddd; border-left-width: 6px; border-radius: 8px; padding: .8rem 1rem; margin-bottom: .6rem; background: #fafafa; }
+    li.sev-watch { border-left-color: #eab308; }
+    li.sev-fix { border-left-color: #f97316; }
+    li.sev-urgent { border-left-color: #b91c1c; }
+    .level { display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; padding: .1rem .5rem; margin-right: .5rem; }
+    .level-watch { background: #fde047; color: #3b2f00; }
+    .level-fix { background: #fb923c; color: #2b1200; }
+    .level-urgent { background: #b91c1c; color: #fff; }
+    .title { font-weight: 700; }
+    .age, .held, .unknown { color: #555; font-size: .85rem; margin: .25rem 0 0; }
+    .held { font-style: italic; }
+    ul.evidence { margin: .4rem 0 0; padding-left: 1.2rem; font-family: monospace; font-size: .82rem; color: #374151; }
+    a.open { display: inline-block; margin-top: .5rem; color: #1f6feb; text-decoration: none; font-size: .9rem; }
+    a.open:hover { text-decoration: underline; }
+    .empty { color: #666; font-style: italic; }
+    button { padding: .45rem .9rem; font-size: .88rem; cursor: pointer; border: 1px solid #bbb; border-radius: 6px; background: white; margin: .2rem .3rem .2rem 0; }
+    button.primary { background: #1f6feb; color: white; border-color: #1f6feb; font-weight: bold; }
+    .ranges a { margin-right: .8rem; color: #1f6feb; text-decoration: none; }
+    .ranges a.current { color: #1f2933; font-weight: 700; text-decoration: underline; }
+    figure { margin: 1rem 0; }
+    figcaption { font-weight: 700; font-size: .92rem; }
+    svg.graph { width: 100%; height: auto; display: block; }
+    .legend { font-size: .8rem; color: #444; }
+    .legend span { margin-right: 1rem; }
+    .swatch { display: inline-block; width: .9rem; height: .25rem; vertical-align: middle; margin-right: .3rem; }
+    .back-link { display: inline-block; margin-bottom: 1.2rem; font-size: .88rem; color: #1f6feb; text-decoration: none; }
+    .top-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.5rem; }
+    .lang-switch { font-size: .85rem; margin-left: auto; display: inline-flex; align-items: center; gap: .5rem; }
+    .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
+    .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
+    .lang-switch a:hover .flag { opacity: 1; }
+    .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+  </style>
+</head>
+<body>
+  <div class="top-links">
+    <a class="back-link" href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">{% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}</nav>
+  </div>
+
+  <header>
+    <h1>{{ t('security.heading') }}</h1>
+    <p class="meta">{{ t('security.meta') }}</p>
+  </header>
+
+  {% if status %}<div class="status">{{ status }}</div>{% endif %}
+
+  {% if not has_report %}
+    <div class="warning">{{ t('security.report.absent') }}</div>
+  {% else %}
+    <p class="meta">{{ t('security.report.age', at=collected_at, minutes=minutes_old) }}</p>
+    {% if stale %}<div class="warning">{{ t('security.report.stale') }}</div>{% endif %}
+    {% if counts.watch + counts.fix + counts.urgent == 0 %}
+      <p class="summary">{{ t('security.summary.none') }}</p>
+    {% else %}
+      <p class="summary">{{ t('security.summary.line', watch=counts.watch, fix=counts.fix, urgent=counts.urgent, information=information) }}</p>
+    {% endif %}
+
+    {% for group in groups %}
+      <h2>{{ group.title }}</h2>
+      <p class="meta">{{ group.intro }}</p>
+      {% if group.rows %}
+        <ul class="findings">
+          {% for entry in group.rows %}
+            {% set row = entry.row %}
+            <li class="sev-{{ row.severity }}" id="finding-{{ row.key }}">
+              <span class="level level-{{ row.severity }}">{{ level_word(row.severity) }}</span><span class="title">{{ row.title }}</span>
+              {% if entry.age %}<p class="age">{{ t('security.row.since', age=entry.age) }}</p>{% endif %}
+              {% if row.held %}<p class="held">{{ t('security.row.held') }}</p>{% endif %}
+              {% if row.evidence %}
+                <ul class="evidence">{% for line in row.evidence[:5] %}<li>{{ line }}</li>{% endfor %}</ul>
+              {% endif %}
+              {% if row.unknown %}<p class="unknown">{{ t('security.row.unknown', text=row.unknown) }}</p>{% endif %}
+              <a class="open" href="{{ base }}/finding/{{ row.key | urlencode }}" title="{{ t('security.row.open_tooltip') }}">{{ t('security.row.open') }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">{{ t('security.group.empty') }}</p>
+      {% endif %}
+    {% endfor %}
+
+    <h2>{{ t('security.sources.heading') }}</h2>
+    <p class="meta">{{ t('security.sources.intro') }}</p>
+    {% if sources %}
+      <ul>{% for item in sources %}<li>{{ item.title }} <span class="meta">({{ level_word(item.severity) }})</span></li>{% endfor %}</ul>
+    {% else %}
+      <p class="empty">{{ t('security.sources.none') }}</p>
+    {% endif %}
+  {% endif %}
+
+  <h2>{{ t('security.window.heading') }}</h2>
+  <p class="meta">{{ t('security.window.intro', hours=window_hours) }}</p>
+  {% if window_open %}
+    <p>{{ t('security.window.open', until=window_until, minutes=window_minutes) }}</p>
+    <form method="post" action="{{ base }}/window"><!--aistack:csrf-->
+      <input type="hidden" name="action" value="end">
+      <button type="submit" title="{{ t('security.window.end_tooltip') }}">{{ t('security.window.end') }}</button>
+    </form>
+  {% else %}
+    <p>{{ t('security.window.none') }}</p>
+    <form method="post" action="{{ base }}/window"><!--aistack:csrf-->
+      <input type="hidden" name="action" value="open">
+      {% for duration in durations %}
+        <button type="submit" name="duration" value="{{ duration }}" title="{{ t('security.window.open_tooltip', duration=duration) }}">{{ t('security.window.open_for', duration=duration) }}</button>
+      {% endfor %}
+    </form>
+  {% endif %}
+
+  <h2>{{ t('security.graphs.heading') }}</h2>
+  <p class="meta">{{ t('security.graphs.intro') }}</p>
+  <p class="ranges">{% for item in ranges %}<a href="?range={{ item.name }}" {% if item.name == range %}class="current" aria-current="true"{% endif %}>{{ item.label }}</a>{% endfor %}</p>
+  {% for graph in graphs %}
+    <figure>
+      <figcaption>{{ graph.title }}</figcaption>
+      {{ graph.svg | safe }}
+      <div class="legend">{% for item in graph.legend %}<span><i class="swatch" style="background: {{ item.colour }}"></i>{{ item.label }}</span>{% endfor %}</div>
+    </figure>
+  {% endfor %}
+</body>
+</html>

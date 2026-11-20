@@ -96,3 +96,9 @@ pending:
   dock: "{count} mise(s) à jour à valider"
   troubleshooting: "{count} constat(s) à traiter"
   timemachine: "{count} explication(s) à valider"
+  security: "{count} constat(s) de sécurité ouverts, le pire : {level}"
+  security_any: "{count} constat(s) de sécurité ouverts"
+  security_level:
+    watch: "à surveiller"
+    fix: "à corriger"
+    urgent: "urgent"

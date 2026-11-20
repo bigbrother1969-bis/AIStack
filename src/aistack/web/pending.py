@@ -6,11 +6,16 @@ Signed-in sessions only; anyone else gets `{}`.
 
 Counted live from what the screens read: dock proposals awaiting
 validation, the findings of the vigil's last pass (`health-state.json`),
-and Time Machine Explications proposed but not validated.
+Time Machine Explications proposed but not validated, and the security
+findings "to watch" or worse that no maintenance window holds back
+(ADR-0028 slice T4b). The security badge alone also says how bad the worst
+is, `"level": "watch" | "fix" | "urgent"` with the word, so that it reads
+without a hover and cannot be mistaken for a queue.
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -19,10 +24,12 @@ from fastapi.responses import JSONResponse
 
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import page_language
+from aistack.security.screen import Attention, attention
 from aistack.web.authentication import current_session
 from aistack.web.exposure import PUBLIC
 
 PATH = "/pending"
+SECURITY = "/security/"
 
 router = APIRouter(dependencies=[PUBLIC])
 
@@ -54,13 +61,27 @@ def counts(generated_dir: Path) -> dict[str, int]:
     except (OSError, ValueError, KeyError):
         pass
 
+    try:
+        found[SECURITY] = security_attention(generated_dir).count
+    except (OSError, ValueError, KeyError):
+        pass
+
     return {path: count for path, count in found.items() if count > 0}
+
+
+def security_attention(generated_dir: Path) -> Attention:
+    """The security findings the card counts, and the worst level among them."""
+
+    from aistack.security import series, window
+
+    return attention(series.read_report(generated_dir), window.current(generated_dir, datetime.now(timezone.utc)) is not None)
 
 
 TEXTS = {
     "/dock/": "console.pending.dock",
     "/troubleshooting/": "console.pending.troubleshooting",
     "/timemachine/": "console.pending.timemachine",
+    SECURITY: "console.pending.security",
 }
 
 
@@ -74,9 +95,23 @@ def pending(request: Request) -> JSONResponse:
         request.app.state.languages,
     ).t
     found = request.app.state.pending_counts(request.app.state.generated_dir)
-    return JSONResponse(
-        {path: {"count": count, "text": t(TEXTS[path], count=count)} for path, count in found.items() if path in TEXTS}
-    )
+    answer: dict[str, dict[str, Any]] = {}
+
+    for path, count in found.items():
+        if path not in TEXTS:
+            continue
+        item: dict[str, Any] = {"count": count, "text": ""}
+        level = security_attention(request.app.state.generated_dir).level if path == SECURITY else None
+        if path == SECURITY and level is None:
+            item["text"] = t("console.pending.security_any", count=count)
+        elif path == SECURITY and level is not None:
+            word = t(f"console.pending.security_level.{level}")
+            item = {"count": count, "text": t(TEXTS[path], count=count, level=word), "level": level, "label": word}
+        else:
+            item["text"] = t(TEXTS[path], count=count)
+        answer[path] = item
+
+    return JSONResponse(answer)
 
 
 # Injected before `</body>` for a signed-in person on both listeners: on a
@@ -85,6 +120,10 @@ def pending(request: Request) -> JSONResponse:
 SNIPPET = """<style>
 .card[data-pending] { position: relative; }
 .pending-mark { position: absolute; top: .55rem; right: .6rem; min-width: 1.4rem; height: 1.4rem; padding: 0 .35rem; box-sizing: border-box; border-radius: .7rem; background: #c2410c; color: #fff; font: 700 .78rem/1.4rem system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 2px #fff; }
+.pending-mark.pending-level { border-radius: .3rem; padding: 0 .5rem; white-space: nowrap; border: 2px solid rgba(0,0,0,.35); }
+.pending-level-watch { background: #fde047; color: #3b2f00; }
+.pending-level-fix { background: #fb923c; color: #2b1200; }
+.pending-level-urgent { background: #b91c1c; color: #fff; }
 </style>
 <script>
 (function () {
@@ -98,6 +137,7 @@ SNIPPET = """<style>
         if (!item || !item.count) { return; }
         var mark = document.createElement("span");
         mark.className = "pending-mark"; mark.textContent = item.count;
+        if (item.level) { mark.className += " pending-level pending-level-" + item.level; mark.textContent = item.count + " " + item.label; }
         mark.title = item.text; mark.setAttribute("aria-label", item.text);
         card.appendChild(mark);
         card.title = item.text + " \\u2014 " + card.title;

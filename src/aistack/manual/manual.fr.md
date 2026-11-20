@@ -1031,9 +1031,31 @@ Séries : à chaque passage la vigie ajoute une ligne à `security-series.jsonl`
 sondes et chemins d'application du proxy, dérive, mises à jour en attente) :
 des comptes, jamais une adresse, un chemin ou un contenu. `series_days` (90)
 fixe combien de jours sont gardés. Elles nourrissent les graphes de la page
-Sécurité (tranche suivante). Un rapport qui n'a pas été refait n'est pas
+Sécurité. Un rapport qui n'a pas été refait n'est pas
 ajouté deux fois : un trou, pas une ligne plate. L'image doit être reconstruite
 (`docker compose build && docker compose up -d`).
+
+La page Sécurité (T4b) : la carte **Sécurité** de la console (réseau local
+seulement) affiche une pastille quand un constat **à surveiller** ou pire dure
+sans qu'une fenêtre de maintenance le retienne. Le chiffre les compte ; la
+couleur est celle du pire (jaune à surveiller, orange à corriger, rouge
+urgent) et son mot est écrit dans la pastille ; pas de pastille, rien à
+regarder. La page `/security/` range les constats sous *Attaques possibles*
+(journaux, refus, changements de fichiers et de services) et *Vulnérabilités*
+(ports ouverts, conteneurs, mises à jour, images, droits des fichiers), dit les
+sources que la surveillance n'a pas pu lire, tient la fenêtre de maintenance
+(l'ouvrir de 30 minutes à 4 heures, ou la fermer, depuis la page) et dessine
+des graphes sur 24 heures, 7 ou 30 jours. Un trou dans une courbe veut dire
+qu'une source n'a pas été lue. Chaque constat a une fiche : ce que cela veut
+dire, comment le vérifier avec des commandes de lecture, que faire en
+général : un texte écrit à la main, le même pour tous. Sur ton clic, l'IA
+**locale** (le modèle Ollama d'`ai_runtime.yml`, jamais Gemini) explique et
+suggère ; elle ne reçoit que le titre, la gravité et quelques lignes de
+preuve coupées, rien ne sort de ta machine, et rien de ce qu'elle dit n'est
+jamais exécuté : relis une commande avant de la copier. La page demande de
+reconstruire l'application web (`docker compose build && docker compose up -d`),
+et la carte demande une entrée dans ton `config/console_links.yml` si tu en
+gardes une copie.
 
 L'application web, le seul service avec un port public, ne tient aucun
 socket Docker : `docker-compose.yml` lui fait lire Docker par

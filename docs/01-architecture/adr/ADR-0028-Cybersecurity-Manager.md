@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.11
+  version: 0.12
   status: Proposed
   owner: Architecture
   created: 2026-11-19
@@ -176,6 +176,31 @@ as a bounded maintenance window that holds the drift of files back and
 nothing else; every window is journalled, so who silenced what, and when, is
 always known. An alert is information: it never acts.
 
+The console (T4b): a "Security" card, LAN only, whose badge counts the
+findings "to watch" and worse that no maintenance window holds back, and
+takes the colour of the worst (yellow to watch, orange to fix, red urgent,
+nothing when there are none). The badge is square and says its word, so it
+is not taken for the queues' round numbers, and red is kept for "urgent"
+alone. The page `/security/` shows the findings grouped as what is
+happening (logs, refusals, drift) and what is open (exposure, hygiene,
+host, images), the sources the watch cannot read, the window with its
+open and close buttons, and graphs of the series over 24 hours, 7 and 30
+days, with a hole where a source was not read. Each finding has a sheet
+with a text written by hand for its kind (what it means, how to check
+with read-only commands, what to do), the same for everyone.
+
+The AI assists, it does not decide (T4b). On a click, the local engine of
+`ai_runtime.yml` (never Gemini: the owner's decision of 2026-11-20) is
+asked to reason, explain and suggest, and its answers are marked "a
+suggestion, never run" and recorded in the reasoning history. What it
+receives is what the sheet already shows: the title, the severity and at
+most five evidence lines, cut, flattened and fenced as data, because a
+container's name, a path or a log's words can be chosen by whoever
+attacks; the prompt says to follow nothing written in them and to give no
+command that changes anything. The hand-written text, not the model,
+carries every command a person may copy. The page works without the
+engine.
+
 ### 10. The web application does not hold the Docker socket
 
 The Docker socket can start, stop and replace every container, so
@@ -226,7 +251,7 @@ delivery):
 | T2e | Packages and sensitive files of the other traced hosts | done, 2026-11-20: the unit of T2c also runs on the other hosts of `hosts.yml`, writing `<their data folder>/security/`; the push of `ADR-0020` (`rsync -a` of the whole folder, every 15 minutes) brings it to `hosts/<name>/security/`, and the assessment judges it like the local host, each finding naming its host (`host.<name>.…`). A host with no `security` folder is not reported. A snapshot older than 25 hours (`silent_after_minutes`) is set aside and said so, as information: a host may be off for a day. Ports, containers and firewall stay those of the host AIStack runs on |
 | T3 | Detection from existing logs and `ADR-0020` records | T3a done, 2026-11-20: drift of files and units on the traced hosts, read from the `events.jsonl` of `ADR-0020` over the last `drift_window_hours` (24), with nothing installed on any host. A change to a sensitive path (accounts, privilege, SSH, firewall, VPN, UPS, tunnel, hand-installed programs, scheduled jobs; `drift_sensitive`) or a unit newly enabled is to watch, unless an apt run on that host explains it (`drift_apt_grace_minutes`, 60: the collector notes a change when it next runs); noise (`drift_noise`: printer queue, hardware clock, `*.dpkg-new`…) and the owner's `accepted_drift` are counted, never reported; the rest is a count in one information finding per host. A finding names a path and an action, never a fingerprint or a content. A host that is silent or whose records cannot be read is an information finding about the source. By the owner's decision of 2026-11-20, T3 findings go no higher than `watch` until thresholds are calibrated on real records. T3b done, 2026-11-20: refused packets counted from the firewall's own counters. `aistack-firewall-snapshot` asks `iptables-save -c` (the counters are removed from the two text files, so the reader of the rules is unchanged) and appends to `firewall-refusals.jsonl`, kept seven days, the packets dropped by `DOCKER-USER`, by the default policy of `INPUT`, by ufw's rules and by other chains, with the boot identifier. The report sums them over `refusal_window_hours` (24); a counter that goes down or a new boot is a restart from zero, never a negative count. A counter holds no address: the finding says how many and which rule refused, and that only the `DOCKER-USER` refusals are known to come from outside the LAN and the VPN. Information by default; `refusal_watch_per_hour` (0 = off) makes a sustained rate (over at least an hour of readings) a finding to watch, to be set once the usual figure is known. An installed unit needs only its script copied again. T3c done, 2026-11-20: who tried to get in, from the host's logs, through a third root unit, `aistack-host-logs` (hourly, same schema as the firewall snapshot and the host hygiene; its writes are declared exempt in `ADR-0027` § 11 on the owner's decision). It writes `host-logs.json`: counts over the last 24 hours and nothing else, by kind of network (the LAN, the VPN, outside; the VPN's network is given to the unit, the LAN is the private ranges unless said otherwise): SSH logins that failed and user names the host does not have, `DOCKER-USER` packets that were refused and logged (the kernel log keeps at most six a minute, the counters of T3b count them all), and, where Nginx Proxy Manager keeps its logs on the host, per virtual host the requests by status class the probes (`/.env`, `/.git`, `/../`: nobody but a scanner asks for them) and the application paths (`wp-login.php`, `xmlrpc.php`, `phpmyadmin`, `/cgi-bin`: a scanner asks for them and so does the person who uses the application), each with how many were answered with a success (2xx); a probe a virtual host answers with a success is a finding to watch whatever the threshold, the owner accepting by name a host that answers 200 to every path (`accepted_proxy_hosts`). Added the same day after the first reading showed `xmlrpc.php` answered 452 times in 24 h on the public WordPress site: a count of 404s did not tell it apart. Never an address, a path, a user name or a log line: provenance is a class, not an address (the owner's decision of 2026-11-20). Each source is read on its own and a source that fails says so, as information, and its numbers are not used. On the other hosts the file reaches `hosts/<name>/security/` through the push of `ADR-0020` and is judged the same way, each finding naming its host; a file older than 25 hours is set aside. Information by default; `ssh_failed_outside_watch` and `npm_scans_outside_watch` (0 = off) make the figure from outside a finding to watch once it reaches the number the owner sets. T3 is done: its findings go no higher than `watch` until thresholds are calibrated on real records |
 | T4a | What the vigil tells Gotify, a maintenance window, the series | done, 2026-11-20: the vigil runs `security.assess` at each pass and reads the report. A finding to fix or urgent is told at once, once while it stands (urgent rings, Gotify priority 8; to fix shows); one that goes and comes back is told again. The findings to watch go in one message a day at `digest_hour` (8) in `digest_timezone` (Europe/Paris), each with how long it has stood, and only when there are some; the message also says when the report has not been redone for three hours. The first pass after the slice only notes what is there. By the owner's decision of 2026-11-20, his own changes are not alerts: `python -m aistack.cli.security_window --for 2h` opens a maintenance window of at most `window_max_hours` (4), during which the drift of files and units is counted and not told (whatever its severity but urgent; everything else is told as usual), told when the window ends if it still stands; the window ends by itself and says so once, and each opening and closing is kept in `security-window.jsonl`. The report carries `measures` (counts by severity and area, ports, refusals, SSH, proxy, drift, updates: never an address, a path or a content; a source not read adds no key) and the vigil appends them to `security-series.jsonl` (`series_days`, 90) before it sends, so a Gotify that does not answer leaves no gap. Nothing acts on any host |
-| T4b | The console card and the Security page: findings, sources, the window, graphs drawn from the series | not started |
+| T4b | The console card and the Security page: findings, sources, the window, graphs drawn from the series | done, 2026-11-20: `/security/` (LAN only, signed in; the window and the AI need the administrators' group) with the card and its badge; the fixed texts are `security.guide.*` in both languages; the window is declared through the `security.window` Task; the AI goes through `ask_ollama`, never `ask_ai_runtime`. Nothing acts on any host |
 | T2d | The web application no longer holds the Docker socket (§ 10) | done, 2026-11-20: `docker-proxy` in the compose file, a test of its settings; tried on the reference host the same morning — the web application `healthy`, its Dock and CPU-priority pages answer, a write through the proxy is refused (403), the report goes from two points to watch to one |
 | later | Raspberry witness; actuator; level 1; snapshot, clean point, level 3 | not started, each to be decided |
 

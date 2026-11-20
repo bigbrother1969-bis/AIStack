@@ -983,9 +983,29 @@ Series: at each pass the vigil appends a line to `security-series.jsonl`
 (findings by severity and by area, ports, firewall refusals, SSH attempts, the
 proxy's probes and application paths, drift, pending updates): counts, never an
 address, a path or a content. `series_days` (90) sets how many days are kept.
-They feed the graphs of the Security page (next slice). A report that was not
+They feed the graphs of the Security page. A report that was not
 redone is not appended twice: a gap, not a flat line. The image must be rebuilt
 (`docker compose build && docker compose up -d`).
+
+The Security page (T4b): the console's **Security** card (local network only)
+shows a badge when a finding **to watch** or worse stands that no maintenance
+window holds back. The number counts them; the colour is the worst one's
+(yellow to watch, orange to fix, red urgent) and its word is written in the
+badge; no badge means nothing to look at. The page `/security/` lists the
+findings under *Possible attacks* (logs, refusals, changes of files and
+services) and *Vulnerabilities* (open ports, containers, updates, images,
+file rights), the sources the watch could not read, the maintenance window
+(open it for 30 minutes to 4 hours, or close it, from the page) and graphs
+over 24 hours, 7 or 30 days. A hole in a curve means a source was not read.
+Each finding has a sheet: what it means, how to check it with read-only
+commands, what to do in general: text written by hand, the same for
+everyone. On your click, the **local** AI (the Ollama model of
+`ai_runtime.yml`, never Gemini) explains and suggests; it receives only the
+title, the severity and a few cut evidence lines, nothing leaves your
+machine, and nothing it says is ever run: read a command before you copy it.
+The page needs the web application rebuilt
+(`docker compose build && docker compose up -d`), and the card needs an entry
+in your `config/console_links.yml` if you keep your own copy.
 
 The web application, the one service with a public listener, holds no
 Docker socket: `docker-compose.yml` has it read Docker through

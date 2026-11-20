@@ -250,6 +250,7 @@ def test_the_real_console_links_definition_loads():
         "Assistant de pannes",
         "Time Machine",
         "Dock",
+        "Sécurité",
     }
     # LAN-only since 2026-09-18: the owner closed every remaining
     # public exception reachable from the console — these two were
@@ -260,6 +261,9 @@ def test_the_real_console_links_definition_loads():
     assert by_name["Priorité CPU"].url == "http://GIGABYTE:8186/priority/"
     assert by_name["Nouveautés"].url == "http://GIGABYTE:8186/arrivals/"
     assert by_name["Relance au démarrage"].url == "http://GIGABYTE:8186/restart-watch/"
+    # The security screen (ADR-0028 T4b): LAN-only, one more card whose badge counts open findings.
+    assert by_name["Sécurité"].url == "http://GIGABYTE:8186/security/"
+    assert by_name["Sécurité"].scope == "lan"
     assert by_name["Architecture"].url == "/architecture.html"
     assert by_name["Cockpit Santé"].url == "/health.html"
     # LAN-only, deliberately: never a `https://...persiaut-family.fr`

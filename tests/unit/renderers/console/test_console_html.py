@@ -623,7 +623,7 @@ def test_the_shipped_cards_mark_the_screens_that_use_ai():
     shipped = Path(aistack.__file__).parent / "console" / "definitions" / "console_links.yml"
     links = load_console_links_yaml(shipped, lang="fr")
 
-    assert sorted(link.name for link in links if link.ai) == ["Assistant de pannes", "Cockpit Santé", "Time Machine"]
+    assert sorted(link.name for link in links if link.ai) == ["Assistant de pannes", "Cockpit Santé", "Sécurité", "Time Machine"]
 
 
 def test_the_running_version_sits_under_the_lockup() -> None:

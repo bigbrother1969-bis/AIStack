@@ -226,7 +226,7 @@ def kind_of(key: str) -> str:
 # What goes to the local engine as data (ADR-0028 slice T4b).
 # ---------------------------------------------------------------------------
 
-EVIDENCE_LINES = 5
+EVIDENCE_LINES = 8
 EVIDENCE_WIDTH = 120
 
 

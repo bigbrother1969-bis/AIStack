@@ -139,3 +139,9 @@ def test_a_declared_temperature_reaches_the_engine_that_is_built():
     assert guide._engine_of(chat(1)).temperature is None
     assert guide._engine_of(chat(1, max_tokens=300)).max_tokens == 300
     assert guide._engine_of(chat(1)).max_tokens == 800
+
+
+def test_the_engine_is_built_with_the_system_directive_of_the_language_asked():
+    assert "tutoies" in guide._engine_of(chat(1), "fr").system
+    assert guide._engine_of(chat(1), "en").system == ""
+    assert guide._engine_of(chat(1)).system == ""

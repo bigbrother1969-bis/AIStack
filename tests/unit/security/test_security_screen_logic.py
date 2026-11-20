@@ -139,6 +139,7 @@ def test_the_rules_given_to_the_engine_ask_for_a_calm_tutoiement_and_read_only_c
     assert "un nom ne prouve rien" in fr and "qui modifie, supprime ou arrête" in fr
     assert "N'écris jamais « tentative d'attaque »" in fr and "n'est pas normal » : dis « cela peut être normal »" in fr
     assert "Never write 'attack attempt'" in en and "say 'this may be normal'" in en
+    assert "n'en donne jamais plus de trois" in fr and "never give more than three" in en
     assert "aistack-" in en and "one to three read-only commands" in en and "a name proves nothing" in en
 
 
@@ -192,3 +193,10 @@ def test_a_graph_without_any_measure_says_so_instead_of_drawing_zero():
 
     assert "No measure in this period" in drawn
     assert "<polyline" not in drawn and "<circle" not in drawn
+
+
+def test_the_page_says_how_many_evidence_lines_the_engine_receives():
+    for language in ("fr", "en"):
+        intro = translator_for(language)("security.finding.ai.intro")
+
+        assert str(screen.EVIDENCE_LINES) in intro

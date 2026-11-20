@@ -4,7 +4,7 @@ Any server that speaks `POST /v1/chat/completions` as an `AIEngine`.
 The first user is the `llama-server` of OVHcloud's llama.cpp fork, which serves
 Olala (Ollama cannot load that model); llama.cpp, vLLM and many others speak
 the same request. One request, `stream: false`, the prompt as one user
-message. Only the answer (`content`) is returned: a reasoning channel
+message (after a system message when the caller gives one). Only the answer (`content`) is returned: a reasoning channel
 (`reasoning_content`) is never shown. Every failure is returned as a sentence,
 never raised, in the shapes `describe_unreachable` knows.
 """
@@ -37,6 +37,7 @@ class OpenAIChatEngine:
         label: str = "",
         temperature: float | None = None,
         max_tokens: int | None = None,
+        system: str = "",
     ) -> None:
         self.host = host
         self.port = port
@@ -45,6 +46,7 @@ class OpenAIChatEngine:
         self.reasoning_effort = reasoning_effort
         self.label = label or model or "chat engine"
         self.temperature = temperature
+        self.system = system.strip()
         self.max_tokens = max_tokens if max_tokens is not None else (
             DEFAULT_MAX_TOKENS if reasoning_effort in (None, "disabled") else None
         )
@@ -52,7 +54,8 @@ class OpenAIChatEngine:
     def complete(self, prompt: str) -> tuple[str, str]:
         payload: dict[str, object] = {
             "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": ([{"role": "system", "content": self.system}] if self.system else [])
+            + [{"role": "user", "content": prompt}],
             "stream": False,
             **{**DEFAULT_SAMPLING, **({"temperature": self.temperature} if self.temperature is not None else {})},
         }

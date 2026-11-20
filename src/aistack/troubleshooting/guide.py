@@ -24,7 +24,7 @@ from aistack.ai_runtime.engine import AIEngine
 from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
 from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
-from aistack.ai_runtime.operations import explain, reason, recommend
+from aistack.ai_runtime.operations import explain, reason, recommend, system_directive
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.runtime_finding import RuntimeFinding
@@ -135,12 +135,13 @@ def ask_ollama(
     )
 
 
-def _engine_of(declared: LocalEngineDefinition) -> AIEngine:
+def _engine_of(declared: LocalEngineDefinition, target_language: str = "en") -> AIEngine:
     if declared.kind == "openai_chat":
         return OpenAIChatEngine(
             declared.host, declared.port, declared.model, declared.timeout, declared.reasoning_effort, declared.label,
             declared.temperature,
             declared.max_tokens,
+            system_directive(target_language),
         )
     return OllamaEngine(host=declared.host, port=declared.port, model=declared.model, timeout=declared.timeout)
 
@@ -157,7 +158,7 @@ def ask_one(
 
     return _CALLS[operation](
         finding,
-        _engine_of(engine),
+        _engine_of(engine, target_language),
         engine.label or engine.model,
         target_language=target_language,
         translator=translator,

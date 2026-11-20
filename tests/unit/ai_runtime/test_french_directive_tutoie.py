@@ -8,3 +8,10 @@ def test_the_french_directive_asks_for_tutoiement_as_its_last_word():
 
     assert "Tutoie le lecteur" in directive and "jamais « vous »" in directive
     assert "\n" not in directive.strip()  # one closing instruction, at the end of the prompt
+
+
+def test_the_french_system_directive_tutoies_and_english_adds_nothing():
+    from aistack.ai_runtime.operations import system_directive
+
+    assert "tutoies" in system_directive("fr") and "jamais « vous »" in system_directive("fr")
+    assert system_directive("en") == "" and system_directive("de") == ""

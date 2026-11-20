@@ -157,3 +157,14 @@ def test_a_normal_stop_is_an_answer(server):
     server.answer = {"choices": [{"message": {"content": "done"}, "finish_reason": "stop"}]}
 
     assert engine(server).complete("q") == ("done", "")
+
+
+def test_a_system_message_comes_first_when_given_and_is_absent_otherwise(server):
+    engine(server, system="Tu tutoies.").complete("Question?")
+    engine(server).complete("Question?")
+
+    assert server.bodies[0]["messages"] == [
+        {"role": "system", "content": "Tu tutoies."},
+        {"role": "user", "content": "Question?"},
+    ]
+    assert server.bodies[1]["messages"] == [{"role": "user", "content": "Question?"}]

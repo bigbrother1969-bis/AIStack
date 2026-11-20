@@ -36,6 +36,23 @@ _LANGUAGE_DIRECTIVE: dict[str, str] = {
     "en": "",
 }
 
+# The same instruction, said first to an engine that takes a system message: a small model follows
+# a rule given at the start and repeated at the end better than one given only at the end.
+_SYSTEM_DIRECTIVE: dict[str, str] = {
+    "fr": (
+        "Tu réponds toujours en français et tu tutoies le lecteur : « tu », « ton », « exécute », "
+        "« vérifie », jamais « vous » ni « exécutez »."
+    ),
+    "en": "",
+}
+
+
+def system_directive(target_language: str) -> str:
+    """What to say first to the engine in this language; empty when there is nothing to add."""
+
+    return _SYSTEM_DIRECTIVE.get(target_language, "")
+
+
 # Language names for the translation prompt (non-English targets only).
 _LANGUAGE_NAME: dict[str, str] = {
     "fr": "French",

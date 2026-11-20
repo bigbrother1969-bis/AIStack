@@ -1,0 +1,51 @@
+# AIStack — what the host's logs say about who tried to get in (ADR-0028, T3c)
+#
+# Counts, over the last 24 hours, the SSH logins that failed, the packets
+# DOCKER-USER refused and logged, and (where Nginx Proxy Manager keeps its
+# logs) the requests by status class and the scanner-looking ones, each by
+# kind of network: the LAN, the VPN, outside. It writes counts only, never an
+# address, a path, a user name or a line of a log. Root, because the journal
+# and the proxy's logs are read by root; writes nowhere but its output.
+#
+# Install (as root), once per host — see the manual, "Security assessment":
+#
+#   install -m 0755 src/aistack/host_logs.py /usr/local/sbin/aistack-host-logs
+#   cp aistack-host-logs.service aistack-host-logs.timer /etc/systemd/system/
+#   # the output directory is the one of the firewall snapshot (already there)
+#   mkdir -p /etc/systemd/system/aistack-host-logs.service.d
+#   # host.conf there: OUTPUT (twice, below), the VPN's network, and where the proxy keeps its logs
+#   systemctl daemon-reload && systemctl enable --now aistack-host-logs.timer
+#
+# On another host (no copy of AIStack, the push of ADR-0020 brings the file to
+# the MSI), the output is the folder of that host's collector, in its
+# `security` subfolder: OUTPUT=/var/lib/aistack-hotes/<host>/security
+#
+# What it did: journalctl -u aistack-host-logs -n 5
+
+[Unit]
+Description=AIStack host logs (counts failed logins and refused packets by kind of network)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Set per host in aistack-host-logs.service.d/host.conf — the output twice,
+# since ReadWritePaths= does not expand variables:
+#   [Service]
+#   Environment=OUTPUT=/srv/aistack/AIStack/reports/generated/security-host
+#   ReadWritePaths=/srv/aistack/AIStack/reports/generated/security-host
+#   Environment=AISTACK_LOGS_VPN=10.223.207.0/24
+#   Environment=AISTACK_LOGS_NPM=/srv/npm/data/logs
+# AISTACK_LOGS_LAN is optional (the private ranges by default); a host with no
+# Nginx Proxy Manager leaves AISTACK_LOGS_NPM out.
+Environment=OUTPUT=
+ExecStart=/usr/local/sbin/aistack-host-logs --output ${OUTPUT}
+Nice=10
+IOSchedulingClass=idle
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+# Reading the journal and the proxy's logs needs CAP_DAC_READ_SEARCH; writing
+# the file as its directory's owner needs CAP_CHOWN and CAP_FOWNER. Nothing else.
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_CHOWN CAP_FOWNER
+TimeoutStartSec=5min

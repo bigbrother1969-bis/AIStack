@@ -975,6 +975,32 @@ seulement que son script soit recopié (la ligne `install` ci-dessus).
 chiffre reste une information tant que tu n'as pas vu le chiffre habituel
 et fixé un seuil au-dessus.
 
+Journaux (T3c) : une troisième unité, `aistack-host-logs`, compte ce que les
+journaux de l'hôte disent de qui a essayé d'entrer, sur les dernières 24 heures
+et par sorte de réseau (le LAN, le VPN, l'extérieur) : les connexions SSH
+échouées, les paquets refusés et journalisés par `DOCKER-USER` et, quand Nginx
+Proxy Manager garde ses journaux sur l'hôte, les requêtes par classe de statut
+et par hôte virtuel et celles qui demandent un chemin que demandent les
+balayeurs (`/.env`, `/.git`, `wp-login.php`…). Elle n'écrit que des comptes,
+jamais une adresse, un chemin, un nom de compte ni une ligne de journal. On
+l'installe comme l'hygiène de l'hôte :
+
+```
+sudo install -m 0755 src/aistack/host_logs.py /usr/local/sbin/aistack-host-logs
+sudo cp deploy/host-logs/aistack-host-logs.service deploy/host-logs/aistack-host-logs.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-host-logs.service.d
+# host.conf : OUTPUT et ReadWritePaths (le dossier du relevé du pare-feu),
+# AISTACK_LOGS_VPN (le réseau du VPN) et, avec un proxy sur l'hôte, AISTACK_LOGS_NPM
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-host-logs.timer
+```
+
+Sur un autre hôte, la sortie est `/var/lib/aistack-hotes/<hôte>/security`,
+comme pour l'hygiène. Les chiffres restent une information tant que tu n'as pas
+fixé `ssh_failed_outside_watch` et `npm_scans_outside_watch` dans
+`security.yml` au-dessus du chiffre habituel du rapport ; ensuite, le chiffre
+venu de l'extérieur, ou d'une origine inconnue, est à surveiller. Une source de
+journal illisible est un constat, pas un hôte tranquille.
+
 L'application web, le seul service avec un port public, ne tient aucun
 socket Docker : `docker-compose.yml` lui fait lire Docker par
 `docker-proxy`, un proxy en lecture seule sur la boucle locale de l'hôte

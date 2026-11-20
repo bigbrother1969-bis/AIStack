@@ -930,6 +930,31 @@ installed before this version only needs its script copied again (the
 0, so the figure stays information until you have seen the usual one and
 set a threshold above it.
 
+Logs (T3c): a third unit, `aistack-host-logs`, counts what the host's logs
+say about who tried to get in, over the last 24 hours and by kind of network
+(the LAN, the VPN, outside): SSH logins that failed, `DOCKER-USER` packets
+that were refused and logged, and, where Nginx Proxy Manager keeps its logs
+on the host, the requests by status class per virtual host and those that ask
+for a path scanners ask for (`/.env`, `/.git`, `wp-login.php`…). It writes
+counts only, never an address, a path, a user name or a log line. Install it
+like the host hygiene:
+
+```
+sudo install -m 0755 src/aistack/host_logs.py /usr/local/sbin/aistack-host-logs
+sudo cp deploy/host-logs/aistack-host-logs.service deploy/host-logs/aistack-host-logs.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-host-logs.service.d
+# host.conf there: OUTPUT and ReadWritePaths (the same folder as the firewall snapshot),
+# AISTACK_LOGS_VPN (the VPN's network) and, with a proxy on the host, AISTACK_LOGS_NPM
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-host-logs.timer
+```
+
+On another host the output is `/var/lib/aistack-hotes/<host>/security`, as for
+the host hygiene. The figures are information until you set
+`ssh_failed_outside_watch` and `npm_scans_outside_watch` in `security.yml`
+above the usual figure of the report; then the figure from outside, or from an
+unknown origin, is a finding to watch. A log source that cannot be read is a
+finding, not a quiet host.
+
 The web application, the one service with a public listener, holds no
 Docker socket: `docker-compose.yml` has it read Docker through
 `docker-proxy`, a read-only proxy on the host's loopback

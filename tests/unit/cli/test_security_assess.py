@@ -17,6 +17,7 @@ def _run(monkeypatch: pytest.MonkeyPatch, generated: Path, listeners, published)
     monkeypatch.setattr("aistack.tasks.security_assess.read_containers", lambda: [])
     # The reference `hosts.yml` of a development checkout traces hosts that have no records here.
     monkeypatch.setattr("aistack.tasks.security_assess.read_drift", lambda generated_dir: ([], None))
+    monkeypatch.setattr("aistack.tasks.security_assess.read_logs", lambda local, generated_dir: [])
     monkeypatch.setattr("sys.argv", ["security_assess", str(generated)])
     cli.main()
 

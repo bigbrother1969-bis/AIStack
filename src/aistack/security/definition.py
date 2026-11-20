@@ -57,3 +57,6 @@ class SecurityDefinition:
     # T3b: refused packets counted from the firewall's counters.
     refusal_window_hours: int = 24
     refusal_watch_per_hour: int = 0
+    # T3c: failed logins and scanner requests counted from the host's logs (0 = information only).
+    ssh_failed_outside_watch: int = 0
+    npm_scans_outside_watch: int = 0

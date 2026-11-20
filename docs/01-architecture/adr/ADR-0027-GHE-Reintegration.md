@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.49
+  version: 1.50
   status: Accepted
   owner: Architecture
   created: 2026-11-15
@@ -420,6 +420,16 @@ write is not knowledge and no person's choice triggers it:
   that hold secrets — never their content. Rewritten whole at every pass,
   no knowledge of a person, no copy of AIStack on the host to go through,
   and `ADR-0028` reads it. Same nature as the firewall snapshot.
+- *The host logs* (`host_logs`), added on 2026-11-20 on the owner's decision
+  ("go T3c", after the proposal that named this exemption), as a third
+  service beside the firewall snapshot and the host hygiene: a host service
+  that writes, every hour, a dated file of **counts** over the last 24 hours
+  (failed SSH logins, packets `DOCKER-USER` refused and logged, and the
+  requests of the proxy by status class and scanner-looking ones), by kind of
+  network, never an address, a path, a user name or a line of a log.
+  Rewritten whole at every pass, no knowledge of a person, no copy of AIStack
+  on the host to go through, and `ADR-0028` reads it. Same nature as the host
+  hygiene.
 - *The process locks*: `dock/executor` and `cli/sync_apply` write a lock file.
 - *The installation*: `config_init`, `instance/declarations`,
   `instance/first_start` and `instance/setup_wizard` copy the shipped

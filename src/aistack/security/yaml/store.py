@@ -55,6 +55,8 @@ def load_security_yaml(path: Path) -> SecurityDefinition:
         accepted_drift=_patterns(data, "accepted_drift", (), path),
         refusal_window_hours=_positive(data, "refusal_window_hours", 24, path),
         refusal_watch_per_hour=_non_negative(data, "refusal_watch_per_hour", 0, path),
+        ssh_failed_outside_watch=_non_negative(data, "ssh_failed_outside_watch", 0, path),
+        npm_scans_outside_watch=_non_negative(data, "npm_scans_outside_watch", 0, path),
     )
 
 

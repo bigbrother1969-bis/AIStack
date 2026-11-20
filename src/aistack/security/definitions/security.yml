@@ -89,6 +89,19 @@ max_listed: 20
 # count is a finding to watch; 0 keeps it to information. Read the usual
 # figure in the report first, then set a threshold above it.
 
+# Logs (T3c): `aistack-host-logs` counts, over the last 24 hours and by kind
+# of network (LAN, VPN, outside), the failed SSH logins, the packets
+# DOCKER-USER refused and logged, and what Nginx Proxy Manager answered
+# (status classes, scanner-looking requests such as /.env or wp-login.php).
+# It writes counts only: no address, path, user name or log line. These two
+# make the figure from outside (or from an unknown origin) a finding to
+# watch once it reaches the number you set; 0 keeps it to information. Set
+# them above the usual figure of the report.
+
+ssh_failed_outside_watch: 0
+
+npm_scans_outside_watch: 0
+
 refusal_window_hours: 24
 
 refusal_watch_per_hour: 0

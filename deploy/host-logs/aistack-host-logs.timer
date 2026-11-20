@@ -1,0 +1,11 @@
+# AIStack — host logs, every hour (ADR-0028, T3c)
+[Unit]
+Description=AIStack host logs, every hour
+
+[Timer]
+OnBootSec=7min
+OnUnitActiveSec=1h
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

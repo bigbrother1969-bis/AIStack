@@ -117,7 +117,7 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 2.2.1
+### Concrete capabilities, as of 2.2.2
 
 - **A read-only Cybersecurity Manager — new as of 2.2.0** — the *Sécurité* screen says
   what the host exposes (sockets, published ports, firewall), what the containers may do
@@ -579,7 +579,7 @@ got past its absence.
   and criteria 2.5 and 2.6 of the official validation suite (`STD-0300`) fail the
   day the bundle is no longer `clean: True`.
 
-**As of 2.2.1**: `pytest -q` — **4044 passed**; `ruff check src tests` — all
+**As of 2.2.2**: `pytest -q` — **4047 passed**; `ruff check src tests` — all
 checks passed; `mypy` — no issues found in **651 source files**;
 `python -m aistack.cli.knowledge_integrity` — **68 knowledge artifacts**,
 `blocking: 0   warnings: 0   clean: True`.

@@ -21,6 +21,9 @@ aside:
   legal: "Legal notice"
   license: "Licence and sources"
   copyright: "© {year} {publisher}"
+  ghe_title: "Governed Heritage Engineering"
+  ghe_text: "The method AIStack applies to itself: a governed heritage of knowledge."
+  ghe_link: "The manifesto and the principles"
 # Last line of every local-network card, in italics.
 card_scope_lan: "Reachable from the local network only."
 # Mark on a card whose screen uses AI.
@@ -37,6 +40,7 @@ tooltip:
   lockup: "AIStack — back to the top of the console"
   help: "How to read this console and what each screen is for"
   legal: "Publisher, hosting, personal data and cookies"
+  ghe: "Read the manifesto and the principles of governed heritage engineering"
   license: "The software's licence and its source code repositories"
   cartouche: "Summary of the domains the Health cockpit measures, recomputed each time the console is generated"
   score: "Score out of 100 computed from the measured domains, weighted per OPS-0008; the Health cockpit shows the detail"

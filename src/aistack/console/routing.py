@@ -16,10 +16,12 @@ from aistack.i18n import (
 from aistack.i18n.pages import page_file
 from aistack.console.identity import load_console_identity
 from aistack.renderers.console.pages import (
+    GHE_PATH,
     HELP_PATH,
     LEGAL_PATH,
     LICENSE_PATH,
     MANUAL_PATH,
+    render_ghe_html,
     render_help_html,
     render_manual_html,
     render_legal_html,
@@ -36,7 +38,7 @@ PAGES = ("console.html", "architecture.html", "health.html", "plan.html")
 SETTINGS_PATH = "/settings"
 
 # Reading pages linked from the console's left column, rendered per request.
-READING_PATHS = (HELP_PATH, MANUAL_PATH, LEGAL_PATH, LICENSE_PATH)
+READING_PATHS = (HELP_PATH, MANUAL_PATH, LEGAL_PATH, LICENSE_PATH, GHE_PATH)
 
 
 @dataclass(frozen=True)
@@ -89,6 +91,9 @@ def respond(
 
     if path == HELP_PATH:
         return _html(200, render_help_html(choice.lang, declared), remember, method)
+
+    if path == GHE_PATH:
+        return _html(200, render_ghe_html(choice.lang, declared), remember, method)
 
     if path == MANUAL_PATH:
         return _html(200, render_manual_html(choice.lang, declared), remember, method)

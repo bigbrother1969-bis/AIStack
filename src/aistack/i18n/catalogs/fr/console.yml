@@ -21,6 +21,9 @@ aside:
   legal: "Mentions légales"
   license: "Licence et sources"
   copyright: "© {year} {publisher}"
+  ghe_title: "Governed Heritage Engineering"
+  ghe_text: "La méthode qu'AIStack applique à lui-même : un patrimoine de connaissance gouverné."
+  ghe_link: "Le manifeste et les principes"
 # Last line of every local-network card, in italics.
 card_scope_lan: "Accessible uniquement depuis le réseau local."
 # Mark on a card whose screen uses AI.
@@ -37,6 +40,7 @@ tooltip:
   lockup: "AIStack — retour en haut de la console"
   help: "Comment lire cette console et à quoi sert chaque écran"
   legal: "Éditeur, hébergement, données personnelles et cookies"
+  ghe: "Lire le manifeste et les principes de l'ingénierie du patrimoine gouverné"
   license: "Licence du logiciel et dépôts de son code source"
   cartouche: "Synthèse des domaines mesurés par le Cockpit Santé, recalculée à chaque génération de la console"
   score: "Note sur 100 calculée à partir des domaines mesurés, pondérés selon OPS-0008 ; le détail du calcul est dans le Cockpit Santé"

@@ -17,6 +17,7 @@ HELP_PATH = "/help"
 LEGAL_PATH = "/legal"
 LICENSE_PATH = "/license"
 MANUAL_PATH = "/help/manual"
+GHE_PATH = "/ghe"
 
 _STYLE = """\
 .reading h1 {
@@ -38,6 +39,19 @@ _STYLE = """\
   background: #16335c; color: #fff; text-decoration: none;
 }
 .reading .manual-link:hover { filter: brightness(1.15); }
+.ghe .tagline { color: #3d5a73; font-size: 1.05rem; margin: -.2rem 0 1rem; }
+.ghe .article { border-top: 1px solid #eef2f7; padding: .5rem 0; }
+.ghe .article:first-of-type { border-top: 0; }
+.ghe .article h3 { font-size: 1rem; color: #16335c; margin: .2rem 0; }
+.ghe .article .number { color: #5b6b7d; font-size: .85rem; margin-right: .4rem; }
+.ghe .article .in-aistack { color: #3d5a73; font-size: .92rem; }
+.ghe .declaration { font-style: italic; }
+.ghe table { border-collapse: collapse; width: 100%; margin: .4rem 0 1rem; font-size: .92rem; }
+.ghe th, .ghe td { border-bottom: 1px solid #eef2f7; padding: .3rem .5rem; text-align: left; vertical-align: top; }
+.ghe th { color: #5b6b7d; font-weight: 600; }
+.ghe td.id { white-space: nowrap; font-family: ui-monospace, monospace; font-size: .85rem; }
+.ghe .level-C3 { color: #16335c; font-weight: 600; }
+.ghe .note { color: #5b6b7d; font-size: .88rem; }
 .manual h1 { margin-top: 0; }
 .manual h2 { border-top: 1px solid #dde4ed; padding-top: 1rem; margin-top: 2rem; }
 .manual h3 { font-size: 1rem; color: #16335c; margin: 1.2rem 0 .3rem; }
@@ -105,6 +119,70 @@ def render_help_html(lang: str | None = None, languages: Languages | None = None
     )
 
     return _page(t, declared, "console.help.page_title", body)
+
+
+def render_ghe_html(lang: str | None = None, languages: Languages | None = None) -> str:
+    """The "Governed Heritage Engineering" page: the manifesto and the principles, explained (`FDN-0004`, `FDN-0012`)."""
+
+    from aistack.ghe import ARTICLES, FAMILIES, of_family
+
+    t = translator_for(lang)
+    declared = languages if languages is not None else default_languages()
+
+    articles = []
+    for number in range(1, ARTICLES + 1):
+        key = f"ghe.article_{number:02d}"
+        in_aistack = t(f"{key}.aistack") if f"{key}.aistack" in {**t.reference_messages, **t.messages} else ""
+        articles.append(
+            '  <div class="article">'
+            f'<h3><span class="number">{escape_text(t("ghe.article_word"))} {escape_text(t(f"{key}.number"))}</span>'
+            f'{escape_text(t(f"{key}.title"))}</h3>'
+            f'<p>{escape_text(t(f"{key}.text"))}</p>'
+            + (
+                f'<p class="in-aistack"><strong>{escape_text(t("ghe.in_aistack"))}</strong> {escape_text(in_aistack)}</p>'
+                if in_aistack
+                else ""
+            )
+            + "</div>"
+        )
+
+    families = []
+    for family in FAMILIES:
+        rows = "".join(
+            f'<tr><td class="id">{pid}</td><td>{escape_text(t(f"ghe.principle.{pid}"))}</td>'
+            f'<td class="level-{level}">{escape_text(t(f"ghe.level.{level}"))}</td></tr>'
+            for pid, level in of_family(family)
+        )
+        families.append(
+            f'  <h3>{escape_text(t(f"ghe.family.{family}"))}</h3>\n'
+            f'  <table><tr><th>{escape_text(t("ghe.col_id"))}</th><th>{escape_text(t("ghe.col_principle"))}</th>'
+            f'<th>{escape_text(t("ghe.col_level"))}</th></tr>{rows}</table>'
+        )
+
+    body = "\n".join(
+        [
+            '  <div class="ghe">',
+            f'  <h1>{escape_text(t("ghe.heading"))}</h1>',
+            f'  <p class="tagline">{escape_text(t("ghe.tagline"))}</p>',
+            _section(t("ghe.what_heading"), escape_text(t("ghe.what_1")), escape_text(t("ghe.what_2"))),
+            f'  <section>\n    <h2>{escape_text(t("ghe.manifesto_heading"))}</h2>\n'
+            f'    <p>{escape_text(t("ghe.manifesto_intro"))}</p>\n' + "\n".join(articles) + "\n  </section>",
+            f'  <section>\n    <h2>{escape_text(t("ghe.declaration_heading"))}</h2>\n'
+            f'    <p class="declaration">{escape_text(t("ghe.declaration"))}</p>\n  </section>',
+            f'  <section>\n    <h2>{escape_text(t("ghe.principles_heading"))}</h2>\n'
+            f'    <p>{escape_text(t("ghe.principles_intro"))}</p>\n' + "\n".join(families) + "\n  </section>",
+            _section(
+                t("ghe.read_heading"),
+                escape_text(t("ghe.read_text")),
+                f'<span class="note">{escape_text(t("ghe.translation_note"))}</span>',
+            ),
+            f'  <p><a href="{LICENSE_PATH}?lang={t.lang}" title="{escape_text(t("console.tooltip.license"))}">'
+            f'{escape_text(t("ghe.license_link"))}</a></p>',
+            "  </div>",
+        ]
+    )
+
+    return _page(t, declared, "ghe.page_title", body)
 
 
 def render_manual_html(lang: str | None = None, languages: Languages | None = None) -> str:

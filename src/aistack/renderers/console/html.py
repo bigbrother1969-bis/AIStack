@@ -21,7 +21,7 @@ from aistack.i18n import (
 )
 from aistack.console.identity import ConsoleIdentity
 from aistack.renderers.assets import LOCKUP_DATA_URI, MARK_DATA_URI
-from aistack.renderers.console.pages import HELP_PATH, LEGAL_PATH, LICENSE_PATH
+from aistack.renderers.console.pages import GHE_PATH, HELP_PATH, LEGAL_PATH, LICENSE_PATH
 from aistack.renderers.nav import PAGE_NAV_STYLE, render_page_nav
 from aistack.renderers.text import domain_slug, escape_text
 from aistack.renderers.plan.html import DEBT_ANCHOR, HEALTH_ANCHOR, plan_link
@@ -139,7 +139,21 @@ def _render_aside_text(t: Translator, identity: ConsoleIdentity | None) -> str:
         f'  <p class="aside-intro">{escape_text(t("console.aside.intro"))}</p>\n'
         f'  <p class="aside-guide">{escape_text(t("console.aside.guide"))}</p>\n'
         f'  <nav class="aside-links">\n{links}\n  </nav>\n'
+        f"{_render_ghe_block(t)}"
         f"{copyright_line}"
+    )
+
+
+def _render_ghe_block(t: Translator) -> str:
+    """The block under the legal links: the method AIStack applies to itself, with the page that explains it."""
+
+    return (
+        '  <div class="aside-ghe">\n'
+        f'    <p class="aside-ghe-title">{escape_text(t("console.aside.ghe_title"))}</p>\n'
+        f'    <p class="aside-ghe-text">{escape_text(t("console.aside.ghe_text"))}</p>\n'
+        f'    <a href="{GHE_PATH}" title="{escape_text(t("console.tooltip.ghe"))}">'
+        f'{escape_text(t("console.aside.ghe_link"))}</a>\n'
+        "  </div>\n"
     )
 
 
@@ -408,6 +422,15 @@ body {
 }
 .aside-links a { color: #16335c; text-decoration: none; }
 .aside-links a:hover { text-decoration: underline; }
+.aside-ghe {
+  width: 100%; box-sizing: border-box; border: 1px solid #dde4ed; border-radius: 6px;
+  background: #ffffff; padding: .5rem .7rem; font-size: .8rem;
+}
+.aside-ghe p { margin: 0 0 .25rem; }
+.aside-ghe .aside-ghe-title { font-weight: 600; color: #16335c; }
+.aside-ghe .aside-ghe-text { color: #5b6b7d; }
+.aside-ghe a { color: #16335c; text-decoration: none; }
+.aside-ghe a:hover { text-decoration: underline; }
 .aside-copyright { margin: 0; font-size: .75rem; color: #5b6b7d; text-align: left; width: 100%; }
 @media (max-width: 900px) {
   .console-layout { grid-template-columns: 1fr; gap: 1rem; }

@@ -1,0 +1,166 @@
+# "Governed Heritage Engineering" page: the manifesto and the principles, explained.
+
+title: AIStack — Governed Heritage Engineering
+page_title: AIStack — Governed Heritage Engineering
+heading: Governed Heritage Engineering
+tagline: La méthode qu'AIStack applique à lui-même avant de l'appliquer à ton infrastructure.
+what_heading: En deux mots
+what_1: 'Une infrastructure ne se comprend et ne se transmet que si ce qu''on en sait forme un patrimoine gouverné : daté, sourcé, avec un propriétaire, expliqué, jamais écrasé. C''est le Governed Heritage Engineering (GHE).'
+what_2: 'Un système qui prétend bâtir un tel patrimoine pour les autres doit d''abord gouverner le sien. AIStack est le premier à s''y appliquer : ses règles, ses décisions et son code sont tenus à ce qu''il demande aux infrastructures qu''il observe.'
+manifesto_heading: Le manifeste
+manifesto_intro: 'The Sustainable Heritage Manifesto compte dix-huit articles. Il part d''un constat : le logiciel n''est que la partie visible d''un effort intellectuel bien plus large, et la plus grande partie de cette connaissance disparaît quand les gens partent, que la documentation vieillit ou que les technologies changent. La vraie dette est la perte progressive de compréhension. Voici chaque article, en une phrase, avec un exemple dans AIStack quand il y en a un.'
+article_word: Article
+in_aistack: 'Dans AIStack :'
+article_01:
+  number: I
+  title: La connaissance est l'actif premier
+  text: Le vrai produit de l'ingénierie est ce qu'on comprend. Le logiciel, la documentation, l'infrastructure, les tests et les schémas n'en sont que des représentations.
+article_02:
+  number: II
+  title: Comprendre précède implémenter
+  text: On ne commence jamais par le code. La compréhension produit l'architecture, l'architecture est documentée, et le code vient ensuite comme la preuve que la compréhension est devenue exécutable.
+article_03:
+  number: III
+  title: L'architecture organise la complexité
+  text: 'La complexité ne disparaît pas : elle se répartit. L''architecture la distribue entre des domaines cohérents, aux responsabilités explicites et aux contrats gouvernés.'
+article_04:
+  number: IV
+  title: La connaissance doit être gouvernée
+  text: Sans gouvernance, une connaissance n'est qu'une opinion. Chacune a un point de vérité unique, un propriétaire, une provenance, un niveau de qualité et de confiance, un cycle de vie et un historique ; rien n'entre dans le patrimoine avant d'avoir été validé.
+  aistack: Chaque décision d'architecture et chaque déclaration porte son propriétaire, sa version et sa date, et des tests le vérifient.
+article_05:
+  number: V
+  title: La connaissance doit survivre aux technologies
+  text: Les technologies, les langages et les modèles d'IA changent. Aucune connaissance essentielle ne doit dépendre d'un fournisseur, d'un cloud, d'un cadre ou d'un modèle particulier.
+  aistack: Les moteurs d'IA (Ollama, Olala, Gemini, ChatGPT, Claude) sont déclarés et remplaçables ; la politique décide, aucun n'est câblé dans le code.
+article_06:
+  number: VI
+  title: Documenter, c'est faire de l'ingénierie
+  text: 'La documentation n''est pas produite après coup : elle est l''ingénierie. Elle conserve le raisonnement, qui conserve la compréhension, qui conserve le patrimoine.'
+article_07:
+  number: VII
+  title: L'intelligence artificielle est un outil de raisonnement
+  text: 'L''IA accélère le raisonnement, facilite l''exploration, aide à implémenter, explique et documente. Elle ne devient jamais l''autorité : la vérité reste gouvernée.'
+  aistack: L'IA explique un constat et suggère quoi faire ; rien n'est appliqué sans ton clic, et la politique dit ce qui peut sortir de tes machines.
+article_08:
+  number: VIII
+  title: La donnée exige de la gouvernance
+  text: Pas d'intelligence artificielle sans données, pas de données fiables sans gouvernance. L'IA amplifie la qualité des données ; elle ne peut pas compenser leur absence.
+article_09:
+  number: IX
+  title: Les artefacts générés sont jetables
+  text: 'Un artefact généré est un produit ; le générateur est le vrai actif. Quand un artefact demande une correction, on corrige d''abord son générateur : la maintenance appartient à la source de la connaissance.'
+  aistack: Les pages de la console, de l'architecture et de la santé sont générées à partir des déclarations ; on ne les retouche jamais à la main.
+article_10:
+  number: X
+  title: L'ingénierie durable réduit la charge cognitive
+  text: Les personnes ont une mémoire limitée, les IA un contexte limité, les organisations une continuité limitée. On met donc la compréhension dans une connaissance gouvernée, pas dans la mémoire de quelqu'un.
+article_11:
+  number: XI
+  title: L'ingénierie est un acte de transmission
+  text: 'On ne résout pas seulement les problèmes d''aujourd''hui : on permet à ceux qui viendront de comprendre les solutions d''hier. Une connaissance qu''on ne sait pas transmettre est incomplète.'
+article_12:
+  number: XII
+  title: Toute recommandation doit être explicable
+  text: 'Aucune recommandation ne paraît comme une conclusion sans explication : elle dit les observations, les preuves, les règles appliquées, le raisonnement, la confiance et les hypothèses. Le raisonnement lui-même est gouverné, explicable et reproductible.'
+  aistack: L'assistant de pannes établit d'abord les faits, puis l'avis de l'IA ; la page Moteurs IA dit, pour chaque appel, quel moteur a répondu et pourquoi.
+article_13:
+  number: XIII
+  title: Le patrimoine avant la performance
+  text: 'La performance compte, la maintenabilité compte davantage : la connaissance survit aux optimisations. On préfère toujours l''architecture la plus simple qui préserve la compréhension.'
+article_14:
+  number: XIV
+  title: La durabilité commence avant l'implémentation
+  text: 'La qualité industrielle se gagne surtout en amont : dans la compréhension, la modélisation, la gouvernance, l''architecture, la documentation et les contrats explicites. Le code doit sembler déjà mûri, pas un premier jet.'
+article_15:
+  number: XV
+  title: L'ingénierie est une découverte permanente
+  text: Tout part de la réalité, qui laisse des preuves ; les preuves donnent des observations, les observations de la connaissance, la connaissance une architecture, l'architecture une implémentation, et l'implémentation change la réalité. La connaissance progresse en boucle.
+article_16:
+  number: XVI
+  title: Le patrimoine doit pouvoir se reconstruire
+  text: Documentation, gouvernance, architecture et compréhension opérationnelle doivent permettre de reconstruire le système dans un nouvel environnement. L'objectif ultime est l'auto-intégration (Self-Onboarding).
+  aistack: Le premier démarrage guidé et les déclarations dans config/ permettent de remonter une installation sur une autre machine.
+article_17:
+  number: XVII
+  title: Une connaissance ouverte est une connaissance durable
+  text: 'La connaissance survit par l''ouverture : standards, documentation, gouvernance, formats et écosystèmes ouverts. L''indépendance vis-à-vis des fournisseurs est une propriété de l''ingénierie durable.'
+  aistack: Le code, les décisions et les principes sont publiés, avec leur licence, sur les dépôts indiqués dans « Licence et sources ».
+article_18:
+  number: XVIII
+  title: L'ingénierie sert le bien commun
+  text: L'ingénierie favorise l'autonomie, la transparence, la durabilité, l'explicabilité, la transmission, l'interopérabilité et la conservation à long terme. La technologie sert la société ; la connaissance sert l'humanité.
+declaration_heading: La déclaration finale
+declaration: Les logiciels deviennent obsolètes, les technologies évoluent, les intelligences artificielles changent, les organisations se transforment, les personnes partent. La connaissance est le seul actif d'ingénierie capable de survivre à tout cela. Notre responsabilité n'est donc pas seulement de construire des systèmes, mais de bâtir un patrimoine gouverné de compréhension que les générations futures pourront comprendre, enrichir, faire évoluer et transmettre à leur tour.
+principles_heading: Les principes
+principles_intro: 'Les articles du manifeste se traduisent en principes numérotés, que le code d''AIStack cite par leur identifiant (par exemple ARC-P-006 ou GOV-P-001). Le registre les classe par famille et par criticité : C3 est un invariant fondamental qu''AIStack ne contredit jamais, C2 une règle gouvernée qui évolue par changement expliqué, C1 un guide opérationnel adaptable.'
+col_id: Identifiant
+col_principle: Principe
+col_level: Criticité
+level:
+  C3: C3 — fondamental
+  C2: C2 — gouverné
+  C1: C1 — opérationnel
+family:
+  FDN: Fondation
+  GOV: Gouvernance
+  ARC: Architecture
+  STD: Standards de documentation
+  ENG: Ingénierie
+  OPS: Exploitation
+principle:
+  FDN-P-001: Pas d'IA sans données
+  FDN-P-002: Pas de données sans gouvernance
+  FDN-P-003: L'IA est un moyen, jamais une fin
+  FDN-P-004: La connaissance est le premier actif de l'ingénierie
+  FDN-P-005: Toute connaissance a un point de vérité unique (SPOT)
+  FDN-P-006: Toute connaissance est gouvernée
+  FDN-P-007: Toute recommandation est explicable
+  FDN-P-008: Toute transformation est traçable
+  FDN-P-009: L'architecture précède l'implémentation
+  FDN-P-010: AIStack applique d'abord ses principes à lui-même
+  FDN-P-011: La preuve produit la connaissance ; la découverte n'en produit jamais
+  FDN-P-012: Toute connaissance est portable d'un outil, d'un fournisseur, d'un cloud ou d'un modèle à l'autre
+  FDN-P-013: La connaissance passée est conservée par les versions et les relations
+  FDN-P-014: La dette technique est une propriété des contrats, pas de l'implémentation
+  FDN-P-015: Le premier livrable de l'ingénierie est un ensemble de contrats gouvernés
+  GOV-P-001: L'IA ne crée jamais de connaissance qui fait autorité
+  GOV-P-002: Toute modification est une transaction gouvernée
+  GOV-P-003: Les transactions sont atomiques, complètes et reproductibles
+  GOV-P-004: « Gravé » crée une connaissance gouvernée permanente
+  GOV-P-005: La documentation fait partie du produit
+  GOV-P-006: Le propriétaire et le cycle de vie d'une connaissance sont explicites
+  ARC-P-001: Principe du noyau générique
+  ARC-P-002: Principe d'amorçage du noyau
+  ARC-P-003: Les responsabilités du Runtime et de l'IA restent séparées
+  ARC-P-004: Aucun concept propre à une technologie dans le noyau
+  ARC-P-005: Les contrats avant les implémentations
+  ARC-P-006: Abstractions méritées
+  ARC-P-007: Monolithe modulaire d'abord
+  ARC-P-008: L'architecture évolue par étapes validées, une à une
+  ARC-P-009: Les frontières de déploiement ne définissent pas celles de l'architecture
+  ARC-P-010: Le noyau et son Runtime restent séparés
+  ARC-P-011: Les capacités disent ce qu'AIStack sait faire ; les services les fournissent
+  ARC-P-012: Les fournisseurs observent et collectent ; ils ne décident ni ne modifient jamais
+  ARC-P-013: L'évaluation consomme des modèles de connaissance canoniques, jamais une sortie technique brute
+  ARC-P-014: L'emplacement abstrait le stockage physique
+  STD-P-001: La documentation d'abord
+  STD-P-002: La spécification avant l'implémentation
+  STD-P-003: La terminologie officielle est préservée
+  STD-P-004: Un concept validé, un commit
+  STD-P-005: Les conventions de nommage sont gouvernées
+  ENG-P-001: Le rôle de l'ingénieur est de comprendre, pas d'écrire du code
+  ENG-P-002: La qualité industrielle se gagne avant l'implémentation
+  ENG-P-003: Les artefacts générés sont jetables
+  ENG-P-004: Améliorer les générateurs plutôt que les artefacts générés
+  ENG-P-005: Valider chaque étape d'architecture indépendamment
+  ENG-P-006: Préférer les solutions simples, modulaires et maintenables
+  ENG-P-007: Les contrats découlent des politiques
+  OPS-P-001: Le déploiement est de l'architecture
+  OPS-P-002: Le packaging est une question d'architecture
+  OPS-P-003: Le retour arrière est obligatoire pour une évolution risquée
+  OPS-P-004: Observer avant d'agir
+read_heading: Pour lire les textes
+read_text: 'Les textes de référence sont dans le dépôt, en anglais : le manifeste (docs/00-foundation/The-Sustainable-Heritage-Manifesto.md), le registre des principes (docs/00-foundation/FDN-0012-AIStack-Principles-Registry.md), la constitution (FDN-0003), le patrimoine gouverné (FDN-0004) et le guide « Governed Heritage Engineering in AIStack » (docs/04-handbook/GHE-IN-AISTACK.md). Cette page les explique ; en cas d''écart, ce sont eux qui font foi. Les dépôts sont listés dans « Licence et sources ».'
+translation_note: Le manifeste est écrit en français par son auteur ; le dépôt en garde la traduction anglaise, et les libellés de cette page sont des rendus en français des textes du dépôt.
+license_link: Licence et sources

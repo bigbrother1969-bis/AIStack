@@ -40,6 +40,7 @@ ANYONE = {
     "/setup",
     "/legal",
     "/license",
+    "/ghe",
     "/login",
     "/auth/callback",
     "/login/local",

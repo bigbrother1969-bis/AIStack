@@ -112,6 +112,11 @@ links:
         and tells you which one answered and why. Nothing is kept.
     service: web_lan
     path: /ask/
+    ai:
+      fr: >-
+        AIStack examine ta question avant l'envoi : s'il y trouve des données personnelles, elle reste sur tes machines (modèle local) ; sinon, un fournisseur externe peut répondre si la politique l'autorise. La page te dit qui a répondu et pourquoi.
+      en: >-
+        AIStack examines your question before sending it: if it finds personal data, it stays on your machines (local model); otherwise an outside provider may answer if the policy allows it. The page tells you who answered and why.
     scope: lan
     ai_callers: [portal.chat]
   - name: Architecture

@@ -103,3 +103,12 @@ def test_a_copy_made_before_ai_callers_takes_them_from_the_shipped_card(tmp_path
     assert by_name["Mon assistant"].ai_use == AI_EXTERNAL
     assert by_name["Mon service"].ai_use == ""
     assert by_name["Mon assistant"].description == "Texte à moi"
+
+
+def test_every_card_that_asks_an_engine_says_so_in_its_own_sentence():
+    from aistack.console.yaml.store import load_console_links_yaml
+    from aistack.tasks.console_render import SHIPPED_CONSOLE_LINKS
+
+    for link in load_console_links_yaml(SHIPPED_CONSOLE_LINKS):
+        if link.ai_callers:
+            assert link.ai, f"{link.name} uses an AI engine but has no `ai` sentence"

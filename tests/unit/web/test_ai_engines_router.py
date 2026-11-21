@@ -91,6 +91,19 @@ def test_the_page_is_in_french_too(tmp_path: Path):
     assert "Ce qui a été demandé" in client(tmp_path).get("/ai-engines/?lang=fr").text
 
 
+def test_the_reasons_of_the_table_and_of_the_choices_are_said_in_french_on_the_french_page(tmp_path: Path):
+    record(
+        tmp_path, at="2026-11-21T09:40:07+00:00", operation="recommend", kind="recommendation",
+        route="external_allowed; kind=recommendation; chose anthropic: the steps and commands you will run: precision before speed",
+    )
+
+    text = client(tmp_path).get("/ai-engines/?lang=fr").text
+
+    assert "raisonne longuement sur plusieurs faits à la fois" in text
+    assert "la précision avant la vitesse" in text
+    assert "precision before speed" not in text
+
+
 def test_nothing_answers_on_the_public_port(tmp_path: Path):
     assert client(tmp_path, PUBLIC_PORT).get("/ai-engines/").status_code == 404
 

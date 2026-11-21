@@ -32,7 +32,9 @@ internal_hosts: []
 
 # The kind of request an operation is (`caller.operation` wins over `operation`), and for each
 # kind the engines asked, best first, each with the reason you give for it. The reason is
-# written in the journal with every choice. An engine is `gemini`, `openai` (ChatGPT),
+# written in the journal with every choice (the English text of it, whatever the language of
+# the page) and shown in the language of the page: write `why` as a plain text, or as a mapping
+# of a language code to its text (`{en: "…", fr: "…"}`), the reference language (fr) being required. An engine is `gemini`, `openai` (ChatGPT),
 # `anthropic` (Claude), `local` (the local engines of ai_runtime.yml in their order) or the
 # label or model of one local engine ("Olala", "qwen2.5:7b").
 #
@@ -51,22 +53,22 @@ kinds:
 
 preferences:
   diagnosis:
-    - {engine: anthropic, why: "long reasoning over several facts at once"}
-    - {engine: openai, why: "a second opinion of the same class"}
-    - {engine: gemini, why: "fast and cheap when the others are not set"}
-    - {engine: local, why: "stays on your machines when no outside engine answers"}
+    - {engine: anthropic, why: {en: "long reasoning over several facts at once", fr: "raisonne longuement sur plusieurs faits à la fois"}}
+    - {engine: openai, why: {en: "a second opinion of the same class", fr: "un deuxième avis de même niveau"}}
+    - {engine: gemini, why: {en: "fast and cheap when the others are not set", fr: "rapide et peu cher quand les autres ne sont pas configurés"}}
+    - {engine: local, why: {en: "stays on your machines when no outside engine answers", fr: "reste sur tes machines quand aucun moteur extérieur ne répond"}}
   explanation:
-    - {engine: gemini, why: "short and fast, a plain explanation is enough"}
-    - {engine: openai, why: "clear short answers"}
-    - {engine: anthropic, why: "careful wording when the others are not set"}
-    - {engine: local, why: "stays on your machines when no outside engine answers"}
+    - {engine: gemini, why: {en: "short and fast, a plain explanation is enough", fr: "court et rapide : une explication simple suffit"}}
+    - {engine: openai, why: {en: "clear short answers", fr: "des réponses courtes et claires"}}
+    - {engine: anthropic, why: {en: "careful wording when the others are not set", fr: "une formulation soignée quand les autres ne sont pas configurés"}}
+    - {engine: local, why: {en: "stays on your machines when no outside engine answers", fr: "reste sur tes machines quand aucun moteur extérieur ne répond"}}
   recommendation:
-    - {engine: anthropic, why: "the steps and commands you will run: precision before speed"}
-    - {engine: openai, why: "a second opinion on the steps"}
-    - {engine: gemini, why: "fast when the others are not set"}
-    - {engine: local, why: "stays on your machines when no outside engine answers"}
+    - {engine: anthropic, why: {en: "the steps and commands you will run: precision before speed", fr: "les étapes et les commandes que tu vas lancer : la précision avant la vitesse"}}
+    - {engine: openai, why: {en: "a second opinion on the steps", fr: "un deuxième avis sur les étapes"}}
+    - {engine: gemini, why: {en: "fast when the others are not set", fr: "rapide quand les autres ne sont pas configurés"}}
+    - {engine: local, why: {en: "stays on your machines when no outside engine answers", fr: "reste sur tes machines quand aucun moteur extérieur ne répond"}}
   question:
-    - {engine: gemini, why: "quick and cheap for an everyday question"}
-    - {engine: openai, why: "clear short answers"}
-    - {engine: anthropic, why: "careful wording when the others are not set"}
-    - {engine: local, why: "stays on your machines: nothing you typed leaves the house"}
+    - {engine: gemini, why: {en: "quick and cheap for an everyday question", fr: "rapide et peu cher pour une question de tous les jours"}}
+    - {engine: openai, why: {en: "clear short answers", fr: "des réponses courtes et claires"}}
+    - {engine: anthropic, why: {en: "careful wording when the others are not set", fr: "une formulation soignée quand les autres ne sont pas configurés"}}
+    - {engine: local, why: {en: "stays on your machines: nothing you typed leaves the house", fr: "reste sur tes machines : rien de ce que tu as écrit ne sort de la maison"}}

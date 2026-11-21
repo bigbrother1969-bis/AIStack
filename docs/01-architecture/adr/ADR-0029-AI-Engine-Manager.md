@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.11
+  version: 0.12
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -179,7 +179,12 @@ Choices made with the owner the same day:
   gives for it
   ("long reasoning over several facts", "short and fast", "keeps French
   tutoiement"). The comparison of engines (`ai.compare`) may later
-  correct the table; it does not replace it.
+  correct the table; it does not replace it. A reason is a plain text or a
+  mapping of a language code to its text (the reference language, `fr`, being
+  required): the journal records one text (the English one), the pages say it in
+  their own language (`ai_runtime/reasons.py`), and a copy of the file written before
+  the translation is read in French too, its texts being looked up in the shipped
+  file.
 - **The class stays a ceiling.** The best engine is chosen among those
   the caller's class allows (§ 4): an `internal_only` caller never sees
   ChatGPT, Gemini or Claude however well they would do. A caller that

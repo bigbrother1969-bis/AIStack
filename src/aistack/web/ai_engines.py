@@ -10,7 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, Response
 
-from aistack.ai_runtime import call_journal, engines_view
+from aistack.ai_runtime import call_journal, engines_view, reasons
 from aistack.ai_runtime.policy import current_policy
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
@@ -54,6 +54,7 @@ def index(request: Request) -> Response:
         "outside_names": dict(engines_view.HOSTED),
         "answerer": engines_view.answerer,
         "silent": lambda route: engines_view.silent_of(route),
+        "reason": lambda text: reasons.localize(text, language.lang),
         **language.context(),
     }
 

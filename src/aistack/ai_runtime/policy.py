@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 from aistack.config import configured
+from aistack.i18n import default_languages, pick_localized
 
 SHIPPED = Path(__file__).resolve().parent / "definitions" / "ai_policy.yml"
 
@@ -41,6 +42,9 @@ class Preference:
 
     engine: str
     why: str
+    # The reason in each language it was written in, `(code, text)`: shown in the language of the page. `why`
+    # stays the one text the journal records (the English one when there is one), whatever the page language.
+    by_language: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -201,9 +205,18 @@ def _preferences(raw: object, path: Path) -> dict[str, tuple[Preference, ...]]:
         for item in items:
             engine = item.get("engine") if isinstance(item, dict) else None
             why = item.get("why") if isinstance(item, dict) else None
+            by_language: tuple[tuple[str, str], ...] = ()
+            if isinstance(why, dict):
+                # A reason in several languages (a mapping of a language code to its text), as the other
+                # hand-written fields are: the journal keeps the English text, or the reference one.
+                label = f"AI policy {path}: preferences: {kind}: why"
+                languages = default_languages()
+                text = pick_localized(why, "en", languages, label)
+                by_language = tuple((str(code), str(words).strip()) for code, words in why.items())
+                why = text
             if not isinstance(engine, str) or not engine.strip() or not isinstance(why, str) or not why.strip():
                 raise ValueError(f"AI policy {path}: preferences: {kind}: each line names an engine and says why")
-            lines.append(Preference(engine.strip(), why.strip()))
+            lines.append(Preference(engine.strip(), why.strip(), by_language))
         table[kind] = tuple(lines)
     return table
 

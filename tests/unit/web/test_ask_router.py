@@ -89,6 +89,21 @@ def test_a_user_asks_and_reads_the_engine_and_why_in_simple_words(tmp_path: Path
     assert "It stayed on the machines of the house." in page
 
 
+def test_the_reason_is_said_in_the_language_of_the_page_and_the_journal_keeps_one_text(tmp_path: Path):
+    def reasoned(question, operation, language, personal=()):
+        return replace(
+            answered(question, operation, language),
+            route="internal_only; kind=question; chose Olala: stays on your machines: nothing you typed leaves the house",
+        )
+
+    web = client(build(tmp_path, ask=reasoned), user=True)
+
+    web.post("/ask/ask", data={"question": SECRET_QUESTION})
+
+    assert "reste sur tes machines : rien de ce que tu as écrit ne sort de la maison" in web.get("/ask/?lang=fr").text
+    assert "stays on your machines: nothing you typed leaves the house" in web.get("/ask/?lang=en").text
+
+
 def test_the_question_is_in_the_journal_by_engine_and_reason_never_by_its_words(tmp_path: Path):
     web = client(build(tmp_path), user=True)
 

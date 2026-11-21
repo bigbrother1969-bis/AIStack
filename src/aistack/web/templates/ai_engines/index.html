@@ -98,7 +98,7 @@
             <td><code>{{ kind }}</code></td>
             <td>{% for use, named in view.kinds %}{% if named == kind %}<code>{{ use }}</code> {% endif %}{% endfor %}</td>
             <td>
-              <ol>{% for line in lines %}<li><strong>{{ outside_names.get(line.engine, line.engine) }}</strong> <span class="why">— {{ line.why }}</span></li>{% endfor %}</ol>
+              <ol>{% for line in lines %}<li><strong>{{ outside_names.get(line.engine, line.engine) }}</strong> <span class="why">— {{ reason(line.why) }}</span></li>{% endfor %}</ol>
             </td>
           </tr>
         {% endfor %}
@@ -141,7 +141,7 @@
               {% if call.reached_external %}<span class="badge outside">{{ t('ai_engines.outside') }}</span>{% endif %}
             </td>
             <td>
-              <span class="why">{{ call.route or call.policy_class }}</span>
+              <span class="why">{{ reason(call.route) if call.route else call.policy_class }}</span>
               {% if call.set_aside and not call.reachable %}<br><span class="why">{{ call.set_aside }}</span>{% endif %}
             </td>
           </tr>

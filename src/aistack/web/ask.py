@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from aistack.ai_runtime.question import MAX_LENGTH, OPERATION, Question
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
+from aistack.ai_runtime import reasons
 from aistack.portal import chat, personal_data
 from aistack.web.authentication import SIGNED_IN_ONLY, USER_ACTION, current_session
 from aistack.web.exposure import LAN_ONLY
@@ -38,6 +39,14 @@ def _person(request: Request) -> str:
     return session.subject if session is not None else ""
 
 
+def _decision(answer, lang: str) -> chat.Decision:
+    """Who answered and why, the reason said in the language of the page (the journal keeps it in English)."""
+
+    decision = chat.decision_of(answer)
+
+    return chat.Decision(decision.engine, reasons.localize(decision.why, lang))
+
+
 @router.get("", response_class=HTMLResponse, include_in_schema=False)
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 def index(request: Request) -> Response:
@@ -52,7 +61,7 @@ def index(request: Request) -> Response:
         "where": request.app.state.portal_destination(),
         "exchange": exchange,
         "answer": answer,
-        "decision": chat.decision_of(answer) if answer is not None and answer.reachable else None,
+        "decision": _decision(answer, language.lang) if answer is not None and answer.reachable else None,
         "reason_shown": REASON_SHOWN,
         "personal": (
             ", ".join(language.t(f"ask.personal.{kind}") for kind in exchange.personal)

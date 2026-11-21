@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('ai_engines.title') }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+    .box h2 { margin: 0 0 .6rem; font-size: 1.05rem; }
+    .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .75rem; }
+    .badge.open { background: #dff6dd; color: #116329; }
+    .badge.closed { background: #f0f0f0; color: #666; }
+    .badge.ready { background: #dff6dd; color: #116329; }
+    .badge.no_key { background: #fff1cc; color: #7d4e00; }
+    .badge.not_declared { background: #f0f0f0; color: #666; }
+    .badge.outside { background: #fde2e2; color: #8a1c1c; }
+    .badge.inside { background: #dff6dd; color: #116329; }
+    .why { color: #444; font-size: .85rem; }
+    .badge.restarted { background: #dff6dd; color: #116329; }
+    .badge.failed, .badge.cycle { background: #fde2e2; color: #8a1c1c; }
+    .badge.planned, .badge.outside_window, .badge.skipped_limit { background: #fff1cc; color: #7d4e00; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    code { background: #eef1f4; padding: .05rem .3rem; border-radius: 4px; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; font-size: .88rem; }
+    .top a { color: #1f6feb; text-decoration: none; }
+    .top a:hover { text-decoration: underline; }
+    .lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
+    .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
+    .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
+    .lang-switch a:hover .flag { opacity: 1; }
+    .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+  </style>
+</head>
+<body>
+  {% set states = {
+    'ready': t('ai_engines.state.ready'),
+    'no_key': t('ai_engines.state.no_key'),
+    'not_declared': t('ai_engines.state.not_declared'),
+  } %}
+  {% set classes = {
+    'internal_only': t('ai_engines.class.internal_only'),
+    'external_allowed': t('ai_engines.class.external_allowed'),
+  } %}
+  <div class="top">
+    <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+  <header>
+    <h1>{{ t('ai_engines.heading') }}</h1>
+    <p class="meta">{{ t('ai_engines.meta') }}</p>
+  </header>
+
+  <div class="box">
+    <h2>{{ t('ai_engines.engines.heading') }}</h2>
+    <table>
+      <tr><th>{{ t('ai_engines.col.engine') }}</th><th>{{ t('ai_engines.col.model') }}</th><th>{{ t('ai_engines.col.where') }}</th><th>{{ t('ai_engines.col.state') }}</th><th>{{ t('ai_engines.col.last_answer') }}</th><th>{{ t('ai_engines.col.last_silence') }}</th></tr>
+      {% for engine in view.engines %}
+        <tr>
+          <td><strong>{{ engine.label }}</strong></td>
+          <td>{% if engine.model %}<code>{{ engine.model }}</code>{% else %}—{% endif %}</td>
+          <td>
+            {% if engine.where %}<code>{{ engine.where }}</code> {% endif %}
+            {% if engine.outside %}<span class="badge outside">{{ t('ai_engines.outside') }}</span>{% else %}<span class="badge inside">{{ t('ai_engines.inside') }}</span>{% endif %}
+          </td>
+          <td><span class="badge {{ engine.state }}">{{ states.get(engine.state, engine.state) }}</span></td>
+          <td>{% if engine.last_answered %}{{ engine.last_answered.replace('T', ' ') }} ({{ engine.last_seconds }} s){% else %}—{% endif %}</td>
+          <td>{% if engine.last_silent_at %}{{ engine.last_silent_at.replace('T', ' ') }}<br><span class="why">{{ engine.last_silent_why }}</span>{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    <p class="meta">{{ t('ai_engines.engines.note') }}</p>
+  </div>
+
+  <div class="box">
+    <h2>{{ t('ai_engines.policy.heading') }}</h2>
+    <p class="meta">{{ t('ai_engines.policy.where') }}</p>
+    <table>
+      <tr><th>{{ t('ai_engines.col.caller') }}</th><th>{{ t('ai_engines.col.class') }}</th></tr>
+      {% for caller, declared in view.callers %}
+        <tr><td><code>{{ caller }}</code></td><td>{{ classes.get(declared, declared) }}</td></tr>
+      {% endfor %}
+    </table>
+    <p class="meta">{{ t('ai_engines.policy.unnamed') }}</p>
+    {% if view.table %}
+      <table>
+        <tr><th>{{ t('ai_engines.col.kind') }}</th><th>{{ t('ai_engines.col.operations') }}</th><th>{{ t('ai_engines.col.preferred') }}</th></tr>
+        {% for kind, lines in view.table %}
+          <tr>
+            <td><code>{{ kind }}</code></td>
+            <td>{% for use, named in view.kinds %}{% if named == kind %}<code>{{ use }}</code> {% endif %}{% endfor %}</td>
+            <td>
+              <ol>{% for line in lines %}<li><strong>{{ outside_names.get(line.engine, line.engine) }}</strong> <span class="why">— {{ line.why }}</span></li>{% endfor %}</ol>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>{{ t('ai_engines.policy.no_table') }}</p>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>{{ t('ai_engines.counts.heading') }}</h2>
+    {% if view.total.calls %}
+      <p>{{ t('ai_engines.counts.summary', calls=view.total.calls, outside=view.total.outside, unanswered=view.total.unanswered, fallback=view.with_fallback) }}</p>
+      {% for title, rows in [(t('ai_engines.counts.by_caller'), view.by_caller), (t('ai_engines.counts.by_kind'), view.by_kind), (t('ai_engines.counts.by_engine'), view.by_engine)] %}
+        <h3>{{ title }}</h3>
+        <table>
+          <tr><th></th><th>{{ t('ai_engines.col.calls') }}</th><th>{{ t('ai_engines.col.outside') }}</th><th>{{ t('ai_engines.col.unanswered') }}</th><th>{{ t('ai_engines.col.average') }}</th></tr>
+          {% for name, tally in rows %}
+            <tr><td><code>{{ name }}</code></td><td>{{ tally.calls }}</td><td>{{ tally.outside }}</td><td>{{ tally.unanswered }}</td><td>{{ tally.average }} s</td></tr>
+          {% endfor %}
+        </table>
+      {% endfor %}
+    {% else %}
+      <p>{{ t('ai_engines.counts.empty') }}</p>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>{{ t('ai_engines.recent.heading') }}</h2>
+    {% if view.recent %}
+      <table>
+        <tr><th>{{ t('ai_engines.col.when') }}</th><th>{{ t('ai_engines.col.caller') }}</th><th>{{ t('ai_engines.col.kind') }}</th><th>{{ t('ai_engines.col.answered_by') }}</th><th>{{ t('ai_engines.col.why') }}</th></tr>
+        {% for call in view.recent %}
+          <tr>
+            <td>{{ call.at.replace('T', ' ') }}<br><span class="why">{{ call.seconds }} s</span></td>
+            <td><code>{{ call.caller }}</code><br><span class="why">{{ call.operation }}</span></td>
+            <td>{% if call.kind %}<code>{{ call.kind }}</code>{% else %}—{% endif %}</td>
+            <td>
+              {% if call.reachable %}<code>{{ answerer(call) }}</code>{% else %}<span class="badge no_key">{{ t('ai_engines.recent.unanswered') }}</span>{% endif %}
+              {% if call.reached_external %}<span class="badge outside">{{ t('ai_engines.outside') }}</span>{% endif %}
+            </td>
+            <td>
+              <span class="why">{{ call.route or call.policy_class }}</span>
+              {% if call.set_aside and not call.reachable %}<br><span class="why">{{ call.set_aside }}</span>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>{{ t('ai_engines.recent.empty') }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

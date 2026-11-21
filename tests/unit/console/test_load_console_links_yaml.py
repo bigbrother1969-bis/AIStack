@@ -251,6 +251,7 @@ def test_the_real_console_links_definition_loads():
         "Time Machine",
         "Dock",
         "Sécurité",
+        "Moteurs IA",
     }
     # LAN-only since 2026-09-18: the owner closed every remaining
     # public exception reachable from the console — these two were
@@ -279,6 +280,9 @@ def test_the_real_console_links_definition_loads():
     assert by_name["Time Machine"].url == "http://GIGABYTE:8186/timemachine/"
     # The dock (ADR-0019): governed changes, LAN only.
     assert by_name["Dock"].url == "http://GIGABYTE:8186/dock/"
+    # The engines page (ADR-0029 M4): a reading screen, LAN only.
+    assert by_name["Moteurs IA"].url == "http://GIGABYTE:8186/ai-engines/"
+    assert by_name["Moteurs IA"].scope == "lan"
     # `scope`, added 2026-09-30: the same LAN/public split this file's
     # own header comments already narrated by hand above, now a field
     # `console/html.py` groups cards by.

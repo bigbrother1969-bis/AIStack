@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.6
+  version: 0.7
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -27,7 +27,7 @@ relations:
 
 Proposed, 2026-11-20. Scope and three choices decided with the owner on
 2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
-the rest is proposed and waits for the owner. The record (M1), the policy file (M2), the routing by policy (M3), the ChatGPT and Claude engines (M3b) and the choice of engine by kind of request (M3c) exist in code. On 2026-11-21 the owner asked that the policy choose the best engine for the kind of request, internal or external, and say why (§ 10).
+the rest is proposed and waits for the owner. The record (M1), the policy file (M2), the routing by policy (M3), the ChatGPT and Claude engines (M3b) the choice of engine by kind of request (M3c) and the page of § 8 (M4) exist in code. On 2026-11-21 the owner asked that the policy choose the best engine for the kind of request, internal or external, and say why (§ 10).
 
 ## Context
 
@@ -229,7 +229,7 @@ it (§ 7).
 
 ## Implementation state
 
-M1, M2, M3, M3b and M3c are built; the rest is not. Planned slices (each its own patch, tested before
+M1 to M4 and M3b, M3c are built; the rest is not. Planned slices (each its own patch, tested before
 delivery):
 
 | Slice | Content | State |
@@ -240,7 +240,7 @@ delivery):
 | M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | done, 2026-11-21 (0093): `ask_managed(caller, …)` in `troubleshooting/guide.py` serves the assistant, the Security page and the watch; an `external_allowed` caller is asked as before (Gemini first when its key is set), an `internal_only` one reaches internal engines only, never crosses its class when they are silent, and says so. `ai_destination()` follows the policy. `ai.compare` refuses an engine outside. Each answer carries `route`, kept in the journal (`internal_only; not asked: gemini`). The shipped class of the assistant stays `internal_only`; an installation that keeps Gemini declares `troubleshooting: external_allowed` in its own `ai_policy.yml` |
 | M3b | ChatGPT and Claude as external engines beside Gemini: `OpenAIEngine` and `AnthropicEngine` (`ai_runtime/hosted_engines.py`), `openai:` and `anthropic:` in `ai_runtime.yml`, the two keys in Settings (`AISTACK_OPENAI_API_KEY`, `AISTACK_ANTHROPIC_API_KEY`), the page's text before the click for each | done, 2026-11-21 (0094): asked in the order Gemini, ChatGPT, Claude, then local, only when declared and the key is set, and only for an `external_allowed` caller; `route` of an `internal_only` caller lists every outside engine it was kept from. Nothing is declared by default: no behaviour changes until the owner declares a model and sets a key |
 | M3c | The best engine for the kind of request (§ 10): kinds per operation, the table kind by engine with its reasons, the rule, `route` and `kind` carrying the why | done, 2026-11-21 (0095): `ai_runtime/choice.py` (`plan`, a pure function of the declarations: the steps best first and what it passed over), `kinds:` and `preferences:` in `ai_policy.yml` (strict loader), `ask_managed` runs the steps and stops at the first answer, `kind` added to the answer and to each line of the journal. Shipped table: a starting point written with the owner (diagnosis and recommendation prefer Claude then ChatGPT then Gemini, explanation prefers Gemini, each ending on the local engines), to be corrected by what `ai.compare` shows. With only Gemini set, behaviour is unchanged. The page's destination names the first outside engine any of the three operations asks |
-| M4 | The read-only page of § 8 and its console card, showing the why of § 10 | not started |
+| M4 | The read-only page of § 8 and its console card, showing the why of § 10 | done, 2026-11-21 (0096): `/ai-engines/` (LAN only, signed in), `ai_runtime/engines_view.py` builds it from the declarations, the keys present (names only) and the journal. Engines with their state (ready, key missing, not declared), where they run and when each last answered or stayed silent; the policy (class per caller, kinds, the table with its reasons); counts by caller, kind and engine, the share that went outside and the calls where a first engine was silent; the latest 30 calls with their route. It asks no engine, so the state is what the declarations and the journal say, not a probe (an Ollama on the GPU or the CPU, an Olala stopped or starting, is not shown: a probe would make the page wait on a slow engine) |
 | later | A portal for other applications behind the OIDC provider | not started, to be decided |
 
 ## Open points

@@ -53,6 +53,7 @@ from aistack.web import dock as dock_screen
 from aistack.web import health
 from aistack.web import notifications
 from aistack.web import pending as pending_screen
+from aistack.web import ai_engines as ai_engines_screen
 from aistack.web import security as security_screen
 from aistack.web import setup_wizard as setup_wizard_screen
 from aistack.instance.setup_wizard import apply_sign_in
@@ -244,6 +245,7 @@ def create_app(
     include(app, selection.router, selection.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)
     include(app, security_screen.router, security_screen.PREFIX)
+    include(app, ai_engines_screen.router, ai_engines_screen.PREFIX)
     include(app, timemachine.router, timemachine.PREFIX)
     include(app, dock_screen.router, dock_screen.PREFIX)
     include(app, health.router)

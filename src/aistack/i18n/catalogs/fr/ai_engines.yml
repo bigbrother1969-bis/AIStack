@@ -1,0 +1,52 @@
+# Écran « Moteurs IA » (ADR-0029 § 8).
+
+title: "AIStack — Moteurs IA"
+heading: "Moteurs IA"
+meta: "Quels moteurs d'IA AIStack interroge, quelle politique choisit entre eux, et ce que chaque appel a décidé. Lecture seule : rien n'est modifié ici, et aucun texte de question ni de réponse n'est conservé."
+outside: "hors de tes machines"
+inside: "chez toi"
+state:
+  ready: "prêt"
+  no_key: "déclaré, clé absente"
+  not_declared: "non déclaré"
+class:
+  internal_only: "interne seulement : rien ne sort de tes machines"
+  external_allowed: "externe permis : la question peut partir chez un moteur externe"
+col:
+  engine: "Moteur"
+  model: "Modèle"
+  where: "Où"
+  state: "État"
+  last_answer: "Dernière réponse"
+  last_silence: "Dernier silence"
+  caller: "Appelant"
+  class: "Classe"
+  kind: "Type de requête"
+  operations: "Opérations"
+  preferred: "Moteurs demandés, du meilleur au moins bon"
+  calls: "Appels"
+  outside: "Partis dehors"
+  unanswered: "Sans réponse"
+  average: "Durée moyenne"
+  when: "Quand"
+  answered_by: "A répondu"
+  why: "Pourquoi ce choix"
+engines:
+  heading: "Les moteurs"
+  note: "L'état vient des déclarations, des clés présentes et du journal : la page n'interroge aucun moteur. Une clé n'est jamais affichée."
+policy:
+  heading: "La politique"
+  where: "Dans ai_policy.yml (Paramètres, déclarations livrées) et ai_runtime.yml : les classes, les types de requête et le tableau des moteurs."
+  unnamed: "Un appelant que le fichier ne nomme pas est interne seulement. La classe est un plafond : un appelant interne n'atteint jamais un moteur externe, quel que soit le tableau."
+  no_table: "Aucun tableau de moteurs n'est déclaré : les moteurs sont demandés dans l'ordre déclaré."
+counts:
+  heading: "Ce qui a été demandé"
+  summary: "{calls} appel(s) dans le journal, dont {outside} parti(s) chez un moteur externe et {unanswered} sans réponse ; {fallback} appel(s) où un premier moteur est resté silencieux avant qu'un autre réponde."
+  empty: "Le journal est vide : aucune question n'a encore été posée à un moteur."
+  by_caller: "Par appelant"
+  by_kind: "Par type de requête"
+  by_engine: "Par moteur qui a répondu"
+recent:
+  heading: "Derniers choix"
+  empty: "Aucun appel pour l'instant."
+  unanswered: "sans réponse"

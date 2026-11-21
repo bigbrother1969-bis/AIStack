@@ -235,6 +235,7 @@ SCREENS = [
     "/priority/?status=ok",
     "/arrivals/",
     "/restart-watch/",
+    "/ai-engines/",
     "/selection/?status=ok",
     "/troubleshooting/?status=ok",
     "/troubleshooting/aide",

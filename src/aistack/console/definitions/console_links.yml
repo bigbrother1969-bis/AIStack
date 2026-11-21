@@ -69,6 +69,23 @@ links:
     service: web_lan
     path: /restart-watch/
     scope: lan
+  - name:
+      fr: Moteurs IA
+      en: AI engines
+    description:
+      fr: >-
+        Voir quels moteurs d'IA AIStack interroge (chez toi ou chez un
+        fournisseur), la politique qui choisit entre eux selon le type de
+        requête, ce que chaque appel a décidé et pourquoi. Lecture seule ;
+        aucun texte de question ni de réponse n'est conservé.
+      en: >-
+        See which AI engines AIStack asks (on your machines or at a
+        provider), the policy that chooses among them by kind of request,
+        and what each call decided and why. Read-only; no text of any
+        question or answer is kept.
+    service: web_lan
+    path: /ai-engines/
+    scope: lan
   - name: Architecture
     description:
       fr: >-

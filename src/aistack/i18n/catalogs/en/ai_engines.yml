@@ -1,0 +1,52 @@
+# "AI engines" screen (ADR-0029 § 8).
+
+title: "AIStack — AI engines"
+heading: "AI engines"
+meta: "Which AI engines AIStack asks, which policy chooses among them, and what each call decided. Read-only: nothing is changed here, and no text of any question or answer is kept."
+outside: "outside your machines"
+inside: "on your machines"
+state:
+  ready: "ready"
+  no_key: "declared, key missing"
+  not_declared: "not declared"
+class:
+  internal_only: "internal only: nothing leaves your machines"
+  external_allowed: "external allowed: the question may go to an outside engine"
+col:
+  engine: "Engine"
+  model: "Model"
+  where: "Where"
+  state: "State"
+  last_answer: "Last answer"
+  last_silence: "Last silence"
+  caller: "Caller"
+  class: "Class"
+  kind: "Kind of request"
+  operations: "Operations"
+  preferred: "Engines asked, best first"
+  calls: "Calls"
+  outside: "Went outside"
+  unanswered: "No answer"
+  average: "Average time"
+  when: "When"
+  answered_by: "Answered by"
+  why: "Why this choice"
+engines:
+  heading: "The engines"
+  note: "The state comes from the declarations, the keys present and the journal: the page asks no engine. A key is never shown."
+policy:
+  heading: "The policy"
+  where: "In ai_policy.yml (Settings, shipped declarations) and ai_runtime.yml: the classes, the kinds of request and the table of engines."
+  unnamed: "A caller the file does not name is internal only. The class is a ceiling: an internal caller never reaches an outside engine, whatever the table says."
+  no_table: "No table of engines is declared: engines are asked in the order declared."
+counts:
+  heading: "What was asked"
+  summary: "{calls} call(s) in the journal, {outside} of them sent to an outside engine and {unanswered} without an answer; {fallback} call(s) where a first engine stayed silent before another answered."
+  empty: "The journal is empty: no question has been put to an engine yet."
+  by_caller: "By caller"
+  by_kind: "By kind of request"
+  by_engine: "By engine that answered"
+recent:
+  heading: "Latest choices"
+  empty: "No call yet."
+  unanswered: "no answer"

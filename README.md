@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 15
+  version: 16
   created: 2026-07-04
-  updated: 2026-11-18
+  updated: 2026-11-21
 ---
 
 # AIStack
@@ -30,12 +30,47 @@ AIStack does not aim to build the most powerful infrastructure.
 
 **Its ambition is to build the best understood and most sustainable one.**
 
-**New in 2.1 — why AIStack brings its own principles back, and how:
-[Governed Heritage Engineering in AIStack 2.1](docs/04-handbook/GHE-IN-AISTACK.md).**
+**New in 2.2 — AIStack watches its own security and chooses which AI answers:
+see [What is new in 2.2](#what-is-new-in-22) below.** Since 2.1: why AIStack brings its own
+principles back, and how, in
+[Governed Heritage Engineering in AIStack 2.1](docs/04-handbook/GHE-IN-AISTACK.md).
 
 ---
 
-## What is new in 2.1
+## What is new in 2.2
+
+AIStack 2.2 learns to watch its own security and to choose which AI answers,
+and it says what the AI calls cost. Versions 2.2.1 and 2.2.2 are patch releases
+of the same line.
+
+- **A read-only Cybersecurity Manager.** The *Sécurité* screen says what the host
+  exposes, what the containers may do to it, how old the running images are, what
+  changed on the traced hosts and who tried to get in. Nothing is closed or purged;
+  the vigil tells Gotify what deserves it. The web application no longer holds the
+  Docker socket.
+- **A policy for which AI answers.** Each use of an AI has a class (stays on your
+  machines, or may go outside), and a table says which engine suits which kind of
+  request: local engines, one of them started only when needed, and Gemini, ChatGPT or
+  Claude when their key is set. Every call leaves a line saying who asked, which engine
+  and why — never the question or the answer. The *Moteurs IA* screen reads it.
+- **Ask a question in your own words.** *Poser une question* looks for personal data
+  before anything is sent; if it finds some, the question stays on your machines. The
+  words it looks for follow the families rgpd.com lists (2.2.1), and since 2.2.2 you can
+  list the first names of your house.
+- **Usage and footprint.** *Usage et empreinte* counts the AI calls and their energy and
+  greenhouse gases, every figure a range with its origin. The method is inspired by the
+  AFNOR SPEC 2314 and does not claim conformity. Since 2.2.2 the page says when the
+  permanent load is measured rather than declared.
+- **Decisions.** `ADR-0029` (the AI-Engine Manager) and `ADR-0030` (usage and footprint)
+  are accepted; `ADR-0028` (the Cybersecurity Manager) stays proposed until its response
+  levels are decided.
+
+*Everything that changed, version by version, in plain language:*
+[`docs/04-handbook/RELEASE-NOTES.md`](docs/04-handbook/RELEASE-NOTES.md).
+
+---
+
+## What was new in 2.1
 
 AIStack 2.1 changes little of what you click and a lot of what happens when you
 click. It brings back, inside the product, the principles the project is

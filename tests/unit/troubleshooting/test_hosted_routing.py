@@ -61,7 +61,7 @@ def test_only_the_engines_whose_key_is_set_are_asked(monkeypatch, world):
     answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait")
 
     assert answer.response == "Vu par Claude." and answer.model.startswith("anthropic:c-model")
-    assert answer.external is True and answer.route == "external_allowed"
+    assert answer.external is True and answer.route == "external_allowed; chose anthropic: declared order"
     assert world["gemini"].asked == 0 and world["openai"].asked == 0
 
 
@@ -95,7 +95,10 @@ def test_an_internal_caller_reaches_none_of_them_and_the_route_names_them(monkey
     answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait")
 
     assert answer.response == "Vu en local." and answer.external is False
-    assert answer.route == "internal_only; not asked: gemini, openai, anthropic"
+    assert answer.route == (
+        "internal_only; chose local: declared order; passed over: "
+        "gemini (not allowed for this caller), openai (not allowed for this caller), anthropic (not allowed for this caller)"
+    )
     assert all(engine.asked == 0 for engine in world.values())
 
 
@@ -110,3 +113,71 @@ def test_the_destination_names_the_first_outside_engine_set(monkeypatch, world):
 def test_a_declared_engine_without_its_key_is_not_asked(world):
     assert guide.hosted_names_set(guide.load_ai_runtime_yaml(None)) == []
     assert guide.hosted_engines(guide.load_ai_runtime_yaml(None)) == []
+
+
+def declare_kinds(monkeypatch, table, caller_class=ALLOWED):
+    from aistack.ai_runtime.policy import Preference
+
+    chosen = AIPolicy(
+        caller_class.callers,
+        kinds={"reason": "diagnosis"},
+        preferences={"diagnosis": tuple(Preference(engine, why) for engine, why in table)},
+    )
+    monkeypatch.setattr(guide, "current_policy", lambda: chosen)
+    return chosen
+
+
+def test_the_kind_of_request_picks_the_engine_and_the_why_is_in_the_route(monkeypatch, world):
+    monkeypatch.setenv("AISTACK_GEMINI_API_KEY", "k")
+    monkeypatch.setenv("AISTACK_ANTHROPIC_API_KEY", "k")
+    declare_kinds(monkeypatch, [("anthropic", "long reasoning"), ("gemini", "fast")])
+
+    answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait")
+
+    assert answer.response == "Vu par Claude." and answer.external is True and answer.kind == "diagnosis"
+    assert answer.route == "external_allowed; kind=diagnosis; chose anthropic: long reasoning"
+    assert world["gemini"].asked == 0
+
+
+def test_when_the_best_engine_is_silent_the_next_of_the_list_answers_and_the_route_says_so(monkeypatch, world):
+    monkeypatch.setenv("AISTACK_GEMINI_API_KEY", "k")
+    monkeypatch.setenv("AISTACK_ANTHROPIC_API_KEY", "k")
+    declare_kinds(monkeypatch, [("anthropic", "long reasoning"), ("gemini", "fast")])
+    world["anthropic"].text, world["anthropic"].reason = "", "Claude refused the request with status 529"
+
+    answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait")
+
+    assert answer.response == "Vu par Gemini." and "Claude: Claude refused" in answer.model
+    assert answer.route == "external_allowed; kind=diagnosis; chose gemini: fast; silent: anthropic (Claude refused the request with status 529)"
+
+
+def test_an_internal_caller_follows_the_table_among_its_own_engines_only(monkeypatch, world):
+    monkeypatch.setenv("AISTACK_ANTHROPIC_API_KEY", "k")
+    declare_kinds(monkeypatch, [("anthropic", "long reasoning"), ("local", "stays home")], caller_class=INTERNAL)
+
+    answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait")
+
+    assert answer.response == "Vu en local." and answer.external is False
+    assert answer.route == "internal_only; kind=diagnosis; chose local: stays home; passed over: anthropic (not allowed for this caller)"
+    assert world["anthropic"].asked == 0
+
+
+def test_when_every_engine_of_the_list_is_silent_the_answer_says_so_and_the_route_keeps_the_kind(monkeypatch, world):
+    monkeypatch.setenv("AISTACK_ANTHROPIC_API_KEY", "k")
+    declare_kinds(monkeypatch, [("anthropic", "long reasoning")])
+    world["anthropic"].text, world["anthropic"].reason = "", "Claude could not be reached: down"
+    monkeypatch.setattr(guide, "OllamaEngine", lambda **kwargs: Engine("qwen", "", "Ollama could not be reached"))
+
+    answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait")
+
+    assert not answer.reachable and "Claude could not be reached" in answer.unreachable_reason
+    assert answer.kind == "diagnosis" and answer.route.startswith("external_allowed; kind=diagnosis; silent: anthropic")
+
+
+def test_the_destination_names_the_outside_engine_any_operation_will_ask(monkeypatch, world):
+    monkeypatch.setenv("AISTACK_ANTHROPIC_API_KEY", "k")
+    declare_kinds(monkeypatch, [("anthropic", "long reasoning"), ("local", "stays home")])
+
+    assert guide.ai_destination("troubleshooting", guide.current_policy()) == ("anthropic", "c-model")
+    internal = declare_kinds(monkeypatch, [("anthropic", "x"), ("local", "stays home")], caller_class=INTERNAL)
+    assert guide.ai_destination("troubleshooting", internal) == ("ollama", "qwen")

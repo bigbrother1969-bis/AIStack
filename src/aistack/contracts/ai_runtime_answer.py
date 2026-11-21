@@ -35,6 +35,8 @@ class AIRuntimeAnswer:
     language: str = "fr"
     external: bool = False
     route: str = ""
+    # The kind of request the policy took this call for (`diagnosis`, `explanation`…); empty when none is declared.
+    kind: str = ""
 
     def __post_init__(self) -> None:
         if not self.operation.strip():

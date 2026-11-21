@@ -1,7 +1,7 @@
-# AIStack — which use of an AI model may send its question outside your machines
-# (ADR-0029). Nothing here changes which engine answers yet: the journal of AI
-# calls (`reports/generated/ai-calls/`) shows, for each call, its class and
-# whether a routing by this policy would have changed it.
+# AIStack — which use of an AI model may send its question outside your machines,
+# and which engine is asked first for which kind of request (ADR-0029). The journal
+# of AI calls (`reports/generated/ai-calls/`) shows, for each call, its class, its
+# kind, the engine chosen and why.
 #
 # Two classes:
 #   internal_only     what is asked never leaves the machines you run
@@ -24,3 +24,38 @@ callers:
   ai.compare: internal_only
 
 internal_hosts: []
+
+# The kind of request an operation is (`caller.operation` wins over `operation`), and for each
+# kind the engines asked, best first, each with the reason you give for it. The reason is
+# written in the journal with every choice. An engine is `gemini`, `openai` (ChatGPT),
+# `anthropic` (Claude), `local` (the local engines of ai_runtime.yml in their order) or the
+# label or model of one local engine ("Olala", "qwen2.5:7b").
+#
+# The class above is a ceiling: an `internal_only` caller never reaches an outside engine,
+# however the table ranks it, and never asks outside to make up for a silent local engine.
+# An outside engine is asked only when declared in ai_runtime.yml with its key set. A kind
+# with no list, or a list that leaves no engine, falls back to the order declared.
+#
+# This table is a starting point: what each engine is generally held to be good at, not
+# measured on your findings. Change it as the comparison of engines (`ai.compare`) teaches you.
+kinds:
+  reason: diagnosis
+  explain: explanation
+  recommend: recommendation
+
+preferences:
+  diagnosis:
+    - {engine: anthropic, why: "long reasoning over several facts at once"}
+    - {engine: openai, why: "a second opinion of the same class"}
+    - {engine: gemini, why: "fast and cheap when the others are not set"}
+    - {engine: local, why: "stays on your machines when no outside engine answers"}
+  explanation:
+    - {engine: gemini, why: "short and fast, a plain explanation is enough"}
+    - {engine: openai, why: "clear short answers"}
+    - {engine: anthropic, why: "careful wording when the others are not set"}
+    - {engine: local, why: "stays on your machines when no outside engine answers"}
+  recommendation:
+    - {engine: anthropic, why: "the steps and commands you will run: precision before speed"}
+    - {engine: openai, why: "a second opinion on the steps"}
+    - {engine: gemini, why: "fast when the others are not set"}
+    - {engine: local, why: "stays on your machines when no outside engine answers"}

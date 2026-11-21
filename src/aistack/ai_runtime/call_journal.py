@@ -54,6 +54,8 @@ class Call:
     policy_differs: bool = False
     # What the policy decided for this call, and the engines it kept out of it (`ADR-0029` § 6).
     route: str = ""
+    # The kind of request the policy took it for (`ADR-0029` § 10), empty when none is declared.
+    kind: str = ""
 
 
 def now_iso() -> str:
@@ -80,6 +82,7 @@ def call_of(
         policy_class=policy.class_of(caller),
         policy_differs=answer.external and not policy.allows_external(caller),
         route=answer.route,
+        kind=answer.kind,
     )
 
 
@@ -103,6 +106,7 @@ def append(directory: Path, call: Call, today: datetime | None = None) -> None:
                 "policy_class": call.policy_class,
                 "policy_differs": call.policy_differs,
                 "route": call.route,
+                "kind": call.kind,
             },
             ensure_ascii=False,
         )
@@ -164,6 +168,7 @@ def read(directory: Path, limit: int = 100) -> tuple[Call, ...]:
                     policy_class=str(data.get("policy_class") or ""),
                     policy_differs=bool(data.get("policy_differs")),
                     route=str(data.get("route") or ""),
+                    kind=str(data.get("kind") or ""),
                 )
             )
         except (ValueError, KeyError, TypeError):

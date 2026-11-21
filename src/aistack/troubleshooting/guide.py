@@ -21,6 +21,7 @@ from typing import Any
 
 from aistack.ai_runtime.definition import AIRuntimeDefinition, GeminiDefinition, HostedDefinition, LocalEngineDefinition
 from aistack.ai_runtime.answer_guard import GuardedEngine
+from aistack.ai_runtime.choice import Step, plan, route_of
 from aistack.ai_runtime.engine import AIEngine
 from aistack.ai_runtime.engine_switch import EngineSwitch, SwitchedEngine
 from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
@@ -112,22 +113,44 @@ def hosted_engines(definition: AIRuntimeDefinition) -> list[tuple[str, Any]]:
     return [(name, engine) for name, engine in built if engine is not None]
 
 
+def _plan_for(
+    policy: AIPolicy, caller: str, operation: str, definition: AIRuntimeDefinition
+) -> tuple[str, tuple[Step, ...], tuple[str, ...]]:
+    """The kind of this call and the steps and left-out engines `choice.plan` gives it, from what is declared and set."""
+
+    declared = tuple(
+        name for name, one in (("gemini", definition.gemini), ("openai", definition.openai), ("anthropic", definition.anthropic))
+        if one is not None
+    )
+    kind = policy.kind_of(caller, operation)
+    steps, passed_over = plan(policy, caller, kind, declared, tuple(hosted_names_set(definition)), definition.local_engines())
+    return kind, steps, passed_over
+
+
 def ai_destination(caller: str = "troubleshooting", policy: AIPolicy | None = None) -> tuple[str, str]:
     """
-    Where the next question of `caller` goes: ("gemini" | "openai" | "anthropic", model) or
-    ("ollama", model). It follows `ai_policy.yml`, as the routing does: an internal-only caller is
-    never told an outside engine, and the model named is the first engine it may reach.
+    Where the next questions of `caller` go: ("gemini" | "openai" | "anthropic", model) or
+    ("ollama", model). It follows `ai_policy.yml` as the routing does. The three operations may go to
+    different engines; the page must say when the facts leave the house, so the first outside engine
+    any of them asks is named, and the local model otherwise.
     """
 
     policy = policy or current_policy()
     definition = load_ai_runtime_yaml(AI_RUNTIME)
-    if policy.allows_external(caller):
-        outside = hosted_engines(definition)
-        if outside:
-            name, engine = outside[0]
-            return name, engine.model
-    engines = _reachable_by(policy, caller, definition.local_engines())
-    return "ollama", engines[0].model if engines else (definition.model or "")
+    models = {
+        "gemini": definition.gemini.model if definition.gemini else "",
+        "openai": definition.openai.model if definition.openai else "",
+        "anthropic": definition.anthropic.model if definition.anthropic else "",
+    }
+    first_local = ""
+    for operation in OPERATIONS:
+        _, steps, _ = _plan_for(policy, caller, operation, definition)
+        for step in steps:
+            if step.outside:
+                return step.engine, models[step.engine]
+        if not first_local and steps and steps[0].local:
+            first_local = steps[0].local[0].model
+    return "ollama", first_local or (definition.model or "")
 
 
 def _reachable_by(policy: AIPolicy, caller: str, engines: tuple[LocalEngineDefinition, ...]) -> tuple[LocalEngineDefinition, ...]:
@@ -147,27 +170,27 @@ def ask_managed(
     definition: AIRuntimeDefinition | None = None,
 ) -> AIRuntimeAnswer:
     """
-    One answer, by `ai_policy.yml` (`ADR-0029` § 4). A caller declared `external_allowed`
-    is asked as `ask_ai_runtime` does (Gemini first when its key is set, then the local
-    engines). An `internal_only` one reaches the internal engines only, and never crosses
-    its class to find an answer: when none can answer, the answer says so and the
-    hand-written text stays. The answer carries what was decided in `route`.
+    One answer, by `ai_policy.yml` (`ADR-0029` § 4 and § 10). The policy gives the call a kind, the
+    table gives the kind its engines best first, and the class of the caller is a ceiling: an
+    `internal_only` caller never reaches an outside engine and never crosses its class to find an
+    answer, so when every engine its class allows is silent the answer says so and the hand-written
+    text stays. The answer carries what was decided and why in `route`.
     """
 
     policy = current_policy()
     declared_class = policy.class_of(caller)
-
-    if policy.allows_external(caller):
-        return replace(ask_ai_runtime(finding, operation, target_language, context), route=declared_class)
-
     definition = definition or load_ai_runtime_yaml(AI_RUNTIME)
-    declared = definition.local_engines()
-    allowed = _reachable_by(policy, caller, declared)
-    kept_out = [engine.label or engine.model for engine in declared if engine not in allowed]
-    kept_out[:0] = hosted_names_set(definition)
-    route = declared_class + (f"; not asked: {', '.join(kept_out)}" if kept_out else "")
+    kind, steps, passed_over = _plan_for(policy, caller, operation, definition)
+    declared_local = definition.local_engines()
+    silent: list[tuple[str, str]] = []
+    went_outside = False
+    models = {
+        "gemini": definition.gemini.model if definition.gemini else "",
+        "openai": definition.openai.model if definition.openai else "",
+        "anthropic": definition.anthropic.model if definition.anthropic else "",
+    }
 
-    if declared and not allowed:
+    if not steps and declared_local:
         return AIRuntimeAnswer(
             operation=operation,
             subject=finding.subject,
@@ -180,11 +203,41 @@ def ask_managed(
                 f"(an engine on a public address or an unlisted host name is outside: see internal_hosts in ai_policy.yml)"
             ),
             language=target_language,
-            route=route,
+            route=route_of(declared_class, kind, None, (), passed_over),
+            kind=kind,
         )
 
-    narrowed = replace(definition, engines=allowed) if allowed else definition
-    return replace(ask_local(finding, operation, target_language, context, narrowed), route=route)
+    answer = None
+    for step in steps:
+        if step.outside:
+            engine = dict(hosted_engines(definition))[step.engine]
+            answer = _CALLS[operation](
+                finding, engine, f"{step.engine}:{models[step.engine]}", target_language=target_language, context=context
+            )
+            went_outside = True
+        else:
+            narrowed = replace(definition, engines=step.local) if step.local else definition
+            answer = ask_local(finding, operation, target_language, context, narrowed)
+        if answer.reachable:
+            said = " ; ".join(f"{HOSTED_NAMES.get(name, name)}: {why}" for name, why in silent)
+            return replace(
+                answer,
+                model=f"{answer.model} ({said})" if said else answer.model,
+                external=went_outside,
+                route=route_of(declared_class, kind, step, tuple(silent), passed_over),
+                kind=kind,
+            )
+        silent.append((step.engine, answer.unreachable_reason))
+
+    reason = " ; ".join(why for _, why in silent)
+    last = answer if answer is not None else ask_local(finding, operation, target_language, context, definition)
+    return replace(
+        last,
+        unreachable_reason=reason or last.unreachable_reason,
+        external=went_outside,
+        route=route_of(declared_class, kind, None, tuple(silent), passed_over),
+        kind=kind,
+    )
 
 
 def ask_ai_runtime(

@@ -57,7 +57,7 @@ def test_an_internal_caller_never_asks_gemini_even_with_its_key(monkeypatch):
 
     assert answer.reachable and answer.response == "Réponse locale."
     assert answer.external is False
-    assert answer.route == "internal_only; not asked: gemini"
+    assert answer.route == "internal_only; chose local: declared order; passed over: gemini (not allowed for this caller)"
 
 
 def test_a_caller_declared_external_allowed_is_asked_as_before(monkeypatch):
@@ -67,7 +67,7 @@ def test_a_caller_declared_external_allowed_is_asked_as_before(monkeypatch):
 
     assert answer.response == "Vu par Gemini." and answer.model.startswith("gemini:")
     assert answer.external is True
-    assert answer.route == "external_allowed"
+    assert answer.route == "external_allowed; chose gemini: declared order"
 
 
 def test_an_internal_caller_does_not_cross_its_class_when_the_local_engine_is_silent(monkeypatch):
@@ -88,7 +88,7 @@ def test_an_engine_outside_is_kept_out_of_an_internal_call(monkeypatch):
     answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr")
 
     assert answer.reachable and answer.response == "Réponse locale."
-    assert answer.route == "internal_only; not asked: Big"
+    assert answer.route == "internal_only; chose local: declared order; passed over: Big (outside your machines, not allowed for this caller)"
 
 
 def test_when_no_internal_engine_is_declared_the_answer_says_so_and_asks_nothing(monkeypatch):
@@ -100,7 +100,7 @@ def test_when_no_internal_engine_is_declared_the_answer_says_so_and_asks_nothing
     assert not answer.reachable
     assert "no internal engine is declared for troubleshooting" in answer.unreachable_reason
     assert "internal_hosts" in answer.unreachable_reason
-    assert answer.route == "internal_only; not asked: Big"
+    assert answer.route == "internal_only; passed over: Big (outside your machines, not allowed for this caller)"
 
 
 def test_a_host_the_owner_lists_is_inside(monkeypatch):
@@ -147,7 +147,7 @@ def test_the_journal_keeps_the_decision(monkeypatch, tmp_path):
     asked(finding(), "reason", "fr")
 
     (line,) = call_journal.read(tmp_path)
-    assert line.route == "internal_only; not asked: gemini"
+    assert line.route == "internal_only; chose local: declared order; passed over: gemini (not allowed for this caller)"
     assert line.reached_external is False and line.policy_differs is False
 
 

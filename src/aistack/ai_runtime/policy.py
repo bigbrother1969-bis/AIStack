@@ -27,13 +27,39 @@ CLASSES = (INTERNAL_ONLY, EXTERNAL_ALLOWED)
 INTERNAL = "internal"
 EXTERNAL = "external"
 
-_KEYS = ("callers", "internal_hosts")
+_KEYS = ("callers", "internal_hosts", "kinds", "preferences")
+
+
+@dataclass(frozen=True)
+class Preference:
+    """
+    One line of the table of `ADR-0029` § 10: an engine, and why the owner puts it there.
+
+    `engine` is `gemini`, `openai` (ChatGPT), `anthropic` (Claude), `local` (the local engines in
+    the order declared), or the label or model of one local engine ("Olala", "qwen2.5:7b").
+    """
+
+    engine: str
+    why: str
 
 
 @dataclass(frozen=True)
 class AIPolicy:
     callers: dict[str, str] = field(default_factory=dict)
     internal_hosts: tuple[str, ...] = ()
+    # Operation (or `caller.operation`) to the kind of request it is, and kind to the engines it prefers, best first.
+    kinds: dict[str, str] = field(default_factory=dict)
+    preferences: dict[str, tuple[Preference, ...]] = field(default_factory=dict)
+
+    def kind_of(self, caller: str, operation: str) -> str:
+        """The kind of request a call is: declared for `caller.operation`, else for the operation; empty when not declared."""
+
+        return self.kinds.get(f"{caller}.{operation}") or self.kinds.get(operation) or ""
+
+    def preferred(self, kind: str) -> tuple[Preference, ...]:
+        """The engines a kind prefers, best first; empty when the kind has no list."""
+
+        return self.preferences.get(kind, ())
 
     def class_of(self, caller: str) -> str:
         """The class of a use of a model; a caller the file does not name is internal."""
@@ -100,7 +126,45 @@ def load_ai_policy(path: Path) -> AIPolicy:
     if not isinstance(hosts, list) or not all(isinstance(item, str) and item.strip() for item in hosts):
         raise ValueError(f"AI policy {path}: internal_hosts must be a list of host names")
 
-    return AIPolicy(callers=callers, internal_hosts=tuple(hosts))
+    return AIPolicy(
+        callers=callers,
+        internal_hosts=tuple(hosts),
+        kinds=_kinds(data.get("kinds"), path),
+        preferences=_preferences(data.get("preferences"), path),
+    )
+
+
+def _kinds(raw: object, path: Path) -> dict[str, str]:
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError(f"AI policy {path}: kinds must be a mapping of an operation (or caller.operation) to a kind")
+    kinds: dict[str, str] = {}
+    for use, kind in raw.items():
+        if not isinstance(use, str) or not use.strip() or not isinstance(kind, str) or not kind.strip():
+            raise ValueError(f"AI policy {path}: kinds: {use!r}: {kind!r} must be a name given to a name")
+        kinds[use] = kind
+    return kinds
+
+
+def _preferences(raw: object, path: Path) -> dict[str, tuple[Preference, ...]]:
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError(f"AI policy {path}: preferences must be a mapping of a kind to a list of engines")
+    table: dict[str, tuple[Preference, ...]] = {}
+    for kind, items in raw.items():
+        if not isinstance(kind, str) or not kind.strip() or not isinstance(items, list):
+            raise ValueError(f"AI policy {path}: preferences: {kind!r} must be a list of engines, best first")
+        lines: list[Preference] = []
+        for item in items:
+            engine = item.get("engine") if isinstance(item, dict) else None
+            why = item.get("why") if isinstance(item, dict) else None
+            if not isinstance(engine, str) or not engine.strip() or not isinstance(why, str) or not why.strip():
+                raise ValueError(f"AI policy {path}: preferences: {kind}: each line names an engine and says why")
+            lines.append(Preference(engine.strip(), why.strip()))
+        table[kind] = tuple(lines)
+    return table
 
 
 def current_policy() -> AIPolicy:

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.5
+  version: 0.6
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -27,7 +27,7 @@ relations:
 
 Proposed, 2026-11-20. Scope and three choices decided with the owner on
 2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
-the rest is proposed and waits for the owner. The record (M1), the policy file (M2), the routing by policy (M3) and the ChatGPT and Claude engines (M3b) exist in code. On 2026-11-21 the owner asked that the policy choose the best engine for the kind of request, internal or external, and say why (§ 10).
+the rest is proposed and waits for the owner. The record (M1), the policy file (M2), the routing by policy (M3), the ChatGPT and Claude engines (M3b) and the choice of engine by kind of request (M3c) exist in code. On 2026-11-21 the owner asked that the policy choose the best engine for the kind of request, internal or external, and say why (§ 10).
 
 ## Context
 
@@ -168,13 +168,15 @@ Choices made with the owner the same day:
 
 - **The kind is declared, not detected.** A kind (a diagnosis, an
   explanation, a recommendation, a comparison, and so on) is named in
-  `ai_policy.yml` for each operation of each caller, and may be refined
-  by the domain of the finding (disk, network, security…), which is a
-  label AIStack's own qualification gives, not text from the question.
-  The Manager does not read the question to class it, and no model
-  decides (§ 9 stands).
-- **The choice reads a declared table**, kind by engine: an ordered list
-  of engines for each kind, each with the reason the owner gives for it
+  `ai_policy.yml` (`kinds:`) for each operation, or for one operation of
+  one caller (`troubleshooting.reason`). Refining it by the domain of
+  the finding (disk, network, security…), a label AIStack's own
+  qualification gives and not text from the question, is not built: see
+  the open points. The Manager does not read the question to class it,
+  and no model decides (§ 9 stands).
+- **The choice reads a declared table** (`preferences:`), kind by engine:
+  an ordered list of engines for each kind, each with the reason the owner
+  gives for it
   ("long reasoning over several facts", "short and fast", "keeps French
   tutoiement"). The comparison of engines (`ai.compare`) may later
   correct the table; it does not replace it.
@@ -186,12 +188,17 @@ Choices made with the owner the same day:
   key set and not shut off, the first of the kind's list is asked; when
   it is silent or its answer is set aside, the next of the list, never an
   engine outside the class (§ 4). A kind with no list falls back to the
-  order declared.
+  order declared. An engine is a name (`gemini`, `openai`, `anthropic`),
+`local` (the local engines in the order declared) or the label or model
+of one local engine, so an internal engine can be ranked above an
+external one for a kind.
 
 **Why is recorded with every choice**, in `route`, from declarations
 only: the kind, the engine chosen, the reason the table gives for it, and
-what was left out and why (`claude: key not set`, `gemini: not allowed
-for this caller`, `qwen2.5: asked first, silent`). Never the content. The
+what was left out and why. A line reads
+`external_allowed; kind=diagnosis; chose gemini: fast; silent: anthropic
+(Claude refused the request with status 529); passed over: openai (key
+not set)`. Never the content. The
 page of § 8 shows it, and the answer already names the model that gave
 it (§ 7).
 
@@ -222,7 +229,7 @@ it (§ 7).
 
 ## Implementation state
 
-M1, M2, M3 and M3b are built; the rest is not. Planned slices (each its own patch, tested before
+M1, M2, M3, M3b and M3c are built; the rest is not. Planned slices (each its own patch, tested before
 delivery):
 
 | Slice | Content | State |
@@ -232,7 +239,7 @@ delivery):
 | M2 | Classes and policy: `ai_policy.yml` (caller to class, `internal_hosts`, internal by default); the record says, per call, its class and whether a routing by the policy would have changed it | done, 2026-11-21 (0092): shipped `ai_policy.yml` (four callers, all `internal_only`), loader and `AIPolicy` in `ai_runtime/policy.py`, `policy_class` and `policy_differs` in each line of `ai-calls.jsonl`. The page's destination (`ai_destination()`) is **not** changed: it must keep telling where the question really goes, and nothing routes by the policy before M3 |
 | M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | done, 2026-11-21 (0093): `ask_managed(caller, …)` in `troubleshooting/guide.py` serves the assistant, the Security page and the watch; an `external_allowed` caller is asked as before (Gemini first when its key is set), an `internal_only` one reaches internal engines only, never crosses its class when they are silent, and says so. `ai_destination()` follows the policy. `ai.compare` refuses an engine outside. Each answer carries `route`, kept in the journal (`internal_only; not asked: gemini`). The shipped class of the assistant stays `internal_only`; an installation that keeps Gemini declares `troubleshooting: external_allowed` in its own `ai_policy.yml` |
 | M3b | ChatGPT and Claude as external engines beside Gemini: `OpenAIEngine` and `AnthropicEngine` (`ai_runtime/hosted_engines.py`), `openai:` and `anthropic:` in `ai_runtime.yml`, the two keys in Settings (`AISTACK_OPENAI_API_KEY`, `AISTACK_ANTHROPIC_API_KEY`), the page's text before the click for each | done, 2026-11-21 (0094): asked in the order Gemini, ChatGPT, Claude, then local, only when declared and the key is set, and only for an `external_allowed` caller; `route` of an `internal_only` caller lists every outside engine it was kept from. Nothing is declared by default: no behaviour changes until the owner declares a model and sets a key |
-| M3c | The best engine for the kind of request (§ 10): kinds per operation and domain, the table kind by engine with its reasons, the rule, `route` carrying the why | not started |
+| M3c | The best engine for the kind of request (§ 10): kinds per operation, the table kind by engine with its reasons, the rule, `route` and `kind` carrying the why | done, 2026-11-21 (0095): `ai_runtime/choice.py` (`plan`, a pure function of the declarations: the steps best first and what it passed over), `kinds:` and `preferences:` in `ai_policy.yml` (strict loader), `ask_managed` runs the steps and stops at the first answer, `kind` added to the answer and to each line of the journal. Shipped table: a starting point written with the owner (diagnosis and recommendation prefer Claude then ChatGPT then Gemini, explanation prefers Gemini, each ending on the local engines), to be corrected by what `ai.compare` shows. With only Gemini set, behaviour is unchanged. The page's destination names the first outside engine any of the three operations asks |
 | M4 | The read-only page of § 8 and its console card, showing the why of § 10 | not started |
 | later | A portal for other applications behind the OIDC provider | not started, to be decided |
 
@@ -244,8 +251,8 @@ delivery):
 - How a caller declares the capability it needs of an engine, for the
   case of § 5.
 - Whether Home Assistant should one day go through the Manager.
-- For § 10: the list of kinds, whether the finding's domain is the right
-  refinement, and the first table, to be written with the owner (which
-  engine for which kind, and why).
+- For § 10: whether the finding's domain is the right refinement of the
+  kind (not built), and the shipped table, a starting point to be replaced
+  by what the comparison of engines shows on the owner's own findings.
 - Whether an engine that has answered badly several times in a row
   should be put behind the next one for a while, from the record.

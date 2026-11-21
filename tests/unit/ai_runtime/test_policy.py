@@ -122,3 +122,52 @@ def test_a_line_written_before_the_policy_still_reads(tmp_path):
     (line,) = call_journal.read(tmp_path)
 
     assert (line.policy_class, line.policy_differs) == ("", False)
+
+
+def test_the_shipped_policy_gives_each_operation_a_kind_and_each_kind_its_engines_with_a_reason():
+    shipped = load_ai_policy(policy.SHIPPED)
+
+    for operation in ("reason", "explain", "recommend"):
+        kind = shipped.kind_of("troubleshooting", operation)
+        assert kind and shipped.preferred(kind), operation
+        assert all(line.why for line in shipped.preferred(kind))
+        assert shipped.preferred(kind)[-1].engine == "local"
+
+
+def test_a_caller_and_operation_kind_wins_over_the_operation_kind(tmp_path: Path):
+    loaded = load_ai_policy(declared(tmp_path, "kinds:\n  reason: diagnosis\n  security.page.reason: security\n"))
+
+    assert loaded.kind_of("troubleshooting", "reason") == "diagnosis"
+    assert loaded.kind_of("security.page", "reason") == "security"
+    assert loaded.kind_of("security.page", "explain") == ""
+    assert loaded.kind_of("x", "compare") == ""
+
+
+def test_the_table_loads_in_order_with_its_reasons(tmp_path: Path):
+    loaded = load_ai_policy(declared(tmp_path, "preferences:\n  diagnosis:\n    - {engine: openai, why: a}\n    - {engine: local, why: b}\n"))
+
+    assert [(line.engine, line.why) for line in loaded.preferred("diagnosis")] == [("openai", "a"), ("local", "b")]
+    assert loaded.preferred("nothing") == ()
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "kinds: [reason]\n",
+        "kinds:\n  reason: ''\n",
+        "preferences: [a]\n",
+        "preferences:\n  diagnosis: openai\n",
+        "preferences:\n  diagnosis:\n    - {engine: openai}\n",
+        "preferences:\n  diagnosis:\n    - {engine: '', why: a}\n",
+    ],
+)
+def test_a_badly_declared_kind_or_table_is_refused(tmp_path: Path, text: str):
+    with pytest.raises(ValueError):
+        load_ai_policy(declared(tmp_path, text))
+
+
+def test_the_journal_keeps_the_kind_and_nothing_else_of_the_choice(tmp_path: Path):
+    line = call_journal.call_of("troubleshooting", answer(kind="diagnosis", route="external_allowed; kind=diagnosis"), 1.0)
+    call_journal.append(tmp_path, line)
+
+    assert call_journal.read(tmp_path)[0].kind == "diagnosis"

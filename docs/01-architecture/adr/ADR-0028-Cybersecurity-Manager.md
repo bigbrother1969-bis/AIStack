@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.28
+  version: 0.29
   status: Proposed
   owner: Architecture
   created: 2026-11-19
-  updated: 2026-11-20
+  updated: 2026-11-21
 
 relations:
   references:
@@ -32,8 +32,11 @@ relations:
 ## Status
 
 Proposed, 2026-11-19. Scope and four choices decided with the owner the
-same day (§ 1, § 2, § 5); the rest is proposed and waits for the owner.
-No code exists yet.
+same day (§ 1, § 2, § 5). The read-only part (T1 to T4: exposure, what the
+containers can do to the host, drift, refusals, who tried to get in, alerts)
+is built and runs on the reference host; the security actuator, level 1, the snapshot,
+the clean point and level 3 are not built, and this ADR stays Proposed until
+they are decided.
 
 ## Context
 
@@ -261,28 +264,17 @@ delivery):
 | T2d | The web application no longer holds the Docker socket (§ 10) | done, 2026-11-20: `docker-proxy` in the compose file, a test of its settings; tried on the reference host the same morning — the web application `healthy`, its Dock and CPU-priority pages answer, a write through the proxy is refused (403), the report goes from two points to watch to one |
 | later | Raspberry witness; actuator; level 1; snapshot, clean point, level 3 | not started, each to be decided |
 
-## Open points
+## Open points, answered on 2026-11-21
 
-- **Reading the firewall: done, 2026-11-19 (T1b).** The container cannot
-  read it (no `iptables`; `ADR-0020`'s collector has no network), so a
-  small root unit, `aistack-firewall-snapshot`, runs `iptables-save` and
-  `ip6tables-save` in the host's namespace every ten minutes and writes
-  their answer, dated, under the data directory. The assessment reads
-  those files and says, per port, from where it can be reached: the
-  `INPUT` chain and the chains ufw jumps to for host ports, `DOCKER-USER`
-  for published ones. It is an approximation: a rule it cannot classify
-  (connection state, destination address, source port) is set aside,
-  never counted as an opening; a snapshot older than two hours is not
-  used. What stays unknown, and is said: whether a router in front of
-  the host forwards ports to it. Still to read: the tunnel and the proxy.
-- **What a real run has shown**: the first run on the reference host
-  (2026-11-19) listed 82 ports on every interface, none to fix. T1b is
-  verified by the suite against a ufw-shaped snapshot; its first run on
-  the host is still to come.
-- A vulnerability feed (CVE) for images and packages: which source,
-  and whether any data leaves the LAN.
-- How level 1 closes the entrance: stop the tunnel, or refuse at the
-  proxy; and what keeps the owner's own way in open.
-- Where the clean point lives, and who verifies its fingerprints.
-- What a second signal means for the first real detections: the
-  rules are written once the first weeks of readings exist.
+- **Reading the firewall: done** (T1b, 2026-11-19): the snapshot unit ran on the reference host and listed 82 ports on
+  every interface, none to fix. What remains is a slice of its own, read-only: the state of the tunnel and of the proxy.
+  What stays unknown, and is said: whether a router in front of the host forwards ports to it.
+- **A vulnerability feed (CVE) for images and packages: not now.** If wanted one day, a database downloaded and read on
+  the LAN, so that nothing of the house is sent out.
+- **How level 1 closes the entrance: stop the tunnel.** One action, reversible, that closes the whole public entrance;
+  the LAN, the VPN and the owner's own way in stay open, as § 5 requires. Refusing at the proxy is finer but depends on
+  the proxy's configuration.
+- **Where the clean point lives: in the restic repository of the Gigabyte**, outside the machine an intruder would be on.
+  The owner verifies its fingerprints, from another machine, when it is saved.
+- **What a second signal means for the first real detections: postponed.** The rules are written once the first weeks
+  of readings exist; a review around 2026-12-19.

@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.13
-  status: Proposed
+  version: 0.14
+  status: Accepted
   owner: Architecture
   created: 2026-11-20
   updated: 2026-11-21
@@ -25,9 +25,8 @@ relations:
 
 ## Status
 
-Proposed, 2026-11-20. Scope and three choices decided with the owner on
-2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
-the rest is proposed and waits for the owner. The record (M1), the policy file (M2), the routing by policy (M3), the ChatGPT and Claude engines (M3b) the choice of engine by kind of request (M3c) and the page of § 8 (M4) exist in code. On 2026-11-21 the owner asked that the policy choose the best engine for the kind of request, internal or external, and say why (§ 10).
+Accepted, 2026-11-21, by the owner, with the answers to the open points below. Proposed on 2026-11-20; scope and three
+choices decided with the owner on 2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices). The record (M1), the policy file (M2), the routing by policy (M3), the ChatGPT and Claude engines (M3b) the choice of engine by kind of request (M3c) and the page of § 8 (M4) exist in code. On 2026-11-21 the owner asked that the policy choose the best engine for the kind of request, internal or external, and say why (§ 10).
 
 ## Context
 
@@ -278,29 +277,31 @@ person) and written nowhere. The page is reached from a card of the console and 
 M1 to M4 and M3b, M3c are built; the rest is not. Planned slices (each its own patch, tested before
 delivery):
 
-| Slice | Content | State |
-|---|---|---|
-| M0 | This ADR | proposed, 2026-11-20 |
-| M1 | The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; routing unchanged | done, 2026-11-20 (0091): callers `troubleshooting`, `security.page`, `vigil.reason`, `ai.compare`; 90 days kept; `AIRuntimeAnswer.external` marks a question that went to an external engine. Written by the process that asks (the web service, the watch, the comparison), as state a service keeps for itself in the GHE audit; § 6 said "by a Task", which does not fit the web service, so the rule is read as "declared in the audit" |
-| M2 | Classes and policy: `ai_policy.yml` (caller to class, `internal_hosts`, internal by default); the record says, per call, its class and whether a routing by the policy would have changed it | done, 2026-11-21 (0092): shipped `ai_policy.yml` (four callers, all `internal_only`), loader and `AIPolicy` in `ai_runtime/policy.py`, `policy_class` and `policy_differs` in each line of `ai-calls.jsonl`. The page's destination (`ai_destination()`) is **not** changed: it must keep telling where the question really goes, and nothing routes by the policy before M3 |
-| M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | done, 2026-11-21 (0093): `ask_managed(caller, …)` in `troubleshooting/guide.py` serves the assistant, the Security page and the watch; an `external_allowed` caller is asked as before (Gemini first when its key is set), an `internal_only` one reaches internal engines only, never crosses its class when they are silent, and says so. `ai_destination()` follows the policy. `ai.compare` refuses an engine outside. Each answer carries `route`, kept in the journal (`internal_only; not asked: gemini`). The shipped class of the assistant stays `internal_only`; an installation that keeps Gemini declares `troubleshooting: external_allowed` in its own `ai_policy.yml` |
-| M3b | ChatGPT and Claude as external engines beside Gemini: `OpenAIEngine` and `AnthropicEngine` (`ai_runtime/hosted_engines.py`), `openai:` and `anthropic:` in `ai_runtime.yml`, the two keys in Settings (`AISTACK_OPENAI_API_KEY`, `AISTACK_ANTHROPIC_API_KEY`), the page's text before the click for each | done, 2026-11-21 (0094): asked in the order Gemini, ChatGPT, Claude, then local, only when declared and the key is set, and only for an `external_allowed` caller; `route` of an `internal_only` caller lists every outside engine it was kept from. Nothing is declared by default: no behaviour changes until the owner declares a model and sets a key |
-| M3c | The best engine for the kind of request (§ 10): kinds per operation, the table kind by engine with its reasons, the rule, `route` and `kind` carrying the why | done, 2026-11-21 (0095): `ai_runtime/choice.py` (`plan`, a pure function of the declarations: the steps best first and what it passed over), `kinds:` and `preferences:` in `ai_policy.yml` (strict loader), `ask_managed` runs the steps and stops at the first answer, `kind` added to the answer and to each line of the journal. Shipped table: a starting point written with the owner (diagnosis and recommendation prefer Claude then ChatGPT then Gemini, explanation prefers Gemini, each ending on the local engines), to be corrected by what `ai.compare` shows. With only Gemini set, behaviour is unchanged. The page's destination names the first outside engine any of the three operations asks |
-| M4 | The read-only page of § 8 and its console card, showing the why of § 10 | done, 2026-11-21 (0096): `/ai-engines/` (LAN only, signed in), `ai_runtime/engines_view.py` builds it from the declarations, the keys present (names only) and the journal. Engines with their state (ready, key missing, not declared), where they run and when each last answered or stayed silent; the policy (class per caller, kinds, the table with its reasons); counts by caller, kind and engine, the share that went outside and the calls where a first engine was silent; the latest 30 calls with their route. It asks no engine, so the state is what the declarations and the journal say, not a probe (an Ollama on the GPU or the CPU, an Olala stopped or starting, is not shown: a probe would make the page wait on a slow engine) |
-| M4 bis | A line on every card of the console: asks no engine, local only, or outside allowed (§ 11) | done, 2026-11-21 (0098): `ai_callers` per card, `ai_use` worked out from the policy by `console/ai_use.py` |
-| M5 | The page for everyone of § 12 | done, 2026-11-21 (0100, 0101): `/ask/` (LAN only, signed in, `USER_ACTION`: any signed-in person, with the session's token), `portal/chat.py`, operation `ask` in `ai_runtime/operations.py` (the matter of a question is an `AIMatter`, a `RuntimeFinding` being one), `portal.chat` in the shipped `ai_policy.yml`, a card with `ai_callers: [portal.chat]` |
-| later | A portal for other applications behind the OIDC provider | not started, to be decided |
+| Slice | State |
+|---|---|
+| M0 — This ADR | done — 2026-11-21, accepted by the owner (proposed 2026-11-20) |
+| M1 — The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; routing unchanged | done, 2026-11-20 (0091): callers `troubleshooting`, `security.page`, `vigil.reason`, `ai.compare`; 90 days kept; `AIRuntimeAnswer.external` marks a question that went to an external engine. Written by the process that asks (the web service, the watch, the comparison), as state a service keeps for itself in the GHE audit; § 6 said "by a Task", which does not fit the web service, so the rule is read as "declared in the audit" |
+| M2 — Classes and policy: `ai_policy.yml` (caller to class, `internal_hosts`, internal by default); the record says, per call, its class and whether a routing by the policy would have changed it | done, 2026-11-21 (0092): shipped `ai_policy.yml` (four callers, all `internal_only`), loader and `AIPolicy` in `ai_runtime/policy.py`, `policy_class` and `policy_differs` in each line of `ai-calls.jsonl`. The page's destination (`ai_destination()`) is **not** changed: it must keep telling where the question really goes, and nothing routes by the policy before M3 |
+| M3 — Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | done, 2026-11-21 (0093): `ask_managed(caller, …)` in `troubleshooting/guide.py` serves the assistant, the Security page and the watch; an `external_allowed` caller is asked as before (Gemini first when its key is set), an `internal_only` one reaches internal engines only, never crosses its class when they are silent, and says so. `ai_destination()` follows the policy. `ai.compare` refuses an engine outside. Each answer carries `route`, kept in the journal (`internal_only; not asked: gemini`). The shipped class of the assistant stays `internal_only`; an installation that keeps Gemini declares `troubleshooting: external_allowed` in its own `ai_policy.yml` |
+| M3b — ChatGPT and Claude as external engines beside Gemini: `OpenAIEngine` and `AnthropicEngine` (`ai_runtime/hosted_engines.py`), `openai:` and `anthropic:` in `ai_runtime.yml`, the two keys in Settings (`AISTACK_OPENAI_API_KEY`, `AISTACK_ANTHROPIC_API_KEY`), the page's text before the click for each | done, 2026-11-21 (0094): asked in the order Gemini, ChatGPT, Claude, then local, only when declared and the key is set, and only for an `external_allowed` caller; `route` of an `internal_only` caller lists every outside engine it was kept from. Nothing is declared by default: no behaviour changes until the owner declares a model and sets a key |
+| M3c — The best engine for the kind of request (§ 10): kinds per operation, the table kind by engine with its reasons, the rule, `route` and `kind` carrying the why | done, 2026-11-21 (0095): `ai_runtime/choice.py` (`plan`, a pure function of the declarations: the steps best first and what it passed over), `kinds:` and `preferences:` in `ai_policy.yml` (strict loader), `ask_managed` runs the steps and stops at the first answer, `kind` added to the answer and to each line of the journal. Shipped table: a starting point written with the owner (diagnosis and recommendation prefer Claude then ChatGPT then Gemini, explanation prefers Gemini, each ending on the local engines), to be corrected by what `ai.compare` shows. With only Gemini set, behaviour is unchanged. The page's destination names the first outside engine any of the three operations asks |
+| M4 — The read-only page of § 8 and its console card, showing the why of § 10 | done, 2026-11-21 (0096): `/ai-engines/` (LAN only, signed in), `ai_runtime/engines_view.py` builds it from the declarations, the keys present (names only) and the journal. Engines with their state (ready, key missing, not declared), where they run and when each last answered or stayed silent; the policy (class per caller, kinds, the table with its reasons); counts by caller, kind and engine, the share that went outside and the calls where a first engine was silent; the latest 30 calls with their route. It asks no engine, so the state is what the declarations and the journal say, not a probe (an Ollama on the GPU or the CPU, an Olala stopped or starting, is not shown: a probe would make the page wait on a slow engine) |
+| M4 bis — A line on every card of the console: asks no engine, local only, or outside allowed (§ 11) | done, 2026-11-21 (0098): `ai_callers` per card, `ai_use` worked out from the policy by `console/ai_use.py` |
+| M5 — The page for everyone of § 12 | done, 2026-11-21 (0100, 0101): `/ask/` (LAN only, signed in, `USER_ACTION`: any signed-in person, with the session's token), `portal/chat.py`, operation `ask` in `ai_runtime/operations.py` (the matter of a question is an `AIMatter`, a `RuntimeFinding` being one), `portal.chat` in the shipped `ai_policy.yml`, a card with `ai_callers: [portal.chat]` |
+| later — A portal for other applications behind the OIDC provider | not started, to be decided |
 
-## Open points
+## Open points, settled on 2026-11-21
 
-- How long the record is kept (proposed: 90 days, like the security
-  series) and how it is bounded.
-- The list of callers, to be read with the owner when M1 names them.
-- How a caller declares the capability it needs of an engine, for the
-  case of § 5.
-- Whether Home Assistant should one day go through the Manager.
-- For § 10: whether the finding's domain is the right refinement of the
-  kind (not built), and the shipped table, a starting point to be replaced
-  by what the comparison of engines shows on the owner's own findings.
-- Whether an engine that has answered badly several times in a row
-  should be put behind the next one for a while, from the record.
+- **How long the record is kept: 90 days**, dropped by age; it is already so since M1 (0091). No bound by size: one
+  line per call, without content, stays small over 90 days.
+- **The list of callers is the policy file.** `ai_policy.yml` names them (`troubleshooting`, `security.page`,
+  `vigil.reason`, `ai.compare`, `portal.chat`); a caller it does not know stays internal, as the rule says. A new
+  caller is declared there, and in this ADR when it matters.
+- **How a caller declares the capability it needs of an engine: postponed.** The table of kinds by engine is enough
+  today; it is reopened with the first caller that needs more (images, a long context).
+- **Home Assistant through the Manager: no, for now.** It keeps its own path; the question is reopened only if the
+  owner asks.
+- **The finding's domain as a refinement of the kind, and the shipped table: postponed** until a few weeks of
+  comparisons (`ai.compare`) on the owner's own findings show what to change.
+- **An engine that answered badly several times in a row, put behind the next one: postponed** until the record
+  shows such a case.

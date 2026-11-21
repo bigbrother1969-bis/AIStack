@@ -7,8 +7,8 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 0.2
-  status: Proposed
+  version: 0.3
+  status: Accepted
   owner: Architecture
   created: 2026-11-21
   updated: 2026-11-21
@@ -23,7 +23,7 @@ relations:
 
 ## Status
 
-Proposed, 2026-11-21. The owner asked on 2026-11-21 for a general page of usage statistics with the carbon
+Accepted, 2026-11-21, by the owner, with the limits written below as assumed. The owner asked on 2026-11-21 for a general page of usage statistics with the carbon
 footprint of AIStack, calculated after the AFNOR SPEC 2314 (June 2024). The scope (AIStack and its AI calls,
 local and outside) and the measure of the GPU power instead of a declared power were agreed that day; the
 rest is proposed and waits for the owner.
@@ -95,18 +95,32 @@ take the whole reading.
 - **Terminal**: for the callers a person waits on (`terminal_callers`), the declared terminal power × duration.
 - **A call nothing answered** is counted in usage and carries no energy.
 - **Permanent load**: the containers of AIStack that run all the time, apart from calls, over the same period.
-  This is a declared power, and for any realistic value it is far above the calls: it is the first thing to measure.
+  This power is declared unless the owner measured it (see the limits below); for any realistic value it is far above the calls.
 
-## Not decided here
+## Implementation state
 
-1. **Measure the permanent load continuously.** Done once by hand on the reference host on 2026-11-21: the UPS reads
-   31 % of 520 W (161 W for its whole circuit, resolution about 5 W) and the containers show AIStack holding 2.2 % of their
-   memory and 9.2 % of one core, which gives 0.5 / 3.6 / 4.6 W (the owner's `config/footprint.yml`, status `measured`; the
-   shipped file keeps the declared 2 / 5 / 10 W, as it cannot know another machine). What remains: the allocation key
-   (memory; a processor key would give more) is a choice, the UPS also feeds the Raspberry, and a single reading does not
-   follow the load over time. A reading by the vigil of the UPS (NUT) and of the containers' use would.
-2. **Whether `nvidia-smi` is visible from the web container.** If it is not, every local call is *estimated* until the container is given the card's monitoring.
-3. **The making of the machine** and its life: the declared 350 kgCO2e over 5 years is a placeholder for the maker's figure.
-4. **Allocating the making of the machine to the permanent load**, which is not done.
-5. **Resource depletion and primary energy**, which are not calculated.
-6. **Conformity to the SPEC**, which the owner checks against his copy.
+| Step | State |
+|---|---|
+| § 1 and § 2: the reading screen `/footprint/` and the calculation `footprint/estimate.py` | done, 2026-11-21 |
+| § 3: `footprint.yml` with a low, a central and a high value, a status and a source for each input, refused when incomplete | done, 2026-11-21 |
+| § 4: the GPU power read during a call, `gpu_watts` in the journal | done, 2026-11-21, verified on the reference host |
+| § 5: what a local call, an outside call, the terminal and the permanent load carry | done, 2026-11-21 |
+| The permanent load measured on the reference host and the page texts that follow its status (0110) | done, 2026-11-21 |
+| A reading of the permanent load by the vigil (UPS and containers), instead of a reading by hand | not started, optional |
+
+## Limits assumed, settled on 2026-11-21
+
+1. **The permanent load is measured, and read again by hand.** Done once on the reference host on 2026-11-21: the UPS
+   reads 31 % of 520 W (161 W for its whole circuit, resolution about 5 W) and the containers show AIStack holding
+   2.2 % of their memory and 9.2 % of one core, which gives 0.5 / 3.8 / 5.6 W (the owner's `config/footprint.yml`,
+   status `measured`, on an i7-6700K of 91 W, 8 logical and 4 physical cores; the shipped file keeps the declared
+   2 / 5 / 10 W, as it cannot know another machine). The allocation key (memory) is a choice, the UPS also feeds the
+   Raspberry, and a single reading does not follow the load over time: a reading by the vigil, if wanted, is a later slice.
+2. **`nvidia-smi` is visible from the web container: resolved.** A local call carries the card's measured power
+   (`gpu_watts`) in the record; only a call without it is estimated, and the page says which.
+3. **The making of the machine** stays declared (350 kgCO2e over 5 years, with a wide range): a hand-built machine has
+   no maker's figure. The page shows its status.
+4. **Allocating the making of the machine to the permanent load** is not done: a choice of method, written here, to be
+   reopened if a full life-cycle total is wanted.
+5. **Resource depletion and primary energy** are out of scope, and the page says so.
+6. **Conformity to the SPEC** is checked by the owner against his copy; AIStack claims none.

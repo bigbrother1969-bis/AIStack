@@ -136,12 +136,15 @@ AIStack transforms observations into sustainable knowledge assets.
 - **Ask a question in your own words — new as of 2.2.0** — *Poser une question* is open to
   anyone signed in on the local network. At the moment of sending, AIStack looks for personal
   data in the question; if it finds any the question stays on your machines, otherwise the
-  policy decides, and the page says which engine answered and why. Each card of the console
-  says whether its screen asks an AI.
+  policy decides, and the page says which engine answered and why. **New as of 2.2.2**: you can
+  list the first names of your house (`names:` in `config/personal_data.yml`), and a question
+  that holds one stays inside. Each card of the console says whether its screen asks an AI.
 - **Usage and footprint — new as of 2.2.0** — *Usage et empreinte* counts the AI calls of the
   last 30 days and their energy and greenhouse gases by level (machine that answers, network,
   terminal, permanent load), every figure a range with its origin: measured, published by a
-  source, or declared. The GPU power is read during a local call. The method is inspired by
+  source, or declared. The GPU power is read during a local call. **New as of 2.2.2**: the
+  permanent load can be declared measured in your own `config/footprint.yml`, and the page then
+  says so instead of calling it a hypothesis. The method is inspired by
   the AFNOR SPEC 2314 and does not claim conformity
   ([ADR-0030](docs/01-architecture/adr/ADR-0030-Usage-and-Footprint.md)).
 - **Governed Heritage Engineering — new as of 2.2.0** — a page and a block of the console

@@ -36,6 +36,7 @@ from aistack.console.yaml.store import load_console_links_yaml
 from aistack.data_budget.budget import load_data_budget
 from aistack.dock.declaration import load_dock_declaration
 from aistack.health.yaml.store import load_health_score_weights_yaml
+from aistack.footprint.declaration import load_footprint_yaml
 from aistack.hosts.records import load_hosts_declaration
 from aistack.i18n.catalog import load_languages_yaml
 from aistack.instance.yaml.store import load_instance_config_yaml
@@ -68,6 +69,7 @@ LOADERS: dict[str, Loader] = {
     "console_links.yml": lambda path, _: load_console_links_yaml(path),
     "data_budget.yml": lambda path, _: load_data_budget(path),
     "dock.yml": lambda path, _: load_dock_declaration(path),
+    "footprint.yml": lambda path, _: load_footprint_yaml(path),
     "gpu_thresholds.yml": lambda path, _: load_gpu_thresholds_yaml(path),
     "health_score_weights.yml": lambda path, _: load_health_score_weights_yaml(path),
     "hosts.yml": lambda path, generated: load_hosts_declaration(generated, path),

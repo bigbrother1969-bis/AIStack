@@ -1,0 +1,134 @@
+# Empreinte carbone d'AIStack et de ses appels d'IA (ADR-0030).
+#
+# Chaque paramètre a trois valeurs : `low`, `central`, `high`. Ce sont celles du scénario le moins
+# et le plus chargé en impact, pas forcément la plus petite et la plus grande valeur du nombre
+# (une durée de vie plus longue donne moins d'impact : elle est donc à gauche).
+#
+# `status` dit d'où vient le chiffre :
+#   measured : relevé sur la machine ;
+#   sourced  : publié par la source citée ;
+#   declared : hypothèse posée ici, à confirmer ou à remplacer par une mesure.
+#
+# Cette déclaration est livrée avec AIStack ; la copie dans config/ la remplace en entier.
+
+method:
+  # La méthode s'inspire de l'AFNOR SPEC 2314 (juin 2024) : unité fonctionnelle, trois niveaux
+  # (terminaux, réseaux, centres de données), répartition au temps d'usage, données mesurées de
+  # préférence, incertitude déclarée. Aucun texte de la SPEC n'est repris ici, et la conformité
+  # à la SPEC n'est pas revendiquée.
+  reference: "AFNOR SPEC 2314 (juin 2024)"
+  functional_unit: "un appel à un moteur d'IA, du clic à la réponse"
+  computed: [gwp100, final_energy]
+  not_computed: [adp, primary_energy]
+
+# Les appels du journal comptés sont ceux des derniers `period_days` jours.
+period_days: 30
+
+# Appelants pour lesquels une personne attend devant un écran (niveau « terminal »).
+terminal_callers: [troubleshooting, portal.chat, security.page]
+
+parameters:
+  grid_local:
+    unit: kgCO2e/kWh
+    low: 0.0196
+    central: 0.0414
+    high: 0.0519
+    status: sourced
+    source: >-
+      Électricité en France : 19,6 g/kWh (RTE, émissions directes de la production 2025),
+      41,4 g/kWh (Ember, cycle de vie 2025), 51,9 g/kWh (ADEME, Base Empreinte, mix de
+      consommation 2024).
+  grid_external:
+    unit: kgCO2e/kWh
+    low: 0.210
+    central: 0.384
+    high: 0.458
+    status: sourced
+    source: >-
+      Lieu du centre de données du fournisseur inconnu : Union européenne 210 g/kWh,
+      États-Unis 384 g/kWh, moyenne mondiale 458 g/kWh (Ember, cycle de vie 2025).
+  gpu_idle_watts:
+    unit: W
+    low: 33.57
+    central: 33.57
+    high: 33.57
+    status: measured
+    source: "Carte GeForce GTX 1070 de la MSI au repos, nvidia-smi power.draw, 21 nov. 2026."
+  gpu_active_watts:
+    unit: W
+    low: 60
+    central: 100
+    high: 151
+    status: declared
+    source: >-
+      Puissance de la carte pendant un appel quand elle n'est pas mesurée : la limite de la
+      carte est 151 W (nvidia-smi power.limit, mesuré) ; 60 W et 100 W sont des hypothèses.
+  host_overhead_ratio:
+    unit: part en plus du GPU
+    low: 0.2
+    central: 0.4
+    high: 0.6
+    status: declared
+    source: "Processeur, mémoire et pertes d'alimentation de la machine pendant un appel local."
+  pue_local:
+    unit: sans unité
+    low: 1.0
+    central: 1.0
+    high: 1.1
+    status: declared
+    source: "Machine de la maison, sans climatisation propre ; valeur de repos de l'indicateur PUE."
+  embodied_host:
+    unit: kgCO2e
+    low: 250
+    central: 350
+    high: 500
+    status: declared
+    source: "Fabrication de la machine qui porte les moteurs locaux ; à remplacer par la valeur du constructeur."
+  host_lifetime_years:
+    unit: années
+    low: 7
+    central: 5
+    high: 4
+    status: declared
+    source: "Durée d'usage de la machine sur laquelle la fabrication est répartie au temps d'usage."
+  external_energy_per_call:
+    unit: Wh
+    low: 0.24
+    central: 0.3
+    high: 3.0
+    status: sourced
+    source: >-
+      Énergie d'un appel de texte chez un fournisseur : 0,24 Wh (Google, médiane d'une requête
+      Gemini, août 2025, surcharge du centre de données comprise), 0,3 Wh (Epoch AI, requête
+      ChatGPT GPT-4o, 2025), 3 Wh (ancienne estimation courante, de Vries 2023). Les appels
+      d'AIStack portent parfois beaucoup de contexte : la valeur haute les couvre.
+  terminal_watts:
+    unit: W
+    low: 5
+    central: 15
+    high: 30
+    status: declared
+    source: "Part de l'ordinateur et de l'écran attribuée à la personne qui attend la réponse."
+  network_kwh_per_gb:
+    unit: kWh/Go
+    low: 0.01
+    central: 0.06
+    high: 0.2
+    status: declared
+    source: "Ordre de grandeur de l'énergie du réseau fixe par Go transféré ; à confirmer."
+  external_exchange_mb:
+    unit: Mo
+    low: 0.02
+    central: 0.05
+    high: 0.2
+    status: declared
+    source: "Taille d'un échange de texte avec un fournisseur externe (question, contexte, réponse)."
+  baseline_watts:
+    unit: W
+    low: 2
+    central: 5
+    high: 10
+    status: declared
+    source: >-
+      Puissance permanente en plus du repos de la machine pour faire tourner les conteneurs
+      d'AIStack, hors appels d'IA ; à remplacer par une mesure (prise connectée).

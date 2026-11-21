@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('footprint.title') }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+    .box h2 { margin: 0 0 .6rem; font-size: 1.05rem; }
+    .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .75rem; }
+    .badge.open { background: #dff6dd; color: #116329; }
+    .badge.closed { background: #f0f0f0; color: #666; }
+    .badge.ready { background: #dff6dd; color: #116329; }
+    .badge.no_key { background: #fff1cc; color: #7d4e00; }
+    .badge.not_declared { background: #f0f0f0; color: #666; }
+    .badge.outside { background: #fde2e2; color: #8a1c1c; }
+    .badge.inside { background: #dff6dd; color: #116329; }
+    .why { color: #444; font-size: .85rem; }
+    .badge.restarted { background: #dff6dd; color: #116329; }
+    .badge.failed, .badge.cycle { background: #fde2e2; color: #8a1c1c; }
+    .badge.planned, .badge.outside_window, .badge.skipped_limit { background: #fff1cc; color: #7d4e00; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    code { background: #eef1f4; padding: .05rem .3rem; border-radius: 4px; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; font-size: .88rem; }
+    .top a { color: #1f6feb; text-decoration: none; }
+    .top a:hover { text-decoration: underline; }
+    .lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
+    .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
+    .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
+    .lang-switch a:hover .flag { opacity: 1; }
+    .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+    .figure { font-size: 1.6rem; font-weight: 600; }
+    .range { color: #666; font-size: .85rem; }
+    .badge.measured { background: #dff6dd; color: #116329; }
+    .badge.sourced { background: #e1ecff; color: #1f4f99; }
+    .badge.declared { background: #fff1cc; color: #7d4e00; }
+    td.num, th.num { text-align: right; }
+    ul.limits li { margin-bottom: .3rem; }
+  </style>
+</head>
+<body>
+  {% set level_name = {'data_center_local': t('footprint.level.data_center_local.name'), 'data_center_external': t('footprint.level.data_center_external.name'), 'network': t('footprint.level.network.name'), 'terminal': t('footprint.level.terminal.name'), 'baseline': t('footprint.level.baseline.name')} %}
+  {% set level_what = {'data_center_local': t('footprint.level.data_center_local.what'), 'data_center_external': t('footprint.level.data_center_external.what'), 'network': t('footprint.level.network.what'), 'terminal': t('footprint.level.terminal.what'), 'baseline': t('footprint.level.baseline.what')} %}
+  {% set param_name = {'grid_local': t('footprint.param.grid_local'), 'grid_external': t('footprint.param.grid_external'), 'gpu_idle_watts': t('footprint.param.gpu_idle_watts'), 'gpu_active_watts': t('footprint.param.gpu_active_watts'), 'host_overhead_ratio': t('footprint.param.host_overhead_ratio'), 'pue_local': t('footprint.param.pue_local'), 'embodied_host': t('footprint.param.embodied_host'), 'host_lifetime_years': t('footprint.param.host_lifetime_years'), 'external_energy_per_call': t('footprint.param.external_energy_per_call'), 'terminal_watts': t('footprint.param.terminal_watts'), 'network_kwh_per_gb': t('footprint.param.network_kwh_per_gb'), 'external_exchange_mb': t('footprint.param.external_exchange_mb'), 'baseline_watts': t('footprint.param.baseline_watts')} %}
+  {% set limit_text = {'indicators': t('footprint.limit.indicators'), 'unanswered': t('footprint.limit.unanswered'), 'host_making': t('footprint.limit.host_making'), 'training': t('footprint.limit.training'), 'water': t('footprint.limit.water'), 'places': t('footprint.limit.places'), 'conformity': t('footprint.limit.conformity')} %}
+  {% set status_text = {'measured': t('footprint.status.measured'), 'sourced': t('footprint.status.sourced'), 'declared': t('footprint.status.declared')} %}
+  <div class="top">
+    <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+  <header>
+    <h1>{{ t('footprint.heading') }}</h1>
+    <p class="meta">{{ t('footprint.meta') }}</p>
+  </header>
+
+  {% if error %}
+    <div class="box"><p>{{ t('footprint.invalid', reason=error) }}</p></div>
+  {% else %}
+  {% set total = result.total %}
+  {% set energy_total = energy(total.energy_kwh) %}
+  {% set mass_total = mass(total.gwp_kg) %}
+  <div class="box">
+    <h2>{{ t('footprint.summary.heading', days=result.period_days) }}</h2>
+    <p><span class="figure">{{ mass_total[0] }}</span> <span class="range">({{ t('footprint.range') }} {{ mass_total[1] }})</span></p>
+    <p><span class="figure">{{ energy_total[0] }}</span> <span class="range">({{ t('footprint.range') }} {{ energy_total[1] }})</span></p>
+    <p class="meta">{{ t('footprint.summary.note') }}</p>
+    {% set base = result.levels['baseline'] %}
+    {% if total.gwp_kg.central > 0 %}
+      <p>{{ t('footprint.summary.baseline_share', share=plain((base.gwp_kg.central / total.gwp_kg.central) * 100)) }}</p>
+    {% endif %}
+    {% if result.answered %}
+      {% set one_mass = mass(result.per_call.gwp_kg) %}
+      {% set one_energy = energy(result.per_call.energy_kwh) %}
+      <p>{{ t('footprint.summary.per_call', mass=one_mass[0], mass_range=one_mass[1], energy=one_energy[0], energy_range=one_energy[1]) }}</p>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>{{ t('footprint.usage.heading', days=result.period_days) }}</h2>
+    {% if result.calls %}
+      <p>{{ t('footprint.usage.summary', calls=result.calls, answered=result.answered, local=result.local, outside=result.outside, unanswered=result.unanswered, seconds=plain(result.seconds)) }}</p>
+      <h3>{{ t('footprint.usage.by_caller') }}</h3>
+      <table>
+        <tr><th>{{ t('footprint.col.caller') }}</th><th class="num">{{ t('footprint.col.calls') }}</th><th class="num">{{ t('footprint.col.gwp') }}</th></tr>
+        {% for caller, calls in result.by_caller_calls.items() | sort(attribute='1', reverse=True) %}
+          {% set mine = result.by_caller.get(caller) %}
+          <tr>
+            <td><code>{{ caller }}</code></td>
+            <td class="num">{{ calls }}</td>
+            <td class="num">{% if mine %}{{ mass(mine.gwp_kg)[0] }} <span class="range">({{ mass(mine.gwp_kg)[1] }})</span>{% else %}—{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <h3>{{ t('footprint.usage.by_day') }}</h3>
+      <table>
+        <tr><th>{{ t('footprint.col.day') }}</th><th class="num">{{ t('footprint.col.calls') }}</th><th class="num">{{ t('footprint.col.outside') }}</th></tr>
+        {% for day in result.days | reverse %}
+          <tr><td>{{ day.day }}</td><td class="num">{{ day.calls }}</td><td class="num">{{ day.outside }}</td></tr>
+        {% endfor %}
+      </table>
+      <p class="meta">{{ t('footprint.usage.note') }}</p>
+    {% else %}
+      <p>{{ t('footprint.usage.empty') }}</p>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>{{ t('footprint.levels.heading') }}</h2>
+    <table>
+      <tr><th>{{ t('footprint.col.level') }}</th><th class="num">{{ t('footprint.col.energy') }}</th><th class="num">{{ t('footprint.col.gwp') }}</th></tr>
+      {% for level in levels %}
+        {% set quantity = result.levels[level] %}
+        <tr>
+          <td><strong>{{ level_name[level] }}</strong><br><span class="why">{{ level_what[level] }}</span></td>
+          <td class="num">{{ energy(quantity.energy_kwh)[0] }}<br><span class="range">{{ energy(quantity.energy_kwh)[1] }}</span></td>
+          <td class="num">{{ mass(quantity.gwp_kg)[0] }}<br><span class="range">{{ mass(quantity.gwp_kg)[1] }}</span></td>
+        </tr>
+      {% endfor %}
+    </table>
+    <p class="meta">{{ t('footprint.levels.note') }}</p>
+  </div>
+
+  <div class="box">
+    <h2>{{ t('footprint.basis.heading') }}</h2>
+    {% if result.local %}
+      <p>{{ t('footprint.basis.local', measured=result.measured, estimated=result.estimated) }}</p>
+    {% else %}
+      <p>{{ t('footprint.basis.no_local') }}</p>
+    {% endif %}
+    <p>{{ t('footprint.basis.outside') }}</p>
+    <p>{{ t('footprint.basis.baseline') }}</p>
+  </div>
+
+  <div class="box">
+    <h2>{{ t('footprint.params.heading') }}</h2>
+    <p class="meta">{{ t('footprint.params.where') }}</p>
+    <table>
+      <tr><th>{{ t('footprint.col.parameter') }}</th><th class="num">{{ t('footprint.col.low') }}</th><th class="num">{{ t('footprint.col.central') }}</th><th class="num">{{ t('footprint.col.high') }}</th><th>{{ t('footprint.col.origin') }}</th></tr>
+      {% for parameter in declaration.parameters %}
+        <tr>
+          <td><strong>{{ param_name[parameter.name] }}</strong><br><code>{{ parameter.unit }}</code></td>
+          <td class="num">{{ plain(parameter.low) }}</td>
+          <td class="num">{{ plain(parameter.central) }}</td>
+          <td class="num">{{ plain(parameter.high) }}</td>
+          <td><span class="badge {{ parameter.status }}">{{ status_text[parameter.status] }}</span><br><span class="why">{{ parameter.source }}</span></td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="box">
+    <h2>{{ t('footprint.method.heading') }}</h2>
+    <p>{{ t('footprint.method.text', reference=declaration.method.reference, unit=declaration.method.functional_unit) }}</p>
+    <h3>{{ t('footprint.limits.heading') }}</h3>
+    <ul class="limits">
+      {% for key in limits %}<li>{{ limit_text[key] }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</body>
+</html>

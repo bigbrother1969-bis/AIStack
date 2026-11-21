@@ -1,0 +1,91 @@
+# Écran « Usage et empreinte » (ADR-0030).
+
+title: "AIStack — Usage et empreinte"
+heading: "Usage et empreinte"
+meta: "Ce que font les appels d'IA d'AIStack et ce qu'ils coûtent en énergie et en gaz à effet de serre. Lecture seule : rien n'est modifié ici, aucun texte de question ni de réponse n'est conservé, et rien n'est mesuré sur toi. La méthode s'inspire de l'AFNOR SPEC 2314 ; chaque chiffre est une fourchette, avec ce qui la fonde."
+invalid: "La déclaration de l'empreinte n'est pas lisible : {reason}. Corrige le fichier dans les Paramètres, avec les autres déclarations."
+range: "fourchette"
+summary:
+  heading: "Empreinte des {days} derniers jours"
+  note: "Appels d'IA, niveaux réseau et terminal compris, plus la charge permanente des conteneurs d'AIStack. Les gaz à effet de serre sont en équivalent CO2 à 100 ans ; l'énergie est l'énergie finale."
+  baseline_share: "La charge permanente des conteneurs pèse {share} % de ce total (valeur centrale) : c'est elle qu'il faut mesurer en premier."
+  per_call: "Un appel d'IA qui a répondu coûte en moyenne {mass} (fourchette {mass_range}) et {energy} (fourchette {energy_range}), charge permanente non comprise."
+usage:
+  heading: "Usage de l'IA sur {days} jours"
+  summary: "{calls} appels, dont {answered} ont reçu une réponse : {local} chez toi, {outside} chez un fournisseur externe, {unanswered} sans réponse. Temps d'attente cumulé : {seconds} s."
+  by_caller: "Par appelant"
+  by_day: "Par jour"
+  note: "La source est le journal des appels d'IA : il garde qui a appelé et quel moteur a répondu, jamais le texte. AIStack ne garde aucune statistique de visite de ses écrans."
+  empty: "Aucun appel d'IA sur la période : seule la charge permanente est comptée."
+col:
+  caller: "Appelant"
+  calls: "Appels"
+  gwp: "Gaz à effet de serre"
+  day: "Jour"
+  outside: "Partis dehors"
+  level: "Niveau"
+  energy: "Énergie finale"
+  parameter: "Paramètre"
+  low: "Bas"
+  central: "Central"
+  high: "Haut"
+  origin: "Origine et source"
+levels:
+  heading: "Par niveau"
+  note: "Chaque ligne donne la valeur centrale, puis la fourchette bas – haut. Un appel qui n'a pas reçu de réponse n'est compté nulle part."
+level:
+  data_center_local:
+    name: "Machine qui répond, chez toi"
+    what: "Carte graphique et machine pendant l'appel, plus la part de fabrication de la machine répartie au temps d'usage."
+  data_center_external:
+    name: "Machine qui répond, chez un fournisseur"
+    what: "Énergie publiée par appel, surcharge du centre de données comprise."
+  network:
+    name: "Réseau"
+    what: "Échange avec un fournisseur externe. Le réseau de la maison n'est pas compté."
+  terminal:
+    name: "Terminal"
+    what: "L'ordinateur et l'écran de la personne qui attend la réponse."
+  baseline:
+    name: "Charge permanente d'AIStack"
+    what: "Les conteneurs qui tournent en continu, hors appels d'IA. Hypothèse déclarée, pas une mesure."
+basis:
+  heading: "Ce qui est mesuré et ce qui est estimé"
+  local: "Appels locaux : {measured} avec la puissance de la carte graphique lue pendant l'appel, {estimated} calculés avec la puissance déclarée."
+  no_local: "Aucun appel local sur la période : rien n'est mesuré ni estimé pour la machine de la maison."
+  outside: "Appels externes : jamais mesurés, estimés par une énergie publiée par appel et un facteur d'émission du lieu inconnu du fournisseur."
+  baseline: "Charge permanente : puissance déclarée, à remplacer par une mesure."
+params:
+  heading: "Les paramètres du calcul"
+  where: "Ils viennent de la déclaration de l'empreinte. Le bas est le scénario le moins chargé en impact, le haut le plus chargé. Tu peux les remplacer dans les Paramètres, avec les autres déclarations."
+param:
+  grid_local: "Facteur d'émission de l'électricité en France"
+  grid_external: "Facteur d'émission de l'électricité chez le fournisseur"
+  gpu_idle_watts: "Puissance de la carte graphique au repos"
+  gpu_active_watts: "Puissance de la carte pendant un appel (si non mesurée)"
+  host_overhead_ratio: "Consommation de la machine en plus de la carte"
+  pue_local: "PUE de la machine de la maison"
+  embodied_host: "Fabrication de la machine"
+  host_lifetime_years: "Durée d'usage de la machine"
+  external_energy_per_call: "Énergie d'un appel chez un fournisseur"
+  terminal_watts: "Puissance du terminal attribuée à l'attente"
+  network_kwh_per_gb: "Énergie du réseau par Go"
+  external_exchange_mb: "Volume d'un échange externe"
+  baseline_watts: "Puissance permanente des conteneurs d'AIStack"
+status:
+  measured: "mesuré"
+  sourced: "publié par la source"
+  declared: "déclaré, à confirmer"
+method:
+  heading: "Méthode"
+  text: "L'unité fonctionnelle est : {unit}. Trois niveaux sont comptés (machine qui répond, réseau, terminal), le matériel est réparti au temps d'usage, les mesures passent avant les valeurs déclarées, et l'incertitude est écrite. La méthode s'inspire de la {reference} ; AIStack ne revendique pas la conformité à ce document."
+limits:
+  heading: "Ce qui n'est pas compté"
+limit:
+  indicators: "Deux indicateurs ne sont pas calculés : l'épuisement des ressources abiotiques et l'énergie primaire. Seuls les gaz à effet de serre à 100 ans et l'énergie finale le sont."
+  unanswered: "Un appel resté sans réponse n'a pas de réponse à qui attribuer une empreinte : il est compté dans l'usage, pas dans l'énergie."
+  host_making: "La fabrication de la machine n'est répartie que sur les appels locaux, pas sur la charge permanente des conteneurs."
+  training: "L'entraînement des modèles n'est pas compté, ni local ni externe."
+  water: "L'eau n'est pas comptée."
+  places: "Le lieu des centres de données des fournisseurs est inconnu : le facteur d'émission va de l'Union européenne à la moyenne mondiale."
+  conformity: "Ce calcul est inspiré de la SPEC 2314, pas certifié conforme : à comparer avec ta copie du document avant tout usage officiel."

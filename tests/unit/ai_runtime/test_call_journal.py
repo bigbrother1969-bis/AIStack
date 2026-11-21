@@ -134,3 +134,52 @@ def test_a_local_only_question_is_not_marked_external(monkeypatch):
     monkeypatch.setattr(guide, "ask_local", lambda *a, **k: answer())
 
     assert guide.ask_ai_runtime(None, "reason", "fr").external is False
+
+
+def test_the_gpu_power_read_during_a_local_call_is_kept(tmp_path, monkeypatch):
+    class Sampler:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return None
+
+        def mean(self):
+            return 96.5
+
+    monkeypatch.setattr(call_journal, "PowerSampler", Sampler)
+
+    journaled(lambda *a, **k: answer(), "portal.chat", tmp_path)("q", "ask", "fr")
+
+    (line,) = read(tmp_path)
+    assert line.gpu_watts == 96.5
+
+
+def test_an_outside_call_keeps_no_gpu_power_because_the_card_did_not_work_for_it(tmp_path, monkeypatch):
+    class Sampler:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return None
+
+        def mean(self):
+            return 96.5
+
+    monkeypatch.setattr(call_journal, "PowerSampler", Sampler)
+
+    journaled(lambda *a, **k: answer(external=True, model="gemini:x"), "portal.chat", tmp_path)("q", "ask", "fr")
+
+    (line,) = read(tmp_path)
+    assert line.gpu_watts is None
+
+
+def test_a_journal_line_without_a_gpu_power_still_reads(tmp_path):
+    (tmp_path / "ai-calls.jsonl").write_text(
+        json.dumps({"at": "2026-11-01T10:00:00+00:00", "caller": "x", "operation": "ask", "language": "fr",
+                    "answered_by": "m", "reached_external": False, "reachable": True, "seconds": 1.0}) + "\n",
+        encoding="utf-8",
+    )
+
+    (line,) = read(tmp_path)
+    assert line.gpu_watts is None

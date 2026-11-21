@@ -1,0 +1,91 @@
+# "Usage and footprint" screen (ADR-0030).
+
+title: "AIStack — Usage and footprint"
+heading: "Usage and footprint"
+meta: "What AIStack's AI calls amount to and what they cost in energy and greenhouse gases. Read-only: nothing is changed here, no text of any question or answer is kept, and nothing is measured about you. The method is inspired by AFNOR SPEC 2314; every figure is a range, with what it rests on."
+invalid: "The footprint declaration cannot be read: {reason}. Fix the file in Settings, with the other declarations."
+range: "range"
+summary:
+  heading: "Footprint over the last {days} days"
+  note: "AI calls, with their network and terminal levels, plus the permanent load of AIStack's containers. Greenhouse gases are in CO2 equivalent at 100 years; energy is final energy."
+  baseline_share: "The permanent load of the containers weighs {share} % of this total (central value): it is the first thing to measure."
+  per_call: "An AI call that was answered costs {mass} on average (range {mass_range}) and {energy} (range {energy_range}), permanent load not included."
+usage:
+  heading: "AI usage over {days} days"
+  summary: "{calls} calls, {answered} of them answered: {local} on your machines, {outside} at an outside provider, {unanswered} without an answer. Total waiting time: {seconds} s."
+  by_caller: "By caller"
+  by_day: "By day"
+  note: "The source is the journal of AI calls: it keeps who called and which engine answered, never the text. AIStack keeps no visit statistics for its screens."
+  empty: "No AI call over the period: only the permanent load is counted."
+col:
+  caller: "Caller"
+  calls: "Calls"
+  gwp: "Greenhouse gases"
+  day: "Day"
+  outside: "Went outside"
+  level: "Level"
+  energy: "Final energy"
+  parameter: "Parameter"
+  low: "Low"
+  central: "Central"
+  high: "High"
+  origin: "Origin and source"
+levels:
+  heading: "By level"
+  note: "Each line gives the central value, then the low – high range. A call that got no answer is counted nowhere."
+level:
+  data_center_local:
+    name: "Machine that answers, at home"
+    what: "Graphics card and machine during the call, plus the share of the machine's making allocated by time of use."
+  data_center_external:
+    name: "Machine that answers, at a provider"
+    what: "Published energy per call, data-centre overhead included."
+  network:
+    name: "Network"
+    what: "Exchange with an outside provider. The home network is not counted."
+  terminal:
+    name: "Terminal"
+    what: "The computer and screen of the person waiting for the answer."
+  baseline:
+    name: "AIStack's permanent load"
+    what: "The containers that run all the time, apart from AI calls. A declared assumption, not a measure."
+basis:
+  heading: "What is measured and what is estimated"
+  local: "Local calls: {measured} with the graphics card's power read during the call, {estimated} calculated from the declared power."
+  no_local: "No local call over the period: nothing is measured or estimated for the home machine."
+  outside: "Outside calls: never measured, estimated from a published energy per call and an emission factor for the provider's unknown location."
+  baseline: "Permanent load: declared power, to be replaced by a measure."
+params:
+  heading: "The parameters of the calculation"
+  where: "They come from the footprint declaration. Low is the scenario with the least impact, high the one with the most. You can replace them in Settings, with the other declarations."
+param:
+  grid_local: "Emission factor of electricity in France"
+  grid_external: "Emission factor of electricity at the provider"
+  gpu_idle_watts: "Graphics card power at rest"
+  gpu_active_watts: "Card power during a call (when not measured)"
+  host_overhead_ratio: "Machine consumption on top of the card"
+  pue_local: "PUE of the home machine"
+  embodied_host: "Making of the machine"
+  host_lifetime_years: "Life of the machine"
+  external_energy_per_call: "Energy of a call at a provider"
+  terminal_watts: "Terminal power attributed to the wait"
+  network_kwh_per_gb: "Network energy per GB"
+  external_exchange_mb: "Size of an outside exchange"
+  baseline_watts: "Permanent power of AIStack's containers"
+status:
+  measured: "measured"
+  sourced: "published by the source"
+  declared: "declared, to confirm"
+method:
+  heading: "Method"
+  text: "The functional unit is: {unit}. Three levels are counted (machine that answers, network, terminal), equipment is allocated by time of use, measurements come before declared values, and the uncertainty is written down. The method is inspired by {reference}; AIStack does not claim conformity to that document."
+limits:
+  heading: "What is not counted"
+limit:
+  indicators: "Two indicators are not calculated: abiotic resource depletion and primary energy. Only greenhouse gases at 100 years and final energy are."
+  unanswered: "A call left without an answer has no answer to carry a footprint: it is counted in usage, not in energy."
+  host_making: "The making of the machine is allocated only to local calls, not to the permanent load of the containers."
+  training: "Model training is not counted, local or outside."
+  water: "Water is not counted."
+  places: "The location of the providers' data centres is unknown: the emission factor runs from the European Union to the world average."
+  conformity: "This calculation is inspired by SPEC 2314, not certified as conforming: compare it with your copy of the document before any official use."

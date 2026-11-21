@@ -253,6 +253,7 @@ def test_the_real_console_links_definition_loads():
         "Sécurité",
         "Moteurs IA",
         "Poser une question",
+        "Usage et empreinte",
     }
     # LAN-only since 2026-09-18: the owner closed every remaining
     # public exception reachable from the console — these two were

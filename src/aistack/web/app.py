@@ -55,6 +55,7 @@ from aistack.web import health
 from aistack.web import notifications
 from aistack.web import pending as pending_screen
 from aistack.web import ai_engines as ai_engines_screen
+from aistack.web import footprint as footprint_screen
 from aistack.web import ask as ask_screen
 from aistack.web import security as security_screen
 from aistack.web import setup_wizard as setup_wizard_screen
@@ -255,6 +256,7 @@ def create_app(
     include(app, security_screen.router, security_screen.PREFIX)
     include(app, ai_engines_screen.router, ai_engines_screen.PREFIX)
     include(app, ask_screen.router, ask_screen.PREFIX)
+    include(app, footprint_screen.router, footprint_screen.PREFIX)
     include(app, timemachine.router, timemachine.PREFIX)
     include(app, dock_screen.router, dock_screen.PREFIX)
     include(app, health.router)

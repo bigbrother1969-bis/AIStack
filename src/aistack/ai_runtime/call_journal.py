@@ -21,6 +21,7 @@ from typing import Any
 
 from aistack.ai_runtime.policy import AIPolicy, current_policy
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
+from aistack.footprint.power import PowerSampler
 
 JOURNAL_FILE = "ai-calls.jsonl"
 DEFAULT_JOURNAL_DIR = Path("reports/generated/ai-calls")
@@ -57,6 +58,8 @@ class Call:
     route: str = ""
     # The kind of request the policy took it for (`ADR-0029` § 10), empty when none is declared.
     kind: str = ""
+    # The mean power the GPU drew while a local call ran, in watts, when the process could read it (`ADR-0030`).
+    gpu_watts: float | None = None
 
 
 def now_iso() -> str:
@@ -64,7 +67,12 @@ def now_iso() -> str:
 
 
 def call_of(
-    caller: str, answer: AIRuntimeAnswer, seconds: float, at: str | None = None, policy: AIPolicy | None = None
+    caller: str,
+    answer: AIRuntimeAnswer,
+    seconds: float,
+    at: str | None = None,
+    policy: AIPolicy | None = None,
+    gpu_watts: float | None = None,
 ) -> Call:
     """One line from one answer: what it names (engine, reasons), never what it holds (prompt, response)."""
 
@@ -84,6 +92,7 @@ def call_of(
         policy_differs=answer.external and not policy.allows_external(caller),
         route=answer.route,
         kind=answer.kind,
+        gpu_watts=None if answer.external else gpu_watts,
     )
 
 
@@ -108,6 +117,7 @@ def append(directory: Path, call: Call, today: datetime | None = None) -> None:
                 "policy_differs": call.policy_differs,
                 "route": call.route,
                 "kind": call.kind,
+                "gpu_watts": call.gpu_watts,
             },
             ensure_ascii=False,
         )
@@ -142,6 +152,10 @@ def _recent(lines: list[str], today: datetime) -> list[str]:
     return kept[-TRIM_AT:]
 
 
+def _watts(value: Any) -> float | None:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
 def read(directory: Path, limit: int = 100) -> tuple[Call, ...]:
     """The newest `limit` calls, newest first; unreadable lines are skipped."""
 
@@ -170,6 +184,7 @@ def read(directory: Path, limit: int = 100) -> tuple[Call, ...]:
                     policy_differs=bool(data.get("policy_differs")),
                     route=str(data.get("route") or ""),
                     kind=str(data.get("kind") or ""),
+                    gpu_watts=_watts(data.get("gpu_watts")),
                 )
             )
         except (ValueError, KeyError, TypeError):
@@ -192,8 +207,11 @@ def journaled(
 
     def asked(*args: Any, **kwargs: Any) -> AIRuntimeAnswer:
         started = time.monotonic()
-        answer = ask(*args, **kwargs)
-        append(directory, call_of(caller, answer, time.monotonic() - started))
+
+        with PowerSampler() as power:
+            answer = ask(*args, **kwargs)
+
+        append(directory, call_of(caller, answer, time.monotonic() - started, gpu_watts=power.mean()))
         return answer
 
     return asked

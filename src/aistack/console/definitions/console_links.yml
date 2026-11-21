@@ -96,6 +96,25 @@ links:
     scope: lan
     ai_callers: []
   - name:
+      fr: Usage et empreinte
+      en: Usage and footprint
+    description:
+      fr: >-
+        Voir combien d'appels d'IA AIStack a faits (chez toi ou chez un
+        fournisseur) et ce qu'ils coûtent en énergie et en gaz à effet de
+        serre, avec la fourchette, ce qui est mesuré, ce qui est estimé et
+        la source de chaque chiffre. Méthode inspirée de l'AFNOR SPEC 2314.
+        Lecture seule.
+      en: >-
+        See how many AI calls AIStack made (on your machines or at a
+        provider) and what they cost in energy and greenhouse gases, with
+        the range, what is measured, what is estimated and the source of
+        each figure. Method inspired by AFNOR SPEC 2314. Read-only.
+    service: web_lan
+    path: /footprint/
+    scope: lan
+    ai_callers: []
+  - name:
       fr: Poser une question
       en: Ask a question
     description:

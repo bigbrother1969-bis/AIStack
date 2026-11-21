@@ -332,11 +332,16 @@ def _render_link(link: ConsoleLink, t: Translator) -> str:
         if link.ai
         else ""
     )
+    use_html = (
+        f'\n      <p class="card-ai-use card-ai-use-{link.ai_use}">{escape_text(t(f"console.ai_use.{link.ai_use}"))}</p>'
+        if link.ai_use
+        else ""
+    )
 
     pending = f' data-pending="{escape_text(_path_of(link.url))}"' if link.scope == LAN else ""
     return f"""    <a class="card card-{link.scope}"{pending} href="{escape_text(_link_href(link.url, t.lang))}" title="{escape_text(tooltip)}">
       <h2>{escape_text(link.name)}</h2>
-      <p>{escape_text(description)}</p>{ai_html}{scope_html}
+      <p>{escape_text(description)}</p>{ai_html}{use_html}{scope_html}
     </a>"""
 
 
@@ -485,6 +490,8 @@ body {
   padding: .05rem .4rem; margin-right: .3rem; border-radius: 4px;
   background: #16335c; color: #ffffff; vertical-align: 1px;
 }
+.card .card-ai-use { margin: .4rem 0 0; font-size: .82rem; color: #3d5a73; }
+.card .card-ai-use-external { color: #8a5a00; }
 .card .card-scope { margin: .4rem 0 0; font-size: .85rem; color: #3d5a73; }
 /* Scope accent: a left-edge stripe, blue-gray for a LAN-only card,
    amber-gold for a public one, distinct from badge-watch's amber. */

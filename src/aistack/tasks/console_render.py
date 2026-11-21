@@ -3,6 +3,7 @@ from __future__ import annotations
 import socket
 from pathlib import Path
 
+from aistack.ai_runtime.policy import current_policy
 from aistack.config import configured
 from aistack.console.identity import load_console_identity
 from aistack.console.yaml import load_console_links_yaml
@@ -87,6 +88,7 @@ class ConsoleRenderTask:
         written: list[str] = []
         links_count = 0
         instance = load_instance_config_yaml(domains.SOURCES.instance_config)
+        policy = current_policy()
 
         for language in languages.available:
             links = load_console_links_yaml(
@@ -95,6 +97,7 @@ class ConsoleRenderTask:
                 languages=languages,
                 instance=instance,
                 completing=SHIPPED_CONSOLE_LINKS,
+                policy=policy,
             )
             links_count = len(links)
             output_path = page_file(

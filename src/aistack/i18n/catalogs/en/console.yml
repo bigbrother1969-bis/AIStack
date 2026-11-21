@@ -29,6 +29,11 @@ card_scope_lan: "Reachable from the local network only."
 # Mark on a card whose screen uses AI.
 ai_mark: "AI"
 ai_mark_title: "Feature that uses artificial intelligence"
+# Line on every card of AIStack's own: what its screen asks of the AI engines (ADR-0029 § 11).
+ai_use:
+  none: "Asks no AI engine."
+  local: "AI engine: local only, nothing leaves your machines."
+  external: "AI engine: local, or at an outside provider when your policy allows it."
 tooltip:
   manual: "Open the user manual: every screen in detail, and how to set up an installation"
   manual_section: "Go to this part of the manual"

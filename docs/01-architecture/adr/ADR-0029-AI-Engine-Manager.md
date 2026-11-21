@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.7
+  version: 0.8
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -215,6 +215,22 @@ it (§ 7).
   instance): it would be declared external and follow § 3, § 4 and § 10
   unchanged.
 
+### 11. Each card of the console says whether its screen uses AI engines
+
+Decided by the owner, 2026-11-21. Every card of AIStack's own in `console_links.yml` declares `ai_callers`:
+the uses of a model of `ai_policy.yml` its screen reaches (`[]` for a
+screen that asks no engine). The console writes under the description,
+from those uses and the policy: *asks no AI engine*, *local engines
+only, nothing leaves your machines* (every use `internal_only`), or
+*local, or at an outside provider when your policy allows it* (any use
+`external_allowed`). The line follows the policy, so it stays true when
+the owner changes a class. It is written for the language of the page.
+The `ai` sentence, where a card has one, still says what the AI does
+there. A card of the owner's own without `ai_callers` says nothing of
+AI: the console does not know what it reaches. A copy of the file made
+before `ai_callers` takes them from the shipped card of the same screen
+(`ADR-0017` § 1).
+
 ## Consequences
 
 - The owner can read, in one file, what may leave the network and which
@@ -241,6 +257,7 @@ delivery):
 | M3b | ChatGPT and Claude as external engines beside Gemini: `OpenAIEngine` and `AnthropicEngine` (`ai_runtime/hosted_engines.py`), `openai:` and `anthropic:` in `ai_runtime.yml`, the two keys in Settings (`AISTACK_OPENAI_API_KEY`, `AISTACK_ANTHROPIC_API_KEY`), the page's text before the click for each | done, 2026-11-21 (0094): asked in the order Gemini, ChatGPT, Claude, then local, only when declared and the key is set, and only for an `external_allowed` caller; `route` of an `internal_only` caller lists every outside engine it was kept from. Nothing is declared by default: no behaviour changes until the owner declares a model and sets a key |
 | M3c | The best engine for the kind of request (§ 10): kinds per operation, the table kind by engine with its reasons, the rule, `route` and `kind` carrying the why | done, 2026-11-21 (0095): `ai_runtime/choice.py` (`plan`, a pure function of the declarations: the steps best first and what it passed over), `kinds:` and `preferences:` in `ai_policy.yml` (strict loader), `ask_managed` runs the steps and stops at the first answer, `kind` added to the answer and to each line of the journal. Shipped table: a starting point written with the owner (diagnosis and recommendation prefer Claude then ChatGPT then Gemini, explanation prefers Gemini, each ending on the local engines), to be corrected by what `ai.compare` shows. With only Gemini set, behaviour is unchanged. The page's destination names the first outside engine any of the three operations asks |
 | M4 | The read-only page of § 8 and its console card, showing the why of § 10 | done, 2026-11-21 (0096): `/ai-engines/` (LAN only, signed in), `ai_runtime/engines_view.py` builds it from the declarations, the keys present (names only) and the journal. Engines with their state (ready, key missing, not declared), where they run and when each last answered or stayed silent; the policy (class per caller, kinds, the table with its reasons); counts by caller, kind and engine, the share that went outside and the calls where a first engine was silent; the latest 30 calls with their route. It asks no engine, so the state is what the declarations and the journal say, not a probe (an Ollama on the GPU or the CPU, an Olala stopped or starting, is not shown: a probe would make the page wait on a slow engine) |
+| M4 bis | A line on every card of the console: asks no engine, local only, or outside allowed (§ 11) | done, 2026-11-21 (0098): `ai_callers` per card, `ai_use` worked out from the policy by `console/ai_use.py` |
 | later | A portal for other applications behind the OIDC provider | not started, to be decided |
 
 ## Open points

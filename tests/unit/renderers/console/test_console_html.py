@@ -652,3 +652,32 @@ def test_no_shipped_card_shows_a_plan_reference_in_english() -> None:
     for lang in ("fr", "en"):
         for link in load_console_links_yaml(shipped, lang=lang):
             assert "PLAN-" not in link.description, (lang, link.name)
+
+
+def test_every_card_that_declares_its_ai_use_says_it_under_its_description():
+    from dataclasses import replace
+
+    none = replace(selection_ui_link(), ai_use="none")
+    local = replace(selection_ui_link(), name="Sécurité", ai_use="local")
+    external = replace(selection_ui_link(), name="Assistant de pannes", ai_use="external")
+
+    document = render_html((none, local, external))
+
+    assert "N'interroge aucun moteur d'IA." in document
+    assert "Moteur d'IA : local seulement, rien ne sort de tes machines." in document
+    assert "Moteur d'IA : local, ou chez un fournisseur externe quand ta politique l'autorise." in document
+    assert document.count('class="card-ai-use ') == 3
+    card = document.split("<h2>Assistant de pannes", 1)[1].split("</a>", 1)[0]
+    assert card.index('class="card-ai-use') < card.index('class="card-scope')
+
+
+def test_a_card_that_does_not_declare_its_ai_use_says_nothing_of_it():
+    assert 'class="card-ai-use' not in render_html((selection_ui_link(),))
+
+
+def test_the_english_page_says_it_in_english():
+    from dataclasses import replace
+
+    document = render_html((replace(selection_ui_link(), ai_use="local"),), lang="en")
+
+    assert "AI engine: local only, nothing leaves your machines." in document

@@ -4,8 +4,12 @@
 # `service` + `path` (a screen of the local network, `web_lan` in
 # instance_config.yml) —, a `description`, an optional `ai` line, and
 # its `scope`: `public` (both addresses) or `lan` (the local network
-# only). Add your own cards the same way, for instance a link to a
-# service of yours:
+# only), and `ai_callers`: the uses of a model of ai_policy.yml its
+# screen reaches (`[]` when it asks no engine). The console writes from
+# them, and from the policy, whether the card uses AI engines and
+# whether one may be outside. Add your own cards the same way, for
+# instance a link to a service of yours (without `ai_callers`, the card
+# says nothing of AI):
 #
 #   - name: Nextcloud
 #     description: {fr: "Les fichiers de la maison", en: "The household's files"}
@@ -26,6 +30,7 @@ links:
     service: web_lan
     path: /selection/
     scope: lan
+    ai_callers: []
   - name:
       fr: Priorité CPU
       en: CPU priority
@@ -40,6 +45,7 @@ links:
     service: web_lan
     path: /priority/
     scope: lan
+    ai_callers: []
   - name:
       fr: Nouveautés
       en: New arrivals
@@ -54,6 +60,7 @@ links:
     service: web_lan
     path: /arrivals/
     scope: lan
+    ai_callers: []
   - name:
       fr: Relance au démarrage
       en: Restart after boot
@@ -69,6 +76,7 @@ links:
     service: web_lan
     path: /restart-watch/
     scope: lan
+    ai_callers: []
   - name:
       fr: Moteurs IA
       en: AI engines
@@ -86,6 +94,7 @@ links:
     service: web_lan
     path: /ai-engines/
     scope: lan
+    ai_callers: []
   - name: Architecture
     description:
       fr: >-
@@ -97,6 +106,7 @@ links:
         the services, and how they are connected to each other.
     url: /architecture.html
     scope: public
+    ai_callers: []
   - name:
       fr: Cockpit Santé
       en: Health cockpit
@@ -117,6 +127,7 @@ links:
       en: >-
         Each finding leads to the troubleshooting assistant, where the AI (Google Gemini, Ollama as the fallback) gives its opinion.
     scope: public
+    ai_callers: [troubleshooting]
   - name:
       fr: Découverte réseau
       en: Network discovery
@@ -131,6 +142,7 @@ links:
     service: web_lan
     path: /network-discovery/
     scope: lan
+    ai_callers: []
   - name:
       fr: Assistant de pannes
       en: Troubleshooting assistant
@@ -151,6 +163,7 @@ links:
       en: >-
         AIStack states the facts and what to do; on your click, Google Gemini gives its opinion from those facts (they then leave your network), with a local model (Ollama) as the fallback; nothing is applied without your click.
     scope: lan
+    ai_callers: [troubleshooting]
   - name:
       fr: Sécurité
       en: Security
@@ -172,6 +185,7 @@ links:
       en: >-
         On your click, the local engine (Ollama) explains a finding and suggests what to do; nothing leaves your machine and nothing is run.
     scope: lan
+    ai_callers: [security.page]
   - name: Time Machine
     description:
       fr: >-
@@ -191,6 +205,7 @@ links:
       en: >-
         Keeps every reasoning of the AI, dated and tied to what it explains, so you can read it again, correct it or validate it.
     scope: lan
+    ai_callers: []
   - name:
       fr: Dock
       en: Dock
@@ -207,3 +222,4 @@ links:
     service: web_lan
     path: /dock/
     scope: lan
+    ai_callers: []

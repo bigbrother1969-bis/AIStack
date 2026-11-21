@@ -29,6 +29,11 @@ card_scope_lan: "Accessible uniquement depuis le réseau local."
 # Mark on a card whose screen uses AI.
 ai_mark: "IA"
 ai_mark_title: "Fonctionnalité qui utilise l'intelligence artificielle"
+# Line on every card of AIStack's own: what its screen asks of the AI engines (ADR-0029 § 11).
+ai_use:
+  none: "N'interroge aucun moteur d'IA."
+  local: "Moteur d'IA : local seulement, rien ne sort de tes machines."
+  external: "Moteur d'IA : local, ou chez un fournisseur externe quand ta politique l'autorise."
 tooltip:
   manual: "Ouvrir le manuel utilisateur : chaque écran en détail et la mise en route d'une installation"
   manual_section: "Aller à cette partie du manuel"

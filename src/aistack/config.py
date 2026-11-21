@@ -6,7 +6,9 @@ Every declaration ships inside the package, under
 the environment names a configuration directory —
 `AISTACK_CONFIG_DIR`, `/config` in the container — a file of the same
 name there replaces the shipped one, file by file; a file it does not
-hold keeps the shipped value. `python -m aistack.cli.config_init` copies
+hold keeps the shipped value; two of them, `ai_policy.yml` and
+`console_links.yml`, are also completed when read with what a copy made
+before a version lacks (`ADR-0017` § 1). `python -m aistack.cli.config_init` copies
 every shipped file into that directory, never overwriting one already
 there, so a screen that saves a declaration (CPU priorities, SSH user
 names) writes into the directory, not into the image.

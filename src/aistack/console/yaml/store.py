@@ -19,8 +19,14 @@ def load_console_links_yaml(
     lang: str | None = None,
     languages: Languages | None = None,
     instance: InstanceConfig | None = None,
+    completing: Path | None = None,
 ) -> tuple[ConsoleLink, ...]:
     """Load the declared console links from YAML.
+
+    With `completing`, the file shipped with the package, the screens of AIStack it holds that `path`
+    does not (same `service` and `path`) are added after the declared cards (`ADR-0017` § 1): a copy
+    made before a screen existed still shows it. Nothing is written; a card of the owner's is never
+    changed; a screen he removed from a copy comes back.
 
     `name`, `description` and `ai` may be localized (ADR-0010): a plain
     string or a mapping from language code to text, resolved for `lang`.
@@ -54,10 +60,38 @@ def load_console_links_yaml(
     if not isinstance(links_data, list):
         raise ValueError(f"console link definition {path}: links must be a list")
 
+    if completing is not None and completing.resolve() != path.resolve():
+        links_data = [*links_data, *_missing_screens(links_data, completing)]
+
     return tuple(
         _load_link(item, path, index, lang, declared, resolved_instance)
         for index, item in enumerate(links_data)
     )
+
+
+def _screen(item: Any) -> tuple[str, str] | None:
+    """The `service` and `path` of a card that is a screen of AIStack; None for any other card."""
+
+    if isinstance(item, dict) and "service" in item and "path" in item:
+        return str(item["service"]), str(item["path"])
+
+    return None
+
+
+def _missing_screens(declared: list[Any], shipped_path: Path) -> list[Any]:
+    """The cards of the shipped file that are screens of AIStack the declared cards do not hold."""
+
+    with shipped_path.open("r", encoding="utf-8") as stream:
+        shipped = yaml.safe_load(stream)
+
+    cards = shipped.get("links") if isinstance(shipped, dict) else None
+
+    if not isinstance(cards, list):
+        return []
+
+    held = {key for key in map(_screen, declared) if key is not None}
+
+    return [card for card in cards if _screen(card) is not None and _screen(card) not in held]
 
 
 def _default_instance() -> InstanceConfig:

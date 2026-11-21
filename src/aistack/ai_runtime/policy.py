@@ -50,6 +50,8 @@ class AIPolicy:
     # Operation (or `caller.operation`) to the kind of request it is, and kind to the engines it prefers, best first.
     kinds: dict[str, str] = field(default_factory=dict)
     preferences: dict[str, tuple[Preference, ...]] = field(default_factory=dict)
+    # The blocks the declaration did not hold and the shipped file supplied (`ADR-0017` § 1): shown, never written.
+    completed: tuple[str, ...] = ()
 
     def kind_of(self, caller: str, operation: str) -> str:
         """The kind of request a call is: declared for `caller.operation`, else for the operation; empty when not declared."""
@@ -87,12 +89,12 @@ class AIPolicy:
 CAUTIOUS = AIPolicy()
 
 
-def load_ai_policy(path: Path) -> AIPolicy:
-    """
-    The policy declared at `path`. A mistyped class, an unknown key or a
-    caller that is not a name raises a `ValueError` naming it.
-    """
+# The blocks a copy of the file may lack and the shipped file then supplies. Never `callers` or
+# `internal_hosts`: they decide what may leave, and a caller not named stays internal.
+_COMPLETED = ("kinds", "preferences")
 
+
+def _read(path: Path) -> dict[str, object]:
     with path.open("r", encoding="utf-8") as stream:
         data = yaml.safe_load(stream)
 
@@ -101,6 +103,30 @@ def load_ai_policy(path: Path) -> AIPolicy:
 
     if not isinstance(data, dict):
         raise ValueError(f"AI policy must contain a mapping: {path}")
+
+    return data
+
+
+def load_ai_policy(path: Path, completing: Path | None = None) -> AIPolicy:
+    """
+    The policy declared at `path`. A mistyped class, an unknown key or a
+    caller that is not a name raises a `ValueError` naming it.
+
+    With `completing`, the file shipped with the package: `kinds` and `preferences`, when `path` does
+    not name them at all, are read from it (a copy made before they existed keeps working) and
+    listed in `completed`. A block the copy names, even empty, is the owner's and is never replaced.
+    """
+
+    data = _read(path)
+    completed: list[str] = []
+
+    if completing is not None and completing.resolve() != path.resolve():
+        shipped = _read(completing)
+
+        for block in _COMPLETED:
+            if block not in data and block in shipped:
+                data[block] = shipped[block]
+                completed.append(block)
 
     unknown = [key for key in data if key not in _KEYS]
     if unknown:
@@ -131,6 +157,7 @@ def load_ai_policy(path: Path) -> AIPolicy:
         internal_hosts=tuple(hosts),
         kinds=_kinds(data.get("kinds"), path),
         preferences=_preferences(data.get("preferences"), path),
+        completed=tuple(completed),
     )
 
 
@@ -171,6 +198,6 @@ def current_policy() -> AIPolicy:
     """The declared policy, or the cautious one when it cannot be read (a question never waits for a file)."""
 
     try:
-        return load_ai_policy(configured(SHIPPED))
+        return load_ai_policy(configured(SHIPPED), completing=SHIPPED)
     except (OSError, ValueError, yaml.YAMLError):
         return CAUTIOUS

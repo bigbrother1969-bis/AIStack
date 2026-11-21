@@ -19,9 +19,8 @@ from aistack.instance.yaml import load_instance_config_yaml
 from aistack.kernel.execution import Observation, ObservationContext, Request
 from aistack.kernel.registries.provider_registry import ProviderRegistry
 
-DEFAULT_CONSOLE_LINKS = configured(
-    Path(__file__).resolve().parents[1] / "console" / "definitions" / "console_links.yml"
-)
+SHIPPED_CONSOLE_LINKS = Path(__file__).resolve().parents[1] / "console" / "definitions" / "console_links.yml"
+DEFAULT_CONSOLE_LINKS = configured(SHIPPED_CONSOLE_LINKS)
 
 DEFAULT_GENERATED_DIR = "reports/generated"
 
@@ -95,6 +94,7 @@ class ConsoleRenderTask:
                 lang=language.code,
                 languages=languages,
                 instance=instance,
+                completing=SHIPPED_CONSOLE_LINKS,
             )
             links_count = len(links)
             output_path = page_file(

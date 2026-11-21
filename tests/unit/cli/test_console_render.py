@@ -133,7 +133,7 @@ def test_main_prints_a_confirmation_line(workspace, capsys):
 
     captured = capsys.readouterr()
     assert "Console written to" in captured.out
-    assert "10 link(s)" in captured.out
+    assert "12 link(s)" in captured.out
     assert "served from" in captured.out
 
 
@@ -527,3 +527,21 @@ def test_main_runs_the_chain_through_the_runtime_and_keeps_its_trace(workspace):
     assert "console.render" in (
         workspace / "reports" / "generated" / "execution-trace.json"
     ).read_text(encoding="utf-8")
+
+
+def test_the_console_shows_a_screen_a_declared_copy_lacks(tmp_path):
+    """A copy of `console_links.yml` made before a screen existed still shows it (`ADR-0017` § 1)."""
+
+    from aistack.console.yaml import load_console_links_yaml
+    from aistack.tasks.console_render import SHIPPED_CONSOLE_LINKS
+
+    copy = tmp_path / "console_links.yml"
+    copy.write_text(
+        "links:\n  - name: Mon service\n    description: A moi\n    url: https://cloud.example.org\n    scope: public\n",
+        encoding="utf-8",
+    )
+
+    links = load_console_links_yaml(copy, lang="fr", completing=SHIPPED_CONSOLE_LINKS)
+
+    assert links[0].name == "Mon service"
+    assert "Moteurs IA" in [link.name for link in links]

@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 1.10
+  version: 1.11
   status: Accepted
   owner: Architecture
   created: 2026-10-04
-  updated: 2026-11-20
+  updated: 2026-11-21
 
 relations:
   references:
@@ -68,6 +68,16 @@ copies every shipped declaration into the directory, never overwriting
 one — the container runs it at each start, so a screen that saves a
 declaration writes into the directory. Without the variable, nothing
 changes for a git installation.
+
+A copy that predates something the version added is completed when it
+is read, never rewritten (decided by the owner, 2026-11-21, after two
+copies hid a new block and a new card): in `ai_policy.yml`, `kinds` and
+`preferences` when the copy does not name them (never `callers` or
+`internal_hosts`, which decide what may leave); in `console_links.yml`,
+the screens of AIStack (`service` and `path`) the copy does not hold,
+added after its cards. A block or a card the copy names is the owner's
+and is never replaced. The *Moteurs IA* page says which blocks come from
+the shipped file. The other declarations keep the rule above.
 
 ### 2. One image, one service per process
 
@@ -211,6 +221,8 @@ Settings if wanted (§ 4 bis).
 | § 4 bis — where the data lives, chosen from Settings | done — 2026-10-04 |
 | A shipped declaration that changes (open point, decided 2026-10-05) | done — 2026-10-05: an untouched copy follows the shipped version at start; an edited or owner-placed file is never touched, and Settings shows the difference until marked seen (`aistack.instance.declarations`) |
 | § 5 — GIGABYTE on the compose file | done — 2026-10-04, 14:49: six containers of the `dev` image, console 200 after 21 s, no first-start notice; sign-in, Settings, CPU priority, Selection and the Time Machine checked by the owner |
+
+| A copy that predates a block or a screen (decided 2026-11-21) | done — 2026-11-21: `ai_policy.yml` and `console_links.yml` are completed when read (`load_ai_policy(..., completing=)`, `load_console_links_yaml(..., completing=)`); the other declarations are not |
 
 ## Consequences
 

@@ -171,3 +171,60 @@ def test_the_journal_keeps_the_kind_and_nothing_else_of_the_choice(tmp_path: Pat
     call_journal.append(tmp_path, line)
 
     assert call_journal.read(tmp_path)[0].kind == "diagnosis"
+
+
+_COPY_BEFORE_THE_TABLE = """
+callers:
+  troubleshooting: external_allowed
+"""
+
+
+def test_a_copy_without_the_table_is_completed_from_the_shipped_file(tmp_path: Path):
+    copy = tmp_path / "ai_policy.yml"
+    copy.write_text(_COPY_BEFORE_THE_TABLE, encoding="utf-8")
+
+    loaded = load_ai_policy(copy, completing=policy.SHIPPED)
+
+    assert loaded.allows_external("troubleshooting")
+    assert loaded.kind_of("troubleshooting", "reason") == "diagnosis"
+    assert loaded.preferred("diagnosis")
+    assert loaded.completed == ("kinds", "preferences")
+
+
+def test_the_classes_are_never_completed(tmp_path: Path):
+    copy = tmp_path / "ai_policy.yml"
+    copy.write_text("kinds: {}\n", encoding="utf-8")
+
+    loaded = load_ai_policy(copy, completing=policy.SHIPPED)
+
+    assert loaded.callers == {}
+    assert loaded.class_of("troubleshooting") == policy.INTERNAL_ONLY
+    assert loaded.completed == ("preferences",)
+
+
+def test_a_block_the_copy_names_is_the_owners_even_when_empty(tmp_path: Path):
+    copy = tmp_path / "ai_policy.yml"
+    copy.write_text("kinds: {}\npreferences: {}\n", encoding="utf-8")
+
+    loaded = load_ai_policy(copy, completing=policy.SHIPPED)
+
+    assert loaded.kinds == {}
+    assert loaded.preferences == {}
+    assert loaded.completed == ()
+
+
+def test_a_declaration_is_not_completed_when_it_is_the_shipped_file():
+    loaded = load_ai_policy(policy.SHIPPED, completing=policy.SHIPPED)
+
+    assert loaded.completed == ()
+    assert loaded.preferences
+
+
+def test_the_policy_in_force_completes_a_copy_made_before_the_table(monkeypatch, tmp_path: Path):
+    (tmp_path / "ai_policy.yml").write_text(_COPY_BEFORE_THE_TABLE, encoding="utf-8")
+    monkeypatch.setenv("AISTACK_CONFIG_DIR", str(tmp_path))
+
+    loaded = policy.current_policy()
+
+    assert loaded.allows_external("troubleshooting")
+    assert loaded.preferred("recommendation")

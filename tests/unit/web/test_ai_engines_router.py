@@ -93,3 +93,21 @@ def test_the_page_is_in_french_too(tmp_path: Path):
 
 def test_nothing_answers_on_the_public_port(tmp_path: Path):
     assert client(tmp_path, PUBLIC_PORT).get("/ai-engines/").status_code == 404
+
+
+def test_the_page_says_when_blocks_of_the_policy_come_from_the_shipped_file(tmp_path: Path, monkeypatch):
+    config = tmp_path / "config"
+    config.mkdir()
+    (config / "ai_policy.yml").write_text("callers:\n  troubleshooting: external_allowed\n", encoding="utf-8")
+    monkeypatch.setenv("AISTACK_CONFIG_DIR", str(config))
+
+    text = client(tmp_path).get("/ai-engines/?lang=en").text
+
+    assert "does not hold: kinds, preferences" in text
+    assert "long reasoning over several facts at once" in text
+
+
+def test_the_page_says_nothing_of_it_when_the_policy_is_whole(tmp_path: Path):
+    text = client(tmp_path).get("/ai-engines/?lang=en").text
+
+    assert "does not hold" not in text

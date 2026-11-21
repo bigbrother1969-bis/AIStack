@@ -37,6 +37,7 @@ engines:
 policy:
   heading: "La politique"
   where: "Dans ai_policy.yml (Paramètres, déclarations livrées) et ai_runtime.yml : les classes, les types de requête et le tableau des moteurs."
+  completed: "Ta copie de ai_policy.yml ne contient pas : {blocks}. Ces blocs sont lus dans le fichier livré ; rien n'est écrit dans ta copie."
   unnamed: "Un appelant que le fichier ne nomme pas est interne seulement. La classe est un plafond : un appelant interne n'atteint jamais un moteur externe, quel que soit le tableau."
   no_table: "Aucun tableau de moteurs n'est déclaré : les moteurs sont demandés dans l'ordre déclaré."
 counts:

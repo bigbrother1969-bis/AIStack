@@ -396,3 +396,72 @@ def test_the_real_definition_carries_every_declared_language():
                 link.get("url") or link.get("service"),
                 field,
             )
+
+
+_SHIPPED_WITH_TWO_SCREENS = """
+links:
+  - name: Selection UI
+    description: Sélection
+    service: selection_ui
+    scope: lan
+  - name: Moteurs IA
+    description: Les moteurs
+    service: selection_ui
+    path: /ai-engines/
+    scope: lan
+  - name: Cockpit Santé
+    description: Score
+    url: /health.html
+    scope: public
+"""
+
+
+def test_a_screen_the_copy_lacks_is_added_after_its_cards(tmp_path: Path):
+    shipped = write(tmp_path / "shipped.yml", _SHIPPED_WITH_TWO_SCREENS)
+    copy = write(
+        tmp_path / "config" / "console_links.yml",
+        """
+        links:
+          - name: Mon service
+            description: À moi
+            url: https://cloud.example.org
+            scope: public
+          - name: Selection UI
+            description: Texte à moi
+            service: selection_ui
+            path: /ai-engines/x
+            scope: lan
+        """,
+    )
+
+    links = load_console_links_yaml(copy, instance=_INSTANCE, completing=shipped)
+
+    assert [link.name for link in links] == ["Mon service", "Selection UI", "Moteurs IA"]
+    assert links[1].description == "Texte à moi"
+
+
+def test_a_screen_the_copy_holds_is_not_added_twice_and_other_cards_are_not_copied(tmp_path: Path):
+    shipped = write(tmp_path / "shipped.yml", _SHIPPED_WITH_TWO_SCREENS)
+    copy = write(
+        tmp_path / "config" / "console_links.yml",
+        """
+        links:
+          - name: Mes moteurs
+            description: Mon texte
+            service: selection_ui
+            path: /ai-engines/
+            scope: lan
+        """,
+    )
+
+    links = load_console_links_yaml(copy, instance=_INSTANCE, completing=shipped)
+
+    assert [link.name for link in links] == ["Mes moteurs"]
+
+
+def test_nothing_is_added_when_the_file_is_the_shipped_one(tmp_path: Path):
+    shipped = write(tmp_path / "shipped.yml", _SHIPPED_WITH_TWO_SCREENS)
+
+    links = load_console_links_yaml(shipped, instance=_INSTANCE, completing=shipped)
+
+    assert len(links) == 3

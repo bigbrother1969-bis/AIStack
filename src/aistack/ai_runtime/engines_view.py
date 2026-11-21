@@ -72,6 +72,7 @@ class EnginesView:
     by_engine: tuple[tuple[str, Tally], ...]
     with_fallback: int  # calls where an engine was asked first and said nothing
     recent: tuple[Call, ...]
+    completed: tuple[str, ...] = ()  # blocks of the policy read from the shipped file, not from the declared copy
 
 
 def answerer(call: Call) -> str:
@@ -203,4 +204,5 @@ def build(
         by_engine=_tally(calls, answerer),
         with_fallback=fallback,
         recent=calls[:shown],
+        completed=policy.completed,
     )

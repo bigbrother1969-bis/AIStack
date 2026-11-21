@@ -80,6 +80,9 @@
   <div class="box">
     <h2>{{ t('ai_engines.policy.heading') }}</h2>
     <p class="meta">{{ t('ai_engines.policy.where') }}</p>
+    {% if view.completed %}
+      <p class="meta">{{ t('ai_engines.policy.completed', blocks=view.completed | join(', ')) }}</p>
+    {% endif %}
     <table>
       <tr><th>{{ t('ai_engines.col.caller') }}</th><th>{{ t('ai_engines.col.class') }}</th></tr>
       {% for caller, declared in view.callers %}

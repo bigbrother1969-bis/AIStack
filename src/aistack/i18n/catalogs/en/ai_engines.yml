@@ -37,6 +37,7 @@ engines:
 policy:
   heading: "The policy"
   where: "In ai_policy.yml (Settings, shipped declarations) and ai_runtime.yml: the classes, the kinds of request and the table of engines."
+  completed: "Your copy of ai_policy.yml does not hold: {blocks}. These blocks are read from the shipped file; nothing is written to your copy."
   unnamed: "A caller the file does not name is internal only. The class is a ceiling: an internal caller never reaches an outside engine, whatever the table says."
   no_table: "No table of engines is declared: engines are asked in the order declared."
 counts:

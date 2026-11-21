@@ -30,6 +30,19 @@ def kinds(text: str) -> tuple[str, ...]:
         ("mon mot de passe ne marche plus", ("secret",)),
         ("ma femme a rendez-vous chez le médecin", ("family", "health")),
         ("je veux contester mon impôt, il faut un avocat", ("legal",)),
+        ("mon fils est malade depuis hier", ("family", "health")),
+        ("j'ai de la fièvre et une douleur au dos", ("health",)),
+        ("quels sont les symptômes d'une allergie", ("health",)),
+        ("je suis enceinte de trois mois", ("health",)),
+        ("comment lire ma fiche de paie", ("money",)),
+        ("je viens de recevoir une amende", ("legal",)),
+        ("mon casier judiciaire est-il consultable", ("legal",)),
+        ("comment fonctionne mon empreinte digitale sur le portable", ("biometric",)),
+        ("ma religion m'interdit de travailler le samedi", ("belief",)),
+        ("mon employeur m'a envoyé un avertissement", ("work",)),
+        ("comment partager ma localisation avec ma conjointe", ("place", "family")),
+        ("où est mon passeport, il me faut un visa", ("identity",)),
+        ("what is my health insurance, my wife asks", ("family", "health")),
     ],
 )
 def test_what_is_personal_is_found_by_kind(text, expected):
@@ -53,6 +66,35 @@ def test_what_is_personal_is_found_by_kind(text, expected):
 )
 def test_an_everyday_question_holds_nothing_personal(text):
     assert kinds(text) == (), text
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "comment brancher une enceinte connectée au salon",
+        "la tension du réseau est instable",
+        "comment configurer une imprimante réseau",
+        "où ranger le passeport de la carte mère dans le boîtier",
+    ],
+)
+def test_an_everyday_word_that_looks_private_is_not_taken_for_it(text):
+    assert kinds(text) == (), text
+
+
+def test_every_kind_the_screen_can_return_has_a_label_in_both_languages():
+    from pathlib import Path
+
+    import yaml
+
+    from aistack.portal.personal_data import SHAPES, WORD_KINDS
+
+    root = Path(__file__).parents[3] / "src" / "aistack" / "i18n" / "catalogs"
+
+    for lang in ("fr", "en"):
+        labels = yaml.safe_load((root / lang / "ask.yml").read_text(encoding="utf-8"))["personal"]
+
+        for kind in (*SHAPES, *WORD_KINDS):
+            assert labels.get(kind), (lang, kind)
 
 
 def test_a_number_that_is_not_a_card_or_an_iban_is_not_taken_for_one():

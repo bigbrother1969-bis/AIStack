@@ -50,3 +50,7 @@ personal:
   health: "health"
   money: "money"
   legal: "legal matter"
+  biometric: "biometric data"
+  belief: "beliefs and origins"
+  work: "work or studies"
+  place: "places and movements"

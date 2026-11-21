@@ -50,3 +50,7 @@ personal:
   health: "santé"
   money: "argent"
   legal: "justice"
+  biometric: "données biométriques"
+  belief: "convictions et origines"
+  work: "travail ou études"
+  place: "lieux et déplacements"

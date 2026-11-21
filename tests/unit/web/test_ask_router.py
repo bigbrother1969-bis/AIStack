@@ -205,7 +205,7 @@ def test_a_question_with_personal_data_is_screened_and_the_page_says_what_kind_n
 
     web = client(build(tmp_path, ask=spying), user=True)
 
-    web.post("/ask/ask", data={"question": "ecris a jean.dupont@example.org, mon fils est malade"})
+    web.post("/ask/ask", data={"question": "ecris a jean.dupont@example.org, mon fils est grand"})
     page = web.get("/ask/?lang=en").text
 
     assert seen["personal"] == ("email", "family")

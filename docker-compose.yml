@@ -182,7 +182,7 @@ services:
 # **2.2.0 — published 2026-11-21, current; also `latest`.**
 #
 #   bigbrother1969/aistack-core:2.2.0
-#   @sha256:COLLE_ICI
+#   @sha256:607f8717078b549f7b64b08a2dab0b87c15ab21c653be15040ec1937ac75d176
 #
 # Built from 8631df2 (tag v2.2.0) on the reference host, behind the
 # terms OPS-0002 § *Publishing an image* requires: a clean tree, `main`,

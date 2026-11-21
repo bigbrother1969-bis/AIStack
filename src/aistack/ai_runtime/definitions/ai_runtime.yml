@@ -30,3 +30,16 @@ gemini:
   model: gemini-3.5-flash-lite
   api_key_env: AISTACK_GEMINI_API_KEY
   timeout: 60
+
+# Other outside engines, asked after Gemini in this order (Gemini, ChatGPT, Claude: the first that
+# answers wins), only when declared here, their key is set (Settings, API keys) and the caller is
+# `external_allowed` in ai_policy.yml. The question and its facts leave your network. `model` is
+# the name your account offers; `timeout` and (Claude only) `max_tokens` are optional.
+#
+# openai:
+#   model: <a model of your OpenAI account>
+#   api_key_env: AISTACK_OPENAI_API_KEY
+# anthropic:
+#   model: <a model of your Anthropic account>
+#   api_key_env: AISTACK_ANTHROPIC_API_KEY
+#   max_tokens: 1024

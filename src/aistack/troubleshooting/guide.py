@@ -19,13 +19,14 @@ from pathlib import Path
 from dataclasses import replace
 from typing import Any
 
-from aistack.ai_runtime.definition import AIRuntimeDefinition, LocalEngineDefinition
+from aistack.ai_runtime.definition import AIRuntimeDefinition, GeminiDefinition, HostedDefinition, LocalEngineDefinition
 from aistack.ai_runtime.answer_guard import GuardedEngine
 from aistack.ai_runtime.engine import AIEngine
 from aistack.ai_runtime.engine_switch import EngineSwitch, SwitchedEngine
 from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
 from aistack.ai_runtime.policy import EXTERNAL, AIPolicy, current_policy
 from aistack.ai_runtime.gemini_engine import GeminiEngine
+from aistack.ai_runtime.hosted_engines import AnthropicEngine, OpenAIEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
 from aistack.ai_runtime.operations import explain, reason, recommend, system_directive
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
@@ -66,17 +67,65 @@ def _gemini_is_set(definition: AIRuntimeDefinition) -> bool:
     return declared is not None and bool(os.environ.get(declared.api_key_env, ""))
 
 
+def _key_of(declared: GeminiDefinition | HostedDefinition | None) -> str:
+    return os.environ.get(declared.api_key_env, "") if declared is not None else ""
+
+
+def _openai(definition: AIRuntimeDefinition) -> OpenAIEngine | None:
+    """ChatGPT, when declared and its key is in the environment."""
+
+    declared = definition.openai
+    key = _key_of(declared)
+    if declared is None or not key:
+        return None
+    return OpenAIEngine(declared.model, key, declared.timeout)
+
+
+def _anthropic(definition: AIRuntimeDefinition) -> AnthropicEngine | None:
+    """Claude, when declared and its key is in the environment."""
+
+    declared = definition.anthropic
+    key = _key_of(declared)
+    if declared is None or not key:
+        return None
+    return AnthropicEngine(declared.model, key, declared.timeout, declared.max_tokens)
+
+
+# What an answer and a page call each outside engine.
+HOSTED_NAMES = {"gemini": "Gemini", "openai": "ChatGPT", "anthropic": "Claude"}
+
+
+def hosted_names_set(definition: AIRuntimeDefinition) -> list[str]:
+    """The outside engines declared whose key is in the environment, in the order they are asked (no engine is built)."""
+
+    declared = (("gemini", definition.gemini), ("openai", definition.openai), ("anthropic", definition.anthropic))
+    return [name for name, one in declared if one is not None and _key_of(one)]
+
+
+def hosted_engines(definition: AIRuntimeDefinition) -> list[tuple[str, Any]]:
+    """
+    The outside engines that can be asked now, as `(name, engine)`: declared, and their key in the
+    environment. `name` is `gemini`, `openai` (ChatGPT) or `anthropic` (Claude), in that order.
+    """
+
+    built = (("gemini", _gemini(definition)), ("openai", _openai(definition)), ("anthropic", _anthropic(definition)))
+    return [(name, engine) for name, engine in built if engine is not None]
+
+
 def ai_destination(caller: str = "troubleshooting", policy: AIPolicy | None = None) -> tuple[str, str]:
     """
-    Where the next question of `caller` goes: ("gemini", model) or ("ollama", model).
-    It follows `ai_policy.yml`, as the routing does: an internal-only caller is never
-    told "gemini", and the model named is the first engine it may reach.
+    Where the next question of `caller` goes: ("gemini" | "openai" | "anthropic", model) or
+    ("ollama", model). It follows `ai_policy.yml`, as the routing does: an internal-only caller is
+    never told an outside engine, and the model named is the first engine it may reach.
     """
 
     policy = policy or current_policy()
     definition = load_ai_runtime_yaml(AI_RUNTIME)
-    if policy.allows_external(caller) and definition.gemini is not None and _gemini_is_set(definition):
-        return "gemini", definition.gemini.model
+    if policy.allows_external(caller):
+        outside = hosted_engines(definition)
+        if outside:
+            name, engine = outside[0]
+            return name, engine.model
     engines = _reachable_by(policy, caller, definition.local_engines())
     return "ollama", engines[0].model if engines else (definition.model or "")
 
@@ -115,8 +164,7 @@ def ask_managed(
     declared = definition.local_engines()
     allowed = _reachable_by(policy, caller, declared)
     kept_out = [engine.label or engine.model for engine in declared if engine not in allowed]
-    if _gemini_is_set(definition):
-        kept_out.insert(0, "gemini")
+    kept_out[:0] = hosted_names_set(definition)
     route = declared_class + (f"; not asked: {', '.join(kept_out)}" if kept_out else "")
 
     if declared and not allowed:
@@ -143,30 +191,29 @@ def ask_ai_runtime(
     finding: RuntimeFinding, operation: str, target_language: str, context: str = ""
 ) -> AIRuntimeAnswer:
     """
-    One answer: from Gemini when declared and its key is set, with the
-    collected facts; otherwise, or when Gemini does not answer, from the
-    declared Ollama model. An Ollama answer given in Gemini's place says why
-    in its `model`.
+    One answer: from an outside engine when one is declared and its key is set (Gemini, then ChatGPT,
+    then Claude, the first that answers), with the collected facts; otherwise, or when none answers,
+    from the declared local engines. A local answer given in an outside engine's place says why in its
+    `model`.
     """
 
     definition = load_ai_runtime_yaml(AI_RUNTIME)
-    gemini = _gemini(definition)
-    first = None
-    if gemini is not None:
+    refusals: list[tuple[str, str]] = []
+    for name, engine in hosted_engines(definition):
         first = _CALLS[operation](
-            finding, gemini, f"gemini:{gemini.model}", target_language=target_language, context=context
+            finding, engine, f"{name}:{engine.model}", target_language=target_language, context=context
         )
         if first.reachable:
             return replace(first, external=True)
+        refusals.append((name, first.unreachable_reason))
 
     answer = ask_local(finding, operation, target_language, context, definition)
-    if first is None:
+    if not refusals:
         return answer
+    said = " ; ".join(f"{HOSTED_NAMES[name]}: {reason}" for name, reason in refusals)
     if answer.reachable:
-        return replace(answer, model=f"{answer.model} (Gemini: {first.unreachable_reason})", external=True)
-    return replace(
-        answer, unreachable_reason=f"{first.unreachable_reason} ; {answer.unreachable_reason}", external=True
-    )
+        return replace(answer, model=f"{answer.model} ({said})", external=True)
+    return replace(answer, unreachable_reason=f"{said} ; {answer.unreachable_reason}", external=True)
 
 
 def ask_ollama(

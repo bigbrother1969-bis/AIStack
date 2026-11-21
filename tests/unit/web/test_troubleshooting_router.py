@@ -368,6 +368,18 @@ def test_the_page_says_the_question_leaves_the_house_before_the_click(tmp_path: 
     assert local
 
 
+@pytest.mark.parametrize(("destination", "provider"), [("openai", "ChatGPT"), ("anthropic", "Claude")])
+def test_the_page_names_chatgpt_or_claude_before_the_click(tmp_path: Path, host: Host, destination: str, provider: str):
+    web = client(tmp_path, host, destination=(destination, "model-x"))
+    web.post("/troubleshooting/finding/newcomer/start")
+
+    page = web.get("/troubleshooting/finding/newcomer/step/4?lang=fr").text
+
+    assert f"Envoyé à {provider} (model-x), hors de ton réseau" in page
+    english = web.get("/troubleshooting/finding/newcomer/step/4?lang=en").text
+    assert f"Sent to {provider} (model-x), outside your network" in english
+
+
 def test_asking_without_a_session_goes_back_to_the_list(tmp_path: Path, host: Host):
     reply = client(tmp_path, host).post("/troubleshooting/finding/newcomer/ask")
 

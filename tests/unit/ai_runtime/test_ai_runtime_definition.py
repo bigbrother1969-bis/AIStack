@@ -205,3 +205,30 @@ def test_a_declared_max_tokens_loads_and_is_optional(tmp_path: Path):
     )
 
     assert [engine.max_tokens for engine in definition.local_engines()] == [500, None]
+
+
+def test_chatgpt_and_claude_load_with_their_default_key_variables(tmp_path: Path):
+    path = write(
+        tmp_path,
+        "host: GIGABYTE\nport: 11434\nopenai:\n  model: gpt-x\nanthropic:\n  model: claude-x\n  max_tokens: 600\n  timeout: 90\n",
+    )
+
+    definition = load_ai_runtime_yaml(path)
+
+    assert definition.openai is not None and definition.openai.model == "gpt-x"
+    assert definition.openai.api_key_env == "AISTACK_OPENAI_API_KEY" and definition.openai.timeout == 60.0
+    assert definition.anthropic is not None and definition.anthropic.api_key_env == "AISTACK_ANTHROPIC_API_KEY"
+    assert definition.anthropic.max_tokens == 600 and definition.anthropic.timeout == 90.0
+
+
+def test_chatgpt_and_claude_are_not_declared_by_default(tmp_path: Path):
+    definition = load_ai_runtime_yaml(write(tmp_path, "host: GIGABYTE\nport: 11434\n"))
+
+    assert definition.openai is None and definition.anthropic is None
+
+
+@pytest.mark.parametrize("block", ["openai: {}", "anthropic:\n  model: ''", "openai:\n  model: m\n  timeout: soon",
+                                   "anthropic:\n  model: m\n  max_tokens: 0"])
+def test_a_badly_declared_outside_engine_is_refused(tmp_path: Path, block: str):
+    with pytest.raises(ValueError):
+        load_ai_runtime_yaml(write(tmp_path, f"host: GIGABYTE\nport: 11434\n{block}\n"))

@@ -6,7 +6,13 @@ import yaml
 
 from urllib.parse import urlparse
 
-from aistack.ai_runtime.definition import AIRuntimeDefinition, GeminiDefinition, LocalEngineDefinition, SwitchDefinition
+from aistack.ai_runtime.definition import (
+    AIRuntimeDefinition,
+    GeminiDefinition,
+    HostedDefinition,
+    LocalEngineDefinition,
+    SwitchDefinition,
+)
 from aistack.ai_runtime.openai_chat_engine import REASONING_EFFORTS
 from aistack.ai_runtime.ollama_engine import DEFAULT_TIMEOUT_SECONDS
 
@@ -38,6 +44,28 @@ def _switch(raw: object, path: Path, index: int) -> SwitchDefinition | None:
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 5 <= timeout <= 600:
         raise ValueError(f"{where}: start_timeout {timeout!r} is not a number of seconds from 5 to 600")
     return SwitchDefinition(url=url.rstrip("/"), token_file=token_file, start_timeout=float(timeout))
+
+
+def _hosted(raw: object, path: Path, name: str, default_env: str) -> HostedDefinition | None:
+    """An outside engine (`openai:` or `anthropic:`): a model, the variable of its key, a timeout."""
+
+    if raw is None:
+        return None
+    where = f"AI Runtime definition {path}: {name}"
+    if not isinstance(raw, dict) or not raw.get("model"):
+        raise ValueError(f"{where} names no model")
+    timeout = raw.get("timeout", 60)
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
+        raise ValueError(f"{where}: timeout {timeout!r} is not a number of seconds")
+    max_tokens = raw.get("max_tokens", 1024)
+    if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens < 1:
+        raise ValueError(f"{where}: max_tokens {max_tokens!r} is not a positive whole number")
+    return HostedDefinition(
+        model=str(raw["model"]),
+        api_key_env=str(raw.get("api_key_env") or default_env),
+        timeout=float(timeout),
+        max_tokens=max_tokens,
+    )
 
 
 def _engines(raw: object, path: Path, default_timeout: float) -> tuple[LocalEngineDefinition, ...]:
@@ -129,6 +157,9 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
             timeout=float(raw.get("timeout") or 60),
         )
 
+    openai = _hosted(data.get("openai"), path, "openai", "AISTACK_OPENAI_API_KEY")
+    anthropic = _hosted(data.get("anthropic"), path, "anthropic", "AISTACK_ANTHROPIC_API_KEY")
+
     engines = _engines(data.get("engines"), path, float(timeout) if timeout is not None else DEFAULT_TIMEOUT_SECONDS)
 
     if timeout is None:
@@ -138,6 +169,8 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
             model=str(model) if model else None,
             translator_model=str(translator_model) if translator_model else None,
             gemini=gemini,
+            openai=openai,
+            anthropic=anthropic,
             engines=engines,
         )
 
@@ -148,5 +181,7 @@ def load_ai_runtime_yaml(path: Path) -> AIRuntimeDefinition:
         timeout=float(timeout),
         translator_model=str(translator_model) if translator_model else None,
         gemini=gemini,
+        openai=openai,
+        anthropic=anthropic,
         engines=engines,
     )

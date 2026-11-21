@@ -68,6 +68,10 @@ class AIRuntimeDefinition:
     # Google Gemini, asked first when declared and its API key is in the
     # environment; Ollama answers when it is not.
     gemini: "GeminiDefinition | None" = None
+    # ChatGPT and Claude, declared the same way (a model and the environment variable of the key).
+    # Like Gemini they are external engines: only a caller declared `external_allowed` reaches them.
+    openai: "HostedDefinition | None" = None
+    anthropic: "HostedDefinition | None" = None
     # Local engines in the order they are asked, the first that answers wins.
     # Empty: the one Ollama above (`host`, `port`, `model`), as before.
     engines: tuple[LocalEngineDefinition, ...] = ()
@@ -89,3 +93,19 @@ class GeminiDefinition:
     # key itself is never written in a declaration.
     api_key_env: str = "AISTACK_GEMINI_API_KEY"
     timeout: float = 60.0
+
+
+@dataclass(frozen=True)
+class HostedDefinition:
+    """
+    An outside engine other than Gemini (`openai:` for ChatGPT, `anthropic:` for Claude in `ai_runtime.yml`).
+
+    `api_key_env` names the environment variable holding the key (never the key itself); an engine
+    is asked only when it is declared and that variable is set. `max_tokens` is read by Claude only
+    (its API requires one).
+    """
+
+    model: str
+    api_key_env: str
+    timeout: float = 60.0
+    max_tokens: int = 1024

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.4
+  version: 0.5
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -27,7 +27,7 @@ relations:
 
 Proposed, 2026-11-20. Scope and three choices decided with the owner on
 2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
-the rest is proposed and waits for the owner. The record (M1), the policy file (M2) and the routing by policy (M3) exist in code.
+the rest is proposed and waits for the owner. The record (M1), the policy file (M2), the routing by policy (M3) and the ChatGPT and Claude engines (M3b) exist in code. On 2026-11-21 the owner asked that the policy choose the best engine for the kind of request, internal or external, and say why (§ 10).
 
 ## Context
 
@@ -100,12 +100,12 @@ does not name is internal.
 
 An engine is *internal* when it runs on the owner's machines (Ollama,
 Olala, any `openai_chat` server on the loopback or the LAN) and
-*external* when it does not (Gemini). Built in M2, the rule is read from
+*external* when it does not (Gemini, ChatGPT, Claude). Built in M2, the rule is read from
 where the engine answers, not from a name the owner must keep up to
 date: a loopback, private (LAN) or link-local address is internal, a host
 name the owner lists in `internal_hosts` is internal, and anything else
 (a public address, a host name not listed) is external, the cautious
-side. Gemini has no address of its own to read and is always external.
+side. Gemini, ChatGPT and Claude have no address of their own to read and are always external. They are declared in `ai_runtime.yml` (`gemini:`, `openai:`, `anthropic:`: a model and the name of the environment variable holding the key, never the key) and asked only when the key is set.
 
 ### 4. The routing rule
 
@@ -113,8 +113,9 @@ Decided by the owner, 2026-11-20. For a call of class C:
 
 - an `internal_only` call reaches internal engines only, in the order
   declared;
-- an `external_allowed` call may reach any engine, in the order
-  declared;
+- an `external_allowed` call may reach any engine; which one is asked
+  first is § 10's business (until then: Gemini, ChatGPT, Claude, then
+  the local engines, the first that answers);
 - **a call never crosses its class to find an answer.** When every
   engine its class allows is silent or set aside, the answer says so
   and the hand-written text stays: the Manager does not ask an external
@@ -156,6 +157,44 @@ the CPU, Olala stopped or starting), counts by caller and by engine, the
 share of calls that stayed internal, and the last set-asides. It
 changes nothing.
 
+### 10. The best engine for the kind of request
+
+Decided by the owner, 2026-11-21: the policy chooses the best engine for
+the kind of request, from the question asked and the problem to treat,
+among internal and external engines alike; among the external ones it
+chooses between ChatGPT, Gemini and Claude; and it says why.
+
+Choices made with the owner the same day:
+
+- **The kind is declared, not detected.** A kind (a diagnosis, an
+  explanation, a recommendation, a comparison, and so on) is named in
+  `ai_policy.yml` for each operation of each caller, and may be refined
+  by the domain of the finding (disk, network, security…), which is a
+  label AIStack's own qualification gives, not text from the question.
+  The Manager does not read the question to class it, and no model
+  decides (§ 9 stands).
+- **The choice reads a declared table**, kind by engine: an ordered list
+  of engines for each kind, each with the reason the owner gives for it
+  ("long reasoning over several facts", "short and fast", "keeps French
+  tutoiement"). The comparison of engines (`ai.compare`) may later
+  correct the table; it does not replace it.
+- **The class stays a ceiling.** The best engine is chosen among those
+  the caller's class allows (§ 4): an `internal_only` caller never sees
+  ChatGPT, Gemini or Claude however well they would do. A caller that
+  wants them declares itself `external_allowed`.
+- **The rule.** Among the engines the class allows, declared, with their
+  key set and not shut off, the first of the kind's list is asked; when
+  it is silent or its answer is set aside, the next of the list, never an
+  engine outside the class (§ 4). A kind with no list falls back to the
+  order declared.
+
+**Why is recorded with every choice**, in `route`, from declarations
+only: the kind, the engine chosen, the reason the table gives for it, and
+what was left out and why (`claude: key not set`, `gemini: not allowed
+for this caller`, `qwen2.5: asked first, silent`). Never the content. The
+page of § 8 shows it, and the answer already names the model that gave
+it (§ 7).
+
 ### 9. What this ADR leaves out
 
 - **Other applications** (Home Assistant and any other client): they
@@ -164,9 +203,10 @@ changes nothing.
   the page of § 8 follows `ADR-0014` (profiles and rights).
 - **Choosing an engine by what the text says**, and any choice made by a
   model: the Manager decides from files, deterministically.
-- **Cost and quotas** of an external engine.
-- **A new external engine** (Olala on a hosted service, for instance):
-  it would be declared external and follow § 3 and § 4 unchanged.
+- **Cost and quotas** of an external engine. The owner sets a spending limit on each provider's account; a guard of the Manager's own may come later.
+- **A further external engine** (Olala on a hosted service, for
+  instance): it would be declared external and follow § 3, § 4 and § 10
+  unchanged.
 
 ## Consequences
 
@@ -182,7 +222,7 @@ changes nothing.
 
 ## Implementation state
 
-M1, M2 and M3 are built; the rest is not. Planned slices (each its own patch, tested before
+M1, M2, M3 and M3b are built; the rest is not. Planned slices (each its own patch, tested before
 delivery):
 
 | Slice | Content | State |
@@ -191,7 +231,9 @@ delivery):
 | M1 | The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; routing unchanged | done, 2026-11-20 (0091): callers `troubleshooting`, `security.page`, `vigil.reason`, `ai.compare`; 90 days kept; `AIRuntimeAnswer.external` marks a question that went to an external engine. Written by the process that asks (the web service, the watch, the comparison), as state a service keeps for itself in the GHE audit; § 6 said "by a Task", which does not fit the web service, so the rule is read as "declared in the audit" |
 | M2 | Classes and policy: `ai_policy.yml` (caller to class, `internal_hosts`, internal by default); the record says, per call, its class and whether a routing by the policy would have changed it | done, 2026-11-21 (0092): shipped `ai_policy.yml` (four callers, all `internal_only`), loader and `AIPolicy` in `ai_runtime/policy.py`, `policy_class` and `policy_differs` in each line of `ai-calls.jsonl`. The page's destination (`ai_destination()`) is **not** changed: it must keep telling where the question really goes, and nothing routes by the policy before M3 |
 | M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | done, 2026-11-21 (0093): `ask_managed(caller, …)` in `troubleshooting/guide.py` serves the assistant, the Security page and the watch; an `external_allowed` caller is asked as before (Gemini first when its key is set), an `internal_only` one reaches internal engines only, never crosses its class when they are silent, and says so. `ai_destination()` follows the policy. `ai.compare` refuses an engine outside. Each answer carries `route`, kept in the journal (`internal_only; not asked: gemini`). The shipped class of the assistant stays `internal_only`; an installation that keeps Gemini declares `troubleshooting: external_allowed` in its own `ai_policy.yml` |
-| M4 | The read-only page of § 8 and its console card | not started |
+| M3b | ChatGPT and Claude as external engines beside Gemini: `OpenAIEngine` and `AnthropicEngine` (`ai_runtime/hosted_engines.py`), `openai:` and `anthropic:` in `ai_runtime.yml`, the two keys in Settings (`AISTACK_OPENAI_API_KEY`, `AISTACK_ANTHROPIC_API_KEY`), the page's text before the click for each | done, 2026-11-21 (0094): asked in the order Gemini, ChatGPT, Claude, then local, only when declared and the key is set, and only for an `external_allowed` caller; `route` of an `internal_only` caller lists every outside engine it was kept from. Nothing is declared by default: no behaviour changes until the owner declares a model and sets a key |
+| M3c | The best engine for the kind of request (§ 10): kinds per operation and domain, the table kind by engine with its reasons, the rule, `route` carrying the why | not started |
+| M4 | The read-only page of § 8 and its console card, showing the why of § 10 | not started |
 | later | A portal for other applications behind the OIDC provider | not started, to be decided |
 
 ## Open points
@@ -202,3 +244,8 @@ delivery):
 - How a caller declares the capability it needs of an engine, for the
   case of § 5.
 - Whether Home Assistant should one day go through the Manager.
+- For § 10: the list of kinds, whether the finding's domain is the right
+  refinement, and the first table, to be written with the owner (which
+  engine for which kind, and why).
+- Whether an engine that has answered badly several times in a row
+  should be put behind the next one for a while, from the record.

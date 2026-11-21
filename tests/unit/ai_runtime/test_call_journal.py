@@ -109,7 +109,7 @@ def test_a_gemini_question_is_marked_external(monkeypatch):
     calls = []
 
     class Declared:
-        gemini = None
+        gemini = openai = anthropic = None
 
     class Gemini:
         model = "gemini-test"
@@ -127,7 +127,7 @@ def test_a_local_only_question_is_not_marked_external(monkeypatch):
     from aistack.troubleshooting import guide
 
     class Declared:
-        gemini = None
+        gemini = openai = anthropic = None
 
     monkeypatch.setattr(guide, "load_ai_runtime_yaml", lambda path: Declared())
     monkeypatch.setattr(guide, "_gemini", lambda definition: None)

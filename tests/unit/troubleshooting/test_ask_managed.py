@@ -123,7 +123,7 @@ def test_no_model_at_all_is_still_said_as_before(monkeypatch):
 
 
 def test_the_destination_follows_the_policy(monkeypatch):
-    declare(monkeypatch, policy=INTERNAL)
+    declare(monkeypatch, policy=INTERNAL, gemini=Engine("unused"))
 
     assert guide.ai_destination("troubleshooting", INTERNAL) == ("ollama", "qwen")
     assert guide.ai_destination("troubleshooting", ALLOWED) == ("gemini", "g")

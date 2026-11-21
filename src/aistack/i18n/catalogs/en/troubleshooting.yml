@@ -42,6 +42,7 @@ step:
   ai_warning: "An opinion, not an instruction: the model receives the finding and the facts of step 2, nothing else of your machine, and can be wrong. Steps 2 and 3 are what counts."
   ask: "Ask the AI's opinion"
   ask_gemini: "Sent to Google Gemini ({model}), outside your network, with the facts of step 2 (host names, paths, services; never a password). Answers in seconds; if Gemini does not answer, the local model takes over."
+  ask_hosted: "Sent to {provider} ({model}), outside your network, with the facts of step 2 (host names, paths, services; never a password). Answers in seconds; if {provider} does not answer, the next engine takes over, and the local model last."
   ask_ollama: "Sent to the local model {model} (Ollama, on this machine), with the facts of step 2; allow several minutes per answer. You can leave the page: a notice will appear when each answer is ready."
   waiting: "Waiting…"
 applied:

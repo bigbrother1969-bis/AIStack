@@ -45,6 +45,7 @@ step:
   ai_warning: "Un avis, pas une consigne : le modèle reçoit le constat et les faits de l'étape 2, rien d'autre de ta machine, et peut se tromper. Ce qui fait foi, ce sont les étapes 2 et 3."
   ask: "Demander l'avis de l'IA"
   ask_gemini: "Envoyé à Google Gemini ({model}), hors de ton réseau, avec les faits de l'étape 2 (noms d'hôtes, chemins, services ; jamais de mot de passe). Réponse en quelques secondes ; si Gemini ne répond pas, le modèle local prend le relais."
+  ask_hosted: "Envoyé à {provider} ({model}), hors de ton réseau, avec les faits de l'étape 2 (noms d'hôtes, chemins, services ; jamais de mot de passe). Réponse en quelques secondes ; si {provider} ne répond pas, le moteur suivant prend le relais, et le modèle local en dernier."
   ask_ollama: "Envoyé au modèle local {model} (Ollama, sur cette machine), avec les faits de l'étape 2 ; compte plusieurs minutes par réponse. Tu peux quitter la page : une notification apparaîtra quand chaque réponse sera prête."
   waiting: "En attente…"
 applied:

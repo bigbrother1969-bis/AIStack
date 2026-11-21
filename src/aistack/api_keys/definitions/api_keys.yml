@@ -39,6 +39,36 @@ keys:
         - "\"Create API key\"; choose or create a Google Cloud project."
         - "Copy the key (it starts with AIza) and paste it here. The free tier is enough."
         - "Without it, the AI's opinion comes from Ollama alone, on this server."
+  - name: AISTACK_OPENAI_API_KEY
+    title: {fr: "ChatGPT (OpenAI) — clé d'API", en: "ChatGPT (OpenAI) — API key"}
+    used_by: {fr: "Avis de l'IA des appelants autorisés à sortir (ai_policy.yml), si le bloc openai est déclaré dans ai_runtime.yml", en: "The AI's opinion for callers allowed to go outside (ai_policy.yml), when the openai block is declared in ai_runtime.yml"}
+    applies: {fr: "immédiatement", en: "immediately"}
+    procedure:
+      fr:
+        - "Ouvre https://platform.openai.com/api-keys avec ton compte OpenAI."
+        - "« Create new secret key » ; copie la clé (elle commence par sk-) et colle-la ici : elle n'est montrée qu'une fois."
+        - "L'API est facturée à l'usage, séparément d'un abonnement ChatGPT : fixe un plafond de dépense dans ton compte OpenAI."
+        - "Déclare aussi le bloc openai (model) dans ai_runtime.yml, et l'appelant external_allowed dans ai_policy.yml : sans cela, rien ne part."
+      en:
+        - "Open https://platform.openai.com/api-keys with your OpenAI account."
+        - "\"Create new secret key\"; copy the key (it starts with sk-) and paste it here: it is shown only once."
+        - "The API is billed by use, separately from a ChatGPT subscription: set a spending limit in your OpenAI account."
+        - "Also declare the openai block (model) in ai_runtime.yml, and the caller external_allowed in ai_policy.yml: without both, nothing is sent."
+  - name: AISTACK_ANTHROPIC_API_KEY
+    title: {fr: "Claude (Anthropic) — clé d'API", en: "Claude (Anthropic) — API key"}
+    used_by: {fr: "Avis de l'IA des appelants autorisés à sortir (ai_policy.yml), si le bloc anthropic est déclaré dans ai_runtime.yml", en: "The AI's opinion for callers allowed to go outside (ai_policy.yml), when the anthropic block is declared in ai_runtime.yml"}
+    applies: {fr: "immédiatement", en: "immediately"}
+    procedure:
+      fr:
+        - "Ouvre https://console.anthropic.com/settings/keys avec ton compte Anthropic Console."
+        - "« Create Key » ; copie la clé (elle commence par sk-ant-) et colle-la ici : elle n'est montrée qu'une fois."
+        - "L'API est facturée à l'usage, séparément d'un abonnement Claude : charge un crédit limité et surveille la consommation."
+        - "Déclare aussi le bloc anthropic (model) dans ai_runtime.yml, et l'appelant external_allowed dans ai_policy.yml : sans cela, rien ne part."
+      en:
+        - "Open https://console.anthropic.com/settings/keys with your Anthropic Console account."
+        - "\"Create Key\"; copy the key (it starts with sk-ant-) and paste it here: it is shown only once."
+        - "The API is billed by use, separately from a Claude subscription: load a limited credit and watch the usage."
+        - "Also declare the anthropic block (model) in ai_runtime.yml, and the caller external_allowed in ai_policy.yml: without both, nothing is sent."
   - name: AISTACK_GOTIFY_URL
     title: {fr: "Gotify — adresse", en: "Gotify — address"}
     used_by: {fr: "Notifications de la vigie", en: "The vigil's notifications"}

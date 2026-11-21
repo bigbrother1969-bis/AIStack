@@ -118,3 +118,26 @@ def test_the_page_asks_for_a_signed_in_person(tmp_path: Path):
     reply = TestClient(app, base_url=f"http://testserver:{LAN_PORT}", follow_redirects=False).get("/footprint/")
 
     assert reply.status_code in (302, 303, 307, 401)
+
+
+def test_a_permanent_load_that_is_measured_is_no_longer_called_a_hypothesis(tmp_path: Path, monkeypatch):
+    shipped = (Path(footprint_screen.__file__).parents[1] / "footprint" / "definitions" / "footprint.yml").read_text(encoding="utf-8")
+    start = shipped.index("  baseline_watts:")
+    measured = shipped[:start] + shipped[start:].replace("status: declared", "status: measured", 1)
+    config = tmp_path / "config"
+    config.mkdir()
+    (config / "footprint.yml").write_text(measured, encoding="utf-8")
+    monkeypatch.setenv("AISTACK_CONFIG_DIR", str(config))
+
+    text = unescape(client(tmp_path).get("/footprint/?lang=en").text)
+
+    assert "measured with the machine's UPS" in text
+    assert "declared power, to be replaced by a measure" not in text
+    assert "it is the first thing to measure" not in text
+
+
+def test_a_declared_permanent_load_is_still_called_a_hypothesis(tmp_path: Path):
+    text = unescape(client(tmp_path).get("/footprint/?lang=en").text)
+
+    assert "declared power, to be replaced by a measure" in text
+    assert "it is the first thing to measure" in text

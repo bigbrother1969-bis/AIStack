@@ -9,6 +9,7 @@ summary:
   heading: "Empreinte des {days} derniers jours"
   note: "Appels d'IA, niveaux réseau et terminal compris, plus la charge permanente des conteneurs d'AIStack. Les gaz à effet de serre sont en équivalent CO2 à 100 ans ; l'énergie est l'énergie finale."
   baseline_share: "La charge permanente des conteneurs pèse {share} % de ce total (valeur centrale) : c'est elle qu'il faut mesurer en premier."
+  baseline_share_measured: "La charge permanente des conteneurs pèse {share} % de ce total (valeur centrale)."
   per_call: "Un appel d'IA qui a répondu coûte en moyenne {mass} (fourchette {mass_range}) et {energy} (fourchette {energy_range}), charge permanente non comprise."
 usage:
   heading: "Usage de l'IA sur {days} jours"
@@ -49,12 +50,14 @@ level:
   baseline:
     name: "Charge permanente d'AIStack"
     what: "Les conteneurs qui tournent en continu, hors appels d'IA. Hypothèse déclarée, pas une mesure."
+    what_measured: "Les conteneurs qui tournent en continu, hors appels d'IA. Valeur mesurée sur la machine, avec sa part de la consommation de base : l'origine est donnée dans le tableau des paramètres."
 basis:
   heading: "Ce qui est mesuré et ce qui est estimé"
   local: "Appels locaux : {measured} avec la puissance de la carte graphique lue pendant l'appel, {estimated} calculés avec la puissance déclarée."
   no_local: "Aucun appel local sur la période : rien n'est mesuré ni estimé pour la machine de la maison."
   outside: "Appels externes : jamais mesurés, estimés par une énergie publiée par appel et un facteur d'émission du lieu inconnu du fournisseur."
   baseline: "Charge permanente : puissance déclarée, à remplacer par une mesure."
+  baseline_measured: "Charge permanente : mesurée avec l'onduleur de la machine puis répartie entre les conteneurs ; l'origine est donnée dans le tableau des paramètres."
 params:
   heading: "Les paramètres du calcul"
   where: "Ils viennent de la déclaration de l'empreinte. Le bas est le scénario le moins chargé en impact, le haut le plus chargé. Tu peux les remplacer dans les Paramètres, avec les autres déclarations."

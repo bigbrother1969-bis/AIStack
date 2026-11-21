@@ -43,7 +43,8 @@
 </head>
 <body>
   {% set level_name = {'data_center_local': t('footprint.level.data_center_local.name'), 'data_center_external': t('footprint.level.data_center_external.name'), 'network': t('footprint.level.network.name'), 'terminal': t('footprint.level.terminal.name'), 'baseline': t('footprint.level.baseline.name')} %}
-  {% set level_what = {'data_center_local': t('footprint.level.data_center_local.what'), 'data_center_external': t('footprint.level.data_center_external.what'), 'network': t('footprint.level.network.what'), 'terminal': t('footprint.level.terminal.what'), 'baseline': t('footprint.level.baseline.what')} %}
+  {% set baseline_measured = declaration is not none and declaration.get('baseline_watts').status == 'measured' %}
+  {% set level_what = {'data_center_local': t('footprint.level.data_center_local.what'), 'data_center_external': t('footprint.level.data_center_external.what'), 'network': t('footprint.level.network.what'), 'terminal': t('footprint.level.terminal.what'), 'baseline': t('footprint.level.baseline.what_measured') if baseline_measured else t('footprint.level.baseline.what')} %}
   {% set param_name = {'grid_local': t('footprint.param.grid_local'), 'grid_external': t('footprint.param.grid_external'), 'gpu_idle_watts': t('footprint.param.gpu_idle_watts'), 'gpu_active_watts': t('footprint.param.gpu_active_watts'), 'host_overhead_ratio': t('footprint.param.host_overhead_ratio'), 'pue_local': t('footprint.param.pue_local'), 'embodied_host': t('footprint.param.embodied_host'), 'host_lifetime_years': t('footprint.param.host_lifetime_years'), 'external_energy_per_call': t('footprint.param.external_energy_per_call'), 'terminal_watts': t('footprint.param.terminal_watts'), 'network_kwh_per_gb': t('footprint.param.network_kwh_per_gb'), 'external_exchange_mb': t('footprint.param.external_exchange_mb'), 'baseline_watts': t('footprint.param.baseline_watts')} %}
   {% set limit_text = {'indicators': t('footprint.limit.indicators'), 'unanswered': t('footprint.limit.unanswered'), 'host_making': t('footprint.limit.host_making'), 'training': t('footprint.limit.training'), 'water': t('footprint.limit.water'), 'places': t('footprint.limit.places'), 'conformity': t('footprint.limit.conformity')} %}
   {% set status_text = {'measured': t('footprint.status.measured'), 'sourced': t('footprint.status.sourced'), 'declared': t('footprint.status.declared')} %}
@@ -72,7 +73,7 @@
     <p class="meta">{{ t('footprint.summary.note') }}</p>
     {% set base = result.levels['baseline'] %}
     {% if total.gwp_kg.central > 0 %}
-      <p>{{ t('footprint.summary.baseline_share', share=plain((base.gwp_kg.central / total.gwp_kg.central) * 100)) }}</p>
+      <p>{% if baseline_measured %}{{ t('footprint.summary.baseline_share_measured', share=plain((base.gwp_kg.central / total.gwp_kg.central) * 100)) }}{% else %}{{ t('footprint.summary.baseline_share', share=plain((base.gwp_kg.central / total.gwp_kg.central) * 100)) }}{% endif %}</p>
     {% endif %}
     {% if result.answered %}
       {% set one_mass = mass(result.per_call.gwp_kg) %}
@@ -134,7 +135,7 @@
       <p>{{ t('footprint.basis.no_local') }}</p>
     {% endif %}
     <p>{{ t('footprint.basis.outside') }}</p>
-    <p>{{ t('footprint.basis.baseline') }}</p>
+    <p>{% if baseline_measured %}{{ t('footprint.basis.baseline_measured') }}{% else %}{{ t('footprint.basis.baseline') }}{% endif %}</p>
   </div>
 
   <div class="box">

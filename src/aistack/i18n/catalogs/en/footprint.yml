@@ -9,6 +9,7 @@ summary:
   heading: "Footprint over the last {days} days"
   note: "AI calls, with their network and terminal levels, plus the permanent load of AIStack's containers. Greenhouse gases are in CO2 equivalent at 100 years; energy is final energy."
   baseline_share: "The permanent load of the containers weighs {share} % of this total (central value): it is the first thing to measure."
+  baseline_share_measured: "The permanent load of the containers weighs {share} % of this total (central value)."
   per_call: "An AI call that was answered costs {mass} on average (range {mass_range}) and {energy} (range {energy_range}), permanent load not included."
 usage:
   heading: "AI usage over {days} days"
@@ -49,12 +50,14 @@ level:
   baseline:
     name: "AIStack's permanent load"
     what: "The containers that run all the time, apart from AI calls. A declared assumption, not a measure."
+    what_measured: "The containers that run all the time, outside AI calls. Measured on the machine, with its share of the base consumption: the origin is given in the table of parameters."
 basis:
   heading: "What is measured and what is estimated"
   local: "Local calls: {measured} with the graphics card's power read during the call, {estimated} calculated from the declared power."
   no_local: "No local call over the period: nothing is measured or estimated for the home machine."
   outside: "Outside calls: never measured, estimated from a published energy per call and an emission factor for the provider's unknown location."
   baseline: "Permanent load: declared power, to be replaced by a measure."
+  baseline_measured: "Permanent load: measured with the machine's UPS then shared among the containers; the origin is given in the table of parameters."
 params:
   heading: "The parameters of the calculation"
   where: "They come from the footprint declaration. Low is the scenario with the least impact, high the one with the most. You can replace them in Settings, with the other declarations."

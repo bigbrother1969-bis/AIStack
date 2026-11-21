@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C2
   confidence: Declared
-  version: 0.1
+  version: 0.2
   status: Proposed
   owner: Architecture
   created: 2026-11-21
@@ -99,7 +99,12 @@ take the whole reading.
 
 ## Not decided here
 
-1. **Measure the permanent load** (a connected plug on the home machine, or the host's power counters) and replace the declared 5 W.
+1. **Measure the permanent load continuously.** Done once by hand on the reference host on 2026-11-21: the UPS reads
+   31 % of 520 W (161 W for its whole circuit, resolution about 5 W) and the containers show AIStack holding 2.2 % of their
+   memory and 9.2 % of one core, which gives 0.5 / 3.6 / 4.6 W (the owner's `config/footprint.yml`, status `measured`; the
+   shipped file keeps the declared 2 / 5 / 10 W, as it cannot know another machine). What remains: the allocation key
+   (memory; a processor key would give more) is a choice, the UPS also feeds the Raspberry, and a single reading does not
+   follow the load over time. A reading by the vigil of the UPS (NUT) and of the containers' use would.
 2. **Whether `nvidia-smi` is visible from the web container.** If it is not, every local call is *estimated* until the container is given the card's monitoring.
 3. **The making of the machine** and its life: the declared 350 kgCO2e over 5 years is a placeholder for the maker's figure.
 4. **Allocating the making of the machine to the permanent load**, which is not done.

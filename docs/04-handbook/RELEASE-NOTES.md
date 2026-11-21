@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.19
+  version: 1.20
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -37,6 +37,62 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 2.2.1 — 2026-11-21
+
+**A patch release: the screen for personal data on the page "Poser une question" knows
+the families of personal data that rgpd.com lists, and the reason AIStack gives for the
+engine it chose is said in the language of the page. Nothing else changes. `latest`
+names this version.**
+
+### What you may notice
+
+- **More words are taken for private.** The health words that 2.2.0 missed are there
+  (*malade*, *douleur*, *symptôme*, *fièvre*, *allergie*, *vaccin*, *dossier médical*…),
+  and so are more words of money (*fiche de paie*, *mon épargne*…), of justice (*casier
+  judiciaire*, *amende*…), of the family (*mon conjoint*, *mes parents*…), of identity
+  (*mon passeport*, *mon titre de séjour*…) and of secrets. Four kinds are new, with their
+  label in both languages: biometric data, beliefs and origins, work or studies, places and
+  movements. A word that is also an everyday word of a technical question (*enceinte* for a
+  speaker, *tension* for a voltage) is written in the first person, or left out: «une enceinte
+  connectée» still goes where the policy sends an everyday question.
+- **The reason is in French on the French page.** «Pourquoi ce moteur» and the table of the
+  *Moteurs IA* screen said «stays on your machines: nothing you typed leaves the house»; they
+  now say it in the language of the page, and so do the routes of the latest choices. The
+  journal keeps the English text, so it reads the same whichever page wrote it. A reason in
+  `ai_policy.yml` may be a plain text or a mapping of a language code to its text.
+- **A tile for «Poser une question» on Homepage**, added by a script run on the host, not
+  by the image: nothing in this version depends on it.
+
+### To do when upgrading
+
+- Set `AISTACK_VERSION=2.2.1` in `.env`, then `docker compose pull && docker compose up -d`.
+- **A `config/personal_data.yml` made earlier replaces the shipped file.** Without a change it
+  keeps the words of 2.2.0. If you never edited it, copy the shipped one over it (keep a copy
+  of yours); if you did, add the words you want to your own.
+- A `config/ai_policy.yml` copy needs nothing for the reasons: its English texts are read in
+  French from the shipped file. The line `portal.chat: external_allowed` of 2.2.0 is still
+  yours to add.
+
+### Not changed
+
+Everything else works as in 2.2.0: the Cybersecurity Manager, the AI policy and its journal,
+*Moteurs IA*, *Usage et empreinte*, the installer, the sign-in, the Dock, the restore tests.
+Your `./config` and your data are kept.
+
+### Known limits
+
+- The screen cannot recognise a bare first name. In doubt a question stays inside; a
+  question that holds none of the words can go outside.
+- A technical question that holds a word of the list (*symptôme* of a failure, say) stays on
+  your machines: a weaker answer, never a leak.
+- The footprint limits of 2.2.0 stand: declared figures to confirm, the permanent load
+  dominates the total, the GPU power is read in the web container only.
+
+`pytest -q` — 4044 passed; `mypy` — 651 files; 68 knowledge artifacts,
+`blocking: 0   warnings: 0   clean: True`.
 
 ---
 

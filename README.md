@@ -117,7 +117,35 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 2.1.0
+### Concrete capabilities, as of 2.2.0
+
+- **A read-only Cybersecurity Manager — new as of 2.2.0** — the *Sécurité* screen says
+  what the host exposes (sockets, published ports, firewall), what the containers may do
+  to it, how old the running images are, which packages and sensitive files changed on the
+  traced hosts, and who tried to get in (counted from the host's logs). Nothing is closed
+  or purged; the vigil tells Gotify what deserves it, with a maintenance window for your
+  own work. The web application reads Docker through a read-only proxy and holds no socket
+  ([ADR-0028](docs/01-architecture/adr/ADR-0028-Cybersecurity-Manager.md)).
+- **A policy for which AI answers — new as of 2.2.0** — `ai_policy.yml` gives each use of an
+  AI a class (`internal_only` or `external_allowed`) and a table of the engine that suits
+  each kind of request: local engines (Ollama, and a second one started on demand by a host
+  service) and, when their key is set, Gemini, ChatGPT or Claude. Every call leaves a line in
+  `ai-calls.jsonl` — who asked, which engine, why — never the question or the answer; the
+  *Moteurs IA* screen reads it
+  ([ADR-0029](docs/01-architecture/adr/ADR-0029-AI-Engine-Manager.md)).
+- **Ask a question in your own words — new as of 2.2.0** — *Poser une question* is open to
+  anyone signed in on the local network. At the moment of sending, AIStack looks for personal
+  data in the question; if it finds any the question stays on your machines, otherwise the
+  policy decides, and the page says which engine answered and why. Each card of the console
+  says whether its screen asks an AI.
+- **Usage and footprint — new as of 2.2.0** — *Usage et empreinte* counts the AI calls of the
+  last 30 days and their energy and greenhouse gases by level (machine that answers, network,
+  terminal, permanent load), every figure a range with its origin: measured, published by a
+  source, or declared. The GPU power is read during a local call. The method is inspired by
+  the AFNOR SPEC 2314 and does not claim conformity
+  ([ADR-0030](docs/01-architecture/adr/ADR-0030-Usage-and-Footprint.md)).
+- **Governed Heritage Engineering — new as of 2.2.0** — a page and a block of the console
+  tell the method AIStack applies to itself, with the manifesto and its principles.
 
 - **Governed by its own principles — new as of 2.1.0** — the Kernel names no
   technology and builds itself from declared registrations; application code
@@ -551,9 +579,9 @@ got past its absence.
   and criteria 2.5 and 2.6 of the official validation suite (`STD-0300`) fail the
   day the bundle is no longer `clean: True`.
 
-**As of 2.1.0**: `pytest -q` — **3314 passed**; `ruff check src tests` — all
-checks passed; `mypy` — no issues found in **593 source files**;
-`python -m aistack.cli.knowledge_integrity` — **65 knowledge artifacts**,
+**As of 2.2.0**: `pytest -q` — **4013 passed**; `ruff check src tests` — all
+checks passed; `mypy` — no issues found in **650 source files**;
+`python -m aistack.cli.knowledge_integrity` — **68 knowledge artifacts**,
 `blocking: 0   warnings: 0   clean: True`.
 
 The metrics quoted above and in `docs/04-handbook/RELEASE-NOTES.md` — test

@@ -1,0 +1,26 @@
+# AIStack — which use of an AI model may send its question outside your machines
+# (ADR-0029). Nothing here changes which engine answers yet: the journal of AI
+# calls (`reports/generated/ai-calls/`) shows, for each call, its class and
+# whether a routing by this policy would have changed it.
+#
+# Two classes:
+#   internal_only     what is asked never leaves the machines you run
+#   external_allowed  what is asked may go to an outside engine (Google Gemini)
+#
+# A caller this file does not name is `internal_only`: in doubt, nothing leaves.
+# The callers today:
+#   troubleshooting   the troubleshooting assistant (asks Gemini first when its key is set)
+#   security.page     the Security page
+#   vigil.reason      the vigil's reasoning on a finding
+#   ai.compare        the comparison of engines
+#
+# An engine is internal when it runs on a loopback or private (LAN) address,
+# or on a host name listed in `internal_hosts`; Gemini is always external.
+
+callers:
+  troubleshooting: internal_only
+  security.page: internal_only
+  vigil.reason: internal_only
+  ai.compare: internal_only
+
+internal_hosts: []

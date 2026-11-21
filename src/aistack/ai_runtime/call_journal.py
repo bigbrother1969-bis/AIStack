@@ -19,6 +19,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from aistack.ai_runtime.policy import AIPolicy, current_policy
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 
 JOURNAL_FILE = "ai-calls.jsonl"
@@ -47,14 +48,22 @@ class Call:
     reachable: bool
     seconds: float
     set_aside: str = ""
+    # The class `ai_policy.yml` gives the caller, and whether a routing by it would have changed this call
+    # (the question went outside for a caller declared internal): nothing routes by it yet (`ADR-0029` M2).
+    policy_class: str = ""
+    policy_differs: bool = False
 
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def call_of(caller: str, answer: AIRuntimeAnswer, seconds: float, at: str | None = None) -> Call:
+def call_of(
+    caller: str, answer: AIRuntimeAnswer, seconds: float, at: str | None = None, policy: AIPolicy | None = None
+) -> Call:
     """One line from one answer: what it names (engine, reasons), never what it holds (prompt, response)."""
+
+    policy = policy or current_policy()
 
     return Call(
         at=at or now_iso(),
@@ -66,6 +75,8 @@ def call_of(caller: str, answer: AIRuntimeAnswer, seconds: float, at: str | None
         reachable=answer.reachable,
         seconds=round(seconds, 2),
         set_aside=answer.unreachable_reason[:REASON_LIMIT],
+        policy_class=policy.class_of(caller),
+        policy_differs=answer.external and not policy.allows_external(caller),
     )
 
 
@@ -86,6 +97,8 @@ def append(directory: Path, call: Call, today: datetime | None = None) -> None:
                 "reachable": call.reachable,
                 "seconds": call.seconds,
                 "set_aside": call.set_aside,
+                "policy_class": call.policy_class,
+                "policy_differs": call.policy_differs,
             },
             ensure_ascii=False,
         )
@@ -144,6 +157,8 @@ def read(directory: Path, limit: int = 100) -> tuple[Call, ...]:
                     reachable=bool(data["reachable"]),
                     seconds=float(data["seconds"]),
                     set_aside=str(data.get("set_aside") or ""),
+                    policy_class=str(data.get("policy_class") or ""),
+                    policy_differs=bool(data.get("policy_differs")),
                 )
             )
         except (ValueError, KeyError, TypeError):

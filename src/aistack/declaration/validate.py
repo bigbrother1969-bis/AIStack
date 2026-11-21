@@ -22,6 +22,7 @@ import yaml
 
 from aistack.generators.history import write_artifact_with_history
 
+from aistack.ai_runtime.policy import load_ai_policy
 from aistack.ai_runtime.yaml.store import load_ai_runtime_yaml
 from aistack.api_keys import load_api_keys
 from aistack.architecture.yaml.cmdb_targets_store import load_cmdb_probe_targets_yaml
@@ -54,6 +55,7 @@ from aistack.sync.declaration import load_sync_declaration
 Loader = Callable[[Path, Path], object]
 
 LOADERS: dict[str, Loader] = {
+    "ai_policy.yml": lambda path, _: load_ai_policy(path),
     "ai_runtime.yml": lambda path, _: load_ai_runtime_yaml(path),
     "api_keys.yml": lambda path, _: load_api_keys(path),
     "arrivals.yml": lambda path, _: load_arrivals_yaml(path),

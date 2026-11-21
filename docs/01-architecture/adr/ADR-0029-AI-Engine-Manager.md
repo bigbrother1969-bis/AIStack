@@ -7,11 +7,11 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.2
+  version: 0.3
   status: Proposed
   owner: Architecture
   created: 2026-11-20
-  updated: 2026-11-20
+  updated: 2026-11-21
 
 relations:
   references:
@@ -27,7 +27,7 @@ relations:
 
 Proposed, 2026-11-20. Scope and three choices decided with the owner on
 2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
-the rest is proposed and waits for the owner. Only the record (M1) exists in code.
+the rest is proposed and waits for the owner. Only the record (M1) and the policy file (M2) exist in code.
 
 ## Context
 
@@ -100,9 +100,12 @@ does not name is internal.
 
 An engine is *internal* when it runs on the owner's machines (Ollama,
 Olala, any `openai_chat` server on the loopback or the LAN) and
-*external* when it does not (Gemini). The file says which, per engine;
-the default for an engine it does not name is external, the cautious
-side for this property.
+*external* when it does not (Gemini). Built in M2, the rule is read from
+where the engine answers, not from a name the owner must keep up to
+date: a loopback, private (LAN) or link-local address is internal, a host
+name the owner lists in `internal_hosts` is internal, and anything else
+(a public address, a host name not listed) is external, the cautious
+side. Gemini has no address of its own to read and is always external.
 
 ### 4. The routing rule
 
@@ -179,14 +182,14 @@ changes nothing.
 
 ## Implementation state
 
-M1 is built; the rest is not. Planned slices (each its own patch, tested before
+M1 and M2 are built; the rest is not. Planned slices (each its own patch, tested before
 delivery):
 
 | Slice | Content | State |
 |---|---|---|
 | M0 | This ADR | proposed, 2026-11-20 |
 | M1 | The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; routing unchanged | done, 2026-11-20 (0091): callers `troubleshooting`, `security.page`, `vigil.reason`, `ai.compare`; 90 days kept; `AIRuntimeAnswer.external` marks a question that went to an external engine. Written by the process that asks (the web service, the watch, the comparison), as state a service keeps for itself in the GHE audit; § 6 said "by a Task", which does not fit the web service, so the rule is read as "declared in the audit" |
-| M2 | Classes and policy: `ai_policy.yml` (caller to class, engine to internal or external, internal by default); the page's destination reads it; the record also says what the policy would have decided | not started |
+| M2 | Classes and policy: `ai_policy.yml` (caller to class, `internal_hosts`, internal by default); the record says, per call, its class and whether a routing by the policy would have changed it | done, 2026-11-21 (0092): shipped `ai_policy.yml` (four callers, all `internal_only`), loader and `AIPolicy` in `ai_runtime/policy.py`, `policy_class` and `policy_differs` in each line of `ai-calls.jsonl`. The page's destination (`ai_destination()`) is **not** changed: it must keep telling where the question really goes, and nothing routes by the policy before M3 |
 | M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | not started |
 | M4 | The read-only page of § 8 and its console card | not started |
 | later | A portal for other applications behind the OIDC provider | not started, to be decided |

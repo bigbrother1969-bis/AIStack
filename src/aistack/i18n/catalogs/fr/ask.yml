@@ -1,0 +1,33 @@
+# Page « Poser une question » (portal.chat, ADR-0029 § 12).
+
+title: "AIStack — Poser une question"
+heading: "Poser une question"
+intro: "Écris ta question avec tes mots. AIStack choisit le moteur d'IA qui répond et te dit lequel, et pourquoi. Rien de ce que tu écris n'est conservé après cette session de la page."
+label: "Ta question"
+placeholder: "Par exemple : comment je fais pour retrouver une photo que j'ai supprimée ?"
+ask: "Poser la question"
+new: "Poser une autre question"
+your_question: "Ta question"
+answer: "La réponse"
+pending: "Le moteur réfléchit… la page se met à jour toute seule."
+failed: "La question n'a pas pu être traitée. Réessaie dans un moment."
+no_answer: "Aucun moteur autorisé n'a pu répondre pour l'instant. Réessaie dans un moment, ou demande à la personne qui s'occupe des machines."
+detail: "Détail : {reason}"
+not_kept: "Ta question et cette réponse ne sont écrites nulle part : elles disparaissent de la mémoire au bout d'une demi-heure, ou quand tu poses une autre question. Seul le journal garde que quelqu'un a posé une question, avec le moteur choisi, jamais son texte."
+where:
+  inside: "Ta question reste sur les machines de la maison : elle ne part chez aucun fournisseur externe."
+  outside: "Ta question peut partir chez un fournisseur externe ({engine}), parce que la politique de la maison l'autorise. N'y mets rien de personnel."
+how:
+  who: "Qui a répondu"
+  why: "Pourquoi ce moteur"
+  where: "Où est allée ta question"
+  stayed: "Elle est restée sur les machines de la maison."
+  left: "Elle est partie chez un fournisseur externe."
+notice:
+  empty: "Écris d'abord ta question."
+  too_long: "Ta question est trop longue : raccourcis-la."
+  busy: "Ta question précédente est encore en cours de réponse."
+tooltip:
+  question: "Écris ici ta question, avec tes mots"
+  ask: "Envoyer ta question à AIStack, qui choisit le moteur d'IA"
+  new: "Effacer cette question et cette réponse pour en poser une autre"

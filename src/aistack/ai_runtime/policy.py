@@ -107,6 +107,10 @@ def _read(path: Path) -> dict[str, object]:
     return data
 
 
+# Entries that arrived after the first copies of ai_policy.yml were made, by block.
+_ADDED = {"kinds": ("ask",), "preferences": ("question",)}
+
+
 def load_ai_policy(path: Path, completing: Path | None = None) -> AIPolicy:
     """
     The policy declared at `path`. A mistyped class, an unknown key or a
@@ -127,6 +131,16 @@ def load_ai_policy(path: Path, completing: Path | None = None) -> AIPolicy:
             if block not in data and block in shipped:
                 data[block] = shipped[block]
                 completed.append(block)
+
+        # An entry added to a block after copies were made (the question page, ADR-0029 § 12): read from the
+        # shipped file when the copy's block lacks it; the entries the owner has are never touched.
+        for block, entries in _ADDED.items():
+            mine, theirs = data.get(block), shipped.get(block)
+            if isinstance(mine, dict) and mine and isinstance(theirs, dict):
+                for entry in entries:
+                    if entry not in mine and entry in theirs:
+                        data[block] = mine = {**mine, entry: theirs[entry]}
+                        completed.append(f"{block} ({entry})")
 
     unknown = [key for key in data if key not in _KEYS]
     if unknown:

@@ -60,6 +60,8 @@ ANYONE = {
 # Sign-in itself, whose own checks (CSRF, password) answer for it, and
 # the installation assistant, whose token does.
 SIGN_IN_ACTIONS = {"/logout", "/login/local", "/setup/step/x"}
+# The two actions every signed-in person may take: asking a question and clearing it (ADR-0029 § 12).
+USER_ACTIONS = {"/ask/ask", "/ask/new"}
 
 
 def build(tmp_path: Path, provider: FakeProvider | None = None):
@@ -154,7 +156,7 @@ def test_a_user_reads_but_every_action_is_refused(tmp_path: Path):
 
     assert web.get("/priority/").status_code == 200
     for path in routes(app, "POST"):
-        if path in SIGN_IN_ACTIONS:
+        if path in SIGN_IN_ACTIONS or path in USER_ACTIONS:
             continue
         reply = web.post(path)
         assert reply.status_code == 403, path

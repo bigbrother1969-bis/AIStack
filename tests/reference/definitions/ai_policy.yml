@@ -13,6 +13,7 @@
 #   security.page     the Security page
 #   vigil.reason      the vigil's reasoning on a finding
 #   ai.compare        the comparison of engines
+#   portal.chat       the page where anyone signed in asks a question in their own words
 #
 # An engine is internal when it runs on a loopback or private (LAN) address,
 # or on a host name listed in `internal_hosts`; Gemini is always external.
@@ -22,6 +23,7 @@ callers:
   security.page: internal_only
   vigil.reason: internal_only
   ai.compare: internal_only
+  portal.chat: internal_only
 
 internal_hosts: []
 
@@ -42,6 +44,7 @@ kinds:
   reason: diagnosis
   explain: explanation
   recommend: recommendation
+  ask: question
 
 preferences:
   diagnosis:
@@ -59,3 +62,8 @@ preferences:
     - {engine: openai, why: "a second opinion on the steps"}
     - {engine: gemini, why: "fast when the others are not set"}
     - {engine: local, why: "stays on your machines when no outside engine answers"}
+  question:
+    - {engine: gemini, why: "quick and cheap for an everyday question"}
+    - {engine: openai, why: "clear short answers"}
+    - {engine: anthropic, why: "careful wording when the others are not set"}
+    - {engine: local, why: "stays on your machines: nothing you typed leaves the house"}

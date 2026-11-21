@@ -95,6 +95,24 @@ links:
     path: /ai-engines/
     scope: lan
     ai_callers: []
+  - name:
+      fr: Poser une question
+      en: Ask a question
+    description:
+      fr: >-
+        Poser une question avec tes mots, sans rien connaître aux
+        machines : AIStack choisit le moteur d'IA, te dit lequel a
+        répondu et pourquoi. Ta question reste chez toi et n'est pas
+        conservée.
+      en: >-
+        Ask a question in your own words, without knowing anything
+        about the machines: AIStack chooses the AI engine and tells you
+        which one answered and why. Your question stays at home and is
+        not kept.
+    service: web_lan
+    path: /ask/
+    scope: lan
+    ai_callers: [portal.chat]
   - name: Architecture
     description:
       fr: >-

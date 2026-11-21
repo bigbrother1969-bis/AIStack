@@ -29,9 +29,11 @@ from aistack.ai_runtime.policy import EXTERNAL, AIPolicy, current_policy
 from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.hosted_engines import AnthropicEngine, OpenAIEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
+from aistack.ai_runtime.operations import answer as answer_question
 from aistack.ai_runtime.operations import explain, reason, recommend, system_directive
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
+from aistack.contracts.ai_matter import AIMatter
 from aistack.contracts.runtime_finding import RuntimeFinding
 
 AI_RUNTIME = configured(Path(__file__).resolve().parents[1] / "ai_runtime" / "definitions" / "ai_runtime.yml")
@@ -46,7 +48,7 @@ AI_STEP = 4
 AskAI = Callable[..., AIRuntimeAnswer]
 Record = Callable[[RuntimeFinding, tuple[AIRuntimeAnswer, ...]], Any]
 
-_CALLS = {"reason": reason, "explain": explain, "recommend": recommend}
+_CALLS = {"reason": reason, "explain": explain, "recommend": recommend, "ask": answer_question}
 
 
 def _gemini(definition: AIRuntimeDefinition) -> GeminiEngine | None:
@@ -163,7 +165,7 @@ def _reachable_by(policy: AIPolicy, caller: str, engines: tuple[LocalEngineDefin
 
 def ask_managed(
     caller: str,
-    finding: RuntimeFinding,
+    finding: AIMatter,
     operation: str,
     target_language: str,
     context: str = "",
@@ -241,7 +243,7 @@ def ask_managed(
 
 
 def ask_ai_runtime(
-    finding: RuntimeFinding, operation: str, target_language: str, context: str = ""
+    finding: AIMatter, operation: str, target_language: str, context: str = ""
 ) -> AIRuntimeAnswer:
     """
     One answer: from an outside engine when one is declared and its key is set (Gemini, then ChatGPT,
@@ -270,7 +272,7 @@ def ask_ai_runtime(
 
 
 def ask_ollama(
-    finding: RuntimeFinding,
+    finding: AIMatter,
     operation: str,
     target_language: str,
     context: str = "",
@@ -337,7 +339,7 @@ def _dressed(
 
 def ask_one(
     engine: LocalEngineDefinition,
-    finding: RuntimeFinding,
+    finding: AIMatter,
     operation: str,
     target_language: str,
     context: str = "",
@@ -364,7 +366,7 @@ def _failure(label: str, reason: str) -> str:
 
 
 def ask_local(
-    finding: RuntimeFinding,
+    finding: AIMatter,
     operation: str,
     target_language: str,
     context: str = "",

@@ -1,0 +1,33 @@
+# "Ask a question" page (portal.chat, ADR-0029 § 12).
+
+title: "AIStack — Ask a question"
+heading: "Ask a question"
+intro: "Write your question in your own words. AIStack chooses the AI engine that answers and tells you which one, and why. Nothing you write is kept after this session of the page."
+label: "Your question"
+placeholder: "For example: how do I get back a photo I deleted?"
+ask: "Ask the question"
+new: "Ask another question"
+your_question: "Your question"
+answer: "The answer"
+pending: "The engine is thinking… the page updates by itself."
+failed: "The question could not be handled. Try again in a moment."
+no_answer: "No allowed engine could answer just now. Try again in a moment, or ask the person who looks after the machines."
+detail: "Detail: {reason}"
+not_kept: "Your question and this answer are written nowhere: they leave memory after half an hour, or when you ask another question. Only the journal keeps that a question was asked, with the engine chosen, never its text."
+where:
+  inside: "Your question stays on the machines of the house: it goes to no outside provider."
+  outside: "Your question may go to an outside provider ({engine}), because the house policy allows it. Put nothing personal in it."
+how:
+  who: "Who answered"
+  why: "Why this engine"
+  where: "Where your question went"
+  stayed: "It stayed on the machines of the house."
+  left: "It went to an outside provider."
+notice:
+  empty: "Write your question first."
+  too_long: "Your question is too long: shorten it."
+  busy: "Your previous question is still being answered."
+tooltip:
+  question: "Write your question here, in your own words"
+  ask: "Send your question to AIStack, which chooses the AI engine"
+  new: "Clear this question and answer to ask another"

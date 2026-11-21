@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from aistack.ai_runtime.engine import AIEngine
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
-from aistack.contracts.runtime_finding import RuntimeFinding
+from aistack.contracts.ai_matter import AIMatter
 
 # Three operations, each a separate prompt over the same finding. Every
 # prompt states the finding as established fact: the model reasons about the
@@ -61,7 +61,7 @@ _LANGUAGE_NAME: dict[str, str] = {
 
 
 def reason(
-    finding: RuntimeFinding,
+    finding: AIMatter,
     engine: AIEngine,
     model: str | None,
     *,
@@ -86,7 +86,7 @@ def reason(
 
 
 def explain(
-    finding: RuntimeFinding,
+    finding: AIMatter,
     engine: AIEngine,
     model: str | None,
     *,
@@ -106,7 +106,7 @@ def explain(
 
 
 def recommend(
-    finding: RuntimeFinding,
+    finding: AIMatter,
     engine: AIEngine,
     model: str | None,
     *,
@@ -126,9 +126,27 @@ def recommend(
     )
 
 
+def answer(
+    question: AIMatter,
+    engine: AIEngine,
+    model: str | None,
+    *,
+    target_language: str = "fr",
+    translator: AIEngine | None = None,
+    context: str = "",
+) -> AIRuntimeAnswer:
+    """
+    Ask the engine a free question from a person (`portal.chat`). The question is the matter's
+    `interpretation`; the prompt says the engine answers in plain words and never claims to have
+    seen the person's machines. Parameters as in `reason`.
+    """
+
+    return _ask("ask", question, engine, model, _ANSWER_PROMPT, target_language, translator, context)
+
+
 def _ask(
     operation: str,
-    finding: RuntimeFinding,
+    finding: AIMatter,
     engine: AIEngine,
     model: str | None,
     prompt_template: str,
@@ -187,7 +205,7 @@ def _ask(
     )
 
 
-def _describe(finding: RuntimeFinding) -> dict[str, str]:
+def _describe(finding: AIMatter) -> dict[str, str]:
     qualifications = (
         ", ".join(finding.qualifications)
         if finding.qualifications
@@ -219,6 +237,18 @@ and no note about the translation.
 
 {text}
 """
+
+_ANSWER_PROMPT = """\
+You are the assistant of AIStack, a homelab knowledge operating system, answering a person who \
+lives in the house where it runs and is not a specialist. Answer in plain, short words, without \
+jargon. You do not know the state of their machines, their files or their accounts: say so \
+instead of guessing, and never ask for a password or a key. If the question needs something \
+you cannot know, say what to ask the person who looks after the machines.
+
+The question:
+{interpretation}
+{context_block}
+{language_directive}"""
 
 _REASON_PROMPT = """\
 You are the AI Runtime of AIStack, a homelab knowledge operating \

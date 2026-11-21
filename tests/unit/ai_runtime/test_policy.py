@@ -228,3 +228,17 @@ def test_the_policy_in_force_completes_a_copy_made_before_the_table(monkeypatch,
 
     assert loaded.allows_external("troubleshooting")
     assert loaded.preferred("recommendation")
+
+
+def test_a_copy_with_the_table_made_before_the_question_page_gets_that_entry(tmp_path: Path):
+    copy = tmp_path / "ai_policy.yml"
+    copy.write_text(
+        "kinds:\n  reason: diagnosis\npreferences:\n  diagnosis:\n    - {engine: local, why: mine}\n", encoding="utf-8"
+    )
+
+    loaded = load_ai_policy(copy, completing=policy.SHIPPED)
+
+    assert loaded.kind_of("portal.chat", "ask") == "question"
+    assert loaded.preferred("question")
+    assert loaded.preferred("diagnosis")[0].why == "mine"
+    assert loaded.completed == ("kinds (ask)", "preferences (question)")

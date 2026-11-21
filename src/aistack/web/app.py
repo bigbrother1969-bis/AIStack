@@ -27,7 +27,8 @@ from aistack.priority.screen import Discover, discover_containers
 from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
 from aistack.troubleshooting.findings import CollectFindings, qualified_findings
-from aistack.ai_runtime.call_journal import SECURITY_PAGE, TROUBLESHOOTING, journaled
+from aistack.ai_runtime.call_journal import PORTAL_CHAT, SECURITY_PAGE, TROUBLESHOOTING, journaled
+from aistack.portal import chat as portal_chat
 from aistack.troubleshooting.guide import AskAI, ai_destination, ask_managed
 from aistack.timemachine.screen import ExpiringValue, live_network_tree
 from aistack.timemachine.tree import NetworkTreeNode
@@ -54,6 +55,7 @@ from aistack.web import health
 from aistack.web import notifications
 from aistack.web import pending as pending_screen
 from aistack.web import ai_engines as ai_engines_screen
+from aistack.web import ask as ask_screen
 from aistack.web import security as security_screen
 from aistack.web import setup_wizard as setup_wizard_screen
 from aistack.instance.setup_wizard import apply_sign_in
@@ -132,6 +134,8 @@ def create_app(
     ask_local_ai: AskAI | None = None,
     local_model: Callable[[], str] | None = None,
     engine_starting: Callable[[], str] | None = None,
+    ask_portal: AskAI | None = None,
+    portal_destination: Callable[[], Any] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="AIStack",
@@ -185,6 +189,10 @@ def create_app(
     app.state.local_model = local_model if local_model is not None else security_screen.local_model
     app.state.engine_starting = engine_starting if engine_starting is not None else security_screen.engine_starting
     app.state.security_sessions = {}
+    # The page for everyone (ADR-0029 § 12): a question typed there is held in memory only, never written.
+    app.state.ask_portal = journaled(ask_portal or partial(ask_managed, PORTAL_CHAT), PORTAL_CHAT, journal)
+    app.state.portal_destination = portal_destination if portal_destination is not None else portal_chat.destination
+    app.state.portal_exchanges = portal_chat.Exchanges()
     # The CPU findings last listed: a reading is an instant, so the one
     # clicked may be gone a second later.
     app.state.troubleshooting_listed = {}
@@ -246,6 +254,7 @@ def create_app(
     include(app, troubleshooting.router, troubleshooting.PREFIX)
     include(app, security_screen.router, security_screen.PREFIX)
     include(app, ai_engines_screen.router, ai_engines_screen.PREFIX)
+    include(app, ask_screen.router, ask_screen.PREFIX)
     include(app, timemachine.router, timemachine.PREFIX)
     include(app, dock_screen.router, dock_screen.PREFIX)
     include(app, health.router)

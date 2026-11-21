@@ -33,6 +33,7 @@ REASON_LIMIT = 300
 # Who asks (`ADR-0029` open point: the list is read with the owner).
 TROUBLESHOOTING = "troubleshooting"
 SECURITY_PAGE = "security.page"
+PORTAL_CHAT = "portal.chat"
 VIGIL_REASON = "vigil.reason"
 AI_COMPARE = "ai.compare"
 

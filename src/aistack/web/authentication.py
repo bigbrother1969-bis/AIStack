@@ -248,7 +248,21 @@ async def require_admin_action(request: Request) -> None:
         raise Refused("auth.error.csrf")
 
 
+async def require_user_action(request: Request) -> None:
+    """Any signed-in person, with the session's token: for the few actions open to every user (`/ask`)."""
+
+    session = current_session(request)
+    if session is None:
+        raise SignInRequired(_came_from(request))
+
+    form = await request.form()
+    token = form.get("csrf")
+    if not isinstance(token, str) or not secrets.compare_digest(token, session.csrf):
+        raise Refused("auth.error.csrf")
+
+
 SIGNED_IN_ONLY = Depends(require_signed_in)
+USER_ACTION = Depends(require_user_action)
 ADMIN_ACTION = Depends(require_admin_action)
 
 

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.8
+  version: 0.9
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -231,6 +231,19 @@ AI: the console does not know what it reaches. A copy of the file made
 before `ai_callers` takes them from the shipped card of the same screen
 (`ADR-0017` § 1).
 
+### 12. A page for everyone: "Poser une question"
+
+Anyone signed in on the local network (not only an administrator) asks a question in their own words
+on `/ask/`. The caller is `portal.chat`, `internal_only` as shipped: the question stays on the machines
+until the owner sets `external_allowed` in `ai_policy.yml`, and the page says before the click where the
+question goes. The operation is `ask`, of kind `question` (a row in `kinds:` and a list in
+`preferences:`), so the policy chooses the engine as for any other call. The answer names the engine
+that gave it, the reason the policy gives for it, and whether the question stayed on the machines. What
+is typed is held in memory for the length of the exchange (half an hour at most, one question at a time
+per person) and written nowhere: the journal holds the caller, the engine, the kind and the reason, never
+a word of the question or the answer. The page is reached from a card of the console and from the
+Homepage dashboard.
+
 ## Consequences
 
 - The owner can read, in one file, what may leave the network and which
@@ -258,6 +271,7 @@ delivery):
 | M3c | The best engine for the kind of request (§ 10): kinds per operation, the table kind by engine with its reasons, the rule, `route` and `kind` carrying the why | done, 2026-11-21 (0095): `ai_runtime/choice.py` (`plan`, a pure function of the declarations: the steps best first and what it passed over), `kinds:` and `preferences:` in `ai_policy.yml` (strict loader), `ask_managed` runs the steps and stops at the first answer, `kind` added to the answer and to each line of the journal. Shipped table: a starting point written with the owner (diagnosis and recommendation prefer Claude then ChatGPT then Gemini, explanation prefers Gemini, each ending on the local engines), to be corrected by what `ai.compare` shows. With only Gemini set, behaviour is unchanged. The page's destination names the first outside engine any of the three operations asks |
 | M4 | The read-only page of § 8 and its console card, showing the why of § 10 | done, 2026-11-21 (0096): `/ai-engines/` (LAN only, signed in), `ai_runtime/engines_view.py` builds it from the declarations, the keys present (names only) and the journal. Engines with their state (ready, key missing, not declared), where they run and when each last answered or stayed silent; the policy (class per caller, kinds, the table with its reasons); counts by caller, kind and engine, the share that went outside and the calls where a first engine was silent; the latest 30 calls with their route. It asks no engine, so the state is what the declarations and the journal say, not a probe (an Ollama on the GPU or the CPU, an Olala stopped or starting, is not shown: a probe would make the page wait on a slow engine) |
 | M4 bis | A line on every card of the console: asks no engine, local only, or outside allowed (§ 11) | done, 2026-11-21 (0098): `ai_callers` per card, `ai_use` worked out from the policy by `console/ai_use.py` |
+| M5 | The page for everyone of § 12 | done, 2026-11-21 (0100): `/ask/` (LAN only, signed in, `USER_ACTION`: any signed-in person, with the session's token), `portal/chat.py`, operation `ask` in `ai_runtime/operations.py` (the matter of a question is an `AIMatter`, a `RuntimeFinding` being one), `portal.chat` in the shipped `ai_policy.yml`, a card with `ai_callers: [portal.chat]` |
 | later | A portal for other applications behind the OIDC provider | not started, to be decided |
 
 ## Open points

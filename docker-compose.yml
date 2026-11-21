@@ -179,7 +179,23 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
-# **2.1.0 — published 2026-11-18, current; also `latest`.**
+# **2.2.0 — published 2026-11-21, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:2.2.0
+#   @sha256:COLLE_ICI
+#
+# Built from 8631df2 (tag v2.2.0) on the reference host, behind the
+# terms OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main and carrying the tag, and 4013 tests passing.
+# Before the build, the 16 versions listed here as current (1.1.1 to
+# 2.1.0) were pulled again and each matched its recorded digest. Pushed
+# under its version and as `latest` — both name the same digest; its
+# `revision` label is 8631df2ade11007badc3cd7e2101d05344628b36. The digest is that of the manifest list
+# the registry holds. 2.2 adds the Cybersecurity Manager, the AI policy
+# and its journal, Poser une question and Usage et empreinte:
+# `docs/04-handbook/RELEASE-NOTES.md`'s 2.2.0 entry gives the full account.
+#
+# **2.1.0 — published 2026-11-18, current.**
 #
 #   bigbrother1969/aistack-core:2.1.0
 #   @sha256:9f92cb1342fde7ac902ac651c952bd72eb385a3b13cabb2fc2c1324dc8c8b45e

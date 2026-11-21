@@ -8,6 +8,7 @@ import pytest
 
 from aistack.ai_runtime.ollama_engine import OllamaEngine
 from aistack.i18n import translator_for
+from aistack.ai_runtime.policy import AIPolicy
 from aistack.troubleshooting import guide
 from aistack.troubleshooting.guide import OPERATIONS, describe_unreachable, run_diagnosis
 
@@ -115,7 +116,7 @@ def test_gemini_answers_first_with_the_facts(monkeypatch: pytest.MonkeyPatch):
     assert answer.model.startswith("gemini:")
     assert "- Dernier test: jamais" in gemini.prompts[0]
     assert ollama.prompts == []
-    assert guide.ai_destination()[0] == "gemini"
+    assert guide.ai_destination(policy=AIPolicy({"troubleshooting": "external_allowed"}))[0] == "gemini"
 
 
 def test_ollama_answers_when_gemini_does_not_and_says_why(monkeypatch: pytest.MonkeyPatch):

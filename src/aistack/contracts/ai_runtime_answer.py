@@ -20,6 +20,9 @@ class AIRuntimeAnswer:
     `external` says the question was sent to an engine outside the owner's
     machines, whether or not it answered (`ADR-0029`): the journal records
     it, the answer's text never needs it.
+    `route` says what `ai_policy.yml` decided for this call (`internal_only`, or
+    `internal_only; not asked: gemini` when an engine was kept out): the journal
+    records it, the answer's text never needs it.
     """
 
     operation: str
@@ -31,6 +34,7 @@ class AIRuntimeAnswer:
     unreachable_reason: str = ""
     language: str = "fr"
     external: bool = False
+    route: str = ""
 
     def __post_init__(self) -> None:
         if not self.operation.strip():

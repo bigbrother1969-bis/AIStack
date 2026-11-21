@@ -24,6 +24,7 @@ from aistack.ai_runtime.answer_guard import GuardedEngine
 from aistack.ai_runtime.engine import AIEngine
 from aistack.ai_runtime.engine_switch import EngineSwitch, SwitchedEngine
 from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
+from aistack.ai_runtime.policy import EXTERNAL, AIPolicy, current_policy
 from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
 from aistack.ai_runtime.operations import explain, reason, recommend, system_directive
@@ -58,14 +59,84 @@ def _gemini(definition: AIRuntimeDefinition) -> GeminiEngine | None:
     return GeminiEngine(declared.model, key, declared.timeout)
 
 
-def ai_destination() -> tuple[str, str]:
-    """Where the next question goes: ("gemini", model) or ("ollama", model)."""
+def _gemini_is_set(definition: AIRuntimeDefinition) -> bool:
+    """Gemini is declared and its key is in the environment: asked first by a caller that may go outside."""
 
+    declared = definition.gemini
+    return declared is not None and bool(os.environ.get(declared.api_key_env, ""))
+
+
+def ai_destination(caller: str = "troubleshooting", policy: AIPolicy | None = None) -> tuple[str, str]:
+    """
+    Where the next question of `caller` goes: ("gemini", model) or ("ollama", model).
+    It follows `ai_policy.yml`, as the routing does: an internal-only caller is never
+    told "gemini", and the model named is the first engine it may reach.
+    """
+
+    policy = policy or current_policy()
     definition = load_ai_runtime_yaml(AI_RUNTIME)
-    if _gemini(definition) is not None and definition.gemini is not None:
+    if policy.allows_external(caller) and definition.gemini is not None and _gemini_is_set(definition):
         return "gemini", definition.gemini.model
-    engines = definition.local_engines()
+    engines = _reachable_by(policy, caller, definition.local_engines())
     return "ollama", engines[0].model if engines else (definition.model or "")
+
+
+def _reachable_by(policy: AIPolicy, caller: str, engines: tuple[LocalEngineDefinition, ...]) -> tuple[LocalEngineDefinition, ...]:
+    """The engines a caller may ask: all of them when it may go outside, else the internal ones only."""
+
+    if policy.allows_external(caller):
+        return engines
+    return tuple(engine for engine in engines if policy.kind_of_host(engine.host) != EXTERNAL)
+
+
+def ask_managed(
+    caller: str,
+    finding: RuntimeFinding,
+    operation: str,
+    target_language: str,
+    context: str = "",
+    definition: AIRuntimeDefinition | None = None,
+) -> AIRuntimeAnswer:
+    """
+    One answer, by `ai_policy.yml` (`ADR-0029` § 4). A caller declared `external_allowed`
+    is asked as `ask_ai_runtime` does (Gemini first when its key is set, then the local
+    engines). An `internal_only` one reaches the internal engines only, and never crosses
+    its class to find an answer: when none can answer, the answer says so and the
+    hand-written text stays. The answer carries what was decided in `route`.
+    """
+
+    policy = current_policy()
+    declared_class = policy.class_of(caller)
+
+    if policy.allows_external(caller):
+        return replace(ask_ai_runtime(finding, operation, target_language, context), route=declared_class)
+
+    definition = definition or load_ai_runtime_yaml(AI_RUNTIME)
+    declared = definition.local_engines()
+    allowed = _reachable_by(policy, caller, declared)
+    kept_out = [engine.label or engine.model for engine in declared if engine not in allowed]
+    if _gemini_is_set(definition):
+        kept_out.insert(0, "gemini")
+    route = declared_class + (f"; not asked: {', '.join(kept_out)}" if kept_out else "")
+
+    if declared and not allowed:
+        return AIRuntimeAnswer(
+            operation=operation,
+            subject=finding.subject,
+            model="",
+            prompt="",
+            response="",
+            reachable=False,
+            unreachable_reason=(
+                f"no internal engine is declared for {caller}, which is {declared_class} "
+                f"(an engine on a public address or an unlisted host name is outside: see internal_hosts in ai_policy.yml)"
+            ),
+            language=target_language,
+            route=route,
+        )
+
+    narrowed = replace(definition, engines=allowed) if allowed else definition
+    return replace(ask_local(finding, operation, target_language, context, narrowed), route=route)
 
 
 def ask_ai_runtime(

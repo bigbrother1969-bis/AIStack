@@ -115,3 +115,23 @@ def test_the_declared_engines_are_compared_when_none_is_given(generated: Path, s
 
     assert ai_compare.main(["--generated", str(generated), "--max", "1", "--operations", "reason"]) == 0
     assert len(calls) == 1
+
+
+def test_an_engine_outside_is_refused_while_the_comparison_is_internal_only(generated: Path, capsys):
+    code = ai_compare.main(["--generated", str(generated), "--engine", "openai_chat@api.example.com:443/big?label=Big"])
+
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "Big" in err and "outside your machines" in err and "internal_only" in err
+
+
+def test_an_engine_outside_is_allowed_once_the_comparison_is_declared_external_allowed(generated: Path, monkeypatch, capsys):
+    from aistack.ai_runtime.policy import AIPolicy
+
+    monkeypatch.setattr(task, "current_policy", lambda: AIPolicy({"ai.compare": "external_allowed"}))
+
+    code = ai_compare.main(
+        ["--generated", str(generated), "--engine", "openai_chat@api.example.com:443/big", "--dry-run"]
+    )
+
+    assert code == 0

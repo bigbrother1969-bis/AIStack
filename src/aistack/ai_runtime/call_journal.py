@@ -52,6 +52,8 @@ class Call:
     # (the question went outside for a caller declared internal): nothing routes by it yet (`ADR-0029` M2).
     policy_class: str = ""
     policy_differs: bool = False
+    # What the policy decided for this call, and the engines it kept out of it (`ADR-0029` § 6).
+    route: str = ""
 
 
 def now_iso() -> str:
@@ -77,6 +79,7 @@ def call_of(
         set_aside=answer.unreachable_reason[:REASON_LIMIT],
         policy_class=policy.class_of(caller),
         policy_differs=answer.external and not policy.allows_external(caller),
+        route=answer.route,
     )
 
 
@@ -99,6 +102,7 @@ def append(directory: Path, call: Call, today: datetime | None = None) -> None:
                 "set_aside": call.set_aside,
                 "policy_class": call.policy_class,
                 "policy_differs": call.policy_differs,
+                "route": call.route,
             },
             ensure_ascii=False,
         )
@@ -159,6 +163,7 @@ def read(directory: Path, limit: int = 100) -> tuple[Call, ...]:
                     set_aside=str(data.get("set_aside") or ""),
                     policy_class=str(data.get("policy_class") or ""),
                     policy_differs=bool(data.get("policy_differs")),
+                    route=str(data.get("route") or ""),
                 )
             )
         except (ValueError, KeyError, TypeError):

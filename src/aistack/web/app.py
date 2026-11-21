@@ -28,7 +28,7 @@ from aistack.kernel.bootstrap import create_kernel
 from aistack.selection.screen import SyncthingStatus, read_syncthing
 from aistack.troubleshooting.findings import CollectFindings, qualified_findings
 from aistack.ai_runtime.call_journal import SECURITY_PAGE, TROUBLESHOOTING, journaled
-from aistack.troubleshooting.guide import AskAI, ai_destination, ask_ai_runtime, ask_local
+from aistack.troubleshooting.guide import AskAI, ai_destination, ask_managed
 from aistack.timemachine.screen import ExpiringValue, live_network_tree
 from aistack.timemachine.tree import NetworkTreeNode
 from aistack.web import (
@@ -116,7 +116,7 @@ def create_app(
     syncthing: SyncthingStatus = read_syncthing,
     kernel: Any = None,
     collect_findings: CollectFindings | None = None,
-    ask_ai: AskAI = ask_ai_runtime,
+    ask_ai: AskAI | None = None,
     destination: Callable[[], tuple[str, str]] = ai_destination,
     run_in_background: Callable[[Callable[[], None]], Any] | None = None,
     network_tree: Callable[[], list[NetworkTreeNode]] | None = None,
@@ -128,7 +128,7 @@ def create_app(
     test_api_key: Callable[[str], str | None] | None = None,
     pending_counts: Callable[[Path], dict[str, int]] | None = None,
     security_window: Callable[..., dict[str, Any]] | None = None,
-    ask_local_ai: AskAI = ask_local,
+    ask_local_ai: AskAI | None = None,
     local_model: Callable[[], str] | None = None,
     engine_starting: Callable[[], str] | None = None,
 ) -> FastAPI:
@@ -174,13 +174,13 @@ def create_app(
     )
     # Every question to a model is written to the journal under its caller (ADR-0029), without its content.
     journal = generated_dir / "ai-calls"
-    app.state.ask_ai = journaled(ask_ai, TROUBLESHOOTING, journal)
+    app.state.ask_ai = journaled(ask_ai or partial(ask_managed, TROUBLESHOOTING), TROUBLESHOOTING, journal)
     # Where the AI's question goes, shown before the click.
     app.state.ai_destination = destination
     app.state.troubleshooting_sessions = {}
     # The security screen (ADR-0028 T4b): its window goes through the Runtime, its AI is the local engine only.
     app.state.security_window = security_window if security_window is not None else security_screen.run_window
-    app.state.ask_local_ai = journaled(ask_local_ai, SECURITY_PAGE, journal)
+    app.state.ask_local_ai = journaled(ask_local_ai or partial(ask_managed, SECURITY_PAGE), SECURITY_PAGE, journal)
     app.state.local_model = local_model if local_model is not None else security_screen.local_model
     app.state.engine_starting = engine_starting if engine_starting is not None else security_screen.engine_starting
     app.state.security_sessions = {}

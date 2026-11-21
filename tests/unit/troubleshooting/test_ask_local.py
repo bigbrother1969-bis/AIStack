@@ -126,7 +126,7 @@ def test_without_any_model_nothing_is_sent():
 
 def test_the_destination_names_the_first_declared_model(tmp_path: Path, monkeypatch):
     path = tmp_path / "ai_runtime.yml"
-    path.write_text("host: h\nport: 1\nmodel: qwen\nengines:\n  - {kind: openai_chat, host: h, port: 2, model: olala-mini}\n  - {host: h, port: 1, model: qwen}\n", encoding="utf-8")
+    path.write_text("host: 127.0.0.1\nport: 1\nmodel: qwen\nengines:\n  - {kind: openai_chat, host: 127.0.0.1, port: 2, model: olala-mini}\n  - {host: 127.0.0.1, port: 1, model: qwen}\n", encoding="utf-8")
     monkeypatch.setattr(guide, "AI_RUNTIME", path)
 
     assert guide.ai_destination() == ("ollama", "olala-mini")

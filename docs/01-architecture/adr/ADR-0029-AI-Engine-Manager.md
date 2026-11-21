@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.3
+  version: 0.4
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -27,7 +27,7 @@ relations:
 
 Proposed, 2026-11-20. Scope and three choices decided with the owner on
 2026-11-19 and 2026-11-20 (§ 2, § 4, § 6, and the order of the slices);
-the rest is proposed and waits for the owner. Only the record (M1) and the policy file (M2) exist in code.
+the rest is proposed and waits for the owner. The record (M1), the policy file (M2) and the routing by policy (M3) exist in code.
 
 ## Context
 
@@ -182,7 +182,7 @@ changes nothing.
 
 ## Implementation state
 
-M1 and M2 are built; the rest is not. Planned slices (each its own patch, tested before
+M1, M2 and M3 are built; the rest is not. Planned slices (each its own patch, tested before
 delivery):
 
 | Slice | Content | State |
@@ -190,7 +190,7 @@ delivery):
 | M0 | This ADR | proposed, 2026-11-20 |
 | M1 | The record: each call carries the name of its caller; one line per call in `ai-calls.jsonl`, without content; routing unchanged | done, 2026-11-20 (0091): callers `troubleshooting`, `security.page`, `vigil.reason`, `ai.compare`; 90 days kept; `AIRuntimeAnswer.external` marks a question that went to an external engine. Written by the process that asks (the web service, the watch, the comparison), as state a service keeps for itself in the GHE audit; § 6 said "by a Task", which does not fit the web service, so the rule is read as "declared in the audit" |
 | M2 | Classes and policy: `ai_policy.yml` (caller to class, `internal_hosts`, internal by default); the record says, per call, its class and whether a routing by the policy would have changed it | done, 2026-11-21 (0092): shipped `ai_policy.yml` (four callers, all `internal_only`), loader and `AIPolicy` in `ai_runtime/policy.py`, `policy_class` and `policy_differs` in each line of `ai-calls.jsonl`. The page's destination (`ai_destination()`) is **not** changed: it must keep telling where the question really goes, and nothing routes by the policy before M3 |
-| M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | not started |
+| M3 | Routing by policy: `ask_managed` replaces the direct calls; Gemini only when the caller's class allows it | done, 2026-11-21 (0093): `ask_managed(caller, …)` in `troubleshooting/guide.py` serves the assistant, the Security page and the watch; an `external_allowed` caller is asked as before (Gemini first when its key is set), an `internal_only` one reaches internal engines only, never crosses its class when they are silent, and says so. `ai_destination()` follows the policy. `ai.compare` refuses an engine outside. Each answer carries `route`, kept in the journal (`internal_only; not asked: gemini`). The shipped class of the assistant stays `internal_only`; an installation that keeps Gemini declares `troubleshooting: external_allowed` in its own `ai_policy.yml` |
 | M4 | The read-only page of § 8 and its console card | not started |
 | later | A portal for other applications behind the OIDC provider | not started, to be decided |
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from aistack.config import configured
 
 import subprocess
+from functools import partial
 from pathlib import Path
 
 from aistack.ai_runtime.call_journal import VIGIL_REASON, journaled
@@ -18,7 +19,7 @@ from aistack.providers.docker import DockerProvider
 from aistack.providers.host.provider import HostProvider
 from aistack.runtime.evaluate import evaluate
 from aistack.runtime.idle_consumption import find_unexplained_consumption
-from aistack.troubleshooting.guide import ask_local
+from aistack.troubleshooting.guide import ask_managed
 
 DEFAULT_RESOURCE_PRIORITY = (
     configured(Path(__file__).resolve().parents[1]
@@ -127,7 +128,7 @@ class AiReasonTask:
             for finding in findings:
                 # The same engines, in the same order, with the same hand-over and the same switch as
                 # the console's pages: the watch is one more reader of `engines:`, not a path of its own.
-                ask = journaled(ask_local, VIGIL_REASON)
+                ask = journaled(partial(ask_managed, VIGIL_REASON), VIGIL_REASON)
                 answers = tuple(
                     ask(finding, operation, "fr", definition=ai_runtime_definition)
                     for operation in ("reason", "explain", "recommend")

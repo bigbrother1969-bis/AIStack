@@ -247,7 +247,7 @@ def test_the_watch_asks_the_declared_engines_in_order_through_ask_local(workspac
         asked.append((operation, language, [engine.label or engine.model for engine in definition.local_engines()], definition.engines[0].switch.url))
         return AIRuntimeAnswer(subject=finding.subject, operation=operation, model="Olala", prompt="p", response="ok", reachable=True)
 
-    monkeypatch.setattr(task_module, "ask_local", fake_ask_local)
+    monkeypatch.setattr("aistack.troubleshooting.guide.ask_local", fake_ask_local)
 
     cli.main()
 

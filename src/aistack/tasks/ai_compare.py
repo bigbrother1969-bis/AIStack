@@ -9,6 +9,7 @@ from pathlib import Path
 
 from aistack.ai_runtime import compare
 from aistack.ai_runtime.call_journal import AI_COMPARE, journaled
+from aistack.ai_runtime.policy import EXTERNAL, current_policy
 from aistack.ai_runtime.definition import LocalEngineDefinition
 from aistack.ai_runtime.operations import _LANGUAGE_DIRECTIVE
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
@@ -90,6 +91,16 @@ class AiCompareTask:
             chosen = screen.rows(report, False, {})[: max(int(str(payload.get("max", 2))), 0)]
         if not chosen:
             return _refused("no finding to watch or worse in the report; name one with --finding")
+
+        # The comparison is a use like another (`ADR-0029`): declared internal, it asks no engine outside.
+        policy = current_policy()
+        if not policy.allows_external(AI_COMPARE):
+            outside = [engine for engine in engines if policy.kind_of_host(engine.host) == EXTERNAL]
+            if outside:
+                return _refused(
+                    f"{compare.name_of(outside[0])} is outside your machines and {AI_COMPARE} is internal_only "
+                    f"in ai_policy.yml (declare it external_allowed, or list the host in internal_hosts)"
+                )
 
         subjects = [compare.Subject(row.key, row.title, screen.facts_for_engine(row, t), screen.runtime_finding(row, t)) for row in chosen]
         summary: dict[str, object] = {

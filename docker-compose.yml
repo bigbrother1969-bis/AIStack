@@ -179,7 +179,23 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
-# **2.2.0 — published 2026-11-21, current; also `latest`.**
+# **2.2.1 — published 2026-11-21, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:2.2.1
+#   @sha256:63566e5b4b64e4d0e5af322672f6849d67d8eaf46c26090628c7fa4174c6d9e8
+#
+# Built from 3d89208 (tag v2.2.1) on the reference host, behind the
+# terms OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main and carrying the tag, and 4044 tests passing.
+# Before the build, the versions listed here as current (1.1.1 to 2.2.0)
+# were pulled again and each matched its recorded digest. Pushed under its
+# version and as `latest` — both name the same digest; its `revision` label
+# is 3d892082145f34648618aed5469eb6459bc223b2. The digest is that of the manifest list the registry holds.
+# 2.2.1 completes the words of the screen for personal data and says the
+# reasons of the choice of engine in the language of the page:
+# `docs/04-handbook/RELEASE-NOTES.md`'s 2.2.1 entry gives the full account.
+#
+# **2.2.0 — published 2026-11-21, current.**
 #
 #   bigbrother1969/aistack-core:2.2.0
 #   @sha256:607f8717078b549f7b64b08a2dab0b87c15ab21c653be15040ec1937ac75d176

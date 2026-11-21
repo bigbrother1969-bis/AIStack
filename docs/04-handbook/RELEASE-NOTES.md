@@ -7,7 +7,7 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.20
+  version: 1.21
   status: Draft
   owner: Foundation
   created: 2026-09-04
@@ -37,6 +37,59 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 2.2.2 — 2026-11-21
+
+**A patch release: you can list the first names of your house so that a question holding one
+stays on your machines, and the page *Usage et empreinte* says when the permanent load is
+measured instead of calling it a hypothesis. Two decisions are accepted. `latest` names this
+version.**
+
+### What you may notice
+
+- **The first names of the house.** The screen for personal data has a new family, *prénoms
+  de la maison*, empty as shipped: AIStack cannot know your names. You write them in your own
+  `config/personal_data.yml`, under `names:`, and a question that holds one (*Lukas*, whatever
+  the case or the accents) stays on your machines, as for any word of the list. The text above the
+  question box no longer says that a first name is never recognised: it says that it is, when
+  you listed it.
+- **A measured permanent load is called measured.** The page said, whatever the file held,
+  «hypothèse déclarée, à mesurer en premier». It now follows the status of the parameter: with
+  `status: measured` in your `config/footprint.yml`, it says the load was measured and points to
+  the source in the table of parameters; with `declared`, it says what it said before. The file
+  shipped with the image still declares 2 / 5 / 10 W: it cannot know your machine.
+- **Two decisions are accepted.** `ADR-0029` (the AI-Engine Manager) and `ADR-0030` (usage and
+  footprint) are Accepted; their open points are answered or postponed in writing. `ADR-0028`
+  (the Cybersecurity Manager) stays Proposed: level 1, the clean point and the purge are not
+  built. Nothing in the running application changes because of this.
+
+### To do when upgrading
+
+- Set `AISTACK_VERSION=2.2.2` in `.env`, then `docker compose pull && docker compose up -d`.
+- **First names:** a `config/personal_data.yml` made earlier replaces the shipped file and has no
+  `names:` yet. Add at the end of it, under `cues:`, a line `  names:` followed by one
+  `    - "Prénom"` per name.
+- **The permanent load:** a `config/footprint.yml` made earlier replaces the shipped one. Replace its
+  `baseline_watts` block by your own measure, with `status: measured` and a `source` that says how you
+  measured it (the shipped file explains the three values).
+
+### Not changed
+
+Everything else works as in 2.2.1: the Cybersecurity Manager, the AI policy and its journal,
+*Moteurs IA*, the installer, the sign-in, the Dock, the restore tests. Your `./config` and your
+data are kept.
+
+### Known limits
+
+- A first name is recognised only if you listed it. A name that is also an everyday word
+  (a user name, a product) keeps a question inside: a weaker answer, never a leak.
+- The footprint limits stand: the making of the machine and the terminal are declared figures,
+  and the permanent load is measured by hand, once, not followed over time.
+
+`pytest -q` — 4047 passed; `mypy` — 651 files; 68 knowledge artifacts,
+`blocking: 0   warnings: 0   clean: True`.
 
 ---
 

@@ -7,7 +7,7 @@ artifact:
   domain: Architecture
   criticality: C1
   confidence: Declared
-  version: 0.12
+  version: 0.13
   status: Proposed
   owner: Architecture
   created: 2026-11-20
@@ -247,11 +247,12 @@ decides as for any caller, an outside engine being asked only when declared with
 number checked by their keys, social security number, postal address, IP or MAC address, secret such as a
 key or a private key, date of birth) and the words of `portal/definitions/personal_data.yml` that point at
 a private matter (identity, secret, family, health, money, legal, biometric, belief, work, place — the
-families that rgpd.com lists among personal data), which the owner can extend. A word that is also an
+families that rgpd.com lists among personal data — and `names`, the first names of the owner's house, empty as
+shipped), which the owner can extend. A word that is also an
 everyday word of a technical question (a speaker, a voltage) is written in the first person or left out. In doubt the
 question stays inside: a question kept inside by mistake costs a weaker answer, one that leaves by mistake
-cannot be called back. A first name alone cannot be told from another word: the page says so before the
-click. The screen returns kinds, never text: the page shows "e-mail address, family", the route of the
+cannot be called back. A first name alone cannot be told from another word, except those the owner lists under `names`: the page
+says so before the click. The screen returns kinds, never text: the page shows "e-mail address, family", the route of the
 journal says `personal data: email, family`, and no word of the question is kept anywhere.
 
 The operation is `ask`, of kind `question` (a row in `kinds:` and a list in `preferences:`), so the policy

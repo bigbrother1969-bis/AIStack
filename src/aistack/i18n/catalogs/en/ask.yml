@@ -1,6 +1,6 @@
 # "Ask a question" page (portal.chat, ADR-0029 § 12).
 
-screen_intro: "Before anything is sent, AIStack looks for personal data in your question (e-mail address, telephone, postal address, bank details, password, health, family…). If it finds any, the question stays on the machines of the house. It cannot recognise a plain first name: write nothing confidential."
+screen_intro: "Before anything is sent, AIStack looks for personal data in your question (e-mail address, telephone, postal address, bank details, password, health, family…). If it finds any, the question stays on the machines of the house. It recognises a plain first name only if you listed it among the first names of the house: write nothing confidential."
 title: "AIStack — Ask a question"
 heading: "Ask a question"
 intro: "Write your question in your own words. AIStack chooses the AI engine that answers and tells you which one, and why. Nothing you write is kept after this session of the page."
@@ -54,3 +54,4 @@ personal:
   belief: "beliefs and origins"
   work: "work or studies"
   place: "places and movements"
+  names: "first names of the house"

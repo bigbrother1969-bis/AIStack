@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from aistack.portal.personal_data import screen
@@ -122,3 +124,15 @@ def test_the_kinds_come_in_a_stable_order():
 
 def test_in_doubt_a_number_shaped_like_a_social_security_number_is_kept_inside():
     assert "social_security" in kinds("le chiffre 1234567890123 est-il premier")
+
+
+def test_a_first_name_is_found_only_when_the_owner_listed_it(tmp_path):
+    shipped = Path(__file__).parents[3] / "src" / "aistack" / "portal" / "definitions" / "personal_data.yml"
+    mine = tmp_path / "personal_data.yml"
+    mine.write_text(shipped.read_text(encoding="utf-8").replace("names: []", 'names:\n    - "Sacha"\n    - "Chri\u0073t\u00e8le"'), encoding="utf-8")
+
+    assert screen("que pense Sacha de ce film", shipped).kinds == ()
+    assert screen("que pense Sacha de ce film", mine).kinds == ("names",)
+    assert screen("CHRISTELE est en route", mine).kinds == ("names",)
+    assert screen("le sachet est vide", mine).kinds == ()
+    assert screen("mon fils Sacha", mine).kinds == ("family", "names")

@@ -1,6 +1,6 @@
 # Page « Poser une question » (portal.chat, ADR-0029 § 12).
 
-screen_intro: "Avant tout envoi, AIStack cherche des données personnelles dans ta question (adresse e-mail, téléphone, adresse postale, coordonnées bancaires, mot de passe, santé, famille…). S'il en trouve, la question reste sur les machines de la maison. Il ne peut pas reconnaître un simple prénom : n'écris rien de confidentiel."
+screen_intro: "Avant tout envoi, AIStack cherche des données personnelles dans ta question (adresse e-mail, téléphone, adresse postale, coordonnées bancaires, mot de passe, santé, famille…). S'il en trouve, la question reste sur les machines de la maison. Il ne reconnaît un simple prénom que si tu l'as listé dans les prénoms de la maison : n'écris rien de confidentiel."
 title: "AIStack — Poser une question"
 heading: "Poser une question"
 intro: "Écris ta question avec tes mots. AIStack choisit le moteur d'IA qui répond et te dit lequel, et pourquoi. Rien de ce que tu écris n'est conservé après cette session de la page."
@@ -54,3 +54,4 @@ personal:
   belief: "convictions et origines"
   work: "travail ou études"
   place: "lieux et déplacements"
+  names: "prénoms de la maison"

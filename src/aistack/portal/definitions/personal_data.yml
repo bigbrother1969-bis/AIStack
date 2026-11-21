@@ -12,7 +12,8 @@
 # whole words only. Add the words of your house; remove none you are not sure of: in doubt, inside.
 #
 # A name or a first name alone cannot be told from any other word: it is caught only through the
-# words below ("je m'appelle", "mon fils"...) or through another sign in the question.
+# words below ("je m'appelle", "mon fils"...) or through another sign in the question, unless you list
+# the first names of your house under `names` at the end of this file.
 #
 # The kinds follow the families of personal data that rgpd.com lists ("200 exemples de données à
 # caractère personnel"): identity, secret, family, health, money, legal, biometric, belief, work
@@ -268,3 +269,8 @@ cues:
     - "mes réservations"
     - "mes coordonnées gps"
     - "my location"
+
+  # The first names of your house, one by one ("marie", "paul"). Empty here: AIStack cannot know them.
+  # A question that holds one stays inside. A first name that is also an everyday word is caught like it.
+  # Put them in your own copy (config/personal_data.yml), for instance with the script that comes with the release.
+  names: []

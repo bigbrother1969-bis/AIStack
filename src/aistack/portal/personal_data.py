@@ -36,7 +36,7 @@ BIRTH = "birth"
 
 # The order the kinds are listed in, for a stable text.
 SHAPES = (EMAIL, PHONE, IBAN, CARD, SOCIAL_SECURITY, ADDRESS, NETWORK, SECRET, BIRTH)
-WORD_KINDS = ("identity", "secret", "family", "health", "money", "legal", "biometric", "belief", "work", "place")
+WORD_KINDS = ("identity", "secret", "family", "health", "money", "legal", "biometric", "belief", "work", "place", "names")
 
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 _PHONE = re.compile(r"(?<![\d.])(?:(?:\+|00)\s?\d{1,3}[\s.-]?|0)[1-9](?:[\s.-]?\d{2}){4}(?![\d])|(?<!\d)\+\d{8,15}(?!\d)")

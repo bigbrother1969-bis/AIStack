@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.18
+  version: 1.19
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-11-18
+  updated: 2026-11-21
 
 relations:
   references:
@@ -37,6 +37,112 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 2.2.0 — 2026-11-21
+
+**AIStack learns to watch its own security and to choose which AI answers. 2.2 adds a
+read-only Cybersecurity Manager, a second local AI engine started only when needed,
+an AI policy that decides what may leave your machines and says so for every call,
+a page where anyone signed in can ask a question in their own words, and a page that
+counts what the AI calls cost in energy and greenhouse gases. `latest` names this
+version.**
+
+### What you may notice
+
+- **Security.** A new console card and screen, *Sécurité*, say what the host exposes
+  (listening sockets, ports Docker publishes, the firewall), what the containers may
+  do to the host, how old the running images are, which host packages and sensitive
+  files changed, how many packets the firewall refused and who tried to get in (counted
+  from the host's logs, probes told apart from attempts on your applications). It is
+  read-only: nothing is closed, restarted or purged. The vigil tells Gotify what
+  deserves it (at once from "to fix", one message a day for "to watch") and has a
+  maintenance window for your own work. A local AI engine explains a finding in
+  plain words; the commands it suggests only read. `ADR-0028`.
+- **The web application no longer holds the Docker socket.** It reads Docker through a
+  new service, `docker-proxy`, which listens on the host's loopback only and refuses
+  every write. A `docker compose up -d` creates it.
+- **A second local AI engine, started when needed.** Besides Ollama, a declared engine of
+  another kind (OpenAI-compatible, `ai_runtime.yml` `engines:`) can answer; the first
+  that answers wins. One that needs the GPU's memory is started on demand by a small
+  host service, `aistack-engine-switch`, and stopped when idle. The answers are held
+  to written rules (tutoiement, a calm tone, three read-only commands at most): an
+  answer that breaks them is asked again once, then set aside for the next engine. The
+  host service also restarts Ollama when it came up on the CPU instead of the GPU.
+- **Which AI answers is a policy you can read.** `ai_policy.yml` gives each use of an AI
+  (the assistant, the Security page, the vigil, the question page…) a class,
+  `internal_only` or `external_allowed`, and a table that says which engine suits which
+  kind of request (a diagnosis, a short question…). Google Gemini, ChatGPT and Claude
+  can answer beside the local engines, when their key is set. Every call leaves one line
+  in `ai-calls.jsonl`: who asked, which engine answered, how long, why that engine —
+  never a word of the question or the answer. `ADR-0029`.
+- **Moteurs IA.** A new screen shows the engines and their state, the policy, the counts
+  by use, by kind and by engine, and the reason of the latest choices.
+- **Poser une question.** A new screen for anyone signed in on the local network, without
+  any knowledge of the machines. At the moment of sending, AIStack looks for personal
+  data in the question (an e-mail address, a phone number, a postal address, bank or
+  card details, a password, health, family, money, a date of birth). If it finds any,
+  the question stays on your machines; otherwise the policy may let it go to an
+  outside provider. The page says which engine answered and why. Nothing typed is
+  kept after the session of the page: only the journal says that a question was asked.
+- **Every card says whether its screen asks an AI.** A line under each card of the
+  console, and a badge *IA* where an engine is asked, local or outside according to the policy.
+- **Usage et empreinte.** A new screen counts the AI calls of the last 30 days (by
+  use, by day, local or outside) and their energy and greenhouse gases (GWP at 100
+  years) by level: the machine that answers, the network, the terminal of the person
+  who waits, and the permanent load of AIStack. Every figure is a range, with its
+  origin written beside it: measured, published by a source, or declared. The power of
+  the GPU is read during a local call when `nvidia-smi` is visible. The method is
+  inspired by the AFNOR SPEC 2314; AIStack does not claim conformity to it. `ADR-0030`.
+- **Governed Heritage Engineering.** A page, and a block in the left column of the
+  console, tell the method AIStack applies to itself and give the manifesto and its
+  principles.
+
+### Under the hood
+
+- A copy of `ai_policy.yml` or `console_links.yml` made before a block or a screen
+  existed is completed when it is read, so a new screen shows without editing the file.
+  A copy of `ai_policy.yml` never receives a new *caller*, which only you can allow:
+  see *To do when upgrading*.
+- The shipped declarations grow by `ai_policy.yml`, `personal_data.yml` and
+  `footprint.yml`, each read by a loader that refuses what it cannot read.
+- Two findings of the heritage's own audit were closed: the integration tests of the
+  official validation suite are back, re-measured, and each artifact of the Context
+  Bundle now names its source relative to the repository (`GOV-0002/OS-095`, `OS-096`).
+
+### To do when upgrading
+
+- Set `AISTACK_VERSION=2.2.0` in `.env`, then `docker compose pull && docker compose up -d`.
+  The new `docker-proxy` service is created.
+- **A `config/ai_policy.yml` you edited keeps its callers**: to let the new question
+  screen use an outside provider, add `portal.chat: external_allowed` under `callers:`.
+  Without it, every question stays inside, which is the safe default.
+- An engine you start on demand (the second local engine) must be declared as a service
+  with `on_demand: true` in `service_categorization.yml`, or the health page reports it
+  as running and undeclared each time it is up.
+- The host service `aistack-engine-switch` is installed from the host, not by the image.
+
+### Not changed
+
+The installation script and assistant, the sign-in, the Dock, restore tests, the sync,
+the restart watch, the new arrivals and the Time Machine work as in 2.1.0. Your
+`./config` and your data are kept.
+
+### Known limits
+
+- The screen for personal data cannot recognise a bare first name, and only knows the
+  words its definition lists (for instance «maladie», not yet «malade»). In doubt, a
+  question stays inside; a question that holds none of the words can go outside.
+- The footprint rests in part on declared figures (the permanent load of the containers,
+  the making of the machine, the terminal) that are marked *to be confirmed*, and the
+  permanent load dominates the total until it is measured. The GPU power is read in the
+  web container; the vigil container cannot see it. Resource depletion and primary energy
+  are not calculated.
+- `ADR-0028`, `ADR-0029` and `ADR-0030` are Proposed; their open points are written in them.
+
+`pytest -q` — 4013 passed; `mypy` — 650 files; 68 knowledge artifacts,
+`blocking: 0   warnings: 0   clean: True`.
 
 ---
 

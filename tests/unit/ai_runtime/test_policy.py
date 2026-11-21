@@ -27,7 +27,9 @@ def test_the_shipped_policy_keeps_every_use_inside():
     shipped = load_ai_policy(policy.SHIPPED)
 
     assert shipped.callers
-    assert all(declared == policy.INTERNAL_ONLY for declared in shipped.callers.values())
+    # Every use is inside but the page for everyone, whose questions are screened for personal data one by
+    # one (ADR-0029 § 12): any found keeps that question on the machines.
+    assert {name for name, declared in shipped.callers.items() if declared != policy.INTERNAL_ONLY} == {"portal.chat"}
     assert not shipped.allows_external("troubleshooting")
 
 

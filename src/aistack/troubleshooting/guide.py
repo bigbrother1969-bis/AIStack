@@ -25,7 +25,7 @@ from aistack.ai_runtime.choice import Step, plan, route_of
 from aistack.ai_runtime.engine import AIEngine
 from aistack.ai_runtime.engine_switch import EngineSwitch, SwitchedEngine
 from aistack.ai_runtime.openai_chat_engine import OpenAIChatEngine
-from aistack.ai_runtime.policy import EXTERNAL, AIPolicy, current_policy
+from aistack.ai_runtime.policy import EXTERNAL, INTERNAL_ONLY, AIPolicy, current_policy
 from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.hosted_engines import AnthropicEngine, OpenAIEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
@@ -170,6 +170,30 @@ def ask_managed(
     target_language: str,
     context: str = "",
     definition: AIRuntimeDefinition | None = None,
+    personal: tuple[str, ...] = (),
+) -> AIRuntimeAnswer:
+    """
+    `_ask_managed`, with what was found of personal data in the question named in `route` (the kinds,
+    never the text). When `personal` is not empty the call is `internal_only` whatever the caller's
+    class: personal data never leaves the machines (`ADR-0029` § 5).
+    """
+
+    answer = _ask_managed(caller, finding, operation, target_language, context, definition, personal)
+
+    if personal:
+        return replace(answer, route=f"{answer.route}; personal data: {', '.join(personal)}"[:500])
+
+    return answer
+
+
+def _ask_managed(
+    caller: str,
+    finding: AIMatter,
+    operation: str,
+    target_language: str,
+    context: str = "",
+    definition: AIRuntimeDefinition | None = None,
+    personal: tuple[str, ...] = (),
 ) -> AIRuntimeAnswer:
     """
     One answer, by `ai_policy.yml` (`ADR-0029` § 4 and § 10). The policy gives the call a kind, the
@@ -180,6 +204,8 @@ def ask_managed(
     """
 
     policy = current_policy()
+    if personal:
+        policy = replace(policy, callers={**policy.callers, caller: INTERNAL_ONLY})
     declared_class = policy.class_of(caller)
     definition = definition or load_ai_runtime_yaml(AI_RUNTIME)
     kind, steps, passed_over = _plan_for(policy, caller, operation, definition)

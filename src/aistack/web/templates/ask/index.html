@@ -43,6 +43,7 @@
   {% if notice %}<p class="notice">{{ notice }}</p>{% endif %}
 
   {% if not exchange %}
+    <p class="meta">{{ t('ask.screen_intro') }}</p>
     {% if where.outside %}
       <p class="where outside">{{ t('ask.where.outside', engine=where.engine) }}</p>
     {% else %}
@@ -68,6 +69,8 @@
         <dt>{{ t('ask.how.who') }}</dt>
         <dd>{{ decision.engine }}</dd>
         {% if decision.why %}<dt>{{ t('ask.how.why') }}</dt><dd>{{ decision.why }}</dd>{% endif %}
+        <dt>{{ t('ask.how.personal') }}</dt>
+        <dd>{% if personal %}{{ t('ask.how.personal_found', kinds=personal) }}{% else %}{{ t('ask.how.personal_none') }}{% endif %}</dd>
         <dt>{{ t('ask.how.where') }}</dt>
         <dd>{% if answer.external %}{{ t('ask.how.left') }}{% else %}{{ t('ask.how.stayed') }}{% endif %}</dd>
       </dl>

@@ -23,7 +23,7 @@ LANGUAGES = Languages(reference="fr", available=(Language("fr", "Français"), La
 SECRET_QUESTION = "comment retrouver la photo supprimee de mamie"
 
 
-def answered(question, operation, language) -> AIRuntimeAnswer:
+def answered(question, operation, language, personal=()) -> AIRuntimeAnswer:
     assert operation == "ask"
     return AIRuntimeAnswer(
         operation="ask",
@@ -38,7 +38,7 @@ def answered(question, operation, language) -> AIRuntimeAnswer:
     )
 
 
-def silent(question, operation, language) -> AIRuntimeAnswer:
+def silent(question, operation, language, personal=()) -> AIRuntimeAnswer:
     return AIRuntimeAnswer(
         operation="ask", subject="question", model="", prompt="", response="", reachable=False,
         unreachable_reason="Olala: not reachable", language=language, kind="question",
@@ -74,6 +74,7 @@ def test_the_page_names_the_outside_provider_when_the_policy_allows_it(tmp_path:
     page = client(build(tmp_path, where=Destination(True, "gemini")), user=True).get("/ask/?lang=en")
 
     assert "may go to an outside provider (gemini)" in page.text
+    assert "looks for personal data" in page.text
 
 
 def test_a_user_asks_and_reads_the_engine_and_why_in_simple_words(tmp_path: Path):
@@ -119,7 +120,7 @@ def test_when_no_allowed_engine_answers_the_page_says_so_plainly(tmp_path: Path)
 
 
 def test_an_engine_fault_ends_the_wait_instead_of_hanging_the_page(tmp_path: Path):
-    def broken(question, operation, language):
+    def broken(question, operation, language, personal=()):
         raise RuntimeError("boom")
 
     web = client(build(tmp_path, ask=broken))
@@ -185,11 +186,43 @@ def test_the_decision_is_read_from_the_route_not_from_the_content():
     assert decision_of(replace(answer, route="")).why == ""
 
 
-def test_as_shipped_the_question_stays_on_the_machines():
-    from aistack.ai_runtime.policy import INTERNAL_ONLY, current_policy
+def test_as_shipped_the_class_allows_outside_and_the_screen_decides_per_question():
+    from aistack.ai_runtime.policy import EXTERNAL_ALLOWED, current_policy
 
     policy = current_policy()
 
-    assert policy.class_of(PORTAL_CHAT) == INTERNAL_ONLY
+    assert policy.class_of(PORTAL_CHAT) == EXTERNAL_ALLOWED
     assert policy.kind_of(PORTAL_CHAT, "ask") == "question"
     assert policy.preferred("question")
+
+
+def test_a_question_with_personal_data_is_screened_and_the_page_says_what_kind_not_what_words(tmp_path: Path):
+    seen = {}
+
+    def spying(question, operation, language, personal=()):
+        seen["personal"] = personal
+        return answered(question, operation, language)
+
+    web = client(build(tmp_path, ask=spying), user=True)
+
+    web.post("/ask/ask", data={"question": "ecris a jean.dupont@example.org, mon fils est malade"})
+    page = web.get("/ask/?lang=en").text
+
+    assert seen["personal"] == ("email", "family")
+    assert "e-mail address, family" in page and "so your question stayed on the machines" in page
+    assert "jean.dupont" in page  # the person's own question is shown back to them, in memory only
+    for path in tmp_path.rglob("*"):
+        if path.is_file():
+            assert b"jean.dupont" not in path.read_bytes(), path
+
+
+def test_a_question_with_nothing_personal_is_sent_with_no_restriction(tmp_path: Path):
+    seen = {}
+
+    def spying(question, operation, language, personal=()):
+        seen["personal"] = personal
+        return answered(question, operation, language)
+
+    client(build(tmp_path, ask=spying), user=True).post("/ask/ask", data={"question": "comment regler la luminosite de l'ecran"})
+
+    assert seen["personal"] == ()

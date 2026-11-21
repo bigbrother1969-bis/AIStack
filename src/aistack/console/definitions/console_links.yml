@@ -101,14 +101,15 @@ links:
     description:
       fr: >-
         Poser une question avec tes mots, sans rien connaître aux
-        machines : AIStack choisit le moteur d'IA, te dit lequel a
-        répondu et pourquoi. Ta question reste chez toi et n'est pas
-        conservée.
+        machines : AIStack cherche d'abord des données personnelles
+        dans ta question (si oui, elle reste chez toi), choisit le
+        moteur d'IA, te dit lequel a répondu et pourquoi. Rien n'est
+        conservé.
       en: >-
         Ask a question in your own words, without knowing anything
-        about the machines: AIStack chooses the AI engine and tells you
-        which one answered and why. Your question stays at home and is
-        not kept.
+        about the machines: AIStack first looks for personal data in
+        your question (if any, it stays at home), chooses the AI engine
+        and tells you which one answered and why. Nothing is kept.
     service: web_lan
     path: /ask/
     scope: lan

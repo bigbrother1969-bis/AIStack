@@ -70,6 +70,8 @@ class Exchange:
     at: float
     answer: AIRuntimeAnswer | None = None
     failed: bool = False
+    # The kinds of personal data found in the question (never the text): when any, it stayed inside.
+    personal: tuple[str, ...] = ()
 
     @property
     def pending(self) -> bool:

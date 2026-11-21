@@ -40,6 +40,7 @@ from aistack.hosts.records import load_hosts_declaration
 from aistack.i18n.catalog import load_languages_yaml
 from aistack.instance.yaml.store import load_instance_config_yaml
 from aistack.network_discovery.yaml.store import load_network_discovery_yaml
+from aistack.portal.personal_data import load_personal_data_yaml
 from aistack.pra.yaml.store import load_pra_tests_yaml
 from aistack.priority.yaml.store import load_resource_priority_yaml
 from aistack.providers.filesystem.yaml.backup_store import load_backup_thresholds_yaml
@@ -74,6 +75,7 @@ LOADERS: dict[str, Loader] = {
     "instance_config.yml": lambda path, _: load_instance_config_yaml(path),
     "languages.yml": lambda path, _: load_languages_yaml(path),
     "network_discovery.yml": lambda path, _: load_network_discovery_yaml(path),
+    "personal_data.yml": lambda path, _: load_personal_data_yaml(path),
     "pra_tests.yml": lambda path, _: load_pra_tests_yaml(path),
     "resource_priority.yml": lambda path, _: load_resource_priority_yaml(path),
     "restart_watch.yml": lambda path, _: load_restart_watch_yaml(path),

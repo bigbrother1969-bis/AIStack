@@ -13,7 +13,8 @@
 #   security.page     the Security page
 #   vigil.reason      the vigil's reasoning on a finding
 #   ai.compare        the comparison of engines
-#   portal.chat       the page where anyone signed in asks a question in their own words
+#   portal.chat       the page where anyone signed in asks a question in their own words; a question holding
+#                     personal data stays inside whatever its class
 #
 # An engine is internal when it runs on a loopback or private (LAN) address,
 # or on a host name listed in `internal_hosts`; Gemini is always external.
@@ -23,7 +24,9 @@ callers:
   security.page: internal_only
   vigil.reason: internal_only
   ai.compare: internal_only
-  portal.chat: internal_only
+  # A question typed there is screened for personal data first: any found keeps it on the machines
+  # whatever this class says (portal/definitions/personal_data.yml, ADR-0029 § 12). With none, it may go outside.
+  portal.chat: external_allowed
 
 internal_hosts: []
 

@@ -14,7 +14,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from aistack.ai_runtime.question import MAX_LENGTH, OPERATION, Question
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
-from aistack.portal import chat
+from aistack.portal import chat, personal_data
 from aistack.web.authentication import SIGNED_IN_ONLY, USER_ACTION, current_session
 from aistack.web.exposure import LAN_ONLY
 from aistack.web.templating import templates
@@ -54,6 +54,11 @@ def index(request: Request) -> Response:
         "answer": answer,
         "decision": chat.decision_of(answer) if answer is not None and answer.reachable else None,
         "reason_shown": REASON_SHOWN,
+        "personal": (
+            ", ".join(language.t(f"ask.personal.{kind}") for kind in exchange.personal)
+            if exchange is not None and exchange.personal
+            else ""
+        ),
         "notice": language.t(f"ask.notice.{notice}") if notice in ("empty", "too_long", "busy") else "",
         **language.context(),
     }
@@ -84,10 +89,12 @@ def ask(request: Request, question: str = Form("")) -> RedirectResponse:
         return RedirectResponse(f"{PREFIX}/?notice=busy", status_code=303)
 
     ask_ai = request.app.state.ask_portal
+    # Before any engine is chosen: personal data found keeps the question on the machines (ADR-0029 § 5).
+    exchange.personal = personal_data.screen(text).kinds
 
     def run() -> None:
         try:
-            exchange.answer = ask_ai(Question(text), OPERATION, language.lang)
+            exchange.answer = ask_ai(Question(text), OPERATION, language.lang, personal=exchange.personal)
         except Exception:  # an engine fault must end the wait, never hang the page
             exchange.failed = True
 

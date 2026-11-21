@@ -161,3 +161,22 @@ def test_a_line_without_a_route_still_reads(tmp_path):
     call_journal.append(tmp_path, call_journal.call_of("a", answer, 1.0, policy=INTERNAL))
 
     assert call_journal.read(tmp_path)[0].route == ""
+
+
+def test_personal_data_in_the_question_keeps_an_external_allowed_caller_inside(monkeypatch):
+    declare(monkeypatch, policy=ALLOWED, gemini=Engine("never asked"), ollama=Engine("Réponse locale."))
+
+    answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait", personal=("email", "health"))
+
+    assert answer.response == "Réponse locale." and answer.external is False
+    assert answer.route.startswith("internal_only;")
+    assert answer.route.endswith("personal data: email, health")
+    assert "gemini (not allowed for this caller)" in answer.route
+
+
+def test_without_personal_data_the_class_of_the_caller_decides_as_before(monkeypatch):
+    declare(monkeypatch, policy=ALLOWED, gemini=Engine("Vu par Gemini."), ollama=Engine("never asked"))
+
+    answer = guide.ask_managed("troubleshooting", finding(), "reason", "fr", "- fait", personal=())
+
+    assert answer.external is True and "personal data" not in answer.route

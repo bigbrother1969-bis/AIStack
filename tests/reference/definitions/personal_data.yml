@@ -1,0 +1,73 @@
+# AIStack — what makes a question "personal" on the page "Poser une question" (ADR-0029 § 12).
+#
+# Before a question is sent, AIStack looks for personal data in it. If it finds any, the question
+# stays on the machines of the house (internal engines only); if it finds none, it may go to an
+# outside engine, when the policy (`ai_policy.yml`) allows it for `portal.chat`.
+#
+# The shapes that are recognised by their form (an e-mail address, a telephone number, an IBAN, a
+# card number, a social security number, a postal address, an IP or MAC address, a secret such as a
+# key or a private key) are in the code: a rule you cannot see is not governed, so they are listed
+# in the documentation of the page. This file holds the words that point at a private matter. A
+# question that holds one of them stays inside. The match ignores case and accents and takes
+# whole words only. Add the words of your house; remove none you are not sure of: in doubt, inside.
+#
+# A name or a first name alone cannot be told from any other word: it is caught only through the
+# words below ("je m'appelle", "mon fils"...) or through another sign in the question.
+
+cues:
+  identity:
+    - "je m'appelle"
+    - "mon nom est"
+    - "my name is"
+    - "mon adresse"
+    - "ma date de naissance"
+    - "mon numéro"
+  secret:
+    - "mot de passe"
+    - "mots de passe"
+    - "mdp"
+    - "password"
+    - "passphrase"
+    - "code pin"
+    - "clé api"
+    - "api key"
+    - "token"
+  family:
+    - "mon fils"
+    - "ma fille"
+    - "mes enfants"
+    - "mon mari"
+    - "ma femme"
+    - "mon épouse"
+    - "mon père"
+    - "ma mère"
+    - "mon frère"
+    - "ma sœur"
+    - "ma soeur"
+    - "mamie"
+    - "papi"
+    - "ma belle-mère"
+    - "mon beau-père"
+  health:
+    - "médecin"
+    - "maladie"
+    - "diagnostic"
+    - "ordonnance"
+    - "médicament"
+    - "traitement médical"
+    - "hôpital"
+    - "dépression"
+    - "ma santé"
+  money:
+    - "salaire"
+    - "impôts"
+    - "compte bancaire"
+    - "mon revenu"
+    - "mes dettes"
+    - "crédit immobilier"
+  legal:
+    - "avocat"
+    - "divorce"
+    - "procès"
+    - "plainte"
+    - "tribunal"

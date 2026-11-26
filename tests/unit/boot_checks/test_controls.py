@@ -57,7 +57,7 @@ def test_the_morning_of_26_november_is_green_with_the_past_told_as_information()
     found = by_control(results)
 
     assert overall(results) == OK
-    assert all(result.status in (OK, INFORMATION) for result in results if result.control not in ("monitor", "disks", "systems", "disk_trend", "copies", "restore_tests"))
+    assert all(result.status in (OK, INFORMATION) for result in results if result.control not in ("monitor", "disks", "systems", "disk_trend", "copies", "restore_tests", "certificates", "domains"))
     assert found["monitor"].status == SKIPPED and "not connected" in found["monitor"].summary
     assert found["disks"].status == SKIPPED and "Scrutiny is not connected" in found["disks"].summary
     assert found["systems"].status == SKIPPED and "Beszel is not connected" in found["systems"].summary

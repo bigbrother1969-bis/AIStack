@@ -42,6 +42,11 @@ FINDINGS = (
     "copy_missing",
     "restore_test_failed",
     "restore_test_old",
+    "certificate_soon",
+    "certificate_urgent",
+    "certificate_invalid",
+    "domain_soon",
+    "domain_urgent",
 )
 
 # The circumstances the code computes from the facts, and the extra controls a circumstance may justify
@@ -88,6 +93,11 @@ DEFAULT_SEVERITY = {
     "copy_missing": CRITICAL,
     "restore_test_failed": CRITICAL,
     "restore_test_old": WARNING,
+    "certificate_soon": WARNING,
+    "certificate_urgent": CRITICAL,
+    "certificate_invalid": WARNING,
+    "domain_soon": WARNING,
+    "domain_urgent": CRITICAL,
 }
 
 
@@ -141,6 +151,15 @@ class BootChecksDefinition:
     # The copies the host unit looks at (O6): label -> the most days that may pass since the newest file of that copy was made.
     # Empty = none declared: the control is skipped, AIStack never guesses a copy.
     copies: dict[str, int] = field(default_factory=dict)
+    # What expires (O7). A certificate is a host (`host` or `host:port`, asked for the certificate it presents) or the absolute
+    # path of a PEM file; a domain is a name, with the date declared by hand (`YYYY-MM-DD`, or empty) for a registry that does
+    # not publish one. Ending within the first number of days is to watch, within the second (or past) is to fix.
+    certificates: tuple[str, ...] = ()
+    domains: dict[str, str] = field(default_factory=dict)
+    certificate_days: int = 21
+    certificate_urgent_days: int = 7
+    domain_days: int = 60
+    domain_urgent_days: int = 14
     docker_user_rules: int | None = None
     # label -> the HTTP status the host's probe of that label must answer.
     probes: dict[str, int] = field(default_factory=dict)

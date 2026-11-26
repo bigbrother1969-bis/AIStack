@@ -25,6 +25,9 @@ dependencies = [
     # Sign-in (ADR-0013): the ID token's RS256 signature is verified
     # against the provider's published keys.
     "PyJWT[crypto]>=2.15.1",
+    # The certificates the start-up checks read (ADR-0032, O7): when they end, never their subject. Already installed with
+    # PyJWT[crypto]; named here because this code reads it directly.
+    "cryptography>=42",
     # The slim image has no time zone database; the vigil's daily digest
     # (ADR-0028 T4a) is set in the owner's own time zone.
     "tzdata>=2024.1",

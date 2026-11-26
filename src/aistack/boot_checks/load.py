@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from aistack.boot_checks.expiry import DOMAIN, HOST
 from aistack.boot_checks.definition import (
     CIRCUMSTANCES,
     DEFAULT_CATALOGUE,
@@ -67,6 +69,12 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         docker_user_rules=_optional_count(data, "docker_user_rules", label),
         probes=_probes(data.get("probes"), label),
         copies=_copies(data.get("copies"), label),
+        certificates=_certificates(data.get("certificates"), label),
+        domains=_domains(data.get("domains"), label),
+        certificate_days=_positive_int(data, "certificate_days", defaults.certificate_days, label),
+        certificate_urgent_days=_positive_int(data, "certificate_urgent_days", defaults.certificate_urgent_days, label),
+        domain_days=_positive_int(data, "domain_days", defaults.domain_days, label),
+        domain_urgent_days=_positive_int(data, "domain_urgent_days", defaults.domain_urgent_days, label),
         ups_expected=_ups(data.get("ups_expected"), defaults.ups_expected, label),
         severity=_severity(data.get("severity"), label),
         companions=_flag(data, "companions", defaults.companions, label),
@@ -170,6 +178,53 @@ def _paths(value: Any, label: str) -> tuple[str, ...]:
         raise ValueError(f"{label} must be absolute paths")
 
     return paths
+
+
+def _certificates(value: Any, label: str) -> tuple[str, ...]:
+    """A host (`host` or `host:port`) or the absolute path of a PEM file, each once."""
+
+    if value is None:
+        return ()
+
+    if not isinstance(value, list):
+        raise ValueError(f"{label}: certificates must be a list of hosts or absolute paths")
+
+    for entry in value:
+        if not isinstance(entry, str) or not (HOST.fullmatch(entry) or (entry.startswith("/") and ".." not in entry.split("/") and "\n" not in entry)):
+            raise ValueError(f"{label}: certificates: {entry!r} is neither a host (host or host:port) nor an absolute path")
+
+    return tuple(dict.fromkeys(value))
+
+
+def _domains(value: Any, label: str) -> dict[str, str]:
+    """A list of domain names, or a mapping from a name to the date (`YYYY-MM-DD`) to use when its registry publishes none."""
+
+    if value is None:
+        return {}
+
+    if isinstance(value, list):
+        value = dict.fromkeys(value)
+
+    if not isinstance(value, dict):
+        raise ValueError(f"{label}: domains must be a list of names, or a mapping from a name to a date")
+
+    found: dict[str, str] = {}
+
+    for name, declared in value.items():
+        if not isinstance(name, str) or not DOMAIN.fullmatch(name):
+            raise ValueError(f"{label}: domains: {name!r} is not a domain name")
+
+        text = "" if declared is None else str(declared)
+
+        if text:
+            try:
+                date.fromisoformat(text)
+            except ValueError as error:
+                raise ValueError(f"{label}: domains.{name} must be a date such as 2027-03-11") from error
+
+        found[name] = text
+
+    return found
 
 
 def _copies(value: Any, label: str) -> dict[str, int]:

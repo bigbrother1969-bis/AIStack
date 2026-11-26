@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 
 from aistack.boot_checks.definition import CRITICAL, IGNORE, WARNING, BootChecksDefinition
 from aistack.architecture.beszel_reading import BeszelSystemReading
+from aistack.boot_checks.expiry import Expiry, ExpiryReading
 from aistack.boot_checks.disks import COUNTERS, LINK_COUNTERS, Disk, DiskReading
 from aistack.boot_checks.facts import BootFacts
 from aistack.boot_checks.monitor import DOWN, MAINTENANCE, WAITING, MonitorReading
@@ -743,6 +744,70 @@ def _restore_tests(reading: RestoreReading | None, definition: BootChecksDefinit
     return failed if failed is not None else _skipped("restore_tests", "restore test findings are ignored")
 
 
+def _expiries(
+    control: str,
+    kind: str,
+    declared: bool,
+    found: tuple[Expiry, ...] | None,
+    soon: int,
+    urgent: int,
+    definition: BootChecksDefinition,
+    now: datetime,
+) -> Result:
+    """
+    What expires (O7): a certificate or a domain ending within `soon` days is to watch, within `urgent` days or past is to fix,
+    one that could not be read is *not read*, never a good date, and one that is read but not to be trusted is to watch.
+    """
+
+    if not declared:
+        return _skipped(control, f"no {kind} declared")
+
+    if found is None:
+        return _skipped(control, f"{kind}s were not read")
+
+    ending: list[tuple[float, str]] = []
+    untrusted: list[str] = []
+    unread: list[str] = []
+    levels: set[str] = set()
+    nearest: float | None = None
+
+    for item in found:
+        if item.ends is None:
+            unread.append(f"{item.name}: not read: {item.reason}")
+            continue
+
+        left = (item.ends - now).total_seconds() / 86400
+        nearest = left if nearest is None else min(nearest, left)
+        day = item.ends.strftime("%Y-%m-%d")
+
+        if left < 0:
+            ending.append((left, f"{item.name}: ended {math.ceil(-left)} day(s) ago ({day})"))
+            levels.add("urgent")
+        elif left <= soon:
+            ending.append((left, f"{item.name}: ends in {math.floor(left)} day(s) ({day})"))
+            levels.add("urgent" if left <= urgent else "soon")
+
+        if item.problem:
+            untrusted.append(f"{item.name}: not trusted: {item.problem}")
+            levels.add("invalid")
+
+    if levels:
+        wrong = "urgent" if "urgent" in levels else "soon" if "soon" in levels else "invalid"
+        action = {
+            "certificate": "to do: renew the certificates above (check the renewal job and its last log)",
+            "domain": "to do: renew the domains above at your registrar (and check that the automatic renewal is on)",
+        }[kind]
+        lines = (*(line for _, line in sorted(ending)), *untrusted, *unread, *((action,) if ending else ()))
+        failed = _fails(control, f"{kind}_{wrong}", f"{len(ending)} {kind}(s) to renew" if ending else f"{len(untrusted)} {kind}(s) not trusted", lines, definition, True)
+
+        return failed if failed is not None else _skipped(control, f"{kind} findings are ignored")
+
+    if unread:
+        return Result(control, UNKNOWN, f"{len(unread)} declared {kind}(s) not read", tuple(unread))
+
+    return _passes(control, f"{len(found)} {kind}(s) valid, the nearest ends in {math.floor(nearest or 0)} day(s)")
+
+
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:
     if reading is None:
         return _skipped(control, f"{name} was not read")
@@ -767,6 +832,7 @@ def evaluate(
     systems: SystemsReading | None = None,
     usage: UsageReading | None = None,
     restore: RestoreReading | None = None,
+    expiry: ExpiryReading | None = None,
 ) -> list[Result]:
     """Every control of the base set, in a stable order."""
 
@@ -787,6 +853,12 @@ def evaluate(
     results.append(_reading("backup", "backup_late", "backup", backup, definition, settled))
     results.append(_copies(facts, definition, now))
     results.append(_restore_tests(restore, definition, now))
+    results.append(
+        _expiries("certificates", "certificate", bool(definition.certificates), expiry.certificates if expiry else None, definition.certificate_days, definition.certificate_urgent_days, definition, now)
+    )
+    results.append(
+        _expiries("domains", "domain", bool(definition.domains), expiry.domains if expiry else None, definition.domain_days, definition.domain_urgent_days, definition, now)
+    )
     results.append(_previous_boot(facts))
 
     return [result for result in results if result is not None]

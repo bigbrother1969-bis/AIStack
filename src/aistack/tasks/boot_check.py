@@ -15,6 +15,7 @@ from aistack.boot_checks.choice import ASK_SECONDS, Ask, Choice, decide, wants_e
 from aistack.boot_checks.explain import explain, markers, standing
 from aistack.boot_checks.controls import Reading, RestoreGap, RestoreReading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
+from aistack.boot_checks.expiry import ExpiryReading, read_expiries
 from aistack.boot_checks.facts import BootFacts, read_facts_file
 from aistack.boot_checks.load import load_boot_checks_yaml
 from aistack.boot_checks.disks import DiskReading, read_disks
@@ -112,7 +113,7 @@ class BootCheckTask:
                 previous = read_verdict(generated_dir)
                 ask = _engine(payload)
                 settled = settled_since(facts, definition, now)
-                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir), _usage(generated_dir, definition, now), _restore(now) if payload.get("cockpit", True) else None)
+                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir), _usage(generated_dir, definition, now), _restore(now) if payload.get("cockpit", True) else None, _expiry(definition) if payload.get("cockpit", True) else None)
 
                 # One budget for everything asked of the engine: the vigil stops a pass at 300 s.
                 deadline = time.monotonic() + ASK_SECONDS
@@ -217,6 +218,15 @@ def _disks(generated_dir: Path) -> DiskReading | None:
     url = read_store(generated_dir).get(SCRUTINY_URL) or os.environ.get(SCRUTINY_URL, "")
 
     return read_disks(url) if url else None
+
+
+def _expiry(definition: BootChecksDefinition) -> ExpiryReading | None:
+    """When the declared certificates and domains end; nothing declared, nothing asked (no network use for nothing)."""
+
+    if not definition.certificates and not definition.domains:
+        return None
+
+    return read_expiries(definition.certificates, definition.domains)
 
 
 def _restore(now: datetime) -> RestoreReading:

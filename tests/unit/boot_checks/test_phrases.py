@@ -134,6 +134,34 @@ def _copy_and_restore_sentences() -> set[str]:
             for result in evaluate(facts(), definition, LATER, restore=restore):
                 said.update([result.summary, *result.details])
 
+    said.update(_expiry_sentences())
+
+    return said
+
+
+def _expiry_sentences() -> set[str]:
+    from datetime import timedelta
+
+    from aistack.boot_checks.expiry import Expiry, ExpiryReading
+
+    said: set[str] = set()
+    wide = BootChecksDefinition(certificates=("a",), domains={"d.example": ""})
+    quiet = BootChecksDefinition(certificates=("a",), domains={"d.example": ""}, severity={name: "ignore" for name in ("certificate_soon", "certificate_urgent", "certificate_invalid", "domain_soon", "domain_urgent")})
+    ends = lambda days, **more: Expiry("a", LATER + timedelta(days=days), **more)  # noqa: E731
+    readings = (
+        None,
+        ExpiryReading((ends(90),), (ends(900),)),
+        ExpiryReading((ends(15),), (ends(40),)),
+        ExpiryReading((ends(3),), (ends(-4),)),
+        ExpiryReading((ends(90, problem="self-signed certificate"),), ()),
+        ExpiryReading((Expiry("a", None, "timed out"),), (Expiry("d.example", None, "the registry does not publish the expiry (RDAP)"),)),
+    )
+
+    for definition in (BootChecksDefinition(), wide, quiet):
+        for reading in readings:
+            for result in evaluate(facts(), definition, LATER, expiry=reading):
+                said.update([result.summary, *result.details])
+
     return said
 
 

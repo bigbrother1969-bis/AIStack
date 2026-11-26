@@ -91,6 +91,29 @@ copies: {}
 #     rescue-image: 9
 #     snapshots: 3
 
+# What expires (O7). The certificates you serve: a host name (`host` or `host:port`, asked
+# for the certificate it presents, so what visitors see) or the absolute path of a PEM
+# file (a wildcard certificate a reverse proxy keeps in a folder; the first certificate of
+# the file is the one read). Only when it ends is read, never its subject. Ending within
+# `certificate_days` is to watch, within `certificate_urgent_days` or past is to fix; a
+# certificate a browser would not trust (another name, a chain that leads nowhere) is to
+# watch. The domains you rent: a name is asked of its registry (RDAP, the public successor
+# of whois, at most twice a day); for a registry that publishes no expiry, give the date to
+# use by hand. One that cannot be read is "not read", never fine. Nothing is declared by
+# default, so nothing is asked on the network.
+certificates: []
+#   certificates:
+#     - www.example.org
+#     - /srv/proxy/data/custom_ssl/npm-1/fullchain.pem
+certificate_days: 21
+certificate_urgent_days: 7
+domains: {}
+#   domains:
+#     example.org:
+#     example.eu: 2027-03-01
+domain_days: 60
+domain_urgent_days: 14
+
 # How many rules the DOCKER-USER chain holds after a start. Leave it out to
 # skip the control.
 # docker_user_rules: 7
@@ -136,6 +159,11 @@ severity:
   copy_missing: critical
   restore_test_failed: critical
   restore_test_old: warning
+  certificate_soon: warning
+  certificate_urgent: critical
+  certificate_invalid: warning
+  domain_soon: warning
+  domain_urgent: critical
 
 # Also check the companion machines the instance declares in hosts.yml (each
 # has its own indicator, same rules). A companion is judged from the facts its

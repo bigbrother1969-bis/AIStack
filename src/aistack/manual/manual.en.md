@@ -1109,6 +1109,16 @@ start, so a green badge does not hide what happened. Without a session the
 badge keeps its plain label and says nothing about the state. Nothing is
 sent to Gotify at this stage.
 
+**Uptime Kuma.** With its address and an API key entered in Settings
+(*Uptime Kuma — address* and *API key*; in Uptime Kuma: Settings → API Keys),
+the checks read the state of its monitors with one request on `/metrics` and
+show them as one more control: a monitor that is down is to watch, and so is
+one of `expected_monitors` that is missing. Uptime Kuma does not publish a
+paused monitor, so a paused one counts as missing. Without the address and the
+key the control says it is not connected. Note that once Uptime Kuma has a first
+API key it no longer accepts the user name and password on `/metrics`.
+`boot_check --suggest` prints `expected_monitors` from what it reads.
+
 **A second machine.** The same unit runs on a companion machine (a single-board computer,
 say): the script is a single file of the standard library, no copy of AIStack
 is needed. Install it as above, with `OUTPUT` (and the same path in

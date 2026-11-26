@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -10,8 +11,10 @@ from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, read_facts_file
 from aistack.boot_checks.load import load_boot_checks_yaml
+from aistack.boot_checks.monitor import MonitorReading, read_monitors
 from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
 from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_verdict
+from aistack.api_keys import read_store
 from aistack.config import PACKAGE_ROOT, configured
 from aistack.hosts.records import TracedHost, load_hosts_declaration
 from aistack.kernel.execution import Observation, ObservationContext, Request
@@ -76,6 +79,11 @@ class BootCheckTask:
         if payload.get("suggest"):
             if facts is not None:
                 text = suggestion(facts)
+                names = _monitors(generated_dir)
+
+                if names is not None and names.reachable:
+                    text += "\nexpected_monitors: [" + ", ".join(sorted(names.monitors)) + "]"
+
                 shown = _companion_facts(companions, definition, now)
 
                 if shown:
@@ -87,7 +95,8 @@ class BootCheckTask:
                 verdict = unknown(now, note)
             else:
                 storage, backup = cockpit_readings(_hostname()) if payload.get("cockpit", True) else (None, None)
-                verdict = judge(evaluate(facts, definition, now, storage, backup), facts, now, read_verdict(generated_dir))
+                monitors = _monitors(generated_dir)
+                verdict = judge(evaluate(facts, definition, now, storage, backup, monitors), facts, now, read_verdict(generated_dir))
 
             if not payload.get("dry_run"):
                 write_verdict(generated_dir, verdict)
@@ -114,6 +123,23 @@ class BootCheckTask:
             ),
             data=data,
         )
+
+
+KUMA_URL = "AISTACK_KUMA_URL"
+KUMA_KEY = "AISTACK_KUMA_API_KEY"
+
+
+def _monitors(generated_dir: Path) -> MonitorReading | None:
+    """What Uptime Kuma says, when its address and an API key are set (Settings, or the environment); `None` when they are not."""
+
+    stored = read_store(generated_dir)
+    url = stored.get(KUMA_URL) or os.environ.get(KUMA_URL, "")
+    key = stored.get(KUMA_KEY) or os.environ.get(KUMA_KEY, "")
+
+    if not url or not key:
+        return None
+
+    return read_monitors(url, key)
 
 
 def _companion_folders(generated_dir: Path, hosts_file: object = None) -> list[TracedHost]:

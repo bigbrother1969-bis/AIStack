@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 
 from aistack.boot_checks.definition import CRITICAL, IGNORE, WARNING, BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts
+from aistack.boot_checks.monitor import DOWN, MAINTENANCE, WAITING, MonitorReading
 
 OK = "ok"
 PENDING = "pending"
@@ -310,6 +311,38 @@ def evaluate_companion(
     return [result for result in results if result is not None]
 
 
+def _monitors(reading: MonitorReading | None, definition: BootChecksDefinition, settled: bool) -> Result:
+    """Uptime Kuma: a monitor that is down, and (with a reference list) one that is missing or paused."""
+
+    if reading is None:
+        return _skipped("monitor", "Uptime Kuma is not connected (its address and an API key, in Settings)")
+
+    if not reading.reachable:
+        return Result("monitor", UNKNOWN, f"not read: {reading.reason}")
+
+    names = reading.monitors
+    down = tuple(sorted(name for name, status in names.items() if status == DOWN))
+    waiting = tuple(sorted(name for name, status in names.items() if status == WAITING))
+    missing = tuple(name for name in definition.expected_monitors if name not in names)
+    broken = (*down, *missing)
+
+    if broken:
+        parts = [f"{len(down)} down" if down else "", f"{len(missing)} missing or paused" if missing else ""]
+        failed = _fails("monitor", "monitor_down", ", ".join(part for part in parts if part), broken, definition, settled)
+
+        return failed if failed is not None else _skipped("monitor", "monitor findings are ignored")
+
+    if waiting:
+        return _fails("monitor", "monitor_down", f"{len(waiting)} monitor(s) still pending", waiting, definition, settled) or _skipped(
+            "monitor", "monitor findings are ignored"
+        )
+
+    running = sum(1 for status in names.values() if status != MAINTENANCE)
+    note = "" if definition.expected_monitors else " (no reference list declared)"
+
+    return _passes("monitor", f"{running} monitor(s) up, none down{note}")
+
+
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:
     if reading is None:
         return _skipped(control, f"{name} was not read")
@@ -329,6 +362,7 @@ def evaluate(
     now: datetime,
     storage: Reading | None = None,
     backup: Reading | None = None,
+    monitors: MonitorReading | None = None,
 ) -> list[Result]:
     """Every control of the base set, in a stable order."""
 
@@ -340,6 +374,7 @@ def evaluate(
     for check in (_docker_user, _probes, _kvm, _ups):
         results.append(check(facts, definition, settled))
 
+    results.append(_monitors(monitors, definition, settled))
     results.append(_reading("storage", "storage_low", "storage", storage, definition, settled))
     results.append(_reading("backup", "backup_late", "backup", backup, definition, settled))
     results.append(_previous_boot(facts))

@@ -124,8 +124,8 @@ checked.
   healthy host. It reads, it never acts.
 - **On the Raspberry**: through the collector of `ADR-0020`, as another
   file pushed into the data directory; no SSH from AIStack.
-- **The monitor** (Uptime Kuma) is read through a way to be chosen in the
-  slice that needs it (an API key or a status page).
+- **The monitor** (Uptime Kuma) is read through an API key entered in
+  Settings (decided 2026-11-26, slice B4b): one request on `/metrics`.
 
 ### 6. The declaration
 
@@ -164,7 +164,7 @@ fresh facts the verdict is *unknown*, never green.
 
 1. The severities and the reference list shipped as examples, to be fixed
    with the first facts read.
-2. How AIStack reads Uptime Kuma (API key or status page).
+2. How AIStack reads Uptime Kuma: decided 2026-11-26 by the owner, an API key (slice B4b).
 3. Whether the absence of KVM modules is ever a finding (shipped: ignored).
 4. Whether the indicator should weigh in the score after a period of use.
 
@@ -177,5 +177,6 @@ fresh facts the verdict is *unknown*, never green.
 | B2: the base controls (units, mounts, containers, health, `DOCKER-USER`, probes, KVM, UPS, disks and backups read from the cockpit), the deterministic verdict, the incidents since the start, the Task `boot.check` run by the Runtime through `boot_check --once` and `--suggest`; Uptime Kuma and Timeshift not yet | done, 2026-11-26 |
 | B3: the indicator in the health strip (a static label the signed-in page fills from `/boot-state`, the time since the start counted at each load, a verdict older than 40 minutes read as *not judged*), the page `/boot-check/`, the console card, a pass of the vigil, the manuals; no new writer | done, 2026-11-26 |
 | B4: a companion machine through the collector: the same host unit writes its facts (plus the power and temperature flags and whether the clock is set) in its `boot` folder, the push brings them to the MSI, `boot.check` judges each in a verdict file of its own (reachable, failed units, declared mounts, throttled, clock), a pill and a part of the page per machine; no new writer | done, 2026-11-26 |
+| B4b: Uptime Kuma read through an API key entered in Settings (`/metrics`, Basic, one request); a monitor down or missing from `expected_monitors` is `monitor_down`; a paused monitor is not published and counts as missing; no key means skipped; no new writer | done, 2026-11-26 |
 | B5: the AI choice in the closed catalogue and the explanations | not started |
 | B6: the morning Gotify summary | not started |

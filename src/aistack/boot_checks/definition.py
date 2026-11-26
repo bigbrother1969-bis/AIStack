@@ -67,6 +67,8 @@ class BootChecksDefinition:
     expected_containers: tuple[str, ...] = ()
     expected_stopped: tuple[str, ...] = ()
     mounts: tuple[str, ...] = ()
+    # The Uptime Kuma monitors that must be running after a start (by name); empty = no reference list.
+    expected_monitors: tuple[str, ...] = ()
     docker_user_rules: int | None = None
     # label -> the HTTP status the host's probe of that label must answer.
     probes: dict[str, int] = field(default_factory=dict)

@@ -56,6 +56,7 @@ control:
   failed_units: "Unités en échec"
   mounts: "Montages"
   reachable: "Joignable"
+  monitor: "Sondes Uptime Kuma"
   throttled: "Alimentation et température"
   clock: "Horloge"
   containers: "Conteneurs présents"

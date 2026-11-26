@@ -44,6 +44,7 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
             data.get("expected_stopped"), f"{label}: expected_stopped"
         ),
         mounts=_paths(data.get("mounts"), f"{label}: mounts"),
+        expected_monitors=_names(data.get("expected_monitors"), f"{label}: expected_monitors"),
         docker_user_rules=_optional_count(data, "docker_user_rules", label),
         probes=_probes(data.get("probes"), label),
         ups_expected=_ups(data.get("ups_expected"), defaults.ups_expected, label),

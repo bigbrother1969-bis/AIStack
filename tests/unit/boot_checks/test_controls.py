@@ -11,6 +11,7 @@ import pytest
 from aistack.boot_checks.controls import INFORMATION, OK, PENDING, SKIPPED, UNKNOWN, Reading, Result, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, Container
+from aistack.boot_checks.monitor import MonitorReading
 from aistack.boot_checks.state import judge, overall, read_verdict, unknown, write_verdict
 from aistack.cli import boot_check
 
@@ -56,7 +57,8 @@ def test_the_morning_of_26_november_is_green_with_the_past_told_as_information()
     found = by_control(results)
 
     assert overall(results) == OK
-    assert all(result.status in (OK, INFORMATION) for result in results)
+    assert all(result.status in (OK, INFORMATION) for result in results if result.control != "monitor")
+    assert found["monitor"].status == SKIPPED and "not connected" in found["monitor"].summary
     assert found["previous_boot"].status == INFORMATION and "did not end" in found["previous_boot"].summary
     assert found["containers"].summary == "3 expected present, 2 running"
     assert "kvm_modules" in found and found["kvm_modules"].status == OK
@@ -336,3 +338,46 @@ def test_a_host_name_that_is_not_plain_is_refused_and_the_suggestion_names_the_c
 
     assert boot_check.main(["--facts", str(tmp_path / "facts"), "--hosts", str(hosts), "--suggest"]) == 0
     assert "companion_mounts:\n  backup-host: [/, /media/BACKUP]" in capsys.readouterr().out
+
+
+# -- Uptime Kuma (B4b) ---------------------------------------------------------------------------
+
+
+def kuma(*, reachable: bool = True, reason: str = "", **monitors: int) -> MonitorReading:
+    return MonitorReading(reachable, reason, {name.replace("_", " "): status for name, status in monitors.items()})
+
+
+def monitor_of(reading: MonitorReading | None, definition: BootChecksDefinition = DEFINITION, now: datetime = LATER) -> Result:
+    return by_control(evaluate(facts(), definition, now, Reading(True, 0), Reading(True, 0), reading))["monitor"]
+
+
+def test_monitors_that_are_all_up_pass_and_say_when_there_is_no_reference_list() -> None:
+    result = monitor_of(kuma(plex=1, gitea=1, backup=3))
+
+    assert result.status == OK and result.summary == "2 monitor(s) up, none down (no reference list declared)"
+
+
+def test_a_monitor_that_is_down_or_missing_from_the_reference_list_is_to_fix_by_name() -> None:
+    declared = BootChecksDefinition(expected_monitors=("plex", "gitea", "paused one"))
+    result = monitor_of(kuma(plex=0, gitea=1), declared)
+
+    assert result.status == "warning" and result.finding == "monitor_down"
+    assert result.summary == "1 down, 1 missing or paused" and result.details == ("plex", "paused one")
+
+
+def test_a_monitor_still_pending_waits_and_before_the_settle_time_nothing_is_an_anomaly() -> None:
+    assert monitor_of(kuma(plex=2)).status == "warning"
+    assert monitor_of(kuma(plex=0), now=BOOT + timedelta(minutes=2)).status == PENDING
+
+
+def test_kuma_that_did_not_answer_is_unknown_and_one_not_connected_is_skipped_never_a_pass() -> None:
+    refused = monitor_of(kuma(reachable=False, reason="the API key was refused"))
+
+    assert refused.status == UNKNOWN and refused.summary == "not read: the API key was refused"
+    assert monitor_of(None).status == SKIPPED
+
+
+def test_a_monitor_finding_the_owner_ignores_is_not_a_failure() -> None:
+    ignored = BootChecksDefinition(severity={"monitor_down": "ignore"})
+
+    assert monitor_of(kuma(plex=0), ignored).status == SKIPPED

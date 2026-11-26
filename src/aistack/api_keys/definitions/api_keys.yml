@@ -141,3 +141,26 @@ keys:
         - "Le mot de passe de ce compte Beszel."
       en:
         - "That Beszel account's password."
+  - name: AISTACK_KUMA_URL
+    title: {fr: "Uptime Kuma — adresse", en: "Uptime Kuma — address"}
+    used_by: {fr: "Contrôles du démarrage (état des sondes d'Uptime Kuma)", en: "Start-up checks (the state of Uptime Kuma's monitors)"}
+    applies: {fr: "au prochain passage de la vigie (15 min au plus)", en: "at the vigil's next pass (15 min at most)"}
+    secret: false
+    procedure:
+      fr:
+        - "Facultatif, si Uptime Kuma surveille tes machines : son adresse vue du serveur AIStack (par exemple http://adresse:3001), sans /metrics."
+      en:
+        - "Optional, if Uptime Kuma watches your machines: its address as the AIStack server sees it (for example http://address:3001), without /metrics."
+  - name: AISTACK_KUMA_API_KEY
+    title: {fr: "Uptime Kuma — clé d'API", en: "Uptime Kuma — API key"}
+    used_by: {fr: "Contrôles du démarrage (état des sondes d'Uptime Kuma)", en: "Start-up checks (the state of Uptime Kuma's monitors)"}
+    applies: {fr: "au prochain passage de la vigie (15 min au plus)", en: "at the vigil's next pass (15 min at most)"}
+    procedure:
+      fr:
+        - "Uptime Kuma → Paramètres → Clés d'API → « Ajouter une clé d'API », nom « AIStack », sans date d'expiration → copie la clé (elle commence par uk) et colle-la ici : elle n'est montrée qu'une fois."
+        - "Attention : dès la première clé d'API, Uptime Kuma n'accepte plus l'identifiant et le mot de passe sur /metrics ; un outil qui les y utilisait doit passer à une clé."
+        - "AIStack ne fait que lire l'état des sondes (une requête sur /metrics). Une sonde en pause n'est pas publiée par Uptime Kuma : elle compte comme absente."
+      en:
+        - "Uptime Kuma → Settings → API Keys → \"Add API Key\", named \"AIStack\", with no expiry → copy the key (it starts with uk) and paste it here: it is shown only once."
+        - "Note: once there is a first API key, Uptime Kuma no longer accepts the user name and password on /metrics; a tool that used them there must switch to a key."
+        - "AIStack only reads the monitors' state (one request on /metrics). A paused monitor is not published by Uptime Kuma: it counts as missing."

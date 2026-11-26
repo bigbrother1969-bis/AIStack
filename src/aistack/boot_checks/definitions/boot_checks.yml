@@ -27,6 +27,13 @@ expected_stopped: []
 # Paths that must be mounted after a start (absolute).
 mounts: []
 
+# The Uptime Kuma monitors that must be running after a start, by name. Needs
+# the address and an API key of Uptime Kuma in Settings; without them the
+# control is skipped. A paused monitor is not published by Uptime Kuma, so it
+# counts as missing. Empty = no reference list: a monitor that is down is still
+# a finding.
+expected_monitors: []
+
 # How many rules the DOCKER-USER chain holds after a start. Leave it out to
 # skip the control.
 # docker_user_rules: 7

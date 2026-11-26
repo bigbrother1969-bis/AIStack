@@ -1168,6 +1168,17 @@ listé, marqué *résolu*, jusqu'au prochain démarrage : une pastille verte ne
 cache pas ce qui s'est passé. Sans session, la pastille garde son libellé
 simple et ne dit rien de l'état. Rien n'est envoyé à Gotify à ce stade.
 
+**Uptime Kuma.** Avec son adresse et une clé d'API saisies dans les Réglages
+(*Uptime Kuma — adresse* et *clé d'API* ; dans Uptime Kuma : Paramètres → Clés
+d'API), les contrôles lisent l'état de ses sondes par une requête sur
+`/metrics` et l'affichent comme un contrôle de plus : une sonde en échec est à
+surveiller, de même qu'une sonde de `expected_monitors` qui manque. Uptime Kuma
+ne publie pas une sonde en pause : une sonde en pause compte donc comme
+absente. Sans l'adresse et la clé, le contrôle dit qu'il n'est pas connecté.
+Attention : dès sa première clé d'API, Uptime Kuma n'accepte plus
+l'identifiant et le mot de passe sur `/metrics`. `boot_check --suggest` affiche
+`expected_monitors` d'après ce qu'il lit.
+
 **Une seconde machine.** La même unité tourne sur une machine compagnon (un
 ordinateur monocarte, par exemple) : le script est un seul fichier de la bibliothèque
 standard, aucune copie d'AIStack n'est nécessaire. Installe-le comme

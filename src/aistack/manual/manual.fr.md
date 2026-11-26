@@ -1179,6 +1179,8 @@ Attention : dès sa première clé d'API, Uptime Kuma n'accepte plus
 l'identifiant et le mot de passe sur `/metrics`. `boot_check --suggest` affiche
 `expected_monitors` d'après ce qu'il lit.
 
+**Santé des disques (Scrutiny).** Avec l'adresse de Scrutiny saisie dans les Réglages (*Scrutiny — adresse*, par exemple `http://127.0.0.1:8110` ; aucune clé), les contrôles lisent les relevés SMART des disques (quelques requêtes en lecture) et affichent un contrôle « Santé des disques ». Un **échec SMART** est à corriger ; un attribut critique au-dessus de zéro (secteurs réalloués, en attente ou non corrigeables, relances de rotation) est à surveiller. Le reste est dit sans alerter : les disques que les seules statistiques de Scrutiny signalent, et, si tu déclares `disk_old_hours`, les disques anciens. Les compteurs comme les erreurs CRC ne comptent que s'ils augmentent : un historique le dira plus tard. Un disque archivé dans Scrutiny n'est pas jugé ; un disque est connu par son WWN et non par `sda`, et le champ `smart_support` de Scrutiny, faux même pour des disques lus, n'est pas utilisé. Un relevé plus vieux que `disk_report_hours` (36 par défaut ; Scrutiny relève une fois par jour) ou un disque sans attributs est « non lu », jamais sain. Sans l'adresse, le contrôle dit qu'il n'est pas connecté.
+
 **Le résumé du matin.** À l'heure de `summary.at` (08:00 par défaut, dans le
 fuseau du condensé de sécurité), et seulement à ce moment, la vigie envoie un
 message Gotify : pour chaque machine, depuis combien de temps tout va bien ou ce

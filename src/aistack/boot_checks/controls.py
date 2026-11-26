@@ -22,6 +22,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 
 from aistack.boot_checks.definition import CRITICAL, IGNORE, WARNING, BootChecksDefinition
+from aistack.boot_checks.disks import Disk, DiskReading
 from aistack.boot_checks.facts import BootFacts
 from aistack.boot_checks.monitor import DOWN, MAINTENANCE, WAITING, MonitorReading
 
@@ -355,6 +356,62 @@ def _monitors(reading: MonitorReading | None, definition: BootChecksDefinition, 
     return _passes("monitor", f"{running} monitor(s) up, none down{note}")
 
 
+def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: datetime) -> Result:
+    """Scrutiny: a SMART failure is to fix, a critical attribute above zero is to watch; age and statistics are only said."""
+
+    if reading is None:
+        return _skipped("disks", "Scrutiny is not connected (its address, in Settings)")
+
+    if not reading.reachable:
+        return Result("disks", UNKNOWN, f"not read: {reading.reason}")
+
+    active = [disk for disk in reading.disks if not disk.archived]
+
+    if not active:
+        return Result("disks", UNKNOWN, "not read: Scrutiny reports no active disk")
+
+    limit = timedelta(hours=definition.disk_report_hours)
+    stale = [disk for disk in active if disk.collected_at is None or now - disk.collected_at > limit]
+    fresh = [disk for disk in active if disk not in stale]
+    unread = [disk for disk in fresh if not disk.attributes_read]
+    failing = [disk for disk in fresh if disk.failed_smart]
+    worn = [disk for disk in fresh if disk.worn and not disk.failed_smart]
+    old = [disk for disk in fresh if definition.disk_old_hours is not None and disk.hours is not None and disk.hours >= definition.disk_old_hours]
+    hint = [disk for disk in fresh if disk.statistical and not disk.failed_smart and not disk.worn]
+
+    def names(group: list[Disk]) -> tuple[str, ...]:
+        return tuple(disk.label for disk in group)
+
+    head = f"{len(active)} disk(s) read" + ("" if failing or worn else ", none failing")
+    parts = [
+        f"{len(failing)} failing SMART" if failing else "",
+        f"{len(worn)} with a critical SMART attribute above zero" if worn else "",
+        f"{len(stale)} not reported for over {definition.disk_report_hours} h" if stale else "",
+        f"{len(unread)} without readable attributes" if unread else "",
+        f"{len(old)} old" if old else "",
+        f"{len(hint)} flagged only by Scrutiny's statistics" if hint else "",
+    ]
+    summary = "; ".join([head, *(part for part in parts if part)])
+
+    if failing:
+        failed = _fails("disks", "disk_failing", summary, names(failing + worn), definition, True)
+
+        return failed if failed is not None else _skipped("disks", "disk findings are ignored")
+
+    if worn:
+        failed = _fails("disks", "disk_attribute", summary, names(worn), definition, True)
+
+        return failed if failed is not None else _skipped("disks", "disk findings are ignored")
+
+    if stale or unread:
+        return Result("disks", UNKNOWN, summary, names(stale + unread)[:MAX_DETAILS])
+
+    if old or hint:
+        return Result("disks", INFORMATION, summary, names(old + [disk for disk in hint if disk not in old])[:MAX_DETAILS])
+
+    return _passes("disks", summary)
+
+
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:
     if reading is None:
         return _skipped(control, f"{name} was not read")
@@ -375,6 +432,7 @@ def evaluate(
     storage: Reading | None = None,
     backup: Reading | None = None,
     monitors: MonitorReading | None = None,
+    disks: DiskReading | None = None,
 ) -> list[Result]:
     """Every control of the base set, in a stable order."""
 
@@ -387,6 +445,7 @@ def evaluate(
         results.append(check(facts, definition, settled))
 
     results.append(_monitors(monitors, definition, settled))
+    results.append(_disks(disks, definition, now))
     results.append(_reading("storage", "storage_low", "storage", storage, definition, settled))
     results.append(_reading("backup", "backup_late", "backup", backup, definition, settled))
     results.append(_previous_boot(facts))

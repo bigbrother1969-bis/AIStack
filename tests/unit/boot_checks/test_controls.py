@@ -57,8 +57,9 @@ def test_the_morning_of_26_november_is_green_with_the_past_told_as_information()
     found = by_control(results)
 
     assert overall(results) == OK
-    assert all(result.status in (OK, INFORMATION) for result in results if result.control != "monitor")
+    assert all(result.status in (OK, INFORMATION) for result in results if result.control not in ("monitor", "disks"))
     assert found["monitor"].status == SKIPPED and "not connected" in found["monitor"].summary
+    assert found["disks"].status == SKIPPED and "Scrutiny is not connected" in found["disks"].summary
     assert found["previous_boot"].status == INFORMATION and "did not end" in found["previous_boot"].summary
     assert found["containers"].summary == "3 expected present, 2 running"
     assert "kvm_modules" in found and found["kvm_modules"].status == OK

@@ -164,3 +164,15 @@ keys:
         - "Uptime Kuma → Settings → API Keys → \"Add API Key\", named \"AIStack\", with no expiry → copy the key (it starts with uk) and paste it here: it is shown only once."
         - "Note: once there is a first API key, Uptime Kuma no longer accepts the user name and password on /metrics; a tool that used them there must switch to a key."
         - "AIStack only reads the monitors' state (one request on /metrics). A paused monitor is not published by Uptime Kuma: it counts as missing."
+  - name: AISTACK_SCRUTINY_URL
+    title: {fr: "Scrutiny — adresse", en: "Scrutiny — address"}
+    used_by: {fr: "Contrôles du démarrage (santé SMART des disques)", en: "Start-up checks (the disks' SMART health)"}
+    applies: {fr: "au prochain passage de la vigie (15 min au plus)", en: "at the vigil's next pass (15 min at most)"}
+    secret: false
+    procedure:
+      fr:
+        - "Facultatif, si Scrutiny surveille tes disques : son adresse vue du serveur AIStack (par exemple http://127.0.0.1:8110), sans /api."
+        - "AIStack ne fait que lire (quelques requêtes sur /api/summary et /api/device/…/details) et ne demande aucune clé. Un disque archivé dans Scrutiny n'est pas jugé."
+      en:
+        - "Optional, if Scrutiny watches your disks: its address as the AIStack server sees it (for example http://127.0.0.1:8110), without /api."
+        - "AIStack only reads (a few requests on /api/summary and /api/device/…/details) and needs no key. A disk archived in Scrutiny is not judged."

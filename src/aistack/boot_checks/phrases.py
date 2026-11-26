@@ -61,6 +61,16 @@ RULES: tuple[tuple[str, str], ...] = (
     ("monitor_ignored", r"monitor findings are ignored"),
     ("monitor_up", r"(?P<n>\d+) monitor\(s\) up, none down"),
     ("monitor_up_no_list", r"(?P<n>\d+) monitor\(s\) up, none down \(no reference list declared\)"),
+    ("disks_not_connected", r"Scrutiny is not connected \(its address, in Settings\)"),
+    ("disks_ignored", r"disk findings are ignored"),
+    ("disks_head_ok", r"(?P<n>\d+) disk\(s\) read, none failing"),
+    ("disks_head", r"(?P<n>\d+) disk\(s\) read"),
+    ("disks_failing", r"(?P<n>\d+) failing SMART"),
+    ("disks_worn", r"(?P<n>\d+) with a critical SMART attribute above zero"),
+    ("disks_stale", r"(?P<n>\d+) not reported for over (?P<hours>\d+) h"),
+    ("disks_unread", r"(?P<n>\d+) without readable attributes"),
+    ("disks_old", r"(?P<n>\d+) old"),
+    ("disks_statistics", r"(?P<n>\d+) flagged only by Scrutiny's statistics"),
     ("domain_not_read", r"(?P<domain>storage|backup) was not read"),
     ("domain_not_instrumented", r"(?P<domain>storage|backup) is not instrumented on this host"),
     ("domain_findings", r"(?P<n>\d+) finding\(s\) in the (?P<domain>storage|backup) domain"),
@@ -109,6 +119,27 @@ def _monitor_broken(t: Callable[..., str], text: str) -> str | None:
     return f"{', '.join(parts)} ({found['names']})" if found["names"] else ", ".join(parts)
 
 
+def _disks_summary(t: Callable[..., str], text: str) -> str | None:
+    """`8 disk(s) read; 1 failing SMART; 2 old`: each part is told on its own, `None` when one of them is not the program's."""
+
+    if not re.match(r"\d+ disk\(s\) read", text):
+        return None
+
+    told = []
+
+    for part in text.split("; "):
+        for key, pattern in _COMPILED:
+            found = pattern.fullmatch(part) if key.startswith("disks_") else None
+
+            if found is not None:
+                told.append(t(f"boot_check.phrase.{key}", **found.groupdict()))
+                break
+        else:
+            return None
+
+    return "; ".join(told)
+
+
 def say(t: Callable[..., str], text: str) -> str:
     """The sentence in the language of `t`, or the sentence itself when it is not one of the program's own."""
 
@@ -116,6 +147,11 @@ def say(t: Callable[..., str], text: str) -> str:
 
     if broken is not None:
         return broken
+
+    disks = _disks_summary(t, text)
+
+    if disks is not None:
+        return disks
 
     for key, pattern in _COMPILED:
         found = pattern.fullmatch(text)

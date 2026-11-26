@@ -17,6 +17,7 @@ from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, read_facts_file
 from aistack.boot_checks.load import load_boot_checks_yaml
+from aistack.boot_checks.disks import DiskReading, read_disks
 from aistack.boot_checks.monitor import MonitorReading, read_monitors
 from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
 from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_verdict
@@ -106,7 +107,7 @@ class BootCheckTask:
                 previous = read_verdict(generated_dir)
                 ask = _engine(payload)
                 settled = settled_since(facts, definition, now)
-                base = evaluate(facts, definition, now, storage, backup, monitors)
+                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir))
 
                 # One budget for everything asked of the engine: the vigil stops a pass at 300 s.
                 deadline = time.monotonic() + ASK_SECONDS
@@ -200,6 +201,17 @@ def _monitors(generated_dir: Path) -> MonitorReading | None:
         return None
 
     return read_monitors(url, key)
+
+
+SCRUTINY_URL = "AISTACK_SCRUTINY_URL"
+
+
+def _disks(generated_dir: Path) -> DiskReading | None:
+    """What Scrutiny says of the disks, when its address is set (Settings, or the environment); `None` when it is not."""
+
+    url = read_store(generated_dir).get(SCRUTINY_URL) or os.environ.get(SCRUTINY_URL, "")
+
+    return read_disks(url) if url else None
 
 
 def _companion_folders(generated_dir: Path, hosts_file: object = None) -> list[TracedHost]:

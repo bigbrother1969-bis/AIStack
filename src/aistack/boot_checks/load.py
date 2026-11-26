@@ -49,6 +49,8 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         ),
         mounts=_paths(data.get("mounts"), f"{label}: mounts"),
         expected_monitors=_names(data.get("expected_monitors"), f"{label}: expected_monitors"),
+        disk_report_hours=_positive_int(data, "disk_report_hours", defaults.disk_report_hours, label),
+        disk_old_hours=_optional_count(data, "disk_old_hours", label),
         docker_user_rules=_optional_count(data, "docker_user_rules", label),
         probes=_probes(data.get("probes"), label),
         ups_expected=_ups(data.get("ups_expected"), defaults.ups_expected, label),

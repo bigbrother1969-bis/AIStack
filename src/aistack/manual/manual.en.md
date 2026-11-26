@@ -1119,6 +1119,8 @@ key the control says it is not connected. Note that once Uptime Kuma has a first
 API key it no longer accepts the user name and password on `/metrics`.
 `boot_check --suggest` prints `expected_monitors` from what it reads.
 
+**Disk health (Scrutiny).** With Scrutiny's address entered in Settings (*Scrutiny — address*, for example `http://127.0.0.1:8110`; no key), the checks read the disks' SMART readings (a few read requests) and show a "Disk health" control. A **SMART failure** is to fix; a critical attribute above zero (reallocated, pending or uncorrectable sectors, spin retries) is to watch. The rest is said without alerting: the disks that only Scrutiny's statistics flag and, if you declare `disk_old_hours`, the old disks. Counters such as CRC errors only count when they grow: a history will say so later. A disk archived in Scrutiny is not judged; a disk is known by its WWN, not by `sda`, and Scrutiny's `smart_support` field, false even for disks it reads, is not used. A report older than `disk_report_hours` (36 by default; Scrutiny reads once a day) or a disk without attributes is "not read", never healthy. Without the address, the control says it is not connected.
+
 **The morning summary.** At the hour of `summary.at` (08:00 by default, in the
 time zone of the security digest), and only then, the vigil sends one Gotify
 message: for each machine, how long all has been well or what is to watch, and

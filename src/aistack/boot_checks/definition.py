@@ -24,6 +24,8 @@ FINDINGS = (
     "probe_failed",
     "ups_on_battery",
     "monitor_down",
+    "disk_failing",
+    "disk_attribute",
     "companion_unreachable",
     "companion_throttled",
     "database_recovery",
@@ -57,6 +59,8 @@ DEFAULT_SEVERITY = {
     "probe_failed": CRITICAL,
     "ups_on_battery": WARNING,
     "monitor_down": WARNING,
+    "disk_failing": CRITICAL,
+    "disk_attribute": WARNING,
     "companion_unreachable": CRITICAL,
     "companion_throttled": WARNING,
     "database_recovery": WARNING,
@@ -87,6 +91,10 @@ class BootChecksDefinition:
     mounts: tuple[str, ...] = ()
     # The Uptime Kuma monitors that must be running after a start (by name); empty = no reference list.
     expected_monitors: tuple[str, ...] = ()
+    # Scrutiny: a disk with no report for this many hours is not read; one with at least `disk_old_hours` of use is said
+    # to be old (`None` = say nothing of age).
+    disk_report_hours: int = 36
+    disk_old_hours: int | None = None
     docker_user_rules: int | None = None
     # label -> the HTTP status the host's probe of that label must answer.
     probes: dict[str, int] = field(default_factory=dict)

@@ -34,6 +34,14 @@ mounts: []
 # a finding.
 expected_monitors: []
 
+# Scrutiny (the disks' SMART readings; its address is set in Settings, without it the
+# control is skipped). A disk whose last report is older than this many hours is not
+# read; a disk with at least `disk_old_hours` of use is said to be old (leave it out
+# to say nothing of age). A SMART failure is to fix; a critical attribute above zero
+# (reallocated, pending or uncorrectable sectors, spin retries) is to watch.
+disk_report_hours: 36
+# disk_old_hours: 50000
+
 # How many rules the DOCKER-USER chain holds after a start. Leave it out to
 # skip the control.
 # docker_user_rules: 7
@@ -64,6 +72,8 @@ severity:
   probe_failed: critical
   ups_on_battery: warning
   monitor_down: warning
+  disk_failing: critical
+  disk_attribute: warning
   companion_unreachable: critical
   companion_throttled: warning
 

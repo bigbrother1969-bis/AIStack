@@ -60,7 +60,7 @@ def parse_metrics(text: str) -> dict[str, int]:
     return found
 
 
-def read_monitors(url: str, api_key: str, timeout: float = 8.0) -> MonitorReading:
+def read_monitors(url: str, api_key: str, timeout: float = 20.0) -> MonitorReading:
     """One request to `<url>/metrics`; unreachable is a state with a reason, never an exception."""
 
     token = base64.b64encode(f":{api_key}".encode()).decode()

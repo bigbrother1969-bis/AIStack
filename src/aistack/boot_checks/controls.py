@@ -311,6 +311,18 @@ def evaluate_companion(
     return [result for result in results if result is not None]
 
 
+NAMED = 4
+
+
+def _named(names: tuple[str, ...]) -> str:
+    """The first monitors by name, so an incident says which ones and not only how many."""
+
+    shown = ", ".join(names[:NAMED])
+    more = f", +{len(names) - NAMED}" if len(names) > NAMED else ""
+
+    return f" ({shown}{more})"
+
+
 def _monitors(reading: MonitorReading | None, definition: BootChecksDefinition, settled: bool) -> Result:
     """Uptime Kuma: a monitor that is down, and (with a reference list) one that is missing or paused."""
 
@@ -328,7 +340,7 @@ def _monitors(reading: MonitorReading | None, definition: BootChecksDefinition, 
 
     if broken:
         parts = [f"{len(down)} down" if down else "", f"{len(missing)} missing or paused" if missing else ""]
-        failed = _fails("monitor", "monitor_down", ", ".join(part for part in parts if part), broken, definition, settled)
+        failed = _fails("monitor", "monitor_down", ", ".join(part for part in parts if part) + _named(broken), broken, definition, settled)
 
         return failed if failed is not None else _skipped("monitor", "monitor findings are ignored")
 

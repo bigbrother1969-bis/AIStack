@@ -362,7 +362,7 @@ def test_a_monitor_that_is_down_or_missing_from_the_reference_list_is_to_fix_by_
     result = monitor_of(kuma(plex=0, gitea=1), declared)
 
     assert result.status == "warning" and result.finding == "monitor_down"
-    assert result.summary == "1 down, 1 missing or paused" and result.details == ("plex", "paused one")
+    assert result.summary == "1 down, 1 missing or paused (plex, paused one)" and result.details == ("plex", "paused one")
 
 
 def test_a_monitor_still_pending_waits_and_before_the_settle_time_nothing_is_an_anomaly() -> None:
@@ -381,3 +381,9 @@ def test_a_monitor_finding_the_owner_ignores_is_not_a_failure() -> None:
     ignored = BootChecksDefinition(severity={"monitor_down": "ignore"})
 
     assert monitor_of(kuma(plex=0), ignored).status == SKIPPED
+
+
+def test_an_incident_names_the_first_monitors_and_counts_the_rest() -> None:
+    many = kuma(**{f"m{n}": 0 for n in range(7)})
+
+    assert monitor_of(many).summary == "7 down (m0, m1, m2, m3, +3)"

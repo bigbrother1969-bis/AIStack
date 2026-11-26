@@ -75,6 +75,22 @@ def test_only_the_window_counts_and_the_line_follows_the_recent_growth() -> None
     assert found is not None and abs(found.rate - 0.5) < 1e-6
 
 
+def test_a_copy_that_jumps_the_disk_once_is_a_step_not_a_trend() -> None:
+    # What the Raspberry did: two jumps of tens of GB, flat before, between and after.
+    flat = line(13, 0.05, start=600.0, total=916.0)
+    jumped = tuple(DiskPoint(p.at, p.total, p.used + (30.0 if p.at > NOW - timedelta(days=5) else 0.0) + (55.0 if p.at > NOW - timedelta(days=12) else 0.0)) for p in flat)
+    found = trend_of(jumped, NOW, 14, 7)
+
+    assert found is not None and found.rate < 0.2 and found.days_to_full is None
+
+
+def test_a_steady_growth_by_daily_steps_is_still_seen() -> None:
+    stepped = tuple(DiskPoint(p.at, p.total, 100.0 + 3.0 * int((p.at - (NOW - timedelta(days=10))).total_seconds() // 86400)) for p in line(10, 0.0))
+    found = trend_of(stepped, NOW, 14, 7)
+
+    assert found is not None and 2.5 < found.rate < 3.5
+
+
 def test_a_disk_that_would_be_full_within_the_declared_days_is_to_watch_with_its_figures() -> None:
     result = judged(reading(("msi", "up", line(10, 5.0, start=100.0)), ("pi", "up", line(10, 0.0))))
 
@@ -161,3 +177,16 @@ def test_the_provider_reads_the_history_of_machines_that_are_up_and_the_checks_t
     assert len(history["msi"]) == 30 and history["msi"][0].at < history["msi"][-1].at
     assert history["msi"][-1].used == 129.0 and history["msi"][-1].total == 200.0
     assert isinstance(machine(), BeszelSystemReading)
+
+
+def test_the_real_raspberry_series_is_not_a_trend() -> None:
+    # Measured 2026-11-26: a 916 GB disk filled by copies on 14 and 21 Nov, flat since (660.95 -> 661.14 in four days).
+    used = [544.2, 602.34, 628.19, 628.17, 628.11, 628.14, 628.16, 628.17, 628.18, 628.18, 628.20, 628.21, 628.21, 628.22, 628.35, 628.60, 628.69,
+            628.71, 628.72, 629.20, 629.37, 643.27, 660.23, 660.24, 660.48, 660.95, 660.96, 660.97, 660.98, 660.99, 661.00, 661.01, 661.01, 661.06,
+            661.11, 661.12, 661.14]
+    hours = [-312, -304, -296, -288, -280, -272, -264, -256, -248, -240, -232, -224, -216, -208, -200, -192, -184, -176, -168, -160, -152, -144,
+             -136, -128, -118, -110, -102, -94, -86, -78, -70, -62, -54, -46, -38, -30, -14]
+    points = tuple(DiskPoint(NOW + timedelta(hours=h), 916.0, u) for h, u in zip(hours, used, strict=True))
+    found = trend_of(points, NOW, 14, 7)
+
+    assert found is not None and found.rate < 1.0 and found.days_to_full is None

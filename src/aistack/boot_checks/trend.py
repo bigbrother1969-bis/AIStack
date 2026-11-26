@@ -1,9 +1,11 @@
 """
-How fast a disk fills (ADR-0032, slice O4): a straight line through what Beszel measured, said as days to full.
+How fast a disk fills (ADR-0032, slice O4): a robust line through what Beszel measured, said as days to full.
 
-Beszel keeps the used space of each machine's system disk every 8 hours for about 27 days. A line fitted
-through the last `window_days` of it gives a rate in GB per day; the space left over that rate is the days to
-full. This is arithmetic, decided by the code: nothing here asks an engine, and a trend is only said when there
+Beszel keeps the used space of each machine's system disk every 8 hours for about 27 days. The rate (GB per day)
+is the median of the day-to-day growths over the last `window_days`: a copy or a restore that jumps the disk once or
+twice is a step in two of those days, not a trend, and does not move the median, while a steady growth, even by daily
+steps, does. A growth that comes only by a step a week is not seen as a rate (the percent limit of `systems` is what
+catches it). The space left over that rate is the days to full. This is arithmetic, decided by the code: nothing here asks an engine, and a trend is only said when there
 is enough history to carry one. Not enough history is *not measured*, never "fine".
 
 What it does not see: only the system disk of a machine that Beszel watches. A data disk Beszel does not follow
@@ -14,11 +16,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from statistics import median
 
 # Fewer points than this carry no line.
 MIN_POINTS = 6
 # The newest point must be younger than this, or the series is a past one (a machine that was silent).
 FRESH = timedelta(days=2)
+# A day's growth is read between a point and the one about a day before it, within this.
+DAY_TOLERANCE = timedelta(hours=4)
 # Beyond a year to full, a growth is not worth a line.
 HORIZON_DAYS = 365.0
 
@@ -53,15 +58,19 @@ def trend_of(points: tuple[DiskPoint, ...], now: datetime, window_days: int, min
     if now - last.at > FRESH or last.at - first.at < timedelta(days=min_days) or last.total <= 0:
         return None
 
-    days = [(point.at - first.at).total_seconds() / 86400 for point in window]
-    mean_t = sum(days) / len(days)
-    mean_u = sum(point.used for point in window) / len(window)
-    spread = sum((t - mean_t) ** 2 for t in days)
+    slopes = []
 
-    if spread == 0:
+    for later in window:
+        near = [point for point in window if abs((later.at - point.at) - timedelta(days=1)) <= DAY_TOLERANCE]
+
+        if near:
+            earlier = min(near, key=lambda point: abs((later.at - point.at) - timedelta(days=1)))
+            slopes.append((later.used - earlier.used) / ((later.at - earlier.at).total_seconds() / 86400))
+
+    if not slopes:
         return None
 
-    rate = sum((t - mean_t) * (point.used - mean_u) for t, point in zip(days, window, strict=True)) / spread
+    rate = median(slopes)
     left = max(last.total - last.used, 0.0)
     to_full = left / rate if rate > 0 else None
 

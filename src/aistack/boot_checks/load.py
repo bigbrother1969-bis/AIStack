@@ -66,6 +66,7 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         system_temperature_celsius=_positive_int(data, "system_temperature_celsius", defaults.system_temperature_celsius, label),
         docker_user_rules=_optional_count(data, "docker_user_rules", label),
         probes=_probes(data.get("probes"), label),
+        copies=_copies(data.get("copies"), label),
         ups_expected=_ups(data.get("ups_expected"), defaults.ups_expected, label),
         severity=_severity(data.get("severity"), label),
         companions=_flag(data, "companions", defaults.companions, label),
@@ -169,6 +170,25 @@ def _paths(value: Any, label: str) -> tuple[str, ...]:
         raise ValueError(f"{label} must be absolute paths")
 
     return paths
+
+
+def _copies(value: Any, label: str) -> dict[str, int]:
+    """`copies: {label: days}`: the most days that may pass since the newest file of that copy was made."""
+
+    if value is None:
+        return {}
+
+    if not isinstance(value, dict):
+        raise ValueError(f"{label}: copies must map a copy's label to the most days since its newest file")
+
+    for name, days in value.items():
+        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,60}", name):
+            raise ValueError(f"{label}: copies.{name} is not a label (letters, digits, - _ .)")
+
+        if isinstance(days, bool) or not isinstance(days, int) or days <= 0:
+            raise ValueError(f"{label}: copies.{name} must be a positive number of days")
+
+    return dict(value)
 
 
 def _probes(value: Any, label: str) -> dict[str, int]:

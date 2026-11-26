@@ -170,7 +170,7 @@ def test_every_source_is_read_and_the_file_holds_facts_only(tmp_path: Path, monk
         "boot": "ok", "failed_units": "ok", "mounts": "ok", "containers": "ok", "docker_user_rules": "ok",
         "kvm_modules": "ok", "previous_boot_clean": "ok", "clock_synced": "ok", "stop_reason": "ok",
         "kernel_disk_errors": "ok", "memory_pressure": "ok", "swap_used_percent": "ok", "database_recovery": "absent",
-        "throttled": "absent", "ups": "ok", "probes": "ok",
+        "throttled": "absent", "copies": "absent", "ups": "ok", "probes": "ok",
     }
     assert report["probes"] == {"proxy": 200}
     assert report["kvm_modules"] is True and report["ups"] == "OL" and report["failed_units"] == []
@@ -227,7 +227,7 @@ def test_a_command_that_fails_or_is_missing_is_an_error_not_an_empty_answer(monk
 def test_the_unit_writes_the_file_as_the_owner_of_its_directory(tmp_path: Path, monkeypatch) -> None:
     _answers(monkeypatch)
     monkeypatch.setattr(unit.os, "chown", lambda *_: None)
-    monkeypatch.setattr(unit, "collect", lambda now, probes, ups, databases=(): {"collected_at": now.isoformat(), "sources": {}})
+    monkeypatch.setattr(unit, "collect", lambda now, probes, ups, databases=(), copies=None: {"collected_at": now.isoformat(), "sources": {}})
     monkeypatch.setattr(sys, "argv", ["aistack-boot-facts", "--output", str(tmp_path / "out")])
 
     assert unit.main() == 0
@@ -425,3 +425,65 @@ def test_the_new_facts_are_read_back_and_an_absent_one_is_none() -> None:
     bare = parse_facts(json.dumps({"collected_at": NOW.isoformat()}))
 
     assert bare is not None and bare.stop_reason is None and bare.database_recovery is None and bare.memory_pressure is None
+
+
+def test_a_copy_says_when_its_newest_file_was_made_never_what_it_holds(tmp_path: Path) -> None:
+    import os
+
+    folder = tmp_path / "out"
+    folder.mkdir()
+    old, new = folder / "a.iso", folder / "b.iso"
+    old.write_text("x", encoding="utf-8")
+    new.write_text("x", encoding="utf-8")
+    os.utime(old, (1_700_000_000, 1_700_000_000))
+    os.utime(new, (1_700_086_400, 1_700_086_400))
+
+    assert unit.newest_in(folder) == {"newest": "2023-11-15T22:13:20+00:00", "count": 2}
+    assert unit.newest_in(new) == {"newest": "2023-11-15T22:13:20+00:00", "count": 1}
+    assert "a.iso" not in json.dumps(unit.newest_in(folder))
+
+
+def test_a_copy_that_is_not_there_is_not_the_same_as_one_that_cannot_be_read(tmp_path: Path) -> None:
+    (tmp_path / "empty").mkdir()
+
+    assert unit.newest_in(tmp_path / "empty") == {"newest": None, "count": 0}
+    assert unit.newest_in(tmp_path / "nothing") == {"newest": None, "count": 0}
+
+
+def test_copies_are_declared_as_label_and_absolute_path_and_nothing_else() -> None:
+    assert unit.parse_copies(["rear=/var/lib/rear/output, snapshots=/timeshift/snapshots", ""]) == {
+        "rear": Path("/var/lib/rear/output"),
+        "snapshots": Path("/timeshift/snapshots"),
+    }
+
+    for wrong in ("rear", "rear=relative/path", "=/x", "a b=/x"):
+        with pytest.raises(ValueError):
+            unit.parse_copies([wrong])
+
+
+def test_the_unit_writes_the_declared_copies_and_a_host_with_none_says_absent(tmp_path: Path, monkeypatch) -> None:
+    _answers(monkeypatch)
+    (tmp_path / "rear").mkdir()
+    (tmp_path / "rear" / "x.iso").write_text("x", encoding="utf-8")
+    report = unit.collect(NOW, {}, "", (), {"rear": tmp_path / "rear", "gone": tmp_path / "gone"}, proc=_proc(tmp_path))
+
+    assert report["sources"]["copies"] == "ok"
+    assert report["copies"]["rear"]["count"] == 1 and report["copies"]["gone"] == {"newest": None, "count": 0}
+    assert str(tmp_path) not in json.dumps(report)
+
+
+def test_the_reader_tells_a_missing_copy_from_an_unread_one() -> None:
+    facts = parse_facts(
+        json.dumps(
+            {
+                "collected_at": NOW.isoformat(),
+                "copies": {"a": {"newest": "2026-11-22T05:35:00+00:00", "count": 1}, "b": {"newest": None, "count": 0}, "c": {"error": "denied"}},
+                "sources": {"copies": "ok"},
+            }
+        )
+    )
+
+    assert facts is not None and facts.copies is not None
+    assert facts.copies["a"].newest == datetime(2026, 11, 22, 5, 35, tzinfo=timezone.utc)
+    assert facts.copies["b"].newest is None and not facts.copies["b"].error
+    assert facts.copies["c"].error == "denied"

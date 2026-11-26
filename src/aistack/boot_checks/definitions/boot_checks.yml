@@ -77,6 +77,20 @@ usage_days: 60
 # usage_points:
 #   - /media/Data
 
+# The copies of the host (O6): a folder of backups, a rescue image, a folder of
+# snapshots. The host unit is told where each one is (AISTACK_BOOT_COPIES in its
+# host.conf, `label=/absolute/path`; for a folder, the newest entry directly inside
+# counts) and says when its newest file was made, never what it holds. Here you say,
+# for each label, the most days that may pass: a copy older than that is late, one
+# with nothing in it is missing, one the host does not report is "not read". Empty =
+# none declared: the control is skipped, AIStack never guesses a copy. The restore
+# tests you declared in pra_tests.yml (OPS-0009) are read here too: one that failed,
+# is older than its limit or was never done is to do again.
+copies: {}
+#   copies:
+#     rescue-image: 9
+#     snapshots: 3
+
 # How many rules the DOCKER-USER chain holds after a start. Leave it out to
 # skip the control.
 # docker_user_rules: 7
@@ -118,6 +132,10 @@ severity:
   data_disk_soon: warning
   companion_unreachable: critical
   companion_throttled: warning
+  copy_late: warning
+  copy_missing: critical
+  restore_test_failed: critical
+  restore_test_old: warning
 
 # Also check the companion machines the instance declares in hosts.yml (each
 # has its own indicator, same rules). A companion is judged from the facts its

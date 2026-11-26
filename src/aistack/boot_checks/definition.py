@@ -38,6 +38,10 @@ FINDINGS = (
     "database_recovery",
     "kernel_disk_errors",
     "memory_pressure",
+    "copy_late",
+    "copy_missing",
+    "restore_test_failed",
+    "restore_test_old",
 )
 
 # The circumstances the code computes from the facts, and the extra controls a circumstance may justify
@@ -80,6 +84,10 @@ DEFAULT_SEVERITY = {
     "database_recovery": WARNING,
     "kernel_disk_errors": CRITICAL,
     "memory_pressure": WARNING,
+    "copy_late": WARNING,
+    "copy_missing": CRITICAL,
+    "restore_test_failed": CRITICAL,
+    "restore_test_old": WARNING,
 }
 
 
@@ -130,6 +138,9 @@ class BootChecksDefinition:
     usage_days: int = 60
     disk_trend_days: int = 14
     disk_trend_min_days: int = 7
+    # The copies the host unit looks at (O6): label -> the most days that may pass since the newest file of that copy was made.
+    # Empty = none declared: the control is skipped, AIStack never guesses a copy.
+    copies: dict[str, int] = field(default_factory=dict)
     docker_user_rules: int | None = None
     # label -> the HTTP status the host's probe of that label must answer.
     probes: dict[str, int] = field(default_factory=dict)

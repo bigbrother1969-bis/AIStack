@@ -116,3 +116,14 @@ def test_the_companions_are_declared_by_host_name(tmp_path: Path):
 
     assert definition.companion_silent_minutes == 30 and definition.companion_mounts == {"backup-host": ("/media/BACKUP",)}
     assert shipped.companion_silent_minutes == 45 and shipped.companion_mounts == {}
+
+
+def test_the_copies_are_a_label_and_a_number_of_days(tmp_path):
+    assert load_boot_checks_yaml(SHIPPED).copies == {}
+    assert load_boot_checks_yaml(_write(tmp_path, "copies: {rescue-image: 9, snapshots: 3}\n")).copies == {"rescue-image": 9, "snapshots": 3}
+
+
+@pytest.mark.parametrize("text", ["copies: [a]\n", "copies: {a: 0}\n", "copies: {a: 'x'}\n", "copies: {'a b': 3}\n", "copies: {a: true}\n"])
+def test_a_copy_that_is_not_a_label_and_days_is_refused(tmp_path, text):
+    with pytest.raises(ValueError, match="copies"):
+        load_boot_checks_yaml(_write(tmp_path, text))

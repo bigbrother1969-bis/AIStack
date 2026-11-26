@@ -13,7 +13,7 @@ import yaml
 from aistack.boot_checks.catalogue import circumstances, evaluate_extra, settled_since
 from aistack.boot_checks.choice import ASK_SECONDS, Ask, Choice, decide, wants_engine
 from aistack.boot_checks.explain import explain, markers, standing
-from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
+from aistack.boot_checks.controls import Reading, RestoreGap, RestoreReading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, read_facts_file
 from aistack.boot_checks.load import load_boot_checks_yaml
@@ -112,7 +112,7 @@ class BootCheckTask:
                 previous = read_verdict(generated_dir)
                 ask = _engine(payload)
                 settled = settled_since(facts, definition, now)
-                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir), _usage(generated_dir, definition, now))
+                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir), _usage(generated_dir, definition, now), _restore(now) if payload.get("cockpit", True) else None)
 
                 # One budget for everything asked of the engine: the vigil stops a pass at 300 s.
                 deadline = time.monotonic() + ASK_SECONDS
@@ -217,6 +217,33 @@ def _disks(generated_dir: Path) -> DiskReading | None:
     url = read_store(generated_dir).get(SCRUTINY_URL) or os.environ.get(SCRUTINY_URL, "")
 
     return read_disks(url) if url else None
+
+
+def _restore(now: datetime) -> RestoreReading:
+    """What the restore tests (OPS-0009) say: the declared ones, each replaced by the scheduled test's outcome when that is newer."""
+
+    from aistack.contracts.pra_test_gap import FAILED_REASON, STALE, UNTESTED
+    from aistack.health.domains import SOURCES
+    from aistack.pra.scheduled import with_scheduled
+    from aistack.pra.yaml import load_pra_tests_yaml
+    from aistack.runtime.pra_test_gap import find_pra_test_gaps
+
+    if not SOURCES.pra_tests.exists():
+        return RestoreReading(declared=False)
+
+    try:
+        readings, thresholds = load_pra_tests_yaml(SOURCES.pra_tests)
+        readings = with_scheduled(readings)
+    except (ValueError, OSError) as error:
+        return RestoreReading(reason=f"the restore test definition cannot be read ({str(error)[:80]})")
+
+    names = {UNTESTED: "untested", FAILED_REASON: "failed", STALE: "stale"}
+    gaps = tuple(
+        RestoreGap(gap.reading.service, names.get(gap.reason, "stale"), gap.reading.tested_at, gap.max_age_days)
+        for gap in find_pra_test_gaps(readings, thresholds.thresholds)
+    )
+
+    return RestoreReading(tests=len(readings), gaps=gaps)
 
 
 def _usage(generated_dir: Path, definition: BootChecksDefinition, now: datetime) -> UsageReading:

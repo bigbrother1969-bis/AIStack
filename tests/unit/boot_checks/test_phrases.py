@@ -94,6 +94,46 @@ def _every_sentence() -> set[str]:
             for result in evaluate(facts(), definition, LATER, Reading(True, 0), Reading(True, 0), None, disks):
                 said.update([result.summary, *result.details])
 
+    said.update(_copy_and_restore_sentences())
+
+    return said
+
+
+def _copy_and_restore_sentences() -> set[str]:
+    from datetime import timedelta
+
+    from aistack.boot_checks.controls import RestoreGap, RestoreReading
+    from aistack.boot_checks.facts import Copy
+
+    said: set[str] = set()
+    declared = BootChecksDefinition(copies={"rescue": 9, "snapshots": 3, "gone": 5, "bad": 5, "unseen": 5})
+    mixes = (
+        facts(sources={"copies": "absent"}),
+        facts(copies=None, sources={"copies": "error: boom"}),
+        facts(copies={"rescue": Copy(LATER - timedelta(days=4), 1), "snapshots": Copy(LATER - timedelta(days=1), 3), "gone": Copy(LATER, 1), "bad": Copy(LATER, 1), "unseen": Copy(LATER, 1)}),
+        facts(copies={"rescue": Copy(LATER - timedelta(days=20), 1), "snapshots": Copy(None, 0), "gone": Copy(None, 0, "denied"), "bad": Copy(LATER, 1)}),
+        facts(copies={"rescue": Copy(LATER, 1), "snapshots": Copy(LATER, 1), "gone": Copy(None, 0, "denied"), "bad": Copy(LATER, 1)}),
+    )
+
+    for definition in (BootChecksDefinition(), declared, BootChecksDefinition(copies={"rescue": 1}, severity={"copy_late": "ignore", "copy_missing": "ignore"})):
+        for seen in mixes:
+            for result in evaluate(seen, definition, LATER):
+                said.update([result.summary, *result.details])
+
+    restores = (
+        None,
+        RestoreReading(declared=False),
+        RestoreReading(reason="the restore test definition cannot be read (x)"),
+        RestoreReading(tests=3),
+        RestoreReading(tests=3, gaps=(RestoreGap("nextcloud", "failed", LATER, 90.0), RestoreGap("wordpress", "stale", LATER - timedelta(days=100), 90.0), RestoreGap("gigabyte", "untested", None, 90.0))),
+        RestoreReading(tests=3, gaps=(RestoreGap("wordpress", "stale", LATER - timedelta(days=100), 90.0),)),
+    )
+
+    for definition in (BootChecksDefinition(), BootChecksDefinition(severity={"restore_test_failed": "ignore", "restore_test_old": "ignore"})):
+        for restore in restores:
+            for result in evaluate(facts(), definition, LATER, restore=restore):
+                said.update([result.summary, *result.details])
+
     return said
 
 

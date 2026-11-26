@@ -34,6 +34,20 @@ class Container:
 
 
 @dataclass(frozen=True)
+class Copy:
+    """
+    When the newest file of a declared copy was made (UTC), and how many entries it holds.
+
+    `newest` is `None` for a path with nothing in it or no path at all (the copy is *not there*); `error` says why a
+    path could not be read, which is not the same.
+    """
+
+    newest: datetime | None
+    count: int
+    error: str = ""
+
+
+@dataclass(frozen=True)
 class BootFacts:
     """
     What the host said. A field is `None` when its source did not answer
@@ -63,6 +77,26 @@ class BootFacts:
     database_recovery: dict[str, int] | None = None
     memory_pressure: float | None = None
     swap_used_percent: int | None = None
+    # O6: the declared copies (a backup folder, a rescue image, a folder of snapshots) by label.
+    copies: dict[str, Copy] | None = None
+
+
+def _copies(value: Any) -> dict[str, Copy] | None:
+    if not isinstance(value, dict):
+        return None
+
+    found: dict[str, Copy] = {}
+
+    for label, item in value.items():
+        if not isinstance(item, dict):
+            continue
+
+        if isinstance(item.get("error"), str):
+            found[str(label)] = Copy(None, 0, item["error"])
+        else:
+            found[str(label)] = Copy(_instant(item["newest"]) if item.get("newest") else None, _count(item.get("count")) or 0)
+
+    return found
 
 
 def _strings(value: Any) -> tuple[str, ...] | None:
@@ -146,6 +180,7 @@ def parse_facts(text: str) -> BootFacts | None:
         ),
         memory_pressure=_number(raw.get("memory_pressure")),
         swap_used_percent=_count(raw.get("swap_used_percent")),
+        copies=_copies(raw.get("copies")),
     )
 
 

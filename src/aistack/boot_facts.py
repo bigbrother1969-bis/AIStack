@@ -14,7 +14,9 @@ started and for how long it has run, the units that failed, the file systems
 that are mounted, each container with its state and health, how many rules
 the `DOCKER-USER` chain holds, whether the KVM modules are loaded, whether
 the previous run ended with a clean shutdown, what the UPS says, and the
-HTTP status each declared probe answers. Judging them belongs to AIStack,
+HTTP status each declared probe answers, and when each declared copy (a
+backup folder, a rescue image, a folder of snapshots) was last made. Judging
+them belongs to AIStack,
 which knows what the owner declared a healthy start to be.
 
 It reads and never acts: the commands it can run are the closed list
@@ -298,6 +300,53 @@ def clock_synchronized(text: str) -> bool:
     return answer == "yes"
 
 
+def newest_in(path: Path) -> dict[str, object]:
+    """
+    How fresh a copy is: the newest modification time (UTC) of a file, or of what a folder holds directly, and how many entries it holds.
+
+    A path that does not exist says `newest: null`, which is a copy that is *not there*; one that cannot be read says why under
+    `error`. Neither the names nor the sizes of what it holds are written: only when the newest one was made.
+    """
+
+    try:
+        entries = [path] if path.is_file() else sorted(path.iterdir()) if path.is_dir() else []
+    except OSError as error:
+        return {"error": str(error)[:80]}
+
+    moments = []
+
+    for entry in entries:
+        try:
+            moments.append(entry.stat().st_mtime)
+        except OSError:
+            continue
+
+    if not moments:
+        return {"newest": None, "count": 0}
+
+    return {"newest": datetime.fromtimestamp(max(moments), timezone.utc).isoformat(timespec="seconds"), "count": len(moments)}
+
+
+def parse_copies(values: list[str]) -> dict[str, Path]:
+    """`label=/absolute/path` pairs, from the command line and `AISTACK_BOOT_COPIES` (comma-separated)."""
+
+    found: dict[str, Path] = {}
+
+    for value in values:
+        for part in value.split(","):
+            if not part.strip():
+                continue
+
+            label, separator, location = part.strip().partition("=")
+
+            if not separator or not _NAME.match(label) or not location.startswith("/"):
+                raise ValueError(part.strip().split("=")[0])
+
+            found[label] = Path(location)
+
+    return found
+
+
 def probe(url: str) -> int:
     """The HTTP status a URL answers, `0` when nothing answers. Redirections are not followed."""
 
@@ -365,6 +414,7 @@ def collect(
     probes: dict[str, str],
     ups: str,
     databases: tuple[str, ...] = (),
+    copies: dict[str, Path] | None = None,
     *,
     proc: Path = Path("/proc"),
     probe_one=probe,  # type: ignore[no-untyped-def]
@@ -404,6 +454,11 @@ def collect(
     else:
         sources["database_recovery"] = "absent"
 
+    if copies:
+        read("copies", lambda: {label: newest_in(location) for label, location in sorted(copies.items())})
+    else:
+        sources["copies"] = "absent"
+
     # Only a Raspberry has the command; elsewhere the source is absent, not failed.
     if shutil.which(COMMANDS["throttled"][0]) is None:
         sources["throttled"] = "absent"
@@ -441,6 +496,7 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--probe", action="append", default=[], help="LABEL=URL: the HTTP status it answers is written under LABEL")
     parser.add_argument("--database", action="append", default=[], help="a container whose log is read for its recovery after the start (AISTACK_BOOT_DATABASES, comma-separated)")
+    parser.add_argument("--copy", action="append", default=[], help="LABEL=/path: when the newest file of that path (or of that folder) was made, written under LABEL (AISTACK_BOOT_COPIES, comma-separated)")
     parser.add_argument("--ups", default=os.environ.get("AISTACK_BOOT_UPS", ""), help="the UPS name for upsc, e.g. apc@localhost")
     arguments = parser.parse_args()
 
@@ -448,6 +504,12 @@ def main() -> int:
         probes = parse_probes([*arguments.probe, os.environ.get("AISTACK_BOOT_PROBES", "")])
     except ValueError as error:
         print(f"not a probe (LABEL=http://...): {error}", file=sys.stderr)
+        return 2
+
+    try:
+        copies = parse_copies([*arguments.copy, os.environ.get("AISTACK_BOOT_COPIES", "")])
+    except ValueError as error:
+        print(f"not a copy (LABEL=/absolute/path): {error}", file=sys.stderr)
         return 2
 
     output: Path = arguments.output
@@ -459,7 +521,7 @@ def main() -> int:
         print("not a container name in --database / AISTACK_BOOT_DATABASES", file=sys.stderr)
         return 2
 
-    report = collect(datetime.now(timezone.utc), probes, arguments.ups, names)
+    report = collect(datetime.now(timezone.utc), probes, arguments.ups, names, copies)
     _write(output / OUTPUT_NAME, json.dumps(report, sort_keys=True, indent=1) + "\n", (status.st_uid, status.st_gid))
 
     return 0

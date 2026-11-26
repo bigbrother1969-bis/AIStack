@@ -17,6 +17,7 @@ healthy host. Before `settle_minutes` after the start, what fails is
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -51,6 +52,29 @@ class Reading:
     instrumented: bool
     findings: int = 0
     note: str = ""
+
+
+@dataclass(frozen=True)
+class RestoreGap:
+    """A restore test (OPS-0009) that is not good: `reason` is `failed`, `stale` (older than the limit) or `untested`."""
+
+    service: str
+    reason: str
+    tested_at: datetime | None
+    max_age_days: float
+
+
+@dataclass(frozen=True)
+class RestoreReading:
+    """
+    What the restore tests say. `declared` is false when no test is declared (the control is skipped); `reason` says
+    why they could not be read (the control is then *unknown*, never fine).
+    """
+
+    tests: int = 0
+    gaps: tuple[RestoreGap, ...] = ()
+    declared: bool = True
+    reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -642,6 +666,83 @@ def _data_disks(reading: UsageReading | None, definition: BootChecksDefinition, 
     return _passes("data_disks", summary)
 
 
+def _copies(facts: BootFacts, definition: BootChecksDefinition, now: datetime) -> Result:
+    """
+    The copies the owner declared (O6): a backup folder, a rescue image, a folder of snapshots. A copy whose newest file
+    is older than its limit is late, one with nothing in it is missing, one the host did not tell is *not read*.
+    """
+
+    if not definition.copies:
+        return _skipped("copies", "no copy declared")
+
+    if facts.sources.get("copies") == "absent":
+        return Result("copies", UNKNOWN, "not read: the host unit was not told which copies to look at (AISTACK_BOOT_COPIES)")
+
+    if facts.copies is None:
+        return _unknown("copies", facts, "copies")
+
+    late: list[str] = []
+    missing: list[str] = []
+    unread: list[str] = []
+
+    for name, limit in sorted(definition.copies.items()):
+        copy = facts.copies.get(name)
+
+        if copy is None:
+            unread.append(f"{name}: not read: the host unit does not report it")
+        elif copy.error:
+            unread.append(f"{name}: not read: {copy.error}")
+        elif copy.newest is None:
+            missing.append(f"{name}: no copy found")
+        elif (age := (now - copy.newest).total_seconds() / 86400) > limit:
+            late.append(f"{name}: newest copy is {math.ceil(age)} day(s) old (limit {limit} day(s))")
+
+    if missing or late:
+        action = "to do: check that the job that makes each copy above ran (its timer, its last log)"
+        summary = f"{len(missing) + len(late)} copy(ies) late or missing"
+        failed = _fails("copies", "copy_missing" if missing else "copy_late", summary, (*missing, *late, *unread, action), definition, True)
+
+        return failed if failed is not None else _skipped("copies", "copy findings are ignored")
+
+    if unread:
+        return Result("copies", UNKNOWN, f"{len(unread)} declared copy(ies) not read", tuple(unread))
+
+    return _passes("copies", f"{len(definition.copies)} declared copy(ies) within their limit")
+
+
+def _restore_tests(reading: RestoreReading | None, definition: BootChecksDefinition, now: datetime) -> Result:
+    """A backup never restored is not a backup (OPS-0009): a failed, old or missing restore test is to do again."""
+
+    if reading is None:
+        return _skipped("restore_tests", "restore tests were not read")
+
+    if reading.reason:
+        return Result("restore_tests", UNKNOWN, f"not read: {reading.reason}")
+
+    if not reading.declared or not reading.tests:
+        return _skipped("restore_tests", "no restore test declared")
+
+    if not reading.gaps:
+        return _passes("restore_tests", f"{reading.tests} restore test(s) within their limit")
+
+    lines = []
+
+    for gap in reading.gaps:
+        if gap.reason == "failed":
+            lines.append(f"{gap.service}: the last restore test failed")
+        elif gap.reason == "untested":
+            lines.append(f"{gap.service}: never tested")
+        elif gap.tested_at is not None:
+            lines.append(f"{gap.service}: last restore test {max(0, math.ceil((now - gap.tested_at).total_seconds() / 86400))} day(s) ago (limit {math.floor(gap.max_age_days)} day(s))")
+
+    lines.append("to do: redo the restore tests above (a backup that was never restored is not a backup)")
+    finding = "restore_test_failed" if any(gap.reason == "failed" for gap in reading.gaps) else "restore_test_old"
+    summary = f"{len(reading.gaps)} of {reading.tests} restore test(s) to redo"
+    failed = _fails("restore_tests", finding, summary, tuple(lines), definition, True)
+
+    return failed if failed is not None else _skipped("restore_tests", "restore test findings are ignored")
+
+
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:
     if reading is None:
         return _skipped(control, f"{name} was not read")
@@ -665,6 +766,7 @@ def evaluate(
     disks: DiskReading | None = None,
     systems: SystemsReading | None = None,
     usage: UsageReading | None = None,
+    restore: RestoreReading | None = None,
 ) -> list[Result]:
     """Every control of the base set, in a stable order."""
 
@@ -683,6 +785,8 @@ def evaluate(
     results.append(_data_disks(usage, definition, now))
     results.append(_reading("storage", "storage_low", "storage", storage, definition, settled))
     results.append(_reading("backup", "backup_late", "backup", backup, definition, settled))
+    results.append(_copies(facts, definition, now))
+    results.append(_restore_tests(restore, definition, now))
     results.append(_previous_boot(facts))
 
     return [result for result in results if result is not None]

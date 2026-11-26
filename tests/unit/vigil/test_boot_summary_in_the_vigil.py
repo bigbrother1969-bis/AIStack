@@ -184,3 +184,14 @@ def test_a_boot_checks_declaration_that_cannot_be_read_does_not_stop_the_vigil(t
     notify.write_state(tmp_path, notify.State(known=True))
 
     assert vigil.one_pass(tmp_path, None, dry_run=False, render=False) == 0
+
+
+def test_a_summary_alone_has_its_own_title_and_does_not_count_its_detail_lines(tmp_path: Path) -> None:
+    write_verdict(tmp_path, verdict())
+    found, _ = run(tmp_path)
+
+    assert notify.compose(T, found).title == "AIStack — contrôles du matin"  # type: ignore[union-attr]
+
+    mixed = [*found, notify.Event("health", "Santé en baisse : 90 → 80/100.")]
+
+    assert notify.compose(T, mixed).title == "AIStack — 2 nouveauté(s)"  # type: ignore[union-attr]

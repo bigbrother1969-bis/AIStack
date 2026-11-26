@@ -1,6 +1,7 @@
 # The vigil's Gotify notifications.
 
 title: "AIStack — {count} new event(s)"
+title_boot: "AIStack — morning checks"
 event:
   health: "Health going down: {before} → {after}/100."
   host: "Silent host — {text}"

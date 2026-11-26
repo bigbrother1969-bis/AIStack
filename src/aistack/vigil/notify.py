@@ -221,8 +221,15 @@ class Message:
 def compose(t: Translator, found: Sequence[Event]) -> Message | None:
     if not found:
         return None
+    # A summary of the start-up checks alone is not "news": it has its own title.
+    title = (
+        t("notify.title_boot")
+        if all(e.kind == "boot" for e in found)
+        else t("notify.title", count=sum(1 for e in found if not e.line.startswith(("· ", "  "))))
+    )
+
     return Message(
-        title=t("notify.title", count=sum(1 for e in found if not e.line.startswith("· "))),
+        title=title,
         body="\n".join(e.line for e in found),
         priority=URGENT if any(e.urgent for e in found) else NORMAL,
     )

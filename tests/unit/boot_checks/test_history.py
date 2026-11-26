@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -10,10 +11,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from aistack.boot_checks.controls import Result
-from aistack.boot_checks.history import Event, Retention, history_file, open_since, prune, read_history, transitions
+from aistack.boot_checks.history import Event, Retention, history_file, open_since, prune, read_history, seeds, transitions
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.load import load_boot_checks_yaml
-from aistack.boot_checks.state import Verdict, read_verdict, write_history, write_verdict
+from aistack.boot_checks.state import Incident, Verdict, read_verdict, write_history, write_verdict
 from tests.unit.web.test_boot_check_screen import client
 from tests.unit.web_signed_in import signed_in
 
@@ -50,13 +51,13 @@ def test_a_pass_that_changes_nothing_writes_nothing_and_quiet_states_are_not_eve
     assert transitions(verdict(at(0), Result("memory", "pending", "x")), verdict(at(15), Result("memory", "information", "y"))) == []
     # a change of weight is a line; a first pass that already fails is one too
     assert len(transitions(verdict(at(0), same), verdict(at(15), Result("disks", "critical", "1 disk failing")))) == 1
-    assert len(transitions(None, verdict(at(0), same))) == 1
+    assert transitions(None, verdict(at(0), same)) == []  # the first pass is seeded, not compared
     assert len(transitions(verdict(at(0), same), verdict(at(15), Result("disks", "unknown", "not read")))) == 1
 
 
 def test_the_names_kept_with_a_line_are_bounded() -> None:
     names = tuple(f"unit-{n}" for n in range(30))
-    found = transitions(None, verdict(at(0), Result("failed_units", "warning", "30 unit(s) failed", names)))
+    found = seeds((), verdict(at(0), Result("failed_units", "warning", "30 unit(s) failed", names)))
 
     assert found[0].details == names[:8]
 
@@ -157,3 +158,49 @@ def test_the_page_without_any_change_says_so(tmp_path: Path) -> None:
 
     assert "No change recorded yet." in signed_in(client(tmp_path)).get("/boot-check/?lang=en").text
     assert TestClient is not None
+
+
+def test_an_anomaly_already_there_before_the_journal_is_seeded_with_the_date_of_its_incident(tmp_path: Path) -> None:
+    started = at(-300).isoformat(timespec="seconds")
+    broken = replace(
+        verdict(at(0), Result("systems", "warning", "1 system(s) down", ("gigabyte",)), Result("mounts", "ok", "fine")),
+        incidents=(Incident("systems", "warning", started, "1 system(s) down", None),),
+    )
+
+    write_verdict(tmp_path, broken)  # no previous verdict: the first pass already fails
+    write_verdict(tmp_path, broken)  # nothing changes: nothing more is written
+
+    found = read_history(tmp_path)
+
+    assert [(e.control, e.status, e.at, e.details) for e in found] == [("systems", "warning", started, ("gigabyte",))]
+    assert open_since(found, "systems") == started
+
+
+def test_a_deployment_over_an_existing_verdict_seeds_what_already_fails_without_doubling_a_change(tmp_path: Path) -> None:
+    before = verdict(at(0), Result("systems", "warning", "1 system(s) down", ("gigabyte",)), Result("disks", "ok", "fine"))
+    after = verdict(at(15), Result("systems", "warning", "1 system(s) down", ("gigabyte",)), Result("disks", "warning", "1 disk failing", ("sda",)))
+    path = tmp_path / "boot-check.json"
+    tmp_path.mkdir(exist_ok=True)
+    path.write_text(json.dumps(asdict(before)), encoding="utf-8")
+
+    write_verdict(tmp_path, after)
+    write_verdict(tmp_path, after)
+
+    found = read_history(tmp_path)
+
+    assert sorted((e.control, e.status) for e in found) == [("disks", "warning"), ("systems", "warning")]
+    assert len(found) == 2
+
+
+def test_the_seeds_are_only_for_controls_the_journal_does_not_know() -> None:
+    journal = (Event("2026-11-20T01:00:00+00:00", "systems", "warning", "x"),)
+    current = verdict(at(0), Result("systems", "warning", "x"), Result("disks", "critical", "y"), Result("mounts", "ok", "z"))
+
+    assert [(e.control, e.status) for e in seeds(journal, current)] == [("disks", "critical")]
+
+
+def test_lines_are_kept_in_date_order_even_when_a_seed_is_older_than_the_last_line() -> None:
+    late = Event("2026-11-26T18:00:00+00:00", "a", "warning", "late")
+    early = Event("2026-11-22T04:51:40+00:00", "b", "warning", "early")
+
+    assert [e.summary for e in prune((late, early), NOW, Retention())] == ["early", "late"]

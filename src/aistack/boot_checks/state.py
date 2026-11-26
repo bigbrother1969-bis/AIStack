@@ -23,7 +23,7 @@ from typing import Any
 
 from aistack.boot_checks.controls import ANOMALIES, OK, PENDING, UNKNOWN, Result
 from aistack.boot_checks.facts import BootFacts
-from aistack.boot_checks.history import DEFAULT_RETENTION, Event, Retention, history_file, prune, read_history, transitions
+from aistack.boot_checks.history import DEFAULT_RETENTION, Event, Retention, history_file, prune, read_history, seeds, transitions
 
 STATE = "boot-check.json"
 # A companion's verdict is a file of its own, named after the host in hosts.yml.
@@ -176,7 +176,9 @@ def write_verdict(directory: Path, verdict: Verdict, host: str | None = None, ke
     os.replace(temporary, directory / state_file(host))
 
     try:
-        write_history(directory, transitions(previous, verdict), datetime.fromisoformat(verdict.checked_at), host, keep)
+        changed = transitions(previous, verdict)
+        heard = (*read_history(directory, host), *changed)
+        write_history(directory, [*changed, *seeds(heard, verdict)], datetime.fromisoformat(verdict.checked_at), host, keep)
     except (OSError, ValueError):
         return
 

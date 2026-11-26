@@ -70,7 +70,10 @@ def history_file(host: str | None = None) -> str:
 def transitions(previous: Verdict | None, verdict: Verdict) -> list[Event]:
     """What changed between two verdicts, as lines: a control that fails, changes its status, or comes back."""
 
-    before = {result.control: result.status for result in previous.results} if previous is not None else {}
+    if previous is None:  # nothing to compare with: what already fails is seeded, with the date of its incident
+        return []
+
+    before = {result.control: result.status for result in previous.results}
     found = []
 
     for result in verdict.results:
@@ -85,6 +88,23 @@ def transitions(previous: Verdict | None, verdict: Verdict) -> list[Event]:
         found.append(Event(verdict.checked_at, result.control, result.status, result.summary, tuple(result.details[:MAX_NAMES]), verdict.boot_id))
 
     return found
+
+
+def seeds(journal: tuple[Event, ...], verdict: Verdict) -> list[Event]:
+    """
+    A control already in a state to watch that the journal has never heard of (it was failing before the journal
+    existed, or before the file was lost): one line, dated by the incident of this start when there is one, else by
+    this pass, so the page can say since when, at least since what the service saw.
+    """
+
+    known = {event.control for event in journal}
+    opened = {item.control: item.first_seen for item in verdict.incidents if item.resolved_at is None}
+
+    return [
+        Event(opened.get(result.control, verdict.checked_at), result.control, result.status, result.summary, tuple(result.details[:MAX_NAMES]), verdict.boot_id)
+        for result in verdict.results
+        if result.status not in QUIET and result.control not in known
+    ]
 
 
 def _event(raw: Any) -> Event | None:
@@ -140,10 +160,11 @@ def _when(stamp: str) -> datetime | None:
 
 
 def prune(events: tuple[Event, ...], now: datetime, keep: Retention) -> tuple[Event, ...]:
-    """Drop what is older than the retention (a line whose date cannot be read goes too), then the oldest beyond the number kept."""
+    """Put the lines in date order, drop what is older than the retention (a line whose date cannot be read goes too), then the oldest beyond the number kept."""
 
     limit = now - timedelta(days=keep.days)
-    recent = [event for event in events if (moment := _when(event.at)) is not None and moment >= limit]
+    dated = sorted(((moment, event) for event in events if (moment := _when(event.at)) is not None), key=lambda pair: pair[0])
+    recent = [event for moment, event in dated if moment >= limit]
 
     return tuple(recent[-keep.events :])
 

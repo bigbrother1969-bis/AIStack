@@ -37,6 +37,7 @@
   "disk_writes_declared_exempt": [
     "src/aistack/api_keys/__init__.py (the API keys: no secret in a payload or a trace)",
     "src/aistack/arrivals/state.py (the state a service keeps for itself)",
+    "src/aistack/boot_facts.py (the state a service keeps for itself)",
     "src/aistack/cli/config_init.py (the installation)",
     "src/aistack/cli/docker_diff_monitor.py (the state a service keeps for itself)",
     "src/aistack/cli/docker_digest_monitor.py (the state a service keeps for itself)",

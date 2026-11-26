@@ -1055,6 +1055,33 @@ brings it to the MSI. The report then names each finding with its host. A
 snapshot older than 25 hours is set aside and the report says so; the host
 may simply be off. A host with no `security` folder is not reported.
 
+## Start-up checks
+
+After a reboot you run the same controls by hand. AIStack is taking them over
+in slices (`ADR-0032`); the first one installs a small unit on the host that
+writes the facts those controls read: when the host started, the failed
+units, the mounted file systems, each container with its state and health,
+the rules of `DOCKER-USER`, the KVM modules, how the previous run ended, the
+UPS and the HTTP status of the probes you declare. It writes **facts only**,
+never a verdict, and no address, URL, user name or log line; a probe is
+written under its label. Its commands are a closed list in the script, none
+through a shell, and it changes nothing on the host. The checks and the
+indicator of the health strip come in the next slices; until then the file
+is read by nothing, so installing the unit is harmless.
+
+```
+sudo install -m 0755 src/aistack/boot_facts.py /usr/local/sbin/aistack-boot-facts
+sudo cp deploy/boot-facts/aistack-boot-facts.service deploy/boot-facts/aistack-boot-facts.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-boot-facts.service.d
+# host.conf there: OUTPUT and ReadWritePaths (a folder of its own, e.g. <data>/boot-host),
+# and, if you want them, AISTACK_BOOT_UPS (the UPS name for upsc) and AISTACK_BOOT_PROBES (label=url)
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-boot-facts.timer
+sudo systemctl start aistack-boot-facts.service && journalctl -u aistack-boot-facts -n 5
+```
+
+A source that cannot be read (Docker, the firewall, the UPS) says so in the
+file under `sources`; it is never taken for a healthy host.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

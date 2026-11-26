@@ -112,10 +112,16 @@ checked.
 
 ### 5. How the facts are read
 
-- **On the MSI**: a privileged script of closed read-only commands, in the
-  pattern of `aistack-host-logs`, under the same kind of exception as
-  `ADR-0027` § 11 (to be restated in the slice that adds it). It reads, it
-  never acts.
+- **On the MSI**: a privileged script of closed read-only commands,
+  `aistack-boot-facts`, in the pattern of `aistack-host-logs`, under the
+  exception `ADR-0027` § 11 records for it (slice B1, 2026-11-26). Every five
+  minutes it writes a file of **facts** (when the host started, from the
+  uptime and never from the journal; the failed units; the mounted file
+  systems; the containers with state and health; the rules of `DOCKER-USER`;
+  the KVM modules; whether the previous run ended with a shutdown; the UPS;
+  the status of the declared probes, under their label) and no verdict. A
+  source that fails says so in the file, and the reader never takes it for a
+  healthy host. It reads, it never acts.
 - **On the Raspberry**: through the collector of `ADR-0020`, as another
   file pushed into the data directory; no SSH from AIStack.
 - **The monitor** (Uptime Kuma) is read through a way to be chosen in the
@@ -156,7 +162,7 @@ health score unless the owner sets `indicator_weighted`.
 | Slice | State |
 |---|---|
 | B0: this decision and the declaration `boot_checks.yml` with its loader | done, 2026-11-26 |
-| B1: the facts of the MSI, read by a privileged script of closed commands | not started |
+| B1: the facts of the MSI, read by a privileged script of closed commands (`aistack-boot-facts`, its unit and timer, the reader `boot_checks.facts`, the exception of `ADR-0027` § 11) | done, 2026-11-26 |
 | B2: the base controls, the verdict, `boot_check --once` | not started |
 | B3: the indicator in the health strip, the detail page, the console card, the manuals | not started |
 | B4: the Raspberry through the collector | not started |

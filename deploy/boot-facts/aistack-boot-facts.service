@@ -1,0 +1,56 @@
+# AIStack — the host's facts since its last start (ADR-0032, B1)
+#
+# Writes, every five minutes, a file of facts: when the host started, the
+# failed units, the mounted file systems, the containers with their state and
+# health, the rules of DOCKER-USER, the KVM modules, how the previous run
+# ended, the UPS, and the HTTP status of the probes you declare. Facts only,
+# no verdict (AIStack judges them), and no address, URL, user name or log
+# line. It reads and never acts: its commands are a closed list in the script.
+# Root, because the container list, the firewall chain and the previous
+# boot's journal are read by root; writes nowhere but its output.
+#
+# Install (as root), once per host — see the manual, "Start-up checks":
+#
+#   install -m 0755 src/aistack/boot_facts.py /usr/local/sbin/aistack-boot-facts
+#   cp aistack-boot-facts.service aistack-boot-facts.timer /etc/systemd/system/
+#   mkdir -p /etc/systemd/system/aistack-boot-facts.service.d
+#   # host.conf there: OUTPUT (twice, below) and, if you want them, the probes and the UPS
+#   systemctl daemon-reload && systemctl enable --now aistack-boot-facts.timer
+#   systemctl start aistack-boot-facts.service && cat "$OUTPUT/boot-facts.json"
+#
+# On another host (no copy of AIStack, the push of ADR-0020 brings the file to
+# the MSI), the output is the folder of that host's collector, in its `boot`
+# subfolder: OUTPUT=/var/lib/aistack-hotes/<host>/boot
+#
+# What it did: journalctl -u aistack-boot-facts -n 5
+
+[Unit]
+Description=AIStack boot facts (the host's state since its last start, facts only)
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+# Set per host in aistack-boot-facts.service.d/host.conf — the output twice,
+# since ReadWritePaths= does not expand variables:
+#   [Service]
+#   Environment=OUTPUT=/srv/aistack/AIStack/reports/generated/boot-host
+#   ReadWritePaths=/srv/aistack/AIStack/reports/generated/boot-host
+#   Environment=AISTACK_BOOT_UPS=apc@localhost
+#   Environment=AISTACK_BOOT_PROBES=proxy=http://127.0.0.1:80/
+# The UPS and the probes are optional: a host with no UPS or nothing to ask
+# leaves them out. A probe is written under its label, never its URL.
+Environment=OUTPUT=
+ExecStart=/usr/local/sbin/aistack-boot-facts --output ${OUTPUT}
+Nice=10
+IOSchedulingClass=idle
+ProtectSystem=strict
+# iptables takes a lock file under /run.
+ReadWritePaths=-/run/xtables.lock
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+# Reading the journal and the Docker socket needs CAP_DAC_READ_SEARCH and
+# CAP_DAC_OVERRIDE, listing a firewall chain CAP_NET_ADMIN (and CAP_NET_RAW),
+# writing the file as its directory's owner CAP_CHOWN and CAP_FOWNER. Nothing else.
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_CHOWN CAP_FOWNER CAP_NET_ADMIN CAP_NET_RAW
+TimeoutStartSec=2min

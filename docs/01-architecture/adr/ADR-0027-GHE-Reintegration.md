@@ -430,6 +430,18 @@ write is not knowledge and no person's choice triggers it:
   Rewritten whole at every pass, no knowledge of a person, no copy of AIStack
   on the host to go through, and `ADR-0028` reads it. Same nature as the host
   hygiene.
+- *The boot facts* (`boot_facts`), added on 2026-11-26 on the owner's decision
+  ("go B1", after the proposal that named this exemption), as a fourth host
+  service beside the firewall snapshot, the host hygiene and the host logs: a
+  host service that writes, every five minutes, a dated file of **facts** on
+  the host since its last start (when it started, the failed units, the
+  mounted file systems, the containers with their state and health, the
+  rules of `DOCKER-USER`, the KVM modules, how the previous run ended, the UPS
+  and the status of the declared probes), never an address, a URL, a user name
+  or a line of a log. It runs only the closed list of read-only commands
+  written in the script. Rewritten whole at every pass, no knowledge of a
+  person, no copy of AIStack on the host to go through, and `ADR-0032` reads
+  it. Same nature as the host logs.
 - *The security window and series* (`security/window`, `security/series`),
   added on 2026-11-20 on the owner's decision ("go T4a", after the proposal
   that named them), as the vigil's own state beside the notification state:

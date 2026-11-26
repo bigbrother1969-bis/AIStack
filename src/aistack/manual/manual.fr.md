@@ -1109,6 +1109,35 @@ hôte. Un relevé de plus de 25 heures est écarté et le rapport le dit ; l'hô
 peut simplement être éteint. Un hôte sans dossier `security` n'est pas
 signalé.
 
+## Contrôles du démarrage
+
+Après un redémarrage, tu lances toujours les mêmes contrôles à la main.
+AIStack les reprend par tranches (`ADR-0032`) ; la première installe sur
+l'hôte une petite unité qui écrit les faits que ces contrôles lisent : quand
+l'hôte a démarré, les unités en échec, les systèmes de fichiers montés,
+chaque conteneur avec son état et sa santé, les règles de `DOCKER-USER`, les
+modules KVM, comment s'est terminée la période précédente, l'onduleur et le
+statut HTTP des sondes que tu déclares. Elle écrit **des faits seulement**,
+jamais un verdict, et aucune adresse, URL, nom d'utilisateur ni ligne de
+journal ; une sonde est écrite sous son étiquette. Ses commandes forment une
+liste fermée dans le script, aucune par un shell, et elle ne change rien sur
+l'hôte. Les contrôles et l'indicateur du bandeau de santé viennent aux
+tranches suivantes ; d'ici là, rien ne lit le fichier, donc installer l'unité
+est sans effet.
+
+```
+sudo install -m 0755 src/aistack/boot_facts.py /usr/local/sbin/aistack-boot-facts
+sudo cp deploy/boot-facts/aistack-boot-facts.service deploy/boot-facts/aistack-boot-facts.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/aistack-boot-facts.service.d
+# host.conf : OUTPUT et ReadWritePaths (un dossier à lui, par ex. <données>/boot-host),
+# et, si tu les veux, AISTACK_BOOT_UPS (le nom de l'onduleur pour upsc) et AISTACK_BOOT_PROBES (étiquette=url)
+sudo systemctl daemon-reload && sudo systemctl enable --now aistack-boot-facts.timer
+sudo systemctl start aistack-boot-facts.service && journalctl -u aistack-boot-facts -n 5
+```
+
+Une source illisible (Docker, le pare-feu, l'onduleur) le dit dans le fichier,
+sous `sources` ; elle n'est jamais prise pour un hôte en bonne santé.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

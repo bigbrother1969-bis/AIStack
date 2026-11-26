@@ -21,6 +21,7 @@ from aistack.boot_checks.disks import DiskReading, read_disks
 from aistack.boot_checks.monitor import MonitorReading, read_monitors
 from aistack.boot_checks.systems import SystemsReading, read_systems
 from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
+from aistack.boot_checks.history import Retention
 from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_verdict
 from aistack.api_keys import read_store
 from aistack.architecture.yaml import load_infrastructure_topology_yaml
@@ -127,7 +128,7 @@ class BootCheckTask:
                     first = judged(decide(found, base, definition, None, previous, facts.boot_id, now))
 
                     if not dry:
-                        write_verdict(generated_dir, first)
+                        write_verdict(generated_dir, first, keep=_keep(definition))
 
                     verdict = judged(decide(found, base, definition, ask, None, facts.boot_id, now, max(deadline - time.monotonic(), 0.0)))
                 else:
@@ -138,13 +139,13 @@ class BootCheckTask:
                 if todo and ask is not None and definition.ai_enabled:
                     # Questions written before they are asked: a pass cut short leaves them, and nothing is asked again at once.
                     if not dry:
-                        write_verdict(generated_dir, replace(verdict, explanations=(*kept, *markers(todo, now))))
+                        write_verdict(generated_dir, replace(verdict, explanations=(*kept, *markers(todo, now))), keep=_keep(definition))
 
                     asked = explain(todo, found, list(verdict.results), ask, now, max(deadline - time.monotonic(), 0.0))
                     verdict = replace(verdict, explanations=(*kept, *asked))
 
             if not payload.get("dry_run"):
-                write_verdict(generated_dir, verdict)
+                write_verdict(generated_dir, verdict, keep=_keep(definition))
 
             others = _judge_companions(companions, definition, now, generated_dir, bool(payload.get("dry_run")))
             status = _worse(verdict.overall, others)
@@ -217,6 +218,10 @@ def _disks(generated_dir: Path) -> DiskReading | None:
     return read_disks(url) if url else None
 
 
+def _keep(definition: BootChecksDefinition) -> Retention:
+    return Retention(definition.history_days, definition.history_events)
+
+
 def _systems(generated_dir: Path) -> SystemsReading | None:
     """What Beszel says of its machines, with the account of the architecture page; `None` when there is no Beszel or no account."""
 
@@ -277,7 +282,7 @@ def _judge_companions(
             )
 
             if not dry_run:
-                write_verdict(generated_dir, verdict, host.name)
+                write_verdict(generated_dir, verdict, host.name, _keep(definition))
         except ValueError:
             continue
 

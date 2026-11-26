@@ -21,6 +21,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from aistack.boot_checks.phrases import say
+from aistack.boot_checks.controls import ANOMALIES
+from aistack.boot_checks.history import open_since, read_history
 from aistack.boot_checks.screen import LEVELS, companions, elapsed, read_indicator, read_indicators, sentence
 from aistack.boot_checks.state import read_verdict
 from aistack.i18n import Translator
@@ -31,6 +33,8 @@ from aistack.web.exposure import LAN_ONLY, PUBLIC
 from aistack.web.templating import templates
 
 PREFIX = "/boot-check"
+# How many of the latest changes the page lists.
+HISTORY_SHOWN = 40
 STATE_PATH = "/boot-state"
 
 router = APIRouter(dependencies=[LAN_ONLY, SIGNED_IN_ONLY])
@@ -91,6 +95,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
 
     verdict = read_verdict(generated_dir, host)
     shown = read_indicator(generated_dir, now, host)
+    journal = read_history(generated_dir, host)
     rows = [
         {
             "label": t(f"boot_check.control.{result.control}"),
@@ -100,6 +105,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
             "details": tuple(say(t, detail) for detail in result.details),
             "extra": result.control in (verdict.extra if verdict else ()),
             "explanation": _explanation_of(verdict, result),
+            "since": _stamp(open_since(journal, result.control)) if result.status in ANOMALIES else "",
         }
         for result in (verdict.results if verdict else ())
     ]
@@ -114,8 +120,21 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
         for item in (verdict.incidents if verdict else ())
     ]
 
+    history = [
+        {
+            "at": _stamp(event.at),
+            "label": t(f"boot_check.control.{event.control}"),
+            "status": event.status,
+            "status_label": t(f"boot_check.status.{event.status}"),
+            "summary": say(t, event.summary),
+            "details": tuple(say(t, detail) for detail in event.details),
+        }
+        for event in reversed(journal[-HISTORY_SHOWN:])
+    ]
+
     return {
         "host": host,
+        "history": history,
         "verdict": verdict,
         "shown": shown,
         "level": LEVELS.get(shown.status, "not-instrumented"),

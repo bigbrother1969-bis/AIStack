@@ -23,6 +23,7 @@ from typing import Any
 
 from aistack.boot_checks.controls import ANOMALIES, OK, PENDING, UNKNOWN, Result
 from aistack.boot_checks.facts import BootFacts
+from aistack.boot_checks.history import DEFAULT_RETENTION, Event, Retention, history_file, prune, read_history, transitions
 
 STATE = "boot-check.json"
 # A companion's verdict is a file of its own, named after the host in hosts.yml.
@@ -161,8 +162,11 @@ def unknown(now: datetime, note: str) -> Verdict:
     return Verdict(UNKNOWN, 0, now.isoformat(timespec="seconds"), "", None, (), (), note)
 
 
-def write_verdict(directory: Path, verdict: Verdict, host: str | None = None) -> None:
+def write_verdict(directory: Path, verdict: Verdict, host: str | None = None, keep: Retention = DEFAULT_RETENTION) -> None:
+    """Write the state of this pass; what changed since the last one goes to the journal (O2), which never stops the state."""
+
     directory.mkdir(parents=True, exist_ok=True)
+    previous = read_verdict(directory, host)
 
     with tempfile.NamedTemporaryFile("w", dir=directory, delete=False, encoding="utf-8") as handle:
         handle.write(json.dumps(asdict(verdict), indent=1, sort_keys=True) + "\n")
@@ -170,6 +174,29 @@ def write_verdict(directory: Path, verdict: Verdict, host: str | None = None) ->
 
     os.chmod(temporary, 0o644)
     os.replace(temporary, directory / state_file(host))
+
+    try:
+        write_history(directory, transitions(previous, verdict), datetime.fromisoformat(verdict.checked_at), host, keep)
+    except (OSError, ValueError):
+        return
+
+
+def write_history(directory: Path, new: list[Event], now: datetime, host: str | None = None, keep: Retention = DEFAULT_RETENTION) -> None:
+    """Add lines to the journal and trim it, atomically; nothing to add writes nothing."""
+
+    if not new:
+        return
+
+    kept = prune((*read_history(directory, host), *new), now, keep)
+
+    with tempfile.NamedTemporaryFile("w", dir=directory, delete=False, encoding="utf-8") as handle:
+        for event in kept:
+            handle.write(json.dumps(asdict(event), sort_keys=True) + "\n")
+
+        temporary = Path(handle.name)
+
+    os.chmod(temporary, 0o644)
+    os.replace(temporary, directory / history_file(host))
 
 
 def _result(raw: Any) -> Result | None:

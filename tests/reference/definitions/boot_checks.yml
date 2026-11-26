@@ -98,6 +98,13 @@ companions: true
 # fifteen.
 companion_silent_minutes: 45
 
+# The history of the verdicts: the journal of what changed (a control that starts to
+# fail, changes its status or comes back), kept per machine so the page can say since
+# when. A pass that changes nothing writes nothing. The oldest lines go first, past
+# this many days or this many lines.
+history_days: 180
+history_events: 2000
+
 # The paths that must be mounted on a companion after a start, by the host's
 # name in hosts.yml. Empty = not declared: the control is skipped.
 #

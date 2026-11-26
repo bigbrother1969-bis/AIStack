@@ -85,6 +85,11 @@ circumstance:
 circumstances:
   heading: "Circumstances:"
   none: "none, the base controls are enough."
+history:
+  heading: "History"
+  none: "No change recorded yet."
+  since: "since {since}"
+  hint: "Each line is a change in a control: it starts to fail, changes its weight or comes back. A pass that changes nothing writes nothing."
 incidents:
   heading: "Since the start"
   none: "No control has failed since the start."

@@ -85,6 +85,11 @@ circumstance:
 circumstances:
   heading: "Circonstances :"
   none: "aucune, les contrôles de base suffisent."
+history:
+  heading: "Historique"
+  none: "Aucun changement enregistré pour l'instant."
+  since: "depuis le {since}"
+  hint: "Chaque ligne est un changement d'état d'un contrôle : il se met à échouer, change de gravité ou revient. Un passage qui ne change rien n'écrit rien."
 incidents:
   heading: "Depuis le démarrage"
   none: "Aucun contrôle n'a échoué depuis le démarrage."

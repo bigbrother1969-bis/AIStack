@@ -103,6 +103,9 @@ class BootChecksDefinition:
     system_disk_percent: int = 90
     system_memory_percent: int = 90
     system_temperature_celsius: int = 80
+    # The history of the verdicts (O2): how many days and how many lines the journal keeps, the oldest going first.
+    history_days: int = 180
+    history_events: int = 2000
     docker_user_rules: int | None = None
     # label -> the HTTP status the host's probe of that label must answer.
     probes: dict[str, int] = field(default_factory=dict)

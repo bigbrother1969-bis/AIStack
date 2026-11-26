@@ -87,11 +87,11 @@ RULES: tuple[tuple[str, str], ...] = (
 )
 
 _COMPILED = tuple((key, re.compile(pattern)) for key, pattern in RULES)
-_BROKEN = re.compile(r"(?:(?P<down>\d+) down)?(?:, )?(?:(?P<missing>\d+) missing or paused)? \((?P<names>.*)\)")
+_BROKEN = re.compile(r"(?:(?P<down>\d+) down)?(?:, )?(?:(?P<missing>\d+) missing or paused)?(?: \((?P<names>.*)\))?")
 
 
 def _monitor_broken(t: Callable[..., str], text: str) -> str | None:
-    """`2 down, 1 missing or paused (a, b, +1)`: the two counts are told, the names stay as they are."""
+    """`2 down, 1 missing or paused (a, b, +1)`: the two counts are told, the names stay as they are (an older incident has none)."""
 
     found = _BROKEN.fullmatch(text)
 
@@ -106,7 +106,7 @@ def _monitor_broken(t: Callable[..., str], text: str) -> str | None:
     if found["missing"]:
         parts.append(t("boot_check.phrase.monitor_missing", n=found["missing"]))
 
-    return f"{', '.join(parts)} ({found['names']})"
+    return f"{', '.join(parts)} ({found['names']})" if found["names"] else ", ".join(parts)
 
 
 def say(t: Callable[..., str], text: str) -> str:

@@ -80,6 +80,8 @@ def test_the_numbers_and_names_are_kept() -> None:
     assert say(FR, "6 database(s) recovered after the start") == "6 base(s) de données récupérée(s) après le démarrage"
     assert say(FR, "2 down (Gitea, Frigate)") == "2 en panne (Gitea, Frigate)"
     assert say(FR, "1 down, 3 missing or paused (a, b, c, d, +2)") == "1 en panne, 3 absente(s) ou en pause (a, b, c, d, +2)"
+    assert say(FR, "7 down") == "7 en panne"
+    assert say(FR, "3 missing or paused") == "3 absente(s) ou en pause"
     assert say(FR, "proxy: 502 instead of 200") == "proxy : 502 au lieu de 200"
     assert say(FR, "proxy: not read instead of 200") == "proxy : non lu au lieu de 200"
     assert say(FR, "declared 6, found 7") == "déclaré 6, trouvé 7"

@@ -236,3 +236,89 @@ def test_the_task_reads_scrutiny_when_its_address_is_set_and_the_verdict_keeps_t
     again = {result.control: result for result in (read_verdict(tmp_path / "out") or saved).results}  # type: ignore[union-attr]
 
     assert again["disks"].status == SKIPPED
+
+
+# ---- O5: what the reports kept say over time ----------------------------------------------------------------------
+
+DAY = timedelta(days=1)
+
+
+def reports(*steps: tuple[int, dict[str, int], int | None]) -> dict:
+    """`(days ago, {counter: raw}, temperature)` as the `smart_results` of a disk, newest first as Scrutiny sends them."""
+
+    results = []
+
+    for days, raws, temperature in sorted(steps):
+        item: dict = {"date": (NOW - days * DAY).isoformat().replace("+00:00", "Z"), "attrs": {key: {"status": 0, "raw_value": raw, "thresh": 0, "value": 100} for key, raw in raws.items()}}
+
+        if temperature is not None:
+            item["temp"] = temperature
+
+        results.append(item)
+
+    return {"smart_results": results}
+
+
+def with_temp(temperature: int, **extra: object) -> dict:
+    found = entry(**extra)  # type: ignore[arg-type]
+    found["smart"]["temp"] = temperature
+
+    return found
+
+
+def test_a_counter_that_rose_in_the_window_is_to_watch_with_what_to_do() -> None:
+    link = disks_of((entry(), reports((20, {"188": 0, "199": 9}, 36), (10, {"188": 0, "199": 9}, 36), (1, {"188": 65537, "199": 9}, 37))))
+    media = disks_of((entry(), reports((20, {"197": 0}, 36), (1, {"197": 8}, 36))))
+    result, worn = judged(link), judged(media)
+
+    assert result.status == WARNING and result.finding == "disk_counter_rising"
+    assert result.summary == "1 disk(s) read, none failing; 1 with a counter rising"
+    assert result.details[0] == f"ST2000DM008-2FR102 …ABCD: command timeouts rose from 0 to 65537 since {(NOW - 20 * DAY):%Y-%m-%d}"
+    assert result.details[-1] == "to do: check the SATA cable and the power connector of the disks above" and len(result.details) == 2
+    assert worn.finding == "disk_attribute"  # a sector counter above zero is already to watch; this is the one that moves
+
+
+def test_a_counter_that_is_high_but_still_is_not_rising_and_one_outside_the_window_is_not_said() -> None:
+    steady = disks_of((entry(), reports((20, {"199": 9}, 36), (1, {"199": 9}, 36))))
+    old = disks_of((entry(), reports((50, {"188": 0}, 36), (40, {"188": 5}, 36), (10, {"188": 5}, 36), (1, {"188": 5}, 36))))
+    single = disks_of((entry(), reports((1, {"188": 5}, 36))))
+
+    assert judged(steady).status == OK and judged(old).status == OK and judged(single).status == OK
+
+
+def test_the_window_is_the_owner_s_to_set() -> None:
+    old = disks_of((entry(), reports((50, {"188": 0}, 36), (40, {"188": 5}, 36), (1, {"188": 5}, 36))))
+
+    assert judged(old, BootChecksDefinition(disk_rising_days=60)).finding == "disk_counter_rising"
+    assert judged(old, BootChecksDefinition(severity={"disk_counter_rising": "ignore"})).status == OK
+
+
+def test_a_hot_disk_is_to_watch_and_one_that_peaked_before_is_only_said() -> None:
+    hot = disks_of((with_temp(58), reports((1, {"5": 0}, 58))))
+    peaked = disks_of((with_temp(32, model="WDC WD20EZRZ-00Z5HB0", serial="WCC4D5PH"), reports((30, {"5": 0}, 62), (1, {"5": 0}, 32))))
+    result, said = judged(hot), judged(peaked)
+
+    assert result.status == WARNING and result.finding == "disk_hot" and result.summary == "1 disk(s) read, none failing; 1 at or above 55 °C"
+    assert result.details == ("ST2000DM008-2FR102 …ABCD: 58 °C now (limit 55 °C)", "to do: check the airflow and the fan of the machine")
+    assert said.status == INFORMATION and said.summary == "1 disk(s) read, none failing; 1 peaked at or above 55 °C"
+    assert said.details == (f"WDC WD20EZRZ-00Z5HB0 …D5PH: reached 62 °C on {(NOW - 30 * DAY):%Y-%m-%d}",)
+    assert judged(hot, BootChecksDefinition(disk_temperature_celsius=60)).status == OK
+
+
+def test_a_report_without_a_date_or_a_temperature_says_nothing_and_a_failure_still_comes_first() -> None:
+    bare = disks_of((entry(), details(**{"5": (0, 0)})))
+    failing = disks_of((entry(), reports((20, {"199": 1}, 36), (1, {"199": 9, "5": 1}, 70))), (entry(status=1), GOOD))
+
+    assert judged(bare).status == OK
+    assert judged(failing).finding == "disk_failing"
+
+
+def test_the_new_sentences_are_told_in_french_with_their_numbers() -> None:
+    fr = translator_for("fr")
+
+    assert say(fr, "1 disk(s) read, none failing; 1 with a counter rising") == "1 disque(s) lu(s), aucun en défaut; 1 avec un compteur en hausse"
+    assert say(fr, "ST2000DM008 …5CPV: command timeouts rose from 0 to 65537 since 2026-11-02") == "ST2000DM008 …5CPV : dépassements de délai de commande passés de 0 à 65537 depuis le 2026-11-02"
+    assert say(fr, "WDC …5PH: 58 °C now (limit 55 °C)") == "WDC …5PH : 58 °C en ce moment (limite 55 °C)"
+    assert say(fr, "WDC …5PH: reached 62 °C on 2026-07-02") == "WDC …5PH : a atteint 62 °C le 2026-07-02"
+    assert say(fr, "to do: check the SATA cable and the power connector of the disks above").startswith("à faire : vérifier le câble SATA")
+    assert say(fr, "to do: the power supply or its cable is too weak, use the board's own supply").startswith("à faire : l'alimentation")

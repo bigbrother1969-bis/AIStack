@@ -51,6 +51,8 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         expected_monitors=_names(data.get("expected_monitors"), f"{label}: expected_monitors"),
         disk_report_hours=_positive_int(data, "disk_report_hours", defaults.disk_report_hours, label),
         disk_old_hours=_optional_count(data, "disk_old_hours", label),
+        disk_temperature_celsius=_positive_int(data, "disk_temperature_celsius", defaults.disk_temperature_celsius, label),
+        disk_rising_days=_positive_int(data, "disk_rising_days", defaults.disk_rising_days, label),
         history_days=_positive_int(data, "history_days", defaults.history_days, label),
         history_events=_positive_int(data, "history_events", defaults.history_events, label),
         data_disk_percent=_positive_int(data, "data_disk_percent", defaults.data_disk_percent, label),

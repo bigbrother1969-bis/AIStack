@@ -34,6 +34,20 @@ USER_AGENT = "AIStack-BootChecks/1.0"
 # spin retries (10), reported uncorrectable errors (187), pending sectors (197), offline uncorrectable (198).
 CRITICAL_ATTRIBUTES = (5, 10, 187, 197, 198)
 
+# The counters whose growth is a signal (O5): what wears the surface (5, 10, 187, 196, 197, 198) and what is a cable,
+# a connector or a supply (188 command timeouts, 199 interface CRC errors). Their name is what the sentence says.
+COUNTERS = {
+    5: "reallocated sectors",
+    10: "spin retries",
+    187: "uncorrectable errors",
+    188: "command timeouts",
+    196: "reallocation events",
+    197: "pending sectors",
+    198: "offline uncorrectable sectors",
+    199: "interface CRC errors",
+}
+LINK_COUNTERS = (188, 199)
+
 # The Scrutiny status bits: 1 is a SMART failure; 2 and 4 are warnings from failure statistics.
 SMART_FAILED = 1
 MAX_DISKS = 64
@@ -52,6 +66,11 @@ class Disk:
     worn: tuple[int, ...] = ()
     statistical: bool = False
     attributes_read: bool = False
+    # O5: the temperature in the last report, the hottest one of the reports kept (degrees, when), and for each watched
+    # counter its raw value over the reports kept, oldest first.
+    temperature: int | None = None
+    peak: tuple[int, datetime] | None = None
+    counters: tuple[tuple[int, tuple[tuple[datetime, int], ...]], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -130,6 +149,36 @@ def parse_details(details: Any) -> tuple[bool, tuple[int, ...]] | None:
     return failed, tuple(sorted(worn))
 
 
+def parse_history(details: Any) -> tuple[tuple[tuple[int, tuple[tuple[datetime, int], ...]], ...], tuple[int, datetime] | None]:
+    """What the reports kept say over time: the watched counters, and the hottest report; a report without a date is left out."""
+
+    results = details.get("smart_results") if isinstance(details, dict) else None
+    series: dict[int, list[tuple[datetime, int]]] = {}
+    peak: tuple[int, datetime] | None = None
+
+    for result in results if isinstance(results, list) else []:
+        moment = _moment(result.get("date")) if isinstance(result, dict) else None
+
+        if moment is None:
+            continue
+
+        heat = _number(result.get("temp"))
+
+        if heat is not None and (peak is None or heat > peak[0]):
+            peak = (heat, moment)
+
+        attributes = result.get("attrs")
+
+        for number in COUNTERS:
+            attribute = attributes.get(str(number)) if isinstance(attributes, dict) else None
+            raw = _number(attribute.get("raw_value")) if isinstance(attribute, dict) else None
+
+            if raw is not None:
+                series.setdefault(number, []).append((moment, raw))
+
+    return tuple((number, tuple(sorted(points))) for number, points in sorted(series.items())), peak
+
+
 def parse_summary(summary: Any) -> list[tuple[str, dict[str, Any]]]:
     """The (WWN, entry) pairs of `/api/summary`; anything that is not that shape is not read."""
 
@@ -153,6 +202,7 @@ def disk_of(wwn: str, entry: dict[str, Any], details: Any) -> Disk:
     status = _number(device.get("device_status")) or 0
     read = parse_details(details)
     failed, worn = read if read is not None else (False, ())
+    counters, peak = parse_history(details)
 
     return Disk(
         wwn=wwn,
@@ -164,6 +214,9 @@ def disk_of(wwn: str, entry: dict[str, Any], details: Any) -> Disk:
         worn=worn,
         statistical=bool(status & ~SMART_FAILED),
         attributes_read=read is not None,
+        temperature=_number(smart.get("temp")),
+        peak=peak,
+        counters=counters,
     )
 
 

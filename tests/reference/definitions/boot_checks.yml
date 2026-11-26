@@ -41,6 +41,12 @@ expected_monitors: []
 # (reallocated, pending or uncorrectable sectors, spin retries) is to watch.
 disk_report_hours: 36
 # disk_old_hours: 50000
+# What the SMART reports Scrutiny keeps say over time: a disk at or above this many
+# degrees is to watch (a disk that peaked above it before is only said), and so is a
+# disk with a counter that rose in the last `disk_rising_days` (sectors, but also the
+# command timeouts and interface errors that point at a cable or a supply).
+disk_temperature_celsius: 55
+disk_rising_days: 30
 
 # Beszel (the machines it watches; its account is the one of the architecture page, set
 # in Settings; without it the control is skipped). A machine Beszel calls down is to
@@ -105,6 +111,8 @@ severity:
   disk_attribute: warning
   system_down: warning
   system_pressure: warning
+  disk_counter_rising: warning
+  disk_hot: warning
   disk_full_soon: warning
   data_disk_full: warning
   data_disk_soon: warning

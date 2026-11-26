@@ -15,6 +15,8 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 
+from aistack.boot_checks.disks import COUNTERS
+
 # (catalog key under `boot_check.phrase`, the English sentence as a pattern).
 RULES: tuple[tuple[str, str], ...] = (
     ("failed_units_some", r"(?P<n>\d+) unit\(s\) failed"),
@@ -71,6 +73,19 @@ RULES: tuple[tuple[str, str], ...] = (
     ("disks_unread", r"(?P<n>\d+) without readable attributes"),
     ("disks_old", r"(?P<n>\d+) old"),
     ("disks_statistics", r"(?P<n>\d+) flagged only by Scrutiny's statistics"),
+    ("disks_rising", r"(?P<n>\d+) with a counter rising"),
+    ("disks_hot", r"(?P<n>\d+) at or above (?P<limit>\d+) \u00b0C"),
+    ("disks_peaked", r"(?P<n>\d+) peaked at or above (?P<limit>\d+) \u00b0C"),
+    ("disks_hot_line", r"(?P<label>.+): (?P<temp>\d+) \u00b0C now \(limit (?P<limit>\d+) \u00b0C\)"),
+    ("disks_peak_line", r"(?P<label>.+): reached (?P<peak>\d+) \u00b0C on (?P<date>\d{4}-\d{2}-\d{2})"),
+    ("disks_do_backup", r"to do: back up the disks above now and plan to replace them"),
+    ("disks_do_cable", r"to do: check the SATA cable and the power connector of the disks above"),
+    ("disks_do_cool", r"to do: check the airflow and the fan of the machine"),
+    ("throttled_do_power", r"to do: the power supply or its cable is too weak, use the board's own supply"),
+    *(
+        (f"disks_rise_{number}", r"(?P<label>.+): " + name + r" rose from (?P<a>\d+) to (?P<b>\d+) since (?P<date>\d{4}-\d{2}-\d{2})")
+        for number, name in COUNTERS.items()
+    ),
     ("systems_not_connected", r"Beszel is not connected \(its account, in Settings\)"),
     ("systems_ignored", r"system findings are ignored"),
     ("systems_head_ok", r"(?P<n>\d+) system\(s\) read, none down, none under pressure"),

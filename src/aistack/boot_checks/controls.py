@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 
 from aistack.boot_checks.definition import CRITICAL, IGNORE, WARNING, BootChecksDefinition
 from aistack.architecture.beszel_reading import BeszelSystemReading
-from aistack.boot_checks.disks import Disk, DiskReading
+from aistack.boot_checks.disks import COUNTERS, LINK_COUNTERS, Disk, DiskReading
 from aistack.boot_checks.facts import BootFacts
 from aistack.boot_checks.monitor import DOWN, MAINTENANCE, WAITING, MonitorReading
 from aistack.boot_checks.trend import Trend, trend_of
@@ -264,11 +264,13 @@ def _throttled(facts: BootFacts, definition: BootChecksDefinition, settled: bool
     now = _throttle_names(facts.throttled & _THROTTLE_NOW)
     since = _throttle_names(facts.throttled >> 16 & _THROTTLE_NOW)
 
+    power = ("to do: the power supply or its cable is too weak, use the board's own supply",) if "under-voltage" in (*now, *since) else ()
+
     if now:
-        return _fails("throttled", "companion_throttled", "a power or temperature limit is active now", now, definition, settled)
+        return _fails("throttled", "companion_throttled", "a power or temperature limit is active now", (*now, *power), definition, settled)
 
     if since:
-        return Result("throttled", INFORMATION, "a limit was reached since the start, none now", since)
+        return Result("throttled", INFORMATION, "a limit was reached since the start, none now", (*since, *power))
 
     return _passes("throttled", "no power or temperature limit, now or since the start")
 
@@ -363,6 +365,20 @@ def _monitors(reading: MonitorReading | None, definition: BootChecksDefinition, 
     return _passes("monitor", f"{running} monitor(s) up, none down{note}")
 
 
+def _rises(disk: Disk, now: datetime, days: int) -> list[tuple[int, int, int, datetime]]:
+    """The watched counters of a disk that rose within the last `days`: (counter, from, to, since)."""
+
+    found = []
+
+    for number, points in disk.counters:
+        inside = [point for point in points if now - point[0] <= timedelta(days=days)]
+
+        if len(inside) >= 2 and inside[-1][1] > inside[0][1]:
+            found.append((number, inside[0][1], inside[-1][1], inside[0][0]))
+
+    return found
+
+
 def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: datetime) -> Result:
     """Scrutiny: a SMART failure is to fix, a critical attribute above zero is to watch; age and statistics are only said."""
 
@@ -385,6 +401,11 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
     worn = [disk for disk in fresh if disk.worn and not disk.failed_smart]
     old = [disk for disk in fresh if definition.disk_old_hours is not None and disk.hours is not None and disk.hours >= definition.disk_old_hours]
     hint = [disk for disk in fresh if disk.statistical and not disk.failed_smart and not disk.worn]
+    heat = definition.disk_temperature_celsius
+    rises = {disk.wwn: _rises(disk, now, definition.disk_rising_days) for disk in fresh}
+    rising = [disk for disk in fresh if rises[disk.wwn]]
+    hot = [disk for disk in fresh if disk.temperature is not None and disk.temperature >= heat]
+    peaked = [disk for disk in fresh if disk not in hot and disk.peak is not None and disk.peak[0] >= heat]
 
     def names(group: list[Disk]) -> tuple[str, ...]:
         return tuple(disk.label for disk in group)
@@ -397,6 +418,9 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
         f"{len(unread)} without readable attributes" if unread else "",
         f"{len(old)} old" if old else "",
         f"{len(hint)} flagged only by Scrutiny's statistics" if hint else "",
+        f"{len(rising)} with a counter rising" if rising else "",
+        f"{len(hot)} at or above {heat} \u00b0C" if hot else "",
+        f"{len(peaked)} peaked at or above {heat} \u00b0C" if peaked else "",
     ]
     summary = "; ".join([head, *(part for part in parts if part)])
 
@@ -410,11 +434,35 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
 
         return failed if failed is not None else _skipped("disks", "disk findings are ignored")
 
+    if rising:
+        lines = tuple(
+            f"{disk.label}: {COUNTERS[number]} rose from {before} to {after} since {since:%Y-%m-%d}"
+            for disk in rising
+            for number, before, after, since in rises[disk.wwn]
+        )
+        media = any(number not in LINK_COUNTERS for disk in rising for number, *_ in rises[disk.wwn])
+        link = any(number in LINK_COUNTERS for disk in rising for number, *_ in rises[disk.wwn])
+        todo = (("to do: back up the disks above now and plan to replace them",) if media else ()) + (
+            ("to do: check the SATA cable and the power connector of the disks above",) if link else ()
+        )
+        failed = _fails("disks", "disk_counter_rising", summary, (*lines[: MAX_DETAILS - len(todo)], *todo), definition, True)
+
+        return failed if failed is not None else _skipped("disks", "disk findings are ignored")
+
+    if hot:
+        lines = tuple(f"{disk.label}: {disk.temperature} \u00b0C now (limit {heat} \u00b0C)" for disk in hot)
+        failed = _fails("disks", "disk_hot", summary, (*lines, "to do: check the airflow and the fan of the machine"), definition, True)
+
+        return failed if failed is not None else _skipped("disks", "disk findings are ignored")
+
     if stale or unread:
         return Result("disks", UNKNOWN, summary, names(stale + unread)[:MAX_DETAILS])
 
-    if old or hint:
-        return Result("disks", INFORMATION, summary, names(old + [disk for disk in hint if disk not in old])[:MAX_DETAILS])
+    if old or hint or peaked:
+        said = names(old + [disk for disk in hint if disk not in old])
+        past = tuple(f"{disk.label}: reached {disk.peak[0]} \u00b0C on {disk.peak[1]:%Y-%m-%d}" for disk in peaked if disk.peak is not None)
+
+        return Result("disks", INFORMATION, summary, (*said, *past)[:MAX_DETAILS])
 
     return _passes("disks", summary)
 

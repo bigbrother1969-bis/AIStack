@@ -26,6 +26,8 @@ FINDINGS = (
     "monitor_down",
     "disk_failing",
     "disk_attribute",
+    "disk_counter_rising",
+    "disk_hot",
     "system_down",
     "system_pressure",
     "disk_full_soon",
@@ -66,6 +68,8 @@ DEFAULT_SEVERITY = {
     "monitor_down": WARNING,
     "disk_failing": CRITICAL,
     "disk_attribute": WARNING,
+    "disk_counter_rising": WARNING,
+    "disk_hot": WARNING,
     "system_down": WARNING,
     "system_pressure": WARNING,
     "disk_full_soon": WARNING,
@@ -105,6 +109,10 @@ class BootChecksDefinition:
     # to be old (`None` = say nothing of age).
     disk_report_hours: int = 36
     disk_old_hours: int | None = None
+    # O5: a disk whose temperature reaches this (degrees) is to watch; a counter of its SMART report that rose within the
+    # last `disk_rising_days` is to watch too.
+    disk_temperature_celsius: int = 55
+    disk_rising_days: int = 30
     # Beszel: a machine whose disk or memory use, in percent, or whose temperature, in degrees, reaches this is to watch.
     system_disk_percent: int = 90
     system_memory_percent: int = 90

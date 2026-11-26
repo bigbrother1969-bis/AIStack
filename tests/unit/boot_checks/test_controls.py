@@ -274,8 +274,12 @@ def test_a_limit_active_now_is_to_watch_and_one_in_the_past_is_only_information(
     now = by_control(evaluate_companion("h", pi(throttled=0x5), "", COMPANION, LATER))["throttled"]
     past = by_control(evaluate_companion("h", pi(throttled=0x50000), "", COMPANION, LATER))["throttled"]
 
-    assert now.status == "warning" and now.details == ("under-voltage", "throttled")
-    assert past.status == INFORMATION and past.details == ("under-voltage", "throttled")
+    power = "to do: the power supply or its cable is too weak, use the board's own supply"
+    heat = by_control(evaluate_companion("h", pi(throttled=0x8), "", COMPANION, LATER))["throttled"]
+
+    assert now.status == "warning" and now.details == ("under-voltage", "throttled", power)
+    assert past.status == INFORMATION and past.details == ("under-voltage", "throttled", power)
+    assert heat.details == ("soft temperature limit",)  # no under-voltage, no word about the supply
     assert by_control(evaluate_companion("h", pi(throttled=None, sources={"throttled": "error: no vcgencmd"}), "", COMPANION, LATER))["throttled"].status == UNKNOWN
     assert "throttled" not in by_control(evaluate_companion("h", pi(sources={"throttled": "absent"}), "", COMPANION, LATER))
 

@@ -52,6 +52,22 @@ class Incident:
 
 
 @dataclass(frozen=True)
+class Explanation:
+    """
+    What the AI engine said of one anomaly (B5c): text only, never a verdict, never executed. It belongs to the
+    control, its status and its sentence as they were when it was asked; an empty `text` marks a question that
+    was asked and not answered, so it is not asked again at every pass. `by` names the engine that answered.
+    """
+
+    control: str
+    status: str
+    summary: str
+    text: str
+    by: str
+    asked_at: str
+
+
+@dataclass(frozen=True)
 class Verdict:
     """The overall answer. `anomalies` counts the controls to watch or to fix."""
 
@@ -69,6 +85,8 @@ class Verdict:
     # B5b: who chose the extra controls ("rules" or "engine", empty before any choice) and the sentence the engine gave.
     chosen_by: str = ""
     choice_reason: str = ""
+    # B5c: what the engine said of the anomalies, one entry per anomaly explained.
+    explanations: tuple[Explanation, ...] = ()
 
 
 def overall(results: list[Result]) -> str:
@@ -167,6 +185,20 @@ def _result(raw: Any) -> Result | None:
     )
 
 
+def _explanation(raw: Any) -> Explanation | None:
+    if not isinstance(raw, dict) or not isinstance(raw.get("control"), str):
+        return None
+
+    return Explanation(
+        raw["control"],
+        str(raw.get("status", "")),
+        str(raw.get("summary", "")),
+        str(raw.get("text", "")),
+        str(raw.get("by", "")),
+        str(raw.get("asked_at", "")),
+    )
+
+
 def _incident(raw: Any) -> Incident | None:
     if not isinstance(raw, dict) or not isinstance(raw.get("control"), str):
         return None
@@ -208,6 +240,7 @@ def read_verdict(directory: Path, host: str | None = None) -> Verdict | None:
         extra=tuple(str(item) for item in raw.get("extra", ()) if isinstance(item, str)),
         chosen_by=str(raw.get("chosen_by", "")),
         choice_reason=str(raw.get("choice_reason", "")),
+        explanations=tuple(item for item in (_explanation(entry) for entry in raw.get("explanations", ())) if item is not None),
     )
 
 

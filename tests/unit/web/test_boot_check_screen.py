@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 from aistack.boot_checks.controls import Result
-from aistack.boot_checks.state import Incident, Verdict, write_verdict
+from aistack.boot_checks.state import Explanation, Incident, Verdict, read_verdict, write_verdict
 from aistack.web.app import WebPaths, create_app
 from tests.unit.web.test_api_keys_settings import LANGUAGES, LISTENERS
 from tests.unit.web_signed_in import signed_in
@@ -125,3 +126,20 @@ def test_without_a_circumstance_the_page_says_the_base_controls_are_enough(tmp_p
     write(tmp_path)
 
     assert "none, the base controls are enough." in signed_in(client(tmp_path)).get("/boot-check/?lang=en").text
+
+
+def test_the_page_shows_the_engine_s_words_under_the_anomaly_they_concern_and_only_then(tmp_path: Path) -> None:
+    write(tmp_path, "warning")
+    verdict = read_verdict(tmp_path)
+    assert verdict is not None
+    said = Explanation("containers", "warning", "1 expected container missing", "Un conteneur attendu ne tourne pas.", "olala", "2026-11-26T09:00:00+00:00")
+    stale = Explanation("containers", "warning", "2 expected containers missing", "Texte périmé.", "olala", "2026-11-26T09:00:00+00:00")
+
+    write_verdict(tmp_path, replace(verdict, explanations=(stale, said)))
+    page = signed_in(client(tmp_path)).get("/boot-check/?lang=fr").text
+
+    assert "Un conteneur attendu ne tourne pas." in page and "non vérifiée" in page and "Texte périmé" not in page
+
+    write_verdict(tmp_path, replace(verdict, explanations=(replace(said, text=""),)))
+
+    assert "non vérifiée" not in signed_in(client(tmp_path)).get("/boot-check/?lang=fr").text

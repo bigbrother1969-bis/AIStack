@@ -64,6 +64,16 @@ def _stamp(value: str | None) -> str:
     return (value or "")[:16].replace("T", " ")
 
 
+def _explanation_of(verdict: object, result: object) -> str:
+    """The engine's words on an anomaly, when they still concern the control as it is now; empty otherwise."""
+
+    for item in getattr(verdict, "explanations", ()):
+        if (item.control, item.status, item.summary) == (result.control, result.status, result.summary):  # type: ignore[attr-defined]
+            return item.text  # type: ignore[no-any-return]
+
+    return ""
+
+
 def _choice(t: Translator, verdict: object) -> str:
     """Who chose the extra controls: the engine (and what it said) or the rules; empty when nothing was to choose."""
 
@@ -89,6 +99,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
             "summary": say(t, result.summary),
             "details": tuple(say(t, detail) for detail in result.details),
             "extra": result.control in (verdict.extra if verdict else ()),
+            "explanation": _explanation_of(verdict, result),
         }
         for result in (verdict.results if verdict else ())
     ]

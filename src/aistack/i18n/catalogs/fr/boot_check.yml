@@ -167,3 +167,5 @@ choice:
   engine: "Contrôles complémentaires : le moteur IA de la maison les a choisis (explication de l'IA, non vérifiée) — {reason}"
   rules: "Contrôles complémentaires : choisis par les règles (aucun moteur IA n'a répondu, ou aucun n'est consulté)."
   no_reason: "sans raison donnée"
+explanation:
+  label: "Explication de l'IA, non vérifiée :"

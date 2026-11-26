@@ -167,3 +167,5 @@ choice:
   engine: "Extra controls: chosen by the AI engine of the house (the AI's explanation, not verified) — {reason}"
   rules: "Extra controls: chosen by the rules (no AI engine answered, or none is asked)."
   no_reason: "no reason given"
+explanation:
+  label: "The AI's explanation, not verified:"

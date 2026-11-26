@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
+import time
 from collections.abc import Mapping
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -10,7 +11,8 @@ from typing import Any
 import yaml
 
 from aistack.boot_checks.catalogue import circumstances, evaluate_extra, settled_since
-from aistack.boot_checks.choice import Ask, Choice, decide, wants_engine
+from aistack.boot_checks.choice import ASK_SECONDS, Ask, Choice, decide, wants_engine
+from aistack.boot_checks.explain import explain, markers, standing
 from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, read_facts_file
@@ -106,21 +108,36 @@ class BootCheckTask:
                 settled = settled_since(facts, definition, now)
                 base = evaluate(facts, definition, now, storage, backup, monitors)
 
+                # One budget for everything asked of the engine: the vigil stops a pass at 300 s.
+                deadline = time.monotonic() + ASK_SECONDS
+                dry = bool(payload.get("dry_run"))
+
                 def judged(choice: Choice) -> Verdict:
                     results = [*base, *evaluate_extra(choice.controls, facts, definition, backup, settled)]
+                    made = judge(results, facts, now, previous, found, choice.controls, choice.by, choice.reason)
 
-                    return judge(results, facts, now, previous, found, choice.controls, choice.by, choice.reason)
+                    return replace(made, explanations=standing(results, previous, facts.boot_id, now)[0])
 
                 if wants_engine(found, definition, ask, previous, facts.boot_id, now):
                     # The engine may take minutes: the verdict of the rules is written first, so a pass cut short still says how the start looks.
                     first = judged(decide(found, base, definition, None, previous, facts.boot_id, now))
 
-                    if not payload.get("dry_run"):
+                    if not dry:
                         write_verdict(generated_dir, first)
 
-                    verdict = judged(decide(found, base, definition, ask, None, facts.boot_id, now))
+                    verdict = judged(decide(found, base, definition, ask, None, facts.boot_id, now, max(deadline - time.monotonic(), 0.0)))
                 else:
                     verdict = judged(decide(found, base, definition, ask, previous, facts.boot_id, now))
+
+                kept, todo = standing(list(verdict.results), previous, facts.boot_id, now)
+
+                if todo and ask is not None and definition.ai_enabled:
+                    # Questions written before they are asked: a pass cut short leaves them, and nothing is asked again at once.
+                    if not dry:
+                        write_verdict(generated_dir, replace(verdict, explanations=(*kept, *markers(todo, now))))
+
+                    asked = explain(todo, found, list(verdict.results), ask, now, max(deadline - time.monotonic(), 0.0))
+                    verdict = replace(verdict, explanations=(*kept, *asked))
 
             if not payload.get("dry_run"):
                 write_verdict(generated_dir, verdict)

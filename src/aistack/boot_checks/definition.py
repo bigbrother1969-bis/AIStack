@@ -26,6 +26,8 @@ FINDINGS = (
     "monitor_down",
     "disk_failing",
     "disk_attribute",
+    "system_down",
+    "system_pressure",
     "companion_unreachable",
     "companion_throttled",
     "database_recovery",
@@ -61,6 +63,8 @@ DEFAULT_SEVERITY = {
     "monitor_down": WARNING,
     "disk_failing": CRITICAL,
     "disk_attribute": WARNING,
+    "system_down": WARNING,
+    "system_pressure": WARNING,
     "companion_unreachable": CRITICAL,
     "companion_throttled": WARNING,
     "database_recovery": WARNING,
@@ -95,6 +99,10 @@ class BootChecksDefinition:
     # to be old (`None` = say nothing of age).
     disk_report_hours: int = 36
     disk_old_hours: int | None = None
+    # Beszel: a machine whose disk or memory use, in percent, or whose temperature, in degrees, reaches this is to watch.
+    system_disk_percent: int = 90
+    system_memory_percent: int = 90
+    system_temperature_celsius: int = 80
     docker_user_rules: int | None = None
     # label -> the HTTP status the host's probe of that label must answer.
     probes: dict[str, int] = field(default_factory=dict)

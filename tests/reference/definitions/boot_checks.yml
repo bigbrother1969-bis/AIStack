@@ -42,6 +42,14 @@ expected_monitors: []
 disk_report_hours: 36
 # disk_old_hours: 50000
 
+# Beszel (the machines it watches; its account is the one of the architecture page, set
+# in Settings; without it the control is skipped). A machine Beszel calls down is to
+# watch, and so is one whose disk or memory use (percent) or temperature (degrees) is at
+# one of these limits. The CPU is not judged: one instant of it says nothing of a start.
+system_disk_percent: 90
+system_memory_percent: 90
+system_temperature_celsius: 80
+
 # How many rules the DOCKER-USER chain holds after a start. Leave it out to
 # skip the control.
 # docker_user_rules: 7
@@ -74,6 +82,8 @@ severity:
   monitor_down: warning
   disk_failing: critical
   disk_attribute: warning
+  system_down: warning
+  system_pressure: warning
   companion_unreachable: critical
   companion_throttled: warning
 

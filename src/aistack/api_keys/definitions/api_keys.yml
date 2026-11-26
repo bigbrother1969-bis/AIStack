@@ -124,7 +124,7 @@ keys:
         - "Jellyfin → Dashboard → API Keys → \"+\", named \"AIStack\" → copy the key and paste it here."
   - name: BESZEL_EMAIL
     title: {fr: "Beszel — adresse e-mail", en: "Beszel — e-mail address"}
-    used_by: {fr: "Architecture (relevés Beszel)", en: "Architecture (Beszel readings)"}
+    used_by: {fr: "Architecture (relevés Beszel) et contrôles du démarrage (état des machines)", en: "Architecture (Beszel readings) and start-up checks (the machines' state)"}
     applies: {fr: "au prochain rendu", en: "at the next rendering"}
     secret: false
     procedure:
@@ -134,7 +134,7 @@ keys:
         - "Optional, if Beszel watches your machines: the e-mail address of a Beszel hub account (a read-only one is enough)."
   - name: BESZEL_PASSWORD
     title: {fr: "Beszel — mot de passe", en: "Beszel — password"}
-    used_by: {fr: "Architecture (relevés Beszel)", en: "Architecture (Beszel readings)"}
+    used_by: {fr: "Architecture (relevés Beszel) et contrôles du démarrage (état des machines)", en: "Architecture (Beszel readings) and start-up checks (the machines' state)"}
     applies: {fr: "au prochain rendu", en: "at the next rendering"}
     procedure:
       fr:

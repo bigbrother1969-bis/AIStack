@@ -11,6 +11,8 @@ from aistack.boot_checks.monitor import MonitorReading
 from aistack.boot_checks.phrases import RULES, say
 from aistack.i18n import translator_for
 from tests.unit.boot_checks.test_controls import DEFINITION as BASE, LATER, facts
+from tests.unit.boot_checks.test_systems import machine
+from aistack.boot_checks.systems import SystemsReading
 from tests.unit.boot_checks.test_disks import GOOD, OLD_REPORT, details, disks_of, entry
 
 FR = translator_for("fr")
@@ -73,6 +75,20 @@ def _every_sentence() -> set[str]:
         disks_of((entry(), GOOD)),
     )
 
+    machines = (
+        None,
+        SystemsReading(False, "Beszel did not answer"),
+        SystemsReading(True, "", ()),
+        SystemsReading(True, "", (machine(), machine("pi", temp=61.8))),
+        SystemsReading(True, "", (machine("a", status="down"), machine("b", disk=95.0, memory=99.0, temp=85.0), machine("c", disk=None, memory=None, temp=None))),
+        SystemsReading(True, "", (machine("c", disk=None, memory=None, temp=None),)),
+    )
+
+    for definition in (WIDE, BootChecksDefinition(severity={"system_down": "ignore", "system_pressure": "ignore"})):
+        for systems in machines:
+            for result in evaluate(facts(), definition, LATER, Reading(True, 0), Reading(True, 0), None, None, systems):
+                said.update([result.summary, *result.details])
+
     for definition in (WIDE, aged, BootChecksDefinition(severity={"disk_attribute": "ignore", "disk_failing": "ignore"})):
         for disks in readings:
             for result in evaluate(facts(), definition, LATER, Reading(True, 0), Reading(True, 0), None, disks):
@@ -83,7 +99,7 @@ def _every_sentence() -> set[str]:
 
 def test_every_sentence_the_controls_say_is_told_in_french() -> None:
     # Names of the host (mounts, containers, monitors) and a note that is not the program's own are shown as they are.
-    names = {"/", "/media/Data", "Pi-hole", "ST2000DM008-2FR102 …ABCD", "a", "b", "x", "y", "db", "olala", "web", "a note of its own", "refused"}
+    names = {"/", "/media/Data", "Pi-hole", "ST2000DM008-2FR102 …ABCD", "raspberry", "pi", "c", "a", "b", "x", "y", "db", "olala", "web", "a note of its own", "refused"}
     unknown = sorted(text for text in _every_sentence() if say(FR, text) == text and text not in names)
 
     assert unknown == []
@@ -116,4 +132,4 @@ def test_a_sentence_that_is_not_the_program_s_own_is_shown_as_it_is() -> None:
 def test_the_catalogs_have_every_sentence_in_both_languages() -> None:
     for key, _ in RULES:
         for translate in (FR, EN):
-            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", hour="01:00", domain="d", reason="r", pressure="1", swap="2") != f"boot_check.phrase.{key}"
+            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", limit="90", hour="01:00", domain="d", reason="r", pressure="1", swap="2") != f"boot_check.phrase.{key}"

@@ -19,14 +19,17 @@ from aistack.boot_checks.facts import BootFacts, read_facts_file
 from aistack.boot_checks.load import load_boot_checks_yaml
 from aistack.boot_checks.disks import DiskReading, read_disks
 from aistack.boot_checks.monitor import MonitorReading, read_monitors
+from aistack.boot_checks.systems import SystemsReading, read_systems
 from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
 from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_verdict
 from aistack.api_keys import read_store
+from aistack.architecture.yaml import load_infrastructure_topology_yaml
 from aistack.config import PACKAGE_ROOT, configured
 from aistack.hosts.records import TracedHost, load_hosts_declaration
 from aistack.kernel.execution import Observation, ObservationContext, Request
 
 DEFAULT_GENERATED_DIR = "reports/generated"
+DEFAULT_TOPOLOGY = configured(PACKAGE_ROOT / "architecture" / "definitions" / "infrastructure_topology.yml")
 # Where the host unit aistack-boot-facts writes, under the data directory.
 HOST_DIR = "boot-host"
 # The folder, under a companion's directory of hosts.yml, where its own host unit's facts arrive (ADR-0020's push).
@@ -107,7 +110,7 @@ class BootCheckTask:
                 previous = read_verdict(generated_dir)
                 ask = _engine(payload)
                 settled = settled_since(facts, definition, now)
-                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir))
+                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir))
 
                 # One budget for everything asked of the engine: the vigil stops a pass at 300 s.
                 deadline = time.monotonic() + ASK_SECONDS
@@ -212,6 +215,24 @@ def _disks(generated_dir: Path) -> DiskReading | None:
     url = read_store(generated_dir).get(SCRUTINY_URL) or os.environ.get(SCRUTINY_URL, "")
 
     return read_disks(url) if url else None
+
+
+def _systems(generated_dir: Path) -> SystemsReading | None:
+    """What Beszel says of its machines, with the account of the architecture page; `None` when there is no Beszel or no account."""
+
+    try:
+        connection = load_infrastructure_topology_yaml(DEFAULT_TOPOLOGY).beszel
+    except (OSError, ValueError, yaml.YAMLError):
+        return None
+
+    if connection is None:
+        return None
+
+    stored = read_store(generated_dir)
+    email = stored.get(connection.email_env) or os.environ.get(connection.email_env, "")
+    password = stored.get(connection.password_env) or os.environ.get(connection.password_env, "")
+
+    return read_systems(connection.url, email, password) if email and password else None
 
 
 def _companion_folders(generated_dir: Path, hosts_file: object = None) -> list[TracedHost]:

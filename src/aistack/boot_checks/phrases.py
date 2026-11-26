@@ -71,6 +71,15 @@ RULES: tuple[tuple[str, str], ...] = (
     ("disks_unread", r"(?P<n>\d+) without readable attributes"),
     ("disks_old", r"(?P<n>\d+) old"),
     ("disks_statistics", r"(?P<n>\d+) flagged only by Scrutiny's statistics"),
+    ("systems_not_connected", r"Beszel is not connected \(its account, in Settings\)"),
+    ("systems_ignored", r"system findings are ignored"),
+    ("systems_head_ok", r"(?P<n>\d+) system\(s\) read, none down, none under pressure"),
+    ("systems_head", r"(?P<n>\d+) system\(s\) read"),
+    ("systems_down", r"(?P<n>\d+) system\(s\) down"),
+    ("systems_disk", r"(?P<n>\d+) with disk use at or above (?P<limit>\d+) %"),
+    ("systems_memory", r"(?P<n>\d+) with memory use at or above (?P<limit>\d+) %"),
+    ("systems_temperature", r"(?P<n>\d+) at or above (?P<limit>\d+) \u00b0C"),
+    ("systems_unread", r"(?P<n>\d+) without readings"),
     ("domain_not_read", r"(?P<domain>storage|backup) was not read"),
     ("domain_not_instrumented", r"(?P<domain>storage|backup) is not instrumented on this host"),
     ("domain_findings", r"(?P<n>\d+) finding\(s\) in the (?P<domain>storage|backup) domain"),
@@ -119,17 +128,21 @@ def _monitor_broken(t: Callable[..., str], text: str) -> str | None:
     return f"{', '.join(parts)} ({found['names']})" if found["names"] else ", ".join(parts)
 
 
-def _disks_summary(t: Callable[..., str], text: str) -> str | None:
-    """`8 disk(s) read; 1 failing SMART; 2 old`: each part is told on its own, `None` when one of them is not the program's."""
+def _summary(t: Callable[..., str], text: str) -> str | None:
+    """`8 disk(s) read; 1 failing SMART; 2 old`, `3 system(s) read; 1 system(s) down`: each part is told on its own, `None` when one is not the program's."""
 
-    if not re.match(r"\d+ disk\(s\) read", text):
+    found = re.match(r"\d+ (disk|system)\(s\) read", text)
+
+    if found is None:
         return None
+
+    prefix = "disks_" if found.group(1) == "disk" else "systems_"
 
     told = []
 
     for part in text.split("; "):
         for key, pattern in _COMPILED:
-            found = pattern.fullmatch(part) if key.startswith("disks_") else None
+            found = pattern.fullmatch(part) if key.startswith(prefix) else None
 
             if found is not None:
                 told.append(t(f"boot_check.phrase.{key}", **found.groupdict()))
@@ -148,10 +161,10 @@ def say(t: Callable[..., str], text: str) -> str:
     if broken is not None:
         return broken
 
-    disks = _disks_summary(t, text)
+    summary = _summary(t, text)
 
-    if disks is not None:
-        return disks
+    if summary is not None:
+        return summary
 
     for key, pattern in _COMPILED:
         found = pattern.fullmatch(text)

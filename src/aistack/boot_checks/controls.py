@@ -22,9 +22,13 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 
 from aistack.boot_checks.definition import CRITICAL, IGNORE, WARNING, BootChecksDefinition
+from aistack.architecture.beszel_reading import BeszelSystemReading
 from aistack.boot_checks.disks import Disk, DiskReading
 from aistack.boot_checks.facts import BootFacts
 from aistack.boot_checks.monitor import DOWN, MAINTENANCE, WAITING, MonitorReading
+from aistack.boot_checks.systems import DOWN as SYSTEM_DOWN
+from aistack.boot_checks.systems import UP as SYSTEM_UP
+from aistack.boot_checks.systems import SystemsReading
 
 OK = "ok"
 PENDING = "pending"
@@ -412,6 +416,57 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
     return _passes("disks", summary)
 
 
+def _systems(reading: SystemsReading | None, definition: BootChecksDefinition) -> Result:
+    """Beszel: a machine it calls down, or one whose disk, memory or temperature is at its declared limit, is to watch."""
+
+    if reading is None:
+        return _skipped("systems", "Beszel is not connected (its account, in Settings)")
+
+    if not reading.reachable:
+        return Result("systems", UNKNOWN, f"not read: {reading.reason}")
+
+    judged = [system for system in reading.systems if system.status in (SYSTEM_UP, SYSTEM_DOWN)]
+
+    if not judged:
+        return Result("systems", UNKNOWN, "not read: Beszel reports no machine in service")
+
+    down = [system for system in judged if system.status == SYSTEM_DOWN]
+    alive = [system for system in judged if system.status == SYSTEM_UP]
+    unread = [system for system in alive if system.disk_pct is None and system.mem_pct is None and system.temp_c is None]
+    disk = [system for system in alive if system.disk_pct is not None and system.disk_pct >= definition.system_disk_percent]
+    memory = [system for system in alive if system.mem_pct is not None and system.mem_pct >= definition.system_memory_percent]
+    hot = [system for system in alive if system.temp_c is not None and system.temp_c >= definition.system_temperature_celsius]
+    pressed = [system for system in alive if system in disk or system in memory or system in hot]
+
+    def names(group: list[BeszelSystemReading]) -> tuple[str, ...]:
+        return tuple(system.name for system in group)
+
+    head = f"{len(judged)} system(s) read" + ("" if down or pressed else ", none down, none under pressure")
+    parts = [
+        f"{len(down)} system(s) down" if down else "",
+        f"{len(disk)} with disk use at or above {definition.system_disk_percent} %" if disk else "",
+        f"{len(memory)} with memory use at or above {definition.system_memory_percent} %" if memory else "",
+        f"{len(hot)} at or above {definition.system_temperature_celsius} \u00b0C" if hot else "",
+        f"{len(unread)} without readings" if unread else "",
+    ]
+    summary = "; ".join([head, *(part for part in parts if part)])
+
+    if down:
+        failed = _fails("systems", "system_down", summary, names(down + pressed), definition, True)
+
+        return failed if failed is not None else _skipped("systems", "system findings are ignored")
+
+    if pressed:
+        failed = _fails("systems", "system_pressure", summary, names(pressed), definition, True)
+
+        return failed if failed is not None else _skipped("systems", "system findings are ignored")
+
+    if unread:
+        return Result("systems", UNKNOWN, summary, names(unread))
+
+    return _passes("systems", summary)
+
+
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:
     if reading is None:
         return _skipped(control, f"{name} was not read")
@@ -433,6 +488,7 @@ def evaluate(
     backup: Reading | None = None,
     monitors: MonitorReading | None = None,
     disks: DiskReading | None = None,
+    systems: SystemsReading | None = None,
 ) -> list[Result]:
     """Every control of the base set, in a stable order."""
 
@@ -446,6 +502,7 @@ def evaluate(
 
     results.append(_monitors(monitors, definition, settled))
     results.append(_disks(disks, definition, now))
+    results.append(_systems(systems, definition))
     results.append(_reading("storage", "storage_low", "storage", storage, definition, settled))
     results.append(_reading("backup", "backup_late", "backup", backup, definition, settled))
     results.append(_previous_boot(facts))

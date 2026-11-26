@@ -174,3 +174,9 @@ class BeszelProvider:
             f"Beszel at {self.url} did not answer within "
             f"{self.timeout} seconds"
         )
+
+
+def collect_beszel(url: str, email: str, password: str, timeout: float = 5.0) -> dict[str, Any]:
+    """Observe Beszel once. Callers outside the providers ask for the observation, they do not build the provider."""
+
+    return BeszelProvider(url, email, password, timeout=timeout).collect()

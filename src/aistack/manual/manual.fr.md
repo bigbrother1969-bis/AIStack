@@ -1155,7 +1155,8 @@ démarrage sain.
 (toutes les 15 minutes). Dans le bandeau d'état de santé de la console, une
 personne connectée voit une pastille de plus : *Démarrage : tout va bien
 depuis 5 h 12* tant que chaque contrôle passe maintenant (le temps est compté
-depuis le démarrage de l'hôte, et il est juste à chaque chargement), *en cours
+depuis le démarrage de l'hôte, et il est juste à chaque chargement), suivi de *(n non déclarés)* quand des contrôles n'ont rien
+de déclaré à comparer et ne sont donc pas vérifiés, *en cours
 de vérification* pendant les minutes d'attente, *n à surveiller* ou *n à
 corriger* en orange ou en rouge quand des contrôles échouent, et *non jugé*
 (gris) quand il n'y a pas de verdict, que les faits manquent ou que le dernier

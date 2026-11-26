@@ -1097,7 +1097,8 @@ it first, since AIStack never guesses what a healthy start is.
 (every 15 minutes). In the health strip of the console a signed-in person
 sees one more badge: *Start: all well for 5 h 12* while every control passes
 now (the time is counted from the start of the host, and is right at each
-load), *being checked* during the settling minutes, *n to watch* or *n to
+load), followed by *(n not declared)* when some controls have nothing declared
+to compare with and are therefore not checked, *being checked* during the settling minutes, *n to watch* or *n to
 fix* in amber or red when controls fail, and *not judged* (grey) when there is
 no verdict, the facts are missing or the last check is old: a green that stopped
 being renewed is never shown. It opens the **Start-up checks** screen (local

@@ -23,6 +23,14 @@ def test_a_green_says_how_long_since_the_start_at_the_time_of_the_reading() -> N
     assert indicator(verdict(), NOW + timedelta(minutes=10)).elapsed_seconds == shown.elapsed_seconds + 600
 
 
+def test_a_green_with_controls_nobody_declared_says_so() -> None:
+    partial = Verdict("ok", 0, NOW.isoformat(), "boot", "2026-11-26T06:05:27+00:00", (Result("mounts", "skipped", "none", ()), Result("ups", "ok", "fine", ())))
+    shown = indicator(partial, NOW)
+
+    assert shown.skipped == 1 and shown.level == "clean"
+    assert sentence(translator_for("en"), shown)[0] == "Start: all well for 5 h 54 (1 not declared)"
+
+
 def test_anomalies_are_counted_and_colour_the_badge() -> None:
     assert indicator(verdict("warning", 2), NOW).level == "watch"
     assert indicator(verdict("critical", 1), NOW).level == "alert"

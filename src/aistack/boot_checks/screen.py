@@ -31,6 +31,7 @@ class Indicator:
     anomalies: int
     elapsed_seconds: int | None
     note: str = ""
+    skipped: int = 0
 
     @property
     def level(self) -> str:
@@ -56,7 +57,9 @@ def indicator(verdict: Verdict | None, now: datetime) -> Indicator:
     started = started if started.tzinfo else started.replace(tzinfo=timezone.utc)
     seconds = max(int((now - started).total_seconds()), 0)
 
-    return Indicator(verdict.overall, verdict.anomalies, seconds)
+    skipped = sum(1 for result in verdict.results if result.status == "skipped")
+
+    return Indicator(verdict.overall, verdict.anomalies, seconds, skipped=skipped)
 
 
 def elapsed(t: Callable[..., str], seconds: int) -> str:
@@ -82,6 +85,12 @@ def sentence(t: Callable[..., str], shown: Indicator) -> tuple[str, str]:
         return t("boot_check.indicator.unknown"), t("boot_check.indicator.title_unknown", note=shown.note)
 
     when = elapsed(t, shown.elapsed_seconds)
+
+    if shown.status == "ok" and shown.skipped:
+        return (
+            t("boot_check.indicator.ok_partial", elapsed=when, skipped=shown.skipped),
+            t("boot_check.indicator.title_partial", elapsed=when, skipped=shown.skipped),
+        )
 
     if shown.status == "ok":
         return t("boot_check.indicator.ok", elapsed=when), t("boot_check.indicator.title_ok", elapsed=when)

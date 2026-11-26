@@ -20,6 +20,7 @@ from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
+from aistack.boot_checks.phrases import say
 from aistack.boot_checks.screen import LEVELS, companions, elapsed, read_indicator, read_indicators, sentence
 from aistack.boot_checks.state import read_verdict
 from aistack.i18n import Translator
@@ -73,8 +74,8 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
             "label": t(f"boot_check.control.{result.control}"),
             "status": result.status,
             "status_label": t(f"boot_check.status.{result.status}"),
-            "summary": result.summary,
-            "details": result.details,
+            "summary": say(t, result.summary),
+            "details": tuple(say(t, detail) for detail in result.details),
             "extra": result.control in (verdict.extra if verdict else ()),
         }
         for result in (verdict.results if verdict else ())
@@ -82,7 +83,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
     incidents = [
         {
             "label": t(f"boot_check.control.{item.control}"),
-            "summary": item.summary,
+            "summary": say(t, item.summary),
             "open": item.resolved_at is None,
             "first": _stamp(item.first_seen),
             "last": _stamp(item.resolved_at),

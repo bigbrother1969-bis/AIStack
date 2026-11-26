@@ -1207,6 +1207,8 @@ des nombres. Ces contrôles regardent depuis le démarrage : l'avertissement
 après l'arrêt brutal du 26 novembre, six bases sur huit ont récupéré et la page les
 nomme ; les deux autres ne sont pas listées. Un test rejoue cette matinée.
 
+Les phrases des contrôles s'affichent dans ta langue sur la page et dans le message du matin. Le fichier du verdict et la commande `boot_check` les gardent en anglais, ce qui les rend stables ; les noms (conteneurs, montages, sondes) et les notes venues d'ailleurs sont affichés tels quels.
+
 **Une seconde machine.** La même unité tourne sur une machine compagnon (un
 ordinateur monocarte, par exemple) : le script est un seul fichier de la bibliothèque
 standard, aucune copie d'AIStack n'est nécessaire. Installe-le comme

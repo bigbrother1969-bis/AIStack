@@ -72,7 +72,7 @@ def test_the_controls_to_watch_and_what_was_resolved_are_named(tmp_path: Path) -
     write_verdict(tmp_path, verdict("warning", results, (incident,)))
     found = lines(run(tmp_path)[0])
 
-    assert "  à voir — Sondes Uptime Kuma : 2 down (Gitea, Frigate)" in found
+    assert "  à voir — Sondes Uptime Kuma : 2 en panne (Gitea, Frigate)" in found
     assert "  résolu depuis le démarrage — Conteneurs présents : 1 expected container absent" in found
     assert not any("Montages" in line for line in found)
 

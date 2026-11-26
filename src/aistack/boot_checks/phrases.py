@@ -1,0 +1,133 @@
+"""
+The sentences of the controls, in the owner's language (ADR-0032).
+
+The controls write their sentences in English, once, and the verdict keeps them so:
+a stable text for the file, the command, the tests and the engines that will read
+it. What the owner reads, on the page and in the morning message, goes through
+`say`, which recognises each sentence by its form and gives the catalog's version,
+with the numbers and names the sentence carried. A sentence it does not know (a
+note that comes from another part of the program, the reason a source could not
+be read) is shown as it is, never guessed.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Callable
+
+# (catalog key under `boot_check.phrase`, the English sentence as a pattern).
+RULES: tuple[tuple[str, str], ...] = (
+    ("failed_units_some", r"(?P<n>\d+) unit\(s\) failed"),
+    ("failed_units_none", r"no failed unit"),
+    ("mounts_none_declared", r"no mount declared"),
+    ("mounts_missing", r"(?P<n>\d+) mount\(s\) missing"),
+    ("mounts_present", r"(?P<n>\d+) declared mount\(s\) present"),
+    ("containers_no_list", r"no reference list of containers declared"),
+    ("containers_missing", r"(?P<n>\d+) container\(s\) missing"),
+    ("containers_stopped", r"(?P<n>\d+) container\(s\) stopped"),
+    ("containers_present", r"(?P<n>\d+) expected present, (?P<running>\d+) running"),
+    ("health_unhealthy", r"(?P<n>\d+) container\(s\) unhealthy"),
+    ("health_starting", r"(?P<n>\d+) container\(s\) still starting"),
+    ("health_none", r"no container unhealthy"),
+    ("docker_user_not_declared", r"number of DOCKER-USER rules not declared"),
+    ("docker_user_changed", r"the DOCKER-USER chain changed"),
+    ("docker_user_ok", r"(?P<n>\d+) rules, as declared"),
+    ("docker_user_detail", r"declared (?P<declared>\d+), found (?P<found>\d+)"),
+    ("probes_none_declared", r"no probe declared"),
+    ("probes_failed", r"(?P<n>\d+) probe\(s\) failed"),
+    ("probes_ok", r"(?P<n>\d+) probe\(s\) answer as declared"),
+    ("probe_unread", r"(?P<label>.+): not read instead of (?P<want>.+)"),
+    ("probe_wrong", r"(?P<label>.+): (?P<got>.+) instead of (?P<want>.+)"),
+    ("kvm_loaded", r"KVM modules are loaded"),
+    ("kvm_not_loaded", r"KVM modules not loaded"),
+    ("ups_none_declared", r"no UPS declared on the host"),
+    ("ups_says", r"the UPS says (?P<says>.+)"),
+    ("previous_unknown", r"the end of the previous run is not known"),
+    ("previous_clean", r"the previous run ended with a clean shutdown"),
+    ("previous_unclean", r"the previous run did not end with a shutdown \(power loss or hard stop\)"),
+    ("throttled_now", r"a power or temperature limit is active now"),
+    ("throttled_since", r"a limit was reached since the start, none now"),
+    ("throttled_none", r"no power or temperature limit, now or since the start"),
+    ("limit_under_voltage", r"under-voltage"),
+    ("limit_frequency_capped", r"frequency capped"),
+    ("limit_throttled", r"throttled"),
+    ("limit_soft_temperature", r"soft temperature limit"),
+    ("clock_network", r"the clock was set by the network"),
+    ("clock_not_set", r"the clock is not set by the network yet: the start time may be off"),
+    ("reachable_facts", r"facts from (?P<hour>\d\d:\d\d) UTC"),
+    ("reachable_none", r"no facts"),
+    ("monitor_not_connected", r"Uptime Kuma is not connected \(its address and an API key, in Settings\)"),
+    ("monitor_pending", r"(?P<n>\d+) monitor\(s\) still pending"),
+    ("monitor_ignored", r"monitor findings are ignored"),
+    ("monitor_up", r"(?P<n>\d+) monitor\(s\) up, none down"),
+    ("monitor_up_no_list", r"(?P<n>\d+) monitor\(s\) up, none down \(no reference list declared\)"),
+    ("domain_not_read", r"(?P<domain>storage|backup) was not read"),
+    ("domain_not_instrumented", r"(?P<domain>storage|backup) is not instrumented on this host"),
+    ("domain_findings", r"(?P<n>\d+) finding\(s\) in the (?P<domain>storage|backup) domain"),
+    ("domain_nothing", r"nothing to report in the (?P<domain>storage|backup) domain"),
+    ("db_none_declared", r"no database container declared"),
+    ("db_recovered", r"(?P<n>\d+) database\(s\) recovered after the start"),
+    ("db_ignored", r"database recovery findings are ignored"),
+    ("db_unread", r"(?P<n>\d+) database log\(s\) not read"),
+    ("db_clean", r"(?P<n>\d+) database log\(s\) read, no recovery"),
+    ("kernel_errors", r"(?P<n>\d+) disk or file-system error line\(s\) in the kernel log since the start"),
+    ("kernel_clean", r"no disk or file-system error in the kernel log since the start"),
+    ("kernel_ignored", r"kernel disk errors are ignored"),
+    ("cause_ups", r"the previous run was stopped by the UPS \(power cut\)"),
+    ("cause_requested", r"the previous run was stopped by a shutdown or a reboot that was asked for"),
+    ("cause_unknown", r"the cause of the previous stop is not in the journal"),
+    ("cause_not_known", r"the cause of the previous stop is not known"),
+    ("backup_late", r"the start fell in the backup window and the backup domain has (?P<n>\d+) finding\(s\)"),
+    ("backup_clean", r"the start fell in the backup window; the backup domain has nothing to report"),
+    ("backup_ignored", r"backup findings are ignored"),
+    ("backup_unread", r"the backup domain was not read"),
+    ("memory_said", r"memory pressure (?P<pressure>.+) %, swap (?P<swap>.+) % in use"),
+    ("memory_ignored", r"memory findings are ignored"),
+    ("not_read", r"not read: (?P<reason>.+)"),
+)
+
+_COMPILED = tuple((key, re.compile(pattern)) for key, pattern in RULES)
+_BROKEN = re.compile(r"(?:(?P<down>\d+) down)?(?:, )?(?:(?P<missing>\d+) missing or paused)? \((?P<names>.*)\)")
+
+
+def _monitor_broken(t: Callable[..., str], text: str) -> str | None:
+    """`2 down, 1 missing or paused (a, b, +1)`: the two counts are told, the names stay as they are."""
+
+    found = _BROKEN.fullmatch(text)
+
+    if found is None or not (found["down"] or found["missing"]):
+        return None
+
+    parts = []
+
+    if found["down"]:
+        parts.append(t("boot_check.phrase.monitor_down", n=found["down"]))
+
+    if found["missing"]:
+        parts.append(t("boot_check.phrase.monitor_missing", n=found["missing"]))
+
+    return f"{', '.join(parts)} ({found['names']})"
+
+
+def say(t: Callable[..., str], text: str) -> str:
+    """The sentence in the language of `t`, or the sentence itself when it is not one of the program's own."""
+
+    broken = _monitor_broken(t, text)
+
+    if broken is not None:
+        return broken
+
+    for key, pattern in _COMPILED:
+        found = pattern.fullmatch(text)
+
+        if found is None:
+            continue
+
+        values = found.groupdict()
+
+        if "domain" in values:
+            values["domain"] = t(f"boot_check.phrase.domain.{values['domain']}")
+
+        return t(f"boot_check.phrase.{key}", **values)
+
+    return text

@@ -103,5 +103,5 @@ def test_the_summary_tells_the_anomaly_with_the_databases_counted_never_a_log_li
     told = [event.line for event in found]
 
     assert day == "2026-11-26" and told[0] == "Contrôles du matin :"
-    assert any("Récupération des bases de données" in line and "6 database(s) recovered" in line for line in told)
+    assert any("Récupération des bases de données" in line and "6 base(s) de données récupérée(s) après le démarrage" in line for line in told)
     assert not any("immich_postgres" in line for line in told)

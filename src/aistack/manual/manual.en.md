@@ -1144,6 +1144,8 @@ warning therefore stays shown until the next restart. For example, after the har
 stop of 26 November, six databases out of eight recovered and the page names them;
 the other two are not listed. A test replays that morning.
 
+The sentences of the controls are shown in your language on the page and in the morning message. The verdict file and the `boot_check` command keep them in English, which keeps them stable; the names (containers, mounts, probes) and notes that come from elsewhere are shown as they are.
+
 **A second machine.** The same unit runs on a companion machine (a single-board computer,
 say): the script is a single file of the standard library, no copy of AIStack
 is needed. Install it as above, with `OUTPUT` (and the same path in

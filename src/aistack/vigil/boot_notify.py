@@ -19,6 +19,7 @@ from pathlib import Path
 
 from aistack.boot_checks.controls import ANOMALIES
 from aistack.boot_checks.definition import BootChecksDefinition
+from aistack.boot_checks.phrases import say
 from aistack.boot_checks.screen import read_indicators, sentence
 from aistack.boot_checks.state import Verdict, read_verdict
 from aistack.security.window import zone
@@ -48,13 +49,13 @@ def _details(t: Callable[..., str], verdict: Verdict | None) -> list[str]:
         return []
 
     lines = [
-        t("notify.event.boot_anomaly", control=_label(t, result.control), summary=result.summary)
+        t("notify.event.boot_anomaly", control=_label(t, result.control), summary=say(t, result.summary))
         for result in verdict.results
         if result.status in ANOMALIES
     ][:SHOWN]
     resolved = [item for item in verdict.incidents if item.resolved_at is not None]
     lines.extend(
-        t("notify.event.boot_resolved", control=_label(t, item.control), summary=item.summary)
+        t("notify.event.boot_resolved", control=_label(t, item.control), summary=say(t, item.summary))
         for item in resolved[-SHOWN:]
     )
 

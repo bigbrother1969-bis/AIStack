@@ -27,6 +27,7 @@ from aistack.architecture.beszel_reading import BeszelSystemReading
 from aistack.boot_checks.disks import Disk, DiskReading
 from aistack.boot_checks.facts import BootFacts
 from aistack.boot_checks.monitor import DOWN, MAINTENANCE, WAITING, MonitorReading
+from aistack.boot_checks.trend import Trend, trend_of
 from aistack.boot_checks.systems import DOWN as SYSTEM_DOWN
 from aistack.boot_checks.systems import UP as SYSTEM_UP
 from aistack.boot_checks.systems import SystemsReading
@@ -479,6 +480,65 @@ def _systems(reading: SystemsReading | None, definition: BootChecksDefinition) -
     return _passes("systems", summary)
 
 
+def _disk_trend(reading: SystemsReading | None, definition: BootChecksDefinition, now: datetime) -> Result | None:
+    """Beszel's measures of the system disks, as a line: a disk that would be full within the declared days is to watch."""
+
+    if reading is None or not reading.reachable:
+        return None  # the `systems` control already says why
+
+    up = [system for system in reading.systems if system.status == SYSTEM_UP]
+
+    if not up:
+        return None
+
+    history = dict(reading.history)
+    measured: list[tuple[str, Trend]] = []
+    short: list[str] = []
+
+    for system in up:
+        found = trend_of(history.get(system.name, ()), now, definition.disk_trend_days, definition.disk_trend_min_days)
+
+        if found is None:
+            short.append(system.name)
+        else:
+            measured.append((system.name, found))
+
+    if not measured:
+        return Result("disk_trend", UNKNOWN, f"not read: Beszel has less than {definition.disk_trend_min_days} days of measures for the system disks", tuple(short))
+
+    soon = [(name, found) for name, found in measured if found.days_to_full is not None and found.days_to_full <= definition.disk_full_days]
+    growing = [(name, found) for name, found in measured if found.days_to_full is not None and (name, found) not in soon]
+
+    def said(group: list[tuple[str, Trend]]) -> tuple[str, ...]:
+        return tuple(
+            f"{name}: about {int(found.days_to_full or 0)} day(s) left at +{found.rate:.2f} GB/day ({found.used:.0f} of {found.total:.0f} GB)"
+            for name, found in sorted(group, key=lambda pair: pair[1].days_to_full or 0.0)
+        )
+
+    summary = "; ".join(
+        part
+        for part in (
+            f"{len(measured)} system(s) measured" + ("" if soon else f", none full within {definition.disk_full_days} days"),
+            f"{len(soon)} full within {definition.disk_full_days} days" if soon else "",
+            f"{len(short)} without enough history" if short else "",
+        )
+        if part
+    )
+
+    if soon:
+        failed = _fails("disk_trend", "disk_full_soon", summary, said(soon) + said(growing), definition, True)
+
+        return failed if failed is not None else _skipped("disk_trend", "disk trend findings are ignored")
+
+    if short:
+        return Result("disk_trend", UNKNOWN, summary, tuple(short) + said(growing))
+
+    if growing:
+        return Result("disk_trend", INFORMATION, summary, said(growing))
+
+    return _passes("disk_trend", summary)
+
+
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:
     if reading is None:
         return _skipped(control, f"{name} was not read")
@@ -515,6 +575,7 @@ def evaluate(
     results.append(_monitors(monitors, definition, settled))
     results.append(_disks(disks, definition, now))
     results.append(_systems(systems, definition))
+    results.append(_disk_trend(systems, definition, now))
     results.append(_reading("storage", "storage_low", "storage", storage, definition, settled))
     results.append(_reading("backup", "backup_late", "backup", backup, definition, settled))
     results.append(_previous_boot(facts))

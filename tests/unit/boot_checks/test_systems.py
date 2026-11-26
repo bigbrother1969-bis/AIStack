@@ -97,6 +97,8 @@ class _Beszel(BaseHTTPRequestHandler):
     records: list[dict] = []
     stats: dict[str, str] = {}
     asked: list[str] = []
+    history: dict[str, list[dict]] = {}
+    history_asked: list[str] = []
 
     def _send(self, code: int, body: object) -> None:
         raw = json.dumps(body).encode()
@@ -113,9 +115,14 @@ class _Beszel(BaseHTTPRequestHandler):
             self._send(401, {})
         elif self.path.startswith("/api/collections/system_stats/"):
             asked = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get("filter", [""])[0]
-            self.asked.append(asked)
-            system = asked.removeprefix("system='").removesuffix("'")
-            self._send(200, {"items": [{"created": self.stats[system]}] if system in self.stats else []})
+            system = asked.split("'")[1] if "'" in asked else ""
+
+            if "type='480m'" in asked:
+                self.history_asked.append(asked)
+                self._send(200, {"items": list(reversed(self.history.get(system, [])))})
+            else:
+                self.asked.append(asked)
+                self._send(200, {"items": [{"created": self.stats[system]}] if system in self.stats else []})
         else:
             self._send(200, {"items": self.records})
 
@@ -123,8 +130,9 @@ class _Beszel(BaseHTTPRequestHandler):
         return
 
 
-def _serve(records: list[dict], refuse: bool = False, stats: dict[str, str] | None = None):  # type: ignore[no-untyped-def]
-    server = HTTPServer(("127.0.0.1", 0), type("Handler", (_Beszel,), {"records": records, "refuse": refuse, "stats": stats or {}, "asked": []}))
+def _serve(records: list[dict], refuse: bool = False, stats: dict[str, str] | None = None, history: dict[str, list[dict]] | None = None):  # type: ignore[no-untyped-def]
+    handler = {"records": records, "refuse": refuse, "stats": stats or {}, "asked": [], "history": history or {}, "history_asked": []}
+    server = HTTPServer(("127.0.0.1", 0), type("Handler", (_Beszel,), handler))
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
     return server, f"http://127.0.0.1:{server.server_port}"

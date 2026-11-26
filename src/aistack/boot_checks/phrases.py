@@ -80,6 +80,13 @@ RULES: tuple[tuple[str, str], ...] = (
     ("systems_memory", r"(?P<n>\d+) with memory use at or above (?P<limit>\d+) %"),
     ("systems_temperature", r"(?P<n>\d+) at or above (?P<limit>\d+) \u00b0C"),
     ("systems_unread", r"(?P<n>\d+) without readings"),
+    ("systems_trend_head_ok", r"(?P<n>\d+) system\(s\) measured, none full within (?P<days>\d+) days"),
+    ("systems_trend_head", r"(?P<n>\d+) system\(s\) measured"),
+    ("systems_trend_soon", r"(?P<n>\d+) full within (?P<days>\d+) days"),
+    ("systems_trend_short", r"(?P<n>\d+) without enough history"),
+    ("systems_trend_ignored", r"disk trend findings are ignored"),
+    ("systems_trend_line", r"(?P<name>.+): about (?P<left>\d+) day\(s\) left at \+(?P<rate>[\d.]+) GB/day \((?P<used>\d+) of (?P<total>\d+) GB\)"),
+    ("systems_not_enough", r"not read: Beszel has less than (?P<days>\d+) days of measures for the system disks"),
     ("systems_silent", r"(?P<name>.+) \(no reading since (?P<when>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\)"),
     ("domain_not_read", r"(?P<domain>storage|backup) was not read"),
     ("domain_not_instrumented", r"(?P<domain>storage|backup) is not instrumented on this host"),
@@ -132,7 +139,7 @@ def _monitor_broken(t: Callable[..., str], text: str) -> str | None:
 def _summary(t: Callable[..., str], text: str) -> str | None:
     """`8 disk(s) read; 1 failing SMART; 2 old`, `3 system(s) read; 1 system(s) down`: each part is told on its own, `None` when one is not the program's."""
 
-    found = re.match(r"\d+ (disk|system)\(s\) read", text)
+    found = re.match(r"\d+ (disk|system)\(s\) (?:read|measured)", text)
 
     if found is None:
         return None

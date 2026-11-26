@@ -50,6 +50,15 @@ system_disk_percent: 90
 system_memory_percent: 90
 system_temperature_celsius: 80
 
+# How fast the system disks fill. A straight line is fitted through the last
+# `disk_trend_days` of what Beszel measured (every 8 hours, about 27 days kept); with
+# fewer than `disk_trend_min_days` of history it says "not measured", never "fine".
+# A disk that would be full within `disk_full_days` is to watch. Only the system disk
+# of a machine Beszel watches is seen; a data disk it does not follow is not.
+disk_full_days: 30
+disk_trend_days: 14
+disk_trend_min_days: 7
+
 # How many rules the DOCKER-USER chain holds after a start. Leave it out to
 # skip the control.
 # docker_user_rules: 7
@@ -84,6 +93,7 @@ severity:
   disk_attribute: warning
   system_down: warning
   system_pressure: warning
+  disk_full_soon: warning
   companion_unreachable: critical
   companion_throttled: warning
 

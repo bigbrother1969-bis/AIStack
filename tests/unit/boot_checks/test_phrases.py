@@ -99,7 +99,7 @@ def _every_sentence() -> set[str]:
 
 def test_every_sentence_the_controls_say_is_told_in_french() -> None:
     # Names of the host (mounts, containers, monitors) and a note that is not the program's own are shown as they are.
-    names = {"/", "/media/Data", "Pi-hole", "ST2000DM008-2FR102 …ABCD", "raspberry", "pi", "c", "a", "b", "x", "y", "db", "olala", "web", "a note of its own", "refused"}
+    names = {"/", "/media/Data", "Pi-hole", "ST2000DM008-2FR102 …ABCD", "raspberry", "pi", "c", "a", "b", "x", "y", "db", "olala", "web", "a note of its own", "refused", "msi"}
     unknown = sorted(text for text in _every_sentence() if say(FR, text) == text and text not in names)
 
     assert unknown == []
@@ -132,4 +132,4 @@ def test_a_sentence_that_is_not_the_program_s_own_is_shown_as_it_is() -> None:
 def test_the_catalogs_have_every_sentence_in_both_languages() -> None:
     for key, _ in RULES:
         for translate in (FR, EN):
-            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", limit="90", name="x", when="2026-11-26 12:50", hour="01:00", domain="d", reason="r", pressure="1", swap="2") != f"boot_check.phrase.{key}"
+            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", limit="90", name="x", days="30", left="10", rate="5.00", used="150", total="200", when="2026-11-26 12:50", hour="01:00", domain="d", reason="r", pressure="1", swap="2") != f"boot_check.phrase.{key}"

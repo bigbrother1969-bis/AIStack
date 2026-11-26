@@ -12,6 +12,12 @@ from typing import Any
 _USER_AGENT = "AIStack-BeszelProvider/1.0"
 # A PocketBase record id: nothing else is put in a filter.
 _IDENTIFIER = re.compile(r"[A-Za-z0-9]{1,40}")
+# 60 rows of 8 hours: 20 days, more than the window the checks fit.
+_HISTORY_ROWS = 60
+
+
+def _number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 class BeszelProvider:
@@ -45,7 +51,7 @@ class BeszelProvider:
         self.password = password
         self.timeout = timeout
 
-    def collect(self, last_readings: bool = False) -> dict[str, Any]:
+    def collect(self, last_readings: bool = False, disk_history: bool = False) -> dict[str, Any]:
         observation: dict[str, Any] = {
             "provider": {
                 "id": self.provider_id,
@@ -86,7 +92,38 @@ class BeszelProvider:
         if last_readings:
             self._add_last_readings(state["systems"], token)
 
+        if disk_history:
+            self._add_disk_history(state["systems"], token)
+
         return observation
+
+    def _add_disk_history(self, systems: list[Any], token: str) -> None:
+        """
+        For each system Beszel calls up, the used and total space of its system disk every 8 hours, oldest
+        first (`disk_history`, from the `480m` rows of `system_stats`: about 27 days). A failure leaves the key out.
+        """
+
+        for item in systems:
+            if not isinstance(item, dict) or item.get("status") != "up" or not _IDENTIFIER.fullmatch(str(item.get("id", ""))):
+                continue
+
+            query = urllib.parse.urlencode(
+                {"filter": f"system='{item['id']}' && type='480m'", "sort": "-created", "perPage": _HISTORY_ROWS, "fields": "created,stats"}
+            )
+            found, reason = self._get(f"/api/collections/system_stats/records?{query}", token)
+
+            if reason or not isinstance(found, list):
+                continue
+
+            history = []
+
+            for row in reversed(found):
+                stats = row.get("stats") if isinstance(row, dict) else None
+
+                if isinstance(stats, dict) and isinstance(row.get("created"), str) and _number(stats.get("d")) and _number(stats.get("du")) is not None:
+                    history.append({"at": row["created"], "total": stats["d"], "used": stats["du"]})
+
+            item["disk_history"] = history
 
     def _add_last_readings(self, systems: list[Any], token: str) -> None:
         """
@@ -203,7 +240,7 @@ class BeszelProvider:
         )
 
 
-def collect_beszel(url: str, email: str, password: str, timeout: float = 5.0, last_readings: bool = False) -> dict[str, Any]:
+def collect_beszel(url: str, email: str, password: str, timeout: float = 5.0, last_readings: bool = False, disk_history: bool = False) -> dict[str, Any]:
     """Observe Beszel once. Callers outside the providers ask for the observation, they do not build the provider."""
 
-    return BeszelProvider(url, email, password, timeout=timeout).collect(last_readings=last_readings)
+    return BeszelProvider(url, email, password, timeout=timeout).collect(last_readings=last_readings, disk_history=disk_history)

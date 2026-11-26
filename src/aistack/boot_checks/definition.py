@@ -28,6 +28,7 @@ FINDINGS = (
     "disk_attribute",
     "system_down",
     "system_pressure",
+    "disk_full_soon",
     "companion_unreachable",
     "companion_throttled",
     "database_recovery",
@@ -65,6 +66,7 @@ DEFAULT_SEVERITY = {
     "disk_attribute": WARNING,
     "system_down": WARNING,
     "system_pressure": WARNING,
+    "disk_full_soon": WARNING,
     "companion_unreachable": CRITICAL,
     "companion_throttled": WARNING,
     "database_recovery": WARNING,
@@ -106,6 +108,11 @@ class BootChecksDefinition:
     # The history of the verdicts (O2): how many days and how many lines the journal keeps, the oldest going first.
     history_days: int = 180
     history_events: int = 2000
+    # The trend of the system disks (O4): a line through the last `disk_trend_days` of Beszel's measures, said only with at
+    # least `disk_trend_min_days` of history; a disk that would be full within `disk_full_days` is to watch.
+    disk_full_days: int = 30
+    disk_trend_days: int = 14
+    disk_trend_min_days: int = 7
     docker_user_rules: int | None = None
     # label -> the HTTP status the host's probe of that label must answer.
     probes: dict[str, int] = field(default_factory=dict)

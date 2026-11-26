@@ -1,0 +1,67 @@
+# AIStack — start-up checks (ADR-0032): what a healthy start looks like.
+#
+# After a reboot the owner runs the same controls by hand: failed units,
+# mounts, the containers that should be there, the backups, the UPS, the
+# monitor, the companion machine. AIStack runs them, judges them with code, and
+# shows one indicator in the health strip: all is well since the last
+# start, and for how long. An AI engine may add read-only controls from a
+# closed catalogue and explain what failed; it never decides the verdict.
+#
+# Nothing below is read until the first slice that runs the checks is
+# installed. Copy this file to your own configuration directory to change it.
+
+# Minutes after a start before the checks judge: containers need time to
+# come up, and the restart watch (ADR-0025) works in its own window.
+settle_minutes: 10
+
+# The containers that must exist after a start. Empty = not declared: the
+# control is skipped, AIStack never guesses a list for you.
+expected_containers: []
+
+# The ones you keep stopped on purpose; a stopped container not listed here
+# is a finding.
+expected_stopped: []
+
+# Paths that must be mounted after a start (absolute).
+mounts: []
+
+# How many rules the DOCKER-USER chain holds after a start. Leave it out to
+# skip the control.
+# docker_user_rules: 7
+
+# How much each finding weighs: ignore, warning or critical. Only the keys
+# you change need to be here; these are the shipped values.
+severity:
+  failed_unit: critical
+  container_missing: critical
+  container_stopped: warning
+  container_unhealthy: warning
+  mount_missing: critical
+  docker_user_changed: warning
+  kvm_modules: ignore
+  backup_failed: critical
+  backup_late: warning
+  ups_on_battery: warning
+  monitor_down: warning
+  companion_unreachable: critical
+  companion_throttled: warning
+
+# Also check the companion machines the instance declares (each has its own
+# indicator, same rules).
+companions: true
+
+# The indicator stays beside the weighted health score, not inside it. Set
+# true to let its findings weigh in the score as well.
+indicator_weighted: false
+
+# The AI engine may add read-only controls from the closed catalogue and
+# explain the findings, never more than this many extra controls a start.
+ai:
+  enabled: true
+  max_extra_controls: 3
+
+# One Gotify message in the morning, only a summary: no message for each
+# finding.
+summary:
+  enabled: true
+  at: "08:00"

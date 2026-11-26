@@ -31,6 +31,7 @@ from aistack.architecture.yaml.topology_store import load_infrastructure_topolog
 from aistack.arrivals.load import load_arrivals_yaml
 from aistack.authentication.definition import load_authentication_yaml
 from aistack.backup_strategy.yaml.store import load_backup_strategy_yaml
+from aistack.boot_checks.load import load_boot_checks_yaml
 from aistack.console.identity import load_console_identity
 from aistack.console.yaml.store import load_console_links_yaml
 from aistack.data_budget.budget import load_data_budget
@@ -64,6 +65,7 @@ LOADERS: dict[str, Loader] = {
     "authentication.yml": lambda path, _: load_authentication_yaml(path),
     "backup_strategy.yml": lambda path, _: load_backup_strategy_yaml(path),
     "backup_thresholds.yml": lambda path, _: load_backup_thresholds_yaml(path),
+    "boot_checks.yml": lambda path, _: load_boot_checks_yaml(path),
     "cmdb_probe_targets.yml": lambda path, _: load_cmdb_probe_targets_yaml(path),
     "console_identity.yml": lambda path, _: load_console_identity(path),
     "console_links.yml": lambda path, _: load_console_links_yaml(path),

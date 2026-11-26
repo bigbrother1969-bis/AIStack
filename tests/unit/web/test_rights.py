@@ -51,6 +51,8 @@ ANYONE = {
     "/notifications",
     # The console cards' pastilles (2026-10-10): nothing without a session.
     "/pending",
+    # The strip's start-up indicator (ADR-0032 B3): `{}` without a session.
+    "/boot-state",
     # The installation assistant (ADR-0023 § 5): its installation token
     # answers for it, on the LAN only — tests/unit/web/test_setup_wizard.py.
     "/setup/open",

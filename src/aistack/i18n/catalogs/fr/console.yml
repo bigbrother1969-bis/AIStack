@@ -10,6 +10,7 @@ cartouche:
   technical_debt: "Dette technique :"
   technical_debt_unavailable: "Dette technique : non calculée — {note}"
   detail_link: "Voir le détail par domaine →"
+  boot_label: "Contrôles du démarrage"
 groups:
   lan_title: "Accessible depuis le réseau local"
   public_title: "Accessible depuis internet"
@@ -51,6 +52,7 @@ tooltip:
   score: "Note sur 100 calculée à partir des domaines mesurés, pondérés selon OPS-0008 ; le détail du calcul est dans le Cockpit Santé"
   technical_debt: "Plus cette note est basse, plus il reste de constats à traiter ; elle remonte à mesure qu'ils sont corrigés"
   detail_link: "Ouvrir le Cockpit Santé : le détail de chaque domaine et de chaque constat"
+  boot_indicator: "Comment l'hôte a démarré et si tout va bien depuis : ouvrir les contrôles du démarrage"
   badge_clean: "{domain} : aucun constat lors de la dernière mesure"
   badge_alert: "{domain} : ouvrir le détail des constats dans le Cockpit Santé"
   badge_not_instrumented: "{domain} : ce domaine n'est pas mesuré sur cet hôte"

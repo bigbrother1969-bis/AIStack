@@ -173,6 +173,13 @@ def _render_health_cartouche(
         technical_debt_score, technical_debt_note, t
     )
     badges = "\n".join(_render_domain_badge(domain, t) for domain in cockpit.domains)
+    # The start-up indicator: a static label the page keeps when nobody is
+    # signed in; a signed-in person's page fills it from `/boot-state` with
+    # how long the host has been well (ADR-0032).
+    boot_html = (
+        f'  <div class="cartouche-boot"><a id="boot-indicator" class="domain-badge badge-not-instrumented" href="/boot-check/" '
+        f'title="{escape_text(t("console.tooltip.boot_indicator"))}">{escape_text(t("console.cartouche.boot_label"))}</a></div>'
+    )
 
     return f"""<section class="health-cartouche" title="{escape_text(t("console.tooltip.cartouche"))}">
   <div class="cartouche-header">
@@ -183,6 +190,7 @@ def _render_health_cartouche(
   <div class="cartouche-badges">
 {badges}
   </div>
+{boot_html}
   <a class="cartouche-link" href="/health.html" title="{escape_text(t("console.tooltip.detail_link"))}">{escape_text(t("console.cartouche.detail_link"))}</a>
 </section>"""
 
@@ -540,6 +548,7 @@ a.badge:hover { filter: brightness(0.96); text-decoration: underline; }
 .badge-alert, .domain-badge.badge-alert {
   background: #f9e3e1; border-color: #9c2b2b; color: #9c2b2b;
 }
+.cartouche-boot { margin: .4rem 0; }
 .cartouche-link { font-size: .85rem; text-decoration: none; color: #16335c; }
 .cartouche-link:hover { text-decoration: underline; }\
 """

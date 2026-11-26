@@ -78,6 +78,22 @@ links:
     scope: lan
     ai_callers: []
   - name:
+      fr: Contrôles du démarrage
+      en: Start-up checks
+    description:
+      fr: >-
+        Après un redémarrage, voir les contrôles que tu faisais à la main
+        (unités, montages, conteneurs, pare-feu, sondes, onduleur) et si tout
+        va bien depuis, avec le temps écoulé. Lecture seule.
+      en: >-
+        After a restart, see the controls you used to run by hand (units,
+        mounts, containers, firewall, probes, UPS) and whether all has been
+        well since, with the time elapsed. Read-only.
+    service: web_lan
+    path: /boot-check/
+    scope: lan
+    ai_callers: []
+  - name:
       fr: Moteurs IA
       en: AI engines
     description:

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('boot_check.title') }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; color: #1f2933; }
+    header { margin-bottom: 1.5rem; }
+    .meta { color: #666; font-size: .85rem; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+    .box h2 { margin: 0 0 .6rem; font-size: 1.05rem; }
+    .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .75rem; }
+    .badge.ok, .badge.clean { background: #dff6dd; color: #116329; }
+    .badge.warning, .badge.watch, .badge.pending { background: #fff1cc; color: #7d4e00; }
+    .badge.critical, .badge.alert { background: #fde2e2; color: #8a1c1c; }
+    .badge.skipped, .badge.unknown, .badge.information, .badge.not-instrumented { background: #f0f0f0; color: #555; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    code { background: #eef1f4; padding: .05rem .3rem; border-radius: 4px; }
+    ul.names { margin: .2rem 0 0; padding-left: 1.1rem; }
+    dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: 0; }
+    dl.facts dt { color: #666; }
+    dl.facts dd { margin: 0; }
+    .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; font-size: .88rem; }
+    .top a { color: #1f6feb; text-decoration: none; }
+    .top a:hover { text-decoration: underline; }
+    .lang-switch { display: inline-flex; align-items: center; gap: .5rem; }
+    .lang-switch a, .lang-switch .lang-current { display: inline-flex; line-height: 0; }
+    .lang-switch .flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px #dde4ed; opacity: .55; }
+    .lang-switch a:hover .flag { opacity: 1; }
+    .lang-switch .lang-current .flag { opacity: 1; box-shadow: 0 0 0 2px #16335c; }
+  </style>
+</head>
+<body>
+  {% set overall_labels = {
+    'ok': t('boot_check.overall.ok'),
+    'pending': t('boot_check.overall.pending'),
+    'warning': t('boot_check.overall.warning'),
+    'critical': t('boot_check.overall.critical'),
+    'unknown': t('boot_check.overall.unknown'),
+  } %}
+  <div class="top">
+    <a href="/console.html?lang={{ lang }}" title="{{ t('common.tooltip.back_to_console') }}">{{ t('common.console.back') }}</a>
+    <!--aistack:session-->
+    <nav class="lang-switch" aria-label="{{ t('common.language.switch_label') }}">
+      {% for option in language_options %}{% if option.current %}<span class="lang-current" lang="{{ option.code }}" title="{{ option.name }}" aria-current="true">{% else %}<a href="?lang={{ option.code }}" hreflang="{{ option.code }}" lang="{{ option.code }}" title="{{ option.name }}">{% endif %}{% if option.flag %}<img class="flag" src="{{ option.flag }}" alt="{{ option.name }}" width="24" height="16">{% else %}{{ option.name }}{% endif %}{% if option.current %}</span>{% else %}</a>{% endif %}{% endfor %}
+    </nav>
+  </div>
+  <header>
+    <h1>{{ t('boot_check.heading') }}</h1>
+    <p class="meta">{{ t('boot_check.meta') }}</p>
+  </header>
+
+  <div class="box">
+    <h2>{{ t('boot_check.summary.heading') }}</h2>
+    {% if not verdict %}
+      <p>{{ t('boot_check.summary.none') }}</p>
+    {% else %}
+      <dl class="facts">
+        <dt>{{ t('boot_check.summary.overall') }}</dt>
+        <dd><span class="badge {{ level }}">{{ overall_labels[shown.status] }}</span>{% if shown.note %} <span class="meta">{{ shown.note }}</span>{% endif %}</dd>
+        {% if booted_at %}
+        <dt>{{ t('boot_check.summary.started') }}</dt><dd>{{ booted_at }}</dd>
+        {% endif %}
+        {% if elapsed %}
+        <dt>{{ t('boot_check.summary.since') }}</dt><dd>{{ elapsed }}</dd>
+        {% endif %}
+        <dt>{{ t('boot_check.summary.anomalies') }}</dt><dd>{{ verdict.anomalies }}</dd>
+        <dt>{{ t('boot_check.summary.checked') }}</dt><dd>{{ checked_at }}</dd>
+      </dl>
+    {% endif %}
+  </div>
+
+  {% if rows %}
+  <div class="box">
+    <h2>{{ t('boot_check.controls.heading') }}</h2>
+    <table>
+      <thead><tr><th>{{ t('boot_check.controls.control') }}</th><th>{{ t('boot_check.controls.status') }}</th><th>{{ t('boot_check.controls.detail') }}</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td><span class="badge {{ row.status }}">{{ row.status_label }}</span></td>
+          <td>{{ row.summary }}{% if row.details %}<ul class="names">{% for name in row.details %}<li><code>{{ name }}</code></li>{% endfor %}</ul>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="meta">{{ t('boot_check.controls.technical') }}{% if has_skipped %} {{ t('boot_check.controls.skipped_hint') }}{% endif %}</p>
+  </div>
+
+  <div class="box">
+    <h2>{{ t('boot_check.incidents.heading') }}</h2>
+    {% if not incidents %}
+      <p>{{ t('boot_check.incidents.none') }}</p>
+    {% else %}
+      <table>
+        <tbody>
+          {% for item in incidents %}
+          <tr>
+            <td>{{ item.label }}</td>
+            <td><span class="badge {{ 'critical' if item.open else 'ok' }}">{{ t('boot_check.incidents.open') if item.open else t('boot_check.incidents.resolved') }}</span></td>
+            <td>{{ item.summary }}</td>
+            <td>{{ t('boot_check.incidents.from', first=item.first) }}{% if not item.open %} {{ t('boot_check.incidents.to', last=item.last) }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+  {% endif %}
+</body>
+</html>

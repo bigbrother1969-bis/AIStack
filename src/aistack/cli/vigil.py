@@ -90,6 +90,24 @@ def _assess(generated: Path) -> None:
         print(f"aistack.cli.security_assess: exit {done.returncode}: {(done.stderr or done.stdout).strip()[-400:]}", flush=True)
 
 
+def _boot_check(generated: Path) -> None:
+    """
+    How the host started (ADR-0032, slice B3). The verdict is the answer, in the exit
+    code: 0 to 2 say how the start looks, 3 that the facts are missing or old. Anything
+    else (the module is not in the image, say) is no answer, and says so.
+    """
+
+    done = subprocess.run(
+        [sys.executable, "-m", "aistack.cli.boot_check", "--once", "--output", str(generated)],
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+
+    if done.returncode not in (0, 1, 2, 3):
+        print(f"aistack.cli.boot_check: exit {done.returncode}: {(done.stderr or done.stdout).strip()[-400:]}", flush=True)
+
+
 def _security_definition() -> SecurityDefinition:
     """`security.yml`; a declaration that cannot be read must not stop the vigil."""
 
@@ -103,6 +121,7 @@ def _security_definition() -> SecurityDefinition:
 def _render(generated: Path = GENERATED_DIR) -> None:
     first_renders(generated)
     _assess(generated)
+    _boot_check(generated)
     for module in RENDERS:
         _run(module)
 

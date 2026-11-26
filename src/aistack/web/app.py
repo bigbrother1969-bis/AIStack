@@ -54,6 +54,7 @@ from aistack.web import dock as dock_screen
 from aistack.web import health
 from aistack.web import notifications
 from aistack.web import pending as pending_screen
+from aistack.web import boot_check as boot_check_screen
 from aistack.web import ai_engines as ai_engines_screen
 from aistack.web import footprint as footprint_screen
 from aistack.web import ask as ask_screen
@@ -262,6 +263,8 @@ def create_app(
     include(app, health.router)
     include(app, notifications.router)
     include(app, pending_screen.router)
+    include(app, boot_check_screen.router, boot_check_screen.PREFIX)
+    include(app, boot_check_screen.state_router)
 
     @app.middleware("http")
     async def _who_is_signed_in(request: Request, call_next: Any) -> Response:
@@ -318,7 +321,7 @@ def _with_notices(request: Request, body: bytes) -> bytes:
     if end < 0:
         return body
     # The cards' badges, on both listeners.
-    added = pending_screen.SNIPPET
+    added = pending_screen.SNIPPET + boot_check_screen.SNIPPET
     if arrival_port(request) == listeners.lan_port:
         language = page_language(
             request.query_params.get(LANGUAGE_PARAMETER),

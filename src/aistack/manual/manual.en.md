@@ -1093,6 +1093,21 @@ judged). `--suggest` prints what the facts say as a declaration (containers,
 mounts, `DOCKER-USER` rules, probes) to copy into your `boot_checks.yml`; read
 it first, since AIStack never guesses what a healthy start is.
 
+**The indicator and the page.** The vigil runs these checks at every pass
+(every 15 minutes). In the health strip of the console a signed-in person
+sees one more badge: *Start: all well for 5 h 12* while every control passes
+now (the time is counted from the start of the host, and is right at each
+load), *being checked* during the settling minutes, *n to watch* or *n to
+fix* in amber or red when controls fail, and *not judged* (grey) when there is
+no verdict, the facts are missing or the last check is old: a green that stopped
+being renewed is never shown. It opens the **Start-up checks** screen (local
+network only): each control and its result, the names behind it (the
+containers missing, the units failed), and the incidents since the start. An
+incident that has resolved stays listed, marked *resolved*, until the next
+start, so a green badge does not hide what happened. Without a session the
+badge keeps its plain label and says nothing about the state. Nothing is
+sent to Gotify at this stage.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

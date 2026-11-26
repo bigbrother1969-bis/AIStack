@@ -10,6 +10,7 @@ cartouche:
   technical_debt: "Technical debt:"
   technical_debt_unavailable: "Technical debt: not computed — {note}"
   detail_link: "See the detail by domain →"
+  boot_label: "Start-up checks"
 groups:
   lan_title: "Accessible from the local network"
   public_title: "Accessible from the internet"
@@ -51,6 +52,7 @@ tooltip:
   score: "Score out of 100 computed from the measured domains, weighted per OPS-0008; the Health cockpit shows the detail"
   technical_debt: "The lower this score, the more findings remain to be handled; it rises as they are fixed"
   detail_link: "Open the Health cockpit: every domain and every finding in detail"
+  boot_indicator: "How the host started and whether everything has been well since: open the start-up checks"
   badge_clean: "{domain}: no finding at the last measurement"
   badge_alert: "{domain}: open the findings in the Health cockpit"
   badge_not_instrumented: "{domain}: this domain is not measured on this host"

@@ -258,11 +258,29 @@ def test_the_vigil_runs_the_assessment_then_the_renders(monkeypatch: pytest.Monk
     ran: list[object] = []
 
     monkeypatch.setattr(vigil, "_assess", lambda generated: ran.append(("assess", generated)))
+    monkeypatch.setattr(vigil, "_boot_check", lambda generated: ran.append(("boot", generated)))
     monkeypatch.setattr(vigil, "_run", lambda module: ran.append(module))
     monkeypatch.setattr(vigil, "first_renders", lambda generated, run=None: [])
     vigil._render(tmp_path)
 
-    assert ran == [("assess", tmp_path), *vigil.RENDERS]
+    assert ran == [("assess", tmp_path), ("boot", tmp_path), *vigil.RENDERS]
+
+
+def test_the_start_up_checks_are_run_with_the_data_directory_and_every_verdict_is_an_answer(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    seen: list[list[str]] = []
+    monkeypatch.setattr(vigil.subprocess, "run", lambda command, **kwargs: seen.append(command) or _Done(2, "Start: 1 to fix"))
+
+    vigil._boot_check(tmp_path)
+
+    assert seen[0][1:] == ["-m", "aistack.cli.boot_check", "--once", "--output", str(tmp_path)]
+    assert capsys.readouterr().out == ""
+
+    monkeypatch.setattr(vigil.subprocess, "run", lambda *a, **k: _Done(1 if False else 126, "", "No module named aistack.cli.boot_check"))
+    vigil._boot_check(tmp_path)
+
+    assert "exit 126: No module named aistack.cli.boot_check" in capsys.readouterr().out
 
 
 def test_the_assessment_is_run_with_the_data_directory(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

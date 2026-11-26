@@ -1151,6 +1151,22 @@ comment va le démarrage (0 bien, 1 à surveiller, 2 à corriger, 3 non jugé).
 `boot_checks.yml` ; relis-la d'abord, car AIStack ne devine jamais ce qu'est un
 démarrage sain.
 
+**L'indicateur et la page.** La vigie lance ces contrôles à chaque passage
+(toutes les 15 minutes). Dans le bandeau d'état de santé de la console, une
+personne connectée voit une pastille de plus : *Démarrage : tout va bien
+depuis 5 h 12* tant que chaque contrôle passe maintenant (le temps est compté
+depuis le démarrage de l'hôte, et il est juste à chaque chargement), *en cours
+de vérification* pendant les minutes d'attente, *n à surveiller* ou *n à
+corriger* en orange ou en rouge quand des contrôles échouent, et *non jugé*
+(gris) quand il n'y a pas de verdict, que les faits manquent ou que le dernier
+contrôle est ancien : un vert qui n'est plus renouvelé n'est jamais affiché.
+Elle ouvre l'écran **Contrôles du démarrage** (réseau local seulement) :
+chaque contrôle et son résultat, les noms derrière (conteneurs absents, unités
+en échec) et les incidents depuis le démarrage. Un incident résolu reste
+listé, marqué *résolu*, jusqu'au prochain démarrage : une pastille verte ne
+cache pas ce qui s'est passé. Sans session, la pastille garde son libellé
+simple et ne dit rien de l'état. Rien n'est envoyé à Gotify à ce stade.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

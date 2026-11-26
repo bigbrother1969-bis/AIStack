@@ -57,6 +57,30 @@ def test_only_real_file_systems_are_mounted_places_and_escapes_are_read() -> Non
     assert unit.mounted(MOUNTINFO) == ["/", "/mnt/My Share", "/srv"]
 
 
+def test_what_a_sandbox_or_the_kernel_adds_is_not_a_mounted_place() -> None:
+    text = "\n".join(
+        [
+            "22 1 8:2 / / rw - ext4 /dev/sda2 rw",
+            "30 22 0:50 / /proc/fs/nfsd rw - nfsd nfsd rw",
+            "31 22 0:51 / /run/user/1000/gvfs rw - fuse.gvfsd-fuse gvfsd-fuse rw",
+        ]
+    )
+
+    assert unit.mounted(text) == ["/"]
+
+
+def test_the_mounts_are_the_hosts_and_the_units_own_view_is_only_the_fallback(tmp_path: Path) -> None:
+    proc = _proc(tmp_path)
+    (proc / "1").mkdir()
+    (proc / "1/mountinfo").write_text("22 1 8:2 / /srv rw - ext4 /dev/sda3 rw\n", encoding="utf-8")
+
+    assert unit.mounted(unit._host_mountinfo(proc)) == ["/srv"]
+
+    (proc / "1/mountinfo").unlink()
+
+    assert "/mnt/My Share" in unit.mounted(unit._host_mountinfo(proc))
+
+
 def test_a_container_has_its_state_and_its_health() -> None:
     found = {item["name"]: (item["state"], item["health"]) for item in unit.containers(DOCKER)}
 

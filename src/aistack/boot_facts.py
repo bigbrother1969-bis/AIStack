@@ -65,6 +65,7 @@ PSEUDO_FILESYSTEMS = frozenset(
         "proc", "sysfs", "devtmpfs", "devpts", "tmpfs", "cgroup", "cgroup2", "overlay", "securityfs",
         "debugfs", "tracefs", "configfs", "fusectl", "mqueue", "hugetlbfs", "pstore", "bpf", "autofs",
         "binfmt_misc", "efivarfs", "nsfs", "ramfs", "squashfs", "rpc_pipefs", "selinuxfs", "fuse.lxcfs",
+        "nfsd", "fuse.gvfsd-fuse", "fuse.portal",
     )
 )
 _CLEAN_END = re.compile(r"Reached target .*(Power-Off|Reboot|Halt)|Shutting down\.|Journal stopped", re.IGNORECASE)
@@ -126,6 +127,19 @@ def mounted(mountinfo: str) -> list[str]:
         found.add(_OCTAL.sub(lambda match: chr(int(match.group(1), 8)), fields[4]))
 
     return sorted(found)[:MAX_ITEMS]
+
+
+def _host_mountinfo(proc: Path) -> str:
+    """
+    The host's mounts, as the first process sees them. The unit's own view
+    (`self`) also shows what its sandbox adds (its output folder, a private
+    `/var/tmp`), which the host does not have; it is the fallback only.
+    """
+
+    try:
+        return (proc / "1/mountinfo").read_text(encoding="utf-8")
+    except OSError:
+        return (proc / "self/mountinfo").read_text(encoding="utf-8")
 
 
 def containers(text: str) -> list[dict[str, str]]:
@@ -234,7 +248,7 @@ def collect(
         ),
     )
     read("failed_units", lambda: failed_units(_run("failed_units")))
-    read("mounts", lambda: mounted((proc / "self/mountinfo").read_text(encoding="utf-8")))
+    read("mounts", lambda: mounted(_host_mountinfo(proc)))
     read("containers", lambda: containers(_run("containers")))
     read("docker_user_rules", lambda: docker_user_rules(_run("docker_user")))
     read("kvm_modules", lambda: any(line.startswith(("kvm ", "kvm_intel ", "kvm_amd ")) for line in (proc / "modules").read_text(encoding="utf-8").splitlines()))

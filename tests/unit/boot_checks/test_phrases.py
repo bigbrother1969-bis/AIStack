@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 
-from aistack.boot_checks.catalogue import choose, circumstances, evaluate_extra, settled_since
+from aistack.boot_checks.catalogue import evaluate_extra, settled_since
 from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.monitor import MonitorReading
 from aistack.boot_checks.phrases import RULES, say
 from aistack.i18n import translator_for
-from tests.unit.boot_checks.test_controls import BOOT, DEFINITION as BASE, LATER, facts
+from tests.unit.boot_checks.test_controls import DEFINITION as BASE, LATER, facts
 
 FR = translator_for("fr")
 EN = translator_for("en")

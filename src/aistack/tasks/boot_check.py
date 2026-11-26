@@ -20,9 +20,10 @@ from aistack.boot_checks.load import load_boot_checks_yaml
 from aistack.boot_checks.disks import DiskReading, read_disks
 from aistack.boot_checks.monitor import MonitorReading, read_monitors
 from aistack.boot_checks.systems import SystemsReading, read_systems
+from aistack.boot_checks.usage import UsageReading, read_samples, series
 from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
 from aistack.boot_checks.history import Retention
-from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_verdict
+from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_usage, write_verdict
 from aistack.api_keys import read_store
 from aistack.architecture.yaml import load_infrastructure_topology_yaml
 from aistack.config import PACKAGE_ROOT, configured
@@ -111,7 +112,7 @@ class BootCheckTask:
                 previous = read_verdict(generated_dir)
                 ask = _engine(payload)
                 settled = settled_since(facts, definition, now)
-                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir))
+                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir), _usage(generated_dir, definition, now))
 
                 # One budget for everything asked of the engine: the vigil stops a pass at 300 s.
                 deadline = time.monotonic() + ASK_SECONDS
@@ -216,6 +217,14 @@ def _disks(generated_dir: Path) -> DiskReading | None:
     url = read_store(generated_dir).get(SCRUTINY_URL) or os.environ.get(SCRUTINY_URL, "")
 
     return read_disks(url) if url else None
+
+
+def _usage(generated_dir: Path, definition: BootChecksDefinition, now: datetime) -> UsageReading:
+    """The data disks of this host now, and the series of samples kept for them (O4b)."""
+
+    current = read_samples(definition.usage_points, now)
+
+    return UsageReading(current, series(write_usage(generated_dir, current, now, definition.usage_days)))
 
 
 def _keep(definition: BootChecksDefinition) -> Retention:

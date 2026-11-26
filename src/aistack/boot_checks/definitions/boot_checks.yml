@@ -59,6 +59,18 @@ disk_full_days: 30
 disk_trend_days: 14
 disk_trend_min_days: 7
 
+# The data disks, those the host mounts under /media or /mnt (the system disk is
+# Beszel's, above). One sample of each is kept about every 7 hours for `usage_days`
+# days; a disk at or above `data_disk_percent` percent is to watch, and so is one
+# whose trend (the same as above) fills it within `disk_full_days`. To name the disks
+# yourself, list their mount points; the thresholds you declared for the storage
+# domain (OPS-0005) keep working next to this, and `data_disk_full: ignore` in
+# `severity` leaves the percent to them.
+data_disk_percent: 90
+usage_days: 60
+# usage_points:
+#   - /media/Data
+
 # How many rules the DOCKER-USER chain holds after a start. Leave it out to
 # skip the control.
 # docker_user_rules: 7
@@ -94,6 +106,8 @@ severity:
   system_down: warning
   system_pressure: warning
   disk_full_soon: warning
+  data_disk_full: warning
+  data_disk_soon: warning
   companion_unreachable: critical
   companion_throttled: warning
 

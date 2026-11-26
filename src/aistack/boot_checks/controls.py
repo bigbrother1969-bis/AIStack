@@ -28,6 +28,7 @@ from aistack.boot_checks.disks import Disk, DiskReading
 from aistack.boot_checks.facts import BootFacts
 from aistack.boot_checks.monitor import DOWN, MAINTENANCE, WAITING, MonitorReading
 from aistack.boot_checks.trend import Trend, trend_of
+from aistack.boot_checks.usage import UsageReading
 from aistack.boot_checks.systems import DOWN as SYSTEM_DOWN
 from aistack.boot_checks.systems import UP as SYSTEM_UP
 from aistack.boot_checks.systems import SystemsReading
@@ -539,6 +540,60 @@ def _disk_trend(reading: SystemsReading | None, definition: BootChecksDefinition
     return _passes("disk_trend", summary)
 
 
+def _data_disks(reading: UsageReading | None, definition: BootChecksDefinition, now: datetime) -> Result | None:
+    """The data disks of the host (O4b): at or above the declared percent, or filling within the declared days, is to watch."""
+
+    if reading is None:
+        return None
+
+    if not reading.samples:
+        return _skipped("data_disks", "no data disk to read (nothing under /media or /mnt, none declared)")
+
+    history = dict(reading.history)
+    full: list[tuple[str, str]] = []
+    soon: list[tuple[str, Trend]] = []
+    short: list[str] = []
+
+    for sample in reading.samples:
+        percent = 100.0 * sample.used / sample.total
+
+        if percent >= definition.data_disk_percent:
+            full.append((sample.point, f"{sample.point}: {percent:.1f} % used ({sample.used:.0f} of {sample.total:.0f} GB)"))
+
+        found = trend_of(history.get(sample.point, ()), now, definition.disk_trend_days, definition.disk_trend_min_days)
+
+        if found is None:
+            short.append(sample.point)
+        elif found.days_to_full is not None and found.days_to_full <= definition.disk_full_days:
+            soon.append((sample.point, found))
+
+    limit, days = definition.data_disk_percent, definition.disk_full_days
+    parts = [
+        f"{len(full)} at or above {limit} %" if full else "",
+        f"{len(soon)} full within {days} days" if soon else "",
+        f"{len(short)} without enough history" if short else "",
+    ]
+    quiet = not full and not soon
+    summary = f"{len(reading.samples)} data disk(s) read" + (f", none at or above {limit} %, none full within {days} days" if quiet else "")
+    summary = "; ".join([summary, *(part for part in parts if part)])
+    lines = tuple(line for _, line in full) + tuple(
+        f"{name}: about {int(found.days_to_full or 0)} day(s) left at +{found.rate:.2f} GB/day ({found.used:.0f} of {found.total:.0f} GB)"
+        for name, found in sorted(soon, key=lambda pair: pair[1].days_to_full or 0.0)
+    )
+
+    for finding, group in (("data_disk_full", full), ("data_disk_soon", soon)):
+        if group:
+            failed = _fails("data_disks", finding, summary, lines, definition, True)
+
+            if failed is not None:
+                return failed
+
+    if full or soon:
+        return _skipped("data_disks", "data disk findings are ignored")
+
+    return _passes("data_disks", summary)
+
+
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:
     if reading is None:
         return _skipped(control, f"{name} was not read")
@@ -561,6 +616,7 @@ def evaluate(
     monitors: MonitorReading | None = None,
     disks: DiskReading | None = None,
     systems: SystemsReading | None = None,
+    usage: UsageReading | None = None,
 ) -> list[Result]:
     """Every control of the base set, in a stable order."""
 
@@ -576,6 +632,7 @@ def evaluate(
     results.append(_disks(disks, definition, now))
     results.append(_systems(systems, definition))
     results.append(_disk_trend(systems, definition, now))
+    results.append(_data_disks(usage, definition, now))
     results.append(_reading("storage", "storage_low", "storage", storage, definition, settled))
     results.append(_reading("backup", "backup_late", "backup", backup, definition, settled))
     results.append(_previous_boot(facts))

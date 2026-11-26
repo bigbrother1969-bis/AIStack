@@ -23,6 +23,7 @@ from typing import Any
 
 from aistack.boot_checks.controls import ANOMALIES, OK, PENDING, UNKNOWN, Result
 from aistack.boot_checks.facts import BootFacts
+from aistack.boot_checks import usage as usage_journal
 from aistack.boot_checks.history import DEFAULT_RETENTION, Event, Retention, history_file, prune, read_history, seeds, transitions
 
 STATE = "boot-check.json"
@@ -280,3 +281,36 @@ def age_seconds(verdict: Verdict, now: datetime | None = None) -> float:
     checked = checked if checked.tzinfo else checked.replace(tzinfo=timezone.utc)
 
     return ((now or datetime.now(timezone.utc)) - checked).total_seconds()
+
+
+def write_usage(directory: Path, current: tuple[usage_journal.Sample, ...], now: datetime, days: int) -> list[usage_journal.Sample]:
+    """
+    Keep a sample of each data disk about every 7 hours (O4b) and return the journal as it stands; a disk that
+    has a recent sample adds nothing and nothing to add writes nothing. A journal that cannot be written is the
+    one that was read.
+    """
+
+    kept = usage_journal.read_history(directory)
+    new = usage_journal.due(kept, current, now)
+
+    if not new:
+        return kept
+
+    everything = usage_journal.prune([*kept, *new], now, days)
+
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+
+        with tempfile.NamedTemporaryFile("w", dir=directory, delete=False, encoding="utf-8") as handle:
+            for sample in everything:
+                line = {"at": sample.at.isoformat(timespec="seconds"), "point": sample.point, "total": sample.total, "used": sample.used}
+                handle.write(json.dumps(line, sort_keys=True) + "\n")
+
+            temporary = Path(handle.name)
+
+        os.chmod(temporary, 0o644)
+        os.replace(temporary, directory / usage_journal.USAGE)
+    except OSError:
+        return kept
+
+    return everything

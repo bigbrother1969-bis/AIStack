@@ -29,6 +29,8 @@ FINDINGS = (
     "system_down",
     "system_pressure",
     "disk_full_soon",
+    "data_disk_full",
+    "data_disk_soon",
     "companion_unreachable",
     "companion_throttled",
     "database_recovery",
@@ -67,6 +69,8 @@ DEFAULT_SEVERITY = {
     "system_down": WARNING,
     "system_pressure": WARNING,
     "disk_full_soon": WARNING,
+    "data_disk_full": WARNING,
+    "data_disk_soon": WARNING,
     "companion_unreachable": CRITICAL,
     "companion_throttled": WARNING,
     "database_recovery": WARNING,
@@ -111,6 +115,11 @@ class BootChecksDefinition:
     # The trend of the system disks (O4): a line through the last `disk_trend_days` of Beszel's measures, said only with at
     # least `disk_trend_min_days` of history; a disk that would be full within `disk_full_days` is to watch.
     disk_full_days: int = 30
+    # The data disks (O4b): at or above this percent a disk is to watch; `usage_points` names them, empty means
+    # everything mounted under /media or /mnt; the journal of samples keeps `usage_days` days.
+    data_disk_percent: int = 90
+    usage_points: tuple[str, ...] = ()
+    usage_days: int = 60
     disk_trend_days: int = 14
     disk_trend_min_days: int = 7
     docker_user_rules: int | None = None

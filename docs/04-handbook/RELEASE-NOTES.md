@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.21
+  version: 1.22
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-11-21
+  updated: 2026-11-26
 
 relations:
   references:
@@ -37,6 +37,88 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 2.3.0 — 2026-11-26
+
+**AIStack now checks, by itself, what a person used to check by hand every morning after a
+restart. 2.3 adds the *start-up checks*: a verdict "all well since the last start" in the
+health strip, a page that says what is wrong and since when, one short Gotify message at
+eight o'clock, and, for each machine, the state of its containers, disks, copies,
+certificates and domains. The code judges; the AI only explains. `latest` names this
+version.**
+
+### What you may notice
+
+- **An indicator in the health strip.** *Start: all well for 5 h 12*, or *n to watch*,
+  *n to fix*, *being checked* during the first minutes, or *not judged* when the facts are
+  missing or old: a green that stopped being renewed is never shown. It opens the
+  *Start-up checks* screen (local network only): each control, the names behind it, and the
+  incidents since the start. A control nobody declared anything for says so; a source that
+  did not answer is *not read*, never taken for healthy.
+- **The base controls.** The containers that should run, the failed units, the
+  file systems that should be mounted, the firewall rules, the virtualisation modules, how
+  the previous run ended (a power cut, a hard stop), the UPS, the probes you declare, and
+  Uptime Kuma's monitors. The results are read from a small host service,
+  `aistack-boot-facts` (facts only, every five minutes, a closed list of read commands).
+- **The disks.** Scrutiny's SMART readings (a failure is to fix; a counter that rose in the
+  last 30 days, or a disk at 55 °C or more, is to watch, with what to do), the machines
+  Beszel watches (down, disk, memory, temperature), the trend of each system disk and of
+  the data disks (days before full).
+- **Copies and restore tests.** Each copy you declare (a backup folder, the rescue image, the
+  snapshots of Timeshift read from its logs) must be younger than the limit you set; the
+  restore tests recorded in `pra_tests.yml` must have passed and not be too old.
+- **Certificates and domains.** The end date of the certificates your hosts present (or of
+  a PEM file) and of the domains you rent (asked of the public registries, at most twice a
+  day) is watched: to watch within 21 days, to fix within 7 days or when past. Only the end
+  date is read.
+- **A morning message.** One Gotify message at 08:00 (hour set in `boot_checks.yml`): for each
+  machine, how long all has been well or what is to watch.
+- **A history.** The page keeps what changed, machine by machine, and each anomaly says since
+  when it has lasted. The journal is bounded and holds names, never a line of a log.
+- **Other machines.** A companion machine reports its facts through the collector of
+  `ADR-0020`; its controls are judged with the same declaration.
+- **The AI explains, never judges.** The AI engine of the house may choose extra controls
+  to suggest and explain, in a few lines, an anomaly. That text appears only on the page,
+  marked as not verified; it is never sent in Gotify and never changes a verdict.
+- **A decision.** `ADR-0032` (start-up checks) describes the choices; it stays *Proposed*
+  as long as its last slices are not delivered.
+
+### To do when upgrading
+
+- Set `AISTACK_VERSION=2.3.0` in `.env`, then `docker compose pull && docker compose up -d`.
+- **A control nobody declared anything for is *skipped*, not passed.** Run `python -m aistack.cli.boot_check --suggest`
+  from the installation folder, read what it prints, and copy what suits you into
+  `./config/boot_checks.yml`. A file you made earlier is kept.
+- **To see containers, units and file systems of the host**, install the host service once, as
+  root (the steps are at the top of `deploy/boot-facts/aistack-boot-facts.service`, and in the
+  manual under *Start-up checks*). Without it the controls that need it say *not read*.
+- **To watch copies, certificates and domains**, declare them in `boot_checks.yml`
+  (`copies`, `certificates`, `domains`) and, for copies, tell the host service where they
+  live (`AISTACK_BOOT_COPIES` in its `host.conf`).
+- **Scrutiny, Beszel, Uptime Kuma, Gotify:** their addresses and keys are entered in Settings;
+  each control that needs one says "not connected" until then.
+- The package `cryptography` (reading certificates) is now installed with the image; a
+  development checkout needs `pip install -e .` again.
+
+### Not changed
+
+The Cybersecurity Manager, the AI policy and its journal, *Moteurs IA*, the installer, the
+sign-in and the restore tests work as in 2.2.2. Your `./config` and your data are kept.
+
+### Known limits
+
+- Nothing here repairs: the checks say, they do not restart or correct.
+- A domain whose registry does not publish its end date through RDAP is *not read* until you
+  write the date by hand in `boot_checks.yml`.
+- The snapshots of Timeshift are read from its logs: a log that does not say "saved
+  successfully" does not count.
+- A machine Beszel does not follow has no disk trend; a data disk is seen only on the host
+  that mounts it.
+
+`pytest -q` — 4376 passed; `mypy` — 675 files; 70 knowledge artifacts,
+`blocking: 0   warnings: 0   clean: True`.
 
 ---
 

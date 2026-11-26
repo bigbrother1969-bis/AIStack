@@ -51,33 +51,36 @@
     <p class="meta">{{ t('boot_check.meta') }}</p>
   </header>
 
+  {% for section in sections %}
+  <section{% if section.host %} id="{{ section.host }}"{% endif %}>
+  {% if section.host %}<h2>{{ t('boot_check.host.heading', host=section.host) }}</h2>{% endif %}
   <div class="box">
     <h2>{{ t('boot_check.summary.heading') }}</h2>
-    {% if not verdict %}
+    {% if not section.verdict %}
       <p>{{ t('boot_check.summary.none') }}</p>
     {% else %}
       <dl class="facts">
         <dt>{{ t('boot_check.summary.overall') }}</dt>
-        <dd><span class="badge {{ level }}">{{ overall_labels[shown.status] }}</span>{% if shown.note %} <span class="meta">{{ shown.note }}</span>{% endif %}</dd>
-        {% if booted_at %}
-        <dt>{{ t('boot_check.summary.started') }}</dt><dd>{{ booted_at }}</dd>
+        <dd><span class="badge {{ section.level }}">{{ overall_labels[section.shown.status] }}</span>{% if section.shown.note %} <span class="meta">{{ section.shown.note }}</span>{% endif %}</dd>
+        {% if section.booted_at %}
+        <dt>{{ t('boot_check.summary.started') }}</dt><dd>{{ section.booted_at }}</dd>
         {% endif %}
-        {% if elapsed %}
-        <dt>{{ t('boot_check.summary.since') }}</dt><dd>{{ elapsed }}</dd>
+        {% if section.elapsed %}
+        <dt>{{ t('boot_check.summary.since') }}</dt><dd>{{ section.elapsed }}</dd>
         {% endif %}
-        <dt>{{ t('boot_check.summary.anomalies') }}</dt><dd>{{ verdict.anomalies }}</dd>
-        <dt>{{ t('boot_check.summary.checked') }}</dt><dd>{{ checked_at }}</dd>
+        <dt>{{ t('boot_check.summary.anomalies') }}</dt><dd>{{ section.verdict.anomalies }}</dd>
+        <dt>{{ t('boot_check.summary.checked') }}</dt><dd>{{ section.checked_at }}</dd>
       </dl>
     {% endif %}
   </div>
 
-  {% if rows %}
+  {% if section.rows %}
   <div class="box">
     <h2>{{ t('boot_check.controls.heading') }}</h2>
     <table>
       <thead><tr><th>{{ t('boot_check.controls.control') }}</th><th>{{ t('boot_check.controls.status') }}</th><th>{{ t('boot_check.controls.detail') }}</th></tr></thead>
       <tbody>
-        {% for row in rows %}
+        {% for row in section.rows %}
         <tr>
           <td>{{ row.label }}</td>
           <td><span class="badge {{ row.status }}">{{ row.status_label }}</span></td>
@@ -86,17 +89,17 @@
         {% endfor %}
       </tbody>
     </table>
-    <p class="meta">{{ t('boot_check.controls.technical') }}{% if has_skipped %} {{ t('boot_check.controls.skipped_hint') }}{% endif %}</p>
+    <p class="meta">{{ t('boot_check.controls.technical') }}{% if section.has_skipped %} {{ t('boot_check.controls.skipped_hint') }}{% endif %}</p>
   </div>
 
   <div class="box">
     <h2>{{ t('boot_check.incidents.heading') }}</h2>
-    {% if not incidents %}
+    {% if not section.incidents %}
       <p>{{ t('boot_check.incidents.none') }}</p>
     {% else %}
       <table>
         <tbody>
-          {% for item in incidents %}
+          {% for item in section.incidents %}
           <tr>
             <td>{{ item.label }}</td>
             <td><span class="badge {{ 'critical' if item.open else 'ok' }}">{{ t('boot_check.incidents.open') if item.open else t('boot_check.incidents.resolved') }}</span></td>
@@ -109,5 +112,7 @@
     {% endif %}
   </div>
   {% endif %}
+  </section>
+  {% endfor %}
 </body>
 </html>

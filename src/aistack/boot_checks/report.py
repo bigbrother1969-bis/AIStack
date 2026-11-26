@@ -31,8 +31,15 @@ def suggestion(facts: BootFacts) -> str:
     return "\n".join(lines)
 
 
-def describe(verdict: Verdict) -> str:
-    lines = [f"start-up checks: {verdict.overall} ({verdict.anomalies} anomaly(ies)) at {verdict.checked_at}"]
+def companion_suggestion(name: str, facts: BootFacts) -> str:
+    """The mounts a companion shows, as the part of the declaration that names them."""
+
+    return f"  {name}: [" + ", ".join(facts.mounts or ()) + "]"
+
+
+def describe(verdict: Verdict, host: str | None = None) -> str:
+    where = f" of {host}" if host else ""
+    lines = [f"start-up checks{where}: {verdict.overall} ({verdict.anomalies} anomaly(ies)) at {verdict.checked_at}"]
 
     if verdict.booted_at:
         lines.append(f"  started at {verdict.booted_at}")

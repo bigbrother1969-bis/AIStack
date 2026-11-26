@@ -15,12 +15,14 @@ declaration is edited with the others.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
-from aistack.boot_checks.screen import LEVELS, elapsed, read_indicator, sentence
+from aistack.boot_checks.screen import LEVELS, companions, elapsed, read_indicator, read_indicators, sentence
 from aistack.boot_checks.state import read_verdict
+from aistack.i18n import Translator
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
 from aistack.web.authentication import SIGNED_IN_ONLY, current_session
@@ -48,20 +50,24 @@ def state(request: Request) -> JSONResponse:
         return JSONResponse({})
 
     t = _language(request).t
-    shown = read_indicator(request.app.state.generated_dir)
-    text, title = sentence(t, shown)
+    pills = []
 
-    return JSONResponse({"level": shown.level, "text": text, "title": title, "status": shown.status})
+    for host, shown in read_indicators(request.app.state.generated_dir):
+        text, title = sentence(t, shown, host)
+        pills.append({"host": host or "", "level": shown.level, "text": text, "title": title, "status": shown.status})
+
+    return JSONResponse({"pills": pills})
 
 
-@router.get("", response_class=HTMLResponse, include_in_schema=False)
-@router.get("/", response_class=HTMLResponse, include_in_schema=False)
-def index(request: Request) -> Response:
-    language = _language(request)
-    t = language.t
-    now = datetime.now(timezone.utc)
-    verdict = read_verdict(request.app.state.generated_dir)
-    shown = read_indicator(request.app.state.generated_dir, now)
+def _stamp(value: str | None) -> str:
+    return (value or "")[:16].replace("T", " ")
+
+
+def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime) -> dict[str, object]:
+    """One machine's part of the page: its verdict, its controls, its incidents."""
+
+    verdict = read_verdict(generated_dir, host)
+    shown = read_indicator(generated_dir, now, host)
     rows = [
         {
             "label": t(f"boot_check.control.{result.control}"),
@@ -77,13 +83,14 @@ def index(request: Request) -> Response:
             "label": t(f"boot_check.control.{item.control}"),
             "summary": item.summary,
             "open": item.resolved_at is None,
-            "first": item.first_seen[:16].replace("T", " "),
-            "last": (item.resolved_at or "")[:16].replace("T", " "),
+            "first": _stamp(item.first_seen),
+            "last": _stamp(item.resolved_at),
         }
         for item in (verdict.incidents if verdict else ())
     ]
-    context: dict[str, object] = {
-        "base": PREFIX,
+
+    return {
+        "host": host,
         "verdict": verdict,
         "shown": shown,
         "level": LEVELS.get(shown.status, "not-instrumented"),
@@ -91,10 +98,19 @@ def index(request: Request) -> Response:
         "rows": rows,
         "incidents": incidents,
         "has_skipped": any(row["status"] == "skipped" for row in rows),
-        "booted_at": (verdict.booted_at or "")[:16].replace("T", " ") if verdict else "",
-        "checked_at": verdict.checked_at[:16].replace("T", " ") if verdict else "",
-        **language.context(),
+        "booted_at": _stamp(verdict.booted_at) if verdict else "",
+        "checked_at": _stamp(verdict.checked_at) if verdict else "",
     }
+
+
+@router.get("", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/", response_class=HTMLResponse, include_in_schema=False)
+def index(request: Request) -> Response:
+    language = _language(request)
+    now = datetime.now(timezone.utc)
+    generated_dir = request.app.state.generated_dir
+    sections = [_section(language.t, host, generated_dir, now) for host in (None, *companions(generated_dir))]
+    context: dict[str, object] = {"base": PREFIX, "sections": sections, **language.context()}
     response = templates.TemplateResponse(request=request, name="boot_check/index.html", context=context)
 
     if language.cookie is not None:
@@ -111,13 +127,24 @@ SNIPPET = """<script>
 (function () {
   var mark = document.getElementById("boot-indicator");
   if (!mark || !window.fetch) { return; }
+  function draw(node, found) {
+    node.textContent = found.text;
+    node.className = "domain-badge badge-" + found.level;
+    node.title = found.title;
+  }
   fetch("/boot-state" + window.location.search, { credentials: "same-origin", headers: { "Accept": "application/json" } })
     .then(function (r) { return r.ok ? r.json() : {}; })
     .then(function (found) {
-      if (!found || !found.text) { return; }
-      mark.textContent = found.text;
-      mark.className = "domain-badge badge-" + found.level;
-      mark.title = found.title;
+      var pills = found && found.pills;
+      if (!pills || !pills.length) { return; }
+      draw(mark, pills[0]);
+      var last = mark.parentNode;
+      for (var i = 1; i < pills.length; i++) {
+        var more = document.createElement("a");
+        more.href = "/boot-check/#" + encodeURIComponent(pills[i].host);
+        draw(more, pills[i]);
+        mark.parentNode.appendChild(more);
+      }
     })
     .catch(function () {});
 })();

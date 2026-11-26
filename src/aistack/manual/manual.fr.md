@@ -1168,6 +1168,25 @@ listé, marqué *résolu*, jusqu'au prochain démarrage : une pastille verte ne
 cache pas ce qui s'est passé. Sans session, la pastille garde son libellé
 simple et ne dit rien de l'état. Rien n'est envoyé à Gotify à ce stade.
 
+**Une seconde machine.** La même unité tourne sur une machine compagnon (un
+ordinateur monocarte, par exemple) : le script est un seul fichier de la bibliothèque
+standard, aucune copie d'AIStack n'est nécessaire. Installe-le comme
+ci-dessus, avec `OUTPUT` (et le même chemin dans `ReadWritePaths`) réglé sur le
+dossier `boot` du collecteur de cet hôte, `/var/lib/aistack-hotes/<hôte>/boot` ;
+la poussée des enregistrements des hôtes l'amène sur la MSI, où il est lu dans
+le `directory` que `hosts.yml` donne à cet hôte. AIStack le juge alors sur ce
+qu'il a : joignable (ses faits ont moins de `companion_silent_minutes` minutes,
+45 par défaut, sinon la machine est *injoignable*, à corriger), unités en échec,
+les montages que tu lui nommes dans `companion_mounts` (par le nom de l'hôte
+dans `hosts.yml`) et, sur un ordinateur monocarte qui a la commande `vcgencmd`, l'alimentation et la température : une
+limite active *maintenant* est à surveiller, une limite atteinte plus tôt
+depuis le démarrage n'est qu'une information. L'horloge est affichée aussi :
+une machine sans horloge propre repart de la dernière heure enregistrée, donc
+l'heure de démarrage est marquée *l'horloge n'est pas encore réglée par le
+réseau* tant qu'elle ne l'est pas. La machine a sa propre pastille,
+*Démarrage de <hôte>*, et sa propre partie de l'écran ; la commande
+`boot_check --suggest` affiche aussi les montages qu'elle montre.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

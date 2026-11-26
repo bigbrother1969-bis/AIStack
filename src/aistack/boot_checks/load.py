@@ -49,6 +49,10 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         ups_expected=_ups(data.get("ups_expected"), defaults.ups_expected, label),
         severity=_severity(data.get("severity"), label),
         companions=_flag(data, "companions", defaults.companions, label),
+        companion_silent_minutes=_positive_int(
+            data, "companion_silent_minutes", defaults.companion_silent_minutes, label
+        ),
+        companion_mounts=_companion_mounts(data.get("companion_mounts"), label),
         indicator_weighted=_flag(
             data, "indicator_weighted", defaults.indicator_weighted, label
         ),
@@ -153,6 +157,16 @@ def _probes(value: Any, label: str) -> dict[str, int]:
         found[str(name)] = status
 
     return found
+
+
+def _companion_mounts(value: Any, label: str) -> dict[str, tuple[str, ...]]:
+    if value is None:
+        return {}
+
+    if not isinstance(value, dict):
+        raise ValueError(f"{label}: companion_mounts must map a host's name to the paths mounted on it")
+
+    return {str(host): _paths(paths, f"{label}: companion_mounts.{host}") for host, paths in value.items()}
 
 
 def _ups(value: Any, default: tuple[str, ...], label: str) -> tuple[str, ...]:

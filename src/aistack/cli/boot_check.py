@@ -19,6 +19,7 @@ USAGE = (
     "  --facts        the folder of boot-facts.json (default: <output>/boot-host).\n"
     "  --output       where boot-check.json is written (default: reports/generated).\n"
     "  --definition   path to the declaration (default: the shipped one, or yours).\n"
+    "  --hosts        path to hosts.yml, whose hosts with a `boot` folder are judged too.\n"
     "  --no-cockpit   do not read the disks and backups of the health cockpit.\n"
     "  --dry-run      judge and say, write nothing.\n"
     "  --suggest      print what the facts say as a declaration to copy into your\n"
@@ -33,7 +34,7 @@ def parse(argv: list[str]) -> dict[str, object]:
 
     payload: dict[str, object] = {"generated_dir": DEFAULT_GENERATED_DIR}
     rest = list(argv)
-    paths = {"--facts": "facts_dir", "--output": "generated_dir", "--definition": "definition"}
+    paths = {"--facts": "facts_dir", "--output": "generated_dir", "--definition": "definition", "--hosts": "hosts"}
     flags = {"--no-cockpit": ("cockpit", False), "--dry-run": ("dry_run", True), "--suggest": ("suggest", True)}
 
     while rest:

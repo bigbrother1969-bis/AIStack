@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -24,6 +25,20 @@ from aistack.boot_checks.controls import ANOMALIES, OK, PENDING, UNKNOWN, Result
 from aistack.boot_checks.facts import BootFacts
 
 STATE = "boot-check.json"
+# A companion's verdict is a file of its own, named after the host in hosts.yml.
+_HOST_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,40}$")
+
+
+def state_file(host: str | None = None) -> str:
+    """`boot-check.json` for this host, `boot-check-<host>.json` for a companion; a name that is not a plain one is refused."""
+
+    if host is None:
+        return STATE
+
+    if not _HOST_NAME.match(host):
+        raise ValueError(f"not a host name: {host!r}")
+
+    return f"boot-check-{host}.json"
 MAX_INCIDENTS = 200
 
 
@@ -65,8 +80,21 @@ def overall(results: list[Result]) -> str:
 def judge(results: list[Result], facts: BootFacts, now: datetime, previous: Verdict | None = None) -> Verdict:
     """The verdict of this pass, and the incidents carried over from the passes since the same start."""
 
+    return _judge(results, facts.boot_id, facts.booted_at, now, previous)
+
+
+def judge_silent(results: list[Result], now: datetime, previous: Verdict | None = None) -> Verdict:
+    """The verdict of a machine that wrote no usable facts: its last start and its incidents are kept, the silence is added."""
+
+    boot_id = previous.boot_id if previous is not None else ""
+    booted = datetime.fromisoformat(previous.booted_at) if previous is not None and previous.booted_at else None
+
+    return _judge(results, boot_id, booted, now, previous)
+
+
+def _judge(results: list[Result], boot_id: str, booted_at: datetime | None, now: datetime, previous: Verdict | None) -> Verdict:
     stamp = now.isoformat(timespec="seconds")
-    carried = previous.incidents if previous is not None and previous.boot_id == facts.boot_id else ()
+    carried = previous.incidents if previous is not None and previous.boot_id == boot_id else ()
     incidents = {item.control: item for item in carried if item.resolved_at is None}
     kept = [item for item in carried if item.resolved_at is not None]
 
@@ -81,8 +109,8 @@ def judge(results: list[Result], facts: BootFacts, now: datetime, previous: Verd
         overall=overall(results),
         anomalies=sum(1 for result in results if result.status in ANOMALIES),
         checked_at=stamp,
-        boot_id=facts.boot_id,
-        booted_at=facts.booted_at.isoformat(timespec="seconds") if facts.booted_at else None,
+        boot_id=boot_id,
+        booted_at=booted_at.isoformat(timespec="seconds") if booted_at else None,
         results=tuple(results),
         incidents=tuple([*kept, *incidents.values()][-MAX_INCIDENTS:]),
     )
@@ -94,7 +122,7 @@ def unknown(now: datetime, note: str) -> Verdict:
     return Verdict(UNKNOWN, 0, now.isoformat(timespec="seconds"), "", None, (), (), note)
 
 
-def write_verdict(directory: Path, verdict: Verdict) -> None:
+def write_verdict(directory: Path, verdict: Verdict, host: str | None = None) -> None:
     directory.mkdir(parents=True, exist_ok=True)
 
     with tempfile.NamedTemporaryFile("w", dir=directory, delete=False, encoding="utf-8") as handle:
@@ -102,7 +130,7 @@ def write_verdict(directory: Path, verdict: Verdict) -> None:
         temporary = Path(handle.name)
 
     os.chmod(temporary, 0o644)
-    os.replace(temporary, directory / STATE)
+    os.replace(temporary, directory / state_file(host))
 
 
 def _result(raw: Any) -> Result | None:
@@ -131,11 +159,11 @@ def _incident(raw: Any) -> Incident | None:
     )
 
 
-def read_verdict(directory: Path) -> Verdict | None:
+def read_verdict(directory: Path, host: str | None = None) -> Verdict | None:
     """The last verdict; `None` when there is none or the file is not one (a damaged file is never a green)."""
 
     try:
-        raw = json.loads((directory / STATE).read_text(encoding="utf-8"))
+        raw = json.loads((directory / state_file(host)).read_text(encoding="utf-8"))
         datetime.fromisoformat(str(raw["checked_at"]))
     except (OSError, ValueError, KeyError, TypeError):
         return None

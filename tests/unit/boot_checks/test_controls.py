@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aistack.boot_checks.controls import INFORMATION, OK, PENDING, SKIPPED, UNKNOWN, Reading, Result, evaluate
+from aistack.boot_checks.controls import INFORMATION, OK, PENDING, SKIPPED, UNKNOWN, Reading, Result, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, Container
 from aistack.boot_checks.state import judge, overall, read_verdict, unknown, write_verdict
@@ -229,3 +229,110 @@ def test_the_suggestion_is_the_facts_as_a_declaration_to_copy(tmp_path: Path, ca
 
     assert "expected_containers: [olala, web]" in printed and "expected_stopped: [olala]" in printed
     assert "mounts: [/, /media/Data]" in printed and "docker_user_rules: 6" in printed and "  proxy: 200" in printed
+
+
+# -- a companion machine (B4) -----------------------------------------------------------------
+
+
+def pi(**changes: object) -> BootFacts:
+    base: dict[str, object] = {
+        "failed_units": (), "mounts": ("/", "/media/BACKUP"), "containers": None, "docker_user_rules": None, "kvm_modules": None,
+        "ups": None, "probes": None, "throttled": 0, "clock_synced": True,
+        "sources": {"containers": "error: docker not found", "ups": "absent"},
+    }
+    base.update(changes)
+
+    return facts(**base)
+
+
+COMPANION = BootChecksDefinition(companion_mounts={"backup-host": ("/media/BACKUP",)})
+
+
+def test_a_companion_is_judged_on_what_it_has_and_not_on_what_only_the_msi_has() -> None:
+    results = evaluate_companion("backup-host", pi(), "", COMPANION, LATER)
+    found = by_control(results)
+
+    assert overall(results) == OK
+    assert list(found) == ["reachable", "failed_units", "mounts", "throttled", "clock", "previous_boot"]
+    assert found["mounts"].summary == "1 declared mount(s) present"
+    assert found["clock"].status == INFORMATION and "set by the network" in found["clock"].summary
+
+
+def test_a_companion_with_nothing_declared_for_its_mounts_skips_them_and_a_missing_one_is_to_fix() -> None:
+    assert by_control(evaluate_companion("other", pi(), "", COMPANION, LATER))["mounts"].status == SKIPPED
+
+    missing = by_control(evaluate_companion("backup-host", pi(mounts=("/",)), "", COMPANION, LATER))
+
+    assert missing["mounts"].status == "critical" and missing["mounts"].details == ("/media/BACKUP",)
+
+
+def test_a_limit_active_now_is_to_watch_and_one_in_the_past_is_only_information() -> None:
+    now = by_control(evaluate_companion("h", pi(throttled=0x5), "", COMPANION, LATER))["throttled"]
+    past = by_control(evaluate_companion("h", pi(throttled=0x50000), "", COMPANION, LATER))["throttled"]
+
+    assert now.status == "warning" and now.details == ("under-voltage", "throttled")
+    assert past.status == INFORMATION and past.details == ("under-voltage", "throttled")
+    assert by_control(evaluate_companion("h", pi(throttled=None, sources={"throttled": "error: no vcgencmd"}), "", COMPANION, LATER))["throttled"].status == UNKNOWN
+    assert "throttled" not in by_control(evaluate_companion("h", pi(sources={"throttled": "absent"}), "", COMPANION, LATER))
+
+
+def test_a_clock_the_network_has_not_set_says_the_start_may_be_off() -> None:
+    clock = by_control(evaluate_companion("h", pi(clock_synced=False), "", COMPANION, LATER))["clock"]
+
+    assert clock.status == INFORMATION and "may be off" in clock.summary
+
+
+def test_a_companion_that_wrote_nothing_usable_is_unreachable_never_healthy() -> None:
+    results = evaluate_companion("h", None, "boot-facts.json is old: is the host unit still running?", COMPANION, LATER)
+
+    assert [(r.control, r.status) for r in results] == [("reachable", "critical")]
+    ignored = BootChecksDefinition(severity={"companion_unreachable": "ignore"})
+
+    assert evaluate_companion("h", None, "old", ignored, LATER)[0].status == SKIPPED
+
+
+def test_the_command_judges_the_companions_that_push_a_boot_folder_in_a_file_of_their_own(tmp_path: Path, capsys) -> None:
+    now = datetime.now(timezone.utc)
+    declaration = tmp_path / "b.yml"
+    declaration.write_text("companion_mounts:\n  backup-host: [/media/BACKUP]\n", encoding="utf-8")
+    hosts = tmp_path / "hosts.yml"
+    hosts.write_text(f"hosts:\n  backup-host:\n    directory: {tmp_path / 'hosts' / 'backup-host'}\n  silent-host:\n    directory: {tmp_path / 'hosts' / 'silent-host'}\n", encoding="utf-8")
+    _facts_file(tmp_path / "facts", now)
+    _facts_file(tmp_path / "hosts" / "backup-host" / "boot", now, mounts=["/", "/media/BACKUP"], throttled=0, clock_synced=False)
+    (tmp_path / "hosts" / "silent-host").mkdir(parents=True)
+    arguments = ["--facts", str(tmp_path / "facts"), "--output", str(tmp_path / "out"), "--definition", str(declaration), "--hosts", str(hosts), "--no-cockpit"]
+
+    assert boot_check.main(arguments) == 0
+    printed = capsys.readouterr().out
+
+    assert "start-up checks of backup-host: ok" in printed and "silent-host" not in printed
+    assert read_verdict(tmp_path / "out", "backup-host") is not None and not (tmp_path / "out" / "boot-check-silent-host.json").exists()
+
+    _facts_file(tmp_path / "hosts" / "backup-host" / "boot", now - timedelta(hours=2))
+
+    assert boot_check.main(arguments) == 2
+    assert "reachable" in capsys.readouterr().out
+
+    silent = read_verdict(tmp_path / "out", "backup-host")
+
+    assert silent is not None and silent.overall == "critical" and silent.boot_id == "boot-1" and silent.booted_at is not None
+    assert (read_verdict(tmp_path / "out") or unknown(BOOT, "")).overall == OK
+
+
+def test_a_host_name_that_is_not_plain_is_refused_and_the_suggestion_names_the_companions_mounts(tmp_path: Path, capsys) -> None:
+    from aistack.boot_checks.state import state_file
+
+    assert state_file() == "boot-check.json" and state_file("backup-host") == "boot-check-backup-host.json"
+
+    for bad in ("../x", "a b", "", "-x"):
+        with pytest.raises(ValueError):
+            state_file(bad)
+
+    now = datetime.now(timezone.utc)
+    hosts = tmp_path / "hosts.yml"
+    hosts.write_text(f"hosts:\n  backup-host:\n    directory: {tmp_path / 'h'}\n", encoding="utf-8")
+    _facts_file(tmp_path / "facts", now)
+    _facts_file(tmp_path / "h" / "boot", now, mounts=["/", "/media/BACKUP"])
+
+    assert boot_check.main(["--facts", str(tmp_path / "facts"), "--hosts", str(hosts), "--suggest"]) == 0
+    assert "companion_mounts:\n  backup-host: [/, /media/BACKUP]" in capsys.readouterr().out

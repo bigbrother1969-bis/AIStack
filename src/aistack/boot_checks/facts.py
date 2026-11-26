@@ -53,6 +53,9 @@ class BootFacts:
     ups: str | None
     probes: dict[str, int] | None
     sources: dict[str, str] = field(default_factory=dict)
+    # A Raspberry's power and temperature flags (`vcgencmd get_throttled`), and whether its clock was set by the network.
+    throttled: int | None = None
+    clock_synced: bool | None = None
 
 
 def _strings(value: Any) -> tuple[str, ...] | None:
@@ -121,6 +124,8 @@ def parse_facts(text: str) -> BootFacts | None:
         ups=raw["ups"] if isinstance(raw.get("ups"), str) else None,
         probes={str(k): v for k, v in probes.items() if isinstance(v, int)} if isinstance(probes, dict) else None,
         sources={str(k): str(v) for k, v in sources.items()} if isinstance(sources, dict) else {},
+        throttled=_count(raw.get("throttled")),
+        clock_synced=_flag(raw.get("clock_synced")),
     )
 
 

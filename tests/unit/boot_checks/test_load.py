@@ -84,6 +84,9 @@ def test_the_owner_s_declaration_is_read(tmp_path: Path):
         "severity:\n  kvm_modules: loud\n",
         "severity: [a]\n",
         "companions: yes please\n",
+        "companion_silent_minutes: 0\n",
+        "companion_mounts: [a]\n",
+        "companion_mounts:\n  pi: [media]\n",
         'summary:\n  at: "8h"\n',
         "ai: on\n",
         "- a\n",
@@ -105,3 +108,11 @@ def test_the_probes_and_the_ups_statuses_are_read(tmp_path: Path):
 def test_a_wrong_probe_or_ups_declaration_says_so(tmp_path: Path, text: str):
     with pytest.raises(ValueError):
         load_boot_checks_yaml(_write(tmp_path, text))
+
+
+def test_the_companions_are_declared_by_host_name(tmp_path: Path):
+    definition = load_boot_checks_yaml(_write(tmp_path, "companion_silent_minutes: 30\ncompanion_mounts:\n  backup-host: [/media/BACKUP]\n"))
+    shipped = load_boot_checks_yaml(SHIPPED)
+
+    assert definition.companion_silent_minutes == 30 and definition.companion_mounts == {"backup-host": ("/media/BACKUP",)}
+    assert shipped.companion_silent_minutes == 45 and shipped.companion_mounts == {}

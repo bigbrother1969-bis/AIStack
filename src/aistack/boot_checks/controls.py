@@ -18,7 +18,7 @@ healthy host. Before `settle_minutes` after the start, what fails is
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 
 from aistack.boot_checks.definition import CRITICAL, IGNORE, WARNING, BootChecksDefinition
@@ -231,6 +231,83 @@ def _previous_boot(facts: BootFacts) -> Result:
         return Result("previous_boot", INFORMATION, "the previous run ended with a clean shutdown")
 
     return Result("previous_boot", INFORMATION, "the previous run did not end with a shutdown (power loss or hard stop)")
+
+
+# What `vcgencmd get_throttled` says: the low four bits are true now, the same four,
+# sixteen places up, are true since the start.
+_THROTTLE_NOW = 0xF
+_THROTTLE_NAMES = ("under-voltage", "frequency capped", "throttled", "soft temperature limit")
+
+
+def _throttle_names(bits: int) -> tuple[str, ...]:
+    return tuple(name for index, name in enumerate(_THROTTLE_NAMES) if bits >> index & 1)
+
+
+def _throttled(facts: BootFacts, definition: BootChecksDefinition, settled: bool) -> Result | None:
+    """A Raspberry's power and temperature. Not a control for a host that has no such command."""
+
+    if facts.sources.get("throttled") == "absent":
+        return None
+
+    if facts.throttled is None:
+        return _unknown("throttled", facts, "throttled")
+
+    now = _throttle_names(facts.throttled & _THROTTLE_NOW)
+    since = _throttle_names(facts.throttled >> 16 & _THROTTLE_NOW)
+
+    if now:
+        return _fails("throttled", "companion_throttled", "a power or temperature limit is active now", now, definition, settled)
+
+    if since:
+        return Result("throttled", INFORMATION, "a limit was reached since the start, none now", since)
+
+    return _passes("throttled", "no power or temperature limit, now or since the start")
+
+
+def _clock(facts: BootFacts) -> Result | None:
+    """Whether the start time can be trusted: a host with no clock of its own is wrong until the network sets it."""
+
+    if facts.clock_synced is None:
+        return None
+
+    if facts.clock_synced:
+        return Result("clock", INFORMATION, "the clock was set by the network")
+
+    return Result("clock", INFORMATION, "the clock is not set by the network yet: the start time may be off")
+
+
+def evaluate_companion(
+    name: str,
+    facts: BootFacts | None,
+    note: str,
+    definition: BootChecksDefinition,
+    now: datetime,
+) -> list[Result]:
+    """
+    The controls of a companion machine, from the facts its own host unit pushed.
+
+    No facts (the file is old, or damaged) is the machine *unreachable*, to
+    fix by default: a Raspberry that stopped writing is not a healthy one. What
+    only the MSI has (containers, the firewall chain, the UPS) is not asked of it.
+    """
+
+    if facts is None:
+        missing = _fails("reachable", "companion_unreachable", note or "no facts", (), definition, True)
+
+        return [missing if missing is not None else _skipped("reachable", note or "no facts")]
+
+    settled = facts.booted_at is None or now - facts.booted_at >= timedelta(minutes=definition.settle_minutes)
+    own = replace(definition, mounts=definition.companion_mounts.get(name, ()))
+    results: list[Result | None] = [
+        _passes("reachable", f"facts from {facts.collected_at.strftime('%H:%M')} UTC"),
+        _failed_units(facts, own, settled),
+        _mounts(facts, own, settled),
+        _throttled(facts, own, settled),
+        _clock(facts),
+        _previous_boot(facts),
+    ]
+
+    return [result for result in results if result is not None]
 
 
 def _reading(control: str, finding: str, name: str, reading: Reading | None, definition: BootChecksDefinition, settled: bool) -> Result | None:

@@ -176,6 +176,6 @@ fresh facts the verdict is *unknown*, never green.
 | B1: the facts of the MSI, read by a privileged script of closed commands (`aistack-boot-facts`, its unit and timer, the reader `boot_checks.facts`, the exception of `ADR-0027` § 11) | done, 2026-11-26 |
 | B2: the base controls (units, mounts, containers, health, `DOCKER-USER`, probes, KVM, UPS, disks and backups read from the cockpit), the deterministic verdict, the incidents since the start, the Task `boot.check` run by the Runtime through `boot_check --once` and `--suggest`; Uptime Kuma and Timeshift not yet | done, 2026-11-26 |
 | B3: the indicator in the health strip (a static label the signed-in page fills from `/boot-state`, the time since the start counted at each load, a verdict older than 40 minutes read as *not judged*), the page `/boot-check/`, the console card, a pass of the vigil, the manuals; no new writer | done, 2026-11-26 |
-| B4: the Raspberry through the collector | not started |
+| B4: a companion machine through the collector: the same host unit writes its facts (plus the power and temperature flags and whether the clock is set) in its `boot` folder, the push brings them to the MSI, `boot.check` judges each in a verdict file of its own (reachable, failed units, declared mounts, throttled, clock), a pill and a part of the page per machine; no new writer | done, 2026-11-26 |
 | B5: the AI choice in the closed catalogue and the explanations | not started |
 | B6: the morning Gotify summary | not started |

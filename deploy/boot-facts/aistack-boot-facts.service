@@ -21,6 +21,8 @@
 # On another host (no copy of AIStack, the push of ADR-0020 brings the file to
 # the MSI), the output is the folder of that host's collector, in its `boot`
 # subfolder: OUTPUT=/var/lib/aistack-hotes/<host>/boot
+# (a Raspberry also tells its power and temperature flags, and whether its
+# clock was set by the network; elsewhere those two are left out)
 #
 # What it did: journalctl -u aistack-boot-facts -n 5
 

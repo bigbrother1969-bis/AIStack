@@ -1,20 +1,26 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from aistack.boot_checks.controls import Reading, evaluate
-from aistack.boot_checks.facts import read_facts_file
+import yaml
+
+from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
+from aistack.boot_checks.definition import BootChecksDefinition
+from aistack.boot_checks.facts import BootFacts, read_facts_file
 from aistack.boot_checks.load import load_boot_checks_yaml
-from aistack.boot_checks.report import EXIT, describe, suggestion
-from aistack.boot_checks.state import judge, read_verdict, unknown, write_verdict
+from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
+from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_verdict
 from aistack.config import PACKAGE_ROOT, configured
+from aistack.hosts.records import TracedHost, load_hosts_declaration
 from aistack.kernel.execution import Observation, ObservationContext, Request
 
 DEFAULT_GENERATED_DIR = "reports/generated"
 # Where the host unit aistack-boot-facts writes, under the data directory.
 HOST_DIR = "boot-host"
+# The folder, under a companion's directory of hosts.yml, where its own host unit's facts arrive (ADR-0020's push).
+COMPANION_DIR = "boot"
 
 DEFAULT_DEFINITION = configured(PACKAGE_ROOT / "boot_checks" / "definitions" / "boot_checks.yml")
 
@@ -64,26 +70,39 @@ class BootCheckTask:
         facts, note = read_facts_file(facts_dir, now)
         data: dict[str, object] = {"overall": "unknown", "anomalies": 0, "text": note, "exit_code": EXIT["unknown"]}
 
+        definition = load_boot_checks_yaml(Path(payload.get("definition", DEFAULT_DEFINITION)))
+        companions = _companion_folders(generated_dir, payload.get("hosts")) if definition.companions else []
+
         if payload.get("suggest"):
             if facts is not None:
-                data.update(text=suggestion(facts), exit_code=0)
+                text = suggestion(facts)
+                shown = _companion_facts(companions, definition, now)
+
+                if shown:
+                    text += "\ncompanion_mounts:\n" + "\n".join(companion_suggestion(name, found) for name, found in shown)
+
+                data.update(text=text, exit_code=0)
         else:
             if facts is None:
                 verdict = unknown(now, note)
             else:
-                definition = load_boot_checks_yaml(Path(payload.get("definition", DEFAULT_DEFINITION)))
                 storage, backup = cockpit_readings(_hostname()) if payload.get("cockpit", True) else (None, None)
                 verdict = judge(evaluate(facts, definition, now, storage, backup), facts, now, read_verdict(generated_dir))
 
             if not payload.get("dry_run"):
                 write_verdict(generated_dir, verdict)
 
+            others = _judge_companions(companions, definition, now, generated_dir, bool(payload.get("dry_run")))
+            status = _worse(verdict.overall, others)
+            text = "\n".join([describe(verdict), *(describe(other, name) for name, other in others)])
+
             data = {
-                "overall": verdict.overall,
-                "anomalies": verdict.anomalies,
-                "text": describe(verdict),
-                "exit_code": EXIT[verdict.overall],
+                "overall": status,
+                "anomalies": verdict.anomalies + sum(other.anomalies for _, other in others),
+                "text": text,
+                "exit_code": EXIT[status],
                 "verdict": asdict(verdict),
+                "companions": {name: asdict(other) for name, other in others},
             }
 
         return Observation(
@@ -95,6 +114,66 @@ class BootCheckTask:
             ),
             data=data,
         )
+
+
+def _companion_folders(generated_dir: Path, hosts_file: object = None) -> list[TracedHost]:
+    """The traced hosts that push start-up facts (a `boot` folder); a host with none is not judged."""
+
+    try:
+        hosts = load_hosts_declaration(generated_dir, Path(str(hosts_file)) if hosts_file else None).hosts
+    except (OSError, ValueError, yaml.YAMLError):
+        return []
+
+    return [host for host in hosts if (host.directory / COMPANION_DIR).is_dir()]
+
+
+def _companion_facts(hosts: list[TracedHost], definition: BootChecksDefinition, now: datetime) -> list[tuple[str, BootFacts]]:
+    found = []
+
+    for host in hosts:
+        facts, _ = read_facts_file(host.directory / COMPANION_DIR, now, timedelta(minutes=definition.companion_silent_minutes))
+
+        if facts is not None:
+            found.append((host.name, facts))
+
+    return found
+
+
+def _judge_companions(
+    hosts: list[TracedHost], definition: BootChecksDefinition, now: datetime, generated_dir: Path, dry_run: bool
+) -> list[tuple[str, Verdict]]:
+    """Each companion's verdict, in a file of its own; one whose name is not a plain one is left out and said by the log."""
+
+    verdicts = []
+    silent = timedelta(minutes=definition.companion_silent_minutes)
+
+    for host in hosts:
+        facts, note = read_facts_file(host.directory / COMPANION_DIR, now, silent)
+        results = evaluate_companion(host.name, facts, note, definition, now)
+
+        try:
+            previous = read_verdict(generated_dir, host.name)
+            verdict = (
+                judge_silent(results, now, previous) if facts is None else judge(results, facts, now, previous)
+            )
+
+            if not dry_run:
+                write_verdict(generated_dir, verdict, host.name)
+        except ValueError:
+            continue
+
+        verdicts.append((host.name, verdict))
+
+    return verdicts
+
+
+def _worse(status: str, others: list[tuple[str, Verdict]]) -> str:
+    """The worst status of the machine and its companions, for the exit code."""
+
+    order = ["ok", "pending", "unknown", "warning", "critical"]
+    statuses = [status, *(other.overall for _, other in others)]
+
+    return max(statuses, key=lambda item: order.index(item) if item in order else 0)
 
 
 def _hostname() -> str:

@@ -60,9 +60,23 @@ severity:
   companion_unreachable: critical
   companion_throttled: warning
 
-# Also check the companion machines the instance declares (each has its own
-# indicator, same rules).
+# Also check the companion machines the instance declares in hosts.yml (each
+# has its own indicator, same rules). A companion is judged from the facts its
+# own copy of the host unit writes in its `boot` folder (ADR-0020 brings it
+# here); a host with no `boot` folder is not judged.
 companions: true
+
+# A companion whose last facts are older than this many minutes is
+# unreachable: its facts are written every five minutes and pushed every
+# fifteen.
+companion_silent_minutes: 45
+
+# The paths that must be mounted on a companion after a start, by the host's
+# name in hosts.yml. Empty = not declared: the control is skipped.
+#
+#   companion_mounts:
+#     backup-host: [/media/BACKUP]
+companion_mounts: {}
 
 # The indicator stays beside the weighted health score, not inside it. Set
 # true to let its findings weigh in the score as well.

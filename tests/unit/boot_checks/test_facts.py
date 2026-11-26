@@ -144,6 +144,8 @@ def _answers(monkeypatch, **fail: str) -> None:
         "docker_user": "-A DOCKER-USER -j RETURN\n",
         "previous_boot": "Reached target Power-Off.\n",
         "ups": "ups.status: OL\n",
+        "clock": "yes\n",
+        "throttled": "throttled=0x50005\n",
     }
 
     def run(name: str, ups: str = "") -> str:
@@ -161,7 +163,8 @@ def test_every_source_is_read_and_the_file_holds_facts_only(tmp_path: Path, monk
 
     assert report["sources"] == {
         "boot": "ok", "failed_units": "ok", "mounts": "ok", "containers": "ok", "docker_user_rules": "ok",
-        "kvm_modules": "ok", "previous_boot_clean": "ok", "ups": "ok", "probes": "ok",
+        "kvm_modules": "ok", "previous_boot_clean": "ok", "clock_synced": "ok", "throttled": "absent",
+        "ups": "ok", "probes": "ok",
     }
     assert report["probes"] == {"proxy": 200}
     assert report["kvm_modules"] is True and report["ups"] == "OL" and report["failed_units"] == []
@@ -192,8 +195,8 @@ def test_the_commands_are_a_closed_list_run_without_a_shell(monkeypatch) -> None
     for name in unit.COMMANDS:
         unit._run(name, "apc@localhost")
 
-    assert [command[0] for command in seen] == ["systemctl", "docker", "iptables", "journalctl", "upsc"]
-    assert seen[-1] == ["upsc", "apc@localhost"]
+    assert [command[0] for command in seen] == ["systemctl", "docker", "iptables", "journalctl", "upsc", "vcgencmd", "timedatectl"]
+    assert seen[4] == ["upsc", "apc@localhost"]
 
     with pytest.raises(KeyError):
         unit._run("rm")
@@ -286,3 +289,33 @@ def test_a_missing_old_or_damaged_file_says_why_and_is_never_a_healthy_host(tmp_
     assert read_facts_file(directory, NOW) == (None, f"{FACTS} is not readable")
     assert parse_facts('{"collected_at": "yesterday"}') is None
     assert parse_facts("[1]") is None
+
+
+def test_the_flags_of_a_raspberry_and_its_clock_are_read_and_a_host_without_the_command_is_absent(tmp_path: Path, monkeypatch) -> None:
+    assert unit.throttled_flags("throttled=0x50005\n") == 0x50005
+    assert unit.throttled_flags("throttled=0x0") == 0
+    assert unit.clock_synchronized("yes\n") is True and unit.clock_synchronized("no") is False
+
+    for bad in ("", "temp=1", "throttled=zz"):
+        with pytest.raises(OSError):
+            unit.throttled_flags(bad)
+
+    with pytest.raises(OSError):
+        unit.clock_synchronized("maybe")
+
+    _answers(monkeypatch)
+    monkeypatch.setattr(unit.shutil, "which", lambda name: f"/usr/bin/{name}")
+    report = unit.collect(NOW, {}, "", proc=_proc(tmp_path))
+
+    assert report["throttled"] == 0x50005 and report["clock_synced"] is True
+    assert report["sources"]["throttled"] == "ok"
+
+
+def test_the_reader_keeps_the_flags_and_the_clock_and_none_when_they_were_not_read() -> None:
+    from aistack.boot_checks.facts import parse_facts
+
+    read = parse_facts('{"collected_at": "2026-11-26T10:00:00+00:00", "throttled": 327685, "clock_synced": false}')
+    absent = parse_facts('{"collected_at": "2026-11-26T10:00:00+00:00"}')
+
+    assert read is not None and read.throttled == 0x50005 and read.clock_synced is False
+    assert absent is not None and absent.throttled is None and absent.clock_synced is None

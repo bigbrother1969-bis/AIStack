@@ -36,14 +36,14 @@ def test_the_state_is_empty_without_a_session_and_says_how_the_start_goes_with_o
 
     assert client(tmp_path).get("/boot-state").json() == {}
 
-    found = signed_in(client(tmp_path)).get("/boot-state?lang=fr").json()
+    found = signed_in(client(tmp_path)).get("/boot-state?lang=fr").json()["pills"][0]
 
     assert found["level"] == "clean" and found["status"] == "ok"
     assert found["text"].startswith("Démarrage : tout va bien depuis")
 
 
 def test_without_a_verdict_the_state_is_not_judged_never_green(tmp_path: Path) -> None:
-    found = signed_in(client(tmp_path)).get("/boot-state?lang=en").json()
+    found = signed_in(client(tmp_path)).get("/boot-state?lang=en").json()["pills"][0]
 
     assert (found["level"], found["status"], found["text"]) == ("not-instrumented", "unknown", "Start: not judged")
 
@@ -51,7 +51,7 @@ def test_without_a_verdict_the_state_is_not_judged_never_green(tmp_path: Path) -
 def test_an_anomaly_is_counted_in_the_strip(tmp_path: Path) -> None:
     write(tmp_path, "warning")
 
-    assert signed_in(client(tmp_path)).get("/boot-state?lang=en").json()["text"].startswith("Start: 1 to watch")
+    assert signed_in(client(tmp_path)).get("/boot-state?lang=en").json()["pills"][0]["text"].startswith("Start: 1 to watch")
 
 
 def test_the_page_lists_the_controls_the_names_and_the_incidents(tmp_path: Path) -> None:
@@ -84,3 +84,24 @@ def test_the_cartouche_has_the_static_label_that_links_to_the_page() -> None:
 
     assert 'id="boot-indicator"' in document and 'href="/boot-check/"' in document
     assert "Contrôles du démarrage" in document and "<script" not in document
+
+
+def test_a_companion_has_its_own_pill_and_its_own_part_of_the_page(tmp_path: Path) -> None:
+    write(tmp_path)
+    now = datetime.now(timezone.utc)
+    started = (now.replace(microsecond=0)).isoformat()
+    write_verdict(
+        tmp_path,
+        Verdict("critical", 1, now.isoformat(), "b2", started, (Result("reachable", "critical", "boot-facts.json is old", ()),), ()),
+        "backup-host",
+    )
+    web = signed_in(client(tmp_path))
+    pills = web.get("/boot-state?lang=en").json()["pills"]
+
+    assert [pill["host"] for pill in pills] == ["", "backup-host"]
+    assert pills[1]["text"].startswith("Start of backup-host: 1 to fix") and pills[1]["level"] == "alert"
+
+    page = web.get("/boot-check/?lang=en").text
+
+    assert 'id="backup-host"' in page and "Machine backup-host" in page and "boot-facts.json is old" in page
+    assert "Reachable" in page

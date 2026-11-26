@@ -57,6 +57,9 @@ COMMANDS: dict[str, tuple[str, ...]] = {
     "docker_user": ("iptables", "-w", "2", "-S", "DOCKER-USER"),
     "previous_boot": ("journalctl", "--no-pager", "-o", "cat", "-b", "-1", "-n", "200"),
     "ups": ("upsc", "{ups}"),
+    # A Raspberry's power and temperature flags, and whether its clock was set by the network.
+    "throttled": ("vcgencmd", "get_throttled"),
+    "clock": ("timedatectl", "show", "-p", "NTPSynchronized", "--value"),
 }
 
 # What a file system that is not a disk, a share or a mounted folder looks like.
@@ -183,6 +186,31 @@ def ups_status(text: str) -> str:
     raise OSError("no ups.status")
 
 
+def throttled_flags(text: str) -> int:
+    """The flags `vcgencmd get_throttled` says (`throttled=0x50005`); the low four bits are *now*, the next ones *since the start*."""
+
+    key, _, value = text.strip().partition("=")
+
+    if key != "throttled":
+        raise OSError("no throttled value")
+
+    try:
+        return int(value, 16)
+    except ValueError as error:
+        raise OSError("throttled is not a number") from error
+
+
+def clock_synchronized(text: str) -> bool:
+    """Whether the clock was set by the network (`yes`); a host with no clock of its own is `no` until it was."""
+
+    answer = text.strip().lower()
+
+    if answer not in ("yes", "no"):
+        raise OSError("no NTPSynchronized value")
+
+    return answer == "yes"
+
+
 def probe(url: str) -> int:
     """The HTTP status a URL answers, `0` when nothing answers. Redirections are not followed."""
 
@@ -253,6 +281,13 @@ def collect(
     read("docker_user_rules", lambda: docker_user_rules(_run("docker_user")))
     read("kvm_modules", lambda: any(line.startswith(("kvm ", "kvm_intel ", "kvm_amd ")) for line in (proc / "modules").read_text(encoding="utf-8").splitlines()))
     read("previous_boot_clean", lambda: previous_boot_ended_cleanly(_run("previous_boot")))
+    read("clock_synced", lambda: clock_synchronized(_run("clock")))
+
+    # Only a Raspberry has the command; elsewhere the source is absent, not failed.
+    if shutil.which(COMMANDS["throttled"][0]) is None:
+        sources["throttled"] = "absent"
+    else:
+        read("throttled", lambda: throttled_flags(_run("throttled")))
 
     if ups:
         read("ups", lambda: ups_status(_run("ups", ups)))

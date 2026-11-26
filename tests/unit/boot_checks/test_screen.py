@@ -60,3 +60,20 @@ def test_the_sentence_and_its_tooltip_follow_the_status() -> None:
     assert sentence(t, Indicator("ok", 0, 3600))[0] == "Start: all well for 1 h 00"
     assert sentence(t, Indicator("critical", 2, 120))[0] == "Start: 2 to fix (since 2 min)"
     assert sentence(t, Indicator("unknown", 0, None, "no facts")) == ("Start: not judged", "The checks could not judge the start: no facts")
+
+
+def test_a_companion_has_its_own_label_and_each_machine_its_own_verdict_file(tmp_path) -> None:
+    from aistack.boot_checks.screen import companions, read_indicators
+    from aistack.boot_checks.state import write_verdict
+
+    en = translator_for("en")
+    fr = translator_for("fr")
+
+    assert sentence(en, Indicator("ok", 0, 3600), "backup-host")[0] == "Start of backup-host: all well for 1 h 00"
+    assert sentence(fr, Indicator("critical", 1, 120), "backup-host")[0] == "Démarrage de backup-host : 1 à corriger (depuis 2 min)"
+
+    write_verdict(tmp_path, verdict())
+    write_verdict(tmp_path, verdict("critical", 1), "backup-host")
+
+    assert companions(tmp_path) == ["backup-host"] and companions(tmp_path / "none") == []
+    assert [(host, shown.status) for host, shown in read_indicators(tmp_path, NOW)] == [(None, "ok"), ("backup-host", "critical")]

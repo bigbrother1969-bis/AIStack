@@ -1109,6 +1109,23 @@ start, so a green badge does not hide what happened. Without a session the
 badge keeps its plain label and says nothing about the state. Nothing is
 sent to Gotify at this stage.
 
+**A second machine.** The same unit runs on a companion machine (a single-board computer,
+say): the script is a single file of the standard library, no copy of AIStack
+is needed. Install it as above, with `OUTPUT` (and the same path in
+`ReadWritePaths`) set to the `boot` folder of that host's collector,
+`/var/lib/aistack-hotes/<host>/boot`; the push of the hosts' records brings it
+to the MSI, where it is read under the `directory` that `hosts.yml` gives that
+host. AIStack then judges it on what it has: reachable (its facts are less than
+`companion_silent_minutes` old, 45 by default, otherwise the machine is
+*unreachable*, to fix), failed units, the mounts you name for it in
+`companion_mounts` (by the host's name in `hosts.yml`), and, on a board that has the `vcgencmd` command,
+power and temperature: a limit active *now* is to watch, one reached earlier
+since the start is only information. The clock is shown too: a machine with no
+clock of its own starts from the last saved time, so a start time is marked
+*the clock is not set by the network yet* until it is. The machine gets its
+own badge, *Start of <host>*, and its own part of the screen; the command
+`boot_check --suggest` also prints the mounts it shows.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

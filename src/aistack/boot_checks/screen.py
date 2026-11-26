@@ -14,6 +14,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from aistack.boot_checks.controls import PENDING
 from aistack.boot_checks.state import Verdict, read_verdict
@@ -78,31 +79,64 @@ def elapsed(t: Callable[..., str], seconds: int) -> str:
     return t("boot_check.elapsed.minutes", m=minutes)
 
 
-def sentence(t: Callable[..., str], shown: Indicator) -> tuple[str, str]:
-    """The strip's text and its tooltip."""
+def label(t: Callable[..., str], host: str | None) -> str:
+    """`Start`, or `Start of <host>` for a companion machine."""
+
+    return t("boot_check.indicator.label") if host is None else t("boot_check.indicator.label_host", host=host)
+
+
+def sentence(t: Callable[..., str], shown: Indicator, host: str | None = None) -> tuple[str, str]:
+    """The strip's text and its tooltip, for this machine or for a companion."""
+
+    name = label(t, host)
 
     if shown.status == "unknown" or shown.elapsed_seconds is None:
-        return t("boot_check.indicator.unknown"), t("boot_check.indicator.title_unknown", note=shown.note)
+        return (
+            t("boot_check.indicator.unknown", label=name),
+            t("boot_check.indicator.title_unknown", note=shown.note),
+        )
 
     when = elapsed(t, shown.elapsed_seconds)
 
     if shown.status == "ok" and shown.skipped:
         return (
-            t("boot_check.indicator.ok_partial", elapsed=when, skipped=shown.skipped),
+            t("boot_check.indicator.ok_partial", label=name, elapsed=when, skipped=shown.skipped),
             t("boot_check.indicator.title_partial", elapsed=when, skipped=shown.skipped),
         )
 
     if shown.status == "ok":
-        return t("boot_check.indicator.ok", elapsed=when), t("boot_check.indicator.title_ok", elapsed=when)
+        return t("boot_check.indicator.ok", label=name, elapsed=when), t("boot_check.indicator.title_ok", elapsed=when)
 
     if shown.status == PENDING:
-        return t("boot_check.indicator.pending", elapsed=when), t("boot_check.indicator.title_pending", elapsed=when)
+        return (
+            t("boot_check.indicator.pending", label=name, elapsed=when),
+            t("boot_check.indicator.title_pending", elapsed=when),
+        )
 
     return (
-        t(f"boot_check.indicator.{shown.status}", count=shown.anomalies, elapsed=when),
+        t(f"boot_check.indicator.{shown.status}", label=name, count=shown.anomalies, elapsed=when),
         t("boot_check.indicator.title_anomaly", elapsed=when),
     )
 
 
-def read_indicator(generated_dir, now: datetime | None = None) -> Indicator:  # type: ignore[no-untyped-def]
-    return indicator(read_verdict(generated_dir), now or datetime.now(timezone.utc))
+def read_indicator(generated_dir: Path, now: datetime | None = None, host: str | None = None) -> Indicator:
+    return indicator(read_verdict(generated_dir, host), now or datetime.now(timezone.utc))
+
+
+def companions(generated_dir: Path) -> list[str]:
+    """The companion machines that have a verdict: one `boot-check-<host>.json` each, by name."""
+
+    try:
+        files = sorted(generated_dir.glob("boot-check-*.json"))
+    except OSError:
+        return []
+
+    return [file.name[len("boot-check-") : -len(".json")] for file in files]
+
+
+def read_indicators(generated_dir: Path, now: datetime | None = None) -> list[tuple[str | None, Indicator]]:
+    """This machine first, then each companion, as the strip draws them."""
+
+    moment = now or datetime.now(timezone.utc)
+
+    return [(None, read_indicator(generated_dir, moment)), *((host, read_indicator(generated_dir, moment, host)) for host in companions(generated_dir))]

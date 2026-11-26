@@ -74,6 +74,10 @@ class BootChecksDefinition:
     ups_expected: tuple[str, ...] = ("OL",)
     severity: dict[str, str] = field(default_factory=lambda: dict(DEFAULT_SEVERITY))
     companions: bool = True
+    # A companion whose last facts are older than this is unreachable (its push runs every 15 minutes).
+    companion_silent_minutes: int = 45
+    # host name (as in hosts.yml) -> the paths that must be mounted on that host after a start.
+    companion_mounts: dict[str, tuple[str, ...]] = field(default_factory=dict)
     # The indicator sits beside the weighted health score, not inside it.
     indicator_weighted: bool = False
     ai_enabled: bool = True

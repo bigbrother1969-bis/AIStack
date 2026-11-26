@@ -13,6 +13,7 @@
 #   security.page     the Security page
 #   vigil.reason      the vigil's reasoning on a finding
 #   ai.compare        the comparison of engines
+#   boot_checks       the choice of the extra start-up controls (ADR-0032); the facts of a host stay on your machines
 #   portal.chat       the page where anyone signed in asks a question in their own words; a question holding
 #                     personal data stays inside whatever its class
 #
@@ -24,6 +25,7 @@ callers:
   security.page: internal_only
   vigil.reason: internal_only
   ai.compare: internal_only
+  boot_checks: internal_only
   # A question typed there is screened for personal data first: any found keeps it on the machines
   # whatever this class says (portal/definitions/personal_data.yml, ADR-0029 § 12). With none, it may go outside.
   portal.chat: external_allowed
@@ -49,6 +51,7 @@ kinds:
   reason: diagnosis
   explain: explanation
   recommend: recommendation
+  choose: diagnosis
   ask: question
 
 preferences:

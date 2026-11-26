@@ -10,7 +10,7 @@ from aistack.tasks.boot_check import DEFAULT_GENERATED_DIR, BootCheckTask
 
 USAGE = (
     "usage: python -m aistack.cli.boot_check "
-    "[--once] [--facts DIR] [--output DIR] [--definition PATH] [--no-cockpit] [--dry-run] [--suggest]\n"
+    "[--once] [--facts DIR] [--output DIR] [--definition PATH] [--no-cockpit] [--dry-run] [--suggest] [--ai]\n"
     "\n"
     "  Judges the facts the host unit aistack-boot-facts wrote (ADR-0032) against\n"
     "  what boot_checks.yml declares a healthy start to be, and writes the verdict.\n"
@@ -22,6 +22,8 @@ USAGE = (
     "  --hosts        path to hosts.yml, whose hosts with a `boot` folder are judged too.\n"
     "  --no-cockpit   do not read the disks and backups of the health cockpit.\n"
     "  --dry-run      judge and say, write nothing.\n"
+    "  --ai           let the AI engine of the house add extra controls from the closed catalogue\n"
+    "                 (the vigil does; without it the rules alone choose). Nothing leaves your machines.\n"
     "  --suggest      print what the facts say as a declaration to copy into your\n"
     "                 boot_checks.yml (containers, mounts, rules, probes). Nothing is written.\n"
     "\n"
@@ -35,7 +37,7 @@ def parse(argv: list[str]) -> dict[str, object]:
     payload: dict[str, object] = {"generated_dir": DEFAULT_GENERATED_DIR}
     rest = list(argv)
     paths = {"--facts": "facts_dir", "--output": "generated_dir", "--definition": "definition", "--hosts": "hosts"}
-    flags = {"--no-cockpit": ("cockpit", False), "--dry-run": ("dry_run", True), "--suggest": ("suggest", True)}
+    flags = {"--no-cockpit": ("cockpit", False), "--dry-run": ("dry_run", True), "--suggest": ("suggest", True), "--ai": ("ai", True)}
 
     while rest:
         argument = rest.pop(0)

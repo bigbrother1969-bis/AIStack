@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
 import yaml
 
-from aistack.boot_checks.catalogue import choose, circumstances, evaluate_extra, settled_since
+from aistack.boot_checks.catalogue import circumstances, evaluate_extra, settled_since
+from aistack.boot_checks.choice import Ask, Choice, decide, wants_engine
 from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, read_facts_file
@@ -98,12 +101,26 @@ class BootCheckTask:
                 storage, backup = cockpit_readings(_hostname()) if payload.get("cockpit", True) else (None, None)
                 monitors = _monitors(generated_dir)
                 found = circumstances(facts, definition)
-                chosen = choose(found, definition)
-                results = [
-                    *evaluate(facts, definition, now, storage, backup, monitors),
-                    *evaluate_extra(chosen, facts, definition, backup, settled_since(facts, definition, now)),
-                ]
-                verdict = judge(results, facts, now, read_verdict(generated_dir), found, chosen)
+                previous = read_verdict(generated_dir)
+                ask = _engine(payload)
+                settled = settled_since(facts, definition, now)
+                base = evaluate(facts, definition, now, storage, backup, monitors)
+
+                def judged(choice: Choice) -> Verdict:
+                    results = [*base, *evaluate_extra(choice.controls, facts, definition, backup, settled)]
+
+                    return judge(results, facts, now, previous, found, choice.controls, choice.by, choice.reason)
+
+                if wants_engine(found, definition, ask, previous, facts.boot_id, now):
+                    # The engine may take minutes: the verdict of the rules is written first, so a pass cut short still says how the start looks.
+                    first = judged(decide(found, base, definition, None, previous, facts.boot_id, now))
+
+                    if not payload.get("dry_run"):
+                        write_verdict(generated_dir, first)
+
+                    verdict = judged(decide(found, base, definition, ask, None, facts.boot_id, now))
+                else:
+                    verdict = judged(decide(found, base, definition, ask, previous, facts.boot_id, now))
 
             if not payload.get("dry_run"):
                 write_verdict(generated_dir, verdict)
@@ -130,6 +147,25 @@ class BootCheckTask:
             ),
             data=data,
         )
+
+
+def _engine(payload: Mapping[str, Any]) -> Ask | None:
+    """The call to the AI engine of the house: given by the caller (tests), or built when `ai` is asked; `None` otherwise."""
+
+    given = payload.get("ask")
+
+    if callable(given):
+        return given
+
+    if not payload.get("ai"):
+        return None
+
+    from functools import partial
+
+    from aistack.ai_runtime.call_journal import BOOT_CHECKS, journaled
+    from aistack.troubleshooting.guide import ask_managed
+
+    return journaled(partial(ask_managed, BOOT_CHECKS), BOOT_CHECKS)
 
 
 KUMA_URL = "AISTACK_KUMA_URL"

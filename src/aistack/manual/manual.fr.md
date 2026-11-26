@@ -1209,6 +1209,8 @@ nomme ; les deux autres ne sont pas listées. Un test rejoue cette matinée.
 
 Les phrases des contrôles s'affichent dans ta langue sur la page et dans le message du matin. Le fichier du verdict et la commande `boot_check` les gardent en anglais, ce qui les rend stables ; les noms (conteneurs, montages, sondes) et les notes venues d'ailleurs sont affichés tels quels.
 
+**Qui choisit les contrôles complémentaires.** Les règles ci-dessus donnent un plancher. Si `ai.enabled` est vrai, la vigie demande aussi au moteur IA de la maison (un moteur local : l'appelant `boot_checks` est interne, rien ne sort de tes machines) s'il veut ajouter d'autres contrôles du même catalogue, dans la limite de `ai.max_extra_controls` en tout, et il dit pourquoi en une phrase. Il ne peut jamais retirer un contrôle que les règles demandent, et le code écarte tout identifiant hors du catalogue : un moteur muet, lent ou qui se trompe ne cache rien, et les règles décident seules. Le moteur est interrogé une fois par démarrage et par jeu de circonstances ; si les règles ont décidé faute de réponse, il est réessayé après une heure. La page dit qui a choisi, avec la phrase du moteur marquée « explication de l'IA, non vérifiée » ; la page « Moteurs IA » et le journal des appels montrent l'appelant `boot_checks`. La commande `boot_check --ai` fait la même chose à la main (la vigie la passe) ; sans `--ai`, seules les règles choisissent. Le verdict de chaque contrôle reste calculé par le code.
+
 **Une seconde machine.** La même unité tourne sur une machine compagnon (un
 ordinateur monocarte, par exemple) : le script est un seul fichier de la bibliothèque
 standard, aucune copie d'AIStack n'est nécessaire. Installe-le comme

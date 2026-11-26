@@ -126,6 +126,25 @@ def recommend(
     )
 
 
+def choose(
+    finding: AIMatter,
+    engine: AIEngine,
+    model: str | None,
+    *,
+    target_language: str = "fr",
+    translator: AIEngine | None = None,
+    context: str = "",
+) -> AIRuntimeAnswer:
+    """
+    Ask the engine which controls of a closed catalogue are worth running (`boot_checks`, ADR-0032 B5b).
+    The matter's `interpretation` holds the circumstances, the base results and the catalogue; the answer
+    is one JSON object that the caller validates against the catalogue, never executed. Never translated:
+    a translation pass would damage the identifiers (`translator` is accepted for symmetry and unused).
+    """
+
+    return _ask("choose", finding, engine, model, _CHOOSE_PROMPT, target_language, None, context)
+
+
 def answer(
     question: AIMatter,
     engine: AIEngine,
@@ -249,6 +268,22 @@ The question:
 {interpretation}
 {context_block}
 {language_directive}"""
+
+
+_CHOOSE_PROMPT = """\
+You are the AI Runtime of AIStack, a homelab knowledge operating system. A host has just started. \
+AIStack computed, in code, the circumstances and the results below: treat them as established fact, \
+never contradict them. You do not judge the start: you only choose which extra read-only controls, \
+among a closed catalogue, are worth running now.
+
+{interpretation}
+{context_block}{language_directive}
+The language rule above applies only to the sentence of "reason". Reply with one JSON object and \
+nothing else, on one line, of this form:
+{{"controls": ["identifier", "identifier"], "reason": "one short sentence"}}
+Use only identifiers of the catalogue, at most as many as the limit above, and never invent one. \
+Keep the JSON keys and the identifiers exactly as written, in English.
+"""
 
 _REASON_PROMPT = """\
 You are the AI Runtime of AIStack, a homelab knowledge operating \

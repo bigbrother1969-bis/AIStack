@@ -90,6 +90,7 @@
       </tbody>
     </table>
     <p class="meta">{{ t('boot_check.circumstances.heading') }} {% if section.circumstances %}{{ section.circumstances | join(', ') }}{% else %}{{ t('boot_check.circumstances.none') }}{% endif %}</p>
+    {% if section.choice %}<p class="meta">{{ section.choice }}</p>{% endif %}
     <p class="meta">{{ t('boot_check.controls.technical') }}{% if section.has_skipped %} {{ t('boot_check.controls.skipped_hint') }}{% endif %}</p>
   </div>
 

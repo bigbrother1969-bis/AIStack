@@ -66,6 +66,9 @@ class Verdict:
     # B5a: the circumstances that held, and the extra controls they chose (a subset of the results).
     circumstances: tuple[str, ...] = ()
     extra: tuple[str, ...] = ()
+    # B5b: who chose the extra controls ("rules" or "engine", empty before any choice) and the sentence the engine gave.
+    chosen_by: str = ""
+    choice_reason: str = ""
 
 
 def overall(results: list[Result]) -> str:
@@ -87,10 +90,18 @@ def judge(
     previous: Verdict | None = None,
     circumstances: tuple[str, ...] = (),
     extra: tuple[str, ...] = (),
+    chosen_by: str = "",
+    choice_reason: str = "",
 ) -> Verdict:
     """The verdict of this pass, and the incidents carried over from the passes since the same start."""
 
-    return replace(_judge(results, facts.boot_id, facts.booted_at, now, previous), circumstances=circumstances, extra=extra)
+    return replace(
+        _judge(results, facts.boot_id, facts.booted_at, now, previous),
+        circumstances=circumstances,
+        extra=extra,
+        chosen_by=chosen_by,
+        choice_reason=choice_reason,
+    )
 
 
 def judge_silent(results: list[Result], now: datetime, previous: Verdict | None = None) -> Verdict:
@@ -195,6 +206,8 @@ def read_verdict(directory: Path, host: str | None = None) -> Verdict | None:
         note=str(raw.get("note", "")),
         circumstances=tuple(str(item) for item in raw.get("circumstances", ()) if isinstance(item, str)),
         extra=tuple(str(item) for item in raw.get("extra", ()) if isinstance(item, str)),
+        chosen_by=str(raw.get("chosen_by", "")),
+        choice_reason=str(raw.get("choice_reason", "")),
     )
 
 

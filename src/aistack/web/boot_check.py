@@ -64,6 +64,18 @@ def _stamp(value: str | None) -> str:
     return (value or "")[:16].replace("T", " ")
 
 
+def _choice(t: Translator, verdict: object) -> str:
+    """Who chose the extra controls: the engine (and what it said) or the rules; empty when nothing was to choose."""
+
+    if verdict is None or not getattr(verdict, "circumstances", ()) or not getattr(verdict, "chosen_by", ""):
+        return ""
+
+    if verdict.chosen_by == "engine":  # type: ignore[attr-defined]
+        return t("boot_check.choice.engine", reason=verdict.choice_reason or t("boot_check.choice.no_reason"))  # type: ignore[attr-defined]
+
+    return t("boot_check.choice.rules")
+
+
 def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime) -> dict[str, object]:
     """One machine's part of the page: its verdict, its controls, its incidents."""
 
@@ -99,6 +111,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
         "elapsed": elapsed(t, shown.elapsed_seconds) if shown.elapsed_seconds is not None else "",
         "rows": rows,
         "circumstances": [t(f"boot_check.circumstance.{item}") for item in (verdict.circumstances if verdict else ())],
+        "choice": _choice(t, verdict),
         "incidents": incidents,
         "has_skipped": any(row["status"] == "skipped" for row in rows),
         "booted_at": _stamp(verdict.booted_at) if verdict else "",

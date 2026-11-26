@@ -1146,6 +1146,8 @@ the other two are not listed. A test replays that morning.
 
 The sentences of the controls are shown in your language on the page and in the morning message. The verdict file and the `boot_check` command keep them in English, which keeps them stable; the names (containers, mounts, probes) and notes that come from elsewhere are shown as they are.
 
+**Who chooses the extra controls.** The rules above give a floor. When `ai.enabled` is true, the vigil also asks the AI engine of the house (a local engine: the `boot_checks` caller is internal, nothing leaves your machines) whether it wants to add other controls of the same catalogue, up to `ai.max_extra_controls` in all, and it says why in one sentence. It can never take away a control the rules call for, and the code drops any identifier outside the catalogue: an engine that is silent, slow or wrong hides nothing, and the rules alone decide. The engine is asked once for a start and a set of circumstances; when the rules decided for lack of an answer, it is tried again after an hour. The page says who chose, with the engine's sentence marked "the AI's explanation, not verified"; the "AI engines" page and the journal of calls show the `boot_checks` caller. The command `boot_check --ai` does the same by hand (the vigil passes it); without `--ai` only the rules choose. The verdict of each control is still computed by code.
+
 **A second machine.** The same unit runs on a companion machine (a single-board computer,
 say): the script is a single file of the standard library, no copy of AIStack
 is needed. Install it as above, with `OUTPUT` (and the same path in

@@ -99,12 +99,17 @@ def _boot_check(generated: Path) -> None:
     else (the module is not in the image, say) is no answer, and says so.
     """
 
-    done = subprocess.run(
-        [sys.executable, "-m", "aistack.cli.boot_check", "--once", "--output", str(generated)],
-        capture_output=True,
-        text=True,
-        timeout=300,
-    )
+    try:
+        done = subprocess.run(
+            [sys.executable, "-m", "aistack.cli.boot_check", "--once", "--ai", "--output", str(generated)],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except subprocess.TimeoutExpired:
+        print("aistack.cli.boot_check: no answer within 300 s; the verdict of the previous pass stands", flush=True)
+
+        return
 
     if done.returncode not in (0, 1, 2, 3):
         print(f"aistack.cli.boot_check: exit {done.returncode}: {(done.stderr or done.stdout).strip()[-400:]}", flush=True)

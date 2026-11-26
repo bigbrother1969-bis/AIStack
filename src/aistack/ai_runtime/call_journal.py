@@ -37,6 +37,7 @@ SECURITY_PAGE = "security.page"
 PORTAL_CHAT = "portal.chat"
 VIGIL_REASON = "vigil.reason"
 AI_COMPARE = "ai.compare"
+BOOT_CHECKS = "boot_checks"
 
 
 @dataclass(frozen=True)

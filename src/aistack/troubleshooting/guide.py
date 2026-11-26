@@ -30,7 +30,7 @@ from aistack.ai_runtime.gemini_engine import GeminiEngine
 from aistack.ai_runtime.hosted_engines import AnthropicEngine, OpenAIEngine
 from aistack.ai_runtime.ollama_engine import OllamaEngine
 from aistack.ai_runtime.operations import answer as answer_question
-from aistack.ai_runtime.operations import explain, reason, recommend, system_directive
+from aistack.ai_runtime.operations import choose, explain, reason, recommend, system_directive
 from aistack.ai_runtime.yaml import load_ai_runtime_yaml
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 from aistack.contracts.ai_matter import AIMatter
@@ -48,7 +48,7 @@ AI_STEP = 4
 AskAI = Callable[..., AIRuntimeAnswer]
 Record = Callable[[RuntimeFinding, tuple[AIRuntimeAnswer, ...]], Any]
 
-_CALLS = {"reason": reason, "explain": explain, "recommend": recommend, "ask": answer_question}
+_CALLS = {"reason": reason, "explain": explain, "recommend": recommend, "ask": answer_question, "choose": choose}
 
 
 def _gemini(definition: AIRuntimeDefinition) -> GeminiEngine | None:

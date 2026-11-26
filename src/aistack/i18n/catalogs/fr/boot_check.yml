@@ -46,6 +46,7 @@ overall:
 host:
   heading: "Machine {host}"
 controls:
+  extra: "complémentaire"
   heading: "Contrôles"
   control: "Contrôle"
   status: "Résultat"
@@ -57,6 +58,11 @@ control:
   mounts: "Montages"
   reachable: "Joignable"
   monitor: "Sondes Uptime Kuma"
+  database_recovery: "Récupération des bases de données"
+  kernel_disk_errors: "Erreurs disque du noyau"
+  restart_cause: "Cause de l'arrêt précédent"
+  backup_after_restart: "Sauvegarde après redémarrage"
+  memory: "Mémoire et swap"
   throttled: "Alimentation et température"
   clock: "Horloge"
   containers: "Conteneurs présents"
@@ -68,6 +74,15 @@ control:
   storage: "Espace disque"
   backup: "Sauvegardes"
   previous_boot: "Fin de la période précédente"
+circumstance:
+  unclean_previous_stop: "arrêt précédent non propre"
+  ups_event: "événement d'onduleur"
+  recent_restart: "redémarrage récent"
+  restart_in_backup_window: "redémarrage dans la fenêtre de sauvegarde"
+  memory_pressure: "mémoire sous pression"
+circumstances:
+  heading: "Circonstances :"
+  none: "aucune, les contrôles de base suffisent."
 incidents:
   heading: "Depuis le démarrage"
   none: "Aucun contrôle n'a échoué depuis le démarrage."

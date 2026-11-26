@@ -16,7 +16,7 @@ import json
 import os
 import re
 import tempfile
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -63,6 +63,9 @@ class Verdict:
     results: tuple[Result, ...]
     incidents: tuple[Incident, ...] = field(default_factory=tuple)
     note: str = ""
+    # B5a: the circumstances that held, and the extra controls they chose (a subset of the results).
+    circumstances: tuple[str, ...] = ()
+    extra: tuple[str, ...] = ()
 
 
 def overall(results: list[Result]) -> str:
@@ -77,10 +80,17 @@ def overall(results: list[Result]) -> str:
     return OK
 
 
-def judge(results: list[Result], facts: BootFacts, now: datetime, previous: Verdict | None = None) -> Verdict:
+def judge(
+    results: list[Result],
+    facts: BootFacts,
+    now: datetime,
+    previous: Verdict | None = None,
+    circumstances: tuple[str, ...] = (),
+    extra: tuple[str, ...] = (),
+) -> Verdict:
     """The verdict of this pass, and the incidents carried over from the passes since the same start."""
 
-    return _judge(results, facts.boot_id, facts.booted_at, now, previous)
+    return replace(_judge(results, facts.boot_id, facts.booted_at, now, previous), circumstances=circumstances, extra=extra)
 
 
 def judge_silent(results: list[Result], now: datetime, previous: Verdict | None = None) -> Verdict:
@@ -183,6 +193,8 @@ def read_verdict(directory: Path, host: str | None = None) -> Verdict | None:
         results=tuple(results),
         incidents=tuple(incidents),
         note=str(raw.get("note", "")),
+        circumstances=tuple(str(item) for item in raw.get("circumstances", ()) if isinstance(item, str)),
+        extra=tuple(str(item) for item in raw.get("extra", ()) if isinstance(item, str)),
     )
 
 

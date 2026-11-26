@@ -1189,6 +1189,21 @@ jour : un Gotify qui ne répond pas est réessayé au passage suivant.
 `summary: enabled: false` le coupe. Rien n'est envoyé tant qu'il n'y a pas de
 verdict.
 
+**Contrôles complémentaires.** En plus des contrôles de base, les contrôles
+en ajoutent quelques-uns seulement quand les circonstances le demandent ; la
+page liste les circonstances et marque ces contrôles « complémentaire ». Un
+arrêt qui n'était pas propre regarde la récupération des bases (les
+conteneurs de `database_containers`, dont l'unité de l'hôte compte les lignes
+du journal : `AISTACK_BOOT_DATABASES` dans son `host.conf`) et les erreurs
+disque du noyau ; un démarrage récent dit la cause de l'arrêt précédent
+(l'onduleur ou un arrêt demandé) ; un démarrage dans `backup_window` regarde la
+sauvegarde ; une mémoire sous pression regarde la mémoire et le swap. Les
+circonstances sont calculées à partir des faits, le catalogue de cinq contrôles
+est fermé, et `catalogue:` dans `boot_checks.yml` ne change que la circonstance
+qui justifie chaque contrôle ; au plus `ai.max_extra_controls` s'exécutent. Les
+lignes de journal ne quittent jamais la machine : l'unité de l'hôte n'écrit que
+des nombres.
+
 **Une seconde machine.** La même unité tourne sur une machine compagnon (un
 ordinateur monocarte, par exemple) : le script est un seul fichier de la bibliothèque
 standard, aucune copie d'AIStack n'est nécessaire. Installe-le comme

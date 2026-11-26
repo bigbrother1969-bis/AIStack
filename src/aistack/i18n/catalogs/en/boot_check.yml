@@ -46,6 +46,7 @@ overall:
 host:
   heading: "Machine {host}"
 controls:
+  extra: "extra"
   heading: "Controls"
   control: "Control"
   status: "Result"
@@ -57,6 +58,11 @@ control:
   mounts: "Mounts"
   reachable: "Reachable"
   monitor: "Uptime Kuma monitors"
+  database_recovery: "Database recovery"
+  kernel_disk_errors: "Kernel disk errors"
+  restart_cause: "Cause of the previous stop"
+  backup_after_restart: "Backup after the restart"
+  memory: "Memory and swap"
   throttled: "Power and temperature"
   clock: "Clock"
   containers: "Containers present"
@@ -68,6 +74,15 @@ control:
   storage: "Disk space"
   backup: "Backups"
   previous_boot: "End of the previous run"
+circumstance:
+  unclean_previous_stop: "the previous stop was not clean"
+  ups_event: "a UPS event"
+  recent_restart: "recent restart"
+  restart_in_backup_window: "restart inside the backup window"
+  memory_pressure: "memory under pressure"
+circumstances:
+  heading: "Circumstances:"
+  none: "none, the base controls are enough."
 incidents:
   heading: "Since the start"
   none: "No control has failed since the start."

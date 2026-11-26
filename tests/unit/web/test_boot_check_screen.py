@@ -105,3 +105,23 @@ def test_a_companion_has_its_own_pill_and_its_own_part_of_the_page(tmp_path: Pat
 
     assert 'id="backup-host"' in page and "Machine backup-host" in page and "boot-facts.json is old" in page
     assert "Reachable" in page
+
+
+def test_the_page_says_the_circumstances_and_marks_the_extra_controls(tmp_path: Path) -> None:
+    now = datetime.now(timezone.utc)
+    started = now.replace(microsecond=0).isoformat()
+    results = (Result("mounts", "ok", "2 of 2 mounts present"), Result("kernel_disk_errors", "ok", "no disk or file-system error in the kernel log since the start"))
+    write_verdict(
+        tmp_path,
+        Verdict("ok", 0, now.isoformat(), "b", started, results, (), "", ("unclean_previous_stop",), ("kernel_disk_errors",)),
+    )
+    page = signed_in(client(tmp_path)).get("/boot-check/?lang=en").text
+
+    assert "Circumstances:" in page and "the previous stop was not clean" in page
+    assert page.count("(extra)") == 1 and "Kernel disk errors" in page
+
+
+def test_without_a_circumstance_the_page_says_the_base_controls_are_enough(tmp_path: Path) -> None:
+    write(tmp_path)
+
+    assert "none, the base controls are enough." in signed_in(client(tmp_path)).get("/boot-check/?lang=en").text

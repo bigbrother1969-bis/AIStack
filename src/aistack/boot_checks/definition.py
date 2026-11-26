@@ -26,7 +26,22 @@ FINDINGS = (
     "monitor_down",
     "companion_unreachable",
     "companion_throttled",
+    "database_recovery",
+    "kernel_disk_errors",
+    "memory_pressure",
 )
+
+# The circumstances the code computes from the facts, and the extra controls a circumstance may justify
+# (ADR-0032 § 3, slice B5a). Both lists are closed: the declaration may link them differently, never add one.
+CIRCUMSTANCES = ("unclean_previous_stop", "ups_event", "recent_restart", "restart_in_backup_window", "memory_pressure")
+EXTRA_CONTROLS = ("database_recovery", "kernel_disk_errors", "restart_cause", "backup_after_restart", "memory")
+DEFAULT_CATALOGUE = {
+    "database_recovery": ("unclean_previous_stop",),
+    "kernel_disk_errors": ("unclean_previous_stop",),
+    "restart_cause": ("recent_restart", "ups_event"),
+    "backup_after_restart": ("restart_in_backup_window",),
+    "memory": ("memory_pressure",),
+}
 
 DEFAULT_SEVERITY = {
     "failed_unit": CRITICAL,
@@ -44,6 +59,9 @@ DEFAULT_SEVERITY = {
     "monitor_down": WARNING,
     "companion_unreachable": CRITICAL,
     "companion_throttled": WARNING,
+    "database_recovery": WARNING,
+    "kernel_disk_errors": CRITICAL,
+    "memory_pressure": WARNING,
 }
 
 
@@ -80,6 +98,17 @@ class BootChecksDefinition:
     companion_silent_minutes: int = 45
     # host name (as in hosts.yml) -> the paths that must be mounted on that host after a start.
     companion_mounts: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    # The containers of the databases whose log is read for a recovery after the start (the host unit reads the same names).
+    database_containers: tuple[str, ...] = ()
+    # The owner's time zone, for the backup window; a restart is "recent" under this many hours.
+    timezone: str = "Europe/Paris"
+    backup_window: tuple[str, str] = ("02:00", "05:00")
+    recent_restart_hours: int = 12
+    # Memory: the 5-minute pressure and the swap in use that call for the memory control, in percent.
+    memory_pressure_percent: int = 10
+    swap_used_percent: int = 50
+    # extra control -> the circumstances that justify it.
+    catalogue: dict[str, tuple[str, ...]] = field(default_factory=lambda: dict(DEFAULT_CATALOGUE))
     # The indicator sits beside the weighted health score, not inside it.
     indicator_weighted: bool = False
     ai_enabled: bool = True

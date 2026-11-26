@@ -85,6 +85,31 @@ companion_silent_minutes: 45
 #     backup-host: [/media/BACKUP]
 companion_mounts: {}
 
+# The extra controls (ADR-0032 § 3): they run only when the circumstances call for
+# them, the circumstances being computed from the facts. The containers of the
+# databases whose log is read for a recovery after the start (the host unit reads
+# the same names: AISTACK_BOOT_DATABASES in its host.conf); empty skips that control.
+database_containers: []
+timezone: Europe/Paris
+backup_window:
+  from: "02:00"
+  until: "05:00"
+# A start under this many hours old is "recent".
+recent_restart_hours: 12
+# Memory under pressure: the 5-minute pressure and the swap in use, in percent.
+memory_pressure_percent: 10
+swap_used_percent: 50
+# Which circumstances justify which extra control. The circumstances are
+# unclean_previous_stop, ups_event, recent_restart, restart_in_backup_window and
+# memory_pressure; the extra controls are database_recovery, kernel_disk_errors,
+# restart_cause, backup_after_restart and memory. Both lists are closed.
+catalogue:
+  database_recovery: [unclean_previous_stop]
+  kernel_disk_errors: [unclean_previous_stop]
+  restart_cause: [recent_restart, ups_event]
+  backup_after_restart: [restart_in_backup_window]
+  memory: [memory_pressure]
+
 # The indicator stays beside the weighted health score, not inside it. Set
 # true to let its findings weigh in the score as well.
 indicator_weighted: false

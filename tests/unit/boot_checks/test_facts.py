@@ -133,6 +133,9 @@ def _proc(tmp_path: Path) -> Path:
     (proc / "sys/kernel/random/boot_id").write_text("boot-1\n", encoding="utf-8")
     (proc / "self/mountinfo").write_text(MOUNTINFO, encoding="utf-8")
     (proc / "modules").write_text("kvm_intel 1 0 - Live 0x0\nvfat 1 0 - Live 0x0\n", encoding="utf-8")
+    (proc / "pressure").mkdir()
+    (proc / "pressure/memory").write_text("some avg10=0.00 avg60=1.50 avg300=2.25 total=123\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n", encoding="utf-8")
+    (proc / "meminfo").write_text("MemTotal: 1000 kB\nSwapTotal: 2000 kB\nSwapFree: 1500 kB\n", encoding="utf-8")
 
     return proc
 
@@ -146,13 +149,15 @@ def _answers(monkeypatch, **fail: str) -> None:
         "ups": "ups.status: OL\n",
         "clock": "yes\n",
         "throttled": "throttled=0x50005\n",
+        "kernel_errors": "EXT4-fs error (device sda3): bad entry\nsomething harmless\nBuffer I/O error on dev sda\n",
+        "database_logs": "database system was not properly shut down; automatic recovery in progress\nready\n",
     }
 
-    def run(name: str, ups: str = "") -> str:
-        if name in fail:
-            raise OSError(fail[name])
+    def run(which: str, ups: str = "", /, **values: str) -> str:
+        if which in fail:
+            raise OSError(fail[which])
 
-        return texts[name]
+        return texts[which]
 
     monkeypatch.setattr(unit, "_run", run)
 
@@ -163,8 +168,9 @@ def test_every_source_is_read_and_the_file_holds_facts_only(tmp_path: Path, monk
 
     assert report["sources"] == {
         "boot": "ok", "failed_units": "ok", "mounts": "ok", "containers": "ok", "docker_user_rules": "ok",
-        "kvm_modules": "ok", "previous_boot_clean": "ok", "clock_synced": "ok", "throttled": "absent",
-        "ups": "ok", "probes": "ok",
+        "kvm_modules": "ok", "previous_boot_clean": "ok", "clock_synced": "ok", "stop_reason": "ok",
+        "kernel_disk_errors": "ok", "memory_pressure": "ok", "swap_used_percent": "ok", "database_recovery": "absent",
+        "throttled": "absent", "ups": "ok", "probes": "ok",
     }
     assert report["probes"] == {"proxy": 200}
     assert report["kvm_modules"] is True and report["ups"] == "OL" and report["failed_units"] == []
@@ -193,10 +199,11 @@ def test_the_commands_are_a_closed_list_run_without_a_shell(monkeypatch) -> None
     monkeypatch.setattr(unit.shutil, "which", lambda name: f"/usr/bin/{name}")
 
     for name in unit.COMMANDS:
-        unit._run(name, "apc@localhost")
+        unit._run(name, "apc@localhost", since="2026-11-26T06:05:27+00:00", name="app_db") if name == "database_logs" else unit._run(name, "apc@localhost")
 
-    assert [command[0] for command in seen] == ["systemctl", "docker", "iptables", "journalctl", "upsc", "vcgencmd", "timedatectl"]
+    assert [command[0] for command in seen] == ["systemctl", "docker", "iptables", "journalctl", "upsc", "vcgencmd", "timedatectl", "journalctl", "docker"]
     assert seen[4] == ["upsc", "apc@localhost"]
+    assert seen[-1] == ["docker", "logs", "--since", "2026-11-26T06:05:27+00:00", "app_db"]
 
     with pytest.raises(KeyError):
         unit._run("rm")
@@ -220,7 +227,7 @@ def test_a_command_that_fails_or_is_missing_is_an_error_not_an_empty_answer(monk
 def test_the_unit_writes_the_file_as_the_owner_of_its_directory(tmp_path: Path, monkeypatch) -> None:
     _answers(monkeypatch)
     monkeypatch.setattr(unit.os, "chown", lambda *_: None)
-    monkeypatch.setattr(unit, "collect", lambda now, probes, ups: {"collected_at": now.isoformat(), "sources": {}})
+    monkeypatch.setattr(unit, "collect", lambda now, probes, ups, databases=(): {"collected_at": now.isoformat(), "sources": {}})
     monkeypatch.setattr(sys, "argv", ["aistack-boot-facts", "--output", str(tmp_path / "out")])
 
     assert unit.main() == 0
@@ -319,3 +326,102 @@ def test_the_reader_keeps_the_flags_and_the_clock_and_none_when_they_were_not_re
 
     assert read is not None and read.throttled == 0x50005 and read.clock_synced is False
     assert absent is not None and absent.throttled is None and absent.clock_synced is None
+
+
+# -- B5a: kernel disk errors, database recovery, the cause of the stop, memory --------------------
+
+
+def test_kernel_lines_are_counted_never_copied() -> None:
+    text = "EXT4-fs error (device sda3): x\nnothing\nBuffer I/O error on dev sda\nata1.00: failed command: READ\nmmcblk0: timeout\n"
+
+    assert unit.disk_error_lines(text) == 4 and unit.disk_error_lines("") == 0
+
+
+def test_a_recovery_after_the_start_is_counted_in_the_database_log() -> None:
+    log = "LOG:  database system was not properly shut down; automatic recovery in progress\nInnoDB: Starting crash recovery.\nready\n"
+
+    assert unit.recovery_lines(log) == 2 and unit.recovery_lines("ready to accept connections\n") == 0
+
+
+def test_the_reason_of_the_stop_is_ups_requested_or_unknown() -> None:
+    assert unit.stop_reason("upsmon[812]: UPS ups@localhost on battery\nstuff\n") == "ups"
+    assert unit.stop_reason("x\nReached target Power-Off.\n") == "requested"
+    assert unit.stop_reason("just stops\n") == "unknown"
+    assert unit.stop_reason("upsmon: Executing automatic power-fail shutdown\nReached target Power-Off.\n") == "ups"
+
+
+def test_memory_pressure_and_swap_are_read_from_proc_texts() -> None:
+    assert unit.memory_pressure("some avg10=0.00 avg60=1.50 avg300=2.25 total=1\n") == 2.25
+    assert unit.swap_used_percent("SwapTotal: 2000 kB\nSwapFree: 500 kB\n") == 75
+    assert unit.swap_used_percent("SwapTotal: 0 kB\nSwapFree: 0 kB\n") == 0
+
+    with pytest.raises(OSError):
+        unit.memory_pressure("nothing\n")
+
+
+def test_the_declared_databases_are_read_and_the_one_that_cannot_be_read_is_left_out(tmp_path: Path, monkeypatch) -> None:
+    def run(which: str, ups: str = "", /, **values: str) -> str:
+        if which == "database_logs":
+            if values["name"] == "gone_db":
+                raise OSError("No such container: gone_db")
+
+            return "automatic recovery in progress\n" if values["name"] == "app_db" else "ready\n"
+
+        return {"failed_units": "", "containers": DOCKER, "docker_user": "", "previous_boot": "x\n", "clock": "yes\n", "kernel_errors": ""}.get(which, "")
+
+    monkeypatch.setattr(unit, "_run", run)
+    report = unit.collect(NOW, {}, "", ("app_db", "quiet_db", "gone_db"), proc=_proc(tmp_path))
+
+    assert report["database_recovery"] == {"app_db": 1, "quiet_db": 0}
+    assert report["sources"]["database_recovery"] == "ok"
+
+
+def test_all_the_databases_failing_is_a_failed_source(tmp_path: Path, monkeypatch) -> None:
+    def run(which: str, ups: str = "", /, **values: str) -> str:
+        if which == "database_logs":
+            raise OSError("Cannot connect to the Docker daemon")
+
+        return ""
+
+    monkeypatch.setattr(unit, "_run", run)
+    report = unit.collect(NOW, {}, "", ("app_db",), proc=_proc(tmp_path))
+
+    assert report["sources"]["database_recovery"].startswith("error:") and "database_recovery" not in report
+
+
+def test_a_name_that_is_not_a_container_name_is_never_a_command_argument(monkeypatch) -> None:
+    monkeypatch.setattr(unit.shutil, "which", lambda name: f"/usr/bin/{name}")
+
+    with pytest.raises(OSError):
+        unit._run("database_logs", since="2026-11-26T06:05:27+00:00", name="x; reboot")
+
+    with pytest.raises(OSError):
+        unit._run("database_logs", since="2026-11-26T06:05:27+00:00", name="--all")
+
+
+def test_a_bad_database_name_on_the_command_line_is_refused(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr(sys, "argv", ["aistack-boot-facts", "--output", str(tmp_path), "--database", "a b"])
+
+    assert unit.main() == 2
+    assert "container name" in capsys.readouterr().err
+
+
+def test_the_new_facts_are_read_back_and_an_absent_one_is_none() -> None:
+    text = json.dumps(
+        {
+            "collected_at": NOW.isoformat(),
+            "stop_reason": "ups",
+            "kernel_disk_errors": 2,
+            "database_recovery": {"app_db": 1},
+            "memory_pressure": 2.25,
+            "swap_used_percent": 75,
+        }
+    )
+    facts = parse_facts(text)
+
+    assert facts is not None
+    assert (facts.stop_reason, facts.kernel_disk_errors, facts.database_recovery, facts.memory_pressure, facts.swap_used_percent) == ("ups", 2, {"app_db": 1}, 2.25, 75)
+
+    bare = parse_facts(json.dumps({"collected_at": NOW.isoformat()}))
+
+    assert bare is not None and bare.stop_reason is None and bare.database_recovery is None and bare.memory_pressure is None

@@ -75,6 +75,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
             "status_label": t(f"boot_check.status.{result.status}"),
             "summary": result.summary,
             "details": result.details,
+            "extra": result.control in (verdict.extra if verdict else ()),
         }
         for result in (verdict.results if verdict else ())
     ]
@@ -96,6 +97,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
         "level": LEVELS.get(shown.status, "not-instrumented"),
         "elapsed": elapsed(t, shown.elapsed_seconds) if shown.elapsed_seconds is not None else "",
         "rows": rows,
+        "circumstances": [t(f"boot_check.circumstance.{item}") for item in (verdict.circumstances if verdict else ())],
         "incidents": incidents,
         "has_skipped": any(row["status"] == "skipped" for row in rows),
         "booted_at": _stamp(verdict.booted_at) if verdict else "",

@@ -60,6 +60,9 @@ COMMANDS: dict[str, tuple[str, ...]] = {
     # A Raspberry's power and temperature flags, and whether its clock was set by the network.
     "throttled": ("vcgencmd", "get_throttled"),
     "clock": ("timedatectl", "show", "-p", "NTPSynchronized", "--value"),
+    # B5a: what the kernel said of its disks since the start, and what a declared database said of its recovery.
+    "kernel_errors": ("journalctl", "--no-pager", "-o", "cat", "-k", "-b", "-p", "err"),
+    "database_logs": ("docker", "logs", "--since", "{since}", "{name}"),
 }
 
 # What a file system that is not a disk, a share or a mounted folder looks like.
@@ -72,23 +75,60 @@ PSEUDO_FILESYSTEMS = frozenset(
     )
 )
 _CLEAN_END = re.compile(r"Reached target .*(Power-Off|Reboot|Halt)|Shutting down\.|Journal stopped", re.IGNORECASE)
+# What the kernel says of a disk or a file system that fails; only how many lines say it is written.
+_DISK_ERROR = re.compile(
+    r"I/O error|EXT4-fs error|XFS .*(error|corruption)|BTRFS .*error|blk_update_request|"
+    r"ata\d+(\.\d+)?: .*(error|failed|exception)|nvme\d+.*(timeout|error)|mmcblk\d+.*(error|timeout)|"
+    r"Remounting filesystem read-only|critical medium error",
+    re.IGNORECASE,
+)
+# What a database says when it starts again after a stop that was not clean.
+_RECOVERY = re.compile(
+    r"crash recovery|not properly shut down|was interrupted|automatic recovery in progress|redo starts at|"
+    r"recovering after unclean shutdown|starting recovery",
+    re.IGNORECASE,
+)
+_UPS_STOP = re.compile(
+    r"upsmon.*(shutdown|FSD|battery)|automatic power-fail shutdown|forced shutdown|UPS .*(on battery|low battery)",
+    re.IGNORECASE,
+)
+_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,60}$")
 _HEALTH = re.compile(r"\((healthy|unhealthy|health: starting)\)")
 _OCTAL = re.compile(r"\\([0-7]{3})")
 
 
-def _run(name: str, ups: str = "") -> str:
-    """Run one command of the closed list; a failure raises an `OSError` that says why."""
+def _run(which: str, ups: str = "", /, **values: str) -> str:
+    """
+    Run one command of the closed list; a failure raises an `OSError` that says why.
 
-    template = COMMANDS[name]
-    command = [ups if part == "{ups}" else part for part in template]
+    Only `{ups}`, `{since}` and `{name}` are filled in, from the unit's own configuration
+    and the start time it computed; a `{name}` that is not a plain container name is refused.
+    A container's logs come out on both streams, so both are read.
+    """
+
+    template = COMMANDS[which]
+    fill = {"{ups}": ups, **{"{" + key + "}": value for key, value in values.items()}}
+
+    if "name" in values and not _NAME.match(values["name"]):
+        raise OSError("not a container name")
+
+    command = [fill.get(part, part) for part in template]
 
     if shutil.which(command[0]) is None:
         raise OSError(f"{command[0]} not found")
 
-    result = subprocess.run(command, capture_output=True, text=True, timeout=COMMAND_TIMEOUT, check=False)
+    merged = which == "database_logs"
+    result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT if merged else subprocess.PIPE,
+        text=True,
+        timeout=COMMAND_TIMEOUT,
+        check=False,
+    )
 
     if result.returncode != 0:
-        stderr = result.stderr.strip().splitlines()
+        stderr = (result.stderr or result.stdout or "").strip().splitlines()
         raise OSError(stderr[-1] if stderr else f"{command[0]} failed")
 
     return result.stdout
@@ -176,6 +216,53 @@ def previous_boot_ended_cleanly(text: str) -> bool:
     return any(_CLEAN_END.search(line) for line in text.splitlines()[-60:])
 
 
+def stop_reason(text: str) -> str:
+    """Why the previous run stopped, from the end of its journal: `ups`, `requested` (a shutdown or reboot), or `unknown`."""
+
+    tail = text.splitlines()[-60:]
+
+    if any(_UPS_STOP.search(line) for line in tail):
+        return "ups"
+
+    if any(_CLEAN_END.search(line) for line in tail):
+        return "requested"
+
+    return "unknown"
+
+
+def disk_error_lines(text: str) -> int:
+    """How many kernel lines say a disk or a file system failed; never the lines."""
+
+    return sum(1 for line in text.splitlines() if _DISK_ERROR.search(line))
+
+
+def recovery_lines(text: str) -> int:
+    """How many lines of a database's log say it recovered after the start; never the lines."""
+
+    return sum(1 for line in text.splitlines() if _RECOVERY.search(line))
+
+
+def memory_pressure(text: str) -> float:
+    """The 5-minute average of `some` stalls (PSI), in percent."""
+
+    for line in text.splitlines():
+        if line.startswith("some "):
+            for part in line.split():
+                if part.startswith("avg300="):
+                    return float(part.partition("=")[2])
+
+    raise OSError("no memory pressure value")
+
+
+def swap_used_percent(meminfo: str) -> int:
+    """The share of swap in use (zram is swap too); 0 when the host has none."""
+
+    values = {line.split(":")[0]: int(line.split()[1]) for line in meminfo.splitlines() if ":" in line and len(line.split()) > 1}
+    total = values.get("SwapTotal", 0)
+
+    return 0 if total <= 0 else round(100 * (total - values.get("SwapFree", 0)) / total)
+
+
 def ups_status(text: str) -> str:
     for line in text.splitlines():
         key, _, value = line.partition(":")
@@ -249,10 +336,35 @@ def parse_probes(values: list[str]) -> dict[str, str]:
     return found
 
 
+def _recoveries(names: tuple[str, ...], report: dict[str, object]) -> dict[str, int]:
+    """The recovery lines of each declared database since the start; one that cannot be read is left out, and all of them failing is a failure."""
+
+    boot = report.get("boot")
+    since = boot["booted_at"] if isinstance(boot, dict) and isinstance(boot.get("booted_at"), str) else ""
+
+    if not since:
+        raise OSError("the start time is not known")
+
+    found: dict[str, int] = {}
+    reason = ""
+
+    for name in names:
+        try:
+            found[name] = recovery_lines(_run("database_logs", since=since, name=name))
+        except (OSError, subprocess.TimeoutExpired) as error:
+            reason = f"{name}: {str(error)[:80]}"
+
+    if not found:
+        raise OSError(reason or "no database")
+
+    return found
+
+
 def collect(
     now: datetime,
     probes: dict[str, str],
     ups: str,
+    databases: tuple[str, ...] = (),
     *,
     proc: Path = Path("/proc"),
     probe_one=probe,  # type: ignore[no-untyped-def]
@@ -282,6 +394,15 @@ def collect(
     read("kvm_modules", lambda: any(line.startswith(("kvm ", "kvm_intel ", "kvm_amd ")) for line in (proc / "modules").read_text(encoding="utf-8").splitlines()))
     read("previous_boot_clean", lambda: previous_boot_ended_cleanly(_run("previous_boot")))
     read("clock_synced", lambda: clock_synchronized(_run("clock")))
+    read("stop_reason", lambda: stop_reason(_run("previous_boot")))
+    read("kernel_disk_errors", lambda: disk_error_lines(_run("kernel_errors")))
+    read("memory_pressure", lambda: memory_pressure((proc / "pressure/memory").read_text(encoding="utf-8")))
+    read("swap_used_percent", lambda: swap_used_percent((proc / "meminfo").read_text(encoding="utf-8")))
+
+    if databases:
+        read("database_recovery", lambda: _recoveries(databases, report))
+    else:
+        sources["database_recovery"] = "absent"
 
     # Only a Raspberry has the command; elsewhere the source is absent, not failed.
     if shutil.which(COMMANDS["throttled"][0]) is None:
@@ -319,6 +440,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Write the facts of the host since its last start.")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--probe", action="append", default=[], help="LABEL=URL: the HTTP status it answers is written under LABEL")
+    parser.add_argument("--database", action="append", default=[], help="a container whose log is read for its recovery after the start (AISTACK_BOOT_DATABASES, comma-separated)")
     parser.add_argument("--ups", default=os.environ.get("AISTACK_BOOT_UPS", ""), help="the UPS name for upsc, e.g. apc@localhost")
     arguments = parser.parse_args()
 
@@ -331,7 +453,13 @@ def main() -> int:
     output: Path = arguments.output
     output.mkdir(parents=True, exist_ok=True)
     status = output.stat()
-    report = collect(datetime.now(timezone.utc), probes, arguments.ups)
+    names = tuple(dict.fromkeys(name.strip() for value in [*arguments.database, os.environ.get("AISTACK_BOOT_DATABASES", "")] for name in value.split(",") if name.strip()))
+
+    if not all(_NAME.match(name) for name in names):
+        print("not a container name in --database / AISTACK_BOOT_DATABASES", file=sys.stderr)
+        return 2
+
+    report = collect(datetime.now(timezone.utc), probes, arguments.ups, names)
     _write(output / OUTPUT_NAME, json.dumps(report, sort_keys=True, indent=1) + "\n", (status.st_uid, status.st_gid))
 
     return 0

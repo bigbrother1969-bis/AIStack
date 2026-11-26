@@ -44,6 +44,9 @@ def describe(verdict: Verdict, host: str | None = None) -> str:
     if verdict.booted_at:
         lines.append(f"  started at {verdict.booted_at}")
 
+    if verdict.circumstances:
+        lines.append(f"  circumstances: {', '.join(verdict.circumstances)}")
+
     if verdict.note:
         lines.append(f"  {verdict.note}")
 

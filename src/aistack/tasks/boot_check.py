@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from aistack.boot_checks.catalogue import choose, circumstances, evaluate_extra, settled_since
 from aistack.boot_checks.controls import Reading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
 from aistack.boot_checks.facts import BootFacts, read_facts_file
@@ -96,7 +97,13 @@ class BootCheckTask:
             else:
                 storage, backup = cockpit_readings(_hostname()) if payload.get("cockpit", True) else (None, None)
                 monitors = _monitors(generated_dir)
-                verdict = judge(evaluate(facts, definition, now, storage, backup, monitors), facts, now, read_verdict(generated_dir))
+                found = circumstances(facts, definition)
+                chosen = choose(found, definition)
+                results = [
+                    *evaluate(facts, definition, now, storage, backup, monitors),
+                    *evaluate_extra(chosen, facts, definition, backup, settled_since(facts, definition, now)),
+                ]
+                verdict = judge(results, facts, now, read_verdict(generated_dir), found, chosen)
 
             if not payload.get("dry_run"):
                 write_verdict(generated_dir, verdict)

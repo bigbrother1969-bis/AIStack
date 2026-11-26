@@ -56,6 +56,13 @@ class BootFacts:
     # A Raspberry's power and temperature flags (`vcgencmd get_throttled`), and whether its clock was set by the network.
     throttled: int | None = None
     clock_synced: bool | None = None
+    # B5a: why the previous run stopped (`ups`, `requested`, `unknown`), how many kernel lines say a disk failed,
+    # the recovery lines of each declared database, the memory pressure (percent) and the swap in use (percent).
+    stop_reason: str | None = None
+    kernel_disk_errors: int | None = None
+    database_recovery: dict[str, int] | None = None
+    memory_pressure: float | None = None
+    swap_used_percent: int | None = None
 
 
 def _strings(value: Any) -> tuple[str, ...] | None:
@@ -78,6 +85,10 @@ def _containers(value: Any) -> tuple[Container, ...] | None:
 
 def _count(value: Any) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+def _number(value: Any) -> float | None:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
 
 def _flag(value: Any) -> bool | None:
@@ -126,6 +137,15 @@ def parse_facts(text: str) -> BootFacts | None:
         sources={str(k): str(v) for k, v in sources.items()} if isinstance(sources, dict) else {},
         throttled=_count(raw.get("throttled")),
         clock_synced=_flag(raw.get("clock_synced")),
+        stop_reason=raw["stop_reason"] if isinstance(raw.get("stop_reason"), str) else None,
+        kernel_disk_errors=_count(raw.get("kernel_disk_errors")),
+        database_recovery=(
+            {str(k): v for k, v in recovery.items() if isinstance(v, int) and not isinstance(v, bool)}
+            if isinstance(recovery := raw.get("database_recovery"), dict)
+            else None
+        ),
+        memory_pressure=_number(raw.get("memory_pressure")),
+        swap_used_percent=_count(raw.get("swap_used_percent")),
     )
 
 

@@ -7,7 +7,10 @@ from typing import Any
 import yaml
 
 from aistack.boot_checks.definition import (
+    CIRCUMSTANCES,
+    DEFAULT_CATALOGUE,
     DEFAULT_SEVERITY,
+    EXTRA_CONTROLS,
     FINDINGS,
     SEVERITIES,
     BootChecksDefinition,
@@ -32,6 +35,7 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
     defaults = BootChecksDefinition()
     ai = _section(data, "ai", label)
     summary = _section(data, "summary", label)
+    window = _section(data, "backup_window", label)
 
     return BootChecksDefinition(
         settle_minutes=_positive_int(
@@ -54,6 +58,16 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
             data, "companion_silent_minutes", defaults.companion_silent_minutes, label
         ),
         companion_mounts=_companion_mounts(data.get("companion_mounts"), label),
+        database_containers=_names(data.get("database_containers"), f"{label}: database_containers"),
+        timezone=_zone(data.get("timezone"), defaults.timezone, label),
+        backup_window=(
+            _clock(window, "from", defaults.backup_window[0], f"{label}: backup_window"),
+            _clock(window, "until", defaults.backup_window[1], f"{label}: backup_window"),
+        ),
+        recent_restart_hours=_positive_int(data, "recent_restart_hours", defaults.recent_restart_hours, label),
+        memory_pressure_percent=_positive_int(data, "memory_pressure_percent", defaults.memory_pressure_percent, label),
+        swap_used_percent=_positive_int(data, "swap_used_percent", defaults.swap_used_percent, label),
+        catalogue=_catalogue(data.get("catalogue"), label),
         indicator_weighted=_flag(
             data, "indicator_weighted", defaults.indicator_weighted, label
         ),
@@ -207,3 +221,40 @@ def _severity(value: Any, label: str) -> dict[str, str]:
         severity[finding] = level
 
     return severity
+
+
+def _zone(value: Any, default: str, label: str) -> str:
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    if value is None:
+        return default
+
+    try:
+        ZoneInfo(str(value))
+    except (ZoneInfoNotFoundError, ValueError, OSError):
+        raise ValueError(f"{label}: timezone {value!r} is not a time zone such as Europe/Paris") from None
+
+    return str(value)
+
+
+def _catalogue(value: Any, label: str) -> dict[str, tuple[str, ...]]:
+    """Which circumstances justify each extra control; a control or a circumstance outside the closed lists is refused."""
+
+    catalogue = dict(DEFAULT_CATALOGUE)
+
+    if value is None:
+        return catalogue
+
+    if not isinstance(value, dict):
+        raise ValueError(f"{label}: catalogue must map an extra control to its circumstances")
+
+    for control, when in value.items():
+        if control not in EXTRA_CONTROLS:
+            raise ValueError(f"{label}: catalogue.{control} is not a known extra control ({', '.join(EXTRA_CONTROLS)})")
+
+        if not isinstance(when, list) or not all(item in CIRCUMSTANCES for item in when):
+            raise ValueError(f"{label}: catalogue.{control} must list circumstances among {', '.join(CIRCUMSTANCES)}")
+
+        catalogue[control] = tuple(when)
+
+    return catalogue

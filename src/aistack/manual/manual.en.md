@@ -1128,6 +1128,19 @@ machine is critical, and it is sent once a day: Gotify that does not answer is
 tried again at the next pass. `summary: enabled: false` turns it off. Nothing
 is sent while there is no verdict.
 
+**Extra controls.** Besides the base controls, the checks add some only when
+the circumstances call for them, and the page lists the circumstances and marks
+those controls "extra". A stop that was not clean looks at the databases'
+recovery (the containers in `database_containers`, whose log the host unit
+counts: `AISTACK_BOOT_DATABASES` in its `host.conf`) and at the kernel's disk
+errors; a recent start tells the cause of the previous stop (the UPS or a
+shutdown that was asked for); a start inside `backup_window` looks at the
+backup; memory under pressure looks at memory and swap. The circumstances are
+computed from the facts, the catalogue of five controls is closed, and
+`catalogue:` in `boot_checks.yml` only changes which circumstance justifies
+which control; at most `ai.max_extra_controls` run. The log lines themselves
+never leave the machine: the host unit writes only counts.
+
 **A second machine.** The same unit runs on a companion machine (a single-board computer,
 say): the script is a single file of the standard library, no copy of AIStack
 is needed. Install it as above, with `OUTPUT` (and the same path in

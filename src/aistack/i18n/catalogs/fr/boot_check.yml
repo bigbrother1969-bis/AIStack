@@ -159,6 +159,7 @@ phrase:
   systems_memory: "{n} avec une mémoire utilisée à {limit} % ou plus"
   systems_temperature: "{n} à {limit} °C ou plus"
   systems_unread: "{n} sans relevé"
+  systems_silent: "{name} (sans relevé depuis le {when} UTC)"
   monitor_up: "{n} sonde(s) en service, aucune en panne"
   monitor_up_no_list: "{n} sonde(s) en service, aucune en panne (aucune liste de référence déclarée)"
   monitor_down: "{n} en panne"

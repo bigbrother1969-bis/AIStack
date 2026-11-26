@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from typing import Any
 
 
 _USER_AGENT = "AIStack-BeszelProvider/1.0"
+# A PocketBase record id: nothing else is put in a filter.
+_IDENTIFIER = re.compile(r"[A-Za-z0-9]{1,40}")
 
 
 class BeszelProvider:
@@ -41,7 +45,7 @@ class BeszelProvider:
         self.password = password
         self.timeout = timeout
 
-    def collect(self) -> dict[str, Any]:
+    def collect(self, last_readings: bool = False) -> dict[str, Any]:
         observation: dict[str, Any] = {
             "provider": {
                 "id": self.provider_id,
@@ -79,7 +83,30 @@ class BeszelProvider:
         state["reachable"] = True
         state["systems"] = items if isinstance(items, list) else []
 
+        if last_readings:
+            self._add_last_readings(state["systems"], token)
+
         return observation
+
+    def _add_last_readings(self, systems: list[Any], token: str) -> None:
+        """
+        For each system Beszel calls down, when its last measure arrived (`last_reading`, from `system_stats`).
+
+        The record's own `updated` is not that: it changes when a person edits the record. A failure here only
+        leaves the key out; the observation is the same without it.
+        """
+
+        for item in systems:
+            if not isinstance(item, dict) or item.get("status") != "down" or not _IDENTIFIER.fullmatch(str(item.get("id", ""))):
+                continue
+
+            query = urllib.parse.urlencode(
+                {"filter": f"system='{item['id']}'", "sort": "-created", "perPage": 1, "fields": "created"}
+            )
+            found, reason = self._get(f"/api/collections/system_stats/records?{query}", token)
+
+            if not reason and isinstance(found, list) and found and isinstance(found[0], dict) and isinstance(found[0].get("created"), str):
+                item["last_reading"] = found[0]["created"]
 
     def _authenticate(self) -> tuple[str, str]:
         """`POST /api/collections/users/auth-with-password`; return the token,
@@ -176,7 +203,7 @@ class BeszelProvider:
         )
 
 
-def collect_beszel(url: str, email: str, password: str, timeout: float = 5.0) -> dict[str, Any]:
+def collect_beszel(url: str, email: str, password: str, timeout: float = 5.0, last_readings: bool = False) -> dict[str, Any]:
     """Observe Beszel once. Callers outside the providers ask for the observation, they do not build the provider."""
 
-    return BeszelProvider(url, email, password, timeout=timeout).collect()
+    return BeszelProvider(url, email, password, timeout=timeout).collect(last_readings=last_readings)

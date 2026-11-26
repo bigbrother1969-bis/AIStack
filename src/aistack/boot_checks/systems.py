@@ -43,9 +43,9 @@ def _why(reason: str) -> str:
 
 
 def read_systems(url: str, email: str, password: str, timeout: float = 8.0) -> SystemsReading:
-    """Two requests (sign in, list the systems); a failure is a state with a reason."""
+    """Sign in, list the systems, and for each one Beszel calls down ask when its last measure arrived; a failure is a state with a reason."""
 
-    observation = collect_beszel(url, email, password, timeout=timeout)
+    observation = collect_beszel(url, email, password, timeout=timeout, last_readings=True)
     state = observation["beszel"]
 
     if not state["reachable"]:

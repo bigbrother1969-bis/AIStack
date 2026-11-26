@@ -159,6 +159,7 @@ phrase:
   systems_memory: "{n} with memory use at or above {limit} %"
   systems_temperature: "{n} at or above {limit} °C"
   systems_unread: "{n} without readings"
+  systems_silent: "{name} (no reading since {when} UTC)"
   monitor_up: "{n} monitor(s) up, none down"
   monitor_up_no_list: "{n} monitor(s) up, none down (no reference list declared)"
   monitor_down: "{n} down"

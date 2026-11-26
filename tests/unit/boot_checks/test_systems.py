@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import threading
+import urllib.parse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -16,8 +17,8 @@ from aistack.i18n import translator_for
 from tests.unit.boot_checks.test_controls import DEFINITION, LATER, facts
 
 
-def machine(name: str = "msi", status: str = "up", disk: float | None = 40.0, memory: float | None = 30.0, temp: float | None = 55.0) -> BeszelSystemReading:
-    return BeszelSystemReading(name=name, host="h", status=status, disk_pct=disk, mem_pct=memory, temp_c=temp)
+def machine(name: str = "msi", status: str = "up", disk: float | None = 40.0, memory: float | None = 30.0, temp: float | None = 55.0, last: str = "") -> BeszelSystemReading:
+    return BeszelSystemReading(name=name, host="h", status=status, disk_pct=disk, mem_pct=memory, temp_c=temp, last_reading=last)
 
 
 def judged(reading: SystemsReading | None, definition: BootChecksDefinition = DEFINITION) -> Result:
@@ -94,6 +95,8 @@ def test_the_sentences_are_told_in_french_with_their_numbers() -> None:
 class _Beszel(BaseHTTPRequestHandler):
     refuse = False
     records: list[dict] = []
+    stats: dict[str, str] = {}
+    asked: list[str] = []
 
     def _send(self, code: int, body: object) -> None:
         raw = json.dumps(body).encode()
@@ -106,14 +109,22 @@ class _Beszel(BaseHTTPRequestHandler):
         self._send(400, {}) if self.refuse else self._send(200, {"token": "t"})
 
     def do_GET(self) -> None:  # noqa: N802
-        self._send(200, {"items": self.records}) if self.headers.get("Authorization") == "t" else self._send(401, {})
+        if self.headers.get("Authorization") != "t":
+            self._send(401, {})
+        elif self.path.startswith("/api/collections/system_stats/"):
+            asked = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get("filter", [""])[0]
+            self.asked.append(asked)
+            system = asked.removeprefix("system='").removesuffix("'")
+            self._send(200, {"items": [{"created": self.stats[system]}] if system in self.stats else []})
+        else:
+            self._send(200, {"items": self.records})
 
     def log_message(self, *_: object) -> None:
         return
 
 
-def _serve(records: list[dict], refuse: bool = False):  # type: ignore[no-untyped-def]
-    server = HTTPServer(("127.0.0.1", 0), type("Handler", (_Beszel,), {"records": records, "refuse": refuse}))
+def _serve(records: list[dict], refuse: bool = False, stats: dict[str, str] | None = None):  # type: ignore[no-untyped-def]
+    server = HTTPServer(("127.0.0.1", 0), type("Handler", (_Beszel,), {"records": records, "refuse": refuse, "stats": stats or {}, "asked": []}))
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
     return server, f"http://127.0.0.1:{server.server_port}"
@@ -181,3 +192,45 @@ def test_the_task_asks_beszel_only_with_an_account_and_the_verdict_keeps_the_con
 
     assert found.status == WARNING and found.finding == "system_down" and len(asked) == 1
     assert asked[0][1:] == ("me@example.org", "secret") and asked[0][0].startswith("http")
+
+
+def test_a_machine_called_down_says_when_its_last_measure_arrived_and_a_bare_name_when_it_is_not_known() -> None:
+    reading = SystemsReading(True, "", (machine("msi"), machine("gigabyte", status="down", last="2026-11-26 12:50:00.023Z"), machine("pi", status="down")))
+    result = judged(reading)
+
+    assert result.details == ("gigabyte (no reading since 2026-11-26 12:50 UTC)", "pi")
+    assert result.summary == "3 system(s) read; 2 system(s) down"
+
+
+def test_a_machine_under_pressure_keeps_its_bare_name_and_an_odd_stamp_is_not_told() -> None:
+    reading = SystemsReading(True, "", (machine("a", disk=99.0, last="2026-11-26 12:50:00Z"), machine("b", status="down", last="yesterday")))
+
+    assert judged(reading).details == ("b", "a")
+
+
+def test_the_silence_is_told_in_french_and_a_name_that_is_only_a_name_stays_as_it_is() -> None:
+    fr = translator_for("fr")
+
+    assert say(fr, "gigabyte (no reading since 2026-11-26 12:50 UTC)") == "gigabyte (sans relevé depuis le 2026-11-26 12:50 UTC)"
+    assert say(fr, "gigabyte") == "gigabyte"
+
+
+def test_the_provider_asks_for_the_last_measure_of_a_down_machine_only_and_never_trusts_the_record_s_own_date() -> None:
+    records = [
+        {"id": "up1", "name": "msi", "status": "up", "updated": "2026-11-26 19:15:00Z", "info": {}},
+        {"id": "dn1", "name": "gigabyte", "status": "down", "updated": "2026-11-26 18:43:00Z", "info": {}},
+        {"id": "dn2", "name": "pi", "status": "down", "updated": "2026-11-26 18:44:00Z", "info": {}},
+        {"id": "bad'id", "name": "odd", "status": "down", "info": {}},
+    ]
+    server, url = _serve(records, stats={"dn1": "2026-11-26 12:50:00.023Z"})
+    handler = server.RequestHandlerClass
+
+    try:
+        reading = read_systems(url, "me@example.org", "secret")
+    finally:
+        server.shutdown()
+
+    found = {item.name: item.last_reading for item in reading.systems}
+
+    assert found == {"msi": "", "gigabyte": "2026-11-26 12:50:00.023Z", "pi": "", "odd": ""}
+    assert handler.asked == ["system='dn1'", "system='dn2'"]

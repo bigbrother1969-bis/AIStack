@@ -80,6 +80,7 @@ RULES: tuple[tuple[str, str], ...] = (
     ("systems_memory", r"(?P<n>\d+) with memory use at or above (?P<limit>\d+) %"),
     ("systems_temperature", r"(?P<n>\d+) at or above (?P<limit>\d+) \u00b0C"),
     ("systems_unread", r"(?P<n>\d+) without readings"),
+    ("systems_silent", r"(?P<name>.+) \(no reading since (?P<when>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\)"),
     ("domain_not_read", r"(?P<domain>storage|backup) was not read"),
     ("domain_not_instrumented", r"(?P<domain>storage|backup) is not instrumented on this host"),
     ("domain_findings", r"(?P<n>\d+) finding\(s\) in the (?P<domain>storage|backup) domain"),

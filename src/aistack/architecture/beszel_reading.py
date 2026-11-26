@@ -23,6 +23,8 @@ class BeszelSystemReading:
     temp_c: float | None = None
     load_avg: tuple[float, float, float] | None = None
     uptime_seconds: int | None = None
+    # When the last measure arrived (an ISO stamp from Beszel), only asked for a system it calls down; empty when unknown.
+    last_reading: str = ""
 
 
 def build_beszel_readings(raw_systems: Any) -> tuple[BeszelSystemReading, ...]:
@@ -65,6 +67,8 @@ def _build_one(item: Any) -> BeszelSystemReading | None:
     info = item.get("info")
     info = info if isinstance(info, dict) else {}
 
+    last = item.get("last_reading")
+
     return BeszelSystemReading(
         name=name,
         host=host,
@@ -75,6 +79,7 @@ def _build_one(item: Any) -> BeszelSystemReading | None:
         temp_c=_number(info.get("dt")),
         load_avg=_load_avg(info.get("la")),
         uptime_seconds=_integer(info.get("u")),
+        last_reading=last if isinstance(last, str) else "",
     )
 
 

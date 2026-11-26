@@ -80,7 +80,7 @@ def _every_sentence() -> set[str]:
         SystemsReading(False, "Beszel did not answer"),
         SystemsReading(True, "", ()),
         SystemsReading(True, "", (machine(), machine("pi", temp=61.8))),
-        SystemsReading(True, "", (machine("a", status="down"), machine("b", disk=95.0, memory=99.0, temp=85.0), machine("c", disk=None, memory=None, temp=None))),
+        SystemsReading(True, "", (machine("a", status="down", last="2026-11-26 12:50:00Z"), machine("b", disk=95.0, memory=99.0, temp=85.0), machine("c", disk=None, memory=None, temp=None))),
         SystemsReading(True, "", (machine("c", disk=None, memory=None, temp=None),)),
     )
 
@@ -132,4 +132,4 @@ def test_a_sentence_that_is_not_the_program_s_own_is_shown_as_it_is() -> None:
 def test_the_catalogs_have_every_sentence_in_both_languages() -> None:
     for key, _ in RULES:
         for translate in (FR, EN):
-            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", limit="90", hour="01:00", domain="d", reason="r", pressure="1", swap="2") != f"boot_check.phrase.{key}"
+            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", limit="90", name="x", when="2026-11-26 12:50", hour="01:00", domain="d", reason="r", pressure="1", swap="2") != f"boot_check.phrase.{key}"

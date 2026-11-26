@@ -88,6 +88,8 @@ def test_the_reading_carries_no_unsurfaced_fields():
         "temp_c",
         "load_avg",
         "uptime_seconds",
+        # Said by the start-up checks of a machine Beszel calls down (ADR-0032, O1d).
+        "last_reading",
     }
     assert {f.name for f in type(reading).__dataclass_fields__.values()} == surfaced
 

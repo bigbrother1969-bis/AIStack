@@ -17,6 +17,7 @@ healthy host. Before `settle_minutes` after the start, what fails is
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
@@ -416,6 +417,17 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
     return _passes("disks", summary)
 
 
+_STAMP = re.compile(r"(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})")
+
+
+def _silent(system: BeszelSystemReading) -> str:
+    """A machine Beszel calls down, with when its last measure arrived (UTC) when Beszel said; the bare name when it did not."""
+
+    found = _STAMP.match(system.last_reading)
+
+    return f"{system.name} (no reading since {found.group(1)} {found.group(2)} UTC)" if found else system.name
+
+
 def _systems(reading: SystemsReading | None, definition: BootChecksDefinition) -> Result:
     """Beszel: a machine it calls down, or one whose disk, memory or temperature is at its declared limit, is to watch."""
 
@@ -439,7 +451,7 @@ def _systems(reading: SystemsReading | None, definition: BootChecksDefinition) -
     pressed = [system for system in alive if system in disk or system in memory or system in hot]
 
     def names(group: list[BeszelSystemReading]) -> tuple[str, ...]:
-        return tuple(system.name for system in group)
+        return tuple(_silent(system) if system.status == SYSTEM_DOWN else system.name for system in group)
 
     head = f"{len(judged)} system(s) read" + ("" if down or pressed else ", none down, none under pressure")
     parts = [

@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 16
+  version: 17
   created: 2026-07-04
-  updated: 2026-11-21
+  updated: 2026-11-26
 ---
 
 # AIStack
@@ -30,14 +30,41 @@ AIStack does not aim to build the most powerful infrastructure.
 
 **Its ambition is to build the best understood and most sustainable one.**
 
-**New in 2.2 — AIStack watches its own security and chooses which AI answers:
-see [What is new in 2.2](#what-is-new-in-22) below.** Since 2.1: why AIStack brings its own
+**New in 2.3 — AIStack checks by itself, after every restart, what a person used to check
+by hand: see [What is new in 2.3](#what-is-new-in-23) below.** Since 2.2: the read-only
+Cybersecurity Manager, the AI policy and the footprint, in
+[What was new in 2.2](#what-was-new-in-22). Since 2.1: why AIStack brings its own
 principles back, and how, in
 [Governed Heritage Engineering in AIStack 2.1](docs/04-handbook/GHE-IN-AISTACK.md).
 
 ---
 
-## What is new in 2.2
+## What is new in 2.3
+
+AIStack 2.3 answers the question asked after every restart or power cut: *is
+everything back, and is anything about to fail?* It reads the facts of the host, the code
+judges them against a declaration you own, and the AI only explains.
+
+- **Start-up checks.** The health strip says *Start: all well for 5 h 12*, or what is to
+  watch or to fix; the *Start-up checks* screen says which control, which names, and since
+  when. A control with nothing declared is *skipped*, a source that did not answer is
+  *not read*: neither is ever shown as fine. One Gotify message at 08:00 sums up each
+  machine. `ADR-0032`.
+- **What is read.** The containers, failed units, mounts, firewall rules, the previous run's
+  end (a power cut) and the UPS, through a small host service that only reads; Uptime Kuma's
+  monitors; the disks (SMART through Scrutiny, including counters that rise and heat; Beszel's
+  machines; the trend of every disk, in days before full).
+- **Copies and dates.** Each copy you declare (a backup folder, a rescue image, Timeshift's
+  snapshots) must be recent; the restore tests you recorded must have passed lately; a
+  certificate or a domain that is about to expire is said weeks before.
+- **A history.** What changed, machine by machine, with its date, and never a line of a log.
+
+*Everything that changed, version by version, in plain language:*
+[`docs/04-handbook/RELEASE-NOTES.md`](docs/04-handbook/RELEASE-NOTES.md).
+
+---
+
+## What was new in 2.2
 
 AIStack 2.2 learns to watch its own security and to choose which AI answers,
 and it says what the AI calls cost. Versions 2.2.1 and 2.2.2 are patch releases
@@ -152,8 +179,17 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 2.2.2
+### Concrete capabilities, as of 2.3.0
 
+- **Start-up checks — new as of 2.3.0** — after every start of a machine, AIStack reads
+  the facts of the host (containers, failed units, mounts, firewall, how the previous run
+  ended, the UPS), of Uptime Kuma, Scrutiny and Beszel, of your copies, restore tests,
+  certificates and domains, and judges them against `boot_checks.yml`: a badge in the
+  health strip, a page with what is to watch or to fix and since when, a history, and one
+  Gotify message at 08:00. What nobody declared is *skipped* and what could not be read is
+  *not read*; neither is ever shown as healthy. The AI engine of the house may explain an
+  anomaly on the page, marked as not verified; it never judges and never sends.
+  `ADR-0032`, and the manual under *Start-up checks*.
 - **A read-only Cybersecurity Manager — new as of 2.2.0** — the *Sécurité* screen says
   what the host exposes (sockets, published ports, firewall), what the containers may do
   to it, how old the running images are, which packages and sensitive files changed on the
@@ -207,7 +243,7 @@ AIStack transforms observations into sustainable knowledge assets.
   and the fingerprints before and after. The hard links of a selection are made
   by their own operation, `selection.materialise`.
 - **A declaration edited by hand is seen — new as of 2.1.0** — the vigil compares
-  each of the 25 declarations with the copy it saw last. A hand edit is kept
+  each of the 30 declarations with the copy it saw last. A hand edit is kept
   (`<name>.avant-observe-<date>`) and recorded as made *by hand on the host*,
   by its fingerprints and never its content. A file its loader no longer reads is
   reported once to Gotify, urgently, with the loader's own words and the last copy
@@ -617,9 +653,9 @@ got past its absence.
   and criteria 2.5 and 2.6 of the official validation suite (`STD-0300`) fail the
   day the bundle is no longer `clean: True`.
 
-**As of 2.2.2**: `pytest -q` — **4047 passed**; `ruff check src tests` — all
-checks passed; `mypy` — no issues found in **651 source files**;
-`python -m aistack.cli.knowledge_integrity` — **68 knowledge artifacts**,
+**As of 2.3.0**: `pytest -q` — **4376 passed**; `ruff check src tests` — all
+checks passed; `mypy` — no issues found in **675 source files**;
+`python -m aistack.cli.knowledge_integrity` — **70 knowledge artifacts**,
 `blocking: 0   warnings: 0   clean: True`.
 
 The metrics quoted above and in `docs/04-handbook/RELEASE-NOTES.md` — test

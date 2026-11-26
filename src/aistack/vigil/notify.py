@@ -75,6 +75,8 @@ class State:
     security_told: tuple[str, ...] = ()
     watch_since: dict[str, str] = field(default_factory=dict)
     digest_day: str = ""
+    # The day of the last summary of the start-up checks (ADR-0032, B6).
+    boot_summary_day: str = ""
 
 
 def read_state(generated_dir: Path) -> State:
@@ -90,6 +92,7 @@ def read_state(generated_dir: Path) -> State:
             security_told=tuple(str(key) for key in data.get("security_told") or []),
             watch_since={str(k): str(v) for k, v in (data.get("watch_since") or {}).items()},
             digest_day=str(data.get("digest_day") or ""),
+            boot_summary_day=str(data.get("boot_summary_day") or ""),
         )
     except (OSError, ValueError, TypeError, AttributeError):
         return State()
@@ -110,6 +113,7 @@ def write_state(generated_dir: Path, state: State) -> None:
                 "security_told": list(state.security_told),
                 "watch_since": state.watch_since,
                 "digest_day": state.digest_day,
+                "boot_summary_day": state.boot_summary_day,
             },
             ensure_ascii=False,
             indent=1,

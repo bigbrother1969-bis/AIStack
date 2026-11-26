@@ -36,16 +36,18 @@ from aistack.dock import proposals as store
 from aistack.hosts.records import load_hosts_declaration
 from aistack.i18n import default_languages, translator_for
 from aistack.instance.yaml import load_instance_config_yaml
+from aistack.boot_checks.load import load_boot_checks_yaml
 from aistack.config import configured
 from aistack.declaration.validate import read_invalid
 from aistack.security import series, window
 from aistack.security.definition import SecurityDefinition
 from aistack.security.yaml import load_security_yaml
-from aistack.vigil import notify, security_notify, snapshot
+from aistack.vigil import boot_notify, notify, security_notify, snapshot
 
 GENERATED_DIR = Path("reports/generated")
 INSTANCE_CONFIG = configured(Path(__file__).resolve().parents[1] / "instance" / "definitions" / "instance_config.yml")
 ARRIVALS = configured(Path(__file__).resolve().parents[1] / "arrivals" / "definitions" / "arrivals.yml")
+BOOT_CHECKS = configured(Path(__file__).resolve().parents[1] / "boot_checks" / "definitions" / "boot_checks.yml")
 SECURITY = configured(Path(__file__).resolve().parents[1] / "security" / "definitions" / "security.yml")
 RENDERS = ("aistack.cli.health_render", "aistack.cli.console_render", "aistack.cli.declarations_observe")
 
@@ -166,6 +168,16 @@ def _arrivals(generated: Path, now: datetime | None = None) -> tuple[list[arriva
         return [], None
 
 
+def _boot_summary(t: Callable[..., str], previous: notify.State, generated: Path, now: datetime, timezone_name: str) -> tuple[list[notify.Event], str]:
+    """The morning summary of the start-up checks (ADR-0032, B6); a declaration that cannot be read must not stop the vigil."""
+
+    try:
+        return boot_notify.events(t, previous, generated, load_boot_checks_yaml(BOOT_CHECKS), now, timezone_name)
+    except (OSError, ValueError, yaml.YAMLError) as error:
+        print(f"vigil: boot_checks.yml not read ({error}); no morning summary", flush=True)
+        return [], previous.boot_summary_day
+
+
 def _console_url() -> str:
     try:
         return load_instance_config_yaml(INSTANCE_CONFIG).service_url("web_lan") + "/console.html"
@@ -190,12 +202,15 @@ def one_pass(generated: Path, gotify: notify.Gotify | None, dry_run: bool, rende
     opened = window.current(generated, now)
     told = security_notify.events(t, previous, series.read_report(generated), opened, expired, now, definition)
     found += told.events
+    summary, summary_day = _boot_summary(t, previous, generated, now, definition.digest_timezone)
+    found += summary
     current = dataclasses.replace(
         current,
         security_known=told.known,
         security_told=told.told,
         watch_since=told.watch_since,
         digest_day=told.digest_day,
+        boot_summary_day=summary_day,
     )
     if not dry_run:
         # Before the send: a Gotify that does not answer must not leave a gap in the graphs.

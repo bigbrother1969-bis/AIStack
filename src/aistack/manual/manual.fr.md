@@ -1179,6 +1179,16 @@ Attention : dès sa première clé d'API, Uptime Kuma n'accepte plus
 l'identifiant et le mot de passe sur `/metrics`. `boot_check --suggest` affiche
 `expected_monitors` d'après ce qu'il lit.
 
+**Le résumé du matin.** À l'heure de `summary.at` (08:00 par défaut, dans le
+fuseau du condensé de sécurité), et seulement à ce moment, la vigie envoie un
+message Gotify : pour chaque machine, depuis combien de temps tout va bien ou ce
+qui est à surveiller, et ce qui a échoué depuis le démarrage puis s'est
+résolu, trois de chaque au plus. Un constat des contrôles ne sonne jamais seul.
+Le message ne sonne que si une machine est critique, et il part une fois par
+jour : un Gotify qui ne répond pas est réessayé au passage suivant.
+`summary: enabled: false` le coupe. Rien n'est envoyé tant qu'il n'y a pas de
+verdict.
+
 **Une seconde machine.** La même unité tourne sur une machine compagnon (un
 ordinateur monocarte, par exemple) : le script est un seul fichier de la bibliothèque
 standard, aucune copie d'AIStack n'est nécessaire. Installe-le comme

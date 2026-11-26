@@ -1119,6 +1119,15 @@ key the control says it is not connected. Note that once Uptime Kuma has a first
 API key it no longer accepts the user name and password on `/metrics`.
 `boot_check --suggest` prints `expected_monitors` from what it reads.
 
+**The morning summary.** At the hour of `summary.at` (08:00 by default, in the
+time zone of the security digest), and only then, the vigil sends one Gotify
+message: for each machine, how long all has been well or what is to watch, and
+what failed since the start and has been resolved, three of each at most. A
+finding of the checks never rings by itself. The message rings only when a
+machine is critical, and it is sent once a day: Gotify that does not answer is
+tried again at the next pass. `summary: enabled: false` turns it off. Nothing
+is sent while there is no verdict.
+
 **A second machine.** The same unit runs on a companion machine (a single-board computer,
 say): the script is a single file of the standard library, no copy of AIStack
 is needed. Install it as above, with `OUTPUT` (and the same path in

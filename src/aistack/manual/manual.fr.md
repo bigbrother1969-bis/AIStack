@@ -1202,7 +1202,10 @@ circonstances sont calculées à partir des faits, le catalogue de cinq contrôl
 est fermé, et `catalogue:` dans `boot_checks.yml` ne change que la circonstance
 qui justifie chaque contrôle ; au plus `ai.max_extra_controls` s'exécutent. Les
 lignes de journal ne quittent jamais la machine : l'unité de l'hôte n'écrit que
-des nombres.
+des nombres. Ces contrôles regardent depuis le démarrage : l'avertissement
+« bases récupérées » reste donc affiché jusqu'au prochain redémarrage. Par exemple,
+après l'arrêt brutal du 26 novembre, six bases sur huit ont récupéré et la page les
+nomme ; les deux autres ne sont pas listées. Un test rejoue cette matinée.
 
 **Une seconde machine.** La même unité tourne sur une machine compagnon (un
 ordinateur monocarte, par exemple) : le script est un seul fichier de la bibliothèque

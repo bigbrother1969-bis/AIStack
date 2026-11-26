@@ -1139,7 +1139,10 @@ backup; memory under pressure looks at memory and swap. The circumstances are
 computed from the facts, the catalogue of five controls is closed, and
 `catalogue:` in `boot_checks.yml` only changes which circumstance justifies
 which control; at most `ai.max_extra_controls` run. The log lines themselves
-never leave the machine: the host unit writes only counts.
+never leave the machine: the host unit writes only counts. These controls look since the start: the "databases recovered"
+warning therefore stays shown until the next restart. For example, after the hard
+stop of 26 November, six databases out of eight recovered and the page names them;
+the other two are not listed. A test replays that morning.
 
 **A second machine.** The same unit runs on a companion machine (a single-board computer,
 say): the script is a single file of the standard library, no copy of AIStack

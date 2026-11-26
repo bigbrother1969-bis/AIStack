@@ -9,6 +9,7 @@ registry; `registrations.yml` names the Tasks it registers.
 from aistack.tasks.ai_compare import AiCompareTask
 from aistack.tasks.ai_reason import AiReasonTask
 from aistack.tasks.architecture_render import ArchitectureRenderTask
+from aistack.tasks.boot_check import BootCheckTask
 from aistack.tasks.console_render import ConsoleRenderTask
 from aistack.tasks.declarations_observe import DeclarationsObserveTask
 from aistack.tasks.docker_discover import DockerDiscoverTask
@@ -23,6 +24,7 @@ __all__ = [
     "AiCompareTask",
     "AiReasonTask",
     "ArchitectureRenderTask",
+    "BootCheckTask",
     "ConsoleRenderTask",
     "DeclarationsObserveTask",
     "DockerDiscoverTask",

@@ -45,6 +45,8 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         ),
         mounts=_paths(data.get("mounts"), f"{label}: mounts"),
         docker_user_rules=_optional_count(data, "docker_user_rules", label),
+        probes=_probes(data.get("probes"), label),
+        ups_expected=_ups(data.get("ups_expected"), defaults.ups_expected, label),
         severity=_severity(data.get("severity"), label),
         companions=_flag(data, "companions", defaults.companions, label),
         indicator_weighted=_flag(
@@ -133,6 +135,36 @@ def _paths(value: Any, label: str) -> tuple[str, ...]:
         raise ValueError(f"{label} must be absolute paths")
 
     return paths
+
+
+def _probes(value: Any, label: str) -> dict[str, int]:
+    if value is None:
+        return {}
+
+    if not isinstance(value, dict):
+        raise ValueError(f"{label}: probes must map a probe's label to the HTTP status it must answer")
+
+    found: dict[str, int] = {}
+
+    for name, status in value.items():
+        if isinstance(status, bool) or not isinstance(status, int) or not 100 <= status <= 599:
+            raise ValueError(f"{label}: probes.{name} must be an HTTP status such as 200")
+
+        found[str(name)] = status
+
+    return found
+
+
+def _ups(value: Any, default: tuple[str, ...], label: str) -> tuple[str, ...]:
+    if value is None:
+        return default
+
+    names = _names(value, f"{label}: ups_expected")
+
+    if not names:
+        raise ValueError(f"{label}: ups_expected must name at least one status, such as OL")
+
+    return names
 
 
 def _severity(value: Any, label: str) -> dict[str, str]:

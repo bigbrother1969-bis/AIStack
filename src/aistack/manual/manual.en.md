@@ -1082,6 +1082,17 @@ sudo systemctl start aistack-boot-facts.service && journalctl -u aistack-boot-fa
 A source that cannot be read (Docker, the firewall, the UPS) says so in the
 file under `sources`; it is never taken for a healthy host.
 
+The checks themselves are run by `python -m aistack.cli.boot_check` (from the
+installation folder, as the user who owns AIStack): it reads the facts, judges
+them against `boot_checks.yml` and writes `boot-check.json` in
+`reports/generated`. A control you declared nothing for is *skipped* and says
+so; one whose source did not answer is *unknown*; neither is a pass. Before
+`settle_minutes` after the start, what fails is *pending*, not an anomaly. The
+exit code says how the start looks (0 well, 1 to watch, 2 to fix, 3 not
+judged). `--suggest` prints what the facts say as a declaration (containers,
+mounts, `DOCKER-USER` rules, probes) to copy into your `boot_checks.yml`; read
+it first, since AIStack never guesses what a healthy start is.
+
 ## Troubleshooting
 
 - **The installation assistant answers "This link does not open the

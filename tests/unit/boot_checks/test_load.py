@@ -92,3 +92,16 @@ def test_the_owner_s_declaration_is_read(tmp_path: Path):
 def test_a_wrong_declaration_says_so(tmp_path: Path, text: str):
     with pytest.raises(ValueError):
         load_boot_checks_yaml(_write(tmp_path, text))
+
+
+def test_the_probes_and_the_ups_statuses_are_read(tmp_path: Path):
+    definition = load_boot_checks_yaml(_write(tmp_path, "probes:\n  proxy: 200\n  web: 301\nups_expected: [OL, CHRG]\n"))
+
+    assert definition.probes == {"proxy": 200, "web": 301}
+    assert definition.ups_expected == ("OL", "CHRG")
+
+
+@pytest.mark.parametrize("text", ["probes: [a]\n", "probes:\n  x: ok\n", "probes:\n  x: 42\n", "ups_expected: []\n", "ups_expected: OL\n"])
+def test_a_wrong_probe_or_ups_declaration_says_so(tmp_path: Path, text: str):
+    with pytest.raises(ValueError):
+        load_boot_checks_yaml(_write(tmp_path, text))

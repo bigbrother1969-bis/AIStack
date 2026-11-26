@@ -7,8 +7,10 @@
 # start, and for how long. An AI engine may add read-only controls from a
 # closed catalogue and explain what failed; it never decides the verdict.
 #
-# Nothing below is read until the first slice that runs the checks is
-# installed. Copy this file to your own configuration directory to change it.
+# `python -m aistack.cli.boot_check` reads the facts the host unit wrote
+# (aistack-boot-facts) and judges them against this file. Run it with
+# `--suggest` to print what the facts say as a declaration to copy here.
+# Copy this file to your own configuration directory to change it.
 
 # Minutes after a start before the checks judge: containers need time to
 # come up, and the restart watch (ADR-0025) works in its own window.
@@ -29,6 +31,16 @@ mounts: []
 # skip the control.
 # docker_user_rules: 7
 
+# The probes the host unit asks (a label and the URL it answers, set on the
+# host) and the HTTP status each must answer after a start. None = skipped.
+#
+#   probes:
+#     proxy: 200
+probes: {}
+
+# What the first word of the UPS status may be after a start (OL = on line).
+ups_expected: [OL]
+
 # How much each finding weighs: ignore, warning or critical. Only the keys
 # you change need to be here; these are the shipped values.
 severity:
@@ -41,6 +53,8 @@ severity:
   kvm_modules: ignore
   backup_failed: critical
   backup_late: warning
+  storage_low: warning
+  probe_failed: critical
   ups_on_battery: warning
   monitor_down: warning
   companion_unreachable: critical

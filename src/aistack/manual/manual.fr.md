@@ -1138,6 +1138,19 @@ sudo systemctl start aistack-boot-facts.service && journalctl -u aistack-boot-fa
 Une source illisible (Docker, le pare-feu, l'onduleur) le dit dans le fichier,
 sous `sources` ; elle n'est jamais prise pour un hôte en bonne santé.
 
+Les contrôles eux-mêmes sont lancés par `python -m aistack.cli.boot_check` (depuis
+le dossier d'installation, avec l'utilisateur qui possède AIStack) : il lit les
+faits, les juge d'après `boot_checks.yml` et écrit `boot-check.json` dans
+`reports/generated`. Un contrôle pour lequel tu n'as rien déclaré est
+*ignoré* et le dit ; celui dont la source n'a pas répondu est *inconnu* ;
+aucun des deux n'est une réussite. Avant `settle_minutes` après le démarrage,
+ce qui échoue est *en attente*, pas une anomalie. Le code de sortie dit
+comment va le démarrage (0 bien, 1 à surveiller, 2 à corriger, 3 non jugé).
+`--suggest` affiche ce que disent les faits sous forme de déclaration
+(conteneurs, montages, règles `DOCKER-USER`, sondes) à copier dans ton
+`boot_checks.yml` ; relis-la d'abord, car AIStack ne devine jamais ce qu'est un
+démarrage sain.
+
 ## En cas de problème
 
 - **L'assistant d'installation répond « Ce lien n'ouvre pas l'assistant »** :

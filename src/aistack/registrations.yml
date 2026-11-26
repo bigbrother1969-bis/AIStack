@@ -66,6 +66,8 @@ tasks:
     factory: aistack.tasks:DeclarationsObserveTask
   - id: knowledge.integrity
     factory: aistack.tasks:KnowledgeIntegrityTask
+  - id: boot.check
+    factory: aistack.tasks:BootCheckTask
   - id: security.assess
     factory: aistack.tasks:SecurityAssessTask
   - id: security.window

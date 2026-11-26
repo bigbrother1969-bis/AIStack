@@ -149,6 +149,17 @@ health score unless the owner sets `indicator_weighted`.
 - A control the owner did not declare is not run: a first start gives a
   shorter list, which the owner completes from the page.
 
+### 7. The verdict and what a control may say
+
+A control passes, waits (*pending*, before `settle_minutes` after the
+start), is to watch, is to fix, is *skipped* (the owner declared nothing to
+compare with) or *unknown* (its source did not answer). Only the last two
+are never a pass. The overall status is the worst answer; pending is not an
+anomaly. The previous run's end ("no shutdown": power loss or hard stop) is
+information, never an anomaly. An incident, a control that failed after the
+start, stays in the detail once resolved until the next start. With no
+fresh facts the verdict is *unknown*, never green.
+
 ## Open points
 
 1. The severities and the reference list shipped as examples, to be fixed
@@ -163,7 +174,7 @@ health score unless the owner sets `indicator_weighted`.
 |---|---|
 | B0: this decision and the declaration `boot_checks.yml` with its loader | done, 2026-11-26 |
 | B1: the facts of the MSI, read by a privileged script of closed commands (`aistack-boot-facts`, its unit and timer, the reader `boot_checks.facts`, the exception of `ADR-0027` § 11) | done, 2026-11-26 |
-| B2: the base controls, the verdict, `boot_check --once` | not started |
+| B2: the base controls (units, mounts, containers, health, `DOCKER-USER`, probes, KVM, UPS, disks and backups read from the cockpit), the deterministic verdict, the incidents since the start, the Task `boot.check` run by the Runtime through `boot_check --once` and `--suggest`; Uptime Kuma and Timeshift not yet | done, 2026-11-26 |
 | B3: the indicator in the health strip, the detail page, the console card, the manuals | not started |
 | B4: the Raspberry through the collector | not started |
 | B5: the AI choice in the closed catalogue and the explanations | not started |

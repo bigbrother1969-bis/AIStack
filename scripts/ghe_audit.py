@@ -88,6 +88,7 @@ EXEMPT_WRITES = {
     "src/aistack/explications/human.py": MAINTENANCE,
     "src/aistack/generators/filesystem/yaml/store.py": STATE,
     "src/aistack/generators/history.py": "the recognised writer of generated artifacts",
+    "src/aistack/boot_checks/state.py": STATE,
     "src/aistack/boot_facts.py": STATE,
     "src/aistack/host_collector.py": STATE,
     "src/aistack/firewall_snapshot.py": STATE,

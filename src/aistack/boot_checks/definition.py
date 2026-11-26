@@ -20,6 +20,8 @@ FINDINGS = (
     "kvm_modules",
     "backup_failed",
     "backup_late",
+    "storage_low",
+    "probe_failed",
     "ups_on_battery",
     "monitor_down",
     "companion_unreachable",
@@ -36,6 +38,8 @@ DEFAULT_SEVERITY = {
     "kvm_modules": IGNORE,
     "backup_failed": CRITICAL,
     "backup_late": WARNING,
+    "storage_low": WARNING,
+    "probe_failed": CRITICAL,
     "ups_on_battery": WARNING,
     "monitor_down": WARNING,
     "companion_unreachable": CRITICAL,
@@ -53,7 +57,8 @@ class BootChecksDefinition:
     purpose; an empty reference list means the control is not declared and
     is skipped, never guessed. `mounts` are the paths that must be mounted.
     `docker_user_rules` is the number of rules the DOCKER-USER chain holds
-    (`None` skips the control). `severity` says how much each finding
+    (`None` skips the control). `probes` maps the label of a probe the host
+    unit asks to the status it must answer. `severity` says how much each finding
     weighs. Thresholds of disks, backups and the UPS are not repeated here:
     the controls reuse OPS-0005, OPS-0006 and the health cockpit.
     """
@@ -63,6 +68,10 @@ class BootChecksDefinition:
     expected_stopped: tuple[str, ...] = ()
     mounts: tuple[str, ...] = ()
     docker_user_rules: int | None = None
+    # label -> the HTTP status the host's probe of that label must answer.
+    probes: dict[str, int] = field(default_factory=dict)
+    # What the first word of the UPS status may be (`OL` = on line).
+    ups_expected: tuple[str, ...] = ("OL",)
     severity: dict[str, str] = field(default_factory=lambda: dict(DEFAULT_SEVERITY))
     companions: bool = True
     # The indicator sits beside the weighted health score, not inside it.

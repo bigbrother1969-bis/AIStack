@@ -442,6 +442,13 @@ write is not knowledge and no person's choice triggers it:
   written in the script. Rewritten whole at every pass, no knowledge of a
   person, no copy of AIStack on the host to go through, and `ADR-0032` reads
   it. Same nature as the host logs.
+- *The start-up verdict* (`boot_checks/state`), added on 2026-11-26 on the
+  owner's decision ("go B2", after the proposal that named it), as the state of
+  the start-up checks beside the boot facts: `boot-check.json`, rewritten whole
+  at every pass, holds the overall status, how many anomalies, each control's
+  answer and the incidents since the last start, names and counts only. No
+  knowledge of a person; `ADR-0032` reads it. Same nature as the state a
+  service keeps for itself.
 - *The security window and series* (`security/window`, `security/series`),
   added on 2026-11-20 on the owner's decision ("go T4a", after the proposal
   that named them), as the vigil's own state beside the notification state:

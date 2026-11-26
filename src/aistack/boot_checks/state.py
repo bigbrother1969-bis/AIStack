@@ -1,0 +1,167 @@
+"""
+The verdict of the start-up checks and the incidents since the start (ADR-0032, slice B2).
+
+`boot-check.json` is the state this service keeps for itself, rewritten
+whole at every pass: the overall status, how many anomalies, each control's
+answer, and the incidents since the last start. An incident is a control
+that failed after the start; when it passes again it is *resolved*, and it
+stays in the list until the next start, so the detail page can say what
+happened even though the indicator is green again. Names and counts only,
+never a line of a log.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import tempfile
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from aistack.boot_checks.controls import ANOMALIES, OK, PENDING, UNKNOWN, Result
+from aistack.boot_checks.facts import BootFacts
+
+STATE = "boot-check.json"
+MAX_INCIDENTS = 200
+
+
+@dataclass(frozen=True)
+class Incident:
+    control: str
+    status: str
+    first_seen: str
+    summary: str
+    resolved_at: str | None = None
+
+
+@dataclass(frozen=True)
+class Verdict:
+    """The overall answer. `anomalies` counts the controls to watch or to fix."""
+
+    overall: str
+    anomalies: int
+    checked_at: str
+    boot_id: str
+    booted_at: str | None
+    results: tuple[Result, ...]
+    incidents: tuple[Incident, ...] = field(default_factory=tuple)
+    note: str = ""
+
+
+def overall(results: list[Result]) -> str:
+    """Critical over watch over pending over ok: the worst answer wins, pending is not an anomaly."""
+
+    statuses = {result.status for result in results}
+
+    for status in ("critical", "warning", PENDING):
+        if status in statuses:
+            return status
+
+    return OK
+
+
+def judge(results: list[Result], facts: BootFacts, now: datetime, previous: Verdict | None = None) -> Verdict:
+    """The verdict of this pass, and the incidents carried over from the passes since the same start."""
+
+    stamp = now.isoformat(timespec="seconds")
+    carried = previous.incidents if previous is not None and previous.boot_id == facts.boot_id else ()
+    incidents = {item.control: item for item in carried if item.resolved_at is None}
+    kept = [item for item in carried if item.resolved_at is not None]
+
+    for result in results:
+        if result.status in ANOMALIES and result.control not in incidents:
+            incidents[result.control] = Incident(result.control, result.status, stamp, result.summary)
+        elif result.status not in ANOMALIES and result.control in incidents:
+            opened = incidents.pop(result.control)
+            kept.append(Incident(opened.control, opened.status, opened.first_seen, opened.summary, stamp))
+
+    return Verdict(
+        overall=overall(results),
+        anomalies=sum(1 for result in results if result.status in ANOMALIES),
+        checked_at=stamp,
+        boot_id=facts.boot_id,
+        booted_at=facts.booted_at.isoformat(timespec="seconds") if facts.booted_at else None,
+        results=tuple(results),
+        incidents=tuple([*kept, *incidents.values()][-MAX_INCIDENTS:]),
+    )
+
+
+def unknown(now: datetime, note: str) -> Verdict:
+    """No facts to judge: the state says so, never a green."""
+
+    return Verdict(UNKNOWN, 0, now.isoformat(timespec="seconds"), "", None, (), (), note)
+
+
+def write_verdict(directory: Path, verdict: Verdict) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.NamedTemporaryFile("w", dir=directory, delete=False, encoding="utf-8") as handle:
+        handle.write(json.dumps(asdict(verdict), indent=1, sort_keys=True) + "\n")
+        temporary = Path(handle.name)
+
+    os.chmod(temporary, 0o644)
+    os.replace(temporary, directory / STATE)
+
+
+def _result(raw: Any) -> Result | None:
+    if not isinstance(raw, dict) or not isinstance(raw.get("control"), str):
+        return None
+
+    return Result(
+        raw["control"],
+        str(raw.get("status", UNKNOWN)),
+        str(raw.get("summary", "")),
+        tuple(str(item) for item in raw.get("details", ()) if isinstance(item, str)),
+        str(raw.get("finding", "")),
+    )
+
+
+def _incident(raw: Any) -> Incident | None:
+    if not isinstance(raw, dict) or not isinstance(raw.get("control"), str):
+        return None
+
+    return Incident(
+        raw["control"],
+        str(raw.get("status", "")),
+        str(raw.get("first_seen", "")),
+        str(raw.get("summary", "")),
+        str(raw["resolved_at"]) if raw.get("resolved_at") else None,
+    )
+
+
+def read_verdict(directory: Path) -> Verdict | None:
+    """The last verdict; `None` when there is none or the file is not one (a damaged file is never a green)."""
+
+    try:
+        raw = json.loads((directory / STATE).read_text(encoding="utf-8"))
+        datetime.fromisoformat(str(raw["checked_at"]))
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+    if not isinstance(raw, dict):
+        return None
+
+    results = [item for item in (_result(entry) for entry in raw.get("results", ())) if item is not None]
+    incidents = [item for item in (_incident(entry) for entry in raw.get("incidents", ())) if item is not None]
+
+    return Verdict(
+        overall=str(raw.get("overall", UNKNOWN)),
+        anomalies=raw["anomalies"] if isinstance(raw.get("anomalies"), int) else 0,
+        checked_at=str(raw["checked_at"]),
+        boot_id=str(raw.get("boot_id", "")),
+        booted_at=str(raw["booted_at"]) if raw.get("booted_at") else None,
+        results=tuple(results),
+        incidents=tuple(incidents),
+        note=str(raw.get("note", "")),
+    )
+
+
+def age_seconds(verdict: Verdict, now: datetime | None = None) -> float:
+    """How old the verdict is, so a reader can refuse a stale green."""
+
+    checked = datetime.fromisoformat(verdict.checked_at)
+    checked = checked if checked.tzinfo else checked.replace(tzinfo=timezone.utc)
+
+    return ((now or datetime.now(timezone.utc)) - checked).total_seconds()

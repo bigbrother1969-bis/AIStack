@@ -451,12 +451,12 @@ def test_a_copy_that_is_not_there_is_not_the_same_as_one_that_cannot_be_read(tmp
 
 
 def test_copies_are_declared_as_label_and_absolute_path_and_nothing_else() -> None:
-    assert unit.parse_copies(["rear=/var/lib/rear/output, snapshots=/timeshift/snapshots", ""]) == {
-        "rear": Path("/var/lib/rear/output"),
-        "snapshots": Path("/timeshift/snapshots"),
+    assert unit.parse_copies(["rear=/var/lib/rear/output, snapshots=timeshift:/var/log/timeshift", ""]) == {
+        "rear": ("newest", Path("/var/lib/rear/output")),
+        "snapshots": ("timeshift", Path("/var/log/timeshift")),
     }
 
-    for wrong in ("rear", "rear=relative/path", "=/x", "a b=/x"):
+    for wrong in ("rear", "rear=relative/path", "=/x", "a b=/x", "x=timeshift:relative", "x=other:/y"):
         with pytest.raises(ValueError):
             unit.parse_copies([wrong])
 
@@ -465,7 +465,7 @@ def test_the_unit_writes_the_declared_copies_and_a_host_with_none_says_absent(tm
     _answers(monkeypatch)
     (tmp_path / "rear").mkdir()
     (tmp_path / "rear" / "x.iso").write_text("x", encoding="utf-8")
-    report = unit.collect(NOW, {}, "", (), {"rear": tmp_path / "rear", "gone": tmp_path / "gone"}, proc=_proc(tmp_path))
+    report = unit.collect(NOW, {}, "", (), {"rear": ("newest", tmp_path / "rear"), "gone": ("newest", tmp_path / "gone")}, proc=_proc(tmp_path))
 
     assert report["sources"]["copies"] == "ok"
     assert report["copies"]["rear"]["count"] == 1 and report["copies"]["gone"] == {"newest": None, "count": 0}
@@ -487,3 +487,36 @@ def test_the_reader_tells_a_missing_copy_from_an_unread_one() -> None:
     assert facts.copies["a"].newest == datetime(2026, 11, 22, 5, 35, tzinfo=timezone.utc)
     assert facts.copies["b"].newest is None and not facts.copies["b"].error
     assert facts.copies["c"].error == "denied"
+
+
+def _timeshift_log(directory: Path, name: str, saved: bool, at: int) -> None:
+    import os
+
+    path = directory / name
+    path.write_text("[14:00:01] Main: check_dependencies()\n" + ("[14:22:30] RSYNC Snapshot saved successfully (1347s)\n" if saved else "[23:00:03] Unmounted successfully\n"), encoding="utf-8")
+    os.utime(path, (at, at))
+
+
+def test_the_last_timeshift_snapshot_is_the_newest_log_that_says_one_was_saved(tmp_path: Path) -> None:
+    _timeshift_log(tmp_path, "2026-11-25_14-00-02_backup.log", True, 1_700_000_000)
+    _timeshift_log(tmp_path, "2026-11-26_14-00-01_backup.log", True, 1_700_086_400)
+    _timeshift_log(tmp_path, "2026-11-26_15-00-01_backup.log", False, 1_700_090_000)
+    _timeshift_log(tmp_path, "2026-11-26_23-00-01_backup.log", False, 1_700_120_000)
+    (tmp_path / "2026-11-26_22-44-36_list-snapshots.log").write_text("RSYNC Snapshot saved successfully", encoding="utf-8")
+
+    assert unit.snapshot_logs(tmp_path) == {"newest": "2023-11-15T22:13:20+00:00", "count": 2}
+
+
+def test_hourly_runs_that_made_nothing_are_no_snapshot_and_no_log_is_no_snapshot(tmp_path: Path) -> None:
+    _timeshift_log(tmp_path, "2026-11-26_23-00-01_backup.log", False, 1_700_120_000)
+
+    assert unit.snapshot_logs(tmp_path) == {"newest": None, "count": 0}
+    assert unit.snapshot_logs(tmp_path / "nowhere") == {"newest": None, "count": 0}
+
+
+def test_the_unit_reads_a_timeshift_folder_as_a_copy_named_in_its_declaration(tmp_path: Path, monkeypatch) -> None:
+    _answers(monkeypatch)
+    _timeshift_log(tmp_path, "2026-11-26_14-00-01_backup.log", True, 1_700_086_400)
+    report = unit.collect(NOW, {}, "", (), {"snapshots": ("timeshift", tmp_path)}, proc=_proc(tmp_path))
+
+    assert report["copies"] == {"snapshots": {"newest": "2023-11-15T22:13:20+00:00", "count": 1}}

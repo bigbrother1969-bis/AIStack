@@ -327,10 +327,53 @@ def newest_in(path: Path) -> dict[str, object]:
     return {"newest": datetime.fromtimestamp(max(moments), timezone.utc).isoformat(timespec="seconds"), "count": len(moments)}
 
 
-def parse_copies(values: list[str]) -> dict[str, Path]:
-    """`label=/absolute/path` pairs, from the command line and `AISTACK_BOOT_COPIES` (comma-separated)."""
+# What Timeshift writes in the log of a run that made a snapshot (`RSYNC Snapshot saved successfully (1347s)`, `BTRFS ...`);
+# the hourly runs that find nothing to do write nothing of the kind.
+_SNAPSHOT_SAVED = re.compile(r"(RSYNC|BTRFS) Snapshot saved successfully")
+SNAPSHOT_LOGS = "*_backup.log"
+MAX_LOGS = 2000
+MAX_LOG_BYTES = 1_000_000
 
-    found: dict[str, Path] = {}
+
+def snapshot_logs(directory: Path) -> dict[str, object]:
+    """
+    When Timeshift last made a snapshot, read from its logs rather than from its disk (which it mounts only while it runs).
+
+    Every hourly run writes a log; only the runs that made a snapshot say so. The answer has the shape of `newest_in`: the time
+    of the newest log that says a snapshot was saved, and how many of the logs kept say so. No log that says so is `newest: null`.
+    """
+
+    try:
+        logs = sorted(directory.glob(SNAPSHOT_LOGS))[-MAX_LOGS:]
+    except OSError as error:
+        return {"error": str(error)[:80]}
+
+    saved = []
+
+    for log in logs:
+        try:
+            with log.open("r", encoding="utf-8", errors="replace") as stream:
+                if _SNAPSHOT_SAVED.search(stream.read(MAX_LOG_BYTES)):
+                    saved.append(log.stat().st_mtime)
+        except OSError:
+            continue
+
+    if not saved:
+        return {"newest": None, "count": 0}
+
+    return {"newest": datetime.fromtimestamp(max(saved), timezone.utc).isoformat(timespec="seconds"), "count": len(saved)}
+
+
+KINDS = {"newest": newest_in, "timeshift": snapshot_logs}
+
+
+def parse_copies(values: list[str]) -> dict[str, tuple[str, Path]]:
+    """
+    `label=/absolute/path` pairs, from the command line and `AISTACK_BOOT_COPIES` (comma-separated). A path may be
+    preceded by `timeshift:` (`label=timeshift:/var/log/timeshift`): it is then Timeshift's log folder, read for its last snapshot.
+    """
+
+    found: dict[str, tuple[str, Path]] = {}
 
     for value in values:
         for part in value.split(","):
@@ -339,10 +382,17 @@ def parse_copies(values: list[str]) -> dict[str, Path]:
 
             label, separator, location = part.strip().partition("=")
 
+            kind, colon, rest = location.partition(":")
+
+            if colon and kind in KINDS:
+                location = rest
+            else:
+                kind = "newest"
+
             if not separator or not _NAME.match(label) or not location.startswith("/"):
                 raise ValueError(part.strip().split("=")[0])
 
-            found[label] = Path(location)
+            found[label] = (kind, Path(location))
 
     return found
 
@@ -414,7 +464,7 @@ def collect(
     probes: dict[str, str],
     ups: str,
     databases: tuple[str, ...] = (),
-    copies: dict[str, Path] | None = None,
+    copies: dict[str, tuple[str, Path]] | None = None,
     *,
     proc: Path = Path("/proc"),
     probe_one=probe,  # type: ignore[no-untyped-def]
@@ -455,7 +505,7 @@ def collect(
         sources["database_recovery"] = "absent"
 
     if copies:
-        read("copies", lambda: {label: newest_in(location) for label, location in sorted(copies.items())})
+        read("copies", lambda: {label: KINDS[kind](location) for label, (kind, location) in sorted(copies.items())})
     else:
         sources["copies"] = "absent"
 

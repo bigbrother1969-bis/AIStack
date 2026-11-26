@@ -40,7 +40,7 @@ Type=oneshot
 #   Environment=AISTACK_BOOT_UPS=apc@localhost
 #   Environment=AISTACK_BOOT_PROBES=proxy=http://127.0.0.1:80/
 #   Environment=AISTACK_BOOT_DATABASES=app_db,other_db
-#   Environment=AISTACK_BOOT_COPIES=rescue-image=/var/lib/rear/output,snapshots=/timeshift/snapshots
+#   Environment=AISTACK_BOOT_COPIES=rescue-image=/var/lib/rear/output,snapshots=timeshift:/var/log/timeshift
 # The UPS, the probes and the databases are optional (the databases: the containers whose log is read
 # for a recovery after the start, counted and never copied; the copies: where a backup folder, a rescue image or a
 # folder of snapshots lives, only the time of its newest file is written): a host with no UPS or nothing to ask

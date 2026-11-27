@@ -9,9 +9,9 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 17
+  version: 18
   created: 2026-07-04
-  updated: 2026-11-26
+  updated: 2026-11-27
 ---
 
 # AIStack
@@ -58,6 +58,10 @@ judges them against a declaration you own, and the AI only explains.
   snapshots) must be recent; the restore tests you recorded must have passed lately; a
   certificate or a domain that is about to expire is said weeks before.
 - **A history.** What changed, machine by machine, with its date, and never a line of a log.
+
+Version 2.3.1 is a patch release of the same checks: what comes back, what happened just
+before an anomaly, explanations that rest on cleaned lines of the logs, the quality of the AI
+engine itself, and the wear of an SSD.
 
 *Everything that changed, version by version, in plain language:*
 [`docs/04-handbook/RELEASE-NOTES.md`](docs/04-handbook/RELEASE-NOTES.md).
@@ -179,7 +183,7 @@ explain and act on it:
 
 AIStack transforms observations into sustainable knowledge assets.
 
-### Concrete capabilities, as of 2.3.0
+### Concrete capabilities, as of 2.3.1
 
 - **Start-up checks — new as of 2.3.0** — after every start of a machine, AIStack reads
   the facts of the host (containers, failed units, mounts, firewall, how the previous run
@@ -189,7 +193,12 @@ AIStack transforms observations into sustainable knowledge assets.
   Gotify message at 08:00. What nobody declared is *skipped* and what could not be read is
   *not read*; neither is ever shown as healthy. The AI engine of the house may explain an
   anomaly on the page, marked as not verified; it never judges and never sends.
-  `ADR-0032`, and the manual under *Start-up checks*.
+  `ADR-0032`, and the manual under *Start-up checks*. **New as of 2.3.1**: what comes back
+  at several starts is said as a finding of its own; each anomaly lists what was recorded just
+  before it (said *before*, never *because*); the explanations rest on a few cleaned lines of the
+  logs, used once and never kept; the page measures how the AI engine itself is doing; and an
+  SSD whose life-left attribute you declared says its life left and a rough time at the pace
+  since new.
 - **A read-only Cybersecurity Manager — new as of 2.2.0** — the *Sécurité* screen says
   what the host exposes (sockets, published ports, firewall), what the containers may do
   to it, how old the running images are, which packages and sensitive files changed on the
@@ -653,8 +662,8 @@ got past its absence.
   and criteria 2.5 and 2.6 of the official validation suite (`STD-0300`) fail the
   day the bundle is no longer `clean: True`.
 
-**As of 2.3.0**: `pytest -q` — **4376 passed**; `ruff check src tests` — all
-checks passed; `mypy` — no issues found in **675 source files**;
+**As of 2.3.1**: `pytest -q` — **4420 passed**; `ruff check src tests` — all
+checks passed; `mypy` — no issues found in **679 source files**;
 `python -m aistack.cli.knowledge_integrity` — **70 knowledge artifacts**,
 `blocking: 0   warnings: 0   clean: True`.
 

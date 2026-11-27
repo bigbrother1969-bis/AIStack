@@ -71,6 +71,8 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         copies=_copies(data.get("copies"), label),
         certificates=_certificates(data.get("certificates"), label),
         domains=_domains(data.get("domains"), label),
+        recurrence_days=_positive_int(data, "recurrence_days", defaults.recurrence_days, label),
+        recurrence_starts=_positive_int(data, "recurrence_starts", defaults.recurrence_starts, label),
         certificate_days=_positive_int(data, "certificate_days", defaults.certificate_days, label),
         certificate_urgent_days=_positive_int(data, "certificate_urgent_days", defaults.certificate_urgent_days, label),
         domain_days=_positive_int(data, "domain_days", defaults.domain_days, label),

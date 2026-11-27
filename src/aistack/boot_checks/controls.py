@@ -22,6 +22,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from aistack.boot_checks.definition import CRITICAL, IGNORE, WARNING, BootChecksDefinition
 from aistack.architecture.beszel_reading import BeszelSystemReading
@@ -34,6 +35,9 @@ from aistack.boot_checks.usage import UsageReading
 from aistack.boot_checks.systems import DOWN as SYSTEM_DOWN
 from aistack.boot_checks.systems import UP as SYSTEM_UP
 from aistack.boot_checks.systems import SystemsReading
+
+if TYPE_CHECKING:
+    from aistack.boot_checks.recurrence import RecurrenceReading
 
 OK = "ok"
 PENDING = "pending"
@@ -821,6 +825,36 @@ def _reading(control: str, finding: str, name: str, reading: Reading | None, def
     return _passes(control, f"nothing to report in the {name} domain")
 
 
+def _recurrence(reading: RecurrenceReading | None, definition: BootChecksDefinition) -> Result:
+    """
+    What comes back (O3): a control that began to fail again at `recurrence_starts` distinct starts or more within
+    `recurrence_days` days. To watch while one of them fails now, *said* (information) when they are all quiet at present.
+    Nothing recorded yet is not "nothing came back": the control says so rather than pass.
+    """
+
+    if reading is None:
+        return _skipped("recurrence", "the history was not read")
+
+    if not reading.since:
+        return Result("recurrence", INFORMATION, "no change recorded yet, nothing to compare")
+
+    if not reading.found:
+        return _passes("recurrence", f"no anomaly came back at {reading.starts} starts or more since {reading.since}")
+
+    lines = [
+        f"{item.control}: back at {item.starts} starts in {reading.days} days, the last on {item.last}" + (", failing now" if item.open else "")
+        for item in reading.found
+    ]
+    lines.append("to do: find what brings them back at each start, rather than correcting the same symptom again")
+
+    if not any(item.open for item in reading.found):
+        return Result("recurrence", INFORMATION, f"{len(reading.found)} anomaly(ies) came back at several starts, none now", tuple(lines[:MAX_DETAILS]))
+
+    failed = _fails("recurrence", "anomaly_recurring", f"{len(reading.found)} anomaly(ies) came back at several starts", tuple(lines), definition, True)
+
+    return failed if failed is not None else _skipped("recurrence", "recurrence findings are ignored")
+
+
 def evaluate(
     facts: BootFacts,
     definition: BootChecksDefinition,
@@ -833,6 +867,7 @@ def evaluate(
     usage: UsageReading | None = None,
     restore: RestoreReading | None = None,
     expiry: ExpiryReading | None = None,
+    recurrence: RecurrenceReading | None = None,
 ) -> list[Result]:
     """Every control of the base set, in a stable order."""
 
@@ -860,5 +895,6 @@ def evaluate(
         _expiries("domains", "domain", bool(definition.domains), expiry.domains if expiry else None, definition.domain_days, definition.domain_urgent_days, definition, now)
     )
     results.append(_previous_boot(facts))
+    results.append(_recurrence(recurrence, definition))
 
     return [result for result in results if result is not None]

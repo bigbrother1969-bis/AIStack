@@ -95,6 +95,29 @@ def _every_sentence() -> set[str]:
                 said.update([result.summary, *result.details])
 
     said.update(_copy_and_restore_sentences())
+    said.update(_recurrence_sentences())
+
+    return said
+
+
+def _recurrence_sentences() -> set[str]:
+    from aistack.boot_checks.recurrence import Recurrence, RecurrenceReading
+
+    said: set[str] = set()
+    again = Recurrence("database_recovery", 3, "2026-11-24", True)
+    past = Recurrence("backup", 4, "2026-11-20", False)
+    readings = (
+        None,
+        RecurrenceReading(),
+        RecurrenceReading((), "2026-11-26", 3, 60),
+        RecurrenceReading((again, past), "2026-10-17", 3, 60),
+        RecurrenceReading((past,), "2026-10-17", 3, 60),
+    )
+
+    for definition in (BootChecksDefinition(), BootChecksDefinition(severity={"anomaly_recurring": "ignore"})):
+        for reading in readings:
+            for result in evaluate(facts(), definition, LATER, recurrence=reading):
+                said.update([result.summary, *result.details])
 
     return said
 
@@ -174,7 +197,8 @@ def test_every_sentence_the_controls_say_is_told_in_french() -> None:
 
 
 def test_in_english_a_sentence_comes_back_as_it_was_written() -> None:
-    assert all(say(EN, text) == text for text in _every_sentence())
+    # A recurrence names its control by the title the page gives it (tested in test_recurrence), so it is the one sentence that is not told as written.
+    assert all(say(EN, text) == text for text in _every_sentence() if ": back at " not in text)
 
 
 def test_the_numbers_and_names_are_kept() -> None:
@@ -200,4 +224,4 @@ def test_a_sentence_that_is_not_the_program_s_own_is_shown_as_it_is() -> None:
 def test_the_catalogs_have_every_sentence_in_both_languages() -> None:
     for key, _ in RULES:
         for translate in (FR, EN):
-            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", limit="90", name="x", days="30", pct="82.2", a="1", b="2", date="2026-11-02", temp="58", peak="62", left="10", rate="5.00", used="150", total="200", when="2026-11-26 12:50", hour="01:00", domain="d", reason="r", pressure="1", swap="2") != f"boot_check.phrase.{key}"
+            assert translate(f"boot_check.phrase.{key}", n=1, running=1, declared=1, found=1, label="x", got="y", want="z", says="s", hours="36", limit="90", name="x", days="30", pct="82.2", a="1", b="2", date="2026-11-02", temp="58", peak="62", left="10", rate="5.00", used="150", total="200", when="2026-11-26 12:50", hour="01:00", domain="d", reason="r", pressure="1", swap="2", control="x") != f"boot_check.phrase.{key}"

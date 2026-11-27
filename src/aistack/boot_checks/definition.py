@@ -47,6 +47,7 @@ FINDINGS = (
     "certificate_invalid",
     "domain_soon",
     "domain_urgent",
+    "anomaly_recurring",
 )
 
 # The circumstances the code computes from the facts, and the extra controls a circumstance may justify
@@ -98,6 +99,7 @@ DEFAULT_SEVERITY = {
     "certificate_invalid": WARNING,
     "domain_soon": WARNING,
     "domain_urgent": CRITICAL,
+    "anomaly_recurring": WARNING,
 }
 
 
@@ -156,6 +158,8 @@ class BootChecksDefinition:
     # not publish one. Ending within the first number of days is to watch, within the second (or past) is to fix.
     certificates: tuple[str, ...] = ()
     domains: dict[str, str] = field(default_factory=dict)
+    recurrence_days: int = 60
+    recurrence_starts: int = 3
     certificate_days: int = 21
     certificate_urgent_days: int = 7
     domain_days: int = 60

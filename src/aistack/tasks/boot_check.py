@@ -23,7 +23,8 @@ from aistack.boot_checks.monitor import MonitorReading, read_monitors
 from aistack.boot_checks.systems import SystemsReading, read_systems
 from aistack.boot_checks.usage import UsageReading, read_samples, series
 from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
-from aistack.boot_checks.history import Retention
+from aistack.boot_checks.history import Retention, read_history
+from aistack.boot_checks.recurrence import RecurrenceReading, read_recurrence
 from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_usage, write_verdict
 from aistack.api_keys import read_store
 from aistack.architecture.yaml import load_infrastructure_topology_yaml
@@ -113,7 +114,7 @@ class BootCheckTask:
                 previous = read_verdict(generated_dir)
                 ask = _engine(payload)
                 settled = settled_since(facts, definition, now)
-                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir), _usage(generated_dir, definition, now), _restore(now) if payload.get("cockpit", True) else None, _expiry(definition) if payload.get("cockpit", True) else None)
+                base = evaluate(facts, definition, now, storage, backup, monitors, _disks(generated_dir), _systems(generated_dir), _usage(generated_dir, definition, now), _restore(now) if payload.get("cockpit", True) else None, _expiry(definition) if payload.get("cockpit", True) else None, _recurrence(generated_dir, definition, now))
 
                 # One budget for everything asked of the engine: the vigil stops a pass at 300 s.
                 deadline = time.monotonic() + ASK_SECONDS
@@ -262,6 +263,12 @@ def _usage(generated_dir: Path, definition: BootChecksDefinition, now: datetime)
     current = read_samples(definition.usage_points, now)
 
     return UsageReading(current, series(write_usage(generated_dir, current, now, definition.usage_days)))
+
+
+def _recurrence(generated_dir: Path, definition: BootChecksDefinition, now: datetime) -> RecurrenceReading:
+    """What came back, read from this machine's journal of verdicts (O3)."""
+
+    return read_recurrence(read_history(generated_dir), now, definition.recurrence_days, definition.recurrence_starts)
 
 
 def _keep(definition: BootChecksDefinition) -> Retention:

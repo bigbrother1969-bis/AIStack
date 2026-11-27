@@ -171,6 +171,15 @@ RULES: tuple[tuple[str, str], ...] = (
     ("expiry_ends_line", r"(?P<label>.+): ends in (?P<days>\d+) day\(s\) \((?P<date>\d{4}-\d{2}-\d{2})\)"),
     ("expiry_ended_line", r"(?P<label>.+): ended (?P<days>\d+) day\(s\) ago \((?P<date>\d{4}-\d{2}-\d{2})\)"),
     ("expiry_untrusted_line", r"(?P<label>.+): not trusted: (?P<reason>.+)"),
+    ("recurrence_unread", r"the history was not read"),
+    ("recurrence_none", r"no change recorded yet, nothing to compare"),
+    ("recurrence_ok", r"no anomaly came back at (?P<n>\d+) starts or more since (?P<date>\d{4}-\d{2}-\d{2})"),
+    ("recurrence_bad", r"(?P<n>\d+) anomaly\(ies\) came back at several starts"),
+    ("recurrence_past", r"(?P<n>\d+) anomaly\(ies\) came back at several starts, none now"),
+    ("recurrence_ignored", r"recurrence findings are ignored"),
+    ("recurrence_line", r"(?P<control>.+): back at (?P<n>\d+) starts in (?P<days>\d+) days, the last on (?P<date>\d{4}-\d{2}-\d{2})"),
+    ("recurrence_line_now", r"(?P<control>.+): back at (?P<n>\d+) starts in (?P<days>\d+) days, the last on (?P<date>\d{4}-\d{2}-\d{2}), failing now"),
+    ("recurrence_do", r"to do: find what brings them back at each start, rather than correcting the same symptom again"),
     ("not_read", r"not read: (?P<reason>.+)"),
 )
 
@@ -245,6 +254,12 @@ def say(t: Callable[..., str], text: str) -> str:
 
         if "domain" in values:
             values["domain"] = t(f"boot_check.phrase.domain.{values['domain']}")
+
+        if "control" in values:
+            try:
+                values["control"] = t(f"boot_check.control.{values['control']}")
+            except KeyError:  # a control with no title of its own is named as it is
+                pass
 
         return t(f"boot_check.phrase.{key}", **values)
 

@@ -164,6 +164,7 @@ severity:
   certificate_invalid: warning
   domain_soon: warning
   domain_urgent: critical
+  anomaly_recurring: warning
 
 # Also check the companion machines the instance declares in hosts.yml (each
 # has its own indicator, same rules). A companion is judged from the facts its
@@ -182,6 +183,15 @@ companion_silent_minutes: 45
 # this many days or this many lines.
 history_days: 180
 history_events: 2000
+
+# What comes back (the journal above, read for a second question): a control that
+# began to fail again at `recurrence_starts` distinct starts of the machine within
+# `recurrence_days` days is said as a finding of its own, since a cause nobody found
+# is not cured by correcting the same symptom each time. To watch while one of them
+# fails now, only said when they are all quiet. Failing at every start without ever
+# being quiet is one long failure, not a recurrence.
+recurrence_days: 60
+recurrence_starts: 3
 
 # The paths that must be mounted on a companion after a start, by the host's
 # name in hosts.yml. Empty = not declared: the control is skipped.

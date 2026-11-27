@@ -114,7 +114,7 @@ def test_without_lines_or_with_a_failing_reader_the_anomaly_is_explained_as_befo
 
     assert explain((DB,), (), [DB], ask, NOW, 5.0)[0].basis == ()
     assert explain((DB,), (), [DB], ask, NOW, 5.0, excerpts=boom)[0].text == "dit"
-    assert "log lines" not in calls[0][3] and "log lines" not in calls[1][3]
+    assert "log lines of" not in calls[0][3] and "log lines of" not in calls[1][3]
 
 
 def test_a_silent_engine_keeps_no_basis_and_the_verdict_never_stores_a_line(tmp_path: Path) -> None:

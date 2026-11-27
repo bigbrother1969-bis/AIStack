@@ -193,3 +193,21 @@ def test_an_engine_that_says_nothing_still_leaves_the_verdict_of_the_rules(tmp_p
     data = _run(tmp_path, ask)
 
     assert data["overall"] == "warning" and data["verdict"]["explanations"][0]["text"] == ""  # type: ignore[index]
+
+
+def test_a_greeting_a_question_and_a_promise_of_follow_up_are_taken_out_of_the_words_of_the_engine() -> None:
+    said = "Salut !\nTu as vu que 6 bases ont récupéré après une coupure.\nVérifie les sauvegardes.\nÇa te semble clair ?\nFais-moi savoir comment ça se passe !"
+
+    assert clean(said) == "Tu as vu que 6 bases ont récupéré après une coupure.\nVérifie les sauvegardes."
+    assert clean("Bonjour, ceci est un test.") == "Bonjour, ceci est un test."
+    assert clean("Salut !") == ""
+    assert clean("Que faire ? Vérifie le câble SATA et le connecteur d'alimentation du disque concerné, puis relance un contrôle.") != ""
+
+
+def test_the_engine_is_told_the_rules_last() -> None:
+    from aistack.boot_checks.explain import RULES
+
+    ask, calls = answering("dit")
+    explain((DB,), (), [DB, FINE], ask, NOW, 5.0)
+
+    assert calls[0][3].rstrip().endswith(RULES) and "do not greet the reader" in RULES

@@ -35,6 +35,15 @@ NAMES_SHOWN = 8
 LANGUAGE = "fr"
 
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]+")
+# What a small engine adds that AIStack cannot honour: a greeting, a question to the reader, a promise to follow up.
+_GREETING = re.compile(r"^\W*(salut|bonjour|bonsoir|coucou|hello|hi|hey)\b(\W+\w+){0,2}\W*$", re.IGNORECASE)
+_SOLICITATION = re.compile(r"\?\W*$|fais[- ]moi savoir|dis[- ]moi|tiens[- ]moi au courant|n'h[ée]site pas|let me know", re.IGNORECASE)
+# Said to the engine after the facts, in the last words it reads: a small model follows these better there.
+RULES = (
+    "Rules for your answer: do not greet the reader. Do not ask the reader a question and do not promise to follow up: "
+    "AIStack cannot receive a reply. Use only the facts above and the log lines given: never add a cause, a number or a "
+    "name that is not there, and say so when you do not know. At most two short paragraphs: what it means, then what to look at."
+)
 
 
 def _line(text: str, limit: int) -> str:
@@ -45,8 +54,15 @@ def clean(text: str) -> str:
     """The engine's words as the page may show them: no control character, paragraphs kept, cut at `TEXT_LIMIT`."""
 
     paragraphs = [" ".join(_CONTROL_CHARACTERS.sub(" ", part).split()) for part in text.replace("\r", "").split("\n")]
+    kept = [part for part in paragraphs if part]
 
-    return "\n".join(part for part in paragraphs if part)[:TEXT_LIMIT].strip()
+    if kept and _GREETING.match(kept[0]):
+        kept = kept[1:]
+
+    while kept and len(kept[-1]) < 120 and _SOLICITATION.search(kept[-1]):
+        kept = kept[:-1]
+
+    return "\n".join(kept)[:TEXT_LIMIT].strip()
 
 
 def matter_of(result: Result) -> Matter:
@@ -155,7 +171,7 @@ def explain(
     for item in todo:
         lines = _excerpts(excerpts, item)
         left = deadline - clock()
-        asked = f"{context}\n{block(lines)}" if lines else context
+        asked = "\n".join(part for part in (context, block(lines), RULES) if part)
         answer = _within(ask, matter_of(item), asked, left) if left > 0 else None
         text = clean(answer.response) if answer is not None and answer.reachable else ""
         said.append(

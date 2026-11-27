@@ -463,6 +463,8 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
     life = {disk.wwn: _life_left(disk, definition) for disk in fresh}
     wearing = [disk for disk in fresh if life[disk.wwn] is not None and life[disk.wwn] <= definition.ssd_life_percent]  # type: ignore[operator]
 
+    said_life = tuple(f"{disk.label}: {life[disk.wwn]} % of life left{_ssd_pace(disk, life[disk.wwn])}" for disk in fresh if life[disk.wwn] is not None)  # type: ignore[arg-type]
+
     def names(group: list[Disk]) -> tuple[str, ...]:
         return tuple(disk.label for disk in group)
 
@@ -502,13 +504,13 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
         todo = (("to do: back up the disks above now and plan to replace them",) if media else ()) + (
             ("to do: check the SATA cable and the power connector of the disks above",) if link else ()
         )
-        failed = _fails("disks", "disk_counter_rising", summary, (*lines[: MAX_DETAILS - len(todo)], *todo), definition, True)
+        failed = _fails("disks", "disk_counter_rising", summary, (*lines[: MAX_DETAILS - len(todo) - len(said_life)], *said_life, *todo), definition, True)
 
         return failed if failed is not None else _skipped("disks", "disk findings are ignored")
 
     if hot:
         lines = tuple(f"{disk.label}: {disk.temperature} \u00b0C now (limit {heat} \u00b0C)" for disk in hot)
-        failed = _fails("disks", "disk_hot", summary, (*lines, "to do: check the airflow and the fan of the machine"), definition, True)
+        failed = _fails("disks", "disk_hot", summary, (*lines, *said_life, "to do: check the airflow and the fan of the machine"), definition, True)
 
         return failed if failed is not None else _skipped("disks", "disk findings are ignored")
 
@@ -520,8 +522,6 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
 
     if stale or unread:
         return Result("disks", UNKNOWN, summary, names(stale + unread)[:MAX_DETAILS])
-
-    said_life = tuple(f"{disk.label}: {life[disk.wwn]} % of life left{_ssd_pace(disk, life[disk.wwn])}" for disk in fresh if life[disk.wwn] is not None)  # type: ignore[arg-type]
 
     if old or hint or peaked or said_life:
         said = names(old + [disk for disk in hint if disk not in old])

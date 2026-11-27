@@ -403,3 +403,14 @@ def test_the_wear_sentences_are_told_in_french() -> None:
     assert say(fr, "KINGSTON …ABCD: 77 % of life left, about 4.1 year(s) at the pace since new") == "KINGSTON …ABCD : 77 % de vie restante, environ 4.1 an(s) au rythme depuis l'achat"
     assert say(fr, "KINGSTON …ABCD: 77 % of life left") == "KINGSTON …ABCD : 77 % de vie restante"
     assert say(fr, "to do: back up the SSD above and plan its replacement").startswith("à faire : sauvegarder le SSD")
+
+
+def test_the_life_left_is_still_said_when_another_disk_is_to_watch() -> None:
+    rising = details(**{"5": (0, 0), "199": (3, 0)})
+    rising["smart_results"] = [
+        {"date": (NOW - timedelta(days=10)).isoformat().replace("+00:00", "Z"), "attrs": {"199": {"status": 0, "raw_value": 0, "thresh": 0, "value": 100}}},
+        {"date": FRESH, "attrs": {"199": {"status": 0, "raw_value": 7, "thresh": 0, "value": 100}}},
+    ]
+    result = judged(disks_of((entry(model=KINGSTON, hours=10851), levels(77)), (entry(name="sdb", serial="ZZZ9999WXYZ"), rising)), declared())
+
+    assert result.status == WARNING and any("77 % of life left" in line for line in result.details)

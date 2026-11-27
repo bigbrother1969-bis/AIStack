@@ -214,7 +214,9 @@ def test_the_task_reads_scrutiny_when_its_address_is_set_and_the_verdict_keeps_t
     from aistack.tasks.boot_check import BootCheckTask
     from tests.unit.boot_checks.test_controls import _facts_file
 
-    server, url = _serve({"0xB": entry("sdb")})
+    # The task judges against the real clock, so the report must be young now, not 10 h before a fixed date.
+    young = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    server, url = _serve({"0xB": entry("sdb", collected=young)})
     monkeypatch.setenv("AISTACK_SCRUTINY_URL", url)
     declaration = tmp_path / "b.yml"
     declaration.write_text("mounts: []\n", encoding="utf-8")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import time
 from collections.abc import Mapping
@@ -23,13 +24,16 @@ from aistack.boot_checks.monitor import MonitorReading, read_monitors
 from aistack.boot_checks.systems import SystemsReading, read_systems
 from aistack.boot_checks.usage import UsageReading, read_samples, series
 from aistack.boot_checks.report import EXIT, companion_suggestion, describe, suggestion
+from aistack.boot_checks.frieze import Moment, before, declaration_moments, docker_moments, host_moments, journal_moments, start_moment, window_start
 from aistack.boot_checks.history import Retention, read_history
 from aistack.boot_checks.recurrence import RecurrenceReading, read_recurrence
-from aistack.boot_checks.state import Verdict, judge, judge_silent, read_verdict, unknown, write_usage, write_verdict
+from aistack.boot_checks.state import Incident, Verdict, judge, judge_silent, read_verdict, unknown, write_usage, write_verdict
 from aistack.api_keys import read_store
 from aistack.architecture.yaml import load_infrastructure_topology_yaml
 from aistack.config import PACKAGE_ROOT, configured
-from aistack.hosts.records import TracedHost, load_hosts_declaration
+from aistack.history import every_version
+from aistack.hosts.records import TracedHost, load_hosts_declaration, read_all
+from aistack.providers.docker.events_history import read_recent_docker_events
 from aistack.kernel.execution import Observation, ObservationContext, Request
 
 DEFAULT_GENERATED_DIR = "reports/generated"
@@ -124,7 +128,7 @@ class BootCheckTask:
                     results = [*base, *evaluate_extra(choice.controls, facts, definition, backup, settled)]
                     made = judge(results, facts, now, previous, found, choice.controls, choice.by, choice.reason)
 
-                    return replace(made, explanations=standing(results, previous, facts.boot_id, now)[0])
+                    return replace(made, explanations=standing(results, previous, facts.boot_id, now)[0], incidents=_before(made.incidents, definition, generated_dir, facts, now))
 
                 if wants_engine(found, definition, ask, previous, facts.boot_id, now):
                     # The engine may take minutes: the verdict of the rules is written first, so a pass cut short still says how the start looks.
@@ -269,6 +273,56 @@ def _recurrence(generated_dir: Path, definition: BootChecksDefinition, now: date
     """What came back, read from this machine's journal of verdicts (O3)."""
 
     return read_recurrence(read_history(generated_dir), now, definition.recurrence_days, definition.recurrence_starts)
+
+
+def _before(incidents: tuple[Incident, ...], definition: BootChecksDefinition, generated_dir: Path, facts: BootFacts, now: datetime) -> tuple[Incident, ...]:
+    """The frieze of each incident that has none yet (O8), built from what was recorded in the hours before it began."""
+
+    todo = [item for item in incidents if item.before is None]
+    since = window_start((item.first_seen for item in todo), definition)
+
+    if since is None:
+        return incidents
+
+    journal = read_history(generated_dir)
+    common = [*_recorded(generated_dir, since), *start_moment(facts.booted_at, facts.previous_boot_clean)]
+    built = {}
+
+    for item in todo:
+        opened = datetime.fromisoformat(item.first_seen) if item.first_seen else now
+        built[item.control] = before(opened, [*common, *journal_moments(journal, skip=item.control)], definition.frieze_hours, definition.frieze_events)
+
+    return tuple(replace(item, before=built[item.control]) if item.before is None else item for item in incidents)
+
+
+def _recorded(generated_dir: Path, since: datetime) -> list[Moment]:
+    """What AIStack already keeps and a frieze may use: the Docker events, what the traced machines recorded, the declarations written from screens. A source that cannot be read adds nothing."""
+
+    found: list[Moment] = []
+
+    try:
+        found += docker_moments(read_recent_docker_events(since, generated_dir / "docker-events" / "docker-events.json"))
+    except (OSError, ValueError):
+        pass
+
+    try:
+        records = read_all(load_hosts_declaration(generated_dir))
+        found += host_moments((item.host, [event for _, event in item.events]) for item in records)
+    except (OSError, ValueError, AttributeError):
+        pass
+
+    try:
+        entries = []
+
+        for observation in every_version(generated_dir, "declaration-change"):
+            if observation.observed_at >= since:
+                entries.append(json.loads(observation.read()))
+
+        found += declaration_moments(entry for entry in entries if isinstance(entry, dict))
+    except (OSError, ValueError):
+        pass
+
+    return found
 
 
 def _keep(definition: BootChecksDefinition) -> Retention:

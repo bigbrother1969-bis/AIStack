@@ -108,6 +108,21 @@
             <td>{{ item.summary }}</td>
             <td>{{ t('boot_check.incidents.from', first=item.first) }}{% if not item.open %} {{ t('boot_check.incidents.to', last=item.last) }}{% endif %}</td>
           </tr>
+          {% if item.before is not none %}
+          <tr>
+            <td></td>
+            <td colspan="3">
+              {% if item.before %}
+              <details>
+                <summary>{{ t('boot_check.incidents.before') }}</summary>
+                <ul>{% for line in item.before %}<li>{{ line }}</li>{% endfor %}</ul>
+              </details>
+              {% else %}
+              <small>{{ t('boot_check.incidents.before_none') }}</small>
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
           {% endfor %}
         </tbody>
       </table>

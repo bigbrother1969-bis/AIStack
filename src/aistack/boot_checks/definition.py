@@ -158,6 +158,9 @@ class BootChecksDefinition:
     # not publish one. Ending within the first number of days is to watch, within the second (or past) is to fix.
     certificates: tuple[str, ...] = ()
     domains: dict[str, str] = field(default_factory=dict)
+    # What was recorded just before an anomaly (O8): how many hours back, and how many facts at most (the nearest ones).
+    frieze_hours: int = 6
+    frieze_events: int = 8
     recurrence_days: int = 60
     recurrence_starts: int = 3
     certificate_days: int = 21

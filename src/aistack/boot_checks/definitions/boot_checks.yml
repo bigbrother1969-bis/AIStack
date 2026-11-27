@@ -184,6 +184,14 @@ companion_silent_minutes: 45
 history_days: 180
 history_events: 2000
 
+# What happened just before an anomaly: when a control starts to fail, the page lists what AIStack
+# recorded in the `frieze_hours` before (the host starting, a container that died, was removed or
+# turned unhealthy, packages changed on a machine, a declaration written from a screen, another
+# control that began to fail), the `frieze_events` nearest to it. It says *before*, never *because*,
+# and keeps names and dates only. Built once, when the anomaly is first seen.
+frieze_hours: 6
+frieze_events: 8
+
 # What comes back (the journal above, read for a second question): a control that
 # began to fail again at `recurrence_starts` distinct starts of the machine within
 # `recurrence_days` days is said as a finding of its own, since a cause nobody found

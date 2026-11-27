@@ -116,6 +116,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
             "open": item.resolved_at is None,
             "first": _stamp(item.first_seen),
             "last": _stamp(item.resolved_at),
+            "before": None if item.before is None else tuple(say(t, line) for line in item.before),
         }
         for item in (verdict.incidents if verdict else ())
     ]

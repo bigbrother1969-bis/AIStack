@@ -71,6 +71,8 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         copies=_copies(data.get("copies"), label),
         certificates=_certificates(data.get("certificates"), label),
         domains=_domains(data.get("domains"), label),
+        frieze_hours=_positive_int(data, "frieze_hours", defaults.frieze_hours, label),
+        frieze_events=_positive_int(data, "frieze_events", defaults.frieze_events, label),
         recurrence_days=_positive_int(data, "recurrence_days", defaults.recurrence_days, label),
         recurrence_starts=_positive_int(data, "recurrence_starts", defaults.recurrence_starts, label),
         certificate_days=_positive_int(data, "certificate_days", defaults.certificate_days, label),

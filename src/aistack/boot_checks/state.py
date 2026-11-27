@@ -51,6 +51,9 @@ class Incident:
     first_seen: str
     summary: str
     resolved_at: str | None = None
+    # What was recorded in the hours before it began (O8), as sentences, oldest first. `None` = not built yet,
+    # `()` = built and nothing was recorded: the two are not the same, so a built one is never built again.
+    before: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -144,7 +147,7 @@ def _judge(results: list[Result], boot_id: str, booted_at: datetime | None, now:
             incidents[result.control] = Incident(result.control, result.status, stamp, result.summary)
         elif result.status not in ANOMALIES and result.control in incidents:
             opened = incidents.pop(result.control)
-            kept.append(Incident(opened.control, opened.status, opened.first_seen, opened.summary, stamp))
+            kept.append(Incident(opened.control, opened.status, opened.first_seen, opened.summary, stamp, opened.before))
 
     return Verdict(
         overall=overall(results),
@@ -239,6 +242,7 @@ def _incident(raw: Any) -> Incident | None:
         str(raw.get("first_seen", "")),
         str(raw.get("summary", "")),
         str(raw["resolved_at"]) if raw.get("resolved_at") else None,
+        tuple(str(item) for item in raw["before"]) if isinstance(raw.get("before"), list) else None,
     )
 
 

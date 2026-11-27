@@ -179,7 +179,23 @@ services:
 # act; this is where it is recorded.
 # ---------------------------------------------------------------
 #
-# **2.3.0 — published 2026-11-26, current; also `latest`.**
+# **2.3.1 — published 2026-11-27, current; also `latest`.**
+#
+#   bigbrother1969/aistack-core:2.3.1
+#   @sha256:feb3d33063b849b83c246595be47b8485e751ce24d592b0dcebf71c34dc82ba1
+#
+# Built from e8561a7 (tag v2.3.1) on the reference host, behind the
+# terms OPS-0002 § *Publishing an image* requires: a clean tree, `main`,
+# HEAD equal to origin/main, and 4420 tests passing. Before the build, the
+# previous version (2.3.0) was pulled again and matched its recorded digest;
+# the older ones were not pulled again this time. Pushed under its
+# version and as `latest` — both name the same digest; its `revision` label
+# is e8561a72bb5762dc242c18faecd25f9d834d34e5. The digest is that of the manifest list the registry holds.
+# 2.3.1 adds to the start-up checks what comes back, what happened just before
+# an anomaly, the quality of the AI engine and the wear of an SSD:
+# `docs/04-handbook/RELEASE-NOTES.md`'s 2.3.1 entry gives the full account.
+#
+# **2.3.0 — published 2026-11-26, previous.**
 #
 #   bigbrother1969/aistack-core:2.3.0
 #   @sha256:eeae918d65263e2cd59be1baff7963bf7fc51f1c4f902047999cee7d883c4b8a

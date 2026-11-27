@@ -71,6 +71,10 @@ class Disk:
     temperature: int | None = None
     peak: tuple[int, datetime] | None = None
     counters: tuple[tuple[int, tuple[tuple[datetime, int], ...]], ...] = ()
+    # O5b: the model, and the normalized value of every attribute in the last report (100 new, lower worn). What an
+    # attribute means depends on the maker, so the owner declares which one is an SSD's life left (`ssd_life`).
+    model: str = ""
+    levels: tuple[tuple[int, int], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -179,6 +183,30 @@ def parse_history(details: Any) -> tuple[tuple[tuple[int, tuple[tuple[datetime, 
     return tuple((number, tuple(sorted(points))) for number, points in sorted(series.items())), peak
 
 
+def parse_levels(details: Any) -> tuple[tuple[int, int], ...]:
+    """The normalized value of each attribute of the newest report that has attributes."""
+
+    results = details.get("smart_results") if isinstance(details, dict) else None
+
+    for result in results if isinstance(results, list) else []:
+        attributes = result.get("attrs") if isinstance(result, dict) else None
+
+        if not isinstance(attributes, dict) or not attributes:
+            continue
+
+        found = []
+
+        for key, attribute in attributes.items():
+            value = _number(attribute.get("value")) if isinstance(attribute, dict) else None
+
+            if value is not None and str(key).isdigit():
+                found.append((int(key), value))
+
+        return tuple(sorted(found))
+
+    return ()
+
+
 def parse_summary(summary: Any) -> list[tuple[str, dict[str, Any]]]:
     """The (WWN, entry) pairs of `/api/summary`; anything that is not that shape is not read."""
 
@@ -217,6 +245,8 @@ def disk_of(wwn: str, entry: dict[str, Any], details: Any) -> Disk:
         temperature=_number(smart.get("temp")),
         peak=peak,
         counters=counters,
+        model=" ".join(str(device.get("model_name") or "").split())[:80],
+        levels=parse_levels(details),
     )
 
 

@@ -55,6 +55,8 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         disk_old_hours=_optional_count(data, "disk_old_hours", label),
         disk_temperature_celsius=_positive_int(data, "disk_temperature_celsius", defaults.disk_temperature_celsius, label),
         disk_rising_days=_positive_int(data, "disk_rising_days", defaults.disk_rising_days, label),
+        ssd_life=_ssd_life(data.get("ssd_life"), label),
+        ssd_life_percent=_positive_int(data, "ssd_life_percent", defaults.ssd_life_percent, label),
         history_days=_positive_int(data, "history_days", defaults.history_days, label),
         history_events=_positive_int(data, "history_events", defaults.history_events, label),
         data_disk_percent=_positive_int(data, "data_disk_percent", defaults.data_disk_percent, label),
@@ -200,6 +202,29 @@ def _certificates(value: Any, label: str) -> tuple[str, ...]:
             raise ValueError(f"{label}: certificates: {entry!r} is neither a host (host or host:port) nor an absolute path")
 
     return tuple(dict.fromkeys(value))
+
+
+def _ssd_life(value: Any, label: str) -> dict[str, int]:
+    """A mapping from a part of an SSD's model to the number of the SMART attribute that says its life left."""
+
+    if value is None:
+        return {}
+
+    if not isinstance(value, dict):
+        raise ValueError(f"{label}: ssd_life must be a mapping from a part of a model name to a SMART attribute number")
+
+    found: dict[str, int] = {}
+
+    for name, number in value.items():
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError(f"{label}: ssd_life: {name!r} is not a part of a model name")
+
+        if isinstance(number, bool) or not isinstance(number, int) or not 1 <= number <= 255:
+            raise ValueError(f"{label}: ssd_life.{name} must be a SMART attribute number from 1 to 255")
+
+        found[name.strip()] = number
+
+    return found
 
 
 def _domains(value: Any, label: str) -> dict[str, str]:

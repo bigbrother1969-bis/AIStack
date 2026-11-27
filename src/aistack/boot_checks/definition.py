@@ -28,6 +28,7 @@ FINDINGS = (
     "disk_attribute",
     "disk_counter_rising",
     "disk_hot",
+    "ssd_worn",
     "system_down",
     "system_pressure",
     "disk_full_soon",
@@ -80,6 +81,7 @@ DEFAULT_SEVERITY = {
     "disk_attribute": WARNING,
     "disk_counter_rising": WARNING,
     "disk_hot": WARNING,
+    "ssd_worn": WARNING,
     "system_down": WARNING,
     "system_pressure": WARNING,
     "disk_full_soon": WARNING,
@@ -133,6 +135,10 @@ class BootChecksDefinition:
     # last `disk_rising_days` is to watch too.
     disk_temperature_celsius: int = 55
     disk_rising_days: int = 30
+    # O5b: for an SSD the owner names (a part of its model), the SMART attribute whose normalized value is its life left
+    # (100 new, 0 worn), and the percentage at or under which it is to watch. Nothing declared, nothing judged.
+    ssd_life: dict[str, int] = field(default_factory=dict)
+    ssd_life_percent: int = 20
     # Beszel: a machine whose disk or memory use, in percent, or whose temperature, in degrees, reaches this is to watch.
     system_disk_percent: int = 90
     system_memory_percent: int = 90

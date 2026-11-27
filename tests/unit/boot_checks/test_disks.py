@@ -322,3 +322,84 @@ def test_the_new_sentences_are_told_in_french_with_their_numbers() -> None:
     assert say(fr, "WDC …5PH: reached 62 °C on 2026-07-02") == "WDC …5PH : a atteint 62 °C le 2026-07-02"
     assert say(fr, "to do: check the SATA cable and the power connector of the disks above").startswith("à faire : vérifier le câble SATA")
     assert say(fr, "to do: the power supply or its cable is too weak, use the board's own supply").startswith("à faire : l'alimentation")
+
+
+# O5b: an SSD's life left, from the attribute the owner declared for its model.
+KINGSTON = "KINGSTON SUV400S37240G"
+
+
+def levels(left: int, attribute: str = "231") -> dict:
+    return {"smart_results": [{"date": FRESH, "attrs": {attribute: {"status": 0, "raw_value": 100 - left, "thresh": 0, "value": left}, "9": {"status": 0, "raw_value": 1, "thresh": 0, "value": 100}}}]}
+
+
+def declared(percent: int = 20, **models: int):  # type: ignore[no-untyped-def]
+    from dataclasses import replace
+
+    return replace(DEFINITION, ssd_life=models or {"SUV400S37240G": 231}, ssd_life_percent=percent)
+
+
+def test_an_ssd_with_a_declared_attribute_says_its_life_left_and_how_long_it_lasts_at_the_pace_since_new() -> None:
+    result = judged(disks_of((entry(model=KINGSTON, hours=10851), levels(77))), declared())
+
+    assert result.status == INFORMATION
+    assert any(line == f"{KINGSTON} …ABCD: 77 % of life left, about 4.1 year(s) at the pace since new" for line in result.details)
+
+
+def test_an_ssd_at_or_under_the_limit_is_to_watch_with_what_to_do() -> None:
+    result = judged(disks_of((entry(model=KINGSTON, hours=10851), levels(20))), declared())
+
+    assert result.status == WARNING and "1 SSD(s) at or below 20 % of life left" in result.summary
+    assert result.details[0].endswith("20 % of life left (limit 20 %)") and result.details[-1] == "to do: back up the SSD above and plan its replacement"
+    assert judged(disks_of((entry(model=KINGSTON, hours=10851), levels(21))), declared()).status == INFORMATION
+    assert judged(disks_of((entry(model=KINGSTON, hours=10851), levels(35))), declared(percent=40)).status == WARNING
+
+
+def test_nothing_declared_or_nothing_read_is_not_judged_and_never_a_green_wear() -> None:
+    plain = judged(disks_of((entry(model=KINGSTON), levels(5))))
+
+    assert plain.status == OK and not any("life left" in line for line in plain.details)
+    assert judged(disks_of((entry(model="ST2000DM008"), levels(5))), declared()).status == OK
+    assert judged(disks_of((entry(model=KINGSTON), levels(5, attribute="177"))), declared()).status == OK
+    assert judged(disks_of((entry(model=KINGSTON), None)), declared()).status == UNKNOWN
+
+
+def test_the_pace_is_not_said_before_a_month_of_use_or_before_any_wear() -> None:
+    new = judged(disks_of((entry(model=KINGSTON, hours=100), levels(90))), declared())
+    unused = judged(disks_of((entry(model=KINGSTON, hours=5000), levels(100))), declared())
+
+    assert new.details == (f"{KINGSTON} …ABCD: 90 % of life left",) and unused.details == (f"{KINGSTON} …ABCD: 100 % of life left",)
+
+
+def test_a_failure_or_a_rising_counter_still_comes_before_the_wear() -> None:
+    bad = disks_of((entry(model=KINGSTON, status=1, hours=10851), levels(10)))
+
+    assert judged(bad, declared()).status == CRITICAL
+
+
+def test_the_declaration_of_the_wear_is_checked_when_loaded(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    import pytest
+
+    from aistack.boot_checks.load import load_boot_checks_yaml
+
+    def load(text: str):  # type: ignore[no-untyped-def]
+        path = tmp_path / "b.yml"
+        path.write_text(text, encoding="utf-8")
+
+        return load_boot_checks_yaml(path)
+
+    assert load("ssd_life:\n  SUV400S37240G: 231\nssd_life_percent: 15\n").ssd_life == {"SUV400S37240G": 231}
+    assert load("settle_minutes: 10\n").ssd_life == {}
+
+    for bad in ("ssd_life: [231]\n", "ssd_life:\n  X: 0\n", "ssd_life:\n  X: 300\n", "ssd_life:\n  X: true\n", "ssd_life:\n  '': 231\n"):
+        with pytest.raises(ValueError):
+            load(bad)
+
+
+def test_the_wear_sentences_are_told_in_french() -> None:
+    fr = translator_for("fr")
+
+    assert say(fr, "1 SSD(s) at or below 20 % of life left") == "1 SSD à 20 % de vie restante ou moins"
+    assert say(fr, "KINGSTON …ABCD: 19 % of life left (limit 20 %)") == "KINGSTON …ABCD : 19 % de vie restante (limite 20 %)"
+    assert say(fr, "KINGSTON …ABCD: 77 % of life left, about 4.1 year(s) at the pace since new") == "KINGSTON …ABCD : 77 % de vie restante, environ 4.1 an(s) au rythme depuis l'achat"
+    assert say(fr, "KINGSTON …ABCD: 77 % of life left") == "KINGSTON …ABCD : 77 % de vie restante"
+    assert say(fr, "to do: back up the SSD above and plan its replacement").startswith("à faire : sauvegarder le SSD")

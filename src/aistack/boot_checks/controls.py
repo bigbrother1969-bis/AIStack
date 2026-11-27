@@ -408,6 +408,31 @@ def _rises(disk: Disk, now: datetime, days: int) -> list[tuple[int, int, int, da
     return found
 
 
+def _life_left(disk: Disk, definition: BootChecksDefinition) -> int | None:
+    """An SSD's life left, in percent, from the attribute the owner declared for its model; `None` when none is declared or read."""
+
+    model = disk.model.lower()
+    number = next((attribute for part, attribute in definition.ssd_life.items() if part.lower() in model), None)
+
+    if number is None:
+        return None
+
+    left = dict(disk.levels).get(number)
+
+    return left if left is not None and 0 <= left <= 100 else None
+
+
+def _ssd_pace(disk: Disk, left: int) -> str:
+    """How long the life left lasts at the pace since new, said only once a month of use is behind and some life is gone."""
+
+    used = 100 - left
+
+    if disk.hours is None or disk.hours < 720 or used < 1:
+        return ""
+
+    return f", about {disk.hours * left / used / 8766:.1f} year(s) at the pace since new"
+
+
 def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: datetime) -> Result:
     """Scrutiny: a SMART failure is to fix, a critical attribute above zero is to watch; age and statistics are only said."""
 
@@ -435,6 +460,8 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
     rising = [disk for disk in fresh if rises[disk.wwn]]
     hot = [disk for disk in fresh if disk.temperature is not None and disk.temperature >= heat]
     peaked = [disk for disk in fresh if disk not in hot and disk.peak is not None and disk.peak[0] >= heat]
+    life = {disk.wwn: _life_left(disk, definition) for disk in fresh}
+    wearing = [disk for disk in fresh if life[disk.wwn] is not None and life[disk.wwn] <= definition.ssd_life_percent]  # type: ignore[operator]
 
     def names(group: list[Disk]) -> tuple[str, ...]:
         return tuple(disk.label for disk in group)
@@ -450,6 +477,7 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
         f"{len(rising)} with a counter rising" if rising else "",
         f"{len(hot)} at or above {heat} \u00b0C" if hot else "",
         f"{len(peaked)} peaked at or above {heat} \u00b0C" if peaked else "",
+        f"{len(wearing)} SSD(s) at or below {definition.ssd_life_percent} % of life left" if wearing else "",
     ]
     summary = "; ".join([head, *(part for part in parts if part)])
 
@@ -484,14 +512,22 @@ def _disks(reading: DiskReading | None, definition: BootChecksDefinition, now: d
 
         return failed if failed is not None else _skipped("disks", "disk findings are ignored")
 
+    if wearing:
+        lines = tuple(f"{disk.label}: {life[disk.wwn]} % of life left (limit {definition.ssd_life_percent} %)" for disk in wearing)
+        failed = _fails("disks", "ssd_worn", summary, (*lines, "to do: back up the SSD above and plan its replacement"), definition, True)
+
+        return failed if failed is not None else _skipped("disks", "disk findings are ignored")
+
     if stale or unread:
         return Result("disks", UNKNOWN, summary, names(stale + unread)[:MAX_DETAILS])
 
-    if old or hint or peaked:
+    said_life = tuple(f"{disk.label}: {life[disk.wwn]} % of life left{_ssd_pace(disk, life[disk.wwn])}" for disk in fresh if life[disk.wwn] is not None)  # type: ignore[arg-type]
+
+    if old or hint or peaked or said_life:
         said = names(old + [disk for disk in hint if disk not in old])
         past = tuple(f"{disk.label}: reached {disk.peak[0]} \u00b0C on {disk.peak[1]:%Y-%m-%d}" for disk in peaked if disk.peak is not None)
 
-        return Result("disks", INFORMATION, summary, (*said, *past)[:MAX_DETAILS])
+        return Result("disks", INFORMATION, summary, (*said, *past, *said_life)[:MAX_DETAILS])
 
     return _passes("disks", summary)
 

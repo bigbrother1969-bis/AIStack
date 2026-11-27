@@ -48,6 +48,14 @@ disk_report_hours: 36
 disk_temperature_celsius: 55
 disk_rising_days: 30
 
+# An SSD's wear: what an attribute means depends on the maker, so AIStack does not guess. Name a part of
+# the model and the SMART attribute whose normalized value is its life left (100 new, 0 worn): Scrutiny
+# lists them by number, and for many makers it is 231, 233 or 177. The disks control then says the life
+# left and, once a month of use is behind, how long it lasts at the pace since new; at or under
+# `ssd_life_percent` it is to watch. Example: `ssd_life: {SUV400S37240G: 231}`.
+ssd_life: {}
+ssd_life_percent: 20
+
 # Beszel (the machines it watches; its account is the one of the architecture page, set
 # in Settings; without it the control is skipped). A machine Beszel calls down is to
 # watch, and so is one whose disk or memory use (percent) or temperature (degrees) is at

@@ -161,6 +161,9 @@ class BootChecksDefinition:
     # What was recorded just before an anomaly (O8): how many hours back, and how many facts at most (the nearest ones).
     frieze_hours: int = 6
     frieze_events: int = 8
+    # How AIStack itself is doing (O10): the window of the engine's calls, and how many calls are needed to judge.
+    quality_days: int = 7
+    quality_min_calls: int = 5
     recurrence_days: int = 60
     recurrence_starts: int = 3
     certificate_days: int = 21

@@ -110,6 +110,8 @@ class BootCheckTask:
 
                 data.update(text=text, exit_code=0)
         else:
+            started = time.monotonic()
+
             if facts is None:
                 verdict = unknown(now, note)
             else:
@@ -151,6 +153,8 @@ class BootCheckTask:
 
                     asked = explain(todo, found, list(verdict.results), ask, now, max(deadline - time.monotonic(), 0.0), excerpts=lambda result: excerpts_for(result, facts.booted_at))
                     verdict = replace(verdict, explanations=(*kept, *asked))
+
+            verdict = replace(verdict, took=round(time.monotonic() - started, 1))
 
             if not payload.get("dry_run"):
                 write_verdict(generated_dir, verdict, keep=_keep(definition))

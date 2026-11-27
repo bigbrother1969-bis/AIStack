@@ -192,6 +192,12 @@ history_events: 2000
 frieze_hours: 6
 frieze_events: 8
 
+# How AIStack itself is doing (shown on the page, never in a verdict): the engine's calls of the last
+# `quality_days` days, how many answered and how long they took. With fewer than `quality_min_calls`
+# calls it says it cannot judge, instead of a rate made of two calls.
+quality_days: 7
+quality_min_calls: 5
+
 # What comes back (the journal above, read for a second question): a control that
 # began to fail again at `recurrence_starts` distinct starts of the machine within
 # `recurrence_days` days is said as a finding of its own, since a cause nobody found

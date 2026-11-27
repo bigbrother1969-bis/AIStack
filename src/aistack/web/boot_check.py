@@ -20,11 +20,14 @@ from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
+from aistack.ai_runtime import call_journal
+from aistack.boot_checks.load import load_boot_checks_yaml
 from aistack.boot_checks.phrases import say
+from aistack.boot_checks.quality import read_quality, unexplained
 from aistack.boot_checks.controls import ANOMALIES
 from aistack.boot_checks.history import open_since, read_history
 from aistack.boot_checks.screen import LEVELS, companions, elapsed, read_indicator, read_indicators, sentence
-from aistack.boot_checks.state import read_verdict
+from aistack.boot_checks.state import Verdict, read_verdict
 from aistack.i18n import Translator
 from aistack.i18n import LANGUAGE_COOKIE, LANGUAGE_PARAMETER
 from aistack.i18n.web import PageLanguage, page_language
@@ -161,6 +164,35 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
     }
 
 
+def _quality(t: Translator, generated_dir: Path, verdict: Verdict | None, now: datetime) -> list[str]:
+    """How AIStack itself is doing (O10), in sentences: the engine's calls, the anomalies left without words, the last pass."""
+
+    from aistack.tasks.boot_check import DEFAULT_DEFINITION
+
+    try:
+        definition = load_boot_checks_yaml(DEFAULT_DEFINITION)
+        days, minimum = definition.quality_days, definition.quality_min_calls
+    except Exception:  # an unreadable declaration is not a reason to hide the page
+        days, minimum = 7, 5
+
+    seen = read_quality(call_journal.read(generated_dir / "ai-calls", 5000), now, days, minimum)
+    lines = []
+
+    if seen.enough:
+        lines.append(t("boot_check.quality.engine", answered=seen.answered, calls=seen.calls, days=days, median=seen.median, slowest=seen.slowest))
+    else:
+        lines.append(t("boot_check.quality.too_few", calls=seen.calls, days=days, minimum=minimum))
+
+    if verdict is not None and verdict.anomalies:
+        left = unexplained(verdict.explanations)
+        lines.append(t("boot_check.quality.unexplained", n=left) if left else t("boot_check.quality.explained"))
+
+    took = verdict.took if verdict is not None else None
+    lines.append(t("boot_check.quality.took", seconds=took) if took is not None else t("boot_check.quality.took_unknown"))
+
+    return lines
+
+
 @router.get("", response_class=HTMLResponse, include_in_schema=False)
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 def index(request: Request) -> Response:
@@ -168,7 +200,8 @@ def index(request: Request) -> Response:
     now = datetime.now(timezone.utc)
     generated_dir = request.app.state.generated_dir
     sections = [_section(language.t, host, generated_dir, now) for host in (None, *companions(generated_dir))]
-    context: dict[str, object] = {"base": PREFIX, "sections": sections, **language.context()}
+    quality = _quality(language.t, generated_dir, read_verdict(generated_dir), now)
+    context: dict[str, object] = {"base": PREFIX, "sections": sections, "quality": quality, **language.context()}
     response = templates.TemplateResponse(request=request, name="boot_check/index.html", context=context)
 
     if language.cookie is not None:

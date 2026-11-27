@@ -143,3 +143,36 @@ def test_the_page_shows_the_engine_s_words_under_the_anomaly_they_concern_and_on
     write_verdict(tmp_path, replace(verdict, explanations=(replace(said, text=""),)))
 
     assert "non vérifiée" not in signed_in(client(tmp_path)).get("/boot-check/?lang=fr").text
+
+
+def _call(directory: Path, at: datetime, seconds: float, reachable: bool = True) -> None:
+    import json
+
+    directory.mkdir(parents=True, exist_ok=True)
+    line = {
+        "at": at.isoformat(), "caller": "boot_checks", "operation": "explain", "language": "fr", "answered_by": "m",
+        "reached_external": False, "reachable": reachable, "seconds": seconds,
+    }
+
+    with (directory / "ai-calls.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(line) + "\n")
+
+
+def test_the_page_says_how_aistack_itself_is_doing_and_never_a_rate_from_a_few_calls(tmp_path: Path) -> None:
+    write(tmp_path, "warning")
+    now = datetime.now(timezone.utc)
+    page = signed_in(client(tmp_path)).get("/boot-check/?lang=en").text
+
+    assert "own quality" in page and "too few to judge" in page and "duration not measured" in page
+    assert "it changes no verdict" in page
+
+    for index in range(5):
+        _call(tmp_path / "ai-calls", now, 60.0 + index * 10, reachable=index != 4)
+
+    verdict = read_verdict(tmp_path)
+    assert verdict is not None
+    write_verdict(tmp_path, replace(verdict, took=95.5, explanations=(Explanation("containers", "warning", "1 expected container missing", "", "", now.isoformat()),)))
+    page = signed_in(client(tmp_path)).get("/boot-check/?lang=en").text
+
+    assert "4 answer(s) out of 5 call(s) in 7 days; median duration 80.0 s, the longest 100.0 s" in page
+    assert "1 anomaly(ies) without an answer from the engine" in page and "Last pass: 95.5 s" in page

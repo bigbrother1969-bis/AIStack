@@ -94,6 +94,8 @@ class Verdict:
     choice_reason: str = ""
     # B5c: what the engine said of the anomalies, one entry per anomaly explained.
     explanations: tuple[Explanation, ...] = ()
+    # O10: how long this pass took, in seconds, the wait for the engine included; `None` = not measured (an older verdict).
+    took: float | None = None
 
 
 def overall(results: list[Result]) -> str:
@@ -278,6 +280,7 @@ def read_verdict(directory: Path, host: str | None = None) -> Verdict | None:
         chosen_by=str(raw.get("chosen_by", "")),
         choice_reason=str(raw.get("choice_reason", "")),
         explanations=tuple(item for item in (_explanation(entry) for entry in raw.get("explanations", ())) if item is not None),
+        took=float(raw["took"]) if isinstance(raw.get("took"), (int, float)) and not isinstance(raw.get("took"), bool) else None,
     )
 
 

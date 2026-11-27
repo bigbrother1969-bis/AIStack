@@ -106,6 +106,15 @@ incidents:
   to: "jusqu'à {last}"
   before: "Ce qui a été enregistré juste avant (avant, pas à cause de)"
   before_none: "Rien n'a été enregistré dans les heures qui précèdent."
+quality:
+  heading: "Qualité d'AIStack"
+  engine: "Moteur IA : {answered} réponse(s) sur {calls} appel(s) en {days} jours ; durée médiane {median} s, la plus longue {slowest} s."
+  too_few: "Moteur IA : {calls} appel(s) en {days} jours, trop peu pour juger (il en faut {minimum})."
+  unexplained: "Explications : {n} anomalie(s) sans réponse du moteur pour l'instant."
+  explained: "Explications : chaque anomalie a la sienne."
+  took: "Dernier passage : {seconds} s, attente du moteur comprise."
+  took_unknown: "Dernier passage : durée non mesurée."
+  hint: "Ceci mesure AIStack lui-même, jamais ton hôte : cela ne change aucun verdict."
 phrase:
   failed_units_some: "{n} unité(s) en échec"
   failed_units_none: "aucune unité en échec"

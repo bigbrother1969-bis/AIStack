@@ -73,6 +73,8 @@ def load_boot_checks_yaml(path: Path) -> BootChecksDefinition:
         domains=_domains(data.get("domains"), label),
         frieze_hours=_positive_int(data, "frieze_hours", defaults.frieze_hours, label),
         frieze_events=_positive_int(data, "frieze_events", defaults.frieze_events, label),
+        quality_days=_positive_int(data, "quality_days", defaults.quality_days, label),
+        quality_min_calls=_positive_int(data, "quality_min_calls", defaults.quality_min_calls, label),
         recurrence_days=_positive_int(data, "recurrence_days", defaults.recurrence_days, label),
         recurrence_starts=_positive_int(data, "recurrence_starts", defaults.recurrence_starts, label),
         certificate_days=_positive_int(data, "certificate_days", defaults.certificate_days, label),

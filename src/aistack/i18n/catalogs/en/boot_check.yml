@@ -106,6 +106,15 @@ incidents:
   to: "to {last}"
   before: "What was recorded just before (before, not because)"
   before_none: "Nothing was recorded in the hours before."
+quality:
+  heading: "AIStack's own quality"
+  engine: "AI engine: {answered} answer(s) out of {calls} call(s) in {days} days; median duration {median} s, the longest {slowest} s."
+  too_few: "AI engine: {calls} call(s) in {days} days, too few to judge ({minimum} are needed)."
+  unexplained: "Explanations: {n} anomaly(ies) without an answer from the engine for now."
+  explained: "Explanations: every anomaly has its own."
+  took: "Last pass: {seconds} s, the wait for the engine included."
+  took_unknown: "Last pass: duration not measured."
+  hint: "This measures AIStack itself, never your host: it changes no verdict."
 phrase:
   failed_units_some: "{n} unit(s) failed"
   failed_units_none: "no failed unit"

@@ -7,11 +7,11 @@ artifact:
   domain: Foundation
   criticality: C2
   confidence: Declared
-  version: 1.22
+  version: 1.23
   status: Draft
   owner: Foundation
   created: 2026-09-04
-  updated: 2026-11-26
+  updated: 2026-11-27
 
 relations:
   references:
@@ -37,6 +37,76 @@ bottom. An entry is written when the version is bumped, per `OPS-0002` §
 *Recording what's new* — `GOV-0002/OS-055`. This document does not replace
 `docker-compose.yml`, which is where the digest that proves a build lives;
 it says what the build was *for*.
+
+---
+
+## 2.3.1 — 2026-11-27
+
+**A patch release for the start-up checks: they now say what came back, what happened just
+before an anomaly, how the AI engine itself is doing, and how worn an SSD is, and the
+explanations the AI writes rest on cleaned lines of the logs instead of a guess. `latest`
+names this version.**
+
+### What you may notice
+
+- **What comes back.** A control that began to fail again at three starts of a machine or
+  more in the last 60 days is said as a finding of its own (*recurrence*, to watch): a cause
+  nobody found is not cured by correcting the same symptom every time. Failing at every start
+  without a quiet start in between is one long failure, not a recurrence.
+- **What happened just before.** Under each anomaly, *Since the start* lists, among what
+  AIStack recorded in the 6 hours before it, the nearest facts: the host starting, a container
+  that died, was removed or turned unhealthy, packages that changed, a declaration written from
+  a screen, another control that began to fail. It says *before*, never *because*, and keeps names
+  and dates, never a line of a log.
+- **Explanations that rest on something.** To explain a database that recovered or a container
+  that is not healthy, the vigil reads the end of the log of up to three containers, masks what
+  looks like a secret or an address, keeps at most six relevant lines of each, and gives them to
+  the AI engine of the house.
+  The lines are used once and thrown away: the page only says *how many* lines the explanation
+  rests on. The engine is told to say when the lines tell it nothing, and greetings or questions
+  that slip into an answer are filtered out.
+- **AIStack's own quality.** At the top of the page, a small section: how many calls to the AI
+  engine in the last 7 days, how many answered, the median and the longest duration, how many
+  anomalies have no explanation for now, how long the last pass took. It reads what is already
+  written, never changes a verdict, and says it cannot judge under 5 calls.
+- **An SSD's wear.** Scrutiny sends SMART attributes by number only, and what a number means
+  depends on the maker, so nothing is guessed: you name a part of the model and the attribute
+  that gives its life left (`ssd_life: {SUV400S37240G: 231}`). The disks control then says
+  *77 % of life left, about 4.1 year(s) at the pace since new* (an estimate, said as such, only
+  after a month of use and some wear), and puts the disk to watch at 20 % or less
+  (`ssd_life_percent`). Nothing declared, nothing judged.
+- **A fix.** Two declarations edited by hand within the same second are listed in the order they
+  were made, and no longer in an order that changed from one run to the next.
+
+### To do when upgrading
+
+- Set `AISTACK_VERSION=2.3.1` in `.env`, then `docker compose pull && docker compose up -d`.
+- A `./config/boot_checks.yml` made earlier keeps working: every new key has a default
+  (`recurrence_days`, `recurrence_starts`, `frieze_hours`, `frieze_events`, `quality_days`,
+  `quality_min_calls`, `ssd_life_percent`). Add `ssd_life` only if you own an SSD whose wear you
+  want to read; find the attribute number of its life left in Scrutiny's page for that disk.
+- Reading a container's log needs nothing new: it goes through the Docker socket the vigil
+  already has.
+
+### Not changed
+
+The controls, their thresholds and the morning Gotify message work as in 2.3.0. The AI explains
+and never judges, and an explanation is never sent in Gotify. Your `./config` and your data are
+kept.
+
+### Known limits
+
+- A small local engine (7 billion parameters) writes weak French and sometimes invents a cause;
+  every explanation is marked as not verified, and the filter only removes what it can recognise.
+- A pass gives the AI engine 240 seconds: with a slow engine, three explanations of 90 seconds
+  exceed it, and the last one waits for the next pass.
+- The remaining life of an SSD is an estimate from the pace since new, not a promise; it does
+  not know about a change of use.
+- An SSD is read only if you declared its attribute; one of another maker is *not judged*, which
+  is not the same as healthy.
+
+`pytest -q` — 4420 passed; `mypy` — 679 files; 70 knowledge artifacts,
+`blocking: 0   warnings: 0   clean: True`.
 
 ---
 

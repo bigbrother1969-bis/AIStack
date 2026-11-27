@@ -205,3 +205,13 @@ def test_edits_of_the_same_second_keep_the_order_of_their_history_names(tmp_path
 
     assert [("-a: 3" in e.diff, "+a: 4" in e.diff) for e in edits][0] == (True, True)
     assert "-a: 1" in edits[2].diff and "+a: 2" in edits[2].diff
+
+
+def test_the_order_of_two_edits_never_depends_on_the_disk(tmp_path) -> None:
+    # Both record the same second, but the second one was filed under the next second.
+    first = observe._order(tmp_path / "2026-11-27T08-38-40Z.json", {"at": "2026-11-27T08:38:40+00:00"})
+    second = observe._order(tmp_path / "2026-11-27T08-38-41Z.json", {"at": "2026-11-27T08:38:40+00:00"})
+    third = observe._order(tmp_path / "2026-11-27T08-38-41Z-1.json", {"at": "2026-11-27T08:38:40+00:00"})
+    tenth = observe._order(tmp_path / "2026-11-27T08-38-41Z-10.json", {"at": "2026-11-27T08:38:40+00:00"})
+
+    assert first < second < third < tenth

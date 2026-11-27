@@ -206,6 +206,18 @@ def _text(path: Path) -> str:
         return ""
 
 
+def _order(path: Path, data: dict[str, object]) -> tuple[str, str, int]:
+    """
+    The key an edit is ordered by: the instant it records, then the second its file was named for, then the collision
+    suffix. The instant is taken before the file is written, so two edits can record the same second and be filed under
+    two, and without the file's own second the order of those two would be the disk's.
+    """
+
+    stamp, _, suffix = path.stem.removesuffix("Z").partition("Z-")
+
+    return str(data.get("at", "")), stamp, int(suffix) if suffix.isdigit() else 0
+
+
 def hand_edits(generated_dir: Path, limit: int = 20) -> list[HandEdit]:
     """
     The edits recorded by `apply`, the newest first, each with its difference:
@@ -214,7 +226,7 @@ def hand_edits(generated_dir: Path, limit: int = 20) -> list[HandEdit]:
     that is gone leaves an empty difference, not an error.
     """
 
-    ordered: list[tuple[str, int, dict[str, object]]] = []
+    ordered: list[tuple[str, str, int, dict[str, object]]] = []
 
     for path in (generated_dir / OBSERVED_STREAM).glob("*.json"):
         try:
@@ -223,11 +235,10 @@ def hand_edits(generated_dir: Path, limit: int = 20) -> list[HandEdit]:
             continue
         if isinstance(data, dict) and data.get("name"):
             # Two edits in the same second: the history names the second one `<stamp>-<n>`.
-            suffix = path.stem.rsplit("Z-", 1)[1] if "Z-" in path.stem else "0"
-            ordered.append((str(data.get("at", "")), int(suffix) if suffix.isdigit() else 0, data))
+            ordered.append((*_order(path, data), data))
 
-    ordered.sort(key=lambda entry: entry[:2])
-    records = [entry[2] for entry in ordered]
+    ordered.sort(key=lambda entry: entry[:3])
+    records = [entry[3] for entry in ordered]
     found: list[HandEdit] = []
 
     for index, record in enumerate(records):

@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 
 from aistack.boot_checks.choice import Ask, Matter
 from aistack.boot_checks.controls import ANOMALIES, Result
+from aistack.boot_checks.excerpts import Excerpt, basis, block
 from aistack.boot_checks.state import Explanation, Verdict
 from aistack.contracts.ai_runtime_answer import AIRuntimeAnswer
 
@@ -124,6 +125,16 @@ def _within(ask: Ask, matter: Matter, context: str, seconds: float) -> AIRuntime
     return box[0] if box else None
 
 
+def _excerpts(find: Callable[[Result], tuple[Excerpt, ...]] | None, item: Result) -> tuple[Excerpt, ...]:
+    if find is None:
+        return ()
+
+    try:
+        return find(item)
+    except Exception:  # a log that cannot be read adds nothing: the anomaly is explained without it
+        return ()
+
+
 def explain(
     todo: tuple[Result, ...],
     found: tuple[str, ...],
@@ -132,6 +143,7 @@ def explain(
     now: datetime,
     seconds: float,
     clock: Callable[[], float] = time.monotonic,
+    excerpts: Callable[[Result], tuple[Excerpt, ...]] | None = None,
 ) -> tuple[Explanation, ...]:
     """One explanation per anomaly asked, within `seconds` for all of them; one that does not come stays a marker."""
 
@@ -141,10 +153,14 @@ def explain(
     said: list[Explanation] = []
 
     for item in todo:
+        lines = _excerpts(excerpts, item)
         left = deadline - clock()
-        answer = _within(ask, matter_of(item), context, left) if left > 0 else None
+        asked = f"{context}\n{block(lines)}" if lines else context
+        answer = _within(ask, matter_of(item), asked, left) if left > 0 else None
         text = clean(answer.response) if answer is not None and answer.reachable else ""
-        said.append(Explanation(item.control, item.status, item.summary, text, answer.model[:80] if text and answer is not None else "", stamp))
+        said.append(
+            Explanation(item.control, item.status, item.summary, text, answer.model[:80] if text and answer is not None else "", stamp, basis(lines) if text else ())
+        )
 
     return tuple(said)
 

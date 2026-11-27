@@ -78,6 +78,16 @@ def _explanation_of(verdict: object, result: object) -> str:
     return ""
 
 
+def _basis_of(verdict: object, result: object) -> tuple[str, ...]:
+    """What the explanation of an anomaly rests on besides its sentence (O9): the containers whose log lines were read."""
+
+    for item in getattr(verdict, "explanations", ()):
+        if (item.control, item.status, item.summary) == (result.control, result.status, result.summary):  # type: ignore[attr-defined]
+            return item.basis  # type: ignore[no-any-return]
+
+    return ()
+
+
 def _choice(t: Translator, verdict: object) -> str:
     """Who chose the extra controls: the engine (and what it said) or the rules; empty when nothing was to choose."""
 
@@ -105,6 +115,7 @@ def _section(t: Translator, host: str | None, generated_dir: Path, now: datetime
             "details": tuple(say(t, detail) for detail in result.details),
             "extra": result.control in (verdict.extra if verdict else ()),
             "explanation": _explanation_of(verdict, result),
+            "basis": tuple(say(t, line) for line in _basis_of(verdict, result)),
             "since": _stamp(open_since(journal, result.control)) if result.status in ANOMALIES else "",
         }
         for result in (verdict.results if verdict else ())

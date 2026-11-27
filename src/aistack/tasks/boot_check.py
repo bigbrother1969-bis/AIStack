@@ -13,6 +13,7 @@ import yaml
 
 from aistack.boot_checks.catalogue import circumstances, evaluate_extra, settled_since
 from aistack.boot_checks.choice import ASK_SECONDS, Ask, Choice, decide, wants_engine
+from aistack.boot_checks.excerpts import excerpts_for
 from aistack.boot_checks.explain import explain, markers, standing
 from aistack.boot_checks.controls import Reading, RestoreGap, RestoreReading, evaluate, evaluate_companion
 from aistack.boot_checks.definition import BootChecksDefinition
@@ -148,7 +149,7 @@ class BootCheckTask:
                     if not dry:
                         write_verdict(generated_dir, replace(verdict, explanations=(*kept, *markers(todo, now))), keep=_keep(definition))
 
-                    asked = explain(todo, found, list(verdict.results), ask, now, max(deadline - time.monotonic(), 0.0))
+                    asked = explain(todo, found, list(verdict.results), ask, now, max(deadline - time.monotonic(), 0.0), excerpts=lambda result: excerpts_for(result, facts.booted_at))
                     verdict = replace(verdict, explanations=(*kept, *asked))
 
             if not payload.get("dry_run"):

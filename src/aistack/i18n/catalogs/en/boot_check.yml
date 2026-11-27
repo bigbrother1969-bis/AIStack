@@ -254,6 +254,7 @@ phrase:
   frieze_declaration: "{when} UTC — {name}: declaration changed"
   frieze_control: "{when} UTC — {control}: began to fail"
   frieze_more: "{n} earlier event(s) not shown"
+  excerpt_basis: "{n} log line(s) of {name} kept ({a} read)"
   systems_trend_head_ok: "{n} system(s) measured, none full within {days} days"
   systems_trend_head: "{n} system(s) measured"
   systems_trend_soon: "{n} full within {days} days"

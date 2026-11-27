@@ -192,6 +192,7 @@ RULES: tuple[tuple[str, str], ...] = (
     ("frieze_unit", r"(?P<when>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC — (?P<name>[^:]+): unit (?P<label>.+) changed"),
     ("frieze_declaration", r"(?P<when>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC — (?P<name>.+): declaration changed"),
     ("frieze_control", r"(?P<when>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC — (?P<control>.+): began to fail"),
+    ("excerpt_basis", r"(?P<n>\d+) log line\(s\) of (?P<name>\S+) kept \((?P<a>\d+) read\)"),
     ("frieze_more", r"(?P<n>\\d+) earlier event\\(s\\) not shown"),
     ("not_read", r"not read: (?P<reason>.+)"),
 )

@@ -70,6 +70,8 @@ class Explanation:
     text: str
     by: str
     asked_at: str
+    # What the explanation rests on besides the sentence (O9): how many log lines of which container, never the lines.
+    basis: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -229,6 +231,7 @@ def _explanation(raw: Any) -> Explanation | None:
         str(raw.get("text", "")),
         str(raw.get("by", "")),
         str(raw.get("asked_at", "")),
+        tuple(str(item) for item in raw["basis"]) if isinstance(raw.get("basis"), list) else (),
     )
 
 

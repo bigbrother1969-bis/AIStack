@@ -254,6 +254,7 @@ phrase:
   frieze_declaration: "{when} UTC — {name} : déclaration modifiée"
   frieze_control: "{when} UTC — {control} : a commencé à échouer"
   frieze_more: "{n} événement(s) plus ancien(s) non affiché(s)"
+  excerpt_basis: "{n} ligne(s) du journal de {name} retenue(s) ({a} lues)"
   systems_trend_head_ok: "{n} machine(s) mesurée(s), aucune pleine d'ici {days} jours"
   systems_trend_head: "{n} machine(s) mesurée(s)"
   systems_trend_soon: "{n} pleine(s) d'ici {days} jours"

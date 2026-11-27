@@ -278,12 +278,12 @@ def test_the_start_up_checks_are_run_with_the_data_directory_and_every_verdict_i
     assert capsys.readouterr().out == ""
 
     def too_slow(*args: object, **kwargs: object) -> None:
-        raise vigil.subprocess.TimeoutExpired("boot_check", 300)
+        raise vigil.subprocess.TimeoutExpired("boot_check", vigil.BOOT_CHECK_SECONDS)
 
     monkeypatch.setattr(vigil.subprocess, "run", too_slow)
     vigil._boot_check(tmp_path)
 
-    assert "no answer within 300 s; the verdict of the previous pass stands" in capsys.readouterr().out
+    assert f"no answer within {vigil.BOOT_CHECK_SECONDS} s; the verdict of the previous pass stands" in capsys.readouterr().out
 
     monkeypatch.setattr(vigil.subprocess, "run", lambda *a, **k: _Done(1 if False else 126, "", "No module named aistack.cli.boot_check"))
     vigil._boot_check(tmp_path)

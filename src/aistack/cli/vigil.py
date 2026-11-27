@@ -45,6 +45,8 @@ from aistack.security.yaml import load_security_yaml
 from aistack.vigil import boot_notify, notify, security_notify, snapshot
 
 GENERATED_DIR = Path("reports/generated")
+# One start-up check pass, the wait for the AI engine included (`boot_checks.choice.ASK_SECONDS`, 300 s, is the engine's share).
+BOOT_CHECK_SECONDS = 420
 INSTANCE_CONFIG = configured(Path(__file__).resolve().parents[1] / "instance" / "definitions" / "instance_config.yml")
 ARRIVALS = configured(Path(__file__).resolve().parents[1] / "arrivals" / "definitions" / "arrivals.yml")
 BOOT_CHECKS = configured(Path(__file__).resolve().parents[1] / "boot_checks" / "definitions" / "boot_checks.yml")
@@ -104,10 +106,10 @@ def _boot_check(generated: Path) -> None:
             [sys.executable, "-m", "aistack.cli.boot_check", "--once", "--ai", "--output", str(generated)],
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=BOOT_CHECK_SECONDS,
         )
     except subprocess.TimeoutExpired:
-        print("aistack.cli.boot_check: no answer within 300 s; the verdict of the previous pass stands", flush=True)
+        print(f"aistack.cli.boot_check: no answer within {BOOT_CHECK_SECONDS} s; the verdict of the previous pass stands", flush=True)
 
         return
 

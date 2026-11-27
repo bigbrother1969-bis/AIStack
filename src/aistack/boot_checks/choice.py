@@ -34,8 +34,8 @@ ENGINE = "engine"
 # The language the engine writes its sentence in: the reference language, shown as it was written.
 LANGUAGE = "fr"
 RETRY_MINUTES = 60
-# The vigil stops one pass at 300 s: the engine gets less, and the verdict of the rules is already written.
-ASK_SECONDS = 240
+# The vigil stops one pass at 420 s (`BOOT_CHECK_SECONDS`): the engine gets less, and the verdict of the rules is already written.
+ASK_SECONDS = 300
 REASON_LIMIT = 200
 LINE_LIMIT = 160
 MAX_LINES = 40

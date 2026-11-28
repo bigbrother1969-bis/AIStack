@@ -1,8 +1,8 @@
 """
 `aistack.web.simple_console` (ADR-0033). CN0 : le routeur répond sur
 les deux formes, sur les deux écouteurs, exige une session (comme
-Architecture et le Health cockpit, ADR-0014 § 5) — rien de plus pour
-l'instant.
+Architecture et le Health cockpit, ADR-0014 § 5). CN1 : la maquette
+(variante C) avec ses quatre jauges à valeurs figées.
 """
 
 from __future__ import annotations
@@ -54,3 +54,15 @@ def test_signed_in_the_screen_answers_on_both_listeners(generated: Path, port: i
 
     assert reply.status_code == 200
     assert "text/html" in reply.headers["content-type"]
+
+
+def test_the_four_gauges_and_the_advanced_link_are_there(generated: Path):
+    body = signed_in(client(generated, LAN_PORT)).get("/simple").text
+
+    for label in ("Sécurité", "Sauvegardes", "Espace disque", "Mises à jour"):
+        assert label in body
+    # Only the one with an issue shows the AI button (CN1: fixed values).
+    assert body.count("Demander à l'IA de régler ça") == 1
+    assert "Protégée" in body and "À surveiller" in body and "Suffisant" in body and "À jour" in body
+    assert 'href="/console.html"' in body
+    assert "Mode avancé (console complète)" in body

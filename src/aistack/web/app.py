@@ -41,6 +41,7 @@ from aistack.web import (
     priority,
     restart_watch,
     selection,
+    simple_console,
     timemachine,
     troubleshooting,
 )
@@ -253,6 +254,7 @@ def create_app(
     include(app, arrivals.router, arrivals.PREFIX)
     include(app, restart_watch.router, restart_watch.PREFIX)
     include(app, selection.router, selection.PREFIX)
+    include(app, simple_console.router, simple_console.PREFIX)
     include(app, troubleshooting.router, troubleshooting.PREFIX)
     include(app, security_screen.router, security_screen.PREFIX)
     include(app, ai_engines_screen.router, ai_engines_screen.PREFIX)

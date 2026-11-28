@@ -40,6 +40,7 @@ from aistack.authentication.definition import (
 )
 from aistack.authentication.local_admin import FailureWindow, verify_password
 from aistack.authentication.oidc import Http, OidcClient, SignInError, UrllibHttp
+from aistack.authentication.profiles import REVOKED, ProfileStore
 from aistack.authentication.sessions import (
     CLOSED_BY_ADMIN,
     LAN_LISTENER,
@@ -93,6 +94,10 @@ class Authentication:
     # Where the LAN listener is reached (ADR-0014 § 4).
     lan_base_url: str = "http://localhost:8186"
     failures: FailureWindow = field(default_factory=FailureWindow)
+    # Individual profile assignments (ADR-0034); `None` where nothing
+    # resolves but the Pocket ID group and the local fallback account,
+    # exactly today's behaviour.
+    profiles: ProfileStore | None = None
 
 
 def build_authentication(
@@ -115,6 +120,7 @@ def build_authentication(
         ),
         oidc=OidcClient(definition, credentials, http if http is not None else UrllibHttp()),
         lan_base_url=lan_base_url,
+        profiles=ProfileStore(generated_dir / "web" / "profiles.sqlite3"),
     )
 
 
@@ -160,8 +166,52 @@ def profile_of(session: Session | None, admin_group: str) -> str | None:
     return USER
 
 
+def resolved_profile(session: Session | None, admin_group: str, profiles: ProfileStore | None) -> str | None:
+    """`admin`, `user`, or `None`, with an individual profile assignment
+    (ADR-0034) taking priority over the Pocket ID group or the local
+    fallback account — the order the owner decided at GP0: individual
+    assignment, then group, then fallback. `REVOKED` denies access
+    while the Pocket ID account stays valid elsewhere."""
+
+    if session is None:
+        return None
+    if session.email and profiles is not None:
+        override = profiles.profile_for(session.email)
+        if override == REVOKED:
+            return None
+        if override in (ADMIN, USER):
+            return override
+    return profile_of(session, admin_group)
+
+
 def current_profile(request: Request) -> str | None:
-    return profile_of(current_session(request), _auth(request).definition.admin_group)
+    authentication = _auth(request)
+    return resolved_profile(current_session(request), authentication.definition.admin_group, authentication.profiles)
+
+
+def assign_account(authentication: Authentication, identifier: str, profile: str, by: str) -> None:
+    """Pre-assign or change a Pocket ID account's profile (ADR-0034).
+    Takes effect on that account's very next request — nothing is
+    cached, the resolution above re-reads the store each time."""
+
+    if authentication.profiles is not None:
+        authentication.profiles.assign(identifier, profile, by)
+
+
+def revoke_account(authentication: Authentication, identifier: str, by: str) -> None:
+    """Revoke a Pocket ID account's access and cut any live session of
+    theirs immediately (ADR-0034 § 3) — not only a future sign-in.
+    Closing the session row, not only recording the revocation, is
+    what makes it immediate: `require_signed_in` only asks whether a
+    session exists."""
+
+    if authentication.profiles is None:
+        return
+    authentication.profiles.revoke(identifier, by)
+    key = identifier.strip().lower()
+    for live in authentication.sessions.live():
+        if live.email.strip().lower() == key:
+            authentication.sessions.close_public(live.public_id)
 
 
 def _safe_next(target: str | None) -> str:

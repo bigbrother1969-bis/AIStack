@@ -57,6 +57,8 @@ tasks:
     factory: aistack.tasks:TimeMachineRebuildTask
   - id: network_docker.discover
     factory: aistack.tasks:NetworkDockerDiscoverTask
+  - id: linux_services.discover
+    factory: aistack.tasks:LinuxServicesDiscoverTask
   - id: ai.compare
     factory: aistack.tasks:AiCompareTask
   - id: ai.reason

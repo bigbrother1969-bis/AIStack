@@ -157,6 +157,7 @@ def test_what_the_kernel_registered_before_the_file_existed_is_still_registered(
         "console.render": "ConsoleRenderTask",
         "timemachine.rebuild": "TimeMachineRebuildTask",
         "network_docker.discover": "NetworkDockerDiscoverTask",
+        "linux_services.discover": "LinuxServicesDiscoverTask",
         "ai.compare": "AiCompareTask",
         "ai.reason": "AiReasonTask",
         "declarations.observe": "DeclarationsObserveTask",

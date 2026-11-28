@@ -31,6 +31,7 @@
     "src/aistack/sync/screen.py -> MediaLibraryProvider",
     "src/aistack/tasks/architecture_render.py -> BeszelProvider",
     "src/aistack/tasks/architecture_render.py -> HttpProbeProvider",
+    "src/aistack/tasks/linux_services_discover.py -> LinuxServicesDiscoveryProvider",
     "src/aistack/tasks/network_docker_discover.py -> NetworkDockerDiscoveryProvider"
   ],
   "disk_writes_outside_a_transaction": [],

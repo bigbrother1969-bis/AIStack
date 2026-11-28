@@ -12,6 +12,7 @@ from aistack.tasks import (
     ArchitectureRenderTask,
     ConsoleRenderTask,
     HealthRenderTask,
+    LinuxServicesDiscoverTask,
     NetworkDockerDiscoverTask,
     TimeMachineRebuildTask,
 )
@@ -59,6 +60,14 @@ def test_create_kernel_registers_the_network_docker_discover_task():
     assert isinstance(task, NetworkDockerDiscoverTask)
 
 
+def test_create_kernel_registers_the_linux_services_discover_task():
+    kernel = create_kernel()
+
+    task = kernel.registries.tasks.get("linux_services.discover")
+
+    assert isinstance(task, LinuxServicesDiscoverTask)
+
+
 def test_create_kernel_registers_the_ai_reason_task():
     kernel = create_kernel()
 
@@ -102,6 +111,7 @@ def test_only_the_tasks_declared_here_are_registered():
         "console.render",
         "timemachine.rebuild",
         "network_docker.discover",
+        "linux_services.discover",
         "ai.compare",
         "ai.reason",
         "declarations.observe",

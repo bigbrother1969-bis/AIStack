@@ -15,6 +15,7 @@ from aistack.tasks.declarations_observe import DeclarationsObserveTask
 from aistack.tasks.docker_discover import DockerDiscoverTask
 from aistack.tasks.health_render import HealthRenderTask
 from aistack.tasks.knowledge_integrity import KnowledgeIntegrityTask
+from aistack.tasks.linux_services_discover import LinuxServicesDiscoverTask
 from aistack.tasks.network_docker_discover import NetworkDockerDiscoverTask
 from aistack.tasks.security_assess import SecurityAssessTask
 from aistack.tasks.security_window import SecurityWindowTask
@@ -30,6 +31,7 @@ __all__ = [
     "DockerDiscoverTask",
     "HealthRenderTask",
     "KnowledgeIntegrityTask",
+    "LinuxServicesDiscoverTask",
     "NetworkDockerDiscoverTask",
     "SecurityAssessTask",
     "SecurityWindowTask",

@@ -160,6 +160,21 @@ def test_an_identical_second_run_keeps_the_first_observation_once(
     assert len(list(history_dir.glob("*.json"))) == 1
 
 
+def test_the_catalog_is_also_written_with_history(stubbed_provider, workspace):
+    """LS2 (`ADR-0035`): the observation also builds and writes its own
+    Runtime Catalog, next to the raw observation."""
+
+    linux_services_discover.main()
+
+    catalog_path = workspace / "reports" / "generated" / "linux-services-catalog.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    assert catalog["catalog_id"] == "linux-services-runtime"
+    assert catalog["items"] == []  # no host in the default fixture observation
+
+    history_dir = catalog_path.parent / "history" / "linux-services-catalog"
+    assert len(list(history_dir.glob("*.json"))) == 1
+
+
 def test_a_run_with_real_discovered_hosts_writes_them_through(
     stubbed_provider, workspace
 ):
@@ -194,6 +209,11 @@ def test_a_run_with_real_discovered_hosts_writes_them_through(
     output_path = workspace / "reports" / "generated" / "linux-services-observation.json"
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["linux_services"]["hosts"][0]["host"] == "192.168.1.40"
+
+    catalog_path = workspace / "reports" / "generated" / "linux-services-catalog.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    assert [item["id"] for item in catalog["items"]] == ["192.168.1.40/mariadb"]
+    assert catalog["items"][0]["metadata"]["listening_ports"] == "3306"
 
 
 # --------------------------------------------------------------------

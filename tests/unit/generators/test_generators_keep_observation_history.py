@@ -31,6 +31,9 @@ from aistack.architecture.views import build_all_views
 from aistack.contracts.console_link import ConsoleLink
 from aistack.generators.architecture import ArchitectureHtmlArtifactGenerator
 from aistack.generators.docker.catalog_artifact import DockerCatalogArtifactGenerator
+from aistack.generators.linux_services.catalog_artifact import (
+    LinuxServicesCatalogArtifactGenerator,
+)
 from aistack.generators.filesystem.media_library_artifact import (
     MediaLibraryObservationArtifactGenerator,
 )
@@ -81,6 +84,27 @@ def test_docker_catalog_artifact_generator_keeps_history(tmp_path: Path):
     assert len(history_files) == 1
     assert json.loads(history_files[0].read_text(encoding="utf-8"))["catalog_id"] == (
         "docker-runtime"
+    )
+    assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_linux_services_catalog_artifact_generator_keeps_history(tmp_path: Path):
+    generator = LinuxServicesCatalogArtifactGenerator()
+    output_path = tmp_path / "reports" / "generated" / "linux-services-catalog.json"
+    catalog = Catalog(
+        catalog_id="linux-services-runtime",
+        title="Linux Services Runtime Catalog",
+        items=(CatalogItem(id="192.168.1.40/mariadb", label="mariadb (192.168.1.40)", kind="linux_service"),),
+    )
+
+    generator.generate(catalog=catalog, output_path=output_path)
+
+    history_files = _history_files(output_path)
+    assert len(history_files) == 1
+    assert json.loads(history_files[0].read_text(encoding="utf-8"))["catalog_id"] == (
+        "linux-services-runtime"
     )
     assert history_files[0].read_text(encoding="utf-8") == output_path.read_text(
         encoding="utf-8"

@@ -29,6 +29,7 @@ def main() -> None:
     data = runtime.execute(request).observation.data
 
     print(f"Linux services observation written to {data['output_path']}")
+    print(f"Linux services catalog written to {data['catalog_output_path']} ({data['catalog_items']} item(s))")
 
 
 if __name__ == "__main__":

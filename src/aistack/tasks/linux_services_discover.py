@@ -4,8 +4,12 @@ import os
 from collections.abc import Mapping
 from pathlib import Path
 
+from aistack.catalog.linux_services import LinuxServicesCatalogBuilder
 from aistack.config import configured
-from aistack.generators.linux_services import LinuxServicesObservationArtifactGenerator
+from aistack.generators.linux_services import (
+    LinuxServicesCatalogArtifactGenerator,
+    LinuxServicesObservationArtifactGenerator,
+)
 from aistack.kernel.execution import Observation, ObservationContext, Request
 from aistack.network_discovery.yaml import load_network_discovery_yaml
 from aistack.providers.linux_services import LinuxServicesDiscoveryProvider
@@ -43,8 +47,19 @@ class LinuxServicesDiscoverTask:
     The provider is configured at use (CIDR, key, user names): it is
     built here and not asked of the Kernel (ADR-0027 § 4).
 
-    Returns an Observation of plain values: where the report was
-    written and how many hosts it found.
+    LS2 (`ADR-0035`): the observation also builds its own Runtime
+    Catalog (`LinuxServicesCatalogBuilder`, one item per host/service
+    pair) and writes it as a second artifact, next to the raw
+    observation — its own catalog, grounded by reading the repository
+    (2026-11-28): unlike Docker's local provider, no existing Runtime
+    Catalog covers a network-scanned host to extend into, and
+    `network_docker.discover` (this task's own precedent) has no
+    Runtime Catalog step either. No display, no gap qualification
+    (`LS3`, out of scope here).
+
+    Returns an Observation of plain values: where the observation and
+    the catalog were written, and how many hosts and services were
+    found.
     """
 
     task_id = "linux_services.discover"
@@ -72,6 +87,12 @@ class LinuxServicesDiscoverTask:
             output_path=generated_dir / "linux-services-observation.json",
         )
 
+        catalog = LinuxServicesCatalogBuilder().build(observation)
+        catalog_output_path = LinuxServicesCatalogArtifactGenerator().generate(
+            catalog=catalog,
+            output_path=generated_dir / "linux-services-catalog.json",
+        )
+
         return Observation(
             context=ObservationContext(
                 request_id=request.request_id,
@@ -81,6 +102,8 @@ class LinuxServicesDiscoverTask:
             ),
             data={
                 "output_path": str(output_path),
+                "catalog_output_path": str(catalog_output_path),
                 "hosts": len(observation.get("linux_services", {}).get("hosts", [])),
+                "catalog_items": len(catalog.items),
             },
         )

@@ -51,6 +51,7 @@ from aistack.web import storage as storage_screen
 from aistack.web import declarations as declarations_screen
 from aistack.web import api_keys as api_keys_screen
 from aistack.api_keys import apply_to_environ, load_api_keys
+from aistack.web import profiles as profiles_screen
 from aistack.web import dock as dock_screen
 from aistack.web import health
 from aistack.web import notifications
@@ -247,6 +248,7 @@ def create_app(
     include(app, storage_screen.router)
     include(app, declarations_screen.router)
     include(app, api_keys_screen.router)
+    include(app, profiles_screen.router)
     include(app, authentication.router)
     include(app, authentication.lan_router)
     include(app, network_discovery.router, network_discovery.PREFIX)

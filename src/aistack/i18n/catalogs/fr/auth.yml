@@ -188,3 +188,34 @@ api_keys:
     save: "Enregistrer cette valeur pour {item}"
     clear: "Effacer la valeur saisie ici pour {item}"
     test: "Vérifier auprès du service que {item} est acceptée"
+# Settings: Profiles section (ADR-0034).
+profiles:
+  heading: "Profils"
+  intro: "Les comptes Pocket ID connus d'AIStack et leur profil. Une assignation individuelle prime sur le groupe aistack_admins ; une révocation coupe l'accès à AIStack tout de suite, sans toucher au compte Pocket ID lui-même."
+  empty: "Aucun compte connu pour l'instant — assigne un profil ci-dessous pour en pré-assigner un."
+  status:
+    revoked: "Révoqué"
+  column:
+    identifier: "Identifiant"
+    profile: "Profil"
+    assigned: "Assigné le"
+    change: "Changer"
+    when: "Quand"
+    by: "Par"
+  change: "Changer"
+  revoke: "Révoquer"
+  assign: "Assigner"
+  assign_heading: "Pré-assigner un identifiant"
+  placeholder:
+    identifier: "identifiant Pocket ID (email)"
+  journal_heading: "Journal des changements"
+  journal_empty: "Aucun changement enregistré."
+  notice:
+    assigned: "{identifier} : profil enregistré."
+    revoked: "{identifier} : accès révoqué."
+    empty: "Identifiant manquant."
+  tooltip:
+    identifier: "L'identifiant Pocket ID (email) du compte à assigner ou pré-assigner"
+    assign: "Enregistrer cette assignation"
+    change: "Changer le profil de {item}"
+    revoke: "Révoquer l'accès AIStack de {item} — ferme aussi sa session en cours"
